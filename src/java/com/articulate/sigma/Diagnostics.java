@@ -325,7 +325,7 @@ public class Diagnostics {
         String kbName = kb.name;
         String hostname = KBmanager.getMgr().getPref("hostname");
         String result = null;
-        if (hostname == null)
+        if (hostname == null || hostname.length() == 0)
             hostname = "localhost";
         String kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
         String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
@@ -365,7 +365,7 @@ public class Diagnostics {
         String proof;
         String result = null;
 
-        String answer = null;
+        String answer = new String();
         KB empty = makeEmptyKB("consistencyCheck");
 
         System.out.println("=================== Consistency Testing ===================");
@@ -374,7 +374,7 @@ public class Diagnostics {
             TreeSet formulaSet = kb.getFormulas(); // POD defined this method. Is there another way?
             Iterator it = formulaSet.iterator();
             while (it.hasNext()) {
-                Formula query = (Formula)it.next();
+                Formula query = (Formula) it.next();
                 ArrayList processedQueries = query.preProcess(); // may be multiple because of row vars.
                 //System.out.println(" query = " + query);
                 //System.out.println(" processedQueries = " + processedQueries);
@@ -382,17 +382,26 @@ public class Diagnostics {
                 String processedQuery = null;
                 Iterator q = processedQueries.iterator();
 
+                System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
                 while (q.hasNext()) {
-                    processedQuery = (String)q.next();
+                    Formula f = (Formula) q.next();
+                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.theFormula);
+                    processedQuery = f.makeQuantifiersExplicit();
+                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
                     proof = empty.inferenceEngine.submitQuery(processedQuery,timeout,maxAnswers);
-                    answer = reportAnswer(kb,proof,query,processedQuery,"Redundancy");
-                    if (answer.length() != 0) return answer;
+                    String a = reportAnswer(kb,proof,query,processedQuery,"Redundancy");
+                    //  if (answer.length() != 0) return answer;
+                    answer = answer + a;
+                    a = new String();
 
                     StringBuffer negatedQuery = new StringBuffer();
                     negatedQuery.append("(not " + processedQuery + ")");
                     proof = empty.inferenceEngine.submitQuery(negatedQuery.toString(),timeout,maxAnswers);
-                    answer = reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency");
-                    if (answer.length() != 0) return answer;
+                    a = reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency");
+                    if (a.length() != 0) {
+                        answer = answer + a;
+                        return answer;
+                    }
                 }
                 empty.tell(query.theFormula);
             }
