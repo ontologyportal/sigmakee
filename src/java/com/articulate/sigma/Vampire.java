@@ -88,6 +88,8 @@ public class Vampire {
             throw new IOException("Error in Vampire(): Executable file " + VAMPIRE_EXECUTABLE + " does not exist.");
         if (!(new File(VAMPIRE_DIRECTORY + File.separator + kbFileName)).exists())
             throw new IOException("Error in Vampire(): KB file " + VAMPIRE_DIRECTORY + File.separator + kbFileName + " does not exist.");
+        System.out.println("INFO in Vampire(): Starting vampire as "+VAMPIRE_EXECUTABLE+" "+VAMPIRE_DIRECTORY+File.separator+kbFileName);
+    
         _vampire = Runtime.getRuntime().exec(VAMPIRE_EXECUTABLE + " " + VAMPIRE_DIRECTORY + File.separator + kbFileName);
 
         _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()));
@@ -177,9 +179,12 @@ public class Vampire {
                 throw new IOException(line);
             }
             result += line + "\n";
-            if (line.indexOf("</queryResponse>") != -1) {
+            if ((line.indexOf("</queryResponse>") != -1) ||      // result is ok.
+                (line.indexOf("</assertionResponse>") != -1))  { // result is syntax error.
                 System.out.println("INFO in Vampire.submitQuery(): ===================================");
                 System.out.println(result);
+                result = result.replaceAll("&lt;","<");
+                result = result.replaceAll("&gt;",">");
                 return result;
             }
         }
