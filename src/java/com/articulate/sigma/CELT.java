@@ -23,10 +23,6 @@ import java.util.*;
  */
 public class CELT {
 
-     /** The path to the CELT code. */
-    public String CELT_PATH; 
-     /** The path to the Prolog executable. */
-    public String PL_PATH; 
     private Process _CELT;
     private BufferedReader _reader; 
     private BufferedWriter _writer; 
@@ -40,26 +36,27 @@ public class CELT {
      */
     public CELT() throws IOException {
 
+        String CELT_PATH; 
         String PL_EXECUTABLE;
         String line = null;
         String erline = null;
 
-        if (KBmanager.getMgr().getPref("PLDir") == null)
-            KBmanager.getMgr().setPref("PLDir","C:\\Program Files\\pl-5.2.10\\bin");  
-        PL_PATH = KBmanager.getMgr().getPref("PLDir"); 
+        if (KBmanager.getMgr().getPref("prolog") == null)
+            KBmanager.getMgr().setPref("prolog","C:\\Program Files\\pl-5.2.10\\bin\\plcon.exe");  
+        PL_EXECUTABLE = KBmanager.getMgr().getPref("prolog"); 
         if (KBmanager.getMgr().getPref("celtdir") == null)
             KBmanager.getMgr().setPref("celtdir","C:\\PEASE\\CELT-ACE\\latestDemo\\May29");  
         CELT_PATH = KBmanager.getMgr().getPref("celtdir"); 
-        System.out.println("INFO in CELT(): Setting PL dir to: " + PL_PATH);
+        System.out.println("INFO in CELT(): Setting prolog to: " + PL_EXECUTABLE);
         
-        if (!(new File(PL_PATH)).exists())
-            throw new IOException("Error in CELT(): File " + PL_PATH + " does not exist.");
+        if (!(new File(PL_EXECUTABLE)).exists())
+            throw new IOException("Error in CELT(): File " + PL_EXECUTABLE + " does not exist.");
         if (!(new File(CELT_PATH)).exists())
             throw new IOException("Error in CELT(): File " + CELT_PATH + " does not exist.");
         
         StringBuffer kif = new StringBuffer();
 
-        Process _CELT = Runtime.getRuntime().exec(PL_PATH + File.separator + "plcon.exe" + " " + CELT_PATH + File.separator + "Startup.pl");
+        Process _CELT = Runtime.getRuntime().exec(PL_EXECUTABLE + " " + CELT_PATH + File.separator + "Startup.pl");
         InputStream stderr = _CELT.getErrorStream();
         InputStreamReader isrerror = new InputStreamReader(stderr);
         _error = new BufferedReader(isrerror);

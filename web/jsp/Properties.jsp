@@ -51,7 +51,6 @@ August 9, Acapulco, Mexico.
   }
 
   String celtdir = request.getParameter("celtdir");
-  System.out.println("INFO in Properties.jsp: celtdir: " + celtdir);
   if (celtdir != null) {
       changed = true;
       KBmanager.getMgr().setPref("celtdir",celtdir);
@@ -61,7 +60,17 @@ August 9, Acapulco, Mexico.
       if (celtdir == null)
           celtdir = "";
   }
-  System.out.println("INFO in Properties.jsp: celtdir: " + celtdir);
+
+  String prolog = request.getParameter("prolog");
+  if (prolog != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("prolog",prolog);
+  }
+  else {
+      prolog = KBmanager.getMgr().getPref("prolog");
+      if (prolog == null)
+          prolog = "";
+  }
 
   String hostname = request.getParameter("hostname");
   if (hostname != null) {
@@ -164,6 +173,10 @@ August 9, Acapulco, Mexico.
     <label for="celtdir">
     <INPUT type="text" name="celtdir" value=<%=celtdir %> >
     Directory in which the CELT system is located</label><P>
+
+    <label for="prolog">
+    <INPUT type="text" name="prolog" value=<%=prolog %> >
+    Fully qualified path and name of SWI prolog</label><P>
 
     <label for="hostname">
     <INPUT type="text" name="hostname" value=<%=hostname %> >
