@@ -31,14 +31,19 @@ August 9, Acapulco, Mexico.
       language = "en";
   kbName = request.getParameter("kb");
   kb = KBmanager.getMgr().getKB(kbName);
+  if (kb == null)
+       response.sendRedirect("login.html");     
   Map theMap = null;     // Map of natural language format strings.
 
   String hostname = KBmanager.getMgr().getPref("hostname");
   if (hostname == null)
       hostname = "localhost";
-  kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+  String port = KBmanager.getMgr().getPref("port");
+  if (port == null)
+      port = "8080";
+  kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
 
-  if (term == null || term.equals("")) {       // Show statistics only when no term is specified.
+  if (kb != null && (term == null || term.equals(""))) {       // Show statistics only when no term is specified.
       show.append("<b>Knowledge base statistics: </b><br><table>");
       show.append("<tr bgcolor=#eeeeee><td>Total Terms</td><td>Total Axioms</td><td>Total Rules</td><tr><tr align='center'>\n");
       show.append("<td>  " + kb.getCountTerms());
@@ -47,7 +52,7 @@ August 9, Acapulco, Mexico.
       show.append("</td><tr> </table>\n");  
   }
   
-  else if (!kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term that is not present in the KB.      
+  else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term that is not present in the KB.      
       System.out.println("Doesn't contain " + term);
       ArrayList relations = kb.getNearestRelations(term);
       ArrayList nonRelations = kb.getNearestNonRelations(term);
@@ -84,7 +89,7 @@ August 9, Acapulco, Mexico.
       show.append("</TABLE>");
   }
 
-  else if (kb.containsTerm(term)) {            // Build the HTML format for all the formulas in which the given term appears.
+  else if (kb != null && kb.containsTerm(term)) {            // Build the HTML format for all the formulas in which the given term appears.
       ArrayList forms;
       //System.out.println("Contains " + term);
       show.append("<FONT face='Arial,helvetica' size=+3><b>");
@@ -165,7 +170,9 @@ August 9, Acapulco, Mexico.
                 out.println(HTMLformatter.createMenu("kb",kbName,kbnames)); 
 %>              
                 </b>
+                <% if (kb != null) { %>
                 <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
+                <% } %>
             </td>
         </tr>
     </table>
