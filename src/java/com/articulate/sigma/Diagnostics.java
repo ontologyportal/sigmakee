@@ -27,6 +27,7 @@ public class Diagnostics {
      */
     public static ArrayList termsWithoutDoc(KB kb) {
 
+        System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
         ArrayList result = new ArrayList();
         Iterator it = kb.terms.iterator();
         while (it.hasNext()) {
@@ -44,6 +45,11 @@ public class Diagnostics {
                 if (found == false)
                     result.add(term);
             }
+
+            if (result.size() > 99) {
+                result.add("limited to 100 results");
+                return result;
+            }
         }
         return result;
     }
@@ -53,6 +59,7 @@ public class Diagnostics {
      */
     public static ArrayList termsWithoutParent(KB kb) {
 
+        System.out.println("INFO in Diagnostics.termsWithoutParent(): "); 
         ArrayList result = new ArrayList();
         Iterator it = kb.terms.iterator();
         while (it.hasNext()) {
@@ -74,6 +81,11 @@ public class Diagnostics {
                 if (found == false)
                     result.add(term);
             }
+
+            if (result.size() > 99) {
+                result.add("limited to 100 results");
+                return result;
+            }
         }
         return result;
     }
@@ -83,6 +95,7 @@ public class Diagnostics {
      */
     public static ArrayList childrenOfDisjointParents(KB kb) {
 
+        System.out.println("INFO in Diagnostics.childrenOfDisjointParents(): "); 
         TreeSet result = new TreeSet();
         Iterator it = kb.terms.iterator();
         while (it.hasNext()) {
@@ -98,18 +111,25 @@ public class Diagnostics {
                 }
                 for (int i = 0; i < parents.size(); i++) {
                     String term1 = (String) parents.get(i);
-                    ArrayList d = (ArrayList) kb.disjoint.get(term1.intern());
+                    HashSet d = (HashSet) kb.disjoint.get(term1.intern());
                     if (d != null && d.size() > 0) {
                         for (int j = i+1; j < parents.size(); j++) {
                             String term2 = (String) parents.get(j);
                             if (d.contains(term2.intern())) {
                                 result.add(term);
-                                System.out.println("INFO in childrenOfDisjointParents(): " + term1 + 
+                                System.out.println("INFO in Diagnostics.childrenOfDisjointParents(): " + term1 + 
                                                    " and " + term2 + " are disjoint parents of " + term + ".");
                             }
                         }
                     }
                 }
+            }
+
+            if (result.size() > 99) {
+                result.add("limited to 100 results");
+                ArrayList res = new ArrayList();
+                res.addAll(result);
+                return res;
             }
         }
         ArrayList res = new ArrayList();
@@ -125,6 +145,7 @@ public class Diagnostics {
      */
     public static ArrayList extraSubclassInPartition(KB kb) {
 
+        System.out.println("INFO in Diagnostics.extraSubclassInPartition(): "); 
         ArrayList result = new ArrayList();
         ArrayList forms = kb.ask("arg",0,"partition");
         if (forms == null) 
@@ -144,6 +165,10 @@ public class Diagnostics {
                     if (!partition.contains(child.intern())) {
                         result.add(child);
                     }
+                    if (result.size() > 99) {
+                        result.add("limited to 100 results");
+                        return result;
+                    }
                 }
             }
         }
@@ -155,6 +180,7 @@ public class Diagnostics {
      */
     public static ArrayList termsWithoutRules(KB kb) {
 
+        System.out.println("INFO in Diagnostics.termsWithoutRules(): "); 
         ArrayList result = new ArrayList();
         Iterator it = kb.terms.iterator();
         while (it.hasNext()) {
@@ -163,6 +189,10 @@ public class Diagnostics {
             ArrayList forms2 = kb.ask("cons",-1,term);
             if (forms == null && forms2 == null) 
                 result.add(term);
+            if (result.size() > 99) {
+                result.add("limited to 100 results");
+                return result;
+            }
         }
         return result;
     }
@@ -219,6 +249,7 @@ public class Diagnostics {
      */
     public static ArrayList quantifierNotInBody(KB kb) {
 
+        System.out.println("INFO in Diagnostics.quantifierNotInBody(): "); 
         ArrayList result = new ArrayList();
         ArrayList forms = kb.ask("ant",-1,"forall");        // Collect all the axioms with quantifiers.
         if (forms == null) 
@@ -242,6 +273,11 @@ public class Diagnostics {
             Formula form = (Formula) forms.get(i);
             if (quantifierNotInStatement(form)) 
                 result.add(form);
+
+            if (result.size() > 19) {
+                result.add("limited to 20 results");
+                return result;
+            }
         }
         return result;
     }
@@ -251,6 +287,7 @@ public class Diagnostics {
      */
     public static ArrayList unrootedTerms(KB kb) {
 
+        System.out.println("INFO in Diagnostics.unrootedTerms()");
         ArrayList result = new ArrayList();
         Iterator it = kb.terms.iterator();
         while (it.hasNext()) {
@@ -268,7 +305,7 @@ public class Diagnostics {
                         formula.theFormula.substring(1,9).equalsIgnoreCase("subclass")) {
                         isClassOrInstance = true;
                         String parent = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,formula.theFormula.indexOf(")",10));
-                        ArrayList parentList = (ArrayList) kb.parents.get(parent.intern());
+                        HashSet parentList = (HashSet) kb.parents.get(parent.intern());
                         if ((parentList != null && parentList.contains("Entity")) || parent.equalsIgnoreCase("Entity")) {
                             found = true;                                                                     
                         }
@@ -277,6 +314,11 @@ public class Diagnostics {
                 if (found == false && isClassOrInstance) {
                     result.add(term);
                 }
+            }
+
+            if (result.size() > 99) {
+                result.add("limited to 100 results");
+                return result;
             }
         }
         return result;
@@ -327,7 +369,10 @@ public class Diagnostics {
         String result = null;
         if (hostname == null || hostname.length() == 0)
             hostname = "localhost";
-        String kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+        String port = KBmanager.getMgr().getPref("port");
+        if (port == null || port.length() == 0)
+            port = "8080";
+        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
         String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
         StringBuffer html = new StringBuffer();
 
