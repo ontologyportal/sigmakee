@@ -4,6 +4,16 @@
 %>
 
 <%
+ if (KBmanager.getMgr().getPref("userName") == null && request.getParameter("userName") == null) { %>      
+
+ <META HTTP-EQUIV="Refresh" CONTENT="0; URL=login.html">
+ <%
+       // response.setContentLength(0);
+       // response.sendRedirect("login.html");     
+ }
+%>
+
+<%
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -19,7 +29,3 @@ August 9, Acapulco, Mexico.
 %>
 
 
-<% if (KBmanager.getMgr().getPref("userName") == null && request.getParameter("userName") == null)         
-       response.sendRedirect("login.html");     
-
-%>
