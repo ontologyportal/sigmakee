@@ -31,14 +31,14 @@ public class Formula implements Comparable {
      /** The formula. */
     public String theFormula;   
 
-    /******************************************************************
+    /** ***************************************************************
      * Read a String into the variable 'theFormula'.
      */
     public void read(String s) {
         theFormula = s;
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Implement the Comparable interface by defining the compareTo
      * method.  Formulas are equal if their formula strings are equal.
      */
@@ -48,7 +48,180 @@ public class Formula implements Comparable {
         return theFormula.compareTo(((Formula) f).theFormula);
     }
 
-    /******************************************************************
+    /** ***************************************************************
+     * Return the LISP 'car' of the formula - the first element of the list.
+     */
+    private String car() {
+
+        int i = 0;
+        while (theFormula.charAt(i) != '(') i++;
+        i++;
+        while (Character.isWhitespace(theFormula.charAt(i))) i++;
+        int start = i;
+        if (theFormula.charAt(i) == '(') {
+            int level = 0;
+            i++;
+            while (theFormula.charAt(i) != ')' || level > 0) {
+                // System.out.print(theFormula.charAt(i));
+                if (theFormula.charAt(i) == ')') level--;
+                if (theFormula.charAt(i) == '(') level++;
+                i++;            
+            }
+            i++;
+        }
+        else {
+            while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
+        }
+        return theFormula.substring(start,i);    
+    }
+
+    /** ***************************************************************
+     * Return the LISP 'cdr' of the formula - the rest of a list minus its
+     * first element.
+     */
+    private String cdr() {
+
+        int i = 0;
+        while (theFormula.charAt(i) != '(') i++;
+        i++;
+        while (Character.isWhitespace(theFormula.charAt(i))) i++;
+        int start = i;
+        if (theFormula.charAt(i) == '(') {
+            int level = 0;
+            i++;
+            while (theFormula.charAt(i) != ')' || level > 0) {
+                //System.out.print(theFormula.charAt(i));
+                if (theFormula.charAt(i) == ')') level--;
+                if (theFormula.charAt(i) == '(') level++;
+                i++;            
+            }
+            i++;
+        }
+        else {
+            while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
+        }
+        while (Character.isWhitespace(theFormula.charAt(i))) i++;
+        int end = theFormula.lastIndexOf(')');
+        return "(" + theFormula.substring(i,end) + ")";
+    }
+
+    /** ***************************************************************
+     * Test whether the String is a LISP atom.
+     */
+    private boolean atom(String s) {
+
+        if (s.indexOf(')') == -1 &&
+            s.indexOf('\n') == -1 &&
+            s.indexOf(' ') == -1 &&
+            s.indexOf('\t') == -1) return true;
+        else return false;
+    }
+
+    /** ***************************************************************
+     * Parse a String into an ArrayList of Formulas. The String must be
+     * a LISP-style list.
+     */
+    private ArrayList parseList(String s) {
+
+        // System.out.println("INFO in Formula.parseList(): Parsing " + s);
+        int i = 1;                         // skip the opening paren
+        s = s.trim();
+        ArrayList result = new ArrayList();
+        while (i < s.length() - 1) {
+            while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
+            if (i >= s.length()) 
+                return result;
+            int level = 0;
+            if (s.charAt(i) == '(') 
+                level++;
+            int start = i;
+            i++;
+            while ((!Character.isWhitespace(s.charAt(i)) && s.charAt(i) != ')' && level == 0) ||
+                (s.charAt(i) != ')' && level == 1) ||
+                   level > 1) {
+                // System.out.print(s.charAt(i));
+                if (s.charAt(i) == ')') level--;
+                if (s.charAt(i) == '(') level++;
+                i++;            
+            }
+            Formula newForm = new Formula();
+            if (level == 0) 
+                newForm.read(s.substring(start,i));
+            else
+                newForm.read(s.substring(start,i+1));
+            result.add(newForm);
+            // System.out.println("INFO in Formula.parseList(): Adding " + newForm.toString());
+            i++;
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Compare two lists of formulas, testing whether they are equal,
+     * without regard to order.  (B A C) will be equal to (C B A). The
+     * method iterates through one list, trying to find a match in the other
+     * and removing it if a match is found.  If the lists are equal, the 
+     * second list should be empty once the iteration is complete.
+     */
+    private boolean compareFormulaSets(String s) {
+
+        ArrayList thisList = parseList(this.theFormula);  // an ArrayList of Formulas
+        ArrayList sList = parseList(s);
+        if (thisList.size() != sList.size()) 
+            return false;
+
+        for (int i = 0; i < thisList.size(); i++) {
+            for (int j = 0; j < sList.size(); j++) {
+                if (((Formula) thisList.get(i)).logicallyEquals(((Formula) sList.get(j)).theFormula)) {
+                    // System.out.println("INFO in Formula.compareFormulaSets(): " + 
+                    //                   ((Formula) thisList.get(i)).toString() + " equal to " +
+                    //                   ((Formula) sList.get(j)).theFormula);
+                    sList.remove(j);
+                    j = sList.size();
+                }
+            }
+        }
+        return sList.size() == 0;
+    }
+
+    /** ***************************************************************
+     * Test if the contents of the formula are equal to the argument
+     * at a deeper level than a simple string equals.  The only logical
+     * manipulation is to treat conjunctions and disjunctions as unordered
+     * bags of clauses. So (and A B C) will be logicallyEqual(s) for example,
+     * to (and B A C).  Note that this is a fairly time-consuming operation
+     * and should not generally be used for comparing large sets of formulas.
+     */
+    public boolean logicallyEquals(String s) {
+
+        if (this.equals(s)) 
+            return true;
+        if (atom(s) && s.compareTo(theFormula) != 0) 
+            return false;
+        
+        Formula form = new Formula();
+        form.read(this.theFormula);
+        Formula sform = new Formula();        
+        sform.read(s);
+
+        if (form.car().intern() == "and" || form.car().intern() == "or") {
+            if (sform.car().intern() != sform.car().intern())
+                return false;
+            form.read(form.cdr());
+            sform.read(sform.cdr());
+            return form.compareFormulaSets(sform.theFormula);
+        }
+        else {
+            Formula newForm = new Formula();
+            newForm.read(form.car());
+            Formula newSform = new Formula();
+            newSform.read(sform.cdr());
+            return newForm.logicallyEquals(sform.car()) && 
+                newSform.logicallyEquals(form.cdr());
+        }
+    }
+
+    /** ***************************************************************
      * Test if the contents of the formula are equal to the String argument.
      * Normalize all variables.
      */
@@ -61,15 +234,15 @@ public class Formula implements Comparable {
         form.theFormula = f;
         s = normalizeVariables(s).intern();
         sform.read(s);
-        s = sform.textFormat().trim().intern();
+        s = sform.toString().trim().intern();
 
         form.theFormula = normalizeVariables(theFormula);
-        f = form.textFormat().trim().intern();
+        f = form.toString().trim().intern();
         // System.out.println("INFO in Formula.equals(): Comparing " + s + " to " + f);
         return (f == s);
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Test if the contents of the formula are equal to the argument.
      */
     public boolean deepEquals(Formula f) {
@@ -78,7 +251,7 @@ public class Formula implements Comparable {
                (f.sourceFile.intern() == sourceFile.intern());
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Return the numbered argument of the given formula.  The first
      * element of a formula is number 0.
      */
@@ -134,7 +307,7 @@ public class Formula implements Comparable {
         return theFormula.substring(start,end);
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Normalize all variables, so that the first variable in a formula is
      * ?VAR1, the second is ?VAR2 etc.  This is necessary so that two 
      * formulas can be found equal even if they have different variable
@@ -176,7 +349,7 @@ public class Formula implements Comparable {
         return s;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Translate SUMO inequalities to the typical inequality symbols that 
      * Vampire requires.
      */
@@ -189,7 +362,7 @@ public class Formula implements Comparable {
         return "";
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Makes implicit universal quantification explicit.  May be needed
      * in the future for other theorem provers.
      */
@@ -254,7 +427,7 @@ public class Formula implements Comparable {
         return quant.toString() + ") " + theFormula + ")";
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Expand row variables.  Each variable is treated like a macro that
      * expands to up to seven regular variables.  For example
      *
@@ -299,7 +472,7 @@ public class Formula implements Comparable {
         return result.toString();
     }    
 
-    /******************************************************************
+    /** ***************************************************************
      * Pre-process a formula before sending it to Vampire. This includes
      * ignoring meta-knowledge like documentation strings, translating
      * mathematical operators, quoting higher-order formulas, expanding
@@ -420,7 +593,7 @@ public class Formula implements Comparable {
         return result.toString();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Compare the given formula to the negated query and return whether
      * they are the same (minus the negation).
      */
@@ -442,7 +615,7 @@ public class Formula implements Comparable {
         return result;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Remove the 'holds' prefix wherever it appears.
      */
     public static String postProcess(String s) {
@@ -451,7 +624,7 @@ public class Formula implements Comparable {
         return s;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Format a formula for either text or HTML presentation by inserting
      * the proper hyperlink code, characters for indentation and end of line.
      * A standard LISP-style pretty printing is employed where an open
@@ -550,15 +723,24 @@ public class Formula implements Comparable {
         return formatted.toString();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Format a formula for text presentation.
+     * @deprecated
      */
     public String textFormat() {
 
         return format("","  ",new Character((char) 10).toString());
     }
 
-    /******************************************************************
+    /** ***************************************************************
+     * Format a formula for text presentation.
+     */
+    public String toString() {
+
+        return format("","  ",new Character((char) 10).toString());
+    }
+
+    /** ***************************************************************
      * Format a formula for HTML presentation.
      */
     public String htmlFormat(String html) {
@@ -566,14 +748,33 @@ public class Formula implements Comparable {
         return format(html,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
 
+
         Formula f = new Formula();
-        f.theFormula = "(=> (instance ?REL Relation) (<=> (holds ?REL @ROW) (?REL @ROW)))";
-        System.out.println(f.preProcess());
+        Formula f2 = new Formula();
+        f.theFormula = "(=> (foo A B) (and C B))";
+        f2.theFormula = "(=> (foo A B) (and C D))";
+        System.out.println("Testing " + f.toString() + " " + f2.toString());
+        System.out.println(f.logicallyEquals(f2.theFormula));
+
+        f.theFormula = "(=> (foo A B) (and C B))";
+        f2.theFormula = "(=> (foo A B) (and B C))";
+        System.out.println("Testing " + f.toString() + " " + f2.toString());
+        System.out.println(f.logicallyEquals(f2.theFormula));
+
+        f.theFormula = "(=> (foo A B) (and (bar ?X ?Y) (baz (FrontFn A) ?Y)))";
+        f2.theFormula = "(=> (foo A B) (and (baz (FrontFn B) ?N) (bar ?M ?N)))";
+        System.out.println("Testing " + f.toString() + " " + f2.toString());
+        System.out.println(f.logicallyEquals(f2.theFormula));  
+
+        f.theFormula = "(=> (foo A B) (and (bar ?X ?Y) (baz (FrontFn A) ?Y)))";
+        f2.theFormula = "(=> (foo A B) (and (baz (FrontFn A) ?N) (bar ?M ?N)))";
+        System.out.println("Testing " + f.toString() + " " + f2.toString());
+        System.out.println(f.logicallyEquals(f2.theFormula));  
     }
 
 }
