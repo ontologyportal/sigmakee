@@ -32,7 +32,12 @@ August 9, Acapulco, Mexico.
   kbName = request.getParameter("kb");
   kb = KBmanager.getMgr().getKB(kbName);
   Map theMap = null;
-  kbHref = "http://localhost:8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+
+  String hostname = KBmanager.getMgr().getPref("hostname");
+  if (hostname == null) 
+     hostname = "localhost";
+  kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+
 %>
 
 <FORM action="Diag.jsp">
