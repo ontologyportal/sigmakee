@@ -17,13 +17,13 @@ import java.util.*;
 import java.io.*;
 import java.text.ParseException;
 
-/********************************************************************
+/** *****************************************************************
  * A class that finds problems in a knowledge base.  It is not meant
  * to be instantiated.
  */
 public class Diagnostics {
 
-    /********************************************************************
+    /** *****************************************************************
      * Return a list of terms that do not have a documentation string.
      */
     public static ArrayList termsWithoutDoc(KB kb) {
@@ -50,7 +50,7 @@ public class Diagnostics {
     }
 
 
-    /********************************************************************
+    /** *****************************************************************
      * Return a list of terms that do not have a documentation string.
      */
     public static ArrayList termsWithoutParent(KB kb) {
@@ -80,7 +80,7 @@ public class Diagnostics {
         return result;
     }
 
-    /********************************************************************
+    /** *****************************************************************
      * Return a list of terms that do not ultimately subclass from Entity.
      */
     public static ArrayList unrootedTerms(KB kb) {
