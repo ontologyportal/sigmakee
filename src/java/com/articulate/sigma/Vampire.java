@@ -61,7 +61,7 @@ public class Vampire {
     private BufferedWriter _writer; 
     private BufferedReader _error; 
 
-    /****************************************************************
+    /** *************************************************************
      * Create a running instance of Vampire.
      *
      * @param kbFileName file name of the initial knowledge base to be 
@@ -100,7 +100,7 @@ public class Vampire {
         _writer = new BufferedWriter(new OutputStreamWriter(_vampire.getOutputStream()));
     }
     
-    /****************************************************************
+    /** *************************************************************
      * Add an assertion.
      *
      * @param formula asserted formula in the KIF syntax
@@ -127,7 +127,7 @@ public class Vampire {
         }
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Terminate this instance of Vampire. 
      * <font color='red'><b>Warning:</b></font>After calling this functions
      * no further assertions or queries can be done.
@@ -142,7 +142,7 @@ public class Vampire {
          _reader.close();
      }
 
-    /****************************************************************
+    /** *************************************************************
      * Submit a query.
      *
      * @param formula query in the KIF syntax
@@ -180,7 +180,7 @@ public class Vampire {
         }
     }
 
-    /****************************************************************
+    /** *************************************************************
      * A simple test. Works as follows: 
      * <ol>
      *   <li>start Vampire;</li>
