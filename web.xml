@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+	PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN"
+	"http://java.sun.com/j2ee/dtds/web-app_2_2.dtd">
+
+<web-app>
+
+	<context-param>
+		<param-name>sigmaRoot</param-name>
+		<param-value>WEB-INF/sigma-rt</param-value>
+		<description>The local Sigma installation's root directory.</description>
+	</context-param>
+
+	<context-param>
+		<param-name>configFile</param-name>
+		<param-value>conf/sigma-config.xml</param-value>
+		<description>The local Sigma configuration file.</description>
+	</context-param>
+
+	<context-param>
+		<param-name>kbDefaultDir</param-name>
+		<param-value>kbs</param-value>
+		<description>Directory holding pre-load SKB files.</description>
+	</context-param>
+
+	<!-- New Sigma UA parameters below -->
+
+	<context-param>
+		<param-name>sigmaSiteName</param-name>
+		<param-value>TestSigma</param-value>
+		<description>Name of this Sigma "site"</description>
+	</context-param>
+
+	<context-param>
+		<param-name>sigmaBaseDir</param-name>
+		<param-value>WEB-INF/sigma-rt</param-value>
+		<description>Default base directory for all Sigma file storage</description>
+	</context-param>
+
+	<context-param>
+		<param-name>xsbPrefix</param-name>
+		<param-value>/tmp</param-value>
+		<description>Prefix added to path names when submitting them to XSB</description>
+	</context-param>
+
+	<context-param>
+		<param-name>sigmaConfigDir</param-name>
+		<param-value>conf</param-value>
+        <description>Default lead directory for all Sigma configuration and settings files</description>
+	</context-param>
+
+	<context-param>
+		<param-name>sigmaConfigFile</param-name>
+		<param-value>SigmaConfig.ser</param-value>
+        <description>Default file for all Sigma configuration and settings</description>
+	</context-param>
+
+	<context-param>
+		<param-name>sigmaKBSourceDir</param-name>
+		<param-value>kbs</param-value>
+        <description>Default lead directory for all Sigma knowledge base source files</description>
+	</context-param>
+
+	<context-param>
+		<param-name>sigmaKBOutDir</param-name>
+		<param-value>work</param-value>
+        <description>Default lead directory for all Sigma knowledge base out files</description>
+	</context-param>
+
+</web-app>

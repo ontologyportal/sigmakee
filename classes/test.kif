@@ -1,0 +1,26 @@
+(instance Unconscious ConsciousnessAttribute)
+(contraryAttribute Unconscious Awake)
+(documentation Unconscious "This &%Attribute applies to &%Organisms that 
+are unconscious.  An &%Organism may be &%Unconscious because it is &%Dead 
+or &%Asleep or because of a blow to the head, a drug, etc.")
+
+(instance Awake ConsciousnessAttribute)
+(documentation Awake "This &%Attribute applies to &%Organisms that are 
+neither &%Unconscious nor &%Asleep.")
+
+(=>
+   (or
+      (attribute ?AGENT Asleep)
+      (attribute ?AGENT Awake))
+   (attribute ?AGENT Living))
+
+(subclass TraitAttribute PsychologicalAttribute)
+(documentation TraitAttribute "&%Attributes that indicate the the 
+behavior/personality traits of an &%Organism.")
+
+(subclass PsychologicalDysfunction PsychologicalAttribute)
+(subclass PsychologicalDysfunction DiseaseOrSyndrome)
+(documentation PsychologicalDysfunction "A clinically significant 
+dysfunction whose major manifestation is behavioral or psychological.  
+These dysfunctions may have identified or presumed biological etiologies 
+or manifestations.")

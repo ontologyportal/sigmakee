@@ -1,0 +1,49 @@
+;; ================================================
+
+(domain instance 2 SetOrClass)
+(documentation instance "An object is an &%instance of a &%SetOrClass if 
+it is included in that &%SetOrClass.  An individual may be an instance of many 
+classes, some of which may be subclasses of others.  Thus, there is no 
+assumption in the meaning of &%instance about specificity or uniqueness.")
+
+(=>
+   (immediateInstance ?ENTITY ?CLASS)
+   (not (exists (?SUBCLASS)
+      (and
+         (subclass ?SUBCLASS ?CLASS)
+         (instance ?ENTITY ?@SUBCLASS)))))
+                 
+(=>
+   (inverse ?REL1 ?REL2)
+   (forall (?INST1 ?INST2)
+      (<=>
+         (holds ?REL1 ?INST1 ?INST2)
+         (holds ?REL2 ?INST2 ?INST1))))
+
+(<=>
+   (partition @ROW)
+   (and
+      (exhaustiveDecomposition @ROW)
+      (disjointDecomposition @ROW)))
+
+(<=>
+   (instance ?NUMBER NegativeRealNumber)
+   (and
+      (lessThan ?NUMBER 0)
+      (instance ?NUMBER RealNumber)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
