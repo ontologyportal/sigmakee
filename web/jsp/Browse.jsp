@@ -20,7 +20,7 @@ August 9, Acapulco, Mexico.
 
   StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
-  String htmlDivider = "<table ALIGN='LEFT' WIDTH=50%%><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
+  String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
   String kbName = null;   // Name of the knowledge base
   KB kb = null;   // The knowledge base object.
   String formattedFormula = null;
@@ -101,13 +101,13 @@ August 9, Acapulco, Mexico.
           if (forms != null && forms.size() > 0) {
               Collections.sort(forms);
               show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
-              show.append(htmlDivider + "<TABLE width=95%%>");
+              show.append(htmlDivider + "<TABLE width='95%'>");
               for (int i = 0; i < forms.size(); i++) {
                   Formula f = (Formula) forms.get(i);
                   if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                      !f.sourceFile.substring(f.sourceFile.length()-11,f.sourceFile.length()).equalsIgnoreCase("_Cache.kif")) {
-                      show.append("<TR><TD width=50%% valign=top>");
-                      formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width=10%% valign=top BGCOLOR=#B8CADF>";
+                      show.append("<TR><TD WIDTH='50%' valign=top>");
+                      formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
                       if (f.theFormula.substring(1,14).compareTo("documentation") == 0) 
                           show.append(kb.formatDocumentation(kbHref,formattedFormula));                                              
                       else
@@ -118,7 +118,7 @@ August 9, Acapulco, Mexico.
                       show.append(sourceFilename);
                       show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
                       show.append("</A>");
-                      show.append("</TD>\n<TD width=40%% valign=top>");
+                      show.append("</TD>\n<TD width='40%' valign=top>");
                       if (f.theFormula.substring(1,14).compareTo("documentation") == 0 || f.theFormula.substring(1,7).compareTo("format") == 0) 
                           show.append("</TD></TR>\n");
                       else
