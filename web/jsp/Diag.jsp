@@ -63,21 +63,13 @@ August 9, Acapulco, Mexico.
 </form>
 
 <br>
-<%
-  ArrayList termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
-  show.append(HTMLformatter.termList(termsWithoutDoc,kbHref));
-%>
-
-<br><b>&nbsp;Terms without documentation</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
 
 <%
   show = new StringBuffer();
   ArrayList termsWithoutParent = Diagnostics.termsWithoutParent(kb);
   show.append(HTMLformatter.termList(termsWithoutParent,kbHref));
 %>
-<br><b>&nbsp;Terms without parent</B>
+<br><b>&nbsp;Error: Terms without parent</B>
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
 
@@ -87,7 +79,53 @@ August 9, Acapulco, Mexico.
   unrooted.removeAll(termsWithoutParent);
   show.append(HTMLformatter.termList(unrooted,kbHref));
 %>
-<br><b>&nbsp;Terms without a root at Entity</B>
+<br><b>&nbsp;Error: Terms without a root at Entity</B>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><BR>
+
+<%
+  show = new StringBuffer();
+  ArrayList disjoint = Diagnostics.childrenOfDisjointParents(kb);
+  show.append(HTMLformatter.termList(disjoint,kbHref));
+%>
+<br><b>&nbsp;Error: Terms with disjoint parents</B>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><BR>
+
+<%
+  ArrayList termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
+  show.append(HTMLformatter.termList(termsWithoutDoc,kbHref));
+%>
+
+<br><b>&nbsp;Warning: Terms without documentation</B>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><BR>
+
+<%
+  show = new StringBuffer();
+  ArrayList extra = Diagnostics.extraSubclassInPartition(kb);
+  show.append(HTMLformatter.termList(extra,kbHref));
+%>
+<br><b>&nbsp;Warning: Terms that are subclasses of a partitioned class</B>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><BR>
+
+
+<%
+  show = new StringBuffer();
+  ArrayList norule = Diagnostics.termsWithoutRules(kb);
+  show.append(HTMLformatter.termList(norule,kbHref));
+%>
+<br><b>&nbsp;Warning: Terms that do not appear in any rules</B>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><BR>
+
+<%
+  show = new StringBuffer();
+  ArrayList noquant = Diagnostics.quantifierNotInBody(kb);
+  show.append(HTMLformatter.browserSectionFormat(noquant,null,null,kbHref,kb,language));
+%>
+<br><b>&nbsp;Warning: Quantified variable doesn't appear in body of statement.</B>
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
 
