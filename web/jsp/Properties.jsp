@@ -39,16 +39,29 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
   boolean changed = false;
-  String iedir = request.getParameter("inferenceEngineDir");
-  if (iedir != null) {
+  String inferenceEngine = request.getParameter("inferenceEngine");
+  if (inferenceEngine != null) {
       changed = true;
-      KBmanager.getMgr().setPref("inferenceEngineDir",iedir);
+      KBmanager.getMgr().setPref("inferenceEngine",inferenceEngine);
   }
   else {
-      iedir = KBmanager.getMgr().getPref("inferenceEngineDir");
-      if (iedir == null)
-          iedir = "";
+      inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
+      if (inferenceEngine == null)
+          inferenceEngine = "";
   }
+
+  String celtdir = request.getParameter("celtdir");
+  System.out.println("INFO in Properties.jsp: celtdir: " + celtdir);
+  if (celtdir != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("celtdir",celtdir);
+  }
+  else {
+      celtdir = KBmanager.getMgr().getPref("celtdir");
+      if (celtdir == null)
+          celtdir = "";
+  }
+  System.out.println("INFO in Properties.jsp: celtdir: " + celtdir);
 
   String hostname = request.getParameter("hostname");
   if (hostname != null) {
@@ -144,9 +157,13 @@ August 9, Acapulco, Mexico.
 %>
 
 <FORM method="POST" ACTION="Properties.jsp">
-    <label for="inferenceEngineDir">
-    <INPUT type="text" name="inferenceEngineDir" value=<%=iedir %> >
-    Directory in which the inference engine is located</label><P>
+    <label for="inferenceEngine">
+    <INPUT type="text" name="inferenceEngine" value=<%=inferenceEngine %> >
+    Fully qualified path and name of the inference engine</label><P>
+
+    <label for="celtdir">
+    <INPUT type="text" name="celtdir" value=<%=celtdir %> >
+    Directory in which the CELT system is located</label><P>
 
     <label for="hostname">
     <INPUT type="text" name="hostname" value=<%=hostname %> >

@@ -112,7 +112,7 @@ August 9, Acapulco, Mexico.
                           show.append(kb.formatDocumentation(kbHref,formattedFormula));                                              
                       else
                           show.append(formattedFormula);
-                      String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf("\\") + 1,f.sourceFile.length());
+                      String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length());
                       show.append("<A href=\"EditFile.jsp?file=" + f.sourceFile + "&line=");
                       show.append((new Integer(f.startLine)).toString() + "\">");
                       show.append(sourceFilename);
