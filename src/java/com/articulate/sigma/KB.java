@@ -154,65 +154,61 @@ public class KB {
     }
 
     /** *************************************************************
-     * Collect all the parent classes of each class or instance.  Store
-     * them in the global variable parents, which is a HashMap of 
-     * ArrayLists.  The key is a class, and the value is an ArrayList of
-     * Strings, which are the class' parent classes.
      */
-    private void collectParents() {
 
-        parents = new HashMap();
-        ArrayList al;
-
-        System.out.print("INFO in KB.collectParents(): Caching class hierarchy.");
-        Iterator it = terms.iterator();                       
-        while (it.hasNext()) {
-            String term = (String) it.next();                 // Collect the immediate parents for each term.
-            ArrayList forms = ask("arg",1,term);
-            if (forms == null || forms.size() < 1) { 
-            }
-                // System.out.println("INFO in KB.collectParents(): term " + term + " has no parents.");
-            else {
-                for (int i = 0; i < forms.size(); i++) {
-                    Formula formula = (Formula) forms.get(i);
-                    if (formula.theFormula.indexOf("(",2) == -1 &&
-                        !formula.sourceFile.substring(formula.sourceFile.length()-11,formula.sourceFile.length()).equalsIgnoreCase("_Cache.kif")) {    // Ignore cases where parent class is a function
-                        if (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") || 
-                            formula.theFormula.substring(1,9).equalsIgnoreCase("subclass")) { 
-                            String parent = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,formula.theFormula.indexOf(")",10));
-                            ArrayList parentList = new ArrayList();
-                            parentList.add(parent.intern());
-                            if (parents.containsKey(term.intern())) {
-                                ArrayList existingParents = (ArrayList) parents.get(term.intern());
-                                if (!existingParents.contains(parent.intern()))
-                                    existingParents.add(parent.intern());
-                            }
-                            else
-                                parents.put(term.intern(), parentList);
-                        }
-                    }
-                    if (i % 100 == 1) System.out.print(".");
-                }
-            }
+    private void addParentChildEntry(String parent, String child) {
+        
+        //System.out.println("INFO in KB.addParentChildEntry(): Add " + parent + " and " + child);
+        if (parents.containsKey(child)) {
+            ArrayList existingParents = (ArrayList) parents.get(child);
+            if (!existingParents.contains(parent))
+                existingParents.add(parent);
+        }
+        else {
+            ArrayList parentList = new ArrayList();
+            parentList.add(parent);
+            parents.put(child, parentList);
         }
 
+        if (children.containsKey(parent)) {
+            ArrayList existingChildren = (ArrayList) children.get(parent);
+            if (!existingChildren.contains(child))
+                existingChildren.add(child);
+        }
+        else {
+            ArrayList childList = new ArrayList();
+            childList.add(child);
+            children.put(parent, childList);
+        }
+    }
+
+    /** *************************************************************
+     * Cycle through all terms, adding targets until there are no more 
+     * changes.  This routine is calculating the transitive closure of
+     * the given relation with which the list was constructed.  The list
+     * is a HashMap of ArrayLists, where the key of the HashMap is related
+     * to the values in its associated ArrayList but a particular transitive
+     * relation.
+     */
+    private void calculateTransitiveClosure(HashMap list) {
+
         boolean changed = true;
-        while (changed) {                                   // Cycle through all terms, adding parents until there are no more changes.
+        while (changed) {                                   
             changed = false;
-            it = parents.keySet().iterator();                       
+            Iterator it = list.keySet().iterator();                       
             while (it.hasNext()) {
                 String term = (String) it.next();                 
-                ArrayList above = (ArrayList) parents.get(term);
-                if (above != null) {
-                    for (int i = 0; i < above.size(); i++) {
-                        String parentTerm = (String) above.get(i);
-                        ArrayList newParents = (ArrayList) parents.get(parentTerm);
-                        if (newParents != null) {
-                            for (int j = 0; j < newParents.size(); j++) {
-                                String newParent = ((String) newParents.get(j)).intern();
-                                if (!above.contains(newParent)) {
-                                    above.add(newParent);
-                                    parents.put(term,above);
+                ArrayList targets = (ArrayList) list.get(term);
+                if (targets != null) {
+                    for (int i = 0; i < targets.size(); i++) {
+                        String targetTerm = (String) targets.get(i);
+                        ArrayList newTargets = (ArrayList) list.get(targetTerm);
+                        if (newTargets != null) {
+                            for (int j = 0; j < newTargets.size(); j++) {
+                                String newTarget = ((String) newTargets.get(j)).intern();
+                                if (!targets.contains(newTarget)) {
+                                    targets.add(newTarget);
+                                    list.put(term,targets);
                                     changed = true;
                                 }
                             }
@@ -226,6 +222,113 @@ public class KB {
     }
 
     /** *************************************************************
+     * debugging utility
+     */
+    private void printParents() {
+
+        System.out.println("INFO in printParents():  Printing parents.");
+        System.out.println();
+        Iterator it = parents.keySet().iterator();
+        while (it.hasNext()) {
+            String parent = (String) it.next();
+            System.out.print(parent + " ");
+            System.out.println((ArrayList) parents.get(parent));
+        }
+        System.out.println();
+    }
+
+    /** *************************************************************
+     * debugging utility
+     */
+    private void printChildren() {
+
+        System.out.println("INFO in printChildren():  Printing children.");
+        System.out.println();
+        Iterator it = children.keySet().iterator();
+        while (it.hasNext()) {
+            String child = (String) it.next();
+            System.out.print(child + " ");
+            System.out.println((ArrayList) children.get(child));
+        }
+        System.out.println();
+    }
+    
+    /** *************************************************************
+     * debugging utility
+     */
+    private void printDisjointness() {
+
+        System.out.println("INFO in printDisjointness():  Printing disjoint.");
+        System.out.println();
+        Iterator it = disjoint.keySet().iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            System.out.print(term + " is disjoint with ");
+            System.out.println((ArrayList) disjoint.get(term));
+        }
+        System.out.println();
+    }
+    
+    /** *************************************************************
+     * Collect all the parent and child classes of each class or instance.  Store
+     * them in the global variables parents and children, which are HashMap(s) of 
+     * ArrayLists.  The key is a class, and the value is an ArrayList of
+     * Strings, which are the class' parent or child classes.  Note that this 
+     * routine does not check to make sure that the second argument of
+     * "instance" is a class.
+     */
+    private void collectParentsAndChildren() {
+
+        parents = new HashMap();
+        ArrayList al;
+
+        System.out.println("INFO in KB.collectParentsAndChildren(): Caching class hierarchy.");
+        Iterator it = terms.iterator();                       
+        while (it.hasNext()) {                   // Collect the immediate parents and children for each term.
+            String term = (String) it.next();                 
+            
+            //System.out.println("INFO in KB.collectParentsAndChildren(): Term: " + term);
+            //System.out.println("INFO in KB.collectParentsAndChildren(): Collect arg1 terms.");
+            ArrayList forms = ask("arg",1,term);
+            TreeSet f = new TreeSet();
+            if (forms != null) 
+                f.addAll(forms);
+
+            forms = ask("arg",2,term);
+            f = new TreeSet();
+            if (forms != null) 
+                f.addAll(forms);
+
+            forms = new ArrayList();
+            if (f != null) 
+                forms.addAll(f);
+
+            if (forms != null && forms.size() > 0) {            
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula formula = (Formula) forms.get(i);
+                    if (formula.theFormula.indexOf("(",2) == -1 &&      // Ignore cases where parent class is a function
+                        !formula.sourceFile.substring(formula.sourceFile.length()-11,formula.sourceFile.length()).equalsIgnoreCase("_Cache.kif")) {    
+                        if (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") || 
+                            formula.theFormula.substring(1,9).equalsIgnoreCase("subclass")) { 
+                            String parent = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,
+                                                                         formula.theFormula.indexOf(")",10));
+                            String child = formula.theFormula.substring(10,formula.theFormula.indexOf(" ",10));
+                            addParentChildEntry(parent.intern(),child.intern());
+                        }
+                    }
+                    if (i % 100 == 1) System.out.print(".");
+                }
+            }
+        }
+
+        System.out.print("INFO in KB.collectParentsAndChildren(): Calculating transitive closure.");
+        calculateTransitiveClosure(parents);
+        calculateTransitiveClosure(children);
+        //printParents();
+        //printChildren();
+    }
+
+    /** *************************************************************
      * Add entries to the list of disjoint classes.  Called only by
      * collectDisjointness().
      */
@@ -235,6 +338,7 @@ public class KB {
             ArrayList existingDisjoint = (ArrayList) disjoint.get(term1.intern());
             if (!existingDisjoint.contains(term2.intern()))
                 existingDisjoint.add(term2.intern());
+            disjoint.put(term1.intern(), existingDisjoint);
         }
         else {
             ArrayList disjointList = new ArrayList();
@@ -244,22 +348,17 @@ public class KB {
     }
 
     /** *************************************************************
-     * Collect all the classes which are disjoint with each class.
+     * Collect all assertions of the form (disjoint Arg1 Arg2) and store
+     * them in the variable "disjoint".  Calls addDisjointnessEntry to
+     * perform the actual addition to the disjoint HashMap.
      */
-    private void collectDisjointness() {
-        
-        disjoint = new HashMap();
-        ArrayList al;
+    private void collectDisjointAssertions() {
 
-        System.out.print("INFO in KB.collectDisjointness(): Begin.");
         Iterator it = terms.iterator();                       
         while (it.hasNext()) {
             String term = (String) it.next();                 // Collect the immediate disjoints for each term.
             ArrayList forms = ask("arg",1,term);
-            if (forms == null || forms.size() < 1) { 
-            }
-                // System.out.println("INFO in KB.collectParents(): term " + term + " has no parents.");
-            else {
+            if (forms != null && forms.size() > 0) { 
                 for (int i = 0; i < forms.size(); i++) {
                     Formula formula = (Formula) forms.get(i);
                     if (formula.theFormula.indexOf("(",2) == -1 &&
@@ -275,34 +374,87 @@ public class KB {
                 }
             }
         }
+    }
 
-        boolean changed = true;
-        while (changed) {                                   // Cycle through all terms, adding parents until there are no more changes.
-            changed = false;
-            it = parents.keySet().iterator();                       
-            while (it.hasNext()) {
-                String term = (String) it.next();                 
-                ArrayList above = (ArrayList) parents.get(term);
-                if (above != null) {
-                    for (int i = 0; i < above.size(); i++) {
-                        String parentTerm = (String) above.get(i);
-                        ArrayList newParents = (ArrayList) parents.get(parentTerm);
-                        if (newParents != null) {
-                            for (int j = 0; j < newParents.size(); j++) {
-                                String newParent = ((String) newParents.get(j)).intern();
-                                if (!above.contains(newParent)) {
-                                    above.add(newParent);
-                                    parents.put(term,above);
-                                    changed = true;
-                                }
-                            }
+    /** *************************************************************
+     * Collect disjointness from all statements with the relations
+     * "partition" and "disjointDecomposition" and store in the
+     * "disjoint" HashMap.
+     */
+    private void collectPartitions() {
+
+        ArrayList forms = ask("arg",0,"partition");
+        ArrayList forms2 = ask("arg",0,"disjointDecomposition");
+        if (forms == null) 
+            forms = new ArrayList();
+        if (forms2 != null) 
+            forms.addAll(forms2);
+        if (forms != null && forms.size() > 0) { 
+            for (int i = 0; i < forms.size(); i++) {
+                Formula formula = (Formula) forms.get(i);
+                ArrayList mutualDisjoints = formula.argumentsToArrayList(2);
+                for (int x = 0; x < mutualDisjoints.size(); x++) {
+                    for (int y = 0; y < mutualDisjoints.size(); y++) {
+                        if (x != y) {
+                            String term1 = (String) mutualDisjoints.get(x);
+                            String term2 = (String) mutualDisjoints.get(y);
+                            addDisjointnessEntry(term1,term2);
                         }
-                        if (i % 100 == 1) System.out.print(".");
                     }
                 }
+                if (i % 100 == 1) System.out.print(".");
+            }
+        }
+    }
+
+    /** *************************************************************
+     * Augment the disjoint HashMap by adding all the children (subclasses
+     * and instances) of each target class.  For example, if A and B
+     * are disjoint and C is a subclass of B, A is also disjoint with C.
+     */
+    private void addDisjointChildren() {
+
+        Iterator it = disjoint.keySet().iterator();      
+        while (it.hasNext()) {
+            String term = (String) it.next();                 
+            ArrayList dis = (ArrayList) disjoint.get(term);
+            if (dis != null) {
+                ArrayList newDises = new ArrayList();
+                newDises.addAll(dis);
+                for (int i = 0; i < dis.size(); i++) {
+                    String disTerm = (String) dis.get(i);
+                    ArrayList kids = (ArrayList) children.get(disTerm);
+                    if (kids != null) {
+                        for (int j = 0; j < kids.size(); j++) {
+                            String newDis = ((String) kids.get(j)).intern();
+                            if (!newDises.contains(newDis)) {
+                                newDises.add(newDis);
+                            }
+                        }
+                    }
+                    if (i % 100 == 1) System.out.print(".");
+                }
+                disjoint.put(term,newDises);
             }
         }
         System.out.println(" ");
+    }
+
+    /** *************************************************************
+     * Collect all the classes which are disjoint with each class.
+     * Initially just collects statements with the relations "disjoint",
+     * "partition" and "disjointDecomposition".
+     */
+    private void collectDisjointness() {
+        
+        System.out.print("INFO in KB.collectDisjointness(): Begin.");
+        disjoint = new HashMap();
+        collectDisjointAssertions();
+        //printDisjointness();
+        collectPartitions();
+        //printDisjointness();
+        addDisjointChildren();
+        //printDisjointness();
     }
 
     /** *************************************************************
@@ -313,10 +465,12 @@ public class KB {
         
         ArrayList partial = ask("arg",argnum1,term1);
         ArrayList result = new ArrayList();
-        for (int i = 0; i < partial.size(); i++) {
-            Formula f = (Formula) partial.get(i);
-            if (f.getArgument(argnum2).equalsIgnoreCase(term2)) {
-                result.add(f);
+        if (partial != null) {
+            for (int i = 0; i < partial.size(); i++) {
+                Formula f = (Formula) partial.get(i);
+                if (f.getArgument(argnum2).equalsIgnoreCase(term2)) {
+                    result.add(f);
+                }
             }
         }
         return result;
@@ -328,7 +482,9 @@ public class KB {
      * @param kind - May be one of "ant", "cons", "stmt", or "arg", @see KIF.createKey()
      * @param term - The term that appears in the statements being requested.
      * @param argnum - The argument position of the term being asked for.  The
-     * first argument after the predicate is "1".
+     * first argument after the predicate is "1". This parameter is ignored if
+     * the kind is "ant", "cons" or "stmt".
+     * @return an ArrayList of Formula(s), or null if no match found.
      */
     public ArrayList ask(String kind, int argnum, String term) {
         
@@ -750,8 +906,8 @@ public class KB {
         System.out.println(file.formulas.values().size());
         loadVampire();
         if (filename.substring(filename.lastIndexOf(File.separator),filename.length()).compareTo("_Cache.kif") != 0) {
-            collectParents();
-            // collectDisjointness();
+            collectParentsAndChildren();
+            collectDisjointness();
         }
     }
 
