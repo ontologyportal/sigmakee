@@ -24,6 +24,7 @@ import java.text.ParseException;
  */
 public class KB {
 
+
      /** The inference engine process for this KB. */
     public Vampire inferenceEngine;                 
      /** The name of the knowledge base. */
@@ -599,7 +600,7 @@ public class KB {
         try {
             Iterator itf = theFormulas.iterator();
             while (itf.hasNext()) {
-                f.theFormula = (String)itf.next();
+                f.theFormula = ((Formula)itf.next()).theFormula;
 
                 String filename = kbDir + File.separator + this.name + _userAssertionsString;
                 filename = filename.intern();
@@ -1155,21 +1156,22 @@ public class KB {
 
         TreeSet newTreeSet = new TreeSet();
         Formula newFormula = null;
-        ArrayList processed = null;
-        StringBuffer concat = null;
-
+        ArrayList processed = null;         // An ArrayList of Formula(s).  
+                                            // If the Formula which is to be preprocessed does not contain row
+                                            // variables, then this list will have only one element.
         Iterator it = forms.iterator();
         while (it.hasNext()) {
             newFormula = new Formula();
             newFormula.theFormula = (String) it.next();
-            concat = null;
             processed = newFormula.preProcess();
             Iterator itp = processed.iterator();
             while (itp.hasNext()) {
-                concat = new StringBuffer();
-                concat.append((String) itp.next());
+                Object next = itp.next();
+                //System.out.println("INFO in KB.preProcess(): " + next);
+                Formula p = (Formula) next;
+                if (p.theFormula != null) 
+                    newTreeSet.add(p.theFormula);
             }
-            if (concat != null) newTreeSet.add(concat.toString());
         }
         return newTreeSet;
     }
