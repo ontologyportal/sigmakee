@@ -592,21 +592,28 @@ public class KB {
         kif.parseStatement(formula,this.name + _userAssertionsString);
         merge(kif);
         Formula f = new Formula();
+        ArrayList theFormulas = null;
         f.theFormula = formula;
-        f.theFormula = f.preProcess();
+        theFormulas = f.preProcess();
+
         try {
-            String filename = kbDir + File.separator + this.name + _userAssertionsString;
-            filename = filename.intern();
-            File file = new File(filename);
-            if (!constituents.contains(filename)) {
-                System.out.println("INFO in KB.tell(): Adding file: " + filename + " to: " + constituents.toString());
-                if (file.exists())                      // If the assertions file exists
-                    file.delete();
-                constituents.add(filename);
-                KBmanager.getMgr().writeConfiguration();
+            Iterator itf = theFormulas.iterator();
+            while (itf.hasNext()) {
+                f.theFormula = (String)itf.next();
+
+                String filename = kbDir + File.separator + this.name + _userAssertionsString;
+                filename = filename.intern();
+                File file = new File(filename);
+                if (!constituents.contains(filename)) {
+                    System.out.println("INFO in KB.tell(): Adding file: " + filename + " to: " + constituents.toString());
+                    if (file.exists())                      // If the assertions file exists
+                        file.delete();
+                    constituents.add(filename);
+                    KBmanager.getMgr().writeConfiguration();
+                }
+                writeUserAssertion(formula,filename);
+                return inferenceEngine.assertFormula(f.theFormula);
             }
-            writeUserAssertion(formula,filename);
-            return inferenceEngine.assertFormula(f.theFormula);
         }
         catch (IOException ioe) {
             System.out.println("Error in KB.tell(): " + ioe.getMessage());
@@ -654,6 +661,23 @@ public class KB {
             }
         }        
         return formulaSet.size();
+    } // POD would be better to just count them. 
+
+    /** ***************************************************************
+     *  an accessor providing a TreeSet of un-preProcess-ed Formula.
+     *  @return A Treeset of un-preProcess(ed) formulas.
+     */
+    public TreeSet getFormulas() {
+
+        TreeSet formulaSet = new TreeSet();
+        Iterator ite = formulas.values().iterator();
+        while (ite.hasNext()) {
+            ArrayList al = (ArrayList) ite.next();
+            for (int i = 0; i < al.size(); i++) {
+                formulaSet.add((Formula) al.get(i));
+            }
+        }        
+        return formulaSet;
     }      
     
     /** ***************************************************************
@@ -1098,13 +1122,13 @@ public class KB {
      */
     private void loadVampire() {
 
-        //System.out.println("INFO in KB.loadVampire()");
+        System.out.println("INFO in KB.loadVampire()");
         if (formulas.values().size() != 0) {
             TreeSet forms = collectAllFormulas(formulas);
             forms = preProcess(forms);
             try {
                 String filename = writeInferenceEngineFormulas(forms);
-                // System.out.println("INFO in KB.loadVampire(): writing formulas to " + filename);
+                System.out.println("INFO in KB.loadVampire(): writing formulas to " + filename);
                 inferenceEngine = new Vampire(filename);
             }
             catch (IOException ioe) {
@@ -1131,12 +1155,21 @@ public class KB {
 
         TreeSet newTreeSet = new TreeSet();
         Formula newFormula = null;
+        ArrayList processed = null;
+        StringBuffer concat = null;
 
         Iterator it = forms.iterator();
         while (it.hasNext()) {
             newFormula = new Formula();
             newFormula.theFormula = (String) it.next();
-            newTreeSet.add(newFormula.preProcess());
+            concat = null;
+            processed = newFormula.preProcess();
+            Iterator itp = processed.iterator();
+            while (itp.hasNext()) {
+                concat = new StringBuffer();
+                concat.append((String) itp.next());
+            }
+            if (concat != null) newTreeSet.add(concat.toString());
         }
         return newTreeSet;
     }
