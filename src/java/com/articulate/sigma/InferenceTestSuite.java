@@ -70,8 +70,8 @@ public class InferenceTestSuite {
         int fail = 0;
         int pass = 0;
         PrintWriter pw = null;
-        String proof;
-        String processedStmt;
+        String proof = null;
+        String processedStmt = null;
         String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
         String outputDirString = KBmanager.getMgr().getPref("testOutputDir");
         File outputDir = new File(outputDirString);
@@ -131,18 +131,24 @@ public class InferenceTestSuite {
                     System.out.println("INFO in InferenceTestSuite.test(): Query: " + query);
 
                     Formula theQuery = new Formula();
+                    ArrayList theQueries = null;
                     theQuery.theFormula = query;
-                    processedStmt = theQuery.preProcess();
-                    Date before = new Date();
-                    long start = before.getTime();
-                    proof = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
-                    Date after = new Date();
-                    long end = after.getTime();
-                    duration = end - start;
 
-                    System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
-                    System.out.println(duration);
-                    totalTime = totalTime + duration;
+                    theQueries = theQuery.preProcess();
+                    Iterator q = theQueries.iterator();
+                    while (q.hasNext()) {
+                        processedStmt = (String)q.next();
+                        Date before = new Date();
+                        long start = before.getTime();
+                        proof = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
+                        Date after = new Date();
+                        long end = after.getTime();
+                        duration = end - start;
+                        
+                        System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
+                        System.out.println(duration);
+                        totalTime = totalTime + duration;
+                    }
                 }
                 catch (IOException ioe) {
                     return("Error in InferenceTestSuite.test() while executing query: " + ioe.getMessage());
