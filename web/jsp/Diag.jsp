@@ -21,7 +21,7 @@ August 9, Acapulco, Mexico.
 
   StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
-  String htmlDivider = "<table ALIGN='LEFT' WIDTH=50%%><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
+  String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
   String kbName = null;   // Name of the knowledge base
   KB kb = null;   // The knowledge base object.
   String formattedFormula = null;
@@ -69,7 +69,7 @@ August 9, Acapulco, Mexico.
 %>
 
 <br><b>&nbsp;Terms without documentation</B>
-<table ALIGN='LEFT' WIDTH=50%%><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
 
 <%
@@ -78,7 +78,7 @@ August 9, Acapulco, Mexico.
   show.append(HTMLformatter.termList(termsWithoutParent,kbHref));
 %>
 <br><b>&nbsp;Terms without parent</B>
-<table ALIGN='LEFT' WIDTH=50%%><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
 
 <%
@@ -88,7 +88,7 @@ August 9, Acapulco, Mexico.
   show.append(HTMLformatter.termList(unrooted,kbHref));
 %>
 <br><b>&nbsp;Terms without a root at Entity</B>
-<table ALIGN='LEFT' WIDTH=50%%><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
 
 </BODY>
