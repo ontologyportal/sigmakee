@@ -17,7 +17,7 @@ import java.util.*;
 import java.io.*;
 import java.text.ParseException;
 
-/********************************************************************
+/** *****************************************************************
  *  Contains methods for reading, writing knowledge bases and their
  *  configurations.  Also contains the inference engine process for 
  *  the knowledge base.
@@ -47,7 +47,7 @@ public class KB {
     private HashMap formatMap = null;           // The natural language formatting strings for relations in the KB.
     private HashMap termFormatMap = null;       // The natural language strings for terms in the KB.
 
-    /****************************************************************
+    /** *************************************************************
      * Constructor which takes the name of the KB and the location
      * where KBs preprocessed for Vampire should be placed.
      */
@@ -65,7 +65,7 @@ public class KB {
         }
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Get an ArrayList of Strings containing the language identifiers 
      * of available natural language formatting templates.
      */
@@ -87,7 +87,7 @@ public class KB {
         return al;
     }
     
-    /****************************************************************
+    /** *************************************************************
      * Collect the second argument of a statement.  This assumes that
      * the relation is either "instance" or "subclass"
      */
@@ -120,7 +120,7 @@ public class KB {
         System.out.println(" ");
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Cache subclass and instance statements in the knowledge base.
      */
     public void cache() {
@@ -147,7 +147,7 @@ public class KB {
         }
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Collect all the parent classes of each class or instance.
      */
     public void collectParents() {
@@ -180,9 +180,9 @@ public class KB {
                             }
                             else
                                 parents.put(term.intern(), parentList);
-                            // if (i % 100 == 1) System.out.print(".");
                         }
                     }
+                    if (i % 100 == 1) System.out.print(".");
                 }
             }
         }
@@ -205,10 +205,10 @@ public class KB {
                                     above.add(newParent);
                                     parents.put(term,above);
                                     changed = true;
-                                    // if (i % 100 == 1) System.out.print(".");
                                 }
                             }
                         }
+                        if (i % 100 == 1) System.out.print(".");
                     }
                 }
             }
@@ -216,7 +216,7 @@ public class KB {
         System.out.println(" ");
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Get an ArrayList of Formulas in which the two terms provided appear
      * in the indicated argument positions.
      */
@@ -233,7 +233,7 @@ public class KB {
         return result;
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Get an ArrayList which are the Formulas the match the request.
      *
      * @param kind - May be one of "ant", "cons", "stmt", or "arg", @see KIF.createKey()
@@ -249,7 +249,7 @@ public class KB {
             return (ArrayList) formulas.get(kind + "-" + term);        
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Merge a KIF object containing a single formula into the current KB
      */
     private void merge(KIF kif) {
@@ -282,13 +282,13 @@ public class KB {
             else
                 formulas.put(key,newValues);                            
         }
-        collectParents();
+        /* collectParents();
         if (KBmanager.getMgr().getPref("cache") != null &&
             KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
-            cache();
+            cache();  */     // caching is too slow to perform for just one formula
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Write a assertions to a file.
      * @param formulas an AraryList of Strings
      * @param fname the fully qualified file name
@@ -313,7 +313,7 @@ public class KB {
         }
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Write a single user assertions to the end of a file.
      */
     private void writeUserAssertion(String formula, String fname) throws IOException {
@@ -334,7 +334,7 @@ public class KB {
         }
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Add a formula to the knowledge base.
      */
     public String tell(String formula) {
@@ -362,14 +362,14 @@ public class KB {
         catch (IOException ioe) {
             System.out.println("Error in KB.tell(): " + ioe.getMessage());
         }
-        collectParents();
+        /* collectParents();
         if (KBmanager.getMgr().getPref("cache") != null &&
             KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
-            cache();
+             cache();        */   // caching is currently not efficient enough to invoke it after every assertion
         return "";
     }
 
-    /******************************************************************
+    /** ***************************************************************
      *  Take a term and return whether the term exists in the knowledge base.
      */
     public boolean containsTerm(String term) {
@@ -377,7 +377,7 @@ public class KB {
         return terms.contains(term.intern());
     }      
     
-    /******************************************************************
+    /** ***************************************************************
      *  Count the number of terms in the knowledge base in order to
      *  present statistics to the user.
      *
@@ -388,7 +388,7 @@ public class KB {
         return terms.size();
     }      
     
-    /******************************************************************
+    /** ***************************************************************
      *  Count the number of formulas in the knowledge base in order to
      *  present statistics to the user.
      *
@@ -407,7 +407,7 @@ public class KB {
         return formulaSet.size();
     }      
     
-    /******************************************************************
+    /** ***************************************************************
      *  Count the number of rules in the knowledge base in order to
      *  present statistics to the user. Note that the number of rules
      *  is a subset of the number of formulas.
@@ -428,7 +428,7 @@ public class KB {
         return formulaSet.size();
     }
  
-    /******************************************************************
+    /** ***************************************************************
      * Create an ArrayList of the specific size, filled with empty strings.
      */
     private ArrayList arrayListWithBlanks(int size) {
@@ -439,7 +439,7 @@ public class KB {
         return al;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Get the alphabetically nearest terms to the given term, which
      * is not in the KB.  Elements 0-14 should be alphabetically lesser and 
      * 15-29 alphabetically greater.  If the term is at the beginning or end
@@ -466,7 +466,7 @@ public class KB {
         return al;       
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Get the neighbors of this initial uppercase term (class or function).
      */
     public ArrayList getNearestRelations(String term) {
@@ -475,7 +475,7 @@ public class KB {
         return getNearestTerms(term);
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Get the neighbors of this initial lowercase term (relation).
      */
     public ArrayList getNearestNonRelations(String term) {
@@ -484,7 +484,7 @@ public class KB {
         return getNearestTerms(term);
     }
 
-    /******************************************************************
+    /** ***************************************************************
      */
     private void reloadFormatMaps(String lang) {
 
@@ -543,7 +543,7 @@ public class KB {
         language = lang;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      *  This method creates an association list (Map) of the natural language
      *  format string and the relation name for which that format string applies.  If
      *  the map has already been built and the language hasn't changed, just return
@@ -558,7 +558,7 @@ public class KB {
         return formatMap;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Delete the user assertions file.
      */
     public void deleteUserAssertions() {
@@ -578,7 +578,7 @@ public class KB {
         }
     }
 
-    /******************************************************************
+    /** ***************************************************************
      *  This method creates an association list (Map) of the natural language
      *   string and the term for which that format string applies.  If
      *  the map has already been built and the language hasn't changed, just return
@@ -594,7 +594,7 @@ public class KB {
         return termFormatMap;
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Add a new KB constituent by reading in the file, and then merging
      * the formulas with the existing set of formulas.
      * @param filename - the full path of the file being added.
@@ -618,21 +618,21 @@ public class KB {
         catch (ParseException pe) {
             throw new ParseException(pe.getMessage(),pe.getErrorOffset());
         }
-        System.out.println("Read file " + filename);
         formulaSet.addAll(file.formulaSet);
+        System.out.print("Read file: " + filename + " of size: ");
         System.out.println(file.formulas.keySet().size());
         it = file.formulas.keySet().iterator();
         while (it.hasNext()) {                // Iterate through the formulas in the file, adding them to the KB, at the appropriate key.
-            key = (String) it.next();
+            key = (String) it.next();         // Note that this is a slow operation that needs to be improved
             if (formulas.containsKey(key)) {
                 list = (ArrayList) formulas.get(key);
                 if (list == null) 
                     throw new ParseException("Error: Bad data in existing constituents at key: " + key,0); 
                 newList = (ArrayList) file.formulas.get(key);
-                for (int i = 0; i < newList.size(); i++) {
-                    Formula f = (Formula) newList.get(i);
+                for (int i = 0; i < newList.size(); i++) {          // Don't add formulas to the KB that already exist in the same file.
+                    Formula f = (Formula) newList.get(i);           // This inner loop is the slow part
                     boolean found = false;
-                    for (int j = 0; j < list.size(); j++) {
+                    for (int j = 0; j < list.size(); j++) {         
                         if (f.deepEquals((Formula) list.get(j))) 
                             found = true;
                     }
@@ -656,10 +656,11 @@ public class KB {
         System.out.print("INFO KB.addConstituent(): Number of formulas ");
         System.out.println(file.formulas.values().size());
         loadVampire();
-        collectParents();
+        if (filename.substring(filename.lastIndexOf(File.separator),filename.length()).compareTo("_Cache.kif") != 0) 
+            collectParents();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Reload all the KB constituents.
      */
     public void reload() {
@@ -686,7 +687,7 @@ public class KB {
         }
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Write a KIF file.
      * @param fname - the name of the file to write, including full path.
      */
@@ -712,7 +713,7 @@ public class KB {
                 list = (ArrayList) formulas.get(key);
                 for (int i = 0; i < list.size(); i++) {
                     f = (Formula) list.get(i);
-                    s = f.textFormat();
+                    s = f.toString();
                     pr.println(s);
                     pr.println();
                 }
@@ -731,7 +732,7 @@ public class KB {
         }
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Write the XML configuration file.
      */
     public void writeConfiguration(PrintWriter pw) {
@@ -747,7 +748,7 @@ public class KB {
         pw.println("</kb>");
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Hyperlink terms identified with '&%' to the URL that brings up
      * that term in the browser.  Handle (and ignore) suffixes on the term.
      * For example "&%Processes" would get properly linked to the term "Process",
@@ -781,7 +782,7 @@ public class KB {
         return newFormula;
     }
     
-    /****************************************************************
+    /** *************************************************************
      *  Pull all the formulas into one TreeSet of Strings.
      */
     private TreeSet collectAllFormulas(HashMap forms) {
@@ -797,7 +798,7 @@ public class KB {
         return ts;
     }
     
-    /****************************************************************
+    /** *************************************************************
      *  Pull all the formulas in an ArrayList into one TreeSet of Strings.
      */
     private TreeSet collectFormulasFromList(ArrayList forms) {
@@ -808,7 +809,7 @@ public class KB {
         return ts;
     }
 
-    /****************************************************************
+    /** *************************************************************
      * Save the contents of the current KB to a file.
      */
     public String writeInferenceEngineFormulas(TreeSet forms) throws IOException {
@@ -840,7 +841,7 @@ public class KB {
         return this.name + "-v.kif";
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Start Vampire and collect, preprocess and load all the 
      *  constituents into it.
      */
@@ -869,7 +870,7 @@ public class KB {
         }
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Preprocess a the knowledge base to work with Vampire.  This includes "holds"
      * prefixing, ticking nested formulas, expanding row variables, and
      * translating mathematical relation operators.
@@ -889,7 +890,7 @@ public class KB {
         return newTreeSet;
     }
 
-    /****************************************************************
+    /** *************************************************************
      * A test method.
      */
     public static void main(String args[]) {
