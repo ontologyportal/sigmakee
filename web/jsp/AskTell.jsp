@@ -143,12 +143,12 @@ August 9, Acapulco, Mexico.
 
 <% } %>
 </FORM>
-<table ALIGN='LEFT' WIDTH=80%%><tr><TD BGCOLOR='#AAAAAA'>
+<table ALIGN='LEFT' WIDTH='80%'><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
 
-    String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+    String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
     if (sbStatus != null && sbStatus.toString().length() > 0) {
         out.println("Status: ");
         out.println(sbStatus.toString());
