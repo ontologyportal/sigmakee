@@ -69,17 +69,21 @@ August 9, Acapulco, Mexico.
             
     if (english) {
         englishStatement = stmt;
-        if (!KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes")) {
+        if (!KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes") || kb.celt == null) {
             stmt = null;
             sbStatus.append("<font color='red'>CELT not loaded.  Only KIF syntax is allowed.</font><br>\n");
         }
-        else
+        else {
+            System.out.println("INFO in AskTell.jsp: stmt: " + stmt);
+            System.out.println("INFO in AskTell.jsp: kb: " + kb);
+            System.out.println("INFO in AskTell.jsp: kb.celt " + kb.celt);
             stmt = kb.celt.submit(stmt);
+        }
     }
     System.out.println("INFO in AskTell.jsp: Completed translation.");
-    if (stmt == null) {
+    if (stmt == null || stmt.length() < 2 || stmt.trim().charAt(0) != '(') {
         syntaxError = true;
-        sbStatus.append("<font color='red'>Error: Syntax Error in statement: " + englishStatement + "</font><br>\n");
+        sbStatus.append("<font color='red'>Error: Syntax Error or parsing failure in statement: " + englishStatement + "</font><br>\n");
         stmt = englishStatement;
     }
 
