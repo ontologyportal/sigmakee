@@ -6,15 +6,15 @@
 	<property name="build.classes" value="${build.home}/classes"/>
 	<property name="build.lib" value="${build.home}/lib"/>
 	<property name="dist.home" value="C:/Program Files/Apache Tomcat 4.0/webapps"/>
-    <property name="vampire.home" value="C:/Artic/vampire/Vampire_VSWorkspace/vampire/Release"/>
+    <!-- property name="vampire.home" value="C:/Artic/vampire/Vampire_VSWorkspace/vampire/Release"/ -->
         <property environment="env"/>
         <property name="tomcat.home" value="${env.CATALINA_HOME}" />
     <property name="deploy.home" value="${tomcat.home}/webapps/${app.name}"/>
     <property name="deploy.classes" value="${deploy.home}/WEB-INF/classes"/>
     <property name="deploy.lib" value="${deploy.home}/WEB-INF/lib"/>
     <property name="deploy.jars" value="${deploy.home}/WEB-INF/lib"/>
-	<property name="dist.src" value="${app.name}.jar"/>
-	<property name="dist.war" value="${app.name}.war"/>
+	<!-- property name="dist.src" value="${app.name}.jar"/ -->
+	<!-- property name="dist.war" value="${app.name}.war"/ -->
 	<property name="javadoc.home" value="doc/api"/>
 	<property name="build.javadoc" value="${build.home}/${javadoc.home}"/>
 </target>
@@ -78,7 +78,7 @@
 </target>
 
 <path id="core.classpath">
-    <pathelement path="${basedir}/build/classes:${basedir}/lib/xerces.jar"/>
+    <!-- pathelement path="${basedir}/build/classes:${basedir}/lib/xerces.jar"/ -->
 </path>
 
 <path id="javadoc.classpath">
@@ -87,7 +87,7 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
-    <pathelement path="src/java/jpl"/>
+    <!-- pathelement path="src/java/jpl"/ -->
 </path>
 
 </project>
