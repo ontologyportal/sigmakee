@@ -30,8 +30,8 @@ public class ProofProcessor {
     public ProofProcessor(ArrayList xmlInput) {
 
         xml = new ArrayList(xmlInput);
-        System.out.print("INFO in ProofProcessor(): Number of XML elements is: ");
-        System.out.println(xmlInput.size());
+        //System.out.print("INFO in ProofProcessor(): Number of XML elements is: ");
+        //System.out.println(xmlInput.size());
     }
     
     /** ***************************************************************
