@@ -1,1 +1,0 @@
-<preference key="kbDir" value="D:\\CVSrepository\\sigma2\\build\\classes\\KBs"/>
