@@ -20,7 +20,8 @@ August 9, Acapulco, Mexico.
 </HEAD>
 
 <BODY BGCOLOR=#FFFFFF>
-<% if (request.getParameter("userName") != null)
+<%
+    if (request.getParameter("userName") != null)
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
 %>
 
@@ -59,7 +60,7 @@ August 9, Acapulco, Mexico.
   if (KBmanager.getMgr().getKBnames() != null && KBmanager.getMgr().getKBnames().size() > 0) {
       System.out.println(KBmanager.getMgr().getKBnames().size());
       kbNames = KBmanager.getMgr().getKBnames().iterator();
-      System.out.println("INFO KB.jsp: Got KB names.");
+      System.out.println("INFO in KB.jsp: Got KB names.");
   }
   String defaultKB = null;
   if (KBmanager.getMgr().getKBnames() == null || KBmanager.getMgr().getKBnames().size() == 0)
