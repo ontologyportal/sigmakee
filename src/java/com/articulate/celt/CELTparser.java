@@ -33,6 +33,9 @@ import com.articulate.sigma.*;
 public class CELTparser {
 
      public DefaultTreeModel grammarTree = null;
+      /** An ArrayList of words in the sentence, minus punctuation.  This is
+       * set in parse() and examined in match(). */
+     private ArrayList words = null;
 
     /** ***************************************************************
      * This routine sets up the StreamTokenizer so that it parses English.
@@ -65,6 +68,8 @@ public class CELTparser {
 
     /** *************************************************************
      * Whether the word matches the leaf node at the end of the path.
+     * Has the side effect of setting nInfo.selected to true and nInfo.SUMOterm
+     * to the appropriate SUMO term if there is a match.
      */
     private boolean match(TreePath path, String word) {
 
@@ -81,7 +86,9 @@ public class CELTparser {
             System.out.println("INFO in CELTparser.match(): checking noun " + rootWord);
             if (rootWord != null && WordNet.wn.containsWord(rootWord,WordNet.NOUN)) {
                 nInfo.selected = true;
-                nInfo.SUMOterm = WordNet.wn.getSUMOterm(rootWord,WordNet.NOUN);
+                nInfo.rootWord = rootWord;
+                nInfo.POS = WordNet.NOUN;
+                //nInfo.SUMOterm = WordNet.wn.findSUMOWordSense(rootWord,words,WordNet.NOUN);
                 System.out.println("INFO in CELTparser.match(): Found match: " + word + " with " + nInfo.nodeName + " and SUMO term " + nInfo.SUMOterm);
                 return true;
             }
@@ -91,7 +98,9 @@ public class CELTparser {
             System.out.println("INFO in CELTparser.match(): checking verb " + rootWord);
             if (rootWord != null && WordNet.wn.containsWord(rootWord,WordNet.VERB)) {
                 nInfo.selected = true;
-                nInfo.SUMOterm = WordNet.wn.getSUMOterm(rootWord,WordNet.VERB);
+                nInfo.rootWord = rootWord;
+                nInfo.POS = WordNet.VERB;
+                //nInfo.SUMOterm = WordNet.wn.findSUMOWordSense(rootWord,words,WordNet.VERB);
                 System.out.println("INFO in CELTparser.match(): Found match: " + word + " with " + nInfo.nodeName + " and SUMO term " + nInfo.SUMOterm);
                 return true;
             }
@@ -100,7 +109,8 @@ public class CELTparser {
             System.out.println("INFO in CELTparser.match(): checking adjective " + word);
             if (WordNet.wn.containsWord(word,WordNet.ADJECTIVE)) {
                 nInfo.selected = true;
-                nInfo.SUMOterm = WordNet.wn.getSUMOterm(word,WordNet.ADJECTIVE);
+                nInfo.POS = WordNet.ADJECTIVE;
+                //nInfo.SUMOterm = WordNet.wn.findSUMOWordSense(word,words,WordNet.ADJECTIVE);
                 System.out.println("INFO in CELTparser.match(): Found match: " + word + " with " + nInfo.nodeName + " and SUMO term " + nInfo.SUMOterm);
                 return true;
             }
@@ -109,7 +119,8 @@ public class CELTparser {
             System.out.println("INFO in CELTparser.match(): checking adverb " + word);
             if (WordNet.wn.containsWord(word,WordNet.ADVERB)) {
                 nInfo.selected = true;
-                nInfo.SUMOterm = WordNet.wn.getSUMOterm(word,WordNet.ADVERB);
+                nInfo.POS = WordNet.ADVERB;
+                //nInfo.SUMOterm = WordNet.wn.findSUMOWordSense(word,words,WordNet.ADVERB);
                 System.out.println("INFO in CELTparser.match(): Found match: " + word + " with " + nInfo.nodeName + " and SUMO term " + nInfo.SUMOterm);
                 return true;
             }
@@ -257,7 +268,8 @@ public class CELTparser {
         CELTinterpreter celt = new CELTinterpreter(grammarTree);
         setupStreamTokenizer(st);
         TreePath path = null;
-        try {
+        words = new ArrayList();
+        try {                                               // Add each word in the sentence to an ArrayList.
             do {
                 int lastVal = st.ttype;
                 st.nextToken();
@@ -269,17 +281,7 @@ public class CELTparser {
                     if (punctuation(word)) 
                         continue;
                     System.out.println("INFO in CELTparser.parse(): Matching word " + word);
-                    path = findMatch(null,word);
-                    System.out.println("INFO in CELTparser.parse(): Returning from matching word " + word);
-                    // System.out.println("INFO in CELTparser.parse(): path " + path);
-                    if (path == null) {
-                        System.out.println("INFO in CELTparser.parse(): " + word + " not found.");
-                        return word + " not found.";
-                    }
-                    else {
-                        paths.add(path);
-                        resetChildCounters(path);
-                    }
+                    words.add(word);
                 }
             }
             while (st.ttype != st.TT_EOF);
@@ -287,6 +289,39 @@ public class CELTparser {
         catch (IOException ioe) {
             System.out.println("Error in CELTparser.parse(): IOException: " + ioe.getMessage());
         } 
+        for (int i = 0; i < words.size(); i++) {            // Parse the sentence.
+            String word = (String) words.get(i);
+            path = findMatch(null,word);
+            System.out.println("INFO in CELTparser.parse(): Returning from matching word " + word);
+            // System.out.println("INFO in CELTparser.parse(): path " + path);
+            if (path == null) {
+                System.out.println("INFO in CELTparser.parse(): " + word + " not found.");
+                return word + " not found.";
+            }
+            else {
+                paths.add(path);
+                resetChildCounters(path);
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                GrammarNode nInfo = (GrammarNode) node.getUserObject();
+                if (nInfo.rootWord != null) 
+                    word = nInfo.rootWord;
+            }
+        }
+        for (int i = 0; i < paths.size(); i++) {            // Disambiguate word senses.
+            path = (TreePath) paths.get(i);
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+            GrammarNode nInfo = (GrammarNode) node.getUserObject();
+            if (nInfo.POS != -1) {
+                String rootWord = null;
+                if (nInfo.rootWord != null)
+                    rootWord = nInfo.rootWord;
+                else
+                    rootWord = nInfo.matchedWord;
+                nInfo.SUMOterm = WordNet.wn.findSUMOWordSense(rootWord,words,nInfo.POS);
+                System.out.println("INFO in CELTparser.parse(): SUMO term " + nInfo.SUMOterm + " for word " + rootWord);
+                grammarTree.nodeChanged(node);
+            }
+        }
         Formula f = new Formula();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) grammarTree.getRoot();   
           // This reflects a problem that really needs to be fixed in GrammarTree.load().  For some reason,
