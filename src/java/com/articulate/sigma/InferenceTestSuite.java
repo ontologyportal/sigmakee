@@ -88,6 +88,10 @@ public class InferenceTestSuite {
 
         File dir = new File(inferenceTestDir);
         String[] files = dir.list();
+        if (files == null || files.length == 0) {
+            System.out.println("INFO in InferenceTestSuite.test(): No test files found in " + inferenceTestDir);
+            return("No test files found in " + inferenceTestDir);
+        }
         for (int i = 0; i < files.length; i++) {
             kb.deleteUserAssertions();
             timeout = 30;
@@ -137,7 +141,7 @@ public class InferenceTestSuite {
                     theQueries = theQuery.preProcess();
                     Iterator q = theQueries.iterator();
                     while (q.hasNext()) {
-                        processedStmt = (String)q.next();
+                        processedStmt = ((Formula)q.next()).theFormula;
                         Date before = new Date();
                         long start = before.getTime();
                         proof = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
