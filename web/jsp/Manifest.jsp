@@ -58,7 +58,7 @@ August 9, Acapulco, Mexico.
       </table>
     </td>
     <td valign="bottom"></td>
-    <td><font face="Arial,helvetica" SIZE=-1><b>[ <A href="home.jsp">Home</A> ]</b></FONT></td>
+    <td><font face="Arial,helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A> ]</b></FONT></td>
   </tr>
 </table>
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
