@@ -1,6 +1,7 @@
 <%@ include	file="Prelude.jsp" %>
 
-<% if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))         
+<% 
+if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))         
        response.sendRedirect("KBs.jsp");     
 %>
 <HTML>
@@ -80,7 +81,18 @@ August 9, Acapulco, Mexico.
   else {
       hostname = KBmanager.getMgr().getPref("hostname");
       if (hostname == null)
-          hostname = "";
+          hostname = "localhost";
+  }
+
+  String port = request.getParameter("port");
+  if (port != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("port",port);
+  }
+  else {
+      port = KBmanager.getMgr().getPref("port");
+      if (port == null)
+          port = "8080";
   }
 
   String sumokbname = request.getParameter("sumokbname");
@@ -181,6 +193,10 @@ August 9, Acapulco, Mexico.
     <label for="hostname">
     <INPUT type="text" name="hostname" value=<%=hostname %> >
     DNS address of the computer on which Sigma is hosted</label><P>
+
+    <label for="port">
+    <INPUT type="text" name="port" value=<%=port %> >
+    Port number on which Tomcat responds</label><P>
 
     <label for="sumokbname">
     <INPUT type="text" name="sumokbname" value=<%=sumokbname %> >
