@@ -15,7 +15,7 @@ August 9, Acapulco, Mexico.
 package com.articulate.sigma;
 
 import java.io.*;
-import jpl.*;
+// import jpl.*;
 import java.util.*;
 
 /**
@@ -47,9 +47,9 @@ public class CELT {
         if (KBmanager.getMgr().getPref("PLDir") == null)
             KBmanager.getMgr().setPref("PLDir","C:\\Program Files\\pl-5.2.10\\bin");  
         PL_PATH = KBmanager.getMgr().getPref("PLDir"); 
-        if (KBmanager.getMgr().getPref("CELTDir") == null)
-            KBmanager.getMgr().setPref("CELTDir","C:\\PEASE\\CELT-ACE\\latestDemo\\May29");  
-        CELT_PATH = KBmanager.getMgr().getPref("CELTDir"); 
+        if (KBmanager.getMgr().getPref("celtdir") == null)
+            KBmanager.getMgr().setPref("celtdir","C:\\PEASE\\CELT-ACE\\latestDemo\\May29");  
+        CELT_PATH = KBmanager.getMgr().getPref("celtdir"); 
         System.out.println("INFO in CELT(): Setting PL dir to: " + PL_PATH);
         
         if (!(new File(PL_PATH)).exists())

@@ -813,7 +813,9 @@ public class KB {
      */
     public String writeInferenceEngineFormulas(TreeSet forms) throws IOException {
 
-        String filename = KBmanager.getMgr().getPref("inferenceEngineDir") + File.separator + this.name + "-v.kif";
+        String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
+        String inferenceEngineDir = inferenceEngine.substring(0,inferenceEngine.lastIndexOf(File.separator));
+        String filename = inferenceEngineDir + File.separator + this.name + "-v.kif";
         FileWriter fr = null;
         PrintWriter pr = null;
 
@@ -825,7 +827,7 @@ public class KB {
                 pr.println((String) it.next() + "\n");                       
         }
         catch (java.io.IOException e) {
-            System.out.println("Error in KB.writeFormulas(): Error writing file " + filename);
+            System.out.println("Error in KB.writeInferenceEngineFormulas(): Error writing file " + filename);
         }
         finally {
             if (pr != null) {

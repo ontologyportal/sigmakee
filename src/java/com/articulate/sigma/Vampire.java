@@ -55,12 +55,7 @@ import java.io.*;
  */
 public class Vampire {
 
-     /** The path to the Vampire executable. */
-    public String VAMPIRE_EXECUTABLE_PATH; 
-     /** The Vampire executable. */
-    private String VAMPIRE_EXECUTABLE;
-     /** An empty file to load, if no file is specified. */
-    public String EMPTY_FILE; 
+    public String EMPTY_FILE;
     private Process _vampire;
     private BufferedReader _reader; 
     private BufferedWriter _writer; 
@@ -76,19 +71,19 @@ public class Vampire {
      */
     public Vampire (String kbFileName) throws IOException {
 
+        String VAMPIRE_EXECUTABLE;
         String line = null; 
-        if (KBmanager.getMgr().getPref("inferenceEngineDir") == null)
-            KBmanager.getMgr().setPref("inferenceEngineDir","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release");  
-        VAMPIRE_EXECUTABLE_PATH = KBmanager.getMgr().getPref("inferenceEngineDir"); 
-        System.out.println("INFO in Vampire(): Setting inference engine dir to: " + VAMPIRE_EXECUTABLE_PATH);
-        VAMPIRE_EXECUTABLE = VAMPIRE_EXECUTABLE_PATH + File.separator + "kif.exe";
-        EMPTY_FILE = VAMPIRE_EXECUTABLE_PATH + File.separator + "emptyFile.kif";
-        
-        System.out.println("INFO Vampire(): Initializing with " + VAMPIRE_EXECUTABLE_PATH + File.separator + kbFileName);
-        if (!(new File(VAMPIRE_EXECUTABLE_PATH + File.separator + kbFileName)).exists())
-            throw new IOException("Error in Vampire(): File " + VAMPIRE_EXECUTABLE_PATH + File.separator + kbFileName + " does not exist.");
-        // _vampire = Runtime.getRuntime().exec(VAMPIRE_EXECUTABLE + " C:/Artic/vampire/Vampire_VSWorkspace/vampire/Release/" + kbFileName);
-        _vampire = Runtime.getRuntime().exec(VAMPIRE_EXECUTABLE + " " + VAMPIRE_EXECUTABLE_PATH + File.separator + kbFileName);
+        if (KBmanager.getMgr().getPref("inferenceEngine") == null)
+            KBmanager.getMgr().setPref("inferenceEngine","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe");  
+        VAMPIRE_EXECUTABLE = KBmanager.getMgr().getPref("inferenceEngine"); 
+
+        String VAMPIRE_DIRECTORY = VAMPIRE_EXECUTABLE.substring(0,VAMPIRE_EXECUTABLE.lastIndexOf(File.separator) - 1);
+        System.out.println("INFO in Vampire(): Setting inference engine to: " + VAMPIRE_EXECUTABLE);
+        EMPTY_FILE = VAMPIRE_DIRECTORY + File.separator + "emptyFile.kif";
+
+        if (!(new File(VAMPIRE_DIRECTORY + File.separator + kbFileName)).exists())
+            throw new IOException("Error in Vampire(): File " + VAMPIRE_EXECUTABLE + " does not exist.");
+        _vampire = Runtime.getRuntime().exec(VAMPIRE_EXECUTABLE + " " + VAMPIRE_DIRECTORY + File.separator + kbFileName);
 
         _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()));

@@ -49,8 +49,8 @@ public class KBmanager {
                 NLformatter.readKeywordMap((String) preferences.get("kbDir"));
                 if (!preferences.containsKey("inferenceTestDir"))
                     preferences.put("inferenceTestDir","C:\\Program Files\\Apache Tomcat 4.0\\tests");  
-                if (!preferences.containsKey("inferenceEngineDir"))
-                    preferences.put("inferenceEngineDir","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release");  
+                if (!preferences.containsKey("inferenceEngine"))
+                    preferences.put("inferenceEngine","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe");  
                 if (!preferences.containsKey("cache"))
                     preferences.put("cache","no");  
                 if (!preferences.containsKey("showcached"))
@@ -68,13 +68,16 @@ public class KBmanager {
 
         if (!initialized) {
             BasicXMLparser config = new BasicXMLparser(configuration);
-            System.out.println("INFO in KBmanager.initialize(): Initializing.");
+            System.out.println("INFO in KBmanager.initializeOnce(): Initializing.");
+            System.out.print("INFO in KBmanager.initializeOnce(): Number of preferences:");
+            System.out.println(config.elements.size());
             for (int i = 0; i < config.elements.size(); i++) {
                 BasicXMLelement element = (BasicXMLelement) config.elements.get(i);
                 if (element.tagname.equalsIgnoreCase("preference")) {
                     String name = (String) element.attributes.get("key");
                     String value = (String) element.attributes.get("value");
                     preferences.put(name,value);
+                    System.out.println("INFO in KBmanager.initializeOnce(): Storing preferences: " + name + " " + value);
                 }
                 if (element.tagname.equalsIgnoreCase("kb")) {
                     String kbName = (String) element.attributes.get("name");
@@ -95,6 +98,7 @@ public class KBmanager {
             }
             initialized = true;
         }
+        System.out.println("INFO in KBmanager.initializeOnce(): celtdir: " + (String) preferences.get("celtdir"));
     }
 
     /******************************************************************
@@ -181,7 +185,8 @@ public class KBmanager {
             while (it.hasNext()) {
                 key = (String) it.next();
                 value = (String) preferences.get(key);
-                if (key.compareTo("kbDir") == 0)
+                if (key.compareTo("kbDir") == 0 || key.compareTo("celtdir") == 0 || 
+                    key.compareTo("inferenceEngine") == 0 || key.compareTo("inferenceTestDir") == 0)
                     value = escapeFilename(value);
                 if (key.compareTo("userName") != 0)
                     pw.println("<preference key=\"" + key + "\" value=\"" + value + "\"/>");
@@ -214,7 +219,8 @@ public class KBmanager {
     }
 
     /******************************************************************
-     * Read an XML-formatted configuration file.
+     * Read an XML-formatted configuration file. The method initializeOnce()
+     * sets the preferences based on the contents of the configuration file.
      */
     private void readConfiguration() throws IOException {
         
