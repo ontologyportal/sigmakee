@@ -34,7 +34,10 @@ public class HTMLformatter {
         String hostname = KBmanager.getMgr().getPref("hostname");
         if (hostname == null)
             hostname = "localhost";
-        String kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+        String port = KBmanager.getMgr().getPref("port");
+        if (port == null)
+            port = "8080";
+        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
 
         if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.        
             f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
@@ -65,6 +68,21 @@ public class HTMLformatter {
      *  Show a hyperlinked list of terms.
      */
     public static String termList(ArrayList terms, String kbHref) {
+
+        StringBuffer show = new StringBuffer();
+        for (int i = 0; i < terms.size(); i++) {
+            String term = (String) terms.get(i);
+            show.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
+            if (i < terms.size()-1)
+                show.append(", ");
+        }
+        return show.toString();
+    }
+
+    /** *************************************************************
+     *  Show a hyperlinked list of WordNet synsets.
+     */
+    public static String synsetList(ArrayList terms, String kbHref) {
 
         StringBuffer show = new StringBuffer();
         for (int i = 0; i < terms.size(); i++) {

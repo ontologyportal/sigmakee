@@ -51,7 +51,7 @@ public class CELTTestSuite {
             return("Error in CELTTestSuite.test(): exception reading file: " + celtTestFile + ".\n" + e.getMessage());
         }
         System.out.println("INFO in CELTTestSuite.test(): num formulas: " + String.valueOf(test.formulaSet.size()));
-        Iterator it = test.formulaList.iterator();
+        Iterator it = test.formulaSet.iterator();
         String sentence = null;
         String expectedAnswer = null;
         String celtResult = null;
@@ -60,7 +60,10 @@ public class CELTTestSuite {
         String hostname = KBmanager.getMgr().getPref("hostname");
         if (hostname == null)
             hostname = "localhost";
-        String html = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=en&kb=" + kb.name;
+        String port = KBmanager.getMgr().getPref("port");
+        if (port == null)
+            port = "8080";
+        String html = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=en&kb=" + kb.name;
 
         while (it.hasNext()) {
             String formula = (String) it.next();

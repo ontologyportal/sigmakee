@@ -68,7 +68,10 @@ public class Graph {
         String hostname = KBmanager.getMgr().getPref("hostname");
         if (hostname == null)
             hostname = "localhost";
-        String kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
+        String port = KBmanager.getMgr().getPref("port");
+        if (port == null)
+            port = "8080";
+        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
         String formattedTerm = "<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>";
         
         if (show) 
