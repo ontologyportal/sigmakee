@@ -36,6 +36,10 @@ public class KB {
     public String kbDir = null;
     /** A HashMap of ArrayLists, which contain all the parent classes of a given class. */
     public HashMap parents = new HashMap();
+    /** A HashMap of ArrayLists, which contain all the child classes of a given class. */
+    public HashMap children = new HashMap();
+    /** A HashMap of ArrayLists, which contain all the disjoint classes of a given class. */
+    public HashMap disjoint = null;
     /** The instance of the CELT process. */
     public CELT celt = null;
     /** A Set of Strings, which are all the terms in the KB. */
@@ -68,6 +72,8 @@ public class KB {
     /** *************************************************************
      * Get an ArrayList of Strings containing the language identifiers 
      * of available natural language formatting templates.
+     * 
+     * @return an ArrayList of Strings containing the language identifiers
      */
     public ArrayList availableLanguages() {
 
@@ -148,9 +154,12 @@ public class KB {
     }
 
     /** *************************************************************
-     * Collect all the parent classes of each class or instance.
+     * Collect all the parent classes of each class or instance.  Store
+     * them in the global variable parents, which is a HashMap of 
+     * ArrayLists.  The key is a class, and the value is an ArrayList of
+     * Strings, which are the class' parent classes.
      */
-    public void collectParents() {
+    private void collectParents() {
 
         parents = new HashMap();
         ArrayList al;
@@ -180,6 +189,86 @@ public class KB {
                             }
                             else
                                 parents.put(term.intern(), parentList);
+                        }
+                    }
+                    if (i % 100 == 1) System.out.print(".");
+                }
+            }
+        }
+
+        boolean changed = true;
+        while (changed) {                                   // Cycle through all terms, adding parents until there are no more changes.
+            changed = false;
+            it = parents.keySet().iterator();                       
+            while (it.hasNext()) {
+                String term = (String) it.next();                 
+                ArrayList above = (ArrayList) parents.get(term);
+                if (above != null) {
+                    for (int i = 0; i < above.size(); i++) {
+                        String parentTerm = (String) above.get(i);
+                        ArrayList newParents = (ArrayList) parents.get(parentTerm);
+                        if (newParents != null) {
+                            for (int j = 0; j < newParents.size(); j++) {
+                                String newParent = ((String) newParents.get(j)).intern();
+                                if (!above.contains(newParent)) {
+                                    above.add(newParent);
+                                    parents.put(term,above);
+                                    changed = true;
+                                }
+                            }
+                        }
+                        if (i % 100 == 1) System.out.print(".");
+                    }
+                }
+            }
+        }
+        System.out.println(" ");
+    }
+
+    /** *************************************************************
+     * Add entries to the list of disjoint classes.  Called only by
+     * collectDisjointness().
+     */
+    private void addDisjointnessEntry(String term1, String term2) {
+
+        if (disjoint.containsKey(term1.intern())) {
+            ArrayList existingDisjoint = (ArrayList) disjoint.get(term1.intern());
+            if (!existingDisjoint.contains(term2.intern()))
+                existingDisjoint.add(term2.intern());
+        }
+        else {
+            ArrayList disjointList = new ArrayList();
+            disjointList.add(term2.intern());
+            disjoint.put(term1.intern(), disjointList);
+        }
+    }
+
+    /** *************************************************************
+     * Collect all the classes which are disjoint with each class.
+     */
+    private void collectDisjointness() {
+        
+        disjoint = new HashMap();
+        ArrayList al;
+
+        System.out.print("INFO in KB.collectDisjointness(): Begin.");
+        Iterator it = terms.iterator();                       
+        while (it.hasNext()) {
+            String term = (String) it.next();                 // Collect the immediate disjoints for each term.
+            ArrayList forms = ask("arg",1,term);
+            if (forms == null || forms.size() < 1) { 
+            }
+                // System.out.println("INFO in KB.collectParents(): term " + term + " has no parents.");
+            else {
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula formula = (Formula) forms.get(i);
+                    if (formula.theFormula.indexOf("(",2) == -1 &&
+                        !formula.sourceFile.substring(formula.sourceFile.length()-11,formula.sourceFile.length()).equalsIgnoreCase("_Cache.kif")) {    // Ignore cases where parent class is a function
+                        if (formula.theFormula.substring(1,9).equalsIgnoreCase("disjoint")) { 
+                            String disjointStr = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,
+                                                                              formula.theFormula.indexOf(")",10));
+                            addDisjointnessEntry(term,disjointStr);
+                            addDisjointnessEntry(disjointStr,term);
                         }
                     }
                     if (i % 100 == 1) System.out.print(".");
@@ -335,7 +424,11 @@ public class KB {
     }
 
     /** *************************************************************
-     *  Add a formula to the knowledge base.
+     *  Add a formula to the knowledge base.  Returns an XML formatted
+     * String that contains the response of the inference engine.  It
+     * should be in the form "<assertionResponse>...</assertionResponse>"
+     * where the body should be " Formula has been added to the session 
+     * database" if all went well.
      */
     public String tell(String formula) {
 
@@ -656,8 +749,10 @@ public class KB {
         System.out.print("INFO KB.addConstituent(): Number of formulas ");
         System.out.println(file.formulas.values().size());
         loadVampire();
-        if (filename.substring(filename.lastIndexOf(File.separator),filename.length()).compareTo("_Cache.kif") != 0) 
+        if (filename.substring(filename.lastIndexOf(File.separator),filename.length()).compareTo("_Cache.kif") != 0) {
             collectParents();
+            // collectDisjointness();
+        }
     }
 
     /** ***************************************************************
