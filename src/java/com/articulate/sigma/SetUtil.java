@@ -19,7 +19,7 @@ import java.util.*;
 import java.io.*;
 
 
-  /******************************************************************
+  /** ***************************************************************
   *  A class that handles basic set operations.
   */
 public class SetUtil {

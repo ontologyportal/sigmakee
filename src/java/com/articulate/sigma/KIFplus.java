@@ -20,7 +20,7 @@ import java.text.ParseException;
 
 
 
-/********************************************************************
+/** *****************************************************************
  * A class designed to adhere strictly to the SUO-KIF definition at
  * http://suo.ieee.org/suo-kif.html
  * @author Adam Pease
@@ -83,12 +83,12 @@ quantsent ::= (forall (variable+) sentence) |
               (exists (variable+) sentence)
 */
     
-    /********************************************************************
+    /** *****************************************************************
      */
     private void readLogsent(FileReader fr) throws ParseException, IOException {
     }
 
-    /********************************************************************
+    /** *****************************************************************
      */
     private void start(FileReader fr) throws ParseException, IOException {
 
@@ -111,7 +111,7 @@ quantsent ::= (forall (variable+) sentence) |
         }
 
     }
-    /********************************************************************
+    /** *****************************************************************
      */
     public void main(String[] args) {
 
