@@ -83,6 +83,7 @@ public class KBmanager {
                     String kbName = (String) element.attributes.get("name");
                     addKB(kbName);
                     KB kb = getKB(kbName);
+                    System.out.println("INFO in KBmanager.initializeOnce(): Number of constituents: " + element.subelements.size());
                     for (int j = 0; j < element.subelements.size(); j++) {
                         BasicXMLelement kbConst = (BasicXMLelement) element.subelements.get(j);
                         if (!kbConst.tagname.equalsIgnoreCase("constituent")) 
@@ -221,6 +222,9 @@ public class KBmanager {
     /** ***************************************************************
      * Read an XML-formatted configuration file. The method initializeOnce()
      * sets the preferences based on the contents of the configuration file.
+     * This routine has the side effect of setting the variable 
+     * called "configuration".  It also creates the KBs directory and an empty
+     * configuration file if none exists.
      */
     private void readConfiguration() throws IOException {
         
