@@ -38,7 +38,10 @@ August 9, Acapulco, Mexico.
   String hostname = KBmanager.getMgr().getPref("hostname");
   if (hostname == null) 
      hostname = "localhost";
-  kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+  String port = KBmanager.getMgr().getPref("port");
+  if (port == null)
+      port = "8080";
+  kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
 
 %>
 

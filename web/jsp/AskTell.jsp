@@ -103,7 +103,10 @@ August 9, Acapulco, Mexico.
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula();
                 statement.theFormula = stmt;
-                String kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?kb=" + kbName;
+                String port = KBmanager.getMgr().getPref("port");
+                if (port == null)
+                    port = "8080";
+                String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
                 sbStatus.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
         }
