@@ -85,13 +85,18 @@ public class HTMLformatter {
 
         if (forms != null && forms.size() > 0) {
             Collections.sort(forms);
-            show.append("<br><b>&nbsp;" + header + "</B>");
-            show.append(htmlDivider + "<TABLE width=95%%>");
+            if (header != null) 
+                show.append("<br><b>&nbsp;" + header + "</B>");
+            if (htmlDivider != null) 
+                show.append(htmlDivider);
+            show.append("<TABLE width=95%%>");
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
                 show.append("<TR><TD width=50%% valign=top>");
                 show.append(f.htmlFormat(kbHref) + "</td>\n<TD width=10%% valign=top BGCOLOR=#B8CADF>");
-                show.append(f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length()) + " " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString() + "</TD>\n<TD width=40%% valign=top>");
+                show.append(f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length()) + 
+                            " " + (new Integer(f.startLine)).toString() + 
+                            "-" + (new Integer(f.endLine)).toString() + "</TD>\n<TD width=40%% valign=top>");
                 show.append(NLformatter.htmlParaphrase(kbHref,f.theFormula, kb.getFormatMap(language), 
                                                        kb.getTermFormatMap(language), language) + "</TD></TR>\n"); 
             }
