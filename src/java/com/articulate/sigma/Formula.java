@@ -51,7 +51,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Return the LISP 'car' of the formula - the first element of the list.
      */
-    private String car() {
+    public String car() {
 
         int i = 0;
         while (theFormula.charAt(i) != '(') i++;
@@ -79,7 +79,7 @@ public class Formula implements Comparable {
      * Return the LISP 'cdr' of the formula - the rest of a list minus its
      * first element.
      */
-    private String cdr() {
+    public String cdr() {
 
         int i = 0;
         while (theFormula.charAt(i) != '(') i++;
@@ -253,7 +253,8 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      * Return the numbered argument of the given formula.  The first
-     * element of a formula is number 0.
+     * element of a formula (i.e. the predicate position) is number 0. 
+     * Returns the empty string if there is no such argument position.
      */
     public String getArgument(int argnum) {
 
@@ -304,7 +305,33 @@ public class Formula implements Comparable {
                 i = theFormula.length();
             }
         }
+        if (start > end || start < 0 || end < 0) 
+            return "";
         return theFormula.substring(start,end);
+    }
+
+    /** ***************************************************************
+     * Return all the arguments in a simple formula as a list, starting
+     * at the given argument.  If formula is complex (i.e. an argument
+     * is a function or sentence), then return null.  If the starting
+     * argument is greater than the number of arguments, also return
+     * null.
+     */
+    public ArrayList argumentsToArrayList(int start) {
+
+        if (theFormula.indexOf('(',1) != -1) 
+            return null;
+        int index = start;
+        ArrayList result = new ArrayList();
+        String arg = getArgument(index);
+        while (arg != "") {
+            result.add(arg.intern());
+            index++;
+            arg = getArgument(index);
+        }
+        if (index == start) 
+            return null;
+        return result;
     }
 
     /** ***************************************************************
