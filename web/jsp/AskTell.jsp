@@ -23,6 +23,7 @@ August 9, Acapulco, Mexico.
     String result = null;        
     StringBuffer sbStatus = new StringBuffer();
     String processedStmt = null;
+    ArrayList processedStmts = null;
 
     String hostname = KBmanager.getMgr().getPref("hostname");
     if (hostname == null)
@@ -92,8 +93,10 @@ August 9, Acapulco, Mexico.
             if (req.equalsIgnoreCase("ask")) {
                 Formula query = new Formula();
                 query.theFormula = stmt;
-                processedStmt = query.preProcess();
-                result = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
+                processedStmts = query.preProcess();
+                if (processedStmts.size() != 0) { // What to do if row variables?
+                  result = kb.inferenceEngine.submitQuery((String)processedStmts.get(0),timeout,maxAnswers);
+                }
             }
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula();
@@ -153,8 +156,12 @@ August 9, Acapulco, Mexico.
         out.println("Status: ");
         out.println(sbStatus.toString());
     }
-
-    out.println(HTMLformatter.formatProofResult(result,stmt,processedStmt,lineHtml,kbName,language));
+    if ((result != null) && (result.indexOf("Syntax error detected") != -1)) {        
+       out.println("<font color='red'>A syntax error was detected in your input.</font>");
+    }
+    else {
+        out.println(HTMLformatter.formatProofResult(result,stmt,processedStmt,lineHtml,kbName,language));
+    }
 %>
 
 </BODY>
