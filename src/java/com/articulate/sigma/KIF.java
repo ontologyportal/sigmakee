@@ -35,7 +35,7 @@ public class KIF {
   public LinkedHashSet formulaSet = new LinkedHashSet();
    /** A "raw" ArrayList of Strings which are the formulas from the file without 
     *  any further processing, in the order which they appear in the file. */
-  public ArrayList formulaList = new ArrayList();
+  // public ArrayList formulaList = new ArrayList();
 
   private String filename;
   private int totalLinesForComments = 0;
@@ -188,15 +188,20 @@ public class KIF {
                   expression = expression.concat(")");
                   if (parenLevel == 0) {                                    // The end of the statement...
                       f.theFormula = expression;
-                      formulaSet.add(expression.intern());
-                      formulaList.add(expression.intern());
+                      if (formulaSet.contains(expression.intern())) {
+                          System.out.print("Warning in KIF.parse(): Duplicate formula at line");
+                          System.out.println(new Integer(lineStart + totalLinesForComments).toString());
+                          System.out.println(expression);
+                          System.out.println();
+                      }
+                      // formulaList.add(expression.intern());
                       if (formulaSet.size() % 100 == 0) 
                           System.out.print('.');
                       keySet.add(expression.intern());                      // Make the formula itself a key
                       f.endLine = st.lineno() + totalLinesForComments;
                       for (int i = 0; i < keySet.size(); i++) {             // Add the expression but ...
                           if (formulas.containsKey(keySet.get(i))) {
-                              if (!formulas.containsKey(expression.intern())) {  // don't add if formula is already present
+                              if (!formulaSet.contains(expression.intern())) {  // don't add keys if formula is already present
                                   list = (ArrayList) formulas.get(keySet.get(i));
                                   if (!list.contains(f)) 
                                       list.add(f);
@@ -208,6 +213,7 @@ public class KIF {
                               formulas.put((String) keySet.get(i),list);
                           }
                       }
+                      formulaSet.add(expression.intern());
                       inConsequent = false;
                       inRule = false;
                       argumentNum = -1;
@@ -238,9 +244,13 @@ public class KIF {
                       expression = expression.concat(st.sval);
                   else
                       expression = expression.concat(Double.toString(st.nval));
+                  if (parenLevel<2)                                 // Don't care if parenLevel > 1
+                      argumentNum = argumentNum + 1;                // RAP - added on 11/27/04 
               }
               else if (st.ttype == st.TT_WORD) {                  // a token
-                  if (st.sval.compareTo("=>") == 0 || st.sval.compareTo("<=>") == 0) 
+                  if ((st.sval.compareTo("=>") == 0 || st.sval.compareTo("<=>") == 0) && parenLevel == 1)   
+                                                                    // RAP - added parenLevel clause on 11/27/04 to 
+                                                                    // prevent implications embedded in statements from being rules
                       inRule = true;
                   if (parenLevel<2)                                 // Don't care if parenLevel > 1
                       argumentNum = argumentNum + 1;
@@ -442,7 +452,7 @@ public class KIF {
           System.out.print("In statement starting at line: ");
           System.out.println(pe.getErrorOffset());
       }
-      it = kifp.formulaList.iterator();
+      it = kifp.formulaSet.iterator();
       while (it.hasNext()) {
           form = (String) it.next();
           System.out.println (form);          
