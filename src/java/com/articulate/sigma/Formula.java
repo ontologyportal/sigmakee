@@ -86,8 +86,15 @@ public class Formula implements Comparable {
             }
             i++;
         }
-        else {
-            while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
+        else {        
+            if (theFormula.charAt(i) == '"' || theFormula.charAt(i) == '\'') {
+                char quoteChar = theFormula.charAt(i);
+                while (((theFormula.charAt(i) != quoteChar || theFormula.charAt(i) != '\\') &&
+                        i < theFormula.length() - 1)) i++;
+            }
+            else {
+                while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
+            }            
         }
         return theFormula.substring(start,i);    
     }
@@ -116,7 +123,14 @@ public class Formula implements Comparable {
             i++;
         }
         else {
-            while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
+            if (theFormula.charAt(i) == '"' || theFormula.charAt(i) == '\'') {
+                char quoteChar = theFormula.charAt(i);
+                while (((theFormula.charAt(i) != quoteChar || theFormula.charAt(i) != '\\') &&
+                        i < theFormula.length() - 1)) i++;
+            }
+            else {
+                while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
+            }
         }
         while (Character.isWhitespace(theFormula.charAt(i))) i++;
         int end = theFormula.lastIndexOf(')');
@@ -177,47 +191,6 @@ public class Formula implements Comparable {
             result.add(newForm);
         }
         return result;
-
-        /* System.out.println("INFO in Formula.parseList(): Parsing " + s);
-        System.out.println("INFO in Formula.parseList(): length " + s.length());
-        int i = 0;                        
-        int level = 0;
-        s = s.trim();
-        ArrayList result = new ArrayList();
-        while (i < s.length() - 1) {
-            System.out.println("INFO in Formula.parseList(): i " + i);
-            while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
-            if (i >= s.length()) 
-                return result;
-            if (s.charAt(i) == '(') 
-                level++;
-            int start = i;
-            i++;
-            System.out.println("INFO in Formula.parseList(): i (2) " + i);
-            while ((((!Character.isWhitespace(s.charAt(i)) && s.charAt(i) != ')' && level == 0) ||
-                (s.charAt(i) != ')' && level == 1) ||
-                   level > 1)) && (i < s.length()-1)) {
-                System.out.print(s.charAt(i));
-                if (s.charAt(i) == ')') level--;
-                if (s.charAt(i) == '(') level++;
-                i++;            
-            }
-            Formula newForm = new Formula();
-            if (level == 0) 
-                newForm.read(s.substring(start,i));
-            else
-                newForm.read(s.substring(start,i+1));
-            result.add(newForm);
-            System.out.println();
-            System.out.println("INFO in Formula.parseList(): Adding " + newForm.toString());
-            i++;
-        }
-        return result;
-
-        
-(=> (holds contraryAttribute ?ROW1) (holds foo ?ROW1))
-(=> (holds contraryAttribute ?ROW1 ?ROW2) (holds foo ?ROW1 ?ROW2))
-        */
     }
 
     /** ***************************************************************
@@ -325,56 +298,14 @@ public class Formula implements Comparable {
      */
     public String getArgument(int argnum) {
 
-        int start = -1;
-        int end = -1;
-        int parenLevel = 0;
-        int tokenNumber = -1;
-        int i = -1;
-        boolean marker;
-        boolean oldMarker = false;
-        boolean newMarker = false;
-        while (i < theFormula.length() - 1) {
-            i++;
-            char ch = theFormula.charAt(i);
-            switch (ch) {
-                case '(': {  
-                    parenLevel++;
-                    if (parenLevel == 1)
-                        tokenNumber++;
-                    if (parenLevel == 2) {
-                        start = i;
-                    }
-                    break;
-                }
-                case ')': {      
-                    parenLevel--;
-                    break;
-                }
-                case ' ': {
-                    if (parenLevel == 1)
-                        tokenNumber++;
-                    // i++;
-                    break;
-                }
-            }
-            if (ch != '(' && ch != ')' && ch != ' ') {
-                marker = false;
-            }
-            else {
-                marker = true;
-            }
-            if (i > 0 && tokenNumber == argnum && 
-                (theFormula.charAt(i-1) == '(' || theFormula.charAt(i-1) == ' ') &&
-                !marker && parenLevel == 1) 
-                start = i;
-            if (tokenNumber == argnum + 1 || parenLevel == 0) {
-                end = i;
-                i = theFormula.length();
-            }
+        if (argnum == 0) 
+            return car();
+        Formula form = new Formula();
+        form.read(theFormula);
+        for (int i = 0; i < argnum; i++) {
+            form.read(form.cdr());
         }
-        if (start > end || start < 0 || end < 0) 
-            return "";
-        return theFormula.substring(start,end);
+        return form.car();
     }
 
     /** ***************************************************************
@@ -391,7 +322,7 @@ public class Formula implements Comparable {
         int index = start;
         ArrayList result = new ArrayList();
         String arg = getArgument(index);
-        while (arg != "") {
+        while (arg != null && arg != "" && arg.length() > 0) {
             result.add(arg.intern());
             index++;
             arg = getArgument(index);
@@ -898,9 +829,9 @@ public class Formula implements Comparable {
     public static void main(String[] args) {
 
         Formula f = new Formula();
-        //f.read("(=> (and (contraryAttribute @ROW) (identicalListItems (ListFn @ROW) (ListFn @ROW2))) (contraryAttribute @ROW2))");
-        f.read("(=> (contraryAttribute @ROW) (foo @ROW2))");
-        System.out.println(f.preProcess());
+        f.read("(=> (and (contraryAttribute @ROW) (identicalListItems (ListFn @ROW) (ListFn @ROW2))) (contraryAttribute @ROW2))");
+        //f.read("(documentation Foo \"Blah, blah blah.\")");
+        System.out.println(f.getArgument(5));
         /* System.out.println(f.parseList("(=> (holds contraryAttribute ?ROW1) (holds foo ?ROW1)) " +
                                        "(=> (holds contraryAttribute ?ROW1 ?ROW2) (holds foo ?ROW1 ?ROW2)) " +
                                        "(=> (holds contraryAttribute ?ROW1 ?ROW2 ?ROW3) (holds foo ?ROW1 ?ROW2 ?ROW3)) " +
