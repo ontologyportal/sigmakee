@@ -35,11 +35,11 @@ public class KB {
     public String language = "en";    
      /** The location of preprocessed KIF files, suitable for loading into Vampire. */
     public String kbDir = null;
-    /** A HashMap of ArrayLists, which contain all the parent classes of a given class. */
+    /** A HashMap of HashSets, which contain all the parent classes of a given class. */
     public HashMap parents = new HashMap();
-    /** A HashMap of ArrayLists, which contain all the child classes of a given class. */
+    /** A HashMap of HashSets, which contain all the child classes of a given class. */
     public HashMap children = new HashMap();
-    /** A HashMap of ArrayLists, which contain all the disjoint classes of a given class. */
+    /** A HashMap of HashSets, which contain all the disjoint classes of a given class. */
     public HashMap disjoint = null;
     /** The instance of the CELT process. */
     public CELT celt = null;
@@ -49,6 +49,8 @@ public class KB {
     private String _userAssertionsString = "_UserAssertions.kif";
     private HashSet formulaSet = new HashSet(); // A Set of all the formula Strings in the KB.
     private HashMap formulas = new HashMap();   // A HashMap of ArrayLists of Formulas, containing all the formulas in the KB
+                                                // Keys are both the formula itself, and term indexes created in KIF.createKey()
+
     private HashMap formatMap = null;           // The natural language formatting strings for relations in the KB.
     private HashMap termFormatMap = null;       // The natural language strings for terms in the KB.
 
@@ -109,17 +111,18 @@ public class KB {
                     String child = formula.theFormula.substring(10,formula.theFormula.indexOf(" ",10));
                     String parent = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,formula.theFormula.indexOf(")",10));
                     TreeSet formulaStrings = collectFormulasFromList(forms);
-                    ArrayList newParents = (ArrayList) parents.get(parent);
+                    HashSet newParents = (HashSet) parents.get(parent);
                     if (newParents != null) {
-                        for (int j = 0; j < newParents.size(); j++) {
-                            String newParent = (String) newParents.get(j);
+                        Iterator it = newParents.iterator();
+                        while (it.hasNext()) {
+                            String newParent = (String) it.next();
                             if (newParent.indexOf("(") == -1) {
                                 String newFormula = "(" + statementType + " " + child + " " + newParent + ")";
                                 if (!formulaStrings.contains(newFormula.intern()))
                                     cached.add(newFormula);                
                             }
                         }
-                        System.out.print(".");
+                        if (i % 100 == 1) System.out.print(".");
                     }                
                 }
             }
@@ -161,23 +164,23 @@ public class KB {
         
         //System.out.println("INFO in KB.addParentChildEntry(): Add " + parent + " and " + child);
         if (parents.containsKey(child)) {
-            ArrayList existingParents = (ArrayList) parents.get(child);
+            HashSet existingParents = (HashSet) parents.get(child);
             if (!existingParents.contains(parent))
                 existingParents.add(parent);
         }
         else {
-            ArrayList parentList = new ArrayList();
+            HashSet parentList = new HashSet();
             parentList.add(parent);
             parents.put(child, parentList);
         }
 
         if (children.containsKey(parent)) {
-            ArrayList existingChildren = (ArrayList) children.get(parent);
+            HashSet existingChildren = (HashSet) children.get(parent);
             if (!existingChildren.contains(child))
                 existingChildren.add(child);
         }
         else {
-            ArrayList childList = new ArrayList();
+            HashSet childList = new HashSet();
             childList.add(child);
             children.put(parent, childList);
         }
@@ -193,20 +196,29 @@ public class KB {
      */
     private void calculateTransitiveClosure(HashMap list) {
 
+        System.out.print("INFO in KB.calculateTransitiveClosure()");
+        //System.out.println();
         boolean changed = true;
         while (changed) {                                   
             changed = false;
             Iterator it = list.keySet().iterator();                       
-            while (it.hasNext()) {
+            int count = 0;
+            int divisor = list.keySet().size() / 100;
+            while (it.hasNext()) {                              // Iterate through the terms.
                 String term = (String) it.next();                 
-                ArrayList targets = (ArrayList) list.get(term);
+                //System.out.println("INFO in KB.calculateTransitiveClosure(): Term: " + term);
+                HashSet targets = (HashSet) list.get(term);
                 if (targets != null) {
-                    for (int i = 0; i < targets.size(); i++) {
-                        String targetTerm = (String) targets.get(i);
-                        ArrayList newTargets = (ArrayList) list.get(targetTerm);
+                    Object[] targetArray = targets.toArray();
+                    for (int i = 0; i <targetArray.length; i++) {      // Iterate through the targets of the term
+                        String targetTerm = (String) targetArray[i];
+                        //System.out.println("INFO in KB.calculateTransitiveClosure(): TargetTerm: " + targetTerm);
+                        HashSet newTargets = (HashSet) list.get(targetTerm);
                         if (newTargets != null) {
-                            for (int j = 0; j < newTargets.size(); j++) {
-                                String newTarget = ((String) newTargets.get(j)).intern();
+                            Iterator it3 = newTargets.iterator();
+                            while (it3.hasNext()) {                     // Iterator through the target's targets.
+                                String newTarget = ((String) it3.next()).intern();
+                                //System.out.println("INFO in KB.calculateTransitiveClosure(): NewTarget: " + newTarget);
                                 if (!targets.contains(newTarget)) {
                                     targets.add(newTarget);
                                     list.put(term,targets);
@@ -214,9 +226,9 @@ public class KB {
                                 }
                             }
                         }
-                        if (i % 100 == 1) System.out.print(".");
                     }
                 }
+                if (count++ % divisor == 1) System.out.print(".");
             }
         }
         System.out.println(" ");
@@ -233,7 +245,7 @@ public class KB {
         while (it.hasNext()) {
             String parent = (String) it.next();
             System.out.print(parent + " ");
-            System.out.println((ArrayList) parents.get(parent));
+            System.out.println((HashSet) parents.get(parent));
         }
         System.out.println();
     }
@@ -249,7 +261,7 @@ public class KB {
         while (it.hasNext()) {
             String child = (String) it.next();
             System.out.print(child + " ");
-            System.out.println((ArrayList) children.get(child));
+            System.out.println((HashSet) children.get(child));
         }
         System.out.println();
     }
@@ -283,8 +295,10 @@ public class KB {
         parents = new HashMap();
         ArrayList al;
 
-        System.out.println("INFO in KB.collectParentsAndChildren(): Caching class hierarchy.");
-        Iterator it = terms.iterator();                       
+        System.out.print("INFO in KB.collectParentsAndChildren(): Caching class hierarchy.");
+        Iterator it = terms.iterator(); 
+        int count = 0;
+        int divisor = terms.size() / 100;
         while (it.hasNext()) {                   // Collect the immediate parents and children for each term.
             String term = (String) it.next();                 
             
@@ -317,15 +331,19 @@ public class KB {
                             addParentChildEntry(parent.intern(),child.intern());
                         }
                     }
-                    if (i % 100 == 1) System.out.print(".");
                 }
             }
+            if (count++ % 10 == 1) System.out.print(".");
         }
+        System.out.println();
 
-        System.out.print("INFO in KB.collectParentsAndChildren(): Calculating transitive closure.");
+        //System.out.print("INFO in KB.collectParentsAndChildren(): Caching parents.");
         calculateTransitiveClosure(parents);
+        //System.out.print("INFO in KB.collectParentsAndChildren(): Caching children.");
         calculateTransitiveClosure(children);
+        //System.out.print("INFO in KB.collectParentsAndChildren(): Print parents.");
         //printParents();
+        //System.out.print("INFO in KB.collectParentsAndChildren(): Print children.");
         //printChildren();
     }
 
@@ -336,13 +354,13 @@ public class KB {
     private void addDisjointnessEntry(String term1, String term2) {
 
         if (disjoint.containsKey(term1.intern())) {
-            ArrayList existingDisjoint = (ArrayList) disjoint.get(term1.intern());
+            HashSet existingDisjoint = (HashSet) disjoint.get(term1.intern());
             if (!existingDisjoint.contains(term2.intern()))
                 existingDisjoint.add(term2.intern());
             disjoint.put(term1.intern(), existingDisjoint);
         }
         else {
-            ArrayList disjointList = new ArrayList();
+            HashSet disjointList = new HashSet();
             disjointList.add(term2.intern());
             disjoint.put(term1.intern(), disjointList);
         }
@@ -355,7 +373,9 @@ public class KB {
      */
     private void collectDisjointAssertions() {
 
-        Iterator it = terms.iterator();                       
+        System.out.print("INFO in collectDisjointAssertions().");
+        Iterator it = terms.iterator(); 
+        int count = 0;
         while (it.hasNext()) {
             String term = (String) it.next();                 // Collect the immediate disjoints for each term.
             ArrayList forms = ask("arg",1,term);
@@ -371,10 +391,11 @@ public class KB {
                             addDisjointnessEntry(disjointStr,term);
                         }
                     }
-                    if (i % 100 == 1) System.out.print(".");
                 }
             }
+            if (count++ % 100 == 1) System.out.print(".");
         }
+        System.out.println();
     }
 
     /** *************************************************************
@@ -384,6 +405,7 @@ public class KB {
      */
     private void collectPartitions() {
 
+        System.out.print("INFO in collectPartitions().");
         ArrayList forms = ask("arg",0,"partition");
         ArrayList forms2 = ask("arg",0,"disjointDecomposition");
         if (forms == null) 
@@ -403,9 +425,10 @@ public class KB {
                         }
                     }
                 }
-                if (i % 100 == 1) System.out.print(".");
+                if (i % 1000 == 1) System.out.print(".");
             }
         }
+        System.out.println();
     }
 
     /** *************************************************************
@@ -415,25 +438,30 @@ public class KB {
      */
     private void addDisjointChildren() {
 
+        System.out.print("INFO in addDisjointChildren().");
         Iterator it = disjoint.keySet().iterator();      
         while (it.hasNext()) {
             String term = (String) it.next();                 
-            ArrayList dis = (ArrayList) disjoint.get(term);
+            HashSet dis = (HashSet) disjoint.get(term);
             if (dis != null) {
-                ArrayList newDises = new ArrayList();
+                HashSet newDises = new HashSet();
                 newDises.addAll(dis);
-                for (int i = 0; i < dis.size(); i++) {
-                    String disTerm = (String) dis.get(i);
-                    ArrayList kids = (ArrayList) children.get(disTerm);
-                    if (kids != null) {
-                        for (int j = 0; j < kids.size(); j++) {
-                            String newDis = ((String) kids.get(j)).intern();
+                int i = 0;
+                Iterator it2 = dis.iterator();
+                while (it2.hasNext()) {
+                    String disTerm = (String) it2.next();
+                    i++;
+                    HashSet k = ((HashSet) children.get(disTerm));
+                    if (k != null) {
+                        Object[] kids = ((HashSet) children.get(disTerm)).toArray();
+                        for (int j = 0; j < kids.length; j++) {
+                            String newDis = ((String) kids[j]).intern();
                             if (!newDises.contains(newDis)) {
                                 newDises.add(newDis);
                             }
                         }
                     }
-                    if (i % 100 == 1) System.out.print(".");
+                    if (i % 1000 == 1) System.out.print(".");
                 }
                 disjoint.put(term,newDises);
             }
@@ -448,7 +476,6 @@ public class KB {
      */
     private void collectDisjointness() {
         
-        System.out.print("INFO in KB.collectDisjointness(): Begin.");
         disjoint = new HashMap();
         collectDisjointAssertions();
         //printDisjointness();
@@ -653,16 +680,16 @@ public class KB {
      */
     public int getCountAxioms() {
 
-        TreeSet formulaSet = new TreeSet();
+        /** TreeSet formulaSet = new TreeSet();
         Iterator ite = formulas.values().iterator();
         while (ite.hasNext()) {
             ArrayList al = (ArrayList) ite.next();
             for (int i = 0; i < al.size(); i++) {
                 formulaSet.add(((Formula) al.get(i)).theFormula);
             }
-        }        
+        }   */     
         return formulaSet.size();
-    } // POD would be better to just count them. 
+    }  
 
     /** ***************************************************************
      *  an accessor providing a TreeSet of un-preProcess-ed Formula.
@@ -670,15 +697,19 @@ public class KB {
      */
     public TreeSet getFormulas() {
 
-        TreeSet formulaSet = new TreeSet();
+        TreeSet newFormulaSet = new TreeSet();
+        newFormulaSet.addAll(formulaSet);
+        return newFormulaSet;
+
+        /** TreeSet newFormulaSet = new TreeSet();
         Iterator ite = formulas.values().iterator();
         while (ite.hasNext()) {
             ArrayList al = (ArrayList) ite.next();
             for (int i = 0; i < al.size(); i++) {
-                formulaSet.add((Formula) al.get(i));
+                newFormulaSet.add((Formula) al.get(i));
             }
         }        
-        return formulaSet;
+        return newFormulaSet;  */
     }      
     
     /** ***************************************************************
@@ -690,16 +721,16 @@ public class KB {
      */
     public int getCountRules() {
 
-        TreeSet formulaSet = new TreeSet();
+        TreeSet newFormulaSet = new TreeSet();
         Iterator ite = formulas.values().iterator();
         while (ite.hasNext()) {
             ArrayList al = (ArrayList) ite.next();
             for (int i = 0; i < al.size(); i++) {
                 if (((Formula) al.get(i)).theFormula.substring(1,3).compareTo("=>") == 0)
-                    formulaSet.add(((Formula) al.get(i)).theFormula);
+                    newFormulaSet.add(((Formula) al.get(i)).theFormula);
             }
         }        
-        return formulaSet.size();
+        return newFormulaSet.size();
     }
  
     /** ***************************************************************
@@ -892,26 +923,42 @@ public class KB {
         catch (ParseException pe) {
             throw new ParseException(pe.getMessage(),pe.getErrorOffset());
         }
-        formulaSet.addAll(file.formulaSet);
-        System.out.print("Read file: " + filename + " of size: ");
-        System.out.println(file.formulas.keySet().size());
+        System.out.print("INFO in KB.addConstituent(): Read file: " + filename + " of size: ");
+        System.out.print(file.formulas.keySet().size());
         it = file.formulas.keySet().iterator();
+        int count = 0;
         while (it.hasNext()) {                // Iterate through the formulas in the file, adding them to the KB, at the appropriate key.
             key = (String) it.next();         // Note that this is a slow operation that needs to be improved
+            // System.out.println("INFO KB.addConstituent(): Key " + key);
+            if (count++ % 100 == 1) System.out.print(".");            
             if (formulas.containsKey(key)) {
                 list = (ArrayList) formulas.get(key);
                 if (list == null) 
                     throw new ParseException("Error: Bad data in existing constituents at key: " + key,0); 
                 newList = (ArrayList) file.formulas.get(key);
                 for (int i = 0; i < newList.size(); i++) {          // Don't add formulas to the KB that already exist in the same file.
-                    Formula f = (Formula) newList.get(i);           // This inner loop is the slow part
-                    boolean found = false;
+                    //if (i % 100 == 1) System.out.print("+");    
+                    Formula f = (Formula) newList.get(i);
+                    if (!formulaSet.contains(f.theFormula.intern()))
+                        list.add(newList.get(i));                   // Add Formula to the existing ArrayList of Formulas 
+                    else {
+                        System.out.print("Warning in KB.addConstituent: Duplicate axiom in ");
+                        System.out.println(f.sourceFile + " at line " + f.startLine);
+                        System.out.println(f.theFormula);
+                        Formula existingFormula = (Formula) ((ArrayList) formulas.get(f.theFormula.intern())).get(0);
+                        System.out.print("Existing formula appears in ");
+                        System.out.println(existingFormula.sourceFile + " at line " + existingFormula.startLine);
+                        System.out.println();
+                    }
+                                                                    // This inner loop is the slow part
+                    /**boolean found = false;
                     for (int j = 0; j < list.size(); j++) {         
+                        if (j % 10000 == 1) System.out.print("!");            
                         if (f.deepEquals((Formula) list.get(j))) 
                             found = true;
                     }
                     if (!found) 
-                        list.add(newList.get(i));
+                        list.add(newList.get(i));  */                 // Add Formula to the existing ArrayList of Formulas
                 }
             }
             else {
@@ -919,16 +966,18 @@ public class KB {
                 formulas.put(key,forms);
             }
         }
+        formulaSet.addAll(file.formulaSet);
+        //System.out.println();
         it = file.terms.iterator();
         while (it.hasNext()) {
             key = (String) it.next();
             this.terms.add(key);
         }
         constituents.add(filename.intern());
-        System.out.print("INFO KB.addConstituent(): Number of constituents ");
-        System.out.println(constituents.size());
-        System.out.print("INFO KB.addConstituent(): Number of formulas ");
-        System.out.println(file.formulas.values().size());
+        //System.out.print("INFO KB.addConstituent(): Number of constituents ");
+        //System.out.println(constituents.size());
+        //System.out.print("INFO KB.addConstituent(): Number of formulas ");
+        //System.out.println(file.formulas.values().size());
         loadVampire();
         if (filename.substring(filename.lastIndexOf(File.separator),filename.length()).compareTo("_Cache.kif") != 0) {
             collectParentsAndChildren();
@@ -946,8 +995,10 @@ public class KB {
         constituents = new ArrayList();
         language = "en";                  
         formulas = new HashMap();       
+        formulaSet = new HashSet();       
         terms = new TreeSet();          
         formatMap = null; 
+        termFormatMap = null; 
 
         for (int i = 0; i < newConstituents.size(); i++) {
             try {
@@ -1183,14 +1234,13 @@ public class KB {
 
         KB kb = new KB("foo","");
         try {
-            kb.addConstituent("C:\\Program Files\\Apache Tomcat 4.0\\KBs\\test.txt");
+            kb.addConstituent("D:\\CVS\\KBs\\test.kif");
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) 
-            System.out.println((String) it.next());
+
+        /*Iterator it = kb.terms.iterator();
 
         it = kb.formulas.values().iterator();
         while (it.hasNext()) { 
@@ -1213,6 +1263,6 @@ public class KB {
         for (int i = 0; i < al.size(); i++) {
             System.out.println(((Formula) al.get(i)).theFormula);            
             System.out.println(((Formula) al.get(i)).sourceFile);            
-        }
+        }   */
     }
 }
