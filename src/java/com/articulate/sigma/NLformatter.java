@@ -42,7 +42,7 @@ public class NLformatter {
   */
   public static HashMap readKeywordMap(String dir) {
 
-      String fname = dir + "\\language.txt";
+      String fname = dir + File.separator + "language.txt";
       String line;
       HashMap newLine;
       ArrayList languageKeyArray = new ArrayList();
