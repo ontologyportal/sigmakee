@@ -1,7 +1,6 @@
 package com.articulate.sigma;
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
+/** This code is copyright Articulate Software (c) 2003.  
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
 and Teknowledge in any writings, briefings, publications, presentations, or 
