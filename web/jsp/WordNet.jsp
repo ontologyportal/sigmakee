@@ -22,10 +22,12 @@
 
 <form action="WordNet.jsp" method="GET">
   <font face="Arial,helvetica"><b>English Term:&nbsp;</b></font>
-  <input type="text" name="word">
+  <input type="text" name="word" VALUE=<%= "\"" + (request.getParameter("word")==null?"":request.getParameter("word")) + "\"" %>>
     <select name="POS">
-      <option value=1>Noun
-      <option value=2>Verb
+      <option value="1">Noun
+      <option value="2">Verb
+      <option value="3">Adjective 
+      <option value="4">Adverb
     </select>
   <input type="submit" value="Submit">
 </form>

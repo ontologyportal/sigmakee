@@ -193,7 +193,7 @@ August 9, Acapulco, Mexico.
             <IMG SRC="pixmaps/1pixel.gif" WIDTH="3"></TD>
         <TD align="left" valign="top">
             <select name="POS">
-                <option value="1">Noun <option value="2">Verb
+                <option value="1">Noun <option value="2">Verb <option value="3">Adjective <option value="4">Adverb
             </select>
         </TD>
         <td align="left" valign="top">
