@@ -479,24 +479,32 @@ public class Formula implements Comparable {
      *    (holds ?REL2 ?ARG1 ?ARG2))
      * etc. 
      */
-    private String expandRowVars(String input, HashMap rowVarMap) {
+    private ArrayList expandRowVars(String input, HashMap rowVarMap) {
 
         StringBuffer result = new StringBuffer(input);
+        ArrayList resultList = new ArrayList();
         Iterator it = rowVarMap.keySet().iterator();
-        while (it.hasNext()) {
-            String row = (String) it.next();
-            StringBuffer rowResult = new StringBuffer();
-            StringBuffer rowReplace = new StringBuffer();
-            for (int j = 1; j < 8; j++) {
-                if (rowReplace.toString().length() > 0) {
-                    rowReplace = rowReplace.append(" ");
-                }
-                rowReplace = rowReplace.append("\\?" + row + (new Integer(j)).toString());
-                rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
-            }
-            result = new StringBuffer(rowResult.toString());
+        if (!it.hasNext()) {
+            resultList.add(input);
+            return resultList;
         }
-        return result.toString();
+        else {
+            while (it.hasNext()) {
+                String row = (String) it.next();
+                StringBuffer rowResult = new StringBuffer();
+                StringBuffer rowReplace = new StringBuffer();
+                for (int j = 1; j < 8; j++) {
+                    if (rowReplace.toString().length() > 0) {
+                        rowReplace = rowReplace.append(" ");
+                    }
+                    rowReplace = rowReplace.append("\\?" + row + (new Integer(j)).toString());
+                    resultList.add(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
+                    rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
+                }
+                result = new StringBuffer(rowResult.toString());
+            }
+        }
+            return resultList;
     }    
 
     /** ***************************************************************
@@ -505,7 +513,7 @@ public class Formula implements Comparable {
      * mathematical operators, quoting higher-order formulas, expanding
      * row variables and prepending the 'holds' predicate.
      */
-    public String preProcess() {
+    public ArrayList preProcess() {
 
         String s = theFormula;
         Stack predicateStack = new Stack();
@@ -534,21 +542,24 @@ public class Formula implements Comparable {
                         while (Character.isJavaIdentifierPart(s.charAt(i)))
                             i++;
                         String predicate = s.substring(predicateStart,i);
+                        predicate = predicate.trim();
                         if (predicate.equalsIgnoreCase("documentation") ||
                             predicate.equalsIgnoreCase("format") ||
-                            predicate.equalsIgnoreCase("termFormat")) 
-                            return "";
+                            predicate.equalsIgnoreCase("termFormat"))
+                            return new ArrayList(0);
                         if (mathOperators.contains(predicate)) {
-                            // translate math operators
+                            // translate math operators (NYI)
                         }
                         if (lastPredicate != null &&
                             !logicalOperators.contains(lastPredicate.intern()) && 
-                            predicate.substring(predicate.length()-2,predicate.length()).compareTo("Fn") != 0) {
+                            predicate.substring(predicate.length()-2).compareTo("Fn") != 0) {
                             result = result.append('`');
                             // tick the formula
                         }
                         result = result.append(ch); 
-                        if (!logicalOperators.contains(predicate.intern()) && !mathOperators.contains(predicate.intern()) && !predicate.equalsIgnoreCase("holds")) {
+                        if (!logicalOperators.contains(predicate.intern()) && 
+                            !mathOperators.contains(predicate.intern()) && 
+                            !predicate.equalsIgnoreCase("holds")) {
                             result = result.append("holds " + predicate);
                         }
                         else {
@@ -562,7 +573,9 @@ public class Formula implements Comparable {
                     }
                     else {
                         i++;
-                        if (s.charAt(i) == '?' && !lastPredicate.equalsIgnoreCase("forall") && !lastPredicate.equalsIgnoreCase("exists") ) {
+                        if (s.charAt(i) == '?' && 
+                            !lastPredicate.equalsIgnoreCase("forall") && 
+                            !lastPredicate.equalsIgnoreCase("exists") ) {
                             result = result.append(ch);
                             result = result.append("holds ?");
                             lastPredicate = "holds";
@@ -573,6 +586,7 @@ public class Formula implements Comparable {
                             while (s.charAt(i) != ' ' && s.charAt(i) != ')')
                                 i++;
                             String predicate = s.substring(predicateStart,i);
+                            predicate = predicate.trim();
                             result = result.append(ch);
                             result = result.append(predicate);
                             lastPredicate = predicate;
@@ -616,8 +630,7 @@ public class Formula implements Comparable {
                 result = result.append(ch);
             }
         }
-        result = new StringBuffer(expandRowVars(result.toString(),rowVarMap));
-        return result.toString();
+        return expandRowVars(result.toString(),rowVarMap);
     }
 
     /** ***************************************************************
