@@ -138,7 +138,8 @@ public class Formula implements Comparable {
      * Normalize all variables, so that the first variable in a formula is
      * ?VAR1, the second is ?VAR2 etc.  This is necessary so that two 
      * formulas can be found equal even if they have different variable
-     * names.
+     * names. Variables must be normalized so that (foo ?A ?B) is 
+     * equal to (foo ?X ?Y) - they both are converted to (foo ?VAR1 ?VAR2)
      */
     private static String normalizeVariables(String s) {
 
@@ -189,7 +190,120 @@ public class Formula implements Comparable {
     }
 
     /******************************************************************
-     * Pre-process a formula before sending it to Vampire.
+     * Makes implicit universal quantification explicit.  May be needed
+     * in the future for other theorem provers.
+     */
+    private String makeQuantifiersExplicit() {
+        
+        ArrayList quantVariables = new ArrayList();
+        ArrayList unquantVariables = new ArrayList();
+        System.out.println("Adding quantified variables.");
+        int startIndex = -1;                        // Collect all quantified variables
+        while (theFormula.indexOf("(forall (?",startIndex) != -1 ||
+               theFormula.indexOf("(exists (?",startIndex) != -1) {
+            int forallIndex = theFormula.indexOf("(forall (?",startIndex);
+            int existsIndex = theFormula.indexOf("(exists (?",startIndex);
+            if ((forallIndex < existsIndex && forallIndex != -1) || existsIndex == -1) 
+                startIndex = forallIndex + 9;
+            else
+                startIndex = existsIndex + 9;
+            int i = startIndex;
+            while (theFormula.charAt(i) != ')' && i < theFormula.length()) {
+                i++;
+                if (theFormula.charAt(i) == ' ') { 
+                    quantVariables.add(theFormula.substring(startIndex,i));
+                    System.out.println(theFormula.substring(startIndex,i));
+                    startIndex = i+1;
+                }
+            }
+            System.out.println(startIndex);
+            System.out.println(i);
+            if (i < theFormula.length()) {
+                quantVariables.add(theFormula.substring(startIndex,i).intern());
+                System.out.println(theFormula.substring(startIndex,i));
+                startIndex = i+1;
+            }
+            else
+                startIndex = theFormula.length();
+        }
+
+        System.out.println("Adding unquantified variables.");
+        startIndex = 0;                        // Collect all unquantified variables
+        while (theFormula.indexOf("?",startIndex) != -1) {
+            startIndex = theFormula.indexOf("?",startIndex);
+            int spaceIndex = theFormula.indexOf(" ",startIndex);
+            int parenIndex = theFormula.indexOf(")",startIndex);
+            int i;
+            if ((spaceIndex < parenIndex && spaceIndex != -1) || parenIndex == -1) 
+                i = spaceIndex;
+            else
+                i = parenIndex;
+            if (!quantVariables.contains(theFormula.substring(startIndex,i).intern())) {
+                unquantVariables.add(theFormula.substring(startIndex,i).intern());                
+                System.out.println(theFormula.substring(startIndex,i));
+            }
+            startIndex = i;
+        }
+
+        StringBuffer quant = new StringBuffer("(forall (");  // Quantify all the unquantified variables
+        for (int i = 0; i < unquantVariables.size(); i++) {
+            quant = quant.append((String) unquantVariables.get(i));
+            if (i < unquantVariables.size() - 1) 
+                quant = quant.append(" ");
+        }
+        return quant.toString() + ") " + theFormula + ")";
+    }
+
+    /******************************************************************
+     * Expand row variables.  Each variable is treated like a macro that
+     * expands to up to seven regular variables.  For example
+     *
+     * (=>
+     *    (and
+     *       (subrelation ?REL1 ?REL2)
+     *       (holds ?REL1 @ROW))
+     *    (holds ?REL2 @ROW))
+     *
+     * would become 
+     *
+     * (=>
+     *    (and
+     *       (subrelation ?REL1 ?REL2)
+     *       (holds ?REL1 ?ARG1))
+     *    (holds ?REL2 ?ARG1))
+     * 
+     * (=>
+     *    (and
+     *       (subrelation ?REL1 ?REL2)
+     *       (holds ?REL1 ?ARG1 ?ARG2))
+     *    (holds ?REL2 ?ARG1 ?ARG2))
+     * etc. 
+     */
+    private String expandRowVars(String input, HashMap rowVarMap) {
+
+        StringBuffer result = new StringBuffer(input);
+        Iterator it = rowVarMap.keySet().iterator();
+        while (it.hasNext()) {
+            String row = (String) it.next();
+            StringBuffer rowResult = new StringBuffer();
+            StringBuffer rowReplace = new StringBuffer();
+            for (int j = 1; j < 8; j++) {
+                if (rowReplace.toString().length() > 0) {
+                    rowReplace = rowReplace.append(" ");
+                }
+                rowReplace = rowReplace.append("\\?" + row + (new Integer(j)).toString());
+                rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
+            }
+            result = new StringBuffer(rowResult.toString());
+        }
+        return result.toString();
+    }    
+
+    /******************************************************************
+     * Pre-process a formula before sending it to Vampire. This includes
+     * ignoring meta-knowledge like documentation strings, translating
+     * mathematical operators, quoting higher-order formulas, expanding
+     * row variables and prepending the 'holds' predicate.
      */
     public String preProcess() {
 
@@ -278,7 +392,7 @@ public class Formula implements Comparable {
                         if (!rowVarMap.keySet().contains(var)) {
                             rowVarMap.put(var,null);
                         }
-                        result = result.append("?" + var);
+                        result = result.append("@" + var);
                         i--;
                     }
                     break;
@@ -302,6 +416,7 @@ public class Formula implements Comparable {
                 result = result.append(ch);
             }
         }
+        result = new StringBuffer(expandRowVars(result.toString(),rowVarMap));
         return result.toString();
     }
 
@@ -456,19 +571,9 @@ public class Formula implements Comparable {
      */
     public static void main(String[] args) {
 
-        String s1 = "(exists\n   (?cart ?event)\n(and\n(instance ?event Transfer)\n(patient ?event ?cart)\n(agent ?event ?who)))\n";
-        String s2 = "(not (exists ( ?X557 ?X556)(and (instance ?X556 Transfer)(patient ?X556 ?X557)(agent ?X556 ?X559))))";
-        System.out.println(Formula.isNegatedQuery(s1,s2));
-        /* Formula f = new Formula();
-        f.theFormula = "(not (exists ( ?X557 ?X556)(and (instance ?X556 Transfer)(patient ?X556 ?X557)(agent ?X556 ?X559))))";
-        System.out.println(f.textFormat());
-        f.theFormula = "(not\n (exists ( ?X557 ?X556)\n(and\n (instance ?X556 Transfer)\n(patient ?X556 ?X557)\n(agent ?X556 ?X559))))\n";
-        System.out.println(f.textFormat());
-        f.theFormula = "(not (instance ?X556 Transfer)) (not (patient ?X556 ?X557)) (not (agent ?X556 ?X559))";
-        System.out.println(f.textFormat());
-        f.theFormula = " (patient sk1 sk2)";
-        System.out.println(f.textFormat()); */
-
+        Formula f = new Formula();
+        f.theFormula = "(=> (equal ?REL1 ?REL2) (forall (@ROW1 @ @ROW2) (<=> (holds ?REL1 @ROW1) (holds ?REL2 @ROW2))))";
+        System.out.println(f.preProcess());
     }
 
 }
