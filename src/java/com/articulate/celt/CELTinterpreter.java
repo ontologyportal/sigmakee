@@ -190,9 +190,9 @@ public class CELTinterpreter {
      */
     private String performSubstitutions(GrammarNode nInfo, HashMap vars) {
 
-        // System.out.println("INFO in CELTinterpreter.performSubstitutions(): Node " + nInfo.nodeName);
-        // System.out.println(vars.keySet());
-        // System.out.println(vars.values());
+        System.out.println("INFO in CELTinterpreter.performSubstitutions(): Node " + nInfo.nodeName);
+        System.out.println(vars.keySet());
+        System.out.println(vars.values());
 
         if (nInfo.KIFexpression == null) {
             if (nInfo.KIFtemplate == null) 
@@ -218,10 +218,12 @@ public class CELTinterpreter {
             }
         }
         else {
-            if (nInfo.SUMOterm.trim().indexOf(" ") != -1)     // There are multiple SUMO terms for this synset.
-                nInfo.KIFexpression = processMultipleWNterms(nInfo.SUMOterm,nInfo);
-            else
-                nInfo.KIFexpression = nInfo.KIFtemplate.replaceAll("#" + nInfo.nodeName.toUpperCase(),nInfo.SUMOterm);
+            if (nInfo.SUMOterm != null) {
+                if (nInfo.SUMOterm.trim().indexOf(" ") != -1)     // There are multiple SUMO terms for this synset.
+                    nInfo.KIFexpression = processMultipleWNterms(nInfo.SUMOterm,nInfo);
+                else
+                    nInfo.KIFexpression = nInfo.KIFtemplate.replaceAll("#" + nInfo.nodeName.toUpperCase(),nInfo.SUMOterm);
+            }
         }
         // System.out.println("INFO in CELTinterpreter.performSubstitutions(): After KIFexpression " + nInfo.KIFexpression);
         return nInfo.KIFexpression;
@@ -253,10 +255,12 @@ public class CELTinterpreter {
             }
         }
         String result = performSubstitutions(nInfo,nodeMap);
-        result = renameVariables(result);
-        result = removeVariableReassignments(result);
-        result = removeMetaVariables(result);
-        result = removeUnusedQuantifiedVariables(result);
+        if (result != null) {
+            result = renameVariables(result);
+            result = removeVariableReassignments(result);
+            result = removeMetaVariables(result);
+            result = removeUnusedQuantifiedVariables(result);
+        }
         grammarTree.nodeChanged(node);            // Let the changes to the node be visible in the GUI.
         return result;
     }
