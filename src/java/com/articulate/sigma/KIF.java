@@ -17,7 +17,7 @@ import java.io.*;
 import java.util.*;
 import java.text.ParseException;
 
-/********************************************************************
+/** *****************************************************************
  * A class designed to read a file in SUO-KIF format into memory.
  * See <http://suo.ieee.org/suo-kif.html> for a language specification.
  * readFile() and writeFile() and the only public methods.
@@ -40,7 +40,7 @@ public class KIF {
   private String filename;
   private int totalLinesForComments = 0;
 
-  /******************************************************************
+  /** ***************************************************************
    * This routine sets up the StreamTokenizer_s so that it parses SUO-KIF.
    * = < > are treated as word characters, as are normal alphanumerics.
    * ; is the line comment character and " is the quote character.
@@ -66,7 +66,7 @@ public class KIF {
       st.eolIsSignificant(true);
   }
 
-  /******************************************************************
+  /** ***************************************************************
    */
   private void display(StreamTokenizer_s st,
                              boolean inRule,
@@ -97,7 +97,7 @@ public class KIF {
       System.out.println (key);
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * The routine keeps track of the parenthesis level.  Outside parens
    * is level 0.  The program also keeps track of the number of the
    * argument in an expression, but only for ground statements.
@@ -282,7 +282,7 @@ public class KIF {
       System.out.println();
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * This routine creates a key that relates a token in a
    * logical statement to the entire statement.  It prepends
    * to the token a string indicating its position in the
@@ -333,7 +333,7 @@ public class KIF {
     return (key);
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * Count the number of appearences of a certain character in a string.
    * @param str - the string to be tested.
    * @param c - the character to be counted.
@@ -350,7 +350,7 @@ public class KIF {
       return len;
   }
   
-  /******************************************************************
+  /** ***************************************************************
    * Read a KIF file.
    * @param fname - the full pathname of the file.
    */
@@ -369,7 +369,7 @@ public class KIF {
       }
   }
   
-  /******************************************************************
+  /** ***************************************************************
    * Write a KIF file.
    * @param fname - the name of the file to write, including full path.
    */
@@ -402,7 +402,7 @@ public class KIF {
       }
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * Parse a single formula.
    */
   public String parseStatement(String formula, String f) {
@@ -420,7 +420,7 @@ public class KIF {
       }
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * Test method for this class.
    */
   public static void main(String args[]) {

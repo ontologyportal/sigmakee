@@ -23,7 +23,7 @@ public class ProofProcessor {
      /** An ArrayList of BasicXMLelement (s). */
     private ArrayList xml = null;
 
-    /******************************************************************
+    /** ***************************************************************
      * Take an ArrayList of BasicXMLelement (s) and process them as
      * needed
      */
@@ -34,7 +34,7 @@ public class ProofProcessor {
         System.out.println(xmlInput.size());
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Compare the answer with the expected answer.  Note that this method
      * is very unforgiving in that it requires the exact same format for the 
      * expected answer, including the order of variables.
@@ -68,7 +68,7 @@ public class ProofProcessor {
         return result.toString().equalsIgnoreCase(expectedAnswer);
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Return the variable name and binding for the given answer.
      */
     public String returnAnswer(int answerNum) {
@@ -101,7 +101,7 @@ public class ProofProcessor {
         return result.toString();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Remove the $answer clause that Vampire returns, including any
      * surrounding "or".
      */
@@ -121,7 +121,7 @@ public class ProofProcessor {
         return st;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Return an ArrayList of ProofSteps. It expects that the member variable
      * xml will contain a set of <answer> tags.
      */
@@ -164,7 +164,7 @@ public class ProofProcessor {
         return proofSteps;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Return the number of answers contained in this proof.
      */
     public int numAnswers() {

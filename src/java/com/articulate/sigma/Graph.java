@@ -20,7 +20,7 @@ import java.io.*;
  *  ordering relations.  Supports Graph.jsp.  */
 public class Graph {
 
-    /****************************************************************
+    /** *************************************************************
      * Create a ArrayList with a set of terms comprising a hierarchy
      * Each term String will be prefixed with an appropriate number of
      * indentChars. 
@@ -42,7 +42,7 @@ public class Graph {
         return result;
     }
 
-    /****************************************************************
+    /** *************************************************************
      * The main body for createGraph().
      */
     private static ArrayList createGraphBody(KB kb, String term, String relation, 

@@ -17,7 +17,7 @@ package com.articulate.sigma;
 import java.util.*;
 import java.io.*;
 
-  /******************************************************************
+  /** ***************************************************************
   *  A class that handles the generation of natural language from logic.
   *
   *  @author Adam Pease - adampease@earthlink.net, and Justin Chen, with thanks
@@ -31,7 +31,7 @@ public class NLformatter {
 
   private NLformatter () { }  // This class should never have any instances.
   
-  /******************************************************************
+  /** ***************************************************************
   *  Read a set of standard words and phrases in several languages.
   *  Each phrase must appear on a new line with alternatives separated by '|'.
   *  The first entry should be a set of two letter language identifiers.
@@ -116,7 +116,7 @@ public class NLformatter {
       return (keywordMap);
   }
 
-  /******************************************************************
+  /** ***************************************************************
   *  Create a natural language paraphrase of a logical statement.  This is the
   *  entry point for this function, but kifExprPara does most of the work.
   *
@@ -185,7 +185,7 @@ public class NLformatter {
       return phraser.pop().toString();
   }
 
-  /******************************************************************
+  /** ***************************************************************
   *  This method reads all tokens from the top of a stack until it reaches "(".
   *  It then converts them into a natural language sentence and pushes the result back onto the stack.
   *
@@ -289,7 +289,7 @@ public class NLformatter {
       }
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * Return the NL format of an individual word.
    */
   private static String translateWord(Map termMap, String word) {
@@ -300,7 +300,7 @@ public class NLformatter {
           return (word);
   }
   
-  /******************************************************************
+  /** ***************************************************************
    * Create a natural language paraphrase for statements involving the logical operators.
    *
    * @param pred the logical predicate in the expression
@@ -452,7 +452,7 @@ public class NLformatter {
           return "";
   }
    
-  /******************************************************************
+  /** ***************************************************************
    * Create a natural language paraphrase of a logical statement, where the
    * predicate is not a logical operator.  Use a printf-like format string to generate
    * the paraphrase.
@@ -529,7 +529,7 @@ public class NLformatter {
       return sb.toString();
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * Create a natural language paraphrase with regards to a positive element
    * in the format string.
    *
@@ -558,7 +558,7 @@ public class NLformatter {
       return i;
   }
   
-  /******************************************************************
+  /** ***************************************************************
    * Create a natural language paraphrase with regards to a negative element
    * in the format string.
    *
@@ -591,7 +591,7 @@ public class NLformatter {
       return i;
   }
 
-  /******************************************************************
+  /** ***************************************************************
    * Handle the '*' format character in a natural language formatting string.
    *
    * @param i the index of the current character under examination in the format string
@@ -639,7 +639,7 @@ public class NLformatter {
       return i;
   }
 
-  /*****************************************************************
+  /** **************************************************************
    * Hyperlink terms in a natural language format string.  This assumes that
    * terms to be hyperlinked are in the form &%termName$termString , where
    * termName is the name of the term to be browsed in the knowledge base and
@@ -679,7 +679,7 @@ public class NLformatter {
       return nlFormat;
   }
 
-  /*****************************************************************
+  /** **************************************************************
    */
   public static void main(String[] args) {
 

@@ -29,7 +29,7 @@ public class KBmanager {
     private String configuration = null;
     private boolean initialized = false;
 
-    /******************************************************************
+    /** ***************************************************************
      * Constructor which reads in a configuration from a file.
      */
     public KBmanager() {
@@ -61,7 +61,7 @@ public class KBmanager {
         }
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Read in any KBs defined in the configuration.
      */
     public void initializeOnce() throws IOException, ParseException {
@@ -101,7 +101,7 @@ public class KBmanager {
         System.out.println("INFO in KBmanager.initializeOnce(): celtdir: " + (String) preferences.get("celtdir"));
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Double the backslash in a filename so that it can be saved to a text
      * file and read back properly.
      */
@@ -122,7 +122,7 @@ public class KBmanager {
         return newstring.toString();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Create a new empty KB with a name.
      * @param name - the name of the KB
      */
@@ -134,7 +134,7 @@ public class KBmanager {
         System.out.println("INFO in KBmanager.addKB: Adding KB: " + name);
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Remove a knowledge base.
      * @param name - the name of the KB
      */
@@ -160,7 +160,7 @@ public class KBmanager {
         System.out.println("INFO in KBmanager.removeKB: Removing KB: " + name);
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Write the current configuration of the system.  Call 
      * writeConfiguration() on each KB object to write its manifest.
      */
@@ -218,7 +218,7 @@ public class KBmanager {
         }
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Read an XML-formatted configuration file. The method initializeOnce()
      * sets the preferences based on the contents of the configuration file.
      */
@@ -253,7 +253,7 @@ public class KBmanager {
         configuration = xml.toString();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Get the KB that has the given name.
      */
 
@@ -264,7 +264,7 @@ public class KBmanager {
         return (KB) kbs.get(name.intern());
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Remove the KB that has the given name.
      */
 	
@@ -272,7 +272,7 @@ public class KBmanager {
         kbs.remove(name);
     }
 	
-    /******************************************************************
+    /** ***************************************************************
      * Get the one instance of KBmanager from its class variable.
      */
 
@@ -283,7 +283,7 @@ public class KBmanager {
         return manager;
     }
 	
-    /******************************************************************
+    /** ***************************************************************
      * Get the Set of KB names in this manager.
      */
 
@@ -291,7 +291,7 @@ public class KBmanager {
         return kbs.keySet();
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Get the preference corresponding to the given kef.
      */
     
@@ -299,7 +299,7 @@ public class KBmanager {
         return (String) preferences.get(key);
     }
     
-    /******************************************************************
+    /** ***************************************************************
      * Set the preference to the given value.
      */
     
@@ -307,7 +307,7 @@ public class KBmanager {
         preferences.put(key,value);
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * A test method.
      */
 

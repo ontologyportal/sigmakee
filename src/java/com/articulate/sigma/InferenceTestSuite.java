@@ -42,7 +42,7 @@ public class InferenceTestSuite {
      /** Total time */
     public static long totalTime = 0;
 
-    /******************************************************************
+    /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
      * true if any pair of answers is different.  Return false otherwise.
      */
@@ -57,7 +57,7 @@ public class InferenceTestSuite {
         return false;
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * The main method that controls running a set of tests and returning
      * the result as an HTML page showing test results and links to proofs.
      * Note that this procedure deletes any prior user assertions.
@@ -199,7 +199,7 @@ public class InferenceTestSuite {
         return result.toString();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Test method
      */
     public static void main(String[] args) {

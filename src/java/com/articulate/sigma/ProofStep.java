@@ -34,7 +34,7 @@ public class ProofStep {
       *  the proof numbers returned directly from Vampire. */
     public ArrayList premises = new ArrayList();
     
-    /******************************************************************
+    /** ***************************************************************
      * Take an ArrayList of ProofSteps and renumber them consecutively
      * starting at 1.  Update the ArrayList of premises so that they
      * reflect the renumbering.

@@ -19,7 +19,7 @@ import java.io.*;
  /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
-    /****************************************************************
+    /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
     public static String proofTableFormat(String query, ProofStep step, String kbName, String language) {
@@ -61,7 +61,7 @@ public class HTMLformatter {
         return result.toString();
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Show a hyperlinked list of terms.
      */
     public static String termList(ArrayList terms, String kbHref) {
@@ -76,7 +76,7 @@ public class HTMLformatter {
         return show.toString();
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
     public static String browserSectionFormat(ArrayList forms, String header, String htmlDivider, String kbHref, KB kb, String language) {
@@ -100,7 +100,7 @@ public class HTMLformatter {
         return show.toString();
     }
 
-    /****************************************************************
+    /** *************************************************************
      *  Create an HTML menu, given an ArrayList of Strings.
      */
     public static String createMenu(String menuName, String selectedOption, ArrayList options) {
@@ -125,7 +125,7 @@ public class HTMLformatter {
     }
 
 
-    /****************************************************************
+    /** *************************************************************
      *  Create an HTML formatted result of a query.
      */
     public static String formatProofResult(String result, String stmt, String processedStmt, 
