@@ -39,6 +39,21 @@ public class Formula implements Comparable {
     }
     
     /** ***************************************************************
+     * Copy the Formula.
+     */
+    private Formula copy() {
+
+        Formula result = new Formula();
+        if (sourceFile != null) 
+            result.sourceFile = sourceFile.intern();
+        result.startLine = startLine;
+        result.endLine = endLine;
+        if (theFormula != null) 
+            result.theFormula = theFormula.intern();
+        return result;
+    }
+
+    /** ***************************************************************
      * Implement the Comparable interface by defining the compareTo
      * method.  Formulas are equal if their formula strings are equal.
      */
@@ -50,9 +65,11 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      * Return the LISP 'car' of the formula - the first element of the list.
+     * Note that this operation has no side effect on the Formula.
      */
     public String car() {
 
+        //System.out.println("INFO in Formula.car: theformula: " + theFormula);
         int i = 0;
         while (theFormula.charAt(i) != '(') i++;
         i++;
@@ -78,6 +95,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Return the LISP 'cdr' of the formula - the rest of a list minus its
      * first element.
+     * Note that this operation has no side effect on the Formula.
      */
     public String cdr() {
 
@@ -118,28 +136,68 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Test whether the Formula is an empty list.
+     */
+    private boolean empty() {
+
+        if (theFormula.equals("()")) return true;
+        else return false;
+    }
+
+    /** ***************************************************************
+     * Test whether the Formula is a list.
+     */
+    private boolean listP() {
+
+        String f = theFormula;
+        f.trim();
+        if (f.charAt(0) == '(' && f.charAt(f.length()-1) == ')') return true;
+        else return false;
+    }
+
+    /** ***************************************************************
      * Parse a String into an ArrayList of Formulas. The String must be
      * a LISP-style list.
+     * @return an ArrayList of Formulas
      */
     private ArrayList parseList(String s) {
 
-        // System.out.println("INFO in Formula.parseList(): Parsing " + s);
-        int i = 1;                         // skip the opening paren
+        //System.out.println("INFO in Formula.parseList(): s " + s);
+        ArrayList result = new ArrayList();
+        Formula f = new Formula();
+        f.read("(" + s + ")");
+        if (f.empty()) 
+            return result;
+        while (!f.empty()) {
+            //System.out.println("INFO in Formula.parseList(): f " + f.theFormula);
+            String car = f.car();
+            f.read(f.cdr());
+            Formula newForm = new Formula();
+            newForm.read(car);
+            result.add(newForm);
+        }
+        return result;
+
+        /* System.out.println("INFO in Formula.parseList(): Parsing " + s);
+        System.out.println("INFO in Formula.parseList(): length " + s.length());
+        int i = 0;                        
+        int level = 0;
         s = s.trim();
         ArrayList result = new ArrayList();
         while (i < s.length() - 1) {
+            System.out.println("INFO in Formula.parseList(): i " + i);
             while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
             if (i >= s.length()) 
                 return result;
-            int level = 0;
             if (s.charAt(i) == '(') 
                 level++;
             int start = i;
             i++;
-            while ((!Character.isWhitespace(s.charAt(i)) && s.charAt(i) != ')' && level == 0) ||
+            System.out.println("INFO in Formula.parseList(): i (2) " + i);
+            while ((((!Character.isWhitespace(s.charAt(i)) && s.charAt(i) != ')' && level == 0) ||
                 (s.charAt(i) != ')' && level == 1) ||
-                   level > 1) {
-                // System.out.print(s.charAt(i));
+                   level > 1)) && (i < s.length()-1)) {
+                System.out.print(s.charAt(i));
                 if (s.charAt(i) == ')') level--;
                 if (s.charAt(i) == '(') level++;
                 i++;            
@@ -150,10 +208,16 @@ public class Formula implements Comparable {
             else
                 newForm.read(s.substring(start,i+1));
             result.add(newForm);
-            // System.out.println("INFO in Formula.parseList(): Adding " + newForm.toString());
+            System.out.println();
+            System.out.println("INFO in Formula.parseList(): Adding " + newForm.toString());
             i++;
         }
         return result;
+
+        
+(=> (holds contraryAttribute ?ROW1) (holds foo ?ROW1))
+(=> (holds contraryAttribute ?ROW1 ?ROW2) (holds foo ?ROW1 ?ROW2))
+        */
     }
 
     /** ***************************************************************
@@ -162,11 +226,14 @@ public class Formula implements Comparable {
      * method iterates through one list, trying to find a match in the other
      * and removing it if a match is found.  If the lists are equal, the 
      * second list should be empty once the iteration is complete.
+     * Note that the formulas being compared must be lists, not atoms, and
+     * not a set of formulas unenclosed by parentheses.  So, "(A B C)" 
+     * and "(A)" are valid, but "A" is not, nor is "A B C".
      */
     private boolean compareFormulaSets(String s) {
 
-        ArrayList thisList = parseList(this.theFormula);  // an ArrayList of Formulas
-        ArrayList sList = parseList(s);
+        ArrayList thisList = parseList(this.theFormula.substring(1,this.theFormula.length()-1));  // an ArrayList of Formulas
+        ArrayList sList = parseList(s.substring(1,s.length()-1));
         if (thisList.size() != sList.size()) 
             return false;
 
@@ -340,6 +407,9 @@ public class Formula implements Comparable {
      * formulas can be found equal even if they have different variable
      * names. Variables must be normalized so that (foo ?A ?B) is 
      * equal to (foo ?X ?Y) - they both are converted to (foo ?VAR1 ?VAR2)
+     * Note that this routine has a significant known bug that variables
+     * whose names are a subset of one another will cause problems, for
+     * example (foo ?VAR ?VAR1)
      */
     private static String normalizeVariables(String s) {
 
@@ -393,11 +463,11 @@ public class Formula implements Comparable {
      * Makes implicit universal quantification explicit.  May be needed
      * in the future for other theorem provers.
      */
-    private String makeQuantifiersExplicit() {
+    public String makeQuantifiersExplicit() {
         
         ArrayList quantVariables = new ArrayList();
         ArrayList unquantVariables = new ArrayList();
-        System.out.println("Adding quantified variables.");
+        //System.out.println("Adding quantified variables.");
         int startIndex = -1;                        // Collect all quantified variables
         while (theFormula.indexOf("(forall (?",startIndex) != -1 ||
                theFormula.indexOf("(exists (?",startIndex) != -1) {
@@ -410,24 +480,26 @@ public class Formula implements Comparable {
             int i = startIndex;
             while (theFormula.charAt(i) != ')' && i < theFormula.length()) {
                 i++;
-                if (theFormula.charAt(i) == ' ') { 
-                    quantVariables.add(theFormula.substring(startIndex,i));
-                    System.out.println(theFormula.substring(startIndex,i));
+                if (theFormula.charAt(i) == ' ') {
+                    if (!quantVariables.contains(theFormula.substring(startIndex,i).intern()))
+                        quantVariables.add(theFormula.substring(startIndex,i));
+                    //System.out.println(theFormula.substring(startIndex,i));
                     startIndex = i+1;
                 }
             }
-            System.out.println(startIndex);
-            System.out.println(i);
+            //System.out.println(startIndex);
+            //System.out.println(i);
             if (i < theFormula.length()) {
-                quantVariables.add(theFormula.substring(startIndex,i).intern());
-                System.out.println(theFormula.substring(startIndex,i));
+                if (!quantVariables.contains(theFormula.substring(startIndex,i).intern()))
+                    quantVariables.add(theFormula.substring(startIndex,i).intern());
+                //System.out.println(theFormula.substring(startIndex,i));
                 startIndex = i+1;
             }
             else
                 startIndex = theFormula.length();
         }
 
-        System.out.println("Adding unquantified variables.");
+        //System.out.println("Adding unquantified variables.");
         startIndex = 0;                        // Collect all unquantified variables
         while (theFormula.indexOf("?",startIndex) != -1) {
             startIndex = theFormula.indexOf("?",startIndex);
@@ -438,9 +510,10 @@ public class Formula implements Comparable {
                 i = spaceIndex;
             else
                 i = parenIndex;
-            if (!quantVariables.contains(theFormula.substring(startIndex,i).intern())) {
+            if (!quantVariables.contains(theFormula.substring(startIndex,i).intern()) &&
+                !unquantVariables.contains(theFormula.substring(startIndex,i).intern())) {
                 unquantVariables.add(theFormula.substring(startIndex,i).intern());                
-                System.out.println(theFormula.substring(startIndex,i));
+                //System.out.println(theFormula.substring(startIndex,i));
             }
             startIndex = i;
         }
@@ -451,11 +524,14 @@ public class Formula implements Comparable {
             if (i < unquantVariables.size() - 1) 
                 quant = quant.append(" ");
         }
+        System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
+                            quant.toString() + ") " + theFormula + ")");
         return quant.toString() + ") " + theFormula + ")";
     }
 
     /** ***************************************************************
-     * Expand row variables.  Each variable is treated like a macro that
+     * Expand row variables, keeping the information about the original
+     * source formula.  Each variable is treated like a macro that
      * expands to up to seven regular variables.  For example
      *
      * (=>
@@ -477,19 +553,30 @@ public class Formula implements Comparable {
      *       (subrelation ?REL1 ?REL2)
      *       (holds ?REL1 ?ARG1 ?ARG2))
      *    (holds ?REL2 ?ARG1 ?ARG2))
-     * etc. 
+     * etc.
+     * 
+     * @param rowVarMap is a HashMap with Strings as keys.  The keys are
+     * row variable names without the '@'.  The values
+     * are null, so it should really be a Set.
+     * Note that this routine has a significant bug that appears when
+     * row variable names are subsets of one another, for example
+     * (foo @ROW @ROW2)
+     * @return an ArrayList of Formulas
      */
-    private ArrayList expandRowVars(String input, HashMap rowVarMap) {
+    private ArrayList expandRowVars(String input, TreeSet rowVars) {
 
+        //System.out.println("INFO in Formula.expandRowVars(): input: " + input);
         StringBuffer result = new StringBuffer(input);
         ArrayList resultList = new ArrayList();
-        Iterator it = rowVarMap.keySet().iterator();
+        Iterator it = rowVars.iterator();
         if (!it.hasNext()) {
-            resultList.add(input);
+            Formula f = new Formula();
+            f.read(input);
+            resultList.add(f);
             return resultList;
         }
         else {
-            while (it.hasNext()) {
+            while (it.hasNext()) {                              // Iterate through the row variables
                 String row = (String) it.next();
                 StringBuffer rowResult = new StringBuffer();
                 StringBuffer rowReplace = new StringBuffer();
@@ -498,29 +585,48 @@ public class Formula implements Comparable {
                         rowReplace = rowReplace.append(" ");
                     }
                     rowReplace = rowReplace.append("\\?" + row + (new Integer(j)).toString());
-                    resultList.add(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
                     rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
                 }
                 result = new StringBuffer(rowResult.toString());
+                //System.out.println("INFO in Formula.expandRowVars(): result: " + result);
             }
         }
-            return resultList;
+        ArrayList al = parseList(result.toString());      // Copy the source file information for each expanded formula.
+        //System.out.println("INFO in Formula.expandRowVars(): List : " + al);
+        ArrayList newList = new ArrayList();
+        for (int i = 0; i < al.size(); i++) {
+            Formula f = this.copy();
+            f.theFormula = ((Formula) al.get(i)).theFormula;
+            newList.add(f);
+            //System.out.println("INFO in Formula.expandRowVars(): Adding formula : " + f);
+        }
+        return newList;
     }    
+
+    /** ***************************************************************
+     * Convert an ArrayList of Formulas to an ArrayList of Strings.
+     */
+    private ArrayList formulasToStrings(ArrayList list) {
+
+        ArrayList result = new ArrayList();
+        for (int i = 0; i < list.size(); i++) {
+            result.add(((Formula) list.get(i)).theFormula);
+        }
+        return result;
+    }
 
     /** ***************************************************************
      * Pre-process a formula before sending it to Vampire. This includes
      * ignoring meta-knowledge like documentation strings, translating
      * mathematical operators, quoting higher-order formulas, expanding
      * row variables and prepending the 'holds' predicate.
+     * @return an ArrayList of Formula(s)
      */
     public ArrayList preProcess() {
 
         String s = theFormula;
         Stack predicateStack = new Stack();
-        HashMap varMap = new HashMap();      // A list of variable names and their normalized names.
-        HashMap rowVarMap = new HashMap();   // A list of normalized variable names for row variables.
-                                             // Variables must be normalized so that (foo ?A ?B) is 
-                                             // equal to (foo ?X ?Y) - they both are converted to (foo ?VAR1 ?VAR2)
+        TreeSet rowVars = new TreeSet();   // A list of row variables.
         StringBuffer result = new StringBuffer();
         String[] logOps = {"and", "or", "not", "=>", "<=>", "forall", "exists"};
         String[] matOps = {"equal", "greaterThan", "greaterThanOrEqualTo", "lessThan", "lessThanOrEqualTo", 
@@ -603,9 +709,7 @@ public class Formula implements Comparable {
                         while (Character.isJavaIdentifierPart(s.charAt(i)))
                             i++;
                         String var = s.substring(varStart,i);
-                        if (!rowVarMap.keySet().contains(var)) {
-                            rowVarMap.put(var,null);
-                        }
+                        rowVars.add(var);
                         result = result.append("@" + var);
                         i--;
                     }
@@ -630,7 +734,7 @@ public class Formula implements Comparable {
                 result = result.append(ch);
             }
         }
-        return expandRowVars(result.toString(),rowVarMap);
+        return expandRowVars(result.toString(),rowVars);
     }
 
     /** ***************************************************************
@@ -793,28 +897,18 @@ public class Formula implements Comparable {
      */
     public static void main(String[] args) {
 
-
         Formula f = new Formula();
-        Formula f2 = new Formula();
-        f.theFormula = "(=> (foo A B) (and C B))";
-        f2.theFormula = "(=> (foo A B) (and C D))";
-        System.out.println("Testing " + f.toString() + " " + f2.toString());
-        System.out.println(f.logicallyEquals(f2.theFormula));
-
-        f.theFormula = "(=> (foo A B) (and C B))";
-        f2.theFormula = "(=> (foo A B) (and B C))";
-        System.out.println("Testing " + f.toString() + " " + f2.toString());
-        System.out.println(f.logicallyEquals(f2.theFormula));
-
-        f.theFormula = "(=> (foo A B) (and (bar ?X ?Y) (baz (FrontFn A) ?Y)))";
-        f2.theFormula = "(=> (foo A B) (and (baz (FrontFn B) ?N) (bar ?M ?N)))";
-        System.out.println("Testing " + f.toString() + " " + f2.toString());
-        System.out.println(f.logicallyEquals(f2.theFormula));  
-
-        f.theFormula = "(=> (foo A B) (and (bar ?X ?Y) (baz (FrontFn A) ?Y)))";
-        f2.theFormula = "(=> (foo A B) (and (baz (FrontFn A) ?N) (bar ?M ?N)))";
-        System.out.println("Testing " + f.toString() + " " + f2.toString());
-        System.out.println(f.logicallyEquals(f2.theFormula));  
+        //f.read("(=> (and (contraryAttribute @ROW) (identicalListItems (ListFn @ROW) (ListFn @ROW2))) (contraryAttribute @ROW2))");
+        f.read("(=> (contraryAttribute @ROW) (foo @ROW2))");
+        System.out.println(f.preProcess());
+        /* System.out.println(f.parseList("(=> (holds contraryAttribute ?ROW1) (holds foo ?ROW1)) " +
+                                       "(=> (holds contraryAttribute ?ROW1 ?ROW2) (holds foo ?ROW1 ?ROW2)) " +
+                                       "(=> (holds contraryAttribute ?ROW1 ?ROW2 ?ROW3) (holds foo ?ROW1 ?ROW2 ?ROW3)) " +
+                                       "(=> (holds contraryAttribute ?ROW1 ?ROW2 ?ROW3 ?ROW4) (holds foo ?ROW1 ?ROW2 ?ROW3 ?ROW4)) " +
+                                       "(=> (holds contraryAttribute ?ROW1 ?ROW2 ?ROW3 ?ROW4 ?ROW5) (holds foo ?ROW1 ?ROW2 ?ROW3 ?ROW4 ?ROW5)) " +
+                                       "(=> (holds contraryAttribute ?ROW1 ?ROW2 ?ROW3 ?ROW4 ?ROW5 ?ROW6) (holds foo ?ROW1 ?ROW2 ?ROW3 ?ROW4 ?ROW5 ?ROW6)) " +
+                                       "(=> (holds contraryAttribute ?ROW1 ?ROW2 ?ROW3 ?ROW4 ?ROW5 ?ROW6 ?ROW7) (holds foo ?ROW1 ?ROW2 ?ROW3 ?ROW4 ?ROW5 ?ROW6 ?ROW7))"));
+                                       */
     }
 
 }
