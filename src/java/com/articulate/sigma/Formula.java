@@ -364,7 +364,7 @@ public class Formula implements Comparable {
                         i++;
                         if (s.charAt(i) == '?' && !lastPredicate.equalsIgnoreCase("forall") && !lastPredicate.equalsIgnoreCase("exists") ) {
                             result = result.append(ch);
-                            result = result.append("holds ");
+                            result = result.append("holds ?");
                             lastPredicate = "holds";
                             predicateStack.push("holds");
                         }
@@ -572,7 +572,7 @@ public class Formula implements Comparable {
     public static void main(String[] args) {
 
         Formula f = new Formula();
-        f.theFormula = "(=> (equal ?REL1 ?REL2) (forall (@ROW1 @ @ROW2) (<=> (holds ?REL1 @ROW1) (holds ?REL2 @ROW2))))";
+        f.theFormula = "(=> (instance ?REL Relation) (<=> (holds ?REL @ROW) (?REL @ROW)))";
         System.out.println(f.preProcess());
     }
 
