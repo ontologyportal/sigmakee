@@ -281,4 +281,125 @@ public class Diagnostics {
         }
         return result;
     }
+
+    /** *****************************************************************
+     * Make an empty KB for use in Diagnostics. 
+     */
+    private static KB makeEmptyKB(String kbName) {
+
+        String kbDir = (String)KBmanager.getMgr().getPref("kbDir");
+        if (KBmanager.getMgr().existsKB(kbName)) {
+            KBmanager.getMgr().removeKB(kbName);
+        }
+        String emptyCFilename = kbDir + File.separator + "emptyConstituent.txt";
+        FileWriter fw = null; 
+        PrintWriter pw = null;
+        KBmanager.getMgr().addKB(kbName);
+        KB empty = KBmanager.getMgr().getKB(kbName);
+        System.out.println("empty = " + empty);
+
+        try { // Fails elsewhere if no constituents, or empty constituent, thus...
+            fw = new FileWriter(emptyCFilename);
+            pw = new PrintWriter(fw);   
+            pw.println("(instance instance BinaryPredicate)\n");
+            if (pw != null) pw.close();
+            if (fw != null) fw.close();
+            empty.addConstituent(emptyCFilename);
+        }
+        catch (java.io.IOException e) {
+            System.out.println("Error writing file " + emptyCFilename);
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return empty;
+    }
+
+    /** *****************************************************************
+     * Returns "" if answer is OK, otherwise reports it. 
+     */
+
+    private static String reportAnswer(KB kb, String proof, Formula query, String pQuery, String testType) {
+
+        String language = kb.language;
+        String kbName = kb.name;
+        String hostname = KBmanager.getMgr().getPref("hostname");
+        String result = null;
+        if (hostname == null)
+            hostname = "localhost";
+        String kbHref = "http://" + hostname + ":8080/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+        String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+        StringBuffer html = new StringBuffer();
+
+        if (proof.indexOf("Syntax error detected") != -1) {
+            html = html.append("Syntax error in formula : <br><br>");
+            html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
+            result = HTMLformatter.formatProofResult(proof,query.theFormula,
+                                                     pQuery,lineHtml,kbName,language);
+            html = html.append(result);
+            return html.toString();
+        }
+            
+        BasicXMLparser res = new BasicXMLparser(proof);
+        ProofProcessor pp = new ProofProcessor(res.elements);
+        if (!pp.returnAnswer(0).equalsIgnoreCase("no")) {
+            html = html.append(testType + ": <br><br>");
+            html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
+            result = HTMLformatter.formatProofResult(proof,query.theFormula,
+                                                     pQuery,lineHtml,kbName,language);
+            html = html.append(result);
+            return html.toString();
+        }
+        return "";
+    }
+
+
+    /** *****************************************************************
+     * Iterating through all formulas, return a proof of an inconsistent 
+     * or redundant one, if such a thing exists.
+     */
+    public static String kbConsistencyCheck(KB kb) {
+
+        int timeout = 10;
+        int maxAnswers = 1;
+        String proof;
+        String result = null;
+
+        String answer = null;
+        KB empty = makeEmptyKB("consistencyCheck");
+
+        System.out.println("=================== Consistency Testing ===================");
+        try {
+            Formula theQuery = new Formula();
+            TreeSet formulaSet = kb.getFormulas(); // POD defined this method. Is there another way?
+            Iterator it = formulaSet.iterator();
+            while (it.hasNext()) {
+                Formula query = (Formula)it.next();
+                ArrayList processedQueries = query.preProcess(); // may be multiple because of row vars.
+                //System.out.println(" query = " + query);
+                //System.out.println(" processedQueries = " + processedQueries);
+
+                String processedQuery = null;
+                Iterator q = processedQueries.iterator();
+
+                while (q.hasNext()) {
+                    processedQuery = (String)q.next();
+                    proof = empty.inferenceEngine.submitQuery(processedQuery,timeout,maxAnswers);
+                    answer = reportAnswer(kb,proof,query,processedQuery,"Redundancy");
+                    if (answer.length() != 0) return answer;
+
+                    StringBuffer negatedQuery = new StringBuffer();
+                    negatedQuery.append("(not " + processedQuery + ")");
+                    proof = empty.inferenceEngine.submitQuery(negatedQuery.toString(),timeout,maxAnswers);
+                    answer = reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency");
+                    if (answer.length() != 0) return answer;
+                }
+                empty.tell(query.theFormula);
+            }
+        }
+        catch (IOException ioe) {
+            return("Error in Diagnostics.kbConsistencyCheck while executing query: " + ioe.getMessage());
+        }
+        return "No contradictions or redundancies found.";
+    }
 }
