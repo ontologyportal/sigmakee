@@ -61,7 +61,7 @@ public class BasicXMLparser {
      */
     private void parse(LineNumberReader lnr, BasicXMLelement element) throws ParseException, IOException {
         
-        System.out.println("Beginning parse with tag: " + element.tagname);
+        //System.out.println("Beginning parse with tag: " + element.tagname);
         String newTag = null;
         boolean inQuote = false;
         int lineNumber = 0;
@@ -71,15 +71,15 @@ public class BasicXMLparser {
             String line = lnr.readLine();
             inQuote = false;
             if (line == null) {
-                System.out.println("INFO in BasicXMLparser.parse: Exiting with line = null.");
+                //System.out.println("INFO in BasicXMLparser.parse: Exiting with line = null.");
                 return;
             }
-            System.out.println(line);
+            //System.out.println(line);
             line = line.trim();
             int tagStart = line.indexOf('<');
             if (tagStart != 0) {                        // It's not a tag
                 element.contents = element.contents + (new String(line.trim()));
-                System.out.println("INFO in BasicXMLparser.parse: Adding contents: " + line);
+                //System.out.println("INFO in BasicXMLparser.parse: Adding contents: " + line);
                 continue;
             }
             if (line.charAt(tagStart+1) == '/') {      // Found a closing tag
@@ -96,18 +96,18 @@ public class BasicXMLparser {
                 while (tagEnd < line.length() && Character.isJavaIdentifierPart(line.charAt(tagEnd))) 
                     tagEnd++;
                 newTag = line.substring(line.indexOf('<') + 1,tagEnd);
-                System.out.println("Tag: " + newTag);
+                //System.out.println("Tag: " + newTag);
                 BasicXMLelement newElement = new BasicXMLelement();
                 newElement.tagname = newTag;
                 if (line.charAt(tagEnd) == ' ') {     // The tag has attributes
-                    System.out.println("INFO in BasicXMLparser.parse: Tag has attributes.");
+                    //System.out.println("INFO in BasicXMLparser.parse: Tag has attributes.");
                     do {
                         tagEnd++;
                         int name = tagEnd;
                         while (tagEnd < line.length() && Character.isJavaIdentifierPart(line.charAt(tagEnd))) 
                             tagEnd++;
                         String nameString = line.substring(name,tagEnd);
-                        System.out.println(line);
+                        //System.out.println(line);
                         if (line.charAt(tagEnd) != '=') 
                             throw new ParseException("Error in BasicXMLparser.parse(): Name without value: " + nameString, lnr.getLineNumber());
                         tagEnd++;
@@ -133,7 +133,7 @@ public class BasicXMLparser {
                         }
                         String valueString = line.substring(value,tagEnd);
 
-                        System.out.println("INFO in BasicXMLparser.parse: Value string: " + valueString);
+                        //System.out.println("INFO in BasicXMLparser.parse: Value string: " + valueString);
                         if (line.charAt(tagEnd) == valueEnd) 
                             tagEnd++;
                         newElement.attributes.put(nameString,valueString);
@@ -141,24 +141,24 @@ public class BasicXMLparser {
 
                 }
 
-                System.out.println("INFO in BasicXMLparser.parse (2): End character: '" + line.charAt(tagEnd) + "'");
+                //System.out.println("INFO in BasicXMLparser.parse (2): End character: '" + line.charAt(tagEnd) + "'");
                 if (line.charAt(tagEnd) == '>') {
-                    System.out.println("INFO in BasicXMLparser.parse (2): Adding element " + newElement.tagname);
-                    System.out.println("INFO in BasicXMLparser.parse (2): newelement " + newElement);
+                    //System.out.println("INFO in BasicXMLparser.parse (2): Adding element " + newElement.tagname);
+                    //System.out.println("INFO in BasicXMLparser.parse (2): newelement " + newElement);
                     parse(lnr,newElement);
                     element.subelements.add(newElement);
                 }
                 else if (line.charAt(tagEnd) == '/' && 
                          (line.charAt(tagEnd + 1) == '>' && !inQuote)) {
-                    System.out.println("INFO in BasicXMLparser.parse (2): Adding element " + newElement.tagname);
-                    System.out.println("INFO in BasicXMLparser.parse (2): newelement " + newElement);
+                    //System.out.println("INFO in BasicXMLparser.parse (2): Adding element " + newElement.tagname);
+                    //System.out.println("INFO in BasicXMLparser.parse (2): newelement " + newElement);
                     newTag = "";
                     element.subelements.add(newElement);
                 }
             }
         }
-        System.out.print("INFO in BasicXMLparser.parse: Number of elements ");
-        System.out.println(elements.size());
+        //System.out.print("INFO in BasicXMLparser.parse: Number of elements ");
+        //System.out.println(elements.size());
         return;
     }
    
