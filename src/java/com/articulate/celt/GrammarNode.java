@@ -48,10 +48,14 @@ public class GrammarNode {
     public int lastChildVisited;
      /** A word matched to this node during parsing. */
     public String matchedWord;
+     /** The root form, if applicable, of the word matched to this node during parsing. */
+    public String rootWord;
      /** The tense of a verb.  Only meaningful if this is a verb. */
     public int tense;
      /** The number of a noun, singular or plural.  Only meaningful if this is a noun. */
     public int number;
+     /** The part of speech. */
+    public int POS = -1;
 
     /** Number of times a grammar node may be repeated */
     public static final int NO_REPEAT = 0;
