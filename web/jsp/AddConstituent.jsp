@@ -28,12 +28,12 @@ August 9, Acapulco, Mexico.
       multiPartRequest = new MultipartRequest(request,srcDir);
       callingPage = multiPartRequest.getParameter("callingPage");
       kbName = multiPartRequest.getParameter("kbName");
-      System.out.println("INFO in AddConstituent.jsp: kbName: " + kbName);
-      System.out.println("INFO in AddConstituent.jsp: filename: " + multiPartRequest.getParameter("constituent"));
+      //System.out.println("INFO in AddConstituent.jsp: kbName: " + kbName);
+      //System.out.println("INFO in AddConstituent.jsp: filename: " + multiPartRequest.getParameter("constituent"));
       Enumeration params = multiPartRequest.getParameterNames();
       while (params.hasMoreElements()) {
           String param = params.nextElement().toString();
-          System.out.println("INFO in AddConstituent.jsp: parameter: " + param);
+          //System.out.println("INFO in AddConstituent.jsp: parameter: " + param);
       }
       if (kbName == null) {
           System.out.println("Error: No knowledge base name specified.");
@@ -44,8 +44,8 @@ August 9, Acapulco, Mexico.
       while (fileTags.hasMoreElements()) {                    
           String fileTag = fileTags.nextElement().toString();
           fileName = multiPartRequest.getOriginalFileName(fileTag);
-          System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
-          System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
+          //System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
+          //System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
           if (KBmanager.getMgr().getKB(kbName) == null) 
               KBmanager.getMgr().addKB(kbName);
           KB kb = KBmanager.getMgr().getKB(kbName);
@@ -58,9 +58,9 @@ August 9, Acapulco, Mexico.
   catch (Exception e) {
       System.out.println("Error in AddConstituent.jsp: Enumerating MultipartRequest which uploads files.");
       System.out.println(e.getMessage());
-      System.out.println("INFO in AddConstituent.jsp: kbName: " + kbName);
-      System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
-      System.out.println("INFO in AddConstituent.jsp: callingPage: " + multiPartRequest.getParameter("callingPage"));
+      System.out.println("kbName: " + kbName);
+      System.out.println("filename: " + fileName);
+      System.out.println("callingPage: " + multiPartRequest.getParameter("callingPage"));
   }
 
   response.sendRedirect(callingPage + ".jsp?kb=" + kbName);
