@@ -33,10 +33,16 @@ public class CELTTestSuite {
         boolean isSentence = false;
         boolean isAnswer = false;
         boolean isPair = false;
+        boolean odd = true;
+        int count = 1;
 
         result = result.append("<h2>CELT tests</h2>\n");
-        result = result.append("<table><tr><td><b>Sentence</b></td><td><b>Expected</b></td><td><b>Actual</b></td><td><b>ok</b></td></tr>");
-        String celtTestFile = "C:\\Program Files\\Apache Tomcat 4.0\\tests\\celtTest.txt";
+        result = result.append("<table><tr><td width='20%'><b>Sentence</b></td>");
+        result = result.append("<td><b>Expected</b></td><td><b>Actual</b></td><td><b>ok</b></td></tr>");
+        String celtTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        if (celtTestDir == null)
+            celtTestDir = "C:\\Program Files\\Apache Tomcat 4.0\\tests\\";
+        String celtTestFile = celtTestDir + File.separator + "celtTest.txt";
         KIF test = new KIF();
         try {
             test.readFile(celtTestFile);
@@ -92,13 +98,19 @@ public class CELTTestSuite {
                     Formula f = new Formula();
                     f.read(expectedAnswer);
                     boolean correct = false;
-                    if (f.equals(celtResult))
+                    if (f.logicallyEquals(celtResult))
                         correct = true;
                     else
                         correct = false;
                     Formula c = new Formula();
                     c.read(celtResult);
-                    result = result.append("<tr><td valign=top>" + sentence + "</td>");
+                    if (!odd)
+                        result = result.append("<tr><td valign=top>" + (new Integer(count)).toString());
+                    else
+                        result = result.append("<tr bgcolor=#eeeeee><td valign=top>" + (new Integer(count)).toString());
+                    count++;
+                    odd = !odd;
+                    result = result.append(". " + sentence + "</td>");
                     result = result.append("<td valign=top>" + f.htmlFormat(html) + "</td>");
                     result = result.append("<td valign=top>" + c.htmlFormat(html) + "</td>");
                     if (correct) {
@@ -115,7 +127,14 @@ public class CELTTestSuite {
                     numIncorrect++;
                     Formula f = new Formula();
                     f.read(expectedAnswer);
-                    result = result.append("<tr><td valign=top>" + sentence + "</td><td valign=top>" + f.htmlFormat(html) + "</td>");
+                    if (!odd)
+                        result = result.append("<tr><td valign=top>" + (new Integer(count)).toString());
+                    else
+                        result = result.append("<tr bgcolor=#eeeeee><td valign=top>" + (new Integer(count)).toString());
+                    count++;
+                    odd = !odd;
+                    result = result.append(". " + sentence + "</td>");
+                    result = result.append("<td valign=top>" + f.htmlFormat(html) + "</td>");
                     result = result.append("<td></td><td valign=top>fail</td></tr>\n");
                 }
             }
