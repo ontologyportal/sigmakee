@@ -263,6 +263,16 @@ public class KBmanager {
             System.out.println("Error in KBmanager.getKB(): KB " + name + " not found.");
         return (KB) kbs.get(name.intern());
     }
+
+    /** ***************************************************************
+     * Returns true if a KB with the given name exists.
+     */
+
+    public boolean existsKB(String name) {
+
+        return kbs.containsKey(name);
+    }
+
     
     /** ***************************************************************
      * Remove the KB that has the given name.
