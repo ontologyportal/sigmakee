@@ -18,18 +18,20 @@ import java.util.*;
 import java.io.*;
 import java.text.*;
 
-/******************************************************************
+/** ***************************************************************
  * Parses simple XML into a hierarchy of BasicXMLelement (s).  Used
  * instead of SAX because that class is so complex.  The right thing
  * to do is probably to subclass SAX or create some simpler utility
  * class that makes using it easier.
+ * This class assumes that each XML tag is on its own line and that
+ * every attribute value is enclosed in single or double quotes.
  */
 public class BasicXMLparser {
 
      /** An ArrayList of BasicXMLelement(s). */
     public ArrayList elements = new ArrayList();
 
-    /******************************************************************
+    /** ***************************************************************
      * Constructor that parses an XML-formatted string, with one tag per
      * line, into an ArrayList of BasicXMLelement (s).
      */
@@ -53,7 +55,7 @@ public class BasicXMLparser {
         }
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Parse an XML formatted string into a hierarchy of BasicXMLelement (s).
      * Assume that each line has only one tag.
      */
@@ -160,7 +162,7 @@ public class BasicXMLparser {
         return;
     }
    
-    /******************************************************************
+    /** ***************************************************************
      * Convert the XML hierarchy to a String.
      */
     public String toString() {
@@ -173,7 +175,7 @@ public class BasicXMLparser {
         return result.toString();
     }
 
-    /******************************************************************
+    /** ***************************************************************
      * Test method.
      */
     public static void main(String[] args) {
