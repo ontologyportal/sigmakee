@@ -97,7 +97,9 @@ August 9, Acapulco, Mexico.
           out.println("<TD><A href=\"Browse.jsp?kb=" + kbName + "&lang=en\">Browse</A></TD>");                                                      
           out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=en\">Graph</A></TD>");                                                      
           out.println("<TD><A href=\"Diag.jsp?kb=" + kbName + "&lang=en\">Diagnostics</A></TD>");                                                 
-          out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=en\">Consistency Check</A></TD>");                                                           
+          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))
+              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=en\">Consistency Check</A></TD>");                                                           
           if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=en\">Inference Tests</A></TD>");
