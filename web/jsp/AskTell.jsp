@@ -92,10 +92,12 @@ August 9, Acapulco, Mexico.
         try {
             if (req.equalsIgnoreCase("ask")) {
                 Formula query = new Formula();
+                if (stmt.indexOf('@') != -1)
+                    throw(new IOException("Row variables not allowed in query: " + stmt));
                 query.theFormula = stmt;
                 processedStmts = query.preProcess();
-                if (processedStmts.size() != 0) { // What to do if row variables?
-                  result = kb.inferenceEngine.submitQuery((String)processedStmts.get(0),timeout,maxAnswers);
+                if (processedStmts.size() != 0) { 
+                  result = kb.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);
                 }
             }
             if (req.equalsIgnoreCase("tell")) {
