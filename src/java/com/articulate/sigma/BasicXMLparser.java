@@ -71,7 +71,7 @@ public class BasicXMLparser {
             String line = lnr.readLine();
             inQuote = false;
             if (line == null) {
-                //System.out.println("INFO in BasicXMLparser.parse: Exiting with line = null.");
+                System.out.println("INFO in BasicXMLparser.parse: Exiting with line = null.");
                 return;
             }
             //System.out.println(line);
@@ -180,8 +180,28 @@ public class BasicXMLparser {
      */
     public static void main(String[] args) {
 
-        String xml = "<queryResponse>\n<answer result='yes' number='1'>\n<bindingSet type='definite'>\n<binding>\n<var name='?X' value='<=>'/>\n</binding>\n</bindingSet>\n<proof>\n<proofStep>\n<premises>\n</premises>\n<conclusion>\n<formula number='1531'>\n(<=> (holds subclass ?X108 ?X14) (and (holds instance ?X108 SetOrClass) (holds instance ?X14 SetOrClass) (forall ( ?X15) (=> (holds instance ?X15 ?X108) (holds instance ?X15 ?X14)))))\n</formula>\n</conclusion>\n</proofStep>\n</proof>\n</answer>\n</queryResponse>\n";
+        //String xml = "<queryResponse>\n<answer result='yes' number='1'>\n<bindingSet type='definite'>\n<binding>\n<var name='?X' value='<=>'/>\n</binding>\n</bindingSet>\n<proof>\n<proofStep>\n<premises>\n</premises>\n<conclusion>\n<formula number='1531'>\n(<=> (holds subclass ?X108 ?X14) (and (holds instance ?X108 SetOrClass) (holds instance ?X14 SetOrClass) (forall ( ?X15) (=> (holds instance ?X15 ?X108) (holds instance ?X15 ?X14)))))\n</formula>\n</conclusion>\n</proofStep>\n</proof>\n</answer>\n</queryResponse>\n";
         // String xml = "<queryResponse>\n<answer result='yes' number='1'>\n</answer>\n</queryResponse>\n";
+        String xml = "<preference key='showcached' value='yes'/>\n" +
+            "<preference key='inferenceEngine' value='C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe'/>\n" +
+            "<preference key='testOutputDir' value='C:\\Program Files\\Apache Tomcat 4.0\\webapps\\sigma\\tests'/>\n"+
+            "<preference key='prolog' value='C:\\Program'/>\n<preference key='sumokbname' value='sumo2'/>\n"+
+            "<preference key='kbDir' value='C:\\Program Files\\Apache Tomcat 4.0\\KBs'/>\n"+
+            "<preference key='celtdir' value='C:\\Artic\\CELT20040105\\2004-01-05-CELTv2.65-3b'/>\n"+
+            "<preference key='hostname' value='localhost'/>\n"+
+            "<preference key='cache' value='no'/>\n"+
+            "<preference key='inferenceTestDir' value='C:\\Artic\\vampire\\tests'/>\n"+
+            "<preference key='PLDir' value='C:\\Program Files\\pl-5.2.10\\bin'/>\n"+
+            "<preference key='loadCELT' value='yes'/>\n"+
+            "<kb name='sumo2'>\n"+
+              "<constituent filename='C:\\Program Files\\Apache Tomcat 4.0\\KBs\\english_format.kif'/>\n"+
+              "<constituent filename='C:\\Program Files\\Apache Tomcat 4.0\\KBs\\Mid-level-ontology.txt'/>\n"+
+              "<constituent filename='C:\\Program Files\\Apache Tomcat 4.0\\KBs\\InvoiceInstance.kif'/>\n"+
+              "<constituent filename='C:\\Program Files\\Apache Tomcat 4.0\\KBs\\InvoiceOntology.kif'/>\n"+
+              "<constituent filename='C:\\Program Files\\Apache Tomcat 4.0\\KBs\\SUOBasedOntology.txt'/>\n"+
+              "<constituent filename='C:\\Program Files\\Apache Tomcat 4.0\\KBs\\SUMO_170.kif'/>\n"+
+            "</kb>\n";
+
         BasicXMLparser bp = new BasicXMLparser(xml);
         System.out.print("Parse completed.  Number of elements: ");
         System.out.println(bp.elements.size());
