@@ -62,6 +62,16 @@ public class GrammarTree extends JPanel implements TreeSelectionListener, Action
         //Create the nodes.
         top = new DefaultMutableTreeNode(new GrammarNode("Empty","",true,"",GrammarNode.ONE_TO_MANY));
         initialize(top);
+        try {
+            WordNet.initOnce();
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in GrammarTree(): Error intializing WordNet: " + ioe.getMessage());
+        }
+        WordNet.wn.readWordFrequencies();
+        WordNet.wn.readSenseIndex();
+       // System.out.println("INFO in GrammarTree(): Word sense: " + 
+       //    WordNet.wn.findWordSense("run","The run by Jamaican Bob Marley set a new world record."));
     }
     
     /** *************************************************************
@@ -102,7 +112,6 @@ public class GrammarTree extends JPanel implements TreeSelectionListener, Action
 
         add(treeView);
     }
-
 
     /** *************************************************************
      * Listen for events on the tree model.
