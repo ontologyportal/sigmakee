@@ -125,7 +125,7 @@ August 9, Acapulco, Mexico.
           <TD valign="bottom"></TD>
           <TD>
             <font FACE="Arial, Helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A></b>&nbsp;|&nbsp;
-            <A href=\"Graph.jsp?kb=<%=kbName %>&lang=<%=language %>"><B>Graph</B></A>&nbsp;|&nbsp;                                                      
+            <A href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>"><B>Graph</B></A>&nbsp;|&nbsp;                                                      
             <b><A href="Properties.jsp">Prefs</A></b>&nbsp;]&nbsp;
             <b>KB:&nbsp;
 <%
