@@ -190,10 +190,13 @@ public class KIF {
                       f.theFormula = expression;
                       if (formulaSet.contains(expression.intern())) {
                           System.out.print("Warning in KIF.parse(): Duplicate formula at line");
-                          System.out.println(new Integer(lineStart + totalLinesForComments).toString());
+                          System.out.println(lineStart + totalLinesForComments);
                           System.out.println(expression);
                           System.out.println();
                       }
+                      String validArgs = f.validArgs();
+                      if (validArgs != "") 
+                          throw new ParseException("Parsing error in " + filename + ".\n " + validArgs,f.startLine);  
                       // formulaList.add(expression.intern());
                       if (formulaSet.size() % 100 == 0) 
                           System.out.print('.');
@@ -372,7 +375,8 @@ public class KIF {
           parse(fr);
       }
       catch (ParseException pe) {
-          throw new ParseException("Error in KIF.readFile(): " + pe.getMessage(),pe.getErrorOffset());
+          System.out.print("Error in KIF.readFile(): " + pe.getMessage() + " at line ");
+          System.out.println(pe.getErrorOffset());
       }
       catch (java.io.IOException e) {
           throw new IOException("Error in KIF.readFile(): IO exception parsing file " + filename);
