@@ -228,7 +228,7 @@ public class KB {
                         }
                     }
                 }
-                if (count++ % divisor == 1) System.out.print(".");
+                if (divisor != 0 && count++ % divisor == 1) System.out.print(".");
             }
         }
         System.out.println(" ");
