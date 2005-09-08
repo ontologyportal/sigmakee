@@ -64,34 +64,39 @@ public class KBmanager {
     /** ***************************************************************
      * Read in any KBs defined in the configuration.
      */
-    public void initializeOnce() throws IOException, ParseException {
+    public void initializeOnce() throws IOException {
 
         if (!initialized) {
             BasicXMLparser config = new BasicXMLparser(configuration);
-            System.out.println("INFO in KBmanager.initializeOnce(): Initializing.");
-            System.out.print("INFO in KBmanager.initializeOnce(): Number of preferences:");
-            System.out.println(config.elements.size());
+            //System.out.println("INFO in KBmanager.initializeOnce(): Initializing.");
+            //System.out.print("INFO in KBmanager.initializeOnce(): Number of preferences:");
+            //System.out.println(config.elements.size());
             for (int i = 0; i < config.elements.size(); i++) {
                 BasicXMLelement element = (BasicXMLelement) config.elements.get(i);
                 if (element.tagname.equalsIgnoreCase("preference")) {
                     String name = (String) element.attributes.get("key");
                     String value = (String) element.attributes.get("value");
                     preferences.put(name,value);
-                    System.out.println("INFO in KBmanager.initializeOnce(): Storing preferences: " + name + " " + value);
+                    //System.out.println("INFO in KBmanager.initializeOnce(): Storing preferences: " + name + " " + value);
                 }
                 if (element.tagname.equalsIgnoreCase("kb")) {
                     String kbName = (String) element.attributes.get("name");
                     addKB(kbName);
                     KB kb = getKB(kbName);
-                    System.out.println("INFO in KBmanager.initializeOnce(): Number of constituents: " + element.subelements.size());
+                    //System.out.println("INFO in KBmanager.initializeOnce(): Number of constituents: " + element.subelements.size());
                     for (int j = 0; j < element.subelements.size(); j++) {
                         BasicXMLelement kbConst = (BasicXMLelement) element.subelements.get(j);
                         if (!kbConst.tagname.equalsIgnoreCase("constituent")) 
                             System.out.println("Error in KBmanager.initialize(): Bad element: " + kbConst.tagname);
                         String filename = (String) kbConst.attributes.get("filename");
-                        kb.addConstituent(filename); 
+                        try {                            
+                            kb.addConstituent(filename); 
+                        } catch (ParseException pe) {
+                            System.out.print("Error in KBmanager.initializeOnce(): " + pe.getMessage() + " at line ");
+                            System.out.println(pe.getErrorOffset());
+                        }
                     }
-                    System.out.println("INFO in KBmanager.initializeOnce(): value of cache: " + KBmanager.getMgr().getPref("cache"));
+                    //System.out.println("INFO in KBmanager.initializeOnce(): value of cache: " + KBmanager.getMgr().getPref("cache"));
                     if (KBmanager.getMgr().getPref("cache") != null &&
                         KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
                         kb.cache();
@@ -99,7 +104,7 @@ public class KBmanager {
             }
             initialized = true;
         }
-        System.out.println("INFO in KBmanager.initializeOnce(): celtdir: " + (String) preferences.get("celtdir"));
+        // System.out.println("INFO in KBmanager.initializeOnce(): celtdir: " + (String) preferences.get("celtdir"));
     }
 
     /** ***************************************************************
@@ -178,7 +183,7 @@ public class KBmanager {
         KB kb = null;
         File f;
 
-        System.out.println("INFO in KBmanager.writeConfiguration: Writing configuration.");
+        //System.out.println("INFO in KBmanager.writeConfiguration: Writing configuration.");
         try {
             fw = new FileWriter(dir + File.separator + fname);
             pw = new PrintWriter(fw);
@@ -200,15 +205,15 @@ public class KBmanager {
                 kb = (KB) kbs.get(key);
                 kb.writeConfiguration(pw);
 
-                System.out.print("INFO in KBmanager.writeConfiguration: Number of constituents in kb: " + kb.name + " is: ");
-                System.out.println(kb.constituents.size());
+                //System.out.print("INFO in KBmanager.writeConfiguration: Number of constituents in kb: " + kb.name + " is: ");
+                //System.out.println(kb.constituents.size());
             }
         }
         catch (java.io.IOException e) {
             throw new IOException("Error writing file " + dir + File.separator + fname);
         }
         finally {
-            System.out.println("INFO in KBmanager.writeConfiguration: Completed writing configuration");
+            //System.out.println("INFO in KBmanager.writeConfiguration: Completed writing configuration");
             
             if (pw != null) {
                 pw.close();
@@ -253,7 +258,7 @@ public class KBmanager {
             if (br != null) 
                 br.close();
         }
-        System.out.println(xml.toString());
+        // System.out.println(xml.toString());
         configuration = xml.toString();
     }
 
