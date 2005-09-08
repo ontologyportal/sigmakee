@@ -69,6 +69,12 @@ public class Formula implements Comparable {
      */
     public String car() {
 
+        // System.out.println("INFO in formula.car(): theFormula: " + theFormula);
+        if (theFormula == null) {
+            System.out.println("Error in Formula.car(): Null string");
+            return "";
+        }
+        if (!listP()) return null;       
         //System.out.println("INFO in Formula.car: theformula: " + theFormula);
         int i = 0;
         while (theFormula.charAt(i) != '(') i++;
@@ -89,13 +95,19 @@ public class Formula implements Comparable {
         else {        
             if (theFormula.charAt(i) == '"' || theFormula.charAt(i) == '\'') {
                 char quoteChar = theFormula.charAt(i);
-                while (((theFormula.charAt(i) != quoteChar || theFormula.charAt(i) != '\\') &&
-                        i < theFormula.length() - 1)) i++;
+                i++;
+                while (((theFormula.charAt(i) != quoteChar || 
+                         (theFormula.charAt(i) == quoteChar && theFormula.charAt(i-1) == '\\')) &&
+                        i < theFormula.length() - 1)) {                  
+                    i++;
+                }
+                i++;
             }
             else {
                 while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
             }            
         }
+        // System.out.println("INFO in formula.car() end: theFormula: " + theFormula.substring(start,i));
         return theFormula.substring(start,i);    
     }
 
@@ -106,6 +118,12 @@ public class Formula implements Comparable {
      */
     public String cdr() {
 
+        //System.out.println("INFO in formula.cdr(): theFormula: " + theFormula);
+        if (theFormula == null) {
+            System.out.println("Error in Formula.cdr(): Null string");
+            return "";
+        }
+        if (!listP()) return null;       
         int i = 0;
         while (theFormula.charAt(i) != '(') i++;
         i++;
@@ -125,8 +143,13 @@ public class Formula implements Comparable {
         else {
             if (theFormula.charAt(i) == '"' || theFormula.charAt(i) == '\'') {
                 char quoteChar = theFormula.charAt(i);
-                while (((theFormula.charAt(i) != quoteChar || theFormula.charAt(i) != '\\') &&
-                        i < theFormula.length() - 1)) i++;
+                i++;
+                while (((theFormula.charAt(i) != quoteChar || 
+                         (theFormula.charAt(i) == quoteChar && theFormula.charAt(i-1) == '\\')) &&
+                        i < theFormula.length() - 1)) {                  
+                    i++;
+                }
+                i++;
             }
             else {
                 while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
@@ -142,6 +165,31 @@ public class Formula implements Comparable {
      */
     private boolean atom(String s) {
 
+        if (s == null) {
+            System.out.println("Error in Formula.atom(): Null string");
+            return true;
+        }
+        if (s.charAt(0) == '"' && s.charAt(s.length()-1) == '"') 
+            return true;
+        if (s.indexOf(')') == -1 &&
+            s.indexOf('\n') == -1 &&
+            s.indexOf(' ') == -1 &&
+            s.indexOf('\t') == -1) return true;
+        else return false;
+    }
+
+    /** ***************************************************************
+     * Test whether the Formula is a LISP atom.
+     */
+    private boolean atom() {
+
+        String s = theFormula;
+        if (s == null) {
+            System.out.println("Error in Formula.atom(): Null string");
+            return true;
+        }
+        if (s.charAt(0) == '"' && s.charAt(s.length()-1) == '"') 
+            return true;
         if (s.indexOf(')') == -1 &&
             s.indexOf('\n') == -1 &&
             s.indexOf(' ') == -1 &&
@@ -154,7 +202,24 @@ public class Formula implements Comparable {
      */
     private boolean empty() {
 
+        if (theFormula == null) {
+            System.out.println("Error in Formula.empty(): Null string");
+            return true;
+        }
         if (theFormula.equals("()")) return true;
+        else return false;
+    }
+
+    /** ***************************************************************
+     * Test whether the String is an empty formula.
+     */
+    private boolean empty(String s) {
+
+        if (s == null) {
+            System.out.println("Error in Formula.empty(): Null string");
+            return true;
+        }
+        if (s.equals("()")) return true;
         else return false;
     }
 
@@ -164,9 +229,92 @@ public class Formula implements Comparable {
     private boolean listP() {
 
         String f = theFormula;
+        if (f == null) {
+            System.out.println("Error in Formula.listP(): Null string");
+            return false;
+        }
         f.trim();
         if (f.charAt(0) == '(' && f.charAt(f.length()-1) == ')') return true;
         else return false;
+    }
+
+    /** ***************************************************************
+     * Test whether the String is a list.
+     */
+    private boolean listP(String s) {
+
+        if (s == null) {
+            System.out.println("Error in Formula.listP(): Null string");
+            return true;
+        }
+        s.trim();
+        if (s.charAt(0) == '(' && s.charAt(s.length()-1) == ')') return true;
+        else return false;
+    }
+
+    /** ***************************************************************
+     */
+    private String validArgsRecurse(Formula f) {
+
+        //System.out.println("INFO in Formula.validArgsRecurse(): Formula: " + f.theFormula);
+        if (f.atom() || f.empty() || f.theFormula == "") return "";
+        String pred = f.car();
+        Formula predF = new Formula();
+        predF.read(pred);
+
+        String rest = f.cdr();
+        Formula restF = new Formula();
+        restF.read(rest);
+        int argCount = 0;
+        while (!restF.empty()) {
+            argCount++;
+            String arg = restF.car();
+            Formula argF = new Formula();
+            argF.read(arg);
+            String result = validArgsRecurse(argF);
+            if (result != "") 
+                return result;
+            restF.theFormula = restF.cdr();
+        }
+        if (pred.equals("and") || pred.equals("or")) {
+            if (argCount < 2) 
+                return "Too few arguments for 'and' or 'or' in formula: \n" + f.textFormat() + "\n";
+        }
+        else {        
+            if (pred.equals("forall") || pred.equals("exists")) {
+                 if (argCount != 2) 
+                     return "Wrong number of arguments for 'exists' or 'forall' in formula: \n" + f.textFormat() + "\n";
+            }
+            else {            
+                if (pred.equals("<=>") || pred.equals("=>")) {
+                    if (argCount != 2) 
+                        return "Wrong number of arguments for '<=>' or '=>' in formula: \n" + f.textFormat() + "\n";
+                }
+                else {                
+                    if (pred.equals("equals")) {
+                         if (argCount != 2) 
+                             return "Wrong number of arguments for 'equals' in formula: \n" + f.textFormat() + "\n";
+                    }
+                }
+            }
+        }
+        return "";
+    }
+
+    /** ***************************************************************
+     * Test whether the Formula uses logical operators with the standard
+     * number of arguments.  "equals", "<=>", and "=>" are strictly binary. 
+     * "or", and "and" are binary or greater. "not" is unary.  "forall" and
+     * "exists" are unary with an argument list.
+     */
+    public String validArgs() {
+
+        if (theFormula == null || theFormula == "") 
+            return "";
+        Formula f = new Formula();
+        f.read(theFormula);
+        String result = validArgsRecurse(f);
+        return result;
     }
 
     /** ***************************************************************
