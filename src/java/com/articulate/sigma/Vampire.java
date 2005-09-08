@@ -87,8 +87,10 @@ public class Vampire {
         if (!(new File(VAMPIRE_EXECUTABLE)).exists())
             throw new IOException("Error in Vampire(): Executable file " + VAMPIRE_EXECUTABLE + " does not exist.");
         if (!(new File(VAMPIRE_DIRECTORY + File.separator + kbFileName)).exists())
-            throw new IOException("Error in Vampire(): KB file " + VAMPIRE_DIRECTORY + File.separator + kbFileName + " does not exist.");
-        System.out.println("INFO in Vampire(): Starting vampire as "+VAMPIRE_EXECUTABLE+" "+VAMPIRE_DIRECTORY+File.separator+kbFileName);
+            throw new IOException("Error in Vampire(): KB file " + VAMPIRE_DIRECTORY + 
+                                  File.separator + kbFileName + " does not exist.");
+        System.out.println("INFO in Vampire(): Starting vampire as "+ VAMPIRE_EXECUTABLE + " " + 
+                           VAMPIRE_DIRECTORY + File.separator + kbFileName);
     
         _vampire = Runtime.getRuntime().exec(VAMPIRE_EXECUTABLE + " " + VAMPIRE_DIRECTORY + File.separator + kbFileName);
 
@@ -202,7 +204,7 @@ public class Vampire {
     public static void main (String[] args)
         throws Exception
     {
-        String initialDatabase = "SUMOonly-v.kif";
+        String initialDatabase = "SUMO-v.kif";
         Vampire vampire = new Vampire(initialDatabase);
         System.out.print(vampire.submitQuery("(holds instance ?X Relation)",5,2));
 
