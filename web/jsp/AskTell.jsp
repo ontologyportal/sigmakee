@@ -97,7 +97,7 @@ August 9, Acapulco, Mexico.
                 query.theFormula = stmt;
                 processedStmts = query.preProcess();
                 if (processedStmts.size() != 0) { 
-                  result = kb.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);
+                    result = kb.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);
                 }
             }
             if (req.equalsIgnoreCase("tell")) {
