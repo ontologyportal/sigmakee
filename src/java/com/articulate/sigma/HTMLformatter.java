@@ -97,7 +97,9 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormat(ArrayList forms, String header, String htmlDivider, String kbHref, KB kb, String language) {
+    public static String browserSectionFormat(ArrayList forms, String header, 
+                                              String htmlDivider, String kbHref, 
+                                              KB kb, String language) {
 
         StringBuffer show = new StringBuffer();
 
@@ -124,18 +126,36 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
+     *  Change spaces to "%20"
+     */
+    public static String encodeForURL(String s) {
+
+        return s.replaceAll(" ","%20");
+    }
+
+    /** *************************************************************
+     *  Change spaces to "%20"
+     */
+    public static String decodeFromURL(String s) {
+
+        return s.replaceAll("%20"," ");
+    }
+
+    /** *************************************************************
      *  Create an HTML menu, given an ArrayList of Strings.
      */
     public static String createMenu(String menuName, String selectedOption, ArrayList options) {
 
         StringBuffer result = new StringBuffer();
 
-        result.append("<select name=" + menuName);
+        String menuNameProcessed = encodeForURL(menuName);
+        result.append("<select name=" + menuNameProcessed);
         result.append(">\n  ");
         for (int i = 0; i < options.size(); i++) {
             result.append("<option value='");
             String menuItem = (String) options.get(i);
-            result.append(menuItem);
+            String menuItemProcessed = encodeForURL(menuItem);
+            result.append(menuItemProcessed);
             if (selectedOption != null && selectedOption.equalsIgnoreCase(menuItem)) 
                 result.append("' selected='yes'>");
             else
@@ -146,7 +166,6 @@ public class HTMLformatter {
         result.append("\n</select>\n");
         return result.toString();
     }
-
 
     /** *************************************************************
      *  Create an HTML formatted result of a query.
