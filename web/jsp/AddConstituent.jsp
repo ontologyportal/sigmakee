@@ -19,7 +19,7 @@ August 9, Acapulco, Mexico.
 
   String fileName = "";    
   String srcDir = KBmanager.getMgr().getPref("kbDir");      
-  System.out.println("INFO in AddConstituent.jsp: KB dir: " + srcDir);
+  //System.out.println("INFO in AddConstituent.jsp: KB dir: " + srcDir);
   String callingPage = "KBs";
   MultipartRequest multiPartRequest = null;
   String kbName = null;
@@ -58,6 +58,7 @@ August 9, Acapulco, Mexico.
   catch (Exception e) {
       System.out.println("Error in AddConstituent.jsp: Enumerating MultipartRequest which uploads files.");
       System.out.println(e.getMessage());
+      e.printStackTrace();
       System.out.println("kbName: " + kbName);
       System.out.println("filename: " + fileName);
       System.out.println("callingPage: " + multiPartRequest.getParameter("callingPage"));
