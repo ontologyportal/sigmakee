@@ -41,8 +41,8 @@ public class CELT {
         String line = null;
         String erline = null;
 
-        if (KBmanager.getMgr().getPref("prolog") == null)
-            KBmanager.getMgr().setPref("prolog","C:\\Program Files\\pl-5.2.10\\bin\\plcon.exe");  
+        if (KBmanager.getMgr().getPref("prolog") == null || KBmanager.getMgr().getPref("prolog") == "")
+            KBmanager.getMgr().setPref("prolog","C:\\Program Files\\pl\\bin\\plcon.exe");  
         PL_EXECUTABLE = KBmanager.getMgr().getPref("prolog"); 
         if (KBmanager.getMgr().getPref("celtdir") == null)
             KBmanager.getMgr().setPref("celtdir","C:\\PEASE\\CELT-ACE\\latestDemo\\May29");  
