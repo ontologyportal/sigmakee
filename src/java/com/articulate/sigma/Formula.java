@@ -737,6 +737,7 @@ public class Formula implements Comparable {
                         }
                         if (lastPredicate != null &&
                             !logicalOperators.contains(lastPredicate.intern()) && 
+                            predicate.length() > 1 &&
                             predicate.substring(predicate.length()-2).compareTo("Fn") != 0) {
                             result = result.append('`');
                             // tick the formula
