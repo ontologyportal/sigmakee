@@ -283,6 +283,50 @@ public class KB {
     }
     
     /** *************************************************************
+     * Determine whether a particular term is an immediate instance,
+     * which has a statement of the form (instance term otherTerm).
+     * Note that this does not count for terms such as Attribute(s)
+     * and Relation(s), which may be defined as subAttribute(s) or
+     * subrelation(s) of another instance.  If the term is not an
+     * instance, return an empty ArrayList.  Otherwise, return an
+     * ArrayList of the Formula(s) in which the given term is 
+     * defined as an instance.
+     */
+    private ArrayList instancesOf(String term) {
+
+        return askWithRestriction(0,"instance",1,term);           
+    }
+
+    /** *************************************************************
+     * Determine whether a particular class or instance "child" is a
+     * child of the given "parent".  Note that the current version of 
+     * this routine only follows subclass and instance links.
+     */
+    public boolean childOf(String child, String parent) {
+
+        if (child.equals(parent)) 
+            return true;
+        HashSet childs = (HashSet) children.get(parent);
+        if (childs != null && childs.contains(child)) 
+            return true;
+        else {
+            ArrayList al = instancesOf(child);
+            Iterator it = al.iterator();
+            while (it.hasNext()) {
+                Formula form = (Formula) it.next();
+                form.read(form.cdr());
+                form.read(form.cdr());                
+                String superTerm = form.car();
+                if (superTerm.equals(parent)) 
+                    return true;
+                if (childs != null && childs.contains(superTerm)) 
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /** *************************************************************
      * Collect all the parent and child classes of each class or instance.  Store
      * them in the global variables parents and children, which are HashMap(s) of 
      * ArrayLists.  The key is a class, and the value is an ArrayList of
@@ -487,7 +531,9 @@ public class KB {
 
     /** *************************************************************
      * Get an ArrayList of Formulas in which the two terms provided appear
-     * in the indicated argument positions.
+     * in the indicated argument positions.  If there are no Formula(s)
+     * matching the given terms and respective argument positions,
+     * return and empty ArrayList.
      */
     public ArrayList askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
         
@@ -1060,19 +1106,20 @@ public class KB {
     }
 
     /** *************************************************************
-     * Write the XML configuration file.
+     * Create the XML configuration element.
      */
-    public void writeConfiguration(PrintWriter pw) {
+    public SimpleElement writeConfiguration() {
 
-        pw.println("<kb name=\"" + name + "\">");
-        //System.out.println("<kb name=\"" + name + "\">");
+        SimpleElement se = new SimpleElement("kb");
+        se.setAttribute("name",name);
         for (int i = 0; i < constituents.size(); i++) {
+            SimpleElement constituent = new SimpleElement("constituent");
             String filename = (String) constituents.get(i);
             filename = KBmanager.escapeFilename(filename);
-            pw.println("  <constituent filename=\"" + filename + "\"/>");
-            //System.out.println("  <constituent filename=\"" + filename + "\"/>");
+            constituent.setAttribute("filename",filename);
+            se.addChildElement(constituent);
         }
-        pw.println("</kb>");
+        return se;
     }
 
     /** *************************************************************
@@ -1225,6 +1272,67 @@ public class KB {
             }
         }
         return newTreeSet;
+    }
+
+    /** *************************************************************
+     */
+    private void writePrologFormulas(ArrayList forms, PrintWriter pr) throws IOException {
+
+        TreeSet ts = new TreeSet();
+        ts.addAll(forms);
+        if (forms != null) {
+            int i = 0;
+            Iterator it =  ts.iterator();
+            while (it.hasNext()) {
+                Formula formula = (Formula) it.next();
+                String result = formula.toProlog();
+                if (result != null && result != "") 
+                    pr.println(result);
+                if (i % 100 == 1) System.out.print(".");                                                            
+            }
+        }        
+    }
+
+    /** *************************************************************
+     */
+    public void writePrologFile(String fname) throws IOException {
+
+        FileWriter fr = null;
+        PrintWriter pr = null;
+
+        System.out.println("INFO in KB.writePrologFile()");
+        try {
+            fr = new FileWriter(fname);
+            pr = new PrintWriter(fr);
+            pr.println("% Copyright © 2006 Articulate Software Incorporated");
+            pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
+            pr.println("% This is a very lossy translation to prolog of the KIF ontologies available at www.ontologyportal.org\n");
+
+            pr.println("% subAttribute");
+            writePrologFormulas(ask("arg",0,"subAttribute"),pr);
+            pr.println("\n% subrelation");
+            writePrologFormulas(ask("arg",0,"subrelation"),pr);
+            pr.println("\n% disjoint");
+            writePrologFormulas(ask("arg",0,"disjoint"),pr);
+            pr.println("\n% partition");
+            writePrologFormulas(ask("arg",0,"partition"),pr);
+            pr.println("\n% instance");
+            writePrologFormulas(ask("arg",0,"instance"),pr);
+            pr.println("\n% subclass");
+            writePrologFormulas(ask("arg",0,"subclass"),pr);            
+            System.out.println(" ");
+        }
+        catch (java.io.IOException e) {
+            throw new IOException("Error writing prolog file. " + e.getMessage());
+        }
+        finally {
+            if (pr != null) {
+                pr.close();
+            }
+            if (fr != null) {
+                fr.close();
+            }
+        }
     }
 
     /** *************************************************************
