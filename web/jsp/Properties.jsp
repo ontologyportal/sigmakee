@@ -179,15 +179,15 @@ August 9, Acapulco, Mexico.
 
 <FORM method="POST" ACTION="Properties.jsp">
     <label for="inferenceEngine">
-    <INPUT type="text" name="inferenceEngine" value=<%=inferenceEngine %> >
+    <INPUT type="text" SIZE=50 name="inferenceEngine" value=<%=inferenceEngine %> >
     Fully qualified path and name of the inference engine</label><P>
 
     <label for="celtdir">
-    <INPUT type="text" name="celtdir" value=<%=celtdir %> >
+    <INPUT type="text" SIZE=50 name="celtdir" value=<%=celtdir %> >
     Directory in which the CELT system is located</label><P>
 
     <label for="prolog">
-    <INPUT type="text" name="prolog" value=<%=prolog %> >
+    <INPUT type="text" SIZE=50 name="prolog" value=<%=prolog %> >
     Fully qualified path and name of SWI prolog</label><P>
 
     <label for="hostname">
@@ -203,7 +203,7 @@ August 9, Acapulco, Mexico.
     Name of the SUMO KB in Sigma</label><P>
 
     <label for="inferenceTestDir">
-    <INPUT type="text" name="inferenceTestDir" value=<%=inferenceTestDir %> >
+    <INPUT type="text" SIZE=50 name="inferenceTestDir" value=<%=inferenceTestDir %> >
     Directory in which tests for the inference engine are found</label><P>
 
     <label for="editorCommand">
