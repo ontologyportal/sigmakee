@@ -1,5 +1,18 @@
 <%@ include	file="Prelude.jsp" %>
 
+<%
+
+  String sumokbname = KBmanager.getMgr().getPref("sumokbname");
+  if (sumokbname == null)
+      sumokbname = "SUMO";
+  String word = request.getParameter("word");
+  String writeProlog = request.getParameter("writeProlog");
+  String synset = request.getParameter("synset");
+  String POS = request.getParameter("POS");
+      
+  if (POS == null)
+      POS = "1";  
+%>
 <head>
   <title>SUMO Search Tool</title>
 </head>
@@ -15,24 +28,34 @@
 
 <h3>SUMO Search Tool</h3>
 <P>This tool relates English terms to concepts from the
-   <a href="http://ontology.teknowledge.com">SUMO</a>
+   <a href="http://www.ontologyportal.org">SUMO</a>
    ontology by means of mappings to
    <a href="http://www.cogsci.princeton.edu/~wn/">WordNet</a> synsets.
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <form action="WordNet.jsp" method="GET">
-  <font face="Arial,helvetica"><b>English Term:&nbsp;</b></font>
+  <font face="Arial,helvetica"><b>English Word:&nbsp;</b></font>
   <input type="text" name="word" VALUE=<%= "\"" + (request.getParameter("word")==null?"":request.getParameter("word")) + "\"" %>>
     <select name="POS">
-      <option value="1">Noun
-      <option value="2">Verb
-      <option value="3">Adjective 
-      <option value="4">Adverb
+      <option <%= POS.equals("1")?"selected":"" %> value="1">Noun
+      <option <%= POS.equals("2")?"selected":"" %> value="2">Verb
+      <option <%= POS.equals("3")?"selected":"" %> value="3">Adjective 
+      <option <%= POS.equals("4")?"selected":"" %> value="4">Adverb
     </select>
   <input type="submit" value="Submit">
 </form>
 
 <%
+          if (KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+%>
+
+<FORM name=writeProlog ID=writeProlog action="WordNet.jsp" method="GET">
+    <INPUT type="submit" NAME="writeProlog" VALUE="writeProlog">
+</FORM>
+
+<%
+          }
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -48,14 +71,14 @@ August 9, Acapulco, Mexico.
 */
 
   WordNet.initOnce();
-
-  String sumokbname = KBmanager.getMgr().getPref("sumokbname");
-  if (sumokbname == null)
-      sumokbname = "SUMO";
-  String word = request.getParameter("word");
-  String POS = request.getParameter("POS");
-  if (word !=null && POS !=null)
-      out.println(WordNet.wn.page(word,Integer.decode(POS).intValue(),sumokbname));  
+  KB kb = KBmanager.getMgr().getKB(sumokbname);
+  if (writeProlog != null) 
+      WordNet.wn.writeProlog(kb);
+  if (word !=null && word != "")
+      out.println(WordNet.wn.page(word,Integer.decode(POS).intValue(),sumokbname,synset));
+  else
+      if (synset !=null && synset != "")
+          out.println(WordNet.wn.displaySynset(sumokbname,synset));  
 %>
 <BR>
 
