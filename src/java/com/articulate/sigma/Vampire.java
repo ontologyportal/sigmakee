@@ -80,8 +80,8 @@ public class Vampire {
         String VAMPIRE_DIRECTORY = VAMPIRE_EXECUTABLE.substring(0,VAMPIRE_EXECUTABLE.lastIndexOf(File.separator));
         if (VAMPIRE_DIRECTORY.substring(VAMPIRE_DIRECTORY.length()-1,VAMPIRE_DIRECTORY.length()).equals(File.separator)) 
             VAMPIRE_DIRECTORY = VAMPIRE_DIRECTORY.substring(0,VAMPIRE_DIRECTORY.length()-1);
-        System.out.println("INFO in Vampire(): Setting inference engine to: " + VAMPIRE_EXECUTABLE);
-        System.out.println("INFO in Vampire(): Setting directory to: " + VAMPIRE_DIRECTORY);
+        //System.out.println("INFO in Vampire(): Setting inference engine to: " + VAMPIRE_EXECUTABLE);
+        //System.out.println("INFO in Vampire(): Setting directory to: " + VAMPIRE_DIRECTORY);
         EMPTY_FILE = VAMPIRE_DIRECTORY + File.separator + "emptyFile.kif";
 
         if (!(new File(VAMPIRE_EXECUTABLE)).exists())
@@ -89,8 +89,8 @@ public class Vampire {
         if (!(new File(VAMPIRE_DIRECTORY + File.separator + kbFileName)).exists())
             throw new IOException("Error in Vampire(): KB file " + VAMPIRE_DIRECTORY + 
                                   File.separator + kbFileName + " does not exist.");
-        System.out.println("INFO in Vampire(): Starting vampire as "+ VAMPIRE_EXECUTABLE + " " + 
-                           VAMPIRE_DIRECTORY + File.separator + kbFileName);
+        //System.out.println("INFO in Vampire(): Starting vampire as "+ VAMPIRE_EXECUTABLE + " " + 
+//                           VAMPIRE_DIRECTORY + File.separator + kbFileName);
     
         _vampire = Runtime.getRuntime().exec(VAMPIRE_EXECUTABLE + " " + VAMPIRE_DIRECTORY + File.separator + kbFileName);
 
@@ -119,7 +119,7 @@ public class Vampire {
     public String assertFormula (String formula) 
         throws IOException
     {
-        System.out.println("INFO Vampire.assertFormula(): <assertion> " + formula + " </assertion>");
+        //System.out.println("INFO Vampire.assertFormula(): <assertion> " + formula + " </assertion>");
         _writer.write("<assertion> " + formula + " </assertion>\n");
         _writer.flush();
         String result = "";
@@ -128,7 +128,7 @@ public class Vampire {
             if (line.indexOf("Error:") != -1) {
                 throw new IOException(line);
             }
-            System.out.println("INFO Vampire.assertFormula(): Response: " + line);
+            //System.out.println("INFO Vampire.assertFormula(): Response: " + line);
             result += line + "\n";
             if (line.indexOf("</assertionResponse>") != -1) {
                 return result;
@@ -165,7 +165,7 @@ public class Vampire {
     {
         String result = "";
         
-        System.out.println("INFO in Vampire.submitQuery(): <query timeLimit='" + timeLimit + "' bindingsLimit='" + bindingsLimit + "'> " + formula + " </query>\n");
+        //System.out.println("INFO in Vampire.submitQuery(): <query timeLimit='" + timeLimit + "' bindingsLimit='" + bindingsLimit + "'> " + formula + " </query>\n");
         try {
             _writer.write("<query timeLimit='" + timeLimit + "' bindingsLimit='" + bindingsLimit + "'> " + formula + " </query>\n");
             _writer.flush();
@@ -183,8 +183,8 @@ public class Vampire {
             result += line + "\n";
             if ((line.indexOf("</queryResponse>") != -1) ||      // result is ok.
                 (line.indexOf("</assertionResponse>") != -1))  { // result is syntax error.
-                System.out.println("INFO in Vampire.submitQuery(): ===================================");
-                System.out.println(result);
+                //System.out.println("INFO in Vampire.submitQuery(): ===================================");
+                //System.out.println(result);
                 result = result.replaceAll("&lt;","<");
                 result = result.replaceAll("&gt;",">");
                 return result;
