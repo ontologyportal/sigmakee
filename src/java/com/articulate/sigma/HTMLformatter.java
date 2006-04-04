@@ -82,14 +82,19 @@ public class HTMLformatter {
     /** *************************************************************
      *  Show a hyperlinked list of WordNet synsets.
      */
-    public static String synsetList(ArrayList terms, String kbHref) {
+    public static String synsetList(ArrayList synsets, String kbHref) {
 
         StringBuffer show = new StringBuffer();
-        for (int i = 0; i < terms.size(); i++) {
-            String term = (String) terms.get(i);
-            show.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
-            if (i < terms.size()-1)
+        for (int i = 0; i < synsets.size(); i++) {
+            String synset = (String) synsets.get(i);
+            if (Character.isDigit(synset.charAt(0))) 
+                show.append("<a href=\"" + kbHref + "&synset=" + synset + "\">" + synset + "</a>");            
+            else
+                show.append(synset);
+            if (i < synsets.size()-1)
                 show.append(", ");
+            if (i % 10 == 0) 
+                show.append("\n");
         }
         return show.toString();
     }
@@ -139,6 +144,34 @@ public class HTMLformatter {
     public static String decodeFromURL(String s) {
 
         return s.replaceAll("%20"," ");
+    }
+
+    /** *************************************************************
+     *  Create an HTML menu, given an ArrayList of Strings where the
+     *  value(s) are String representations of int(s) but the displayed
+     *  menu items are String(s).
+     */
+    public static String createNumberedMenu(String menuName, String selectedOption, ArrayList options) {
+
+        StringBuffer result = new StringBuffer();
+
+        String menuNameProcessed = encodeForURL(menuName);
+        result.append("<select name=" + menuNameProcessed);
+        result.append(">\n  ");
+        for (int i = 0; i < options.size(); i++) {
+            result.append("<option value='");
+            String menuItem = (String) options.get(i);
+            String menuItemProcessed = encodeForURL(menuItem);
+            result.append(Integer.toString(i));
+            if (selectedOption != null && selectedOption.equalsIgnoreCase(Integer.toString(i))) 
+                result.append("' selected='yes'>");
+            else
+                result.append("'>");
+            result.append(menuItem);
+            result.append("</option>");
+        }
+        result.append("\n</select>\n");
+        return result.toString();
     }
 
     /** *************************************************************
