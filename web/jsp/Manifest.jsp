@@ -25,16 +25,25 @@ August 9, Acapulco, Mexico.
 */
 
     String kbName = request.getParameter("kb");
+    String writeProlog = request.getParameter("writeProlog");
     String constituent = request.getParameter("constituent");
     String delete = request.getParameter("delete");
     KB kb = KBmanager.getMgr().getKB(kbName);
     if (kb == null || kbName == null)
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
+    if (writeProlog != null) 
+        kb.writePrologFile(kb.name + ".pl");    
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
-        kb.constituents.remove(i);
-        KBmanager.getMgr().writeConfiguration();
-        kb.reload();       
+        if (i == -1) {
+            System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
+            kb.reload();
+        }
+        else {
+            kb.constituents.remove(i);
+            KBmanager.getMgr().writeConfiguration();
+            kb.reload();       
+        }
     }
     else if (constituent != null) {
         kb.addConstituent(constituent);
@@ -103,10 +112,15 @@ August 9, Acapulco, Mexico.
 <% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
     <B>Add a new constituent</B><BR>
     <FORM name=kbUploader ID=kbUploader action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
-        <INPUT TYPE="HIDDEN" NAME="callingPage" VALUE="Manifest">
-        <INPUT type="hidden" name="kbName" value=<%=kbName%>><br> 
+        <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
         <B>KB Constituent</B><INPUT type="file" name="constituent"><BR>
-        <INPUT type="submit" NAME="submit">
+        <INPUT type="submit" NAME="submit" VALUE="Load">
+    </FORM>
+
+
+    <FORM name=writeProlog ID=writeProlog action="Manifest.jsp" method="GET">
+        <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
+        <INPUT type="submit" NAME="writeProlog" VALUE="writeProlog">
     </FORM>
 
 <% } %>
