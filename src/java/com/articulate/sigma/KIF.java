@@ -143,7 +143,7 @@ public class KIF {
 
               // check the situation when multiple KIF statements read as one
               // This relies on extra blank line to seperate KIF statements
-              if (st.ttype == st.TT_EOL ) {
+              if (st.ttype == StreamTokenizer.TT_EOL ) {
                   if (isEOL) { // two line seperators in a row, shows a new KIF statement is to start.
                       // check if a new statement has already been generated, otherwise report error
                       if (keySet.size() != 0 || expression.length() > 0) {
@@ -239,7 +239,7 @@ public class KIF {
                   expression = expression.concat(com);
                   expression = expression.concat("\"");
               }
-              else if ((st.ttype == st.TT_NUMBER) || 
+              else if ((st.ttype == StreamTokenizer.TT_NUMBER) || 
                        (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {                  // number
                   if (lastVal != 40)  // add back whitespace that ST removes
                       expression = expression.concat(" ");
@@ -250,7 +250,7 @@ public class KIF {
                   if (parenLevel<2)                                 // Don't care if parenLevel > 1
                       argumentNum = argumentNum + 1;                // RAP - added on 11/27/04 
               }
-              else if (st.ttype == st.TT_WORD) {                  // a token
+              else if (st.ttype == StreamTokenizer.TT_WORD) {                  // a token
                   if ((st.sval.compareTo("=>") == 0 || st.sval.compareTo("<=>") == 0) && parenLevel == 1)   
                                                                     // RAP - added parenLevel clause on 11/27/04 to 
                                                                     // prevent implications embedded in statements from being rules
@@ -271,7 +271,7 @@ public class KIF {
                       keySet.add(key);                                          // Collect all the keys until the end of
                   }                                                             // the statement is reached.
               }                                    
-              else if (st.ttype != st.TT_EOF) {
+              else if (st.ttype != StreamTokenizer.TT_EOF) {
                   key = null;
                   System.out.print("Error in KIF.parse(): Parsing Error: Illegal character at line: ");
                   System.out.println(new Integer(lineStart + totalLinesForComments).toString());
@@ -279,7 +279,7 @@ public class KIF {
               }
               // if (key != null)
               //    display(st,inRule,inAntecedent,inConsequent,argumentNum,parenLevel,key);
-          } while (st.ttype != st.TT_EOF);
+          } while (st.ttype != StreamTokenizer.TT_EOF);
           if (keySet.size() != 0 || expression.length() > 0) {
               System.out.println("Error in KIF.parse(): Parsing error: ");
               System.out.println("Kif ends before parsing finishes.  Missing closing parenthesis.");
