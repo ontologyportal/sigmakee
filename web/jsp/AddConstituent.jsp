@@ -20,32 +20,30 @@ August 9, Acapulco, Mexico.
   String fileName = "";    
   String srcDir = KBmanager.getMgr().getPref("kbDir");      
   //System.out.println("INFO in AddConstituent.jsp: KB dir: " + srcDir);
-  String callingPage = "KBs";
   MultipartRequest multiPartRequest = null;
   String kbName = null;
 
   try {  
       multiPartRequest = new MultipartRequest(request,srcDir);
-      callingPage = multiPartRequest.getParameter("callingPage");
-      kbName = multiPartRequest.getParameter("kbName");
-      //System.out.println("INFO in AddConstituent.jsp: kbName: " + kbName);
-      //System.out.println("INFO in AddConstituent.jsp: filename: " + multiPartRequest.getParameter("constituent"));
+      kbName = multiPartRequest.getParameter("kb");
+      System.out.println("INFO in AddConstituent.jsp: kb: " + kbName);
+      System.out.println("INFO in AddConstituent.jsp: filename: " + multiPartRequest.getParameter("constituent"));
       Enumeration params = multiPartRequest.getParameterNames();
       while (params.hasMoreElements()) {
           String param = params.nextElement().toString();
-          //System.out.println("INFO in AddConstituent.jsp: parameter: " + param);
+          System.out.println("INFO in AddConstituent.jsp: parameter: " + param);
       }
       if (kbName == null) {
           System.out.println("Error: No knowledge base name specified.");
-          response.sendRedirect(callingPage + ".jsp"); 
+          response.sendRedirect("KBs.jsp"); 
       }
 
       Enumeration fileTags = multiPartRequest.getFileNames(); // There should be just one filename though.
       while (fileTags.hasMoreElements()) {                    
           String fileTag = fileTags.nextElement().toString();
           fileName = multiPartRequest.getOriginalFileName(fileTag);
-          //System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
-          //System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
+          System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
+          System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
           if (KBmanager.getMgr().getKB(kbName) == null) 
               KBmanager.getMgr().addKB(kbName);
           KB kb = KBmanager.getMgr().getKB(kbName);
@@ -56,14 +54,12 @@ August 9, Acapulco, Mexico.
       KBmanager.getMgr().writeConfiguration();
   }
   catch (Exception e) {
-      System.out.println("Error in AddConstituent.jsp: Enumerating MultipartRequest which uploads files.");
-      System.out.println(e.getMessage());
+      System.out.println("Error in AddConstituent.jsp: " + e.getMessage());
       e.printStackTrace();
       System.out.println("kbName: " + kbName);
       System.out.println("filename: " + fileName);
-      System.out.println("callingPage: " + multiPartRequest.getParameter("callingPage"));
   }
 
-  response.sendRedirect(callingPage + ".jsp?kb=" + kbName);
+  response.sendRedirect("Manifest.jsp?kb=" + kbName);
 %>
 
