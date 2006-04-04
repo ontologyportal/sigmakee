@@ -26,85 +26,125 @@ public class KBmanager {
     private HashMap preferences = new HashMap();
 
     private HashMap kbs = new HashMap();
-    private String configuration = null;
     private boolean initialized = false;
 
     /** ***************************************************************
-     * Constructor which reads in a configuration from a file.
+     * Set default attribute values if not in the configuration file.
      */
-    public KBmanager() {
+    private void setDefaultAttributes() {
 
         String sep = File.separator;
-        if (KBmanager.manager == null) {
-            try {
-                preferences.put("kbDir",System.getProperty("user.dir") + sep + "KBs");
-                preferences.put("testOutputDir",System.getProperty("user.dir") + sep + "webapps" + sep + "sigma" + sep + "tests");
-                readConfiguration();
-            }
-            catch (IOException ioe) {
-                System.out.println("Error in KBmanager: Configuration file not read.");
-                System.out.println(ioe.getMessage());
-            }
-            finally {
-                NLformatter.readKeywordMap((String) preferences.get("kbDir"));
-                if (!preferences.containsKey("inferenceTestDir"))
-                    preferences.put("inferenceTestDir","C:\\Program Files\\Apache Tomcat 4.0\\tests");  
-                if (!preferences.containsKey("inferenceEngine"))
-                    preferences.put("inferenceEngine","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe");  
-                if (!preferences.containsKey("cache"))
-                    preferences.put("cache","no");  
-                if (!preferences.containsKey("showcached"))
-                    preferences.put("showcached","yes");  
-                if (!preferences.containsKey("loadCELT"))
-                    preferences.put("loadCELT","no");  
+        preferences.put("kbDir",System.getProperty("user.dir") + sep + "KBs");
+        preferences.put("testOutputDir",System.getProperty("user.dir") + sep + "webapps" + sep + "sigma" + sep + "tests");
+        preferences.put("inferenceTestDir","C:\\Program Files\\Apache Tomcat 4.0\\tests");  
+        preferences.put("inferenceEngine","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe");  
+        preferences.put("cache","no");  
+        preferences.put("showcached","yes");  
+        preferences.put("loadCELT","no");  
+    }
+
+    /** ***************************************************************
+     */
+    private void fromXML(SimpleElement configuration) {
+
+        if (!configuration.getTagName().equals("configuration")) 
+            System.out.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
+        else {
+            for (int i = 0; i < configuration.getChildElements().size(); i++) {
+                SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
+                if (element.getTagName().equals("preference")) {
+                    String name = (String) element.getAttribute("name");
+                    String value = (String) element.getAttribute("value");
+                    preferences.put(name,value);
+                }
+                else {
+                    if (element.getTagName().equals("kb")) {
+                        String kbName = (String) element.getAttribute("name");
+                        addKB(kbName);
+                        KB kb = getKB(kbName);
+                        for (int j = 0; j < element.getChildElements().size(); j++) {
+                            SimpleElement kbConst = (SimpleElement) element.getChildElements().get(j);
+                            if (!kbConst.getTagName().equals("constituent")) 
+                                System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
+                            String filename = (String) kbConst.getAttribute("filename");
+                            try {                            
+                                kb.addConstituent(filename); 
+                            } 
+                            catch (ParseException pe) {
+                                System.out.print("Error in KBmanager.fromXML(): " + pe.getMessage() + " at line ");
+                                System.out.println(pe.getErrorOffset());
+                            }
+                            catch (IOException ioe) {
+                                System.out.print("Error in KBmanager.fromXML(): " + ioe.getMessage());
+                            }
+                        }
+                        if (KBmanager.getMgr().getPref("cache") != null &&
+                            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
+                            kb.cache();
+                    }
+                    else
+                        System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
+                }
             }
         }
     }
-    
+
+    /** ***************************************************************
+     * Read an XML-formatted configuration file. The method initializeOnce()
+     * sets the preferences based on the contents of the configuration file.
+     * This routine has the side effect of setting the variable 
+     * called "configuration".  It also creates the KBs directory and an empty
+     * configuration file if none exists.
+     */
+    private SimpleElement readConfiguration() throws IOException {
+
+        SimpleElement configuration = null;
+        System.out.println("INFO in KBmanager.readConfiguration()"); 
+        String fname = "config.xml";
+        StringBuffer xml = new StringBuffer();
+        String dir = System.getProperty("user.dir") + File.separator + "KBs";
+        File f = new File(dir);
+        if (!f.exists())
+            f.mkdir();
+        f = new File(dir + File.separator + fname);
+        if (!f.exists()) 
+            writeConfiguration();
+        BufferedReader br = new BufferedReader(new FileReader(dir + File.separator + fname));
+
+        try {
+            SimpleDOMParser sdp = new SimpleDOMParser();
+            configuration = sdp.parse(br);
+        }
+        catch (java.io.IOException e) {
+            System.out.println("Error in KBmanager.readConfiguration(): IO exception parsing file " + 
+                               fname + "\n" + e.getMessage());
+        }
+        finally {
+            if (br != null) 
+                br.close();
+        }
+        return configuration;
+    }
+
     /** ***************************************************************
      * Read in any KBs defined in the configuration.
      */
     public void initializeOnce() throws IOException {
 
+        System.out.println("INFO in KBmanager.initializeOnce() ");
         if (!initialized) {
-            BasicXMLparser config = new BasicXMLparser(configuration);
-            //System.out.println("INFO in KBmanager.initializeOnce(): Initializing.");
-            //System.out.print("INFO in KBmanager.initializeOnce(): Number of preferences:");
-            //System.out.println(config.elements.size());
-            for (int i = 0; i < config.elements.size(); i++) {
-                BasicXMLelement element = (BasicXMLelement) config.elements.get(i);
-                if (element.tagname.equalsIgnoreCase("preference")) {
-                    String name = (String) element.attributes.get("key");
-                    String value = (String) element.attributes.get("value");
-                    preferences.put(name,value);
-                    //System.out.println("INFO in KBmanager.initializeOnce(): Storing preferences: " + name + " " + value);
-                }
-                if (element.tagname.equalsIgnoreCase("kb")) {
-                    String kbName = (String) element.attributes.get("name");
-                    addKB(kbName);
-                    KB kb = getKB(kbName);
-                    //System.out.println("INFO in KBmanager.initializeOnce(): Number of constituents: " + element.subelements.size());
-                    for (int j = 0; j < element.subelements.size(); j++) {
-                        BasicXMLelement kbConst = (BasicXMLelement) element.subelements.get(j);
-                        if (!kbConst.tagname.equalsIgnoreCase("constituent")) 
-                            System.out.println("Error in KBmanager.initialize(): Bad element: " + kbConst.tagname);
-                        String filename = (String) kbConst.attributes.get("filename");
-                        try {                            
-                            kb.addConstituent(filename); 
-                        } catch (ParseException pe) {
-                            System.out.print("Error in KBmanager.initializeOnce(): " + pe.getMessage() + " at line ");
-                            System.out.println(pe.getErrorOffset());
-                        }
-                    }
-                    //System.out.println("INFO in KBmanager.initializeOnce(): value of cache: " + KBmanager.getMgr().getPref("cache"));
-                    if (KBmanager.getMgr().getPref("cache") != null &&
-                        KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
-                        kb.cache();
-                }
+            setDefaultAttributes();
+            try {
+                SimpleElement configuration = readConfiguration();
+                fromXML(configuration);
+                NLformatter.readKeywordMap((String) preferences.get("kbDir"));
             }
-            initialized = true;
+            catch (IOException ioe) {
+                System.out.println("Error in KBmanager.initializeOnce(): Configuration file not read.");
+                System.out.println(ioe.getMessage());
+            }
+            initialized = true;            
         }
-        // System.out.println("INFO in KBmanager.initializeOnce(): celtdir: " + (String) preferences.get("celtdir"));
     }
 
     /** ***************************************************************
@@ -170,51 +210,51 @@ public class KBmanager {
      * Write the current configuration of the system.  Call 
      * writeConfiguration() on each KB object to write its manifest.
      */
-
     public void writeConfiguration() throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null;
         Iterator it; 
         String dir = (String) preferences.get("kbDir");
-        String fname = "config.txt";
+        String fname = "config.xml";
         String key;
         String value;
         KB kb = null;
-        File f;
 
-        //System.out.println("INFO in KBmanager.writeConfiguration: Writing configuration.");
+        SimpleElement configXML = new SimpleElement("configuration");
+
+        it = preferences.keySet().iterator();
+        while (it.hasNext()) {
+            key = (String) it.next();
+            value = (String) preferences.get(key);
+            System.out.println("INFO in KBmanager.writeConfiguration(): key, value: " + key + " " + value);
+            if (key.compareTo("kbDir") == 0 || key.compareTo("celtdir") == 0 || 
+                key.compareTo("inferenceEngine") == 0 || key.compareTo("inferenceTestDir") == 0)
+                value = escapeFilename(value);
+            if (key.compareTo("userName") != 0) {
+                SimpleElement preference = new SimpleElement("preference");
+                preference.setAttribute("name",key);
+                preference.setAttribute("value",value);
+                configXML.addChildElement(preference);
+            }
+        }
+        it = kbs.keySet().iterator();
+        while (it.hasNext()) {
+            key = (String) it.next();
+            kb = (KB) kbs.get(key);
+            SimpleElement kbXML = kb.writeConfiguration();            
+            configXML.addChildElement(kbXML);
+        }
+
         try {
             fw = new FileWriter(dir + File.separator + fname);
             pw = new PrintWriter(fw);
-            it = preferences.keySet().iterator();
-            while (it.hasNext()) {
-                key = (String) it.next();
-                value = (String) preferences.get(key);
-                if (key.compareTo("kbDir") == 0 || key.compareTo("celtdir") == 0 || 
-                    key.compareTo("inferenceEngine") == 0 || key.compareTo("inferenceTestDir") == 0)
-                    value = escapeFilename(value);
-                if (key.compareTo("userName") != 0)
-                    pw.println("<preference key=\"" + key + "\" value=\"" + value + "\"/>");
-            }
-            //System.out.print("INFO in KBmanager.writeConfiguration(): number of KBs: ");
-            //System.out.println(kbs.keySet().size());
-            it = kbs.keySet().iterator();
-            while (it.hasNext()) {
-                key = (String) it.next();
-                kb = (KB) kbs.get(key);
-                kb.writeConfiguration(pw);
-
-                //System.out.print("INFO in KBmanager.writeConfiguration: Number of constituents in kb: " + kb.name + " is: ");
-                //System.out.println(kb.constituents.size());
-            }
+            pw.println(configXML.toFileString());
         }
-        catch (java.io.IOException e) {
-            throw new IOException("Error writing file " + dir + File.separator + fname);
+        catch (java.io.IOException e) {                                                  
+            throw new IOException("Error writing file " + dir + File.separator + fname + ".\n " + e.getMessage());
         }
         finally {
-            //System.out.println("INFO in KBmanager.writeConfiguration: Completed writing configuration");
-            
             if (pw != null) {
                 pw.close();
             }
@@ -222,44 +262,6 @@ public class KBmanager {
                 fw.close();
             }
         }
-    }
-
-    /** ***************************************************************
-     * Read an XML-formatted configuration file. The method initializeOnce()
-     * sets the preferences based on the contents of the configuration file.
-     * This routine has the side effect of setting the variable 
-     * called "configuration".  It also creates the KBs directory and an empty
-     * configuration file if none exists.
-     */
-    private void readConfiguration() throws IOException {
-        
-        String fname = "config.txt";
-        StringBuffer xml = new StringBuffer();
-        String dir = System.getProperty("user.dir") + File.separator + "KBs";
-        File f = new File(dir);
-        if (!f.exists())
-            f.mkdir();
-        f = new File(dir + File.separator + fname);
-        if (!f.exists()) 
-            writeConfiguration();
-        System.out.println("INFO in KBmanager.readConfiguration(): Reading: " + dir);
-        BufferedReader br = new BufferedReader(new FileReader(dir + File.separator + fname));
-
-        try {
-            do {
-                String line = br.readLine();
-                xml.append(line + "\n");
-            } while (br.ready());
-        }
-        catch (java.io.IOException e) {
-            System.out.println("Error in KBmanager.readConfiguration(): IO exception parsing file " + fname);
-        }
-        finally {
-            if (br != null) 
-                br.close();
-        }
-        // System.out.println(xml.toString());
-        configuration = xml.toString();
     }
 
     /** ***************************************************************
