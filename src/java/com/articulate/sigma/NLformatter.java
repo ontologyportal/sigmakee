@@ -466,10 +466,10 @@ public class NLformatter {
   private static String paraphraseWithFormat(String strFormat, ArrayList words, Map termMap, 
                                              boolean isNegMode, boolean isPlural, String language) {
 
-      System.out.println("INFO in NLformatter.paraphraseWithFormat(): words: " + words.toString());
-      System.out.println("INFO in NLformatter.paraphraseWithFormat(): strFormat: " + strFormat);
-      System.out.print("INFO in NLformatter.paraphraseWithFormat(): isNegMode: ");
-      System.out.println(isNegMode);
+      //System.out.println("INFO in NLformatter.paraphraseWithFormat(): words: " + words.toString());
+      //System.out.println("INFO in NLformatter.paraphraseWithFormat(): strFormat: " + strFormat);
+      //System.out.print("INFO in NLformatter.paraphraseWithFormat(): isNegMode: ");
+      //System.out.println(isNegMode);
       StringBuffer sb = new StringBuffer();
       int total = words.size();
       int index;
@@ -570,8 +570,8 @@ public class NLformatter {
    */
   private static int paraphraseNegativeRendering(int i, StringBuffer sb, String strFormat, boolean isNegMode, String language) {
       
-      System.out.println("INFO in NLformatter.paraphraseNegativeRendering(): sb: " + sb.toString());
-      System.out.println("INFO in NLformatter.paraphraseNegativeRendering(): strFormat: " + strFormat);
+      //System.out.println("INFO in NLformatter.paraphraseNegativeRendering(): sb: " + sb.toString());
+      //System.out.println("INFO in NLformatter.paraphraseNegativeRendering(): strFormat: " + strFormat);
       char ch;
       i++;  // Point to the 'n' format character that indicates a negative rendering.
       if (strFormat.charAt(i+1) == '{') {
