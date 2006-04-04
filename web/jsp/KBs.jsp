@@ -21,6 +21,8 @@ August 9, Acapulco, Mexico.
 
 <BODY BGCOLOR=#FFFFFF>
 <%
+    System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
+    KBmanager.getMgr().initializeOnce();
     if (request.getParameter("userName") != null)
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
 %>
@@ -53,8 +55,6 @@ August 9, Acapulco, Mexico.
   String remove = request.getParameter("remove");  // Delete the given KB
   if (remove != null && remove.equalsIgnoreCase("true")) 
       KBmanager.getMgr().removeKB(kbName);
-  KBmanager.getMgr();
-  KBmanager.getMgr().initializeOnce();
 
 
   if (KBmanager.getMgr().getKBnames() != null && KBmanager.getMgr().getKBnames().size() > 0) {
@@ -107,6 +107,9 @@ August 9, Acapulco, Mexico.
           if (kb.celt != null && KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName + "&lang=en\">CELT Tests</A></TD>");
+          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))
+              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=en\">WordNet Check</A></TD>");                                                           
           if (kb.inferenceEngine == null && kb.celt == null)
               out.println("<TD>Ask/Tell</TD>");
           else                                      // inference engine is available
@@ -126,8 +129,7 @@ August 9, Acapulco, Mexico.
 <% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
     <B>Add a new knowledge base</B>
     <FORM name=kbUploader ID=kbUploader action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
-        <INPUT TYPE="HIDDEN" NAME="callingPage" VALUE="KBs">
-        <B>KB Name</B><INPUT type="TEXT" name=kbName><br> 
+        <B>KB Name</B><INPUT type="TEXT" name=kb><br> 
         <B>KB Constituent</B><INPUT type=file name=constituent><BR>
         <INPUT type="submit" NAME="submit" VALUE="submit">
     </FORM><P>
