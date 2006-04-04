@@ -69,7 +69,7 @@ public class Formula implements Comparable {
      */
     public String car() {
 
-        // System.out.println("INFO in formula.car(): theFormula: " + theFormula);
+        //System.out.println("INFO in formula.car(): theFormula: " + theFormula);
         if (theFormula == null) {
             System.out.println("Error in Formula.car(): Null string");
             return "";
@@ -107,7 +107,7 @@ public class Formula implements Comparable {
                 while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
             }            
         }
-        // System.out.println("INFO in formula.car() end: theFormula: " + theFormula.substring(start,i));
+        //System.out.println("INFO in formula.car() end: theFormula: " + theFormula.substring(start,i));
         return theFormula.substring(start,i);    
     }
 
@@ -182,7 +182,7 @@ public class Formula implements Comparable {
      * Test whether the Formula is a LISP atom.
      */
     private boolean atom() {
-
+                                                                 
         String s = theFormula;
         if (s == null) {
             System.out.println("Error in Formula.atom(): Null string");
@@ -202,7 +202,7 @@ public class Formula implements Comparable {
      */
     private boolean empty() {
 
-        if (theFormula == null) {
+        if (theFormula == null || theFormula == "" || theFormula.length() < 1) {
             System.out.println("Error in Formula.empty(): Null string");
             return true;
         }
@@ -257,7 +257,7 @@ public class Formula implements Comparable {
     private String validArgsRecurse(Formula f) {
 
         //System.out.println("INFO in Formula.validArgsRecurse(): Formula: " + f.theFormula);
-        if (f.atom() || f.empty() || f.theFormula == "") return "";
+        if (f.atom() || f.empty() || f.theFormula == "" || !f.listP()) return "";
         String pred = f.car();
         Formula predF = new Formula();
         predF.read(pred);
@@ -306,6 +306,8 @@ public class Formula implements Comparable {
      * number of arguments.  "equals", "<=>", and "=>" are strictly binary. 
      * "or", and "and" are binary or greater. "not" is unary.  "forall" and
      * "exists" are unary with an argument list.
+     *  @return an empty String if there are no problems or an error message
+     *  if there are.
      */
     public String validArgs() {
 
@@ -973,14 +975,55 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Format a formula as a prolog statement.  Note that only tuples
+     * are converted properly at this time.  Statements with any embedded
+     * formulas or functions will be rejected with a null return.
+     */
+    public String toProlog() {
+
+        if (!listP()) { 
+            System.out.println("INFO in Fomula.toProlog(): Not a formula: " + theFormula);
+            return "";
+        }
+        if (empty()) { 
+            System.out.println("INFO in Fomula.toProlog(): Empty formula: " + theFormula);
+            return "";
+        }
+        StringBuffer result = new StringBuffer();
+        String relation = car();
+        Formula f = new Formula();
+        f.theFormula = cdr();
+        if (!atom(relation)) { 
+            System.out.println("INFO in Fomula.toProlog(): Relation not an atom: " + relation);
+            return "";
+        }
+        result.append(relation + "('");
+        while (!f.empty()) {
+            String arg = f.car();
+            f.theFormula = f.cdr();
+            if (!atom(arg)) { 
+                System.out.println("INFO in Fomula.toProlog(): Argument not an atom: " + arg);
+                return "";
+            }
+            result.append(arg + "'");
+            if (!f.empty()) 
+                result.append(",'");
+            else
+                result.append(").");
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
 
         Formula f = new Formula();
-        f.read("(=> (and (contraryAttribute @ROW) (identicalListItems (ListFn @ROW) (ListFn @ROW2))) (contraryAttribute @ROW2))");
+        f.read("(subAttribute Foo GovernmentPerson)");
+        System.out.println(f.toProlog());
         //f.read("(documentation Foo \"Blah, blah blah.\")");
-        System.out.println(f.getArgument(5));
+        //System.out.println(f.getArgument(5));
         /* System.out.println(f.parseList("(=> (holds contraryAttribute ?ROW1) (holds foo ?ROW1)) " +
                                        "(=> (holds contraryAttribute ?ROW1 ?ROW2) (holds foo ?ROW1 ?ROW2)) " +
                                        "(=> (holds contraryAttribute ?ROW1 ?ROW2 ?ROW3) (holds foo ?ROW1 ?ROW2 ?ROW3)) " +
