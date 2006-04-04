@@ -52,7 +52,8 @@ August 9, Acapulco, Mexico.
       show.append("</td><tr> </table>\n");  
   }
   
-  else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term that is not present in the KB.      
+  else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term 
+                                                             // that is not present in the KB.      
       System.out.println("Doesn't contain " + term);
       ArrayList relations = kb.getNearestRelations(term);
       ArrayList nonRelations = kb.getNearestNonRelations(term);
@@ -89,17 +90,31 @@ August 9, Acapulco, Mexico.
       show.append("</TABLE>");
   }
 
-  else if (kb != null && kb.containsTerm(term)) {            // Build the HTML format for all the formulas in which the given term appears.
+  else if (kb != null && kb.containsTerm(term)) {            // Build the HTML format for all the formulas in 
+                                                             // which the given term appears.
       ArrayList forms;
-      //System.out.println("Contains " + term);
-      show.append("<FONT face='Arial,helvetica' size=+3><b>");
+      show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
       if (term != null) { 
           show.append(term);
           show.append("</b></FONT>");
           if (kb.getTermFormatMap(language) != null && kb.getTermFormatMap(language).containsKey(term.intern()))
               show.append("(" + (String) kb.getTermFormatMap(language).get(term.intern()) + ")");
+          show.append("</td>");
+          WordNet.initOnce();
+          TreeMap tm = WordNet.wn.getWordsFromTerm(term);
+          if (tm != null) {
+              show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
+              show.append("<td width='40%'><small>");
+              show.append(WordNet.wn.formatWords(tm));
+              show.append("</small></td>");
+          }
+          else
+              System.out.println("INFO in Browse.jsp: No synsets for term " + term);
+          show.append("</tr></table>\n");
       }
-      show.append("<br>");
+      else {
+          show.append ("</b></FONT></td></tr></table>\n");
+      }
 
       for (int arg = 1; arg < 6; arg++) {
           forms = kb.ask("arg",arg,term);
@@ -113,7 +128,7 @@ August 9, Acapulco, Mexico.
                      !f.sourceFile.substring(f.sourceFile.length()-11,f.sourceFile.length()).equalsIgnoreCase("_Cache.kif")) {
                       show.append("<TR><TD WIDTH='50%' valign=top>");
                       formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
-                      if (f.theFormula.substring(1,14).compareTo("documentation") == 0) 
+                      if (f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0) 
                           show.append(kb.formatDocumentation(kbHref,formattedFormula));                                              
                       else
                           show.append(formattedFormula);
