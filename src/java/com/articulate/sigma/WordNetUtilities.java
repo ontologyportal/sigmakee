@@ -38,7 +38,7 @@ public class WordNetUtilities {
 
     /** *************************************************************** 
      */
-    private static String removeTermPrefixes (String formula) {
+    public static String removeTermPrefixes (String formula) {
 
         return formula.replaceAll("&%","");
     }
