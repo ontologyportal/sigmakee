@@ -17,6 +17,7 @@ August 9, Acapulco, Mexico.
  if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))         
        response.sendRedirect("KBs.jsp");     
 
+  StringBuffer result = new StringBuffer();
   String fileName = "";    
   String srcDir = KBmanager.getMgr().getPref("kbDir");      
   //System.out.println("INFO in AddConstituent.jsp: KB dir: " + srcDir);
@@ -31,7 +32,7 @@ August 9, Acapulco, Mexico.
       Enumeration params = multiPartRequest.getParameterNames();
       while (params.hasMoreElements()) {
           String param = params.nextElement().toString();
-          System.out.println("INFO in AddConstituent.jsp: parameter: " + param);
+          //System.out.println("INFO in AddConstituent.jsp: parameter: " + param);
       }
       if (kbName == null) {
           System.out.println("Error: No knowledge base name specified.");
@@ -42,13 +43,13 @@ August 9, Acapulco, Mexico.
       while (fileTags.hasMoreElements()) {                    
           String fileTag = fileTags.nextElement().toString();
           fileName = multiPartRequest.getOriginalFileName(fileTag);
-          System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
-          System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
+          //System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
+          //System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
           if (KBmanager.getMgr().getKB(kbName) == null) 
               KBmanager.getMgr().addKB(kbName);
           KB kb = KBmanager.getMgr().getKB(kbName);
           kb = KBmanager.getMgr().getKB(kbName);
-          kb.addConstituent(srcDir + File.separator + fileName);
+          result.append(kb.addConstituent(srcDir + File.separator + fileName));
           // kb.cache();
       }
       KBmanager.getMgr().writeConfiguration();
@@ -60,6 +61,11 @@ August 9, Acapulco, Mexico.
       System.out.println("filename: " + fileName);
   }
 
+  if (result.toString() != null && result.toString() != "") 
+      KBmanager.getMgr().setError(result.toString());
+  else
+      KBmanager.getMgr().setError("");
+  
   response.sendRedirect("Manifest.jsp?kb=" + kbName);
 %>
 
