@@ -105,7 +105,7 @@ August 9, Acapulco, Mexico.
           if (tm != null) {
               show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
               show.append("<td width='40%'><small>");
-              show.append(WordNet.wn.formatWords(tm));
+              show.append(WordNetUtilities.formatWords(tm));
               show.append("</small></td>");
           }
           else
