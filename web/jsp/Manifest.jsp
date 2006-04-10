@@ -28,6 +28,7 @@ August 9, Acapulco, Mexico.
     String writeProlog = request.getParameter("writeProlog");
     String constituent = request.getParameter("constituent");
     String delete = request.getParameter("delete");
+    String result = "";
     KB kb = KBmanager.getMgr().getKB(kbName);
     if (kb == null || kbName == null)
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
@@ -37,12 +38,12 @@ August 9, Acapulco, Mexico.
         int i = kb.constituents.indexOf(constituent.intern());
         if (i == -1) {
             System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
-            kb.reload();
+            result = kb.reload();
         }
         else {
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
-            kb.reload();       
+            result = kb.reload();       
         }
     }
     else if (constituent != null) {
@@ -123,7 +124,15 @@ August 9, Acapulco, Mexico.
         <INPUT type="submit" NAME="writeProlog" VALUE="writeProlog">
     </FORM>
 
-<% } %>
+<% } 
+  if (KBmanager.getMgr().getError() != "") {
+      out.println(KBmanager.getMgr().getError());  
+      KBmanager.getMgr().setError("");
+  }
+  if (result != "") 
+      out.println(result);
+
+%>
 
 <P>
   <A HREF="KBs.jsp" >Return to home page</A>
