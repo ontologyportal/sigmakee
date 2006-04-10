@@ -1,9 +1,6 @@
-             
-
 <%@include file="Prelude.jsp" %>
 <HEAD>
   <TITLE>Sigma Knowledge Engineering Environment - Ask/Tell</TITLE>
-  <!-- <style>@import url(kifb.css);</style> -->
 </HEAD>
 <%
 
@@ -21,7 +18,7 @@ August 9, Acapulco, Mexico.
 */
     System.out.println("INFO in AskTell.jsp");
     String result = null;        
-    StringBuffer sbStatus = new StringBuffer();
+    StringBuffer status = new StringBuffer();
     String processedStmt = null;
     ArrayList processedStmts = null;
 
@@ -61,8 +58,8 @@ August 9, Acapulco, Mexico.
         else {
             String msg = (new KIF()).parseStatement(stmt,"");
             if (msg != null) {
-                sbStatus.append("<font color='red'>Error: Syntax Error in statement: " + stmt);
-                sbStatus.append("Message: " + msg + "</font><br>\n");
+                status.append("<font color='red'>Error: Syntax Error in statement: " + stmt);
+                status.append("Message: " + msg + "</font><br>\n");
                 syntaxError = true;
             }
         }
@@ -72,7 +69,7 @@ August 9, Acapulco, Mexico.
         englishStatement = stmt;
         if (!KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes") || kb.celt == null) {
             stmt = null;
-            sbStatus.append("<font color='red'>CELT not loaded.  Only KIF syntax is allowed.</font><br>\n");
+            status.append("<font color='red'>CELT not loaded.  Only KIF syntax is allowed.</font><br>\n");
         }
         else {
             System.out.println("INFO in AskTell.jsp: stmt: " + stmt);
@@ -84,7 +81,7 @@ August 9, Acapulco, Mexico.
     System.out.println("INFO in AskTell.jsp: Completed translation.");
     if (stmt == null || stmt.length() < 2 || stmt.trim().charAt(0) != '(') {
         syntaxError = true;
-        sbStatus.append("<font color='red'>Error: Syntax Error or parsing failure in statement: " + englishStatement + "</font><br>\n");
+        status.append("<font color='red'>Error: Syntax Error or parsing failure in statement: " + englishStatement + "</font><br>\n");
         stmt = englishStatement;
     }
 
@@ -107,11 +104,11 @@ August 9, Acapulco, Mexico.
                 if (port == null)
                     port = "8080";
                 String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
-                sbStatus.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
+                status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
         }
         catch (IOException ioe) {
-            sbStatus.append(ioe.getMessage());
+            status.append(ioe.getMessage());
         }
     }
 %>
@@ -157,9 +154,9 @@ August 9, Acapulco, Mexico.
 <%
 
     String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-    if (sbStatus != null && sbStatus.toString().length() > 0) {
+    if (status != null && status.toString().length() > 0) {
         out.println("Status: ");
-        out.println(sbStatus.toString());
+        out.println(status.toString());
     }
     if ((result != null) && (result.indexOf("Syntax error detected") != -1)) {        
        out.println("<font color='red'>A syntax error was detected in your input.</font>");
