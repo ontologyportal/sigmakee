@@ -133,7 +133,13 @@ August 9, Acapulco, Mexico.
         <B>KB Constituent</B><INPUT type=file name=constituent><BR>
         <INPUT type="submit" NAME="submit" VALUE="submit">
     </FORM><P>
-<%  }   %>
+<%  } 
+
+  if (KBmanager.getMgr().getError() != "") {
+      out.println(KBmanager.getMgr().getError());  
+      KBmanager.getMgr().setError("");
+  }
+%>
 </ul>
 </BODY>
 </HTML>
