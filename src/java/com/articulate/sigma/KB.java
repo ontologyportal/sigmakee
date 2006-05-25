@@ -40,7 +40,7 @@ public class KB {
     /** A HashMap of HashSets, which contain all the child classes of a given class. */
     public HashMap children = new HashMap();
     /** A HashMap of HashSets, which contain all the disjoint classes of a given class. */
-    public HashMap disjoint = null;
+    public HashMap disjoint = new HashMap();
     /** The instance of the CELT process. */
     public CELT celt = null;
     /** A Set of Strings, which are all the terms in the KB. */
@@ -950,15 +950,16 @@ public class KB {
      * the formulas with the existing set of formulas.
      * @param filename - the full path of the file being added.
      */
-    public void addConstituent (String filename) throws IOException, ParseException {
+    public String addConstituent (String filename) throws IOException {
 
+        StringBuffer result = new StringBuffer();
         Iterator it;
         KIF file = new KIF();
         String key;
         ArrayList list;
         ArrayList newList;
 
-        if (constituents.contains(filename.intern())) return;
+        if (constituents.contains(filename.intern())) return "Error: " + filename + " already loaded.";
         System.out.println("INFO KB.addConstituent(): Adding " + filename);
         try { 
             file.readFile(filename);
@@ -967,7 +968,8 @@ public class KB {
             throw new IOException(ioe.getMessage());
         }
         catch (ParseException pe) {
-            throw new ParseException(pe.getMessage(),pe.getErrorOffset());
+            result.append(pe.getMessage() + "At line: " + pe.getErrorOffset());
+            return result.toString();
         }
         System.out.print("INFO in KB.addConstituent(): Read file: " + filename + " of size: ");
         System.out.print(file.formulas.keySet().size());
@@ -980,7 +982,7 @@ public class KB {
             if (formulas.containsKey(key)) {
                 list = (ArrayList) formulas.get(key);
                 if (list == null) 
-                    throw new ParseException("Error: Bad data in existing constituents at key: " + key,0); 
+                     return "Error: Bad data in existing constituents at key: " + key; 
                 newList = (ArrayList) file.formulas.get(key);
                 for (int i = 0; i < newList.size(); i++) {          // Don't add formulas to the KB that already exist in the same file.
                     //if (i % 100 == 1) System.out.print("+");    
@@ -988,13 +990,13 @@ public class KB {
                     if (!formulaSet.contains(f.theFormula.intern()))
                         list.add(newList.get(i));                   // Add Formula to the existing ArrayList of Formulas 
                     else {
-                        System.out.print("Warning in KB.addConstituent: Duplicate axiom in ");
-                        System.out.println(f.sourceFile + " at line " + f.startLine);
-                        System.out.println(f.theFormula);
+                        result.append("Warning: Duplicate axiom in ");
+                        result.append(f.sourceFile + " at line " + f.startLine + "<BR>");
+                        result.append(f.theFormula + "<P>");
                         Formula existingFormula = (Formula) ((ArrayList) formulas.get(f.theFormula.intern())).get(0);
-                        System.out.print("Existing formula appears in ");
-                        System.out.println(existingFormula.sourceFile + " at line " + existingFormula.startLine);
-                        System.out.println();
+                        result.append("Warning: Existing formula appears in ");
+                        result.append(existingFormula.sourceFile + " at line " + existingFormula.startLine + "<BR>");
+                        result.append("<P>");
                     }
                                                                     // This inner loop is the slow part
                     /**boolean found = false;
@@ -1029,13 +1031,15 @@ public class KB {
             collectParentsAndChildren();
             collectDisjointness();
         }
+        return result.toString();
     }
 
     /** ***************************************************************
      * Reload all the KB constituents.
      */
-    public void reload() {
-        
+    public String reload() {
+
+        StringBuffer result = new StringBuffer();
         System.out.println("INFO in KB.reload(): Reloading.");
         ArrayList newConstituents = new ArrayList(constituents);
         constituents = new ArrayList();
@@ -1048,16 +1052,13 @@ public class KB {
 
         for (int i = 0; i < newConstituents.size(); i++) {
             try {
-                addConstituent((String) newConstituents.get(i));        
+                result.append(addConstituent((String) newConstituents.get(i)));        
             }
             catch (IOException ioe) {
                 System.out.println("Error in KB.reload(): " + ioe.getMessage());
             }
-            catch (ParseException pe) {
-                System.out.print("Error in KB.reload(): " + pe.getMessage());
-                System.out.println(" at line: " + (new Integer(pe.getErrorOffset()).toString()));
-            }
         }
+        return result.toString();
     }
 
     /** ***************************************************************
