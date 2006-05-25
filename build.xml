@@ -5,16 +5,14 @@
 	<property name="build.home" value="build"/>
 	<property name="build.classes" value="${build.home}/classes"/>
 	<property name="build.lib" value="${build.home}/lib"/>
-	<property name="dist.home" value="C:/Program Files/Apache Tomcat 4.0/webapps"/>
-    <!-- property name="vampire.home" value="C:/Artic/vampire/Vampire_VSWorkspace/vampire/Release"/ -->
-        <property environment="env"/>
-        <property name="tomcat.home" value="${env.CATALINA_HOME}" />
+    <property environment="env"/>
+    <property name="tomcat.home" value="C:/Program Files/Apache Software Foundation/Tomcat 5.5" />
+    <property name="dist.home" value="${tomcat.home}/webapps"/>
     <property name="deploy.home" value="${tomcat.home}/webapps/${app.name}"/>
     <property name="deploy.classes" value="${deploy.home}/WEB-INF/classes"/>
     <property name="deploy.lib" value="${deploy.home}/WEB-INF/lib"/>
     <property name="deploy.jars" value="${deploy.home}/WEB-INF/lib"/>
-	<!-- property name="dist.src" value="${app.name}.jar"/ -->
-	<!-- property name="dist.war" value="${app.name}.war"/ -->
+	<property name="dist.war" value="sigma.war"/>
 	<property name="javadoc.home" value="doc/api"/>
 	<property name="build.javadoc" value="${build.home}/${javadoc.home}"/>
 </target>
@@ -22,7 +20,7 @@
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
     <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off">
-        <classpath refid="core.classpath"/>
+        <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
 </target>
@@ -30,6 +28,13 @@
 <target name="web_deploy" depends="compile" description="Create the deploy structure and add the contents.">
     <!-- Make the root. -->   
 	<mkdir dir="${deploy.home}"/>
+
+    <!-- Delete the old code -->
+
+    <delete includeemptydirs="true" failonerror="false">
+        <fileset dir="${deploy.home}"/>
+        <fileset dir="${tomcat.home}/work/Catalina/localhost/${app.name}"/>
+    </delete>
 
     <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
     <copy todir="${deploy.home}">
@@ -74,12 +79,9 @@
     </javadoc>
 </target>
 
-<target name="all" depends="dist, api_doc">
+<!-- target name="all" depends="dist, api_doc" -->
+<target name="all" depends="dist">
 </target>
-
-<path id="core.classpath">
-    <!-- pathelement path="${basedir}/build/classes:${basedir}/lib/xerces.jar"/ -->
-</path>
 
 <path id="javadoc.classpath">
     <pathelement path="classes:${basedir}/lib/cos.jar:"/>
@@ -87,7 +89,6 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
-    <!-- pathelement path="src/java/jpl"/ -->
 </path>
 
 </project>
