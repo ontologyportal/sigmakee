@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico.
 */
 
 import java.util.*;
+import java.util.regex.*;
 import java.io.*;
 
  /** A utility class that creates HTML-formatting Strings for various purposes. */
@@ -77,6 +78,34 @@ public class HTMLformatter {
                 show.append(", ");
         }
         return show.toString();
+    }
+
+    /** *************************************************************
+     *  Show a hyperlinked list of term mappings from WordNet.
+     */
+    public static String termMappingsList(String terms, String kbHref) {
+
+        StringBuffer result = new StringBuffer();
+        String[] sumoList = terms.split("\\s+");
+        result.append("<P><ul><li>\tSUMO Mappings:  ");
+        for (int j=0; j<sumoList.length; j++) {
+            String sumoEquivalent = sumoList[j];
+            sumoEquivalent.trim();
+
+            Pattern p = Pattern.compile("\\&\\%");
+            Matcher m = p.matcher(sumoEquivalent);
+            sumoEquivalent = m.replaceFirst("");
+            p = Pattern.compile("[\\=\\|\\+\\@]");
+            m = p.matcher(sumoEquivalent);
+            char symbol = sumoEquivalent.charAt(sumoEquivalent.length() - 1);
+            sumoEquivalent = m.replaceFirst("");
+            result.append(kbHref);
+            result.append(sumoEquivalent + "\">" + sumoEquivalent + "</a>  ");
+            String mapping = WordNetUtilities.mappingCharToName(symbol);
+            result.append(" (" + mapping + " mapping) ");
+        }
+        result.append("\n\n</li></ul>");
+        return result.toString();
     }
 
     /** *************************************************************
