@@ -27,6 +27,21 @@ public class KBmanager {
 
     private HashMap kbs = new HashMap();
     private boolean initialized = false;
+    private String error = "";
+
+    /** ***************************************************************
+     * Set an error string for file loading.
+     */
+    public void setError(String er) {
+        error = er;
+    }
+
+    /** ***************************************************************
+     * Get the error string for file loading.
+     */
+    public String getError() {
+        return error;
+    }
 
     /** ***************************************************************
      * Set default attribute values if not in the configuration file.
@@ -45,8 +60,9 @@ public class KBmanager {
 
     /** ***************************************************************
      */
-    private void fromXML(SimpleElement configuration) {
+    private String fromXML(SimpleElement configuration) {
 
+        StringBuffer result = new StringBuffer();
         if (!configuration.getTagName().equals("configuration")) 
             System.out.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
         else {
@@ -68,12 +84,8 @@ public class KBmanager {
                                 System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                             String filename = (String) kbConst.getAttribute("filename");
                             try {                            
-                                kb.addConstituent(filename); 
+                                result.append(kb.addConstituent(filename)); 
                             } 
-                            catch (ParseException pe) {
-                                System.out.print("Error in KBmanager.fromXML(): " + pe.getMessage() + " at line ");
-                                System.out.println(pe.getErrorOffset());
-                            }
                             catch (IOException ioe) {
                                 System.out.print("Error in KBmanager.fromXML(): " + ioe.getMessage());
                             }
@@ -87,6 +99,7 @@ public class KBmanager {
                 }
             }
         }
+        return result.toString();
     }
 
     /** ***************************************************************
@@ -136,7 +149,9 @@ public class KBmanager {
             setDefaultAttributes();
             try {
                 SimpleElement configuration = readConfiguration();
-                fromXML(configuration);
+                String result = fromXML(configuration);
+                if (result !="") 
+                    error = result;
                 NLformatter.readKeywordMap((String) preferences.get("kbDir"));
             }
             catch (IOException ioe) {
@@ -227,7 +242,7 @@ public class KBmanager {
         while (it.hasNext()) {
             key = (String) it.next();
             value = (String) preferences.get(key);
-            System.out.println("INFO in KBmanager.writeConfiguration(): key, value: " + key + " " + value);
+            //System.out.println("INFO in KBmanager.writeConfiguration(): key, value: " + key + " " + value);
             if (key.compareTo("kbDir") == 0 || key.compareTo("celtdir") == 0 || 
                 key.compareTo("inferenceEngine") == 0 || key.compareTo("inferenceTestDir") == 0)
                 value = escapeFilename(value);
