@@ -24,6 +24,10 @@ import java.util.regex.*;
 
 public class WordNetUtilities {
 
+      /** POS-prefixed mappings from a new synset number to the old
+       *  one. */
+    HashMap mappings = new HashMap();
+
     /** ***************************************************************
     *  Get a SUMO term minus its &% prefix and one character mapping
     * suffix.
@@ -98,6 +102,59 @@ public class WordNetUtilities {
             case 'r': return '4';
         }
         return '1';
+    }
+
+    /** ***************************************************************
+     * Convert a part of speech number to the two letter format used by
+     * the WordNet sense index code.  Defaults to noun "NN".
+    */
+    public static String posNumberToLetters(String pos) {
+
+        if (pos.equalsIgnoreCase("1")) return "NN";
+        if (pos.equalsIgnoreCase("2")) return "VB";
+        if (pos.equalsIgnoreCase("3")) return "JJ";
+        if (pos.equalsIgnoreCase("4")) return "RB";
+        return "NN";
+    }
+
+    /** ***************************************************************
+     * Take a WordNet sense identifier, and return the integer part of 
+     * speech code.
+     */
+    public static int sensePOS(String sense) {
+
+        if (sense.indexOf("_NN_") != -1) 
+            return WordNet.NOUN;
+        if (sense.indexOf("_VB_") != -1) 
+            return WordNet.VERB;
+        if (sense.indexOf("_JJ_") != -1) 
+            return WordNet.ADJECTIVE;
+        if (sense.indexOf("_RB_") != -1) 
+            return WordNet.ADVERB;
+        System.out.println("Error in WordNetUtilities.sensePOS(): Unknown part of speech type in sense code: " + sense);
+        return 0;
+    }
+
+    /** ***************************************************************
+    */
+    public static String mappingCharToName(char mappingType) {
+
+        String mapping = "";
+        switch (mappingType) {
+            case '=': mapping = "equivalent";
+                break;
+            case ':': mapping = "anti-equivalent";
+                break;
+            case '+': mapping = "subsuming";
+                break;
+            case '[': mapping = "negated subsuming";
+                break;
+            case '@': mapping = "instance";
+                break;
+            case ']': mapping = "negated instance";
+                break;
+        }
+        return mapping;
     }
 
     /** ***************************************************************
@@ -309,6 +366,46 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * Given a POS-prefixed synset that is not mapped to SUMO, go up the hypernym
+     * links to try to find a synset that is linked.  Return the SUMO term with its
+     * mapping type suffix and &% prefix. Note that in cases where there are 
+     * multiple hpernyms, When the first hypernym doesn't yield a good SUMO term,
+     * the routine does a depth first search (although going "up"
+     * the tree of hypernyms) to find a good term.
+     */
+    private static String findMappingFromHypernym(String synset) {
+
+        ArrayList rels = (ArrayList) WordNet.wn.relations.get(synset);   // relations requires prefixes
+        if (rels != null) {
+            Iterator it2 = rels.iterator();
+            while (it2.hasNext()) {
+                AVPair avp = (AVPair) it2.next();
+                if (avp.attribute.equals("hypernym") || avp.attribute.equals("instance hypernym")) {
+                    String mappingChar = "";
+                    if (avp.attribute.equals("instance hypernym")) 
+                        mappingChar = "@";
+                    else
+                        mappingChar = "+";
+                    String targetSynset = avp.value; 
+                    String targetSUMO = (String) WordNet.wn.getSUMOMapping(targetSynset);
+                    if (targetSUMO != null && targetSUMO != "") {
+                        if (targetSUMO.charAt(targetSUMO.length()-1) == '[') 
+                            mappingChar = "[";
+                        if (Character.isUpperCase(targetSUMO.charAt(2)))     // char 2 is start of actual term after &%
+                            return "&%" + getBareSUMOTerm(targetSUMO) + mappingChar;
+                        else {
+                            String candidate = findMappingFromHypernym(targetSynset);
+                            if (candidate != null && candidate != "") 
+                                return candidate;
+                        }                            
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /** ***************************************************************
      * This is a utility routine that should not be called during 
      * normal Sigma operation.  It does most of the actual work for 
      * deduceMissingLinks()
@@ -336,16 +433,20 @@ public class WordNetUtilities {
                 else {
                     if (m.matches()) {
                         String synset = posNum + m.group(1);
-                        String newTerm = "";
-                        String mapType = "";
+                        String newTerm = findMappingFromHypernym(synset); 
                         if (newTerm != null && newTerm != "") {              
-                            pw.println(m.group(1) + m.group(2) + "| " + m.group(3) + " &%" + newTerm + mapType);
-                            System.out.println("INFO in WordNet.processMergers(): synset, newterm: " + 
-                                               synset + " " + " " + newTerm);
+                            pw.println(m.group(1) + m.group(2) + "| " + m.group(3) + " " + newTerm);
+//                            System.out.println("INFO in WordNet.processMissingLinks(): synset, newterm: " + 
+//                                               synset + " " + " " + newTerm);
                         }
-                        else
+                        else {
                             pw.println(line.trim());
+                            System.out.println("INFO in WordNet.processMissingLinks(): No term found for synset" + 
+                                               synset);
+                        }
                     }
+                    else 
+                        pw.println(line.trim());
                 }
                 m = p.matcher(line);
             }
@@ -372,7 +473,7 @@ public class WordNetUtilities {
     public static void deduceMissingLinks() throws IOException {
 
         String fileName = "WordNetMappings-nouns";
-        String pattern = "^([0-9]{8})([\\S\\s]+)\\|\\s([\\S\\s]+?)\\s*$";
+        String pattern = "^([0-9]{8})([\\S\\s_]+)\\|\\s([\\S\\s]+?)\\s*$";
         String posNum = "1";
         processMissingLinks(fileName,pattern,posNum);
         fileName = "WordNetMappings-verbs";
@@ -390,6 +491,146 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * This is a utility routine that should not be called during 
+     * normal Sigma operation.  It does most of the actual work for 
+     * updateWNversion()
+     */
+    public void updateWNversionProcess(String fileName, String pattern, String posNum) throws IOException {
+
+        FileWriter fw = null;
+        PrintWriter pw = null;
+        try {
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new");
+            pw = new PrintWriter(fw);
+
+            FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
+            LineNumberReader lr = new LineNumberReader(r);
+            String line;
+            while ((line = lr.readLine()) != null) {
+                if (lr.getLineNumber() % 1000 == 0) 
+                    System.out.print('.');
+                Pattern p = Pattern.compile(pattern);
+                line = line.trim();
+                Matcher m = p.matcher(line);
+                if (m.matches()) {
+                    String newsynset = posNum + m.group(1);
+                    String oldsynset = (String) mappings.get(newsynset);
+                    if (oldsynset != null && oldsynset != "") { 
+                        String term = "";
+                        oldsynset = oldsynset.substring(1);
+                        switch (posNum.charAt(0)) {
+                          case '1': term = (String) WordNet.wn.nounSUMOHash.get(oldsynset); break;
+                          case '2': term = (String) WordNet.wn.verbSUMOHash.get(oldsynset); break;
+                          case '3': term = (String) WordNet.wn.adjectiveSUMOHash.get(oldsynset); break;
+                          case '4': term = (String) WordNet.wn.adverbSUMOHash.get(oldsynset); break;
+                        }
+                        if (term == null) {                         
+                            pw.println(line.trim());
+                            System.out.println("Error in WordNetUtilities.updateWNversionProcess(): No term for synsets (old, new): " + 
+                                               oldsynset + " " + newsynset);
+                        }
+                        else
+                            pw.println(line + " " + term);
+                    }
+                    else {
+                        pw.println(line.trim());
+                        System.out.println("Error in WordNetUtilities.updateWNversionProcess(): No mapping for synset: " + newsynset);
+                    }
+                }                
+                else
+                    pw.println(line.trim());
+            }
+        }
+        catch (java.io.IOException e) {
+            throw new IOException("Error writing file " + fileName + "\n" + e.getMessage());
+        }
+        finally {
+            if (pw != null) {
+                pw.close();
+            }
+            if (fw != null) {
+                fw.close();
+            }
+        }
+    }
+
+    /** ***************************************************************
+     * Read the version mapping files and store in the HashMap
+     * called "mappings".
+     */
+    public void updateWNversionReading(String fileName, String pattern, String posNum) throws IOException {
+
+        try {
+            FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
+            LineNumberReader lr = new LineNumberReader(r);
+            String line;
+            while ((line = lr.readLine()) != null) {
+                if (lr.getLineNumber() % 1000 == 0) 
+                    System.out.print('.');
+                Pattern p = Pattern.compile(pattern);
+                line = line.trim();
+                Matcher m = p.matcher(line);
+                if (m.matches()) {
+                    String newsynset = posNum + m.group(1);
+                    String oldsynset = posNum + m.group(2);
+                    mappings.put(newsynset,oldsynset);
+                }
+                else
+                    System.out.println("INFO in WordNetUtilities.updateWNversionReading(): no match for line: " + line);
+            }
+        }
+        catch (java.io.IOException e) {
+            throw new IOException("Error writing file " + fileName + "\n" + e.getMessage());
+        }
+    }
+
+    /** ***************************************************************
+     * Port the mappings from one version of WordNet to another. It
+     * calls updateWNversionReading to do most of the work. It assumes
+     * that the mapping file has the new synset first and the old one
+     * second.
+     * This is a utility which should not be called during normal Sigma
+     * operation.
+     */
+    public void updateWNversion() throws IOException {
+
+        String fileName = "wn21-20.noun";
+        String pattern = "^(\\d+) (\\d+) .*$";
+        String posNum = "1";
+        updateWNversionReading(fileName,pattern,posNum);
+        fileName = "wn21-20.verb";
+        pattern = "^(\\d+) (\\d+) .*$";
+        posNum = "2";
+        updateWNversionReading(fileName,pattern,posNum);
+        fileName = "wn21-20.adj";
+        pattern = "^(\\d+) (\\d+) .*$";
+        posNum = "3";
+        updateWNversionReading(fileName,pattern,posNum);
+        fileName = "wn21-20.adv";
+        pattern = "^(\\d+) (\\d+) .*$";
+        posNum = "4";
+        updateWNversionReading(fileName,pattern,posNum);
+
+        fileName = "data.noun";
+        pattern = "^([0-9]{8}) .+$";
+        posNum = "1";
+        updateWNversionProcess(fileName,pattern,posNum);
+        fileName = "data.verb";
+        pattern = "^([0-9]{8}) .+$";
+        posNum = "2";
+        updateWNversionProcess(fileName,pattern,posNum);
+        fileName = "data.adj";
+        pattern = "^([0-9]{8}) .+$";
+        posNum = "3";
+        updateWNversionProcess(fileName,pattern,posNum);
+        fileName = "data.adv";
+        pattern = "^([0-9]{8}) .+$";
+        posNum = "4";
+        updateWNversionProcess(fileName,pattern,posNum);
+    }
+
+    /** ***************************************************************
     *  A main method, used only for testing.  It should not be called
     *  during normal operation.
     */
@@ -398,7 +639,8 @@ public class WordNetUtilities {
        try {
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
-            WordNetUtilities.deduceMissingLinks();
+            WordNetUtilities wnu = new WordNetUtilities();
+            wnu.deduceMissingLinks();
         }
         catch (IOException ioe) {
             System.out.println("Error in WordNet.main(): IOException: " + ioe.getMessage());
