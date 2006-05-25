@@ -147,9 +147,9 @@ public class KIF {
                   if (isEOL) { // two line seperators in a row, shows a new KIF statement is to start.
                       // check if a new statement has already been generated, otherwise report error
                       if (keySet.size() != 0 || expression.length() > 0) {
-                          System.out.print("Parsing Error:");
+                          System.out.print("Error:");
                           System.out.println(new Integer(lineStart + totalLinesForComments).toString());
-                          throw new ParseException("Parsing error in " + filename + ": possible missing close parenthesis.",f.startLine);
+                          throw new ParseException("Error in " + filename + ": possible missing close parenthesis.",f.startLine);
                       }
                       continue;
                   }
@@ -375,8 +375,7 @@ public class KIF {
           parse(fr);
       }
       catch (ParseException pe) {
-          System.out.print("Error in KIF.readFile(): " + pe.getMessage() + " at line ");
-          System.out.println(pe.getErrorOffset());
+          throw new ParseException(pe.getMessage(),pe.getErrorOffset());
       }
       catch (java.io.IOException e) {
           throw new IOException("Error in KIF.readFile(): IO exception parsing file " + filename);
