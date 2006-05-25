@@ -97,8 +97,10 @@ August 9, Acapulco, Mexico.
   <%=show.toString() %><BR>
 <%
   show = new StringBuffer();
-  ArrayList nonMatchingTaxonomy = WNdiagnostics.nonMatchingTaxonomy();
-  show.append(HTMLformatter.synsetList(nonMatchingTaxonomy,kbHref));
+  ArrayList nonMatchingTaxonomy = WNdiagnostics.nonMatchingTaxonomy(kbName,language);
+  for (int i = 0; i < nonMatchingTaxonomy.size(); i++) {
+      show.append((String) nonMatchingTaxonomy.get(i));
+  }
 %>
 <br><b>&nbsp;Error: nonMatchingTaxonomy</B>
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
