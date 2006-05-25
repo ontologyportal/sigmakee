@@ -104,17 +104,26 @@ public class WNdiagnostics {
     }
 
     /** *****************************************************************
-     * @return an ArrayList of Strings which are WordNet synsets that don't
+     * @return an ArrayList of Strings which are HTML-formatted presentations 
+     * of SUMO terms, and WordNet synsets and that don't
      * have a matching taxonomic structure with their corresponding SUMO
-     * terms.
+     * terms. Currently, this just examines nouns and needs to be expanded
+     * to examine verbs too.
      */
-    public static ArrayList nonMatchingTaxonomy() {
+    public static ArrayList nonMatchingTaxonomy(String kbName, String language) {
 
+        String synsetHTML = "<a href=\"WordNet.jsp?";
+        String termHTML = "<a href=\"Browse.jsp?kb=" + kbName + "&lang=" + language + "&";
         ArrayList result = new ArrayList();
         Iterator it = WordNet.wn.nounSUMOHash.keySet().iterator();
         while (it.hasNext()) {
+            //System.out.println();
             String synset = (String) it.next();                         // not a prefixed synset
             if (WordNet.wn.nounSUMOHash.get(synset) != null) {
+                ArrayList words = (ArrayList) WordNet.wn.synsetsToWords.get("1"+synset);
+                String sumoTerm = (String) WordNet.wn.nounSUMOHash.get(synset);
+                String word = (String) words.get(0);
+                //System.out.println("Source word: " + word);
                 ArrayList rels = (ArrayList) WordNet.wn.relations.get("1"+synset);   // relations requires prefixes
                 if (rels != null) {
                     Iterator it2 = rels.iterator();
@@ -122,18 +131,34 @@ public class WNdiagnostics {
                         AVPair avp = (AVPair) it2.next();
                         if (avp.attribute.equals("hypernym") || avp.attribute.equals("hyponym")) {
                             String targetSynset = avp.value; 
+                            ArrayList targetWords = (ArrayList) WordNet.wn.synsetsToWords.get(targetSynset);
+                            String targetWord = (String) targetWords.get(0);
+                            //System.out.println("Target word: " + targetWord);                            
                             String targetBareSynset = avp.value.substring(1);               
                             String targetSUMO = (String) WordNet.wn.nounSUMOHash.get(targetBareSynset);
-                            String sumoTerm = (String) WordNet.wn.nounSUMOHash.get(synset);
+                            //System.out.println("SUMO source: " + sumoTerm);
+                            //System.out.println("SUMO target: " + targetSUMO);
+                            String bareSUMOterm = WordNetUtilities.getBareSUMOTerm(sumoTerm);
+                            String bareTargetSUMO = WordNetUtilities.getBareSUMOTerm(targetSUMO);
                             if (sumoTerm != null) {
                                 KB kb = KBmanager.getMgr().getKB("SUMO");
                                 HashSet SUMOtaxonomy = new HashSet();
-                                if (avp.attribute.equals("hypernym"))
-                                    SUMOtaxonomy = (HashSet) kb.parents.get(sumoTerm);
-                                if (avp.attribute.equals("hyponym"))
-                                    SUMOtaxonomy = (HashSet) kb.children.get(sumoTerm);                                
-                                if (SUMOtaxonomy != null && targetSUMO != null && !SUMOtaxonomy.contains(targetSUMO)) {
-                                    result.add("1"+synset);                                
+                                String arrow = "->";
+                                if (avp.attribute.equals("hypernym")) 
+                                    SUMOtaxonomy = (HashSet) kb.parents.get(bareSUMOterm);                                                                  
+                                if (avp.attribute.equals("hyponym")) {
+                                    SUMOtaxonomy = (HashSet) kb.children.get(bareSUMOterm);                                
+                                    arrow = "<-";
+                                }
+                                //System.out.println("taxonomy: " + SUMOtaxonomy);
+                                if (SUMOtaxonomy != null && targetSUMO != null && !SUMOtaxonomy.contains(bareTargetSUMO) &&
+                                    !bareSUMOterm.equals(bareTargetSUMO)) {
+                                    StringBuffer resultString = new StringBuffer();
+                                    resultString.append("(" + synsetHTML + "synset=1" + synset + "\">" + word + "</a>" + arrow);
+                                    resultString.append(synsetHTML + "synset=" + targetSynset + "\">" + targetWord + "</a>) ");
+                                    resultString.append("(" + termHTML + "term=" + bareSUMOterm + "\">" + bareSUMOterm + "</a>!" + arrow);
+                                    resultString.append(termHTML + "term=" + bareTargetSUMO + "\">" + bareTargetSUMO + "</a>)<br>\n");
+                                    result.add(resultString.toString());
                                     if (result.size() > 50) {
                                         result.add("limited to 50 results.");
                                         return result;
