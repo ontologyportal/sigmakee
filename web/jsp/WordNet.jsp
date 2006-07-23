@@ -14,7 +14,7 @@
       POS = "1";  
 %>
 <head>
-  <title>SUMO Search Tool</title>
+  <title>Sigma WordNet mapping browser</title>
 </head>
 <BODY BGCOLOR=#FFFFFF>
 <table width=95% cellspacing=0 cellpadding=0>
