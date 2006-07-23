@@ -100,8 +100,25 @@ public class WordNetUtilities {
             case 'v': return '2';
             case 'a': return '3';
             case 'r': return '4';
+            case 's': return '5';
         }
+        System.out.println("Error in WordNetUtilities.posLetterToNumber(): bad letter: " + POS);
         return '1';
+    }
+
+    /** ***************************************************************
+    */
+    public static char posNumberToLetter(char POS) {
+
+        switch (POS) {
+            case '1': return 'n';
+            case '2': return 'v';
+            case '3': return 'a';
+            case '4': return 'r';
+            case '5': return 's';
+        }
+        System.out.println("Error in WordNetUtilities.posLetterToNumber(): bad number: " + POS);
+        return 'n';
     }
 
     /** ***************************************************************
@@ -114,7 +131,23 @@ public class WordNetUtilities {
         if (pos.equalsIgnoreCase("2")) return "VB";
         if (pos.equalsIgnoreCase("3")) return "JJ";
         if (pos.equalsIgnoreCase("4")) return "RB";
+        if (pos.equalsIgnoreCase("5")) return "JJ";
+        System.out.println("Error in WordNetUtilities.posNumberToLetters(): bad number: " + pos);
         return "NN";
+    }
+
+    /** ***************************************************************
+     * Convert a part of speech number to the two letter format used by
+     * the WordNet sense index code.  Defaults to noun "NN".
+    */
+    public static String posLettersToNumber(String pos) {
+
+        if (pos.equalsIgnoreCase("NN")) return "1";
+        if (pos.equalsIgnoreCase("VB")) return "2";
+        if (pos.equalsIgnoreCase("JJ")) return "3";
+        if (pos.equalsIgnoreCase("RB")) return "4";
+        System.out.println("Error in WordNetUtilities.posNumberToLetters(): bad letters: " + pos);
+        return "1";
     }
 
     /** ***************************************************************
