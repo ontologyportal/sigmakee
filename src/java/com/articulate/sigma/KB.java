@@ -292,9 +292,10 @@ public class KB {
      * ArrayList of the Formula(s) in which the given term is 
      * defined as an instance.
      */
-    private ArrayList instancesOf(String term) {
+    public ArrayList instancesOf(String term) {
 
-        return askWithRestriction(0,"instance",1,term);           
+        //System.out.println("INFO in KB.instancesOf()");
+        return askWithRestriction(1,term,0,"instance");           
     }
 
     /** *************************************************************
@@ -314,9 +315,11 @@ public class KB {
             Iterator it = al.iterator();
             while (it.hasNext()) {
                 Formula form = (Formula) it.next();
-                form.read(form.cdr());
-                form.read(form.cdr());                
-                String superTerm = form.car();
+                Formula f = new Formula();
+                f.read(form.theFormula);
+                f.read(f.cdr());
+                f.read(f.cdr());                
+                String superTerm = f.car();
                 if (superTerm.equals(parent)) 
                     return true;
                 if (childs != null && childs.contains(superTerm)) 
@@ -533,16 +536,16 @@ public class KB {
      * Get an ArrayList of Formulas in which the two terms provided appear
      * in the indicated argument positions.  If there are no Formula(s)
      * matching the given terms and respective argument positions,
-     * return and empty ArrayList.
+     * return an empty ArrayList.
      */
     public ArrayList askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
-        
+
         ArrayList partial = ask("arg",argnum1,term1);
         ArrayList result = new ArrayList();
         if (partial != null) {
             for (int i = 0; i < partial.size(); i++) {
                 Formula f = (Formula) partial.get(i);
-                if (f.getArgument(argnum2).equalsIgnoreCase(term2)) {
+                if (f.getArgument(argnum2).equals(term2)) {
                     result.add(f);
                 }
             }
@@ -708,6 +711,14 @@ public class KB {
     }      
     
     /** ***************************************************************
+     *  Take a formula string and return whether it exists in the knowledge base.
+     */
+    public boolean containsFormula(String formula) {
+
+        return formulaSet.contains(formula.intern());
+    }      
+    
+    /** ***************************************************************
      *  Count the number of terms in the knowledge base in order to
      *  present statistics to the user.
      *
@@ -738,24 +749,18 @@ public class KB {
     }  
 
     /** ***************************************************************
-     *  an accessor providing a TreeSet of un-preProcess-ed Formula.
-     *  @return A Treeset of un-preProcess(ed) formulas.
+     *  an accessor providing a TreeSet of un-preProcess-ed Formula(s).
+     *  @return A Treeset of un-preProcess(ed) Formula(s).
      */
     public TreeSet getFormulas() {
 
         TreeSet newFormulaSet = new TreeSet();
-        newFormulaSet.addAll(formulaSet);
+        Iterator it = formulas.values().iterator();
+        while (it.hasNext()) {
+            ArrayList al = (ArrayList) it.next();
+            newFormulaSet.addAll(al);
+        }
         return newFormulaSet;
-
-        /** TreeSet newFormulaSet = new TreeSet();
-        Iterator ite = formulas.values().iterator();
-        while (ite.hasNext()) {
-            ArrayList al = (ArrayList) ite.next();
-            for (int i = 0; i < al.size(); i++) {
-                newFormulaSet.add((Formula) al.get(i));
-            }
-        }        
-        return newFormulaSet;  */
     }      
     
     /** ***************************************************************
@@ -884,6 +889,10 @@ public class KB {
                 int after = strFormat.indexOf("termFormat");
                 int theFirstQuote = strFormat.indexOf("\"");
                 int theSecondQuote = strFormat.indexOf("\"", theFirstQuote+1);
+                if (after < 0 || theFirstQuote < 1) {
+                    System.out.println("Error in KB.getTermFormatMap(): Bad format statement: " + strFormat);
+                    return;
+                }
                 String key = strFormat.substring(after+13,theFirstQuote-1).trim().intern();
                 String format = strFormat.substring(theFirstQuote+1, theSecondQuote).trim();
                 //if (format.indexOf("$") < 0)
