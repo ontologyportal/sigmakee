@@ -448,10 +448,10 @@ public class Formula implements Comparable {
      */
     public String getArgument(int argnum) {
 
-        if (argnum == 0) 
-            return car();
         Formula form = new Formula();
         form.read(theFormula);
+        if (argnum == 0) 
+            return form.car();
         for (int i = 0; i < argnum; i++) {
             form.read(form.cdr());
         }
