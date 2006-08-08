@@ -278,22 +278,28 @@ public class Formula implements Comparable {
         }
         if (pred.equals("and") || pred.equals("or")) {
             if (argCount < 2) 
-                return "Too few arguments for 'and' or 'or' in formula: \n" + f.textFormat() + "\n";
+                return "Too few arguments for 'and' or 'or' in formula: \n" + f.toString() + "\n";
         }
         else {        
             if (pred.equals("forall") || pred.equals("exists")) {
                  if (argCount != 2) 
-                     return "Wrong number of arguments for 'exists' or 'forall' in formula: \n" + f.textFormat() + "\n";
+                     return "Wrong number of arguments for 'exists' or 'forall' in formula: \n" + f.toString() + "\n";
+                 else {
+                     Formula quantF = new Formula();
+                     quantF.read(rest);
+                     if (!listP(quantF.car())) 
+                         return "No parenthesized variable list for 'exists' or 'forall' in formula: \n" + f.toString() + "\n";
+                 }
             }
             else {            
                 if (pred.equals("<=>") || pred.equals("=>")) {
                     if (argCount != 2) 
-                        return "Wrong number of arguments for '<=>' or '=>' in formula: \n" + f.textFormat() + "\n";
+                        return "Wrong number of arguments for '<=>' or '=>' in formula: \n" + f.toString() + "\n";
                 }
                 else {                
                     if (pred.equals("equals")) {
                          if (argCount != 2) 
-                             return "Wrong number of arguments for 'equals' in formula: \n" + f.textFormat() + "\n";
+                             return "Wrong number of arguments for 'equals' in formula: \n" + f.toString() + "\n";
                     }
                 }
             }
