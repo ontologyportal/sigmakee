@@ -605,15 +605,19 @@ public class Formula implements Comparable {
             startIndex = i;
         }
 
-        StringBuffer quant = new StringBuffer("(forall (");  // Quantify all the unquantified variables
-        for (int i = 0; i < unquantVariables.size(); i++) {
-            quant = quant.append((String) unquantVariables.get(i));
-            if (i < unquantVariables.size() - 1) 
-                quant = quant.append(" ");
+        if (unquantVariables.size() > 0) {        
+            StringBuffer quant = new StringBuffer("(forall (");  // Quantify all the unquantified variables
+            for (int i = 0; i < unquantVariables.size(); i++) {
+                quant = quant.append((String) unquantVariables.get(i));
+                if (i < unquantVariables.size() - 1) 
+                    quant = quant.append(" ");
+            }
+            System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
+                                quant.toString() + ") " + theFormula + ")");
+            return quant.toString() + ") " + theFormula + ")";
         }
-        System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
-                            quant.toString() + ") " + theFormula + ")");
-        return quant.toString() + ") " + theFormula + ")";
+        else
+            return theFormula;
     }
 
     /** ***************************************************************
