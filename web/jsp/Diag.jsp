@@ -43,8 +43,6 @@ August 9, Acapulco, Mexico.
 
 %>
 
-<A HREF="WNDiag.jsp">Run WordNet diagnostics</A><P>
-
 <FORM action="Diag.jsp">
     <table width="95%" cellspacing="0" cellpadding="0">
         <tr>
@@ -72,6 +70,7 @@ August 9, Acapulco, Mexico.
     <br>
 </form>
 
+<A HREF="WNDiag.jsp?kb=<%=kbName%>">Run WordNet diagnostics</A><P>
 <br>
 
 <%
