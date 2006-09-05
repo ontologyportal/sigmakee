@@ -23,9 +23,10 @@ August 9, Acapulco, Mexico.
   //System.out.println("INFO in AddConstituent.jsp: KB dir: " + srcDir);
   MultipartRequest multiPartRequest = null;
   String kbName = null;
+  int postSize = 2000000;
 
   try {  
-      multiPartRequest = new MultipartRequest(request,srcDir);
+      multiPartRequest = new MultipartRequest(request,srcDir,postSize);
       kbName = multiPartRequest.getParameter("kb");
       System.out.println("INFO in AddConstituent.jsp: kb: " + kbName);
       System.out.println("INFO in AddConstituent.jsp: filename: " + multiPartRequest.getParameter("constituent"));
