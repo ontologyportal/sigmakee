@@ -369,10 +369,13 @@ public class KIF {
    */
   public void readFile(String fname) throws IOException, ParseException {
 
-      FileReader fr = new FileReader(fname);
+      BufferedReader rdr = new BufferedReader(
+          new InputStreamReader(new FileInputStream(fname),"UTF-8"));
+      // FileReader fr = new FileReader(fname);
       filename = fname;
       try {
-          parse(fr);
+          //parse(fr);
+          parse(rdr);
       }
       catch (ParseException pe) {
           throw new ParseException(pe.getMessage(),pe.getErrorOffset());
