@@ -1,8 +1,11 @@
 <%@ page
     language="java"
     import="com.articulate.sigma.*,com.oreilly.servlet.*,java.util.*,java.io.*"
+    pageEncoding="UTF-8"
+    contentType="text/html;charset=UTF-8"
 %>
 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <%
  if (KBmanager.getMgr().getPref("userName") == null && request.getParameter("userName") == null) { %>      
 
