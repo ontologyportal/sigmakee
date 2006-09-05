@@ -284,15 +284,16 @@ public class Diagnostics {
 
     /** *****************************************************************
      * Return a list of terms that do not ultimately subclass from Entity.
+     * This needs to be modified to allow subAttribute(s) and subrelation(s)
      */
     public static ArrayList unrootedTerms(KB kb) {
 
         System.out.println("INFO in Diagnostics.unrootedTerms()");
         ArrayList result = new ArrayList();
         Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {
+        while (it.hasNext()) {                          // Check every term in the KB
             String term = (String) it.next();
-            ArrayList forms = kb.ask("arg",1,term);
+            ArrayList forms = kb.ask("arg",1,term);     // Get every formula with the term as arg 1
             if (forms == null || forms.size() < 1) {
                 result.add(term);
             }
@@ -301,10 +302,19 @@ public class Diagnostics {
                 boolean isClassOrInstance = false;
                 for (int i = 0; i < forms.size(); i++) {
                     Formula formula = (Formula) forms.get(i);
-                    if (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") || 
-                        formula.theFormula.substring(1,9).equalsIgnoreCase("subclass")) {
+                    System.out.println("INFO in Diagnostics.unrootedTerms(): Formula: " + formula.theFormula);
+                    if ((formula.theFormula.length() > 13) &&
+                        (formula.theFormula.indexOf(")") == formula.theFormula.length()-1) &&
+                        (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") ||
+                         formula.theFormula.substring(1,13).equalsIgnoreCase("subAttribute") ||
+                         formula.theFormula.substring(1,12).equalsIgnoreCase("subrelation") ||
+                         formula.theFormula.substring(1,9).equalsIgnoreCase("subclass"))) {
                         isClassOrInstance = true;
-                        String parent = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,formula.theFormula.indexOf(")",10));
+                        System.out.println("INFO in Diagnostics.unrootedTerms(): found a candidate ");
+                        int firstSpace = formula.theFormula.indexOf(" ");
+                        int secondSpace = formula.theFormula.indexOf(" ",firstSpace+1);
+                        String parent = formula.theFormula.substring(secondSpace+1,formula.theFormula.length()-1);
+                        System.out.println("INFO in Diagnostics.unrootedTerms(): parent: " + parent);
                         HashSet parentList = (HashSet) kb.parents.get(parent.intern());
                         if ((parentList != null && parentList.contains("Entity")) || parent.equalsIgnoreCase("Entity")) {
                             found = true;                                                                     
@@ -455,5 +465,20 @@ public class Diagnostics {
             return("Error in Diagnostics.kbConsistencyCheck while executing query: " + ioe.getMessage());
         }
         return "No contradictions or redundancies found.";
+    }
+
+    /** ***************************************************************
+     * Test method for this class.
+     */
+    public static void main(String args[]) {
+
+        try {
+             KBmanager.getMgr().initializeOnce();
+             KB kb = KBmanager.getMgr().getKB("SUMO");
+             System.out.println(Diagnostics.unrootedTerms(kb));
+         }
+         catch (IOException ioe) {
+             System.out.println("Error in Diagnostics.main(): IOException: " + ioe.getMessage());
+         }      
     }
 }
