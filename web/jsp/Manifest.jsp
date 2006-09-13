@@ -25,15 +25,21 @@ August 9, Acapulco, Mexico.
 */
 
     String kbName = request.getParameter("kb");
-    String writeProlog = request.getParameter("writeProlog");
+    String saveAs = request.getParameter("saveAs");
     String constituent = request.getParameter("constituent");
+    String saveFile = request.getParameter("saveFile");
     String delete = request.getParameter("delete");
     String result = "";
     KB kb = KBmanager.getMgr().getKB(kbName);
     if (kb == null || kbName == null)
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
-    if (writeProlog != null) 
+    if (saveAs != null && saveAs.equals("prolog")) 
         kb.writePrologFile(kb.name + ".pl");    
+    if (saveAs != null && saveAs.equals("OWL")) {
+        OWLtranslator owt = new OWLtranslator();
+        owt.kb = kb;
+        owt.write(saveFile);
+    }
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
         if (i == -1) {
@@ -111,17 +117,23 @@ August 9, Acapulco, Mexico.
 <P>
 
 <% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
-    <B>Add a new constituent</B><BR>
+    <hr><B>Add a new constituent</B>
     <FORM name=kbUploader ID=kbUploader action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
         <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
         <B>KB Constituent</B><INPUT type="file" name="constituent"><BR>
         <INPUT type="submit" NAME="submit" VALUE="Load">
     </FORM>
 
-
-    <FORM name=writeProlog ID=writeProlog action="Manifest.jsp" method="GET">
+    <hr><B>Save KB to other formats</B>
+    <FORM name=save ID=save action="Manifest.jsp" method="GET">
         <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
-        <INPUT type="submit" NAME="writeProlog" VALUE="writeProlog">
+        <B>Filename:</B><INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
+        <INPUT type="submit" NAME="submit" VALUE="submit">
+        <select name="saveAs">
+            <option value="OWL">OWL
+            <option value="prolog">Prolog
+            <option value="tptp">TPTP
+        </select>
     </FORM>
 
 <% } 
