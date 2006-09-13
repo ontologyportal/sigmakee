@@ -163,7 +163,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Test whether the String is a LISP atom.
      */
-    private boolean atom(String s) {
+    public static boolean atom(String s) {
 
         if (s == null) {
             System.out.println("Error in Formula.atom(): Null string");
@@ -213,7 +213,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Test whether the String is an empty formula.
      */
-    private boolean empty(String s) {
+    public static boolean empty(String s) {
 
         if (s == null) {
             System.out.println("Error in Formula.empty(): Null string");
@@ -392,7 +392,7 @@ public class Formula implements Comparable {
 
         if (this.equals(s)) 
             return true;
-        if (atom(s) && s.compareTo(theFormula) != 0) 
+        if (Formula.atom(s) && s.compareTo(theFormula) != 0) 
             return false;
         
         Formula form = new Formula();
@@ -605,7 +605,7 @@ public class Formula implements Comparable {
             startIndex = i;
         }
 
-        if (unquantVariables.size() > 0) {        
+       if (unquantVariables.size() > 0) {        
             StringBuffer quant = new StringBuffer("(forall (");  // Quantify all the unquantified variables
             for (int i = 0; i < unquantVariables.size(); i++) {
                 quant = quant.append((String) unquantVariables.get(i));
@@ -1003,7 +1003,7 @@ public class Formula implements Comparable {
         String relation = car();
         Formula f = new Formula();
         f.theFormula = cdr();
-        if (!atom(relation)) { 
+        if (!Formula.atom(relation)) { 
             System.out.println("INFO in Fomula.toProlog(): Relation not an atom: " + relation);
             return "";
         }
@@ -1011,7 +1011,7 @@ public class Formula implements Comparable {
         while (!f.empty()) {
             String arg = f.car();
             f.theFormula = f.cdr();
-            if (!atom(arg)) { 
+            if (!Formula.atom(arg)) { 
                 System.out.println("INFO in Fomula.toProlog(): Argument not an atom: " + arg);
                 return "";
             }
