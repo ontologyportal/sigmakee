@@ -165,9 +165,12 @@ public class Formula implements Comparable {
      */
     public static boolean atom(String s) {
 
-        if (s == null) {
+        if (s == null || s == "" || s.length() < 1) {
             System.out.println("Error in Formula.atom(): Null string");
-            return true;
+
+            Thread.dumpStack();
+            throw new NullPointerException();
+            
         }
         if (s.charAt(0) == '"' && s.charAt(s.length()-1) == '"') 
             return true;
@@ -181,33 +184,17 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Test whether the Formula is a LISP atom.
      */
-    private boolean atom() {
+    public boolean atom() {
                                                                  
-        String s = theFormula;
-        if (s == null) {
-            System.out.println("Error in Formula.atom(): Null string");
-            return true;
-        }
-        if (s.charAt(0) == '"' && s.charAt(s.length()-1) == '"') 
-            return true;
-        if (s.indexOf(')') == -1 &&
-            s.indexOf('\n') == -1 &&
-            s.indexOf(' ') == -1 &&
-            s.indexOf('\t') == -1) return true;
-        else return false;
+        return Formula.atom(theFormula);
     }
 
     /** ***************************************************************
      * Test whether the Formula is an empty list.
      */
-    private boolean empty() {
+    public boolean empty() {
 
-        if (theFormula == null || theFormula == "" || theFormula.length() < 1) {
-            System.out.println("Error in Formula.empty(): Null string");
-            return true;
-        }
-        if (theFormula.equals("()")) return true;
-        else return false;
+        return Formula.empty(theFormula);
     }
 
     /** ***************************************************************
@@ -215,37 +202,33 @@ public class Formula implements Comparable {
      */
     public static boolean empty(String s) {
 
-        if (s == null) {
+        if (s == null || s == "" || s.length() < 1) {
             System.out.println("Error in Formula.empty(): Null string");
-            return true;
+            Thread.dumpStack();
+            throw new NullPointerException();
         }
-        if (s.equals("()")) return true;
+        s.trim();
+        if (s.matches("\\(\\s*\\)")) return true;
         else return false;
     }
 
     /** ***************************************************************
      * Test whether the Formula is a list.
      */
-    private boolean listP() {
+    public boolean listP() {
 
-        String f = theFormula;
-        if (f == null) {
-            System.out.println("Error in Formula.listP(): Null string");
-            return false;
-        }
-        f.trim();
-        if (f.charAt(0) == '(' && f.charAt(f.length()-1) == ')') return true;
-        else return false;
+        return Formula.listP(theFormula);
     }
 
     /** ***************************************************************
      * Test whether the String is a list.
      */
-    private boolean listP(String s) {
+    private static boolean listP(String s) {
 
-        if (s == null) {
+        if (s == null || s == "" || s.length() < 1) {
             System.out.println("Error in Formula.listP(): Null string");
-            return true;
+            Thread.dumpStack();
+            throw new NullPointerException();
         }
         s.trim();
         if (s.charAt(0) == '(' && s.charAt(s.length()-1) == ')') return true;
@@ -257,7 +240,7 @@ public class Formula implements Comparable {
     private String validArgsRecurse(Formula f) {
 
         //System.out.println("INFO in Formula.validArgsRecurse(): Formula: " + f.theFormula);
-        if (f.atom() || f.empty() || f.theFormula == "" || !f.listP()) return "";
+        if (f.theFormula == "" || !f.listP() || f.atom() || f.empty()) return "";
         String pred = f.car();
         Formula predF = new Formula();
         predF.read(pred);
