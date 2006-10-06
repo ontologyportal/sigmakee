@@ -152,7 +152,7 @@ public class KBmanager {
                 String result = fromXML(configuration);
                 if (result !="") 
                     error = result;
-                NLformatter.readKeywordMap((String) preferences.get("kbDir"));
+                LanguageFormatter.readKeywordMap((String) preferences.get("kbDir"));
             }
             catch (IOException ioe) {
                 System.out.println("Error in KBmanager.initializeOnce(): Configuration file not read.");
@@ -352,7 +352,7 @@ public class KBmanager {
         KB kb = KBmanager.getMgr().getKB("SUMO");
         System.out.println(KBmanager.getMgr().getKBnames());
         System.out.println(kb.name);
-        System.out.println(NLformatter.htmlParaphrase("", "(or (instance ?X0 Relation) (not (instance ?X0 TotalValuedRelation)))", 
+        System.out.println(LanguageFormatter.htmlParaphrase("", "(or (instance ?X0 Relation) (not (instance ?X0 TotalValuedRelation)))", 
                                                       kb.getFormatMap("en"), kb.getTermFormatMap("en"), "en"));
 
     }
