@@ -101,9 +101,13 @@ public class OWLtranslator {
 
     /** ***************************************************************
      */
-    private void writeClasses(PrintWriter pw, String term, ArrayList classes, String documentation) {
+    private void writeClasses(PrintWriter pw, String term, ArrayList classes, 
+                              String documentation, boolean isInstance) {
 
-        pw.println("<owl:Class rdf:ID=\"" + term + "\">");
+        if (isInstance)         
+            pw.println("<owl:Class rdf:About=\"" + term + "\">");
+        else
+            pw.println("<owl:Class rdf:ID=\"" + term + "\">");
         for (int i = 0; i < classes.size(); i++) {
             Formula form = (Formula) classes.get(i);
             String parent = form.getArgument(2);
@@ -134,7 +138,7 @@ public class OWLtranslator {
             pw.println("xmlns:owl =\"http://www.w3.org/2002/07/owl#\">");
 
             pw.println("<owl:Ontology rdf:about=\"\">");
-                pw.println("<rdfs:comment xml:lang=\"en\">A provisional translation to OWL.  Please see");
+                pw.println("<rdfs:comment xml:lang=\"en\">A provisional and necessarily lossy translation to OWL.  Please see");
                 pw.println("www.ontologyportal.org for the original KIF, which is the authoritative");
                 pw.println("source.  This software is released under the GNU Public License"); 
                 pw.println("www.gnu.org.</rdfs:comment>");
@@ -155,10 +159,15 @@ public class OWLtranslator {
                         form = (Formula) doc.get(0);
                         documentation = form.getArgument(2);
                     }
-                    if (instances.size() > 0)
-                        writeInstances(pw,term,instances,documentation);                    
-                    if (classes.size() > 0) 
-                        writeClasses(pw,term,classes,documentation);                                        
+                    if (instances.size() > 0 && !kb.childOf(term,"BinaryRelation"))
+                        writeInstances(pw,term,instances,documentation);   
+                    boolean isInstance = false;
+                    if (classes.size() > 0) {
+                        if (instances.size() > 0) 
+                            isInstance = true;
+                        writeClasses(pw,term,classes,documentation,isInstance); 
+                        isInstance = false;
+                    }
                 }
             }
             pw.println("</rdf:RDF>");
