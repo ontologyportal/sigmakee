@@ -59,7 +59,7 @@ public class HTMLformatter {
         }
         result.append("</td><td width=40% valign=top>");
         if (language != null && language.length() > 0)
-            result.append(NLformatter.htmlParaphrase(kbHref,f.theFormula, KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
+            result.append(LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
                                                      KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), language));        
         result.append("</td>");
         return result.toString();
@@ -151,7 +151,7 @@ public class HTMLformatter {
                 show.append(f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length()) + 
                             " " + (new Integer(f.startLine)).toString() + 
                             "-" + (new Integer(f.endLine)).toString() + "</TD>\n<TD width=40%% valign=top>");
-                show.append(NLformatter.htmlParaphrase(kbHref,f.theFormula, kb.getFormatMap(language), 
+                show.append(LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, kb.getFormatMap(language), 
                                                        kb.getTermFormatMap(language), language) + "</TD></TR>\n"); 
             }
             show.append("</TABLE>\n");
