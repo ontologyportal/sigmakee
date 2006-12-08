@@ -978,6 +978,7 @@ public class KB {
         }
         catch (ParseException pe) {
             result.append(pe.getMessage() + "At line: " + pe.getErrorOffset());
+            KBmanager.getMgr().setError(result.toString());
             return result.toString();
         }
         System.out.print("INFO in KB.addConstituent(): Read file: " + filename + " of size: ");
