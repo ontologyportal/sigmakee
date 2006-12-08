@@ -141,7 +141,7 @@ public class LanguageFormatter {
           br = new BufferedReader(new InputStreamReader(new FileInputStream(fname),"UTF-8"));
       }
       catch (IOException ioe) {
-          System.out.println("Error in NLformatter.readKeywordMap(): Error opening file " + fname);
+          System.out.println("Error in LanguageFormatter.readKeywordMap(): Error opening file " + fname);
           System.out.println(System.getProperty("user.dir"));
           return keywordMap;
       }
@@ -164,6 +164,8 @@ public class LanguageFormatter {
                        }
                        else if (line.startsWith(";")) {  // ignore comment lines
                        }
+                       else if (line.length() == 0) {  // ignore blank lines
+                       }
                        else if (line.indexOf('|') > -1) { // Line with phrase alternates in different languages.
                            newLine = new HashMap();
                            key = line.substring(0,line.indexOf('|'));
@@ -175,11 +177,11 @@ public class LanguageFormatter {
                                count++;
                            }
                            newLine.put(languageKeyArray.get(count),line.substring(i,line.length()));
-                           // System.out.println("INFO in NLformatter.keywordMap(): key: " + key + " value: " + newLine);
+                           // System.out.println("INFO in LanguageFormatter.keywordMap(): key: " + key + " value: " + newLine);
                            keywordMap.put(key.intern(),newLine);
                        }
                        else {
-                           System.out.println("INFO in NLformatter.keywordMap(): Unrecognized line in language.txt: " + line);
+                           System.out.println("INFO in LanguageFormatter.keywordMap(): Unrecognized line in language.txt: " + line);
                        }
                    }
                } while (line != null);
@@ -190,7 +192,7 @@ public class LanguageFormatter {
               br.close();
           }
           catch (IOException e) {
-              System.out.println("Error in NLformatter.keywordMap(): Error closing file " + fname);
+              System.out.println("Error in LanguageFormatter.keywordMap(): Error closing file " + fname);
           };
           return (keywordMap);
       }
@@ -198,7 +200,7 @@ public class LanguageFormatter {
           br.close();
       }
       catch (IOException e) {
-          System.out.println("Error  in NLformatter.readKeywordMap(): Error closing file " + fname);
+          System.out.println("Error  in LanguageFormatter.readKeywordMap(): Error closing file " + fname);
       };
       return (keywordMap);
   }
@@ -242,12 +244,12 @@ public class LanguageFormatter {
               return "";
           }
       if (phraseMap == null) {
-          System.out.println("Error in NLformatter.nlStmtPara(): phrase map is null.");
+          System.out.println("Error in LanguageFormatter.nlStmtPara(): phrase map is null.");
           phraseMap = new HashMap();
       }
       String pred = f.car();
       if (!Formula.atom(pred)) {
-          System.out.println("Error in NLformatter.nlStmtPara(): statement: " + stmt + " has a formula in the predicate position."); 
+          System.out.println("Error in LanguageFormatter.nlStmtPara(): statement: " + stmt + " has a formula in the predicate position."); 
           return stmt;
       }
       if (logicalOperator(pred)) 
@@ -301,9 +303,9 @@ public class LanguageFormatter {
    */
   private static String paraphraseLogicalOperator(String stmt, boolean isNegMode, Map phraseMap, Map termMap, String language) {
 
-      System.out.println("INFO in NLformatter.paraphraseLogicalOperator(): statement: " + stmt);
+      System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperator(): statement: " + stmt);
       if (keywordMap == null) {
-          System.out.println("Error in NLformatter.paraphraseLogicalOperator(): keywordMap is null.");
+          System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): keywordMap is null.");
           return null;
       }
       ArrayList args = new ArrayList();
@@ -321,10 +323,12 @@ public class LanguageFormatter {
 
           if (result != null && result != "" && result.length() > 0) 
               args.add(result);
-          else
-              System.out.println("INFO in NLformatter.paraphraseLogicalOperators(): bad result for: " + arg);
+          else {
+              System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): bad result for: " + arg);
+              arg = " ";
+          }
 
-          System.out.println("INFO in NLformatter.paraphraseLogicalOperators(): adding argument: " + ((String) args.get(args.size()-1)));
+          System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): adding argument: " + ((String) args.get(args.size()-1)));
           f.read(f.cdr());
       }
       String IF = getKeyword("if",language);
