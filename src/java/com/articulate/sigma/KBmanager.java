@@ -87,7 +87,7 @@ public class KBmanager {
                                 result.append(kb.addConstituent(filename)); 
                             } 
                             catch (IOException ioe) {
-                                System.out.print("Error in KBmanager.fromXML(): " + ioe.getMessage());
+                                System.out.println("Error in KBmanager.fromXML(): " + ioe.getMessage());
                             }
                         }
                         if (KBmanager.getMgr().getPref("cache") != null &&
