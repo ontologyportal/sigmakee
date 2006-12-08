@@ -698,7 +698,13 @@ public class Formula implements Comparable {
      */
     public ArrayList preProcess() {
 
+        //String s = makeQuantifiersExplicit();
         String s = theFormula;
+        s = s.replaceAll("greaterThan", ">");
+        s = s.replaceAll("greaterThanOrEqualTo", ">=");
+        s = s.replaceAll("lessThan", "<");
+        s = s.replaceAll("lessThanOrEqualTo", "<=");
+
         Stack predicateStack = new Stack();
         TreeSet rowVars = new TreeSet();   // A list of row variables.
         StringBuffer result = new StringBuffer();
