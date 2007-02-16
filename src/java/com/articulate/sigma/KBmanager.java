@@ -56,6 +56,7 @@ public class KBmanager {
         preferences.put("cache","no");  
         preferences.put("showcached","yes");  
         preferences.put("loadCELT","no");  
+        preferences.put("TPTP","no");  
     }
 
     /** ***************************************************************
@@ -203,6 +204,10 @@ public class KBmanager {
     public void removeKB(String name) {
 
         KB kb = (KB) kbs.get(name);
+        if (kb == null) {
+            error = "KB " + name + " does not exist and cannot be removed.";
+            return;
+        }
         try {
             if (kb.inferenceEngine != null) 
                 kb.inferenceEngine.terminate();
