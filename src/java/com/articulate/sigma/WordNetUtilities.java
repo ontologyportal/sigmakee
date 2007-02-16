@@ -41,6 +41,15 @@ public class WordNetUtilities {
     }
 
     /** *************************************************************** 
+     * Extract the POS from a word_POS_num sense key
+     */
+    public static String getPOSfromKey (String sense) {
+
+        int firstUS = sense.indexOf("_");
+        return sense.substring(firstUS+1,firstUS+3);
+    }
+
+    /** *************************************************************** 
      */
     public static String removeTermPrefixes (String formula) {
 
