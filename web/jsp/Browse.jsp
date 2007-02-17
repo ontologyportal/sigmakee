@@ -49,7 +49,9 @@ August 9, Acapulco, Mexico.
       show.append("<td>  " + kb.getCountTerms());
       show.append("</td><td> " + kb.getCountAxioms());
       show.append("</td><td> " + kb.getCountRules());
-      show.append("</td><tr> </table>\n");  
+      show.append("</td><tr> </table><P>\n");  
+      show.append("Relations: " + kb.getCountRelations());
+      show.append("<P>\n");  
   }
   
   else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term 
@@ -61,6 +63,7 @@ August 9, Acapulco, Mexico.
       if (term != null) 
           show.append(term);
       show.append("</b></FONT><br><br>");
+      show.append("<TABLE><tr><td>");
       show.append("<TABLE>");
     
       for (int i = 0; i < 30; i++) {
@@ -87,11 +90,21 @@ August 9, Acapulco, Mexico.
               }
           }
       }
-      show.append("</TABLE>");
+      show.append("</TABLE></td>");
+      WordNet.initOnce();
+      TreeMap tm = WordNet.wn.getSensesFromWord(term);
+      if (tm != null) {
+          show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
+          show.append("<td width='40%' valign=top><small>");
+          show.append(WordNetUtilities.formatWords(tm));
+          show.append("</small></td>");
+      }
+      show.append("</td></TABLE>");
   }
 
   else if (kb != null && kb.containsTerm(term)) {            // Build the HTML format for all the formulas in 
                                                              // which the given term appears.
+      show.append("<title>Sigma KEE - " + term + "</title>\n");
       ArrayList forms;
       show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
       if (term != null) { 
@@ -142,7 +155,7 @@ August 9, Acapulco, Mexico.
                       if (f.theFormula.substring(1,14).compareTo("documentation") == 0 || f.theFormula.substring(1,7).compareTo("format") == 0) 
                           show.append("</TD></TR>\n");
                       else
-                          show.append(NLformatter.htmlParaphrase(kbHref,f.theFormula, kb.getFormatMap(language), kb.getTermFormatMap(language), language) + "</TD></TR>\n"); 
+                          show.append(LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, kb.getFormatMap(language), kb.getTermFormatMap(language), language) + "</TD></TR>\n"); 
                   }
               }
               show.append("</TABLE>\n");
