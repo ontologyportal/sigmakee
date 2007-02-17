@@ -35,6 +35,8 @@ August 9, Acapulco, Mexico.
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
     if (saveAs != null && saveAs.equals("prolog")) 
         kb.writePrologFile(kb.name + ".pl");    
+    if (saveAs != null && saveAs.equals("TPTP")) 
+        kb.writeTPTPFile(kb.name + ".tptp",null,false);    
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
         owt.kb = kb;
@@ -54,6 +56,7 @@ August 9, Acapulco, Mexico.
     }
     else if (constituent != null) {
         kb.addConstituent(constituent);
+        //System.out.println("INFO in Manifest.jsp (top): The error string is : " + KBmanager.getMgr().getError());
         KBmanager.getMgr().writeConfiguration();
     }
 %>
@@ -132,15 +135,21 @@ August 9, Acapulco, Mexico.
         <select name="saveAs">
             <option value="OWL">OWL
             <option value="prolog">Prolog
-            <option value="tptp">TPTP
+            <option value="TPTP">TPTP
         </select>
     </FORM>
 
 <% } 
-  if (KBmanager.getMgr().getError() != "") {
-      out.println(KBmanager.getMgr().getError());  
+  String er = KBmanager.getMgr().getError();
+  //out.println("INFO in Manifest.jsp: Error string is : " + er);
+  if (er != "" && er != null) {
+      out.println(er);  
+      //System.out.println(er);
       KBmanager.getMgr().setError("");
   }
+  else
+      if (constituent != null && delete == null)       
+          out.println("File " + constituent + " loaded successfully.");
   if (result != "") 
       out.println(result);
 
