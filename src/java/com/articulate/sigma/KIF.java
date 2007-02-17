@@ -186,7 +186,7 @@ public class KIF {
                   if (parenLevel == 0) {                                    // The end of the statement...
                       f.theFormula = expression.toString().intern();
                       if (KBmanager.getMgr().getPref("TPTP").equals("yes")) 
-                          f.tptpParse();
+                          f.tptpParse(false);   // not a query
 
                       if (formulaSet.contains(expression.toString())) {
                           String warning = "Duplicate formula at line " + f.startLine + ": " + expression;
@@ -194,8 +194,10 @@ public class KIF {
                           warningSet.add(warning);
                       }
                       String validArgs = f.validArgs();
-                      if (validArgs != "") 
-                          throw new ParseException("Parsing error in " + filename + ".\n " + validArgs,f.startLine);  
+                      if (validArgs == null || validArgs == "") 
+                          validArgs = f.badQuantification();                      
+                      if (validArgs != null && validArgs != "") 
+                          throw new ParseException("Parsing error in " + filename + ".\n Invalid number of arguments. " + validArgs,f.startLine);  
                       // formulaList.add(expression.intern());
                       if (formulaSet.size() % 100 == 0) 
                           System.out.print('.');
@@ -384,7 +386,6 @@ public class KIF {
       catch (ParseException pe) {
           String er = "Error in KIF.readFile(): " + pe.getMessage() + " at line " +  pe.getErrorOffset();
           KBmanager.getMgr().setError(er);
-          System.out.println("INFO in KIF.readFile() error: " + KBmanager.getMgr().getError());
           System.out.println(er);
       }
       catch (java.io.IOException e) {
