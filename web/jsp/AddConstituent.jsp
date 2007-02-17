@@ -62,10 +62,10 @@ August 9, Acapulco, Mexico.
       System.out.println("filename: " + fileName);
   }
 
-  if (result.toString() != null && result.toString() != "") 
-      KBmanager.getMgr().setError(result.toString());
-  else
-      KBmanager.getMgr().setError("");
+  //if (result.toString() != null && result.toString() != "") 
+  //    KBmanager.getMgr().setError(result.toString());
+  //else
+  //    KBmanager.getMgr().setError("");
   
   response.sendRedirect("Manifest.jsp?kb=" + kbName);
 %>
