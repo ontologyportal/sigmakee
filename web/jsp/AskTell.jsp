@@ -138,7 +138,15 @@ August 9, Acapulco, Mexico.
     </TABLE><br>
     
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
-    <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea><br>
+    <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea>
+<%
+    if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
+%>
+        Try <a href="SystemOnTPTP.jsp?kb=<%=kbName %>&lang=<%=language %>">"System On TPTP"</a> interface (experimental)
+<%
+    }
+%>
+    <br>
     Maximum answers: <input TYPE="TEXT" NAME="maxAnswers" VALUE="<%=maxAnswers%>">
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
     <INPUT type="submit" name="request" value="ask">
