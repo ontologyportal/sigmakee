@@ -1,6 +1,6 @@
 <%@ page
     language="java"
-    import="com.articulate.sigma.*,com.oreilly.servlet.*,java.util.*,java.io.*"
+    import="com.articulate.sigma.*,java.text.ParseException,java.net.URLConnection,java.net.URL,ClientHttpRequest.*,com.oreilly.servlet.*,java.util.*,java.io.*"    
     pageEncoding="UTF-8"
     contentType="text/html;charset=UTF-8"
 %>
@@ -17,7 +17,7 @@
 %>
 
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
+/** This code is copyright Articulate Software (c) 2003-2007.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -27,7 +27,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also www.ontologyportal.org
 */
 %>
 
