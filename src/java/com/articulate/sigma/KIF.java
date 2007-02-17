@@ -23,7 +23,6 @@ import java.text.ParseException;
  * readFile() and writeFile() and the only public methods.
  * @author Adam Pease
  */
-
 public class KIF {
 
    /** The set of all terms in the knowledge base.  This is a set of Strings. */
@@ -33,6 +32,7 @@ public class KIF {
    /** A "raw" HashSet of unique Strings which are the formulas from the file without 
     *  any further processing, in the order which they appear in the file. */
   public LinkedHashSet formulaSet = new LinkedHashSet();
+  public LinkedHashSet tptpFormulaSet = new LinkedHashSet();
    /** A "raw" ArrayList of Strings which are the formulas from the file without 
     *  any further processing, in the order which they appear in the file. */
   // public ArrayList formulaList = new ArrayList();
@@ -45,7 +45,7 @@ public class KIF {
    * = < > are treated as word characters, as are normal alphanumerics.
    * ; is the line comment character and " is the quote character.
    */
-  private void setupStreamTokenizer(StreamTokenizer_s st) {
+  public static void setupStreamTokenizer(StreamTokenizer_s st) {
 
       st.whitespaceChars(0,32);
       st.ordinaryChars(33,44);   // !"#$%&'()*+,
@@ -98,15 +98,13 @@ public class KIF {
   }
 
   /** ***************************************************************
-   * The routine keeps track of the parenthesis level.  Outside parens
-   * is level 0.  The program also keeps track of the number of the
-   * argument in an expression, but only for ground statements.
    */
   private void parse(Reader r) throws ParseException, IOException {
 
+      System.out.println("INFO in KIF.parse():");
       String key = null;
       ArrayList keySet;
-      String expression;
+      StringBuffer expression = new StringBuffer(40);
       StreamTokenizer_s st;
       int parenLevel;
       boolean inRule;
@@ -119,6 +117,7 @@ public class KIF {
       String com;
       Formula f = new Formula();
       ArrayList list;
+      TreeSet warningSet = new TreeSet();
       
       if (r == null) {
           System.err.println("No Input Reader Specified");
@@ -126,15 +125,13 @@ public class KIF {
       }
       try {
           st = new StreamTokenizer_s(r);
-          setupStreamTokenizer(st);
+          KIF.setupStreamTokenizer(st);
           parenLevel = 0;
           inRule = false;
           argumentNum = -1;
           inAntecedent = false;
           inConsequent = false;
-          expression ="";
           keySet = new ArrayList();
-          lastVal = -99;
           lineStart = 0;
           isEOL = false;
           do {
@@ -147,9 +144,9 @@ public class KIF {
                   if (isEOL) { // two line seperators in a row, shows a new KIF statement is to start.
                       // check if a new statement has already been generated, otherwise report error
                       if (keySet.size() != 0 || expression.length() > 0) {
-                          System.out.print("Error:");
-                          System.out.println(new Integer(lineStart + totalLinesForComments).toString());
-                          throw new ParseException("Error in " + filename + ": possible missing close parenthesis.",f.startLine);
+                          //System.out.print("INFO in KIF.parse(): Parsing Error:");
+                          //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
+                          throw new ParseException("Parsing error in " + filename + ": possible missing close parenthesis.",f.startLine);
                       }
                       continue;
                   }
@@ -168,7 +165,7 @@ public class KIF {
                       f.startLine = st.lineno() + totalLinesForComments;
                       f.sourceFile = filename;
                   }
-                  parenLevel=parenLevel+1;
+                  parenLevel++;
                   if (inRule && !inAntecedent && !inConsequent) {
                       inAntecedent = true;
                   }
@@ -178,21 +175,23 @@ public class KIF {
                           inConsequent = true;
                       }
                   }
-                  if ((parenLevel != 0) && (lastVal != 40) && (expression != "")) { // add back whitespace that ST removes
-                      expression = expression.concat(" ");
+                  if ((parenLevel != 0) && (lastVal != 40) && (expression.length() > 0)) { // add back whitespace that ST removes
+                      expression.append(" ");
                   }
-                  expression = expression.concat("(");
+                  expression.append("(");
               }
               else if (st.ttype==41) {                                      // )  - close paren
-                  parenLevel=parenLevel-1;
-                  expression = expression.concat(")");
+                  parenLevel--;
+                  expression.append(")");
                   if (parenLevel == 0) {                                    // The end of the statement...
-                      f.theFormula = expression;
-                      if (formulaSet.contains(expression.intern())) {
-                          System.out.print("Warning in KIF.parse(): Duplicate formula at line");
-                          System.out.println(lineStart + totalLinesForComments);
-                          System.out.println(expression);
-                          System.out.println();
+                      f.theFormula = expression.toString().intern();
+                      if (KBmanager.getMgr().getPref("TPTP").equals("yes")) 
+                          f.tptpParse();
+
+                      if (formulaSet.contains(expression.toString())) {
+                          String warning = "Duplicate formula at line " + f.startLine + ": " + expression;
+                                           // lineStart + totalLinesForComments + expression;
+                          warningSet.add(warning);
                       }
                       String validArgs = f.validArgs();
                       if (validArgs != "") 
@@ -200,11 +199,11 @@ public class KIF {
                       // formulaList.add(expression.intern());
                       if (formulaSet.size() % 100 == 0) 
                           System.out.print('.');
-                      keySet.add(expression.intern());                      // Make the formula itself a key
+                      keySet.add(expression.toString().intern());           // Make the formula itself a key
                       f.endLine = st.lineno() + totalLinesForComments;
                       for (int i = 0; i < keySet.size(); i++) {             // Add the expression but ...
                           if (formulas.containsKey(keySet.get(i))) {
-                              if (!formulaSet.contains(expression.intern())) {  // don't add keys if formula is already present
+                              if (!formulaSet.contains(expression.toString().intern())) {  // don't add keys if formula is already present
                                   list = (ArrayList) formulas.get(keySet.get(i));
                                   if (!list.contains(f)) 
                                       list.add(f);
@@ -216,37 +215,36 @@ public class KIF {
                               formulas.put((String) keySet.get(i),list);
                           }
                       }
-                      formulaSet.add(expression.intern());
+                      formulaSet.add(expression.toString().intern());
+
                       inConsequent = false;
                       inRule = false;
                       argumentNum = -1;
                       lineStart = st.lineno()+1;                            // start next statement from next line
-                      expression = "";
+                      expression.delete(0,expression.length());
                       keySet.clear();
                   }
                   else if (parenLevel < 0) {
-                      System.out.print("Error is KIF.parse(): Extra Closing Paranthesis Found at line: ");
-                      System.out.println(new Integer(lineStart + totalLinesForComments).toString());
                       throw new ParseException("Parsing error in " + filename + ": Extra closing paranthesis found.",f.startLine);
                   }
               }
-              else if (st.ttype==34) {                              // " a string
-                  if (lastVal != 40)                                // add back whitespace that ST removes
-                      expression = expression.concat(" ");
-                  expression = expression.concat("\"");
+              else if (st.ttype==34) {                                      // " - it's a string
+                  if (lastVal != 40)                                        // add back whitespace that ST removes
+                      expression.append(" ");
+                  expression.append("\"");
                   com = st.sval;
                   totalLinesForComments += countChar(com,(char)0X0A);
-                  expression = expression.concat(com);
-                  expression = expression.concat("\"");
+                  expression.append(com);
+                  expression.append("\"");
               }
               else if ((st.ttype == StreamTokenizer.TT_NUMBER) || 
                        (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {                  // number
                   if (lastVal != 40)  // add back whitespace that ST removes
-                      expression = expression.concat(" ");
+                      expression.append(" ");
                   if (st.nval == 0) 
-                      expression = expression.concat(st.sval);
+                      expression.append(st.sval);
                   else
-                      expression = expression.concat(Double.toString(st.nval));
+                      expression.append(Double.toString(st.nval));
                   if (parenLevel<2)                                 // Don't care if parenLevel > 1
                       argumentNum = argumentNum + 1;                // RAP - added on 11/27/04 
               }
@@ -258,11 +256,11 @@ public class KIF {
                   if (parenLevel<2)                                 // Don't care if parenLevel > 1
                       argumentNum = argumentNum + 1;
                   if (lastVal != 40)                                // add back whitespace that ST removes
-                      expression = expression.concat(" ");
-                  expression = expression.concat(String.valueOf(st.sval));
+                      expression.append(" ");
+                  expression.append(String.valueOf(st.sval));
                   if (expression.length() > 64000) {
-                      System.out.print("Error in KIF.parse(): Parsing error: Sentence Over 64000 characters.");
-                      System.out.println(new Integer(lineStart + totalLinesForComments).toString());
+                      //System.out.print("Error in KIF.parse(): Parsing error: Sentence Over 64000 characters.");
+                      //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
                       throw new ParseException("Parsing error in " + filename + ": Sentence Over 64000 characters.",f.startLine);                      
                   }
                   if (st.sval.charAt(0) != '?' && st.sval.charAt(0) != '@') {   // Variables are not terms
@@ -273,17 +271,17 @@ public class KIF {
               }                                    
               else if (st.ttype != StreamTokenizer.TT_EOF) {
                   key = null;
-                  System.out.print("Error in KIF.parse(): Parsing Error: Illegal character at line: ");
-                  System.out.println(new Integer(lineStart + totalLinesForComments).toString());
+                  //System.out.print("Error in KIF.parse(): Parsing Error: Illegal character at line: ");
+                  //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
                   throw new ParseException("Parsing error in " + filename + ": Illegal character.",f.startLine);                      
               }
               // if (key != null)
               //    display(st,inRule,inAntecedent,inConsequent,argumentNum,parenLevel,key);
           } while (st.ttype != StreamTokenizer.TT_EOF);
           if (keySet.size() != 0 || expression.length() > 0) {
-              System.out.println("Error in KIF.parse(): Parsing error: ");
-              System.out.println("Kif ends before parsing finishes.  Missing closing parenthesis.");
-              throw new ParseException("Parsing error in " + filename + ": Missing closing paranthesis.",f.startLine);                      
+              //System.out.println("Error in KIF.parse(): Parsing error: ");
+              //System.out.println("Kif ends before parsing finishes.  Missing closing parenthesis.");
+              throw new ParseException("Parsing error in " + filename + ": Missing closing paranthesis.",f.startLine);
           }
       }
       catch (java.io.FileNotFoundException e) {
@@ -293,6 +291,15 @@ public class KIF {
           throw new IOException("IO exception parsing file " + filename);
       }
       System.out.println();
+      if (warningSet.size() > 0) {
+          Iterator it = warningSet.iterator();
+          StringBuffer warnings = new StringBuffer();
+          while (it.hasNext()) {
+              String w = (String) it.next();
+              warnings.append(w + "<br>\n");
+          }
+          KBmanager.getMgr().setError(warnings.toString());
+      }
   }
 
   /** ***************************************************************
@@ -369,18 +376,19 @@ public class KIF {
    */
   public void readFile(String fname) throws IOException, ParseException {
 
-      BufferedReader rdr = new BufferedReader(
-          new InputStreamReader(new FileInputStream(fname),"UTF-8"));
-      // FileReader fr = new FileReader(fname);
+      FileReader fr = new FileReader(fname);
       filename = fname;
       try {
-          //parse(fr);
-          parse(rdr);
+          parse(fr);
       }
       catch (ParseException pe) {
-          throw new ParseException(pe.getMessage(),pe.getErrorOffset());
+          String er = "Error in KIF.readFile(): " + pe.getMessage() + " at line " +  pe.getErrorOffset();
+          KBmanager.getMgr().setError(er);
+          System.out.println("INFO in KIF.readFile() error: " + KBmanager.getMgr().getError());
+          System.out.println(er);
       }
       catch (java.io.IOException e) {
+          KBmanager.getMgr().setError("Error in KIF.readFile(): IO exception parsing file " + filename);
           throw new IOException("Error in KIF.readFile(): IO exception parsing file " + filename);
       }
   }
@@ -406,7 +414,7 @@ public class KIF {
               pr.println((String) it.next());          
       }
       catch (java.io.IOException e) {
-          throw new IOException("Error writing file " + filename);
+          throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
       }
       finally {
           if (pr != null) {
@@ -437,18 +445,24 @@ public class KIF {
   }
 
   /** ***************************************************************
-   * Test method for this class.
+   * Test method for this class.  Currently, it write the TPTP output
+   * to a file.
    */
-  public static void main(String args[]) {
+  public static void main(String args[]) throws IOException {
 
       Iterator it;
       KIF kifp = new KIF();
       Formula f;
       String form;
       ArrayList list;
-      
+      int axiomCount = 0;
+      File toFile;
+      FileWriter fw;
+      PrintWriter pw;
+
       try {
-          kifp.readFile("C:\\Program Files\\Apache Tomcat 4.0\\tests\\little-celtTest.txt");
+          System.out.println("Loading from " + args[0]);
+          kifp.readFile(args[0]);
       }
       catch (IOException ioe) {
           System.out.println(ioe.getMessage());
@@ -458,10 +472,44 @@ public class KIF {
           System.out.print("In statement starting at line: ");
           System.out.println(pe.getErrorOffset());
       }
+/*
       it = kifp.formulaSet.iterator();
       while (it.hasNext()) {
           form = (String) it.next();
-          System.out.println (form);          
-      }      
+          System.out.println (form);
+      }
+*/
+      System.out.println("");
+
+      fw = null;
+      pw = null;
+      File fil = new File(args[0] + ".tptp");
+
+      try {
+          fw = new FileWriter(fil);
+          pw = new PrintWriter(fw);
+
+          it = kifp.tptpFormulaSet.iterator();
+          while (it.hasNext()) {
+              axiomCount++;
+              form = (String) it.next();
+              form = "fof(axiom" + axiomCount + ",axiom,(" + form + ")).";
+              if (form.indexOf('"') < 0 && form.indexOf('\'') < 0) 
+                  pw.println(form + '\n');
+          }
+      }
+      catch (java.io.IOException e) {
+          throw new IOException("Error writing file " + fil + "\n" + e.getMessage());
+      }
+      finally {
+          if (pw != null) {
+              pw.close();
+          }
+          if (fw != null) {
+              fw.close();
+          }
+      }
   }
 }
+
+
