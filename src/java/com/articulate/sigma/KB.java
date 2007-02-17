@@ -672,7 +672,7 @@ public class KB {
         Formula f = new Formula();
         ArrayList theFormulas = null;
         f.theFormula = formula;
-        theFormulas = f.preProcess();
+        theFormulas = f.preProcess(false);  // tell is not a query
 
         try {
             Iterator itf = theFormulas.iterator();
@@ -1293,7 +1293,7 @@ public class KB {
         while (it.hasNext()) {
             newFormula = new Formula();
             newFormula.theFormula = (String) it.next();
-            processed = newFormula.preProcess();
+            processed = newFormula.preProcess(false);   // not queries
             Iterator itp = processed.iterator();
             while (itp.hasNext()) {
                 Object next = itp.next();
