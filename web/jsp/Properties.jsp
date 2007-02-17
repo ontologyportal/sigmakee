@@ -139,6 +139,17 @@ August 9, Acapulco, Mexico.
           loadCELT = "yes";
   }
 
+  String TPTP = request.getParameter("TPTP");
+  if (TPTP != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("TPTP",TPTP);
+  }
+  else {
+      TPTP = KBmanager.getMgr().getPref("TPTP");
+      if (TPTP == null)
+          TPTP = "yes";
+  }
+
   String inferenceTestDir = request.getParameter("inferenceTestDir");
   if (inferenceTestDir != null) {
       changed = true;
@@ -241,7 +252,7 @@ August 9, Acapulco, Mexico.
 
 
     <label for="loadCELT">  
-    <INPUT type="radio" name="loadCELT" value="yes" <%                            // default to no caching
+    <INPUT type="radio" name="loadCELT" value="yes" <%                            // default to no CELT
         if (KBmanager.getMgr().getPref("loadCELT") != null &&
             KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes")) 
             out.print("checked=no"); 
@@ -252,6 +263,20 @@ August 9, Acapulco, Mexico.
             out.print("checked=yes"); 
         %> > no
     : Should CELT be loaded at startup</label><P>
+
+     
+    <label for="TPTP">  
+    <INPUT type="radio" name="TPTP" value="yes" <%                            // default to no TPTP
+        if (KBmanager.getMgr().getPref("TPTP") != null &&
+            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) 
+            out.print("checked=no"); 
+        %> > yes</input> 
+    <INPUT type="radio" name="TPTP" value="no" <% 
+        if (KBmanager.getMgr().getPref("TPTP") == null ||
+            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("no")) 
+            out.print("checked=yes"); 
+        %> > no
+    : Perform TPTP translation (KB reload required)</label><P>
 
     <INPUT type="submit" name="submit">
 </FORM>
