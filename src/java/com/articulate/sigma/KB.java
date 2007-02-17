@@ -300,8 +300,7 @@ public class KB {
 
     /** *************************************************************
      * Determine whether a particular class or instance "child" is a
-     * child of the given "parent".  Note that the current version of 
-     * this routine only follows subclass and instance links.
+     * child of the given "parent".  
      */
     public boolean childOf(String child, String parent) {
 
@@ -371,7 +370,9 @@ public class KB {
                     if (formula.theFormula.indexOf("(",2) == -1 &&      // Ignore cases where parent class is a function
                         !formula.sourceFile.substring(formula.sourceFile.length()-11,formula.sourceFile.length()).equalsIgnoreCase("_Cache.kif")) {    
                         if (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") || 
-                            formula.theFormula.substring(1,9).equalsIgnoreCase("subclass")) { 
+                            formula.theFormula.substring(1,9).equalsIgnoreCase("subclass") || 
+                            formula.theFormula.substring(1,12).equalsIgnoreCase("subrelation") || 
+                            formula.theFormula.substring(1,12).equalsIgnoreCase("subAttribute")) { 
                             String parent = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,
                                                                          formula.theFormula.indexOf(")",10));
                             String child = formula.theFormula.substring(10,formula.theFormula.indexOf(" ",10));
@@ -430,7 +431,7 @@ public class KB {
                 for (int i = 0; i < forms.size(); i++) {
                     Formula formula = (Formula) forms.get(i);
                     if (formula.theFormula.indexOf("(",2) == -1 &&
-                        !formula.sourceFile.substring(formula.sourceFile.length()-11,formula.sourceFile.length()).equalsIgnoreCase("_Cache.kif")) {    // Ignore cases where parent class is a function
+                        !formula.sourceFile.endsWith("_Cache.kif")) {    // Ignore cases where parent class is a function
                         if (formula.theFormula.substring(1,9).equalsIgnoreCase("disjoint")) { 
                             String disjointStr = formula.theFormula.substring(formula.theFormula.indexOf(" ",10)+1,
                                                                               formula.theFormula.indexOf(")",10));
@@ -730,6 +731,26 @@ public class KB {
     }      
     
     /** ***************************************************************
+     *  Count the number of relations in the knowledge base in order to
+     *  present statistics to the user.
+     *
+     *  @return The int(eger) number of relations in the knowledge base.
+     */
+    public int getCountRelations() {
+
+        int result = 0;
+        Iterator it = terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (childOf(term,"Relation")) {            
+                result++;
+                System.out.println("INFO in KB.getCountRelations(): " + term);
+            }
+        }
+        return result;
+    }      
+    
+    /** ***************************************************************
      *  Count the number of formulas in the knowledge base in order to
      *  present statistics to the user.
      *
@@ -978,7 +999,7 @@ public class KB {
         }
         catch (ParseException pe) {
             result.append(pe.getMessage() + "At line: " + pe.getErrorOffset());
-            KBmanager.getMgr().setError(result.toString());
+            //KBmanager.getMgr().setError(result.toString());
             return result.toString();
         }
         System.out.print("INFO in KB.addConstituent(): Read file: " + filename + " of size: ");
@@ -1344,6 +1365,97 @@ public class KB {
                 fr.close();
             }
         }
+    }
+    /** *************************************************************
+     */
+    public String writeTPTPFile(String fileName,Formula conjecture,boolean
+                                onlyPlainFOL) throws IOException {
+
+        String sanitizedKBName;
+        File outputFile;
+        PrintWriter pr = null;
+        int axiomIndex = 1;
+        TreeSet orderedFormulae;
+        String theTPTPFormula;
+        boolean sanitizedFormula;
+        boolean commentedFormula;
+
+        System.out.println("INFO in KB.writeTPTPFile()");
+        sanitizedKBName = name.replaceAll("\\W","_");
+        try {
+            //----If file name is a directory, create filename therein
+            if (fileName == null) {
+                outputFile = File.createTempFile(sanitizedKBName, ".p",null);
+                //----Delete temp file when program exits.
+                outputFile.deleteOnExit();
+            } else {
+                outputFile = new File(fileName);
+            }
+            fileName = outputFile.getAbsolutePath();
+            System.out.println("INFO writeTPTPFile to " + fileName);
+
+            pr = new PrintWriter(new FileWriter(outputFile));
+            pr.println("% Copyright 2007 Articulate Software Incorporated");
+            pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
+            pr.println("% This is a translation to TPTP of KB " + 
+                       sanitizedKBName + "\n");
+
+            orderedFormulae = new TreeSet(new Comparator() {
+                public int compare(Object o1, Object o2) {
+                    Formula f1 = (Formula) o1;
+                    Formula f2 = (Formula) o2;
+                    int fileCompare = f1.sourceFile.compareTo(f2.sourceFile);
+                    if (fileCompare == 0) {
+                        return((new Integer(f1.startLine)).compareTo(
+                            new Integer(f2.startLine)));
+                    } else {
+                        return(fileCompare);
+                    }
+                } });
+            Iterator ite = formulas.values().iterator();
+            while (ite.hasNext()) {
+                orderedFormulae.addAll((ArrayList) ite.next());
+            }
+
+            ite = orderedFormulae.iterator();
+            while (ite.hasNext()) {
+                theTPTPFormula = ((Formula)ite.next()).theTPTPFormula;
+                commentedFormula = false;
+                if (onlyPlainFOL) {
+                    //----Remove interpretations of arithmetic
+                    theTPTPFormula = theTPTPFormula.
+                        replaceAll("[$]less","dollar_less").replaceAll("[$]greater","dollar_greater").
+                        replaceAll("[$]time","dollar_times").replaceAll("[$]divide","dollar_divide").
+                        replaceAll("[$]plus","dollar_plus").replaceAll("[$]minus","dollar_minus");
+                    //----Don't output ""ed ''ed and numbers
+                    if (theTPTPFormula.indexOf('\'') >= 0 ||
+                        theTPTPFormula.indexOf('"') >= 0 || 
+                        theTPTPFormula.matches(".*[(,]-?[0-9].*")) {
+                        pr.print("%FOL ");
+                        commentedFormula = true;
+                    }
+                }
+                pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                           ",axiom,(" + theTPTPFormula + ")).");
+                if (commentedFormula) {
+                    pr.println();
+                }
+            }
+             //----Print conjecture if one has been supplied
+            if (conjecture != null) {
+                pr.println("fof(prove_from_" + sanitizedKBName + 
+                           ",conjecture,(" + conjecture.theTPTPFormula + ")).");
+            }
+        }
+        catch (java.io.IOException e) {
+            throw new IOException("Error writing TPTP file. " + e.getMessage());
+        }
+        finally {
+            if (pr != null) {
+                pr.close();
+            }
+        }
+        return(fileName);
     }
 
     /** *************************************************************
