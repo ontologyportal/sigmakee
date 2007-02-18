@@ -12,7 +12,7 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
-    System.out.println("INFO in TPTP.jsp");
+    //System.out.println("INFO in SystemOnTPTP.jsp");
 
     String hostname = KBmanager.getMgr().getPref("hostname");
     if (hostname == null) {
@@ -27,7 +27,7 @@ August 9, Acapulco, Mexico.
 
 //----Note, using www.tptp.org does not work
     String SystemOnTPTPFormReplyURL =
-"http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTPTPFormReply";
+        "http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTPTPFormReply";
 
     systemList.add("Choose system");
     URLParameters.put("NoHTML","1");
@@ -37,7 +37,7 @@ August 9, Acapulco, Mexico.
 
     try {
         myResponse = new BufferedReader(new InputStreamReader(
-ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
+            ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
         while ((responseLine = myResponse.readLine()) != null) {
             systemList.add(responseLine);
         }
@@ -129,7 +129,7 @@ ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
     System:
 <%
     out.println(HTMLformatter.createMenu("systemChosen",systemChosen,
-systemList));
+                                         systemList));
 %>
     <INPUT TYPE="CHECKBOX" NAME="sanitize" VALUE="sanitize"
 <% if (sanitize.equals("sanitize")) { out.print(" CHECKED"); } %>
@@ -178,23 +178,26 @@ systemList));
                     URLParameters.put("NoHTML","1");
                     URLParameters.put("QuietFlag",quietFlag);
                     URLParameters.put("X2TPTP",tstpFormat);
-// URLParameters.put("IDV","-T");
+                    URLParameters.put("IDV","-T");
 //----Need to offer automode
                     URLParameters.put("System___System",systemChosen);
                     URLParameters.put("TimeLimit___TimeLimit",
-new Integer(timeout));
+                                      new Integer(timeout));
 //----Add KB contents here
                     conjectureFormula = new Formula();
                     conjectureFormula.theFormula = stmt;
-                    conjectureFormula.tptpParse();
+                    conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
+                    //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theFormula);
+                    conjectureFormula.tptpParse(true);
+                    //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theTPTPFormula);
                     kbFileName = kb.writeTPTPFile(null,conjectureFormula,
-sanitize.equals("sanitize"));
+                                                  sanitize.equals("sanitize"));
                     URLParameters.put("ProblemSource","UPLOAD");
                     URLParameters.put("UPLOADProblem",new File(kbFileName));
                     URLParameters.put("SubmitButton","RunSelectedSystems");
             
                     myResponse = new BufferedReader(new InputStreamReader(
-ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
+                        ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
 //----Delete the kbFile
                     (new File(kbFileName)).delete();
 %>
