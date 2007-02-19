@@ -153,6 +153,9 @@ August 9, Acapulco, Mexico.
     <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q0"
 <% if (quietFlag.equals("-q0")) { out.print(" CHECKED"); } %>
     >Everything
+    <INPUT TYPE=RADIO NAME="quietFlag" VALUE="IDV"
+<% if (quietFlag.equals("-q0")) { out.print(" CHECKED"); } %>
+    >IDV-Proof tree
 
     <INPUT TYPE=SUBMIT NAME="request" value="SystemOnTPTP">
     <!--INPUT TYPE=SUBMIT NAME="SubmitButton" value="RunSelectedSystems"-->
@@ -178,7 +181,9 @@ August 9, Acapulco, Mexico.
                     URLParameters.put("NoHTML","1");
                     URLParameters.put("QuietFlag",quietFlag);
                     URLParameters.put("X2TPTP",tstpFormat);
-                    URLParameters.put("IDV","-T");
+                    if (quietFlag.equals("IDV")) {
+                        URLParameters.put("IDV","-T");
+                    }   
 //----Need to offer automode
                     URLParameters.put("System___System",systemChosen);
                     URLParameters.put("TimeLimit___TimeLimit",
@@ -191,7 +196,7 @@ August 9, Acapulco, Mexico.
                     conjectureFormula.tptpParse(true);
                     //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theTPTPFormula);
                     kbFileName = kb.writeTPTPFile(null,conjectureFormula,
-                                                  sanitize.equals("sanitize"));
+                                                  sanitize.equals("sanitize"),systemChosen);
                     URLParameters.put("ProblemSource","UPLOAD");
                     URLParameters.put("UPLOADProblem",new File(kbFileName));
                     URLParameters.put("SubmitButton","RunSelectedSystems");
