@@ -36,7 +36,7 @@ August 9, Acapulco, Mexico.
     if (saveAs != null && saveAs.equals("prolog")) 
         kb.writePrologFile(kb.name + ".pl");    
     if (saveAs != null && saveAs.equals("TPTP")) 
-        kb.writeTPTPFile(kb.name + ".tptp",null,false);    
+        kb.writeTPTPFile(kb.name + ".tptp",null,false,"");    
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
         owt.kb = kb;
