@@ -672,7 +672,7 @@ public class KB {
         Formula f = new Formula();
         ArrayList theFormulas = null;
         f.theFormula = formula;
-        theFormulas = f.preProcess(false);  // tell is not a query
+        theFormulas = f.preProcess(false,this);  // tell is not a query
 
         try {
             Iterator itf = theFormulas.iterator();
@@ -1289,11 +1289,29 @@ public class KB {
         ArrayList processed = null;         // An ArrayList of Formula(s).  
                                             // If the Formula which is to be preprocessed does not contain row
                                             // variables, then this list will have only one element.
-        Iterator it = forms.iterator();
+        Iterator it = formulaSet.iterator();
         while (it.hasNext()) {
             newFormula = new Formula();
-            newFormula.theFormula = (String) it.next();
-            processed = newFormula.preProcess(false);   // not queries
+            String form = (String) it.next();
+            ArrayList al = (ArrayList) formulas.get(form);
+            Formula f = (Formula) al.get(0);
+            newFormula.theFormula = new String(f.theFormula);
+            processed = newFormula.preProcess(false,this);   // not queries
+            if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {  
+                try {
+                    f.tptpParse(false,this);   // not a query
+                }
+                catch (ParseException pe) {
+                    String er = "Error in KB.preProcess(): " + pe.getMessage() + " for formula is file " + f.sourceFile + " at line " +  f.startLine;
+                    KBmanager.getMgr().setError(KBmanager.getMgr().getError() + "<P>\n" + er);
+                    System.out.println(er);
+                }
+                catch (IOException ioe) {
+                    System.out.println("Error in KB.preProcess: " + ioe.getMessage());
+                }
+
+            }
+
             Iterator itp = processed.iterator();
             while (itp.hasNext()) {
                 Object next = itp.next();
@@ -1368,8 +1386,8 @@ public class KB {
     }
     /** *************************************************************
      */
-    public String writeTPTPFile(String fileName,Formula conjecture,boolean
-                                onlyPlainFOL) throws IOException {
+    public String writeTPTPFile(String fileName,Formula conjecture, boolean
+                                onlyPlainFOL, String reasoner) throws IOException {
 
         String sanitizedKBName;
         File outputFile;
@@ -1419,7 +1437,8 @@ public class KB {
 
             ite = orderedFormulae.iterator();
             while (ite.hasNext()) {
-                theTPTPFormula = ((Formula)ite.next()).theTPTPFormula;
+                Formula f = (Formula) ite.next();
+                theTPTPFormula = f.theTPTPFormula;
                 commentedFormula = false;
                 if (onlyPlainFOL) {
                     //----Remove interpretations of arithmetic
@@ -1434,6 +1453,16 @@ public class KB {
                         pr.print("%FOL ");
                         commentedFormula = true;
                     }
+                    if (reasoner.equals("Equinox---1.0b") && f.theFormula.indexOf("equal") > 2) {
+                        Formula f2 = new Formula();
+                        f2.read(f.cdr());
+                        f2.read(f.car());
+                        if (f2.theFormula.equals("equals")) {
+                            pr.print("%FOL ");
+                            commentedFormula = true;
+                        }
+                    }
+
                 }
                 pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
                            ",axiom,(" + theTPTPFormula + ")).");
@@ -1465,7 +1494,7 @@ public class KB {
 
         KB kb = new KB("foo","");
         try {
-            kb.addConstituent("D:\\CVS\\KBs\\test.kif");
+            kb.addConstituent("C:\\CVS\\SourceForge\\Merge.kif");
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
