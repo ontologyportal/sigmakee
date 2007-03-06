@@ -546,19 +546,12 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Makes implicit quantification explicit.  
-     * @param query controls whether to add universal or existential
-     * quantification.  If true, add existential.
-     * @result the formula as a String, with explicit quantification
+     * Collect all the quantified variables in a formula
      */
-    public String makeQuantifiersExplicit(boolean query) {
+    private ArrayList collectQuantifiedVariables(String theFormula) {
 
-        if (theFormula.indexOf("(documentation") == 0 ) 
-            return theFormula;
+        int startIndex = -1;                        
         ArrayList quantVariables = new ArrayList();
-        ArrayList unquantVariables = new ArrayList();
-        //System.out.println("Adding quantified variables.");
-        int startIndex = -1;                        // Collect all quantified variables
         while (theFormula.indexOf("(forall (?",startIndex) != -1 ||
                theFormula.indexOf("(exists (?",startIndex) != -1) {
             int forallIndex = theFormula.indexOf("(forall (?",startIndex);
@@ -588,9 +581,17 @@ public class Formula implements Comparable {
             else
                 startIndex = theFormula.length();
         }
+        return quantVariables;
+    }
 
-        //System.out.println("Adding unquantified variables.");
-        startIndex = 0;                        // Collect all unquantified variables
+    /** ***************************************************************
+     * Collect all the unquantified variables in a formula
+     */
+    private ArrayList collectUnquantifiedVariables(String theFormula, ArrayList quantVariables) {
+
+        int startIndex = 0;                        
+        ArrayList unquantVariables = new ArrayList();
+
         while (theFormula.indexOf("?",startIndex) != -1) {
             startIndex = theFormula.indexOf("?",startIndex);
             int spaceIndex = theFormula.indexOf(" ",startIndex);
@@ -607,11 +608,26 @@ public class Formula implements Comparable {
             }
             startIndex = i;
         }
+        return unquantVariables;
+    }
 
-       if (unquantVariables.size() > 0) {           // Quantify all the unquantified variables
-           StringBuffer quant = new StringBuffer("(forall (");  
-           if (query) 
-               quant = new StringBuffer("(exists (");             
+    /** ***************************************************************
+     * Makes implicit quantification explicit.  
+     * @param query controls whether to add universal or existential
+     * quantification.  If true, add existential.
+     * @result the formula as a String, with explicit quantification
+     */
+    public String makeQuantifiersExplicit(boolean query) {
+
+        if (theFormula.indexOf("(documentation") == 0 ) 
+            return theFormula;
+        ArrayList quantVariables = collectQuantifiedVariables(theFormula);
+        ArrayList unquantVariables = collectUnquantifiedVariables(theFormula,quantVariables);
+
+        if (unquantVariables.size() > 0) {           // Quantify all the unquantified variables
+            StringBuffer quant = new StringBuffer("(forall (");  
+            if (query) 
+                quant = new StringBuffer("(exists (");             
             for (int i = 0; i < unquantVariables.size(); i++) {
                 quant = quant.append((String) unquantVariables.get(i));
                 if (i < unquantVariables.size() - 1) 
@@ -764,6 +780,16 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Test whether this Formula is a rule
+     */
+    private boolean isRule() {
+
+        if (car().equals("=>") )
+            return true;        
+        return false;
+    }
+
+    /** ***************************************************************
      * Test whether a list with a predicate is a quantifier list
      */
     private boolean isQuantifierList(String listPred, String previousPred) {
@@ -775,13 +801,238 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Test whether a predicate is a logical operator
+     */
+    private boolean isLogicalOperator(String pred) {
+
+        String[] logOps = {"and", "or", "not", "=>", "<=>", "forall", "exists", "holds"};
+        ArrayList logicalOperators = new ArrayList(Arrays.asList(logOps));
+        if (logicalOperators.contains(pred))
+            return true;        
+        return false;
+    }
+
+    /** ***************************************************************
+     */
+    private String[] addToTypeList(String pred, ArrayList al, String[] result, String classP) {
+
+        //System.out.println("INFO in addToTypeList.getTypeList(): pred: " + pred);
+        for (int i = 0; i < al.size(); i++) {
+
+            Formula f = (Formula) al.get(i);
+            //System.out.println("INFO in addToTypeList(): formula: " + f.theFormula);
+            String cl = f.getArgument(3);
+            String argnum;
+            if (f.theFormula.startsWith("(range"))
+                argnum = "0";
+            else
+                argnum = f.getArgument(2);
+            int num;
+            try {                
+                num = Integer.valueOf(argnum).intValue();
+            } catch (NumberFormatException nfe) {
+                KBmanager.getMgr().setError(KBmanager.getMgr().getError() + 
+                                            "\nBad argument type declaration in formula " + f.theFormula +
+                                            " in file " + f.sourceFile + " at line " + f.startLine + "\n<br>");
+                return result;
+            }
+            if (result[num] == null || result[num] == "")
+                result[num] = cl + classP;
+            else {
+                KBmanager.getMgr().setError(KBmanager.getMgr().getError() + 
+                                            "\nConflicting type declarations found for predicate " + pred +
+                                            " at argument " + argnum + " with class " + cl + " and existing argument " +
+                                            result[num] + "\n<br>");
+                //System.out.println(KBmanager.getMgr().getError() + 
+                //                            "\nConflicting type declarations found for predicate " + pred +
+                //                            " at argument " + argnum + " with class " + cl + " and existing argument " +
+                //                            result[num]);
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * A + is appended to the type if the parameter must be a class
+     * @return the type for each argument to the given predicate, where
+     * ArrayList element 0 is the result, if a function, 1 is the 
+     * first argument, 2 is the second etc.
+     */
+    private ArrayList getTypeList(String pred, KB kb) {
+
+        //System.out.println("INFO in Formula.getTypeList(): pred: " + pred);
+        String[] r = new String[5];
+        ArrayList result = new ArrayList();
+        ArrayList al = kb.askWithRestriction(0,"domain",1,pred);
+        ArrayList al2 = kb.askWithRestriction(0,"domainSubclass",1,pred);
+        ArrayList al3 = kb.askWithRestriction(0,"range",1,pred);
+        ArrayList al4 = kb.askWithRestriction(0,"rangeSubclass",1,pred);
+        r = addToTypeList(pred,al,r,"");
+        r = addToTypeList(pred,al2,r,"+");
+        r = addToTypeList(pred,al3,r,"");
+        r = addToTypeList(pred,al4,r,"+");
+        for (int i = 0; i < r.length; i++) 
+            result.add(r[i]);
+        return result;
+    }
+
+    /** ***************************************************************
+     * Find the argument type restriction for a given predicate and 
+     * argument number that is inherited from one of its super-relations.
+     * A "+" is appended to the type if the parameter must be a class.
+     * argument number 0 is used for the return type of a Function.
+     * Functions are not currently handled however.
+     */
+    private String findType(ArrayList types, int numarg, String pred, KB kb) {
+
+        //System.out.println("INFO in Formula.findType(): pred: " + pred);
+        boolean found = false;
+        String newPred = pred;
+        while (!found) {
+            ArrayList parents = kb.askWithRestriction(0,"subrelation",1,newPred);
+            if (parents == null || parents.size() == 0) 
+                return "";            
+            String parent = newPred;
+            for (int i = 0; i < parents.size(); i++) {
+                Formula f = (Formula) parents.get(i);
+                parent = f.getArgument(2);
+                ArrayList axioms = kb.askWithRestriction(0,"domain",1,parent);
+                for (int j = 0; j < axioms.size(); j++) {
+                    f = (Formula) axioms.get(j);
+                    int argnum = Integer.valueOf(f.getArgument(2)).intValue();
+                    if (argnum == numarg) {
+                        found = true;
+                        return f.getArgument(3);
+                    }
+                }
+                axioms = kb.askWithRestriction(0,"domainSubclass",1,parent);
+                for (int j = 0; j < axioms.size(); j++) {
+                    f = (Formula) axioms.get(j);
+                    int argnum = Integer.valueOf(f.getArgument(2)).intValue();
+                    if (argnum == numarg) {
+                        found = true;
+                        return f.getArgument(3) + "+";
+                    }
+                }
+            }
+            newPred = parent;
+        }
+        return "";
+    }
+
+
+    /** ***************************************************************
+     * Does most of the real work for addTypeRestrictions() by
+     * recursing through the formula, collecting variables, finding
+     * their type restrictions, and adding that information to the
+     * HashMap result
+     * @result a HashMap keys are var names values are types. A "+" 
+     * is appended to the type if the parameter must be a class
+     * Note this routine does not yet properly handle function return types.
+     */
+    private HashMap addTypeRestrictionsRecurse(String theFormula, KB kb) {
+
+        //System.out.println("INFO in Formula.addTypeRestrictionsRecurse(): formula: " + theFormula);
+        HashMap varmap = new HashMap(); 
+        Formula f = new Formula();
+        f.read(theFormula);
+        if (!f.listP()) 
+            return varmap;
+        String pred = f.car();
+        ArrayList types = new ArrayList();
+        if (!isLogicalOperator(pred)) 
+            types = getTypeList(pred,kb);
+        f.read(f.cdr());
+        int numarg = 0;
+        while (!f.empty()) {
+            numarg++;
+            String arg = f.car();
+            if (listP(arg)) 
+                varmap.putAll(addTypeRestrictionsRecurse(arg,kb));
+            else {
+                if (isVariable(arg) && !isLogicalOperator(pred)) {
+                    String type;
+                    if (numarg > types.size()) 
+                        type = findType(types,numarg,pred,kb);
+                    type = (String) types.get(numarg);
+                    if (type == null) 
+                        type = findType(types,numarg,pred,kb);
+                    if (type != null && type != "") 
+                        varmap.put(arg,type);
+                }                
+            }
+            f.read(f.cdr());
+        }
+        return varmap;
+    }
+
+    /** ***************************************************************
+     * Add clauses for every variable in the antecedent to restrict its
+     * type to the type restrictions defined on every relation in which
+     * it appears.  For example
+     * (=>
+     *   (foo ?A B)
+     *   (bar B ?A))
+     * 
+     * (domain foo 1 Z) 
+     * 
+     * would result in
+     * 
+     * (=>
+     *   (instance ?A Z)
+     *   (=>
+     *     (foo ?A B)
+     *     (bar B ?A)))
+     */
+    private String addTypeRestrictions(KB kb) { 
+
+        Formula f = new Formula();
+        //System.out.println("INFO in Formula.addTypeRestrictions(): original formula: " + toString());
+        f.read(theFormula);
+        f.read(f.cdr());
+        String antecedent = f.car();
+        f.read(antecedent);
+
+        HashMap varmap = new HashMap(); // keys are var names values are types
+                                        // a + is appended to the type if the parameter must be a class
+        varmap = addTypeRestrictionsRecurse(f.theFormula,kb);
+        StringBuffer form = new StringBuffer();
+        if (varmap.keySet().size() > 0) {
+            form.append("(=> ");
+            if (varmap.keySet().size() > 1) 
+                form.append("(and ");
+            Iterator it = varmap.keySet().iterator();
+            while (it.hasNext()) {
+                String key = (String) it.next();
+                String value = (String) varmap.get(key);
+                String relation = "instance";
+                if (value.endsWith("+")) { 
+                    relation = "subclass";
+                    value = value.substring(0,value.length()-2);
+                }
+                form.append("(" + relation + " " + key + " " + value + ") ");
+            }
+            if (varmap.keySet().size() > 1) 
+                form.append(")");
+            form.append(theFormula);
+            form.append(")");
+
+            f.read(form.toString());
+
+            //System.out.println("INFO in Formula.addTypeRestrictions(): formula: " + f.toString());
+            return form.toString();
+        }
+        return theFormula;
+    }
+
+    /** ***************************************************************
      * Pre-process a formula before sending it to the theorem prover. This includes
      * ignoring meta-knowledge like documentation strings, translating
      * mathematical operators, quoting higher-order formulas, expanding
      * row variables and prepending the 'holds__' predicate.
      * @return an ArrayList of Formula(s)
      */
-    public String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings, 
+    private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings, 
                                     boolean translateIneq, boolean translateMath) {
 
         //System.out.println("INFO in preProcessRecurse(): formula: " + f.theFormula);
@@ -801,7 +1052,7 @@ public class Formula implements Comparable {
         if (!logicalOperators.contains(pred) && !isQuantifierList(pred,previousPred))
             prefix = "holds_";        
         if (f.isFunctionalTerm()) 
-            prefix = "apply_";     
+            prefix = "apply_";  
         String rest = f.cdr();
         Formula restF = new Formula();
         restF.read(rest);
@@ -851,7 +1102,7 @@ public class Formula implements Comparable {
      * quantification.  If true, add existential.
      * @return an ArrayList of Formula(s)
      */
-    public ArrayList preProcess(boolean query) {
+    public ArrayList preProcess(boolean query, KB kb) {
 
         boolean ignoreStrings = false;
         boolean translateIneq = true;
@@ -861,152 +1112,22 @@ public class Formula implements Comparable {
             return new ArrayList();
         Formula f = new Formula();
         f.read(theFormula);
-
+        if (f.isRule() && KBmanager.getMgr().getPref("typePrefix").equals("yes"))
+            f.read(addTypeRestrictions(kb));
         ArrayList al = new ArrayList();
         al = expandRowVars(f.theFormula);
         makeQuantifiersExplicit(query);
         for (int i = 0; i < al.size(); i++) {
             Formula fnew = (Formula) al.get(i);
             fnew.read(preProcessRecurse(fnew,new String(),ignoreStrings,translateIneq,translateMath));
+            
+            //System.out.println("INFO in Formula.preProcess(): formula: " + fnew.toString());
         }
         // String result = preProcessRecurse(f,new String(),ignoreStrings,translateIneq,translateMath);
         // return expandRowVars(result.toString());
         return al;
     }
 
-    /** ***************************************************************
-     * Pre-process a formula before sending it to the theorem prover. This includes
-     * ignoring meta-knowledge like documentation strings, translating
-     * mathematical operators, quoting higher-order formulas, expanding
-     * row variables and prepending the 'holds__' predicate.
-     * @return an ArrayList of Formula(s)
-     */
-    /** public ArrayList preProcess() {
-
-        String s = theFormula;
-        //Formula newFormula = new Formula();       // uncomment to make quantifiers explicit
-        //newFormula.read(s);
-        //s = newFormula.makeQuantifiersExplicit();
-        // 
-        //s = s.replaceAll("greaterThan", ">");     // uncomment to translate inequalities in all argument positions
-        //s = s.replaceAll("greaterThanOrEqualTo", ">=");
-        //s = s.replaceAll("lessThan", "<");
-        //s = s.replaceAll("lessThanOrEqualTo", "<=");
-
-        Stack predicateStack = new Stack();
-        TreeSet rowVars = new TreeSet();   // A list of row variables.
-        StringBuffer result = new StringBuffer();
-        String[] logOps = {"and", "or", "not", "=>", "<=>", "forall", "exists"};
-        String[] matOps = {"equal", "greaterThan", "greaterThanOrEqualTo", "lessThan", "lessThanOrEqualTo", 
-                           "AdditionFn", "SubtractionFn", "MultiplicationFn", "DivisionFn"};
-        String[] compOps = {"greaterThan", "greaterThanOrEqualTo", "lessThan", "lessThanOrEqualTo"};
-        ArrayList logicalOperators = new ArrayList(Arrays.asList(logOps));
-        ArrayList mathOperators = new ArrayList(Arrays.asList(matOps));
-        ArrayList comparisonOperators = new ArrayList(Arrays.asList(compOps));
-        String lastPredicate = null;
-        predicateStack.push("dummy");
-        
-        for (int i = 0; i < s.length(); i++) {
-            char ch = s.charAt(i);
-            switch (ch) {
-                case '(': {
-                    if (Character.isJavaIdentifierStart(s.charAt(i+1))) {
-                        i++;
-                        int predicateStart = i;
-                        while (Character.isJavaIdentifierPart(s.charAt(i)))
-                            i++;
-                        String predicate = s.substring(predicateStart,i);
-                        predicate = predicate.trim();
-                        if (
-//TPTP keeps documentation predicate.equalsIgnoreCase("documentation") ||
-                            predicate.equalsIgnoreCase("format") ||
-                            predicate.equalsIgnoreCase("termFormat"))
-                            return new ArrayList(0);
-                        if (mathOperators.contains(predicate)) {
-                            // translate math operators (NYI)
-                        }
-                        if (lastPredicate != null &&
-                            !logicalOperators.contains(lastPredicate.intern()) && 
-                            predicate.length() > 1 &&
-                            predicate.substring(predicate.length()-2).compareTo("Fn") != 0) {
-                            result = result.append('`');
-                            // tick the formula
-                        }
-                        result = result.append(ch); 
-                        if (!logicalOperators.contains(predicate.intern()) && 
-                            !mathOperators.contains(predicate.intern()) && 
-                            !predicate.equalsIgnoreCase("holds__")) {
-                            result = result.append("holds__ " + predicate);
-                        }
-                        else {
-                            if (comparisonOperators.contains(predicate.intern())) 
-                                predicate = translateInequalities(predicate);
-                            result = result.append(predicate);
-                        }
-                        i--;                       
-                        lastPredicate = predicate;
-                        predicateStack.push(predicate);
-                    }
-                    else {
-                        i++;
-                        if (s.charAt(i) == '?' && 
-                            !lastPredicate.equalsIgnoreCase("forall") && 
-                            !lastPredicate.equalsIgnoreCase("exists") ) {
-                            result = result.append(ch);
-                            result = result.append("holds__ ?");
-                            lastPredicate = "holds__";
-                            predicateStack.push("holds__");
-                        }
-                        else {
-                            int predicateStart = i;
-                            while (s.charAt(i) != ' ' && s.charAt(i) != ')')
-                                i++;
-                            String predicate = s.substring(predicateStart,i);
-                            predicate = predicate.trim();
-                            result = result.append(ch);
-                            result = result.append(predicate);
-                            lastPredicate = predicate;
-                            predicateStack.push(predicate);
-                            i--;
-                        }
-                    }
-                    break;
-                }
-                case '@': {
-                    if (Character.isJavaIdentifierStart(s.charAt(i+1))) {
-                        i++;
-                        int varStart = i;
-                        while (Character.isJavaIdentifierPart(s.charAt(i)))
-                            i++;
-                        String var = s.substring(varStart,i);
-                        rowVars.add(var);
-                        result = result.append("@" + var);
-                        i--;
-                    }
-                    break;
-                }
-                case ')': {
-                    predicateStack.pop();                  
-                    lastPredicate = (String) predicateStack.peek();
-                    break;
-                }
-                case '"': {
-                    result = result.append(ch);
-                    i++;
-                    while (s.charAt(i) != '"') {
-                        result.append(s.charAt(i));                        
-                        i++;
-                    }
-                    break;
-                }
-            }
-            if (ch != '(' && ch != '@') {
-                result = result.append(ch);
-            }
-        }
-        return expandRowVars(result.toString(),rowVars);
-    }
-*/
     /** ***************************************************************
      * Compare the given formula to the negated query and return whether
      * they are the same (minus the negation).
@@ -1217,60 +1338,60 @@ public class Formula implements Comparable {
       String tptpOps[] = {"! ", "? ", "~ ", " & ", " | " ," => " , " <=> "};
 
       String kifPredicates[] = {"equal","<=","<",">",">=",
-"lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo"};
+          "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo"};
       String tptpPredicates[] = {"equal","lesseq","less","greater","greatereq",
-"lesseq","less","greater","greatereq"};
+          "lesseq","less","greater","greatereq"};
 
       String kifFunctions[] = {"MultiplicationFn", "DivisionFn", "AdditionFn",
-"SubtractionFn" };
+          "SubtractionFn" };
       String tptpFunctions[] = {"times","divide","plus","minus"};
 
-//DEBUG System.out.println("Translating word " + st.sval + " with hasArguments " + hasArguments);
+      //DEBUG System.out.println("Translating word " + st.sval + " with hasArguments " + hasArguments);
 
-//----Places double quotes around strings, and replace \n by space
+      //----Places double quotes around strings, and replace \n by space
         if (st.ttype == 34) {
             return("\"" + st.sval.replaceAll("[\n\t\r\f]"," ") + "\"");
         }
-//----Fix variables
+        //----Fix variables
       if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
           return((Character.toUpperCase(st.sval.charAt(1)) +
                   st.sval.substring(2)).replace('-','_'));
       }
-//----Translate special predicates
+      //----Translate special predicates
       translateIndex = 0; 
       while (translateIndex < kifPredicates.length && 
-!st.sval.equals(kifPredicates[translateIndex])) {
+             !st.sval.equals(kifPredicates[translateIndex])) {
           translateIndex++;
       }
       if (translateIndex < kifPredicates.length) {
           return((hasArguments ? "$" : "") + tptpPredicates[translateIndex]);
       }
-//----Translate special functions
+      //----Translate special functions
       translateIndex = 0; 
       while (translateIndex < kifFunctions.length && 
-!st.sval.equals(kifFunctions[translateIndex])) {
+             !st.sval.equals(kifFunctions[translateIndex])) {
           translateIndex++;
       }
       if (translateIndex < kifFunctions.length) {
           return((hasArguments ? "$" : "") + tptpFunctions[translateIndex]);
       }
-//----Translate operators
+      //----Translate operators
       translateIndex = 0; 
       while (translateIndex < kifOps.length && 
-!st.sval.equals(kifOps[translateIndex])) {
+             !st.sval.equals(kifOps[translateIndex])) {
           translateIndex++;
       }
       if (translateIndex < kifOps.length) {
           return(tptpOps[translateIndex]);
       }
-//----Do nothing to numbers 
+      //----Do nothing to numbers 
       if (st.ttype == StreamTokenizer.TT_NUMBER || 
           (st.sval != null && (Character.isDigit(st.sval.charAt(0)) ||
-(st.sval.charAt(0) == '-' && Character.isDigit(st.sval.charAt(1)))))) {
+                               (st.sval.charAt(0) == '-' && Character.isDigit(st.sval.charAt(1)))))) {
           return(st.sval);
-//SANITIZE return("n" + st.sval.replace('-','n').replaceAll("[.]","dot"));
+          //SANITIZE return("n" + st.sval.replace('-','n').replaceAll("[.]","dot"));
       }
-//----Converts leading uppercase to lower case
+      //----Converts leading uppercase to lower case
       return(Character.toLowerCase(st.sval.charAt(0)) + 
              st.sval.substring(1).replace('-','_'));
   }
@@ -1327,8 +1448,11 @@ public class Formula implements Comparable {
   /** ***************************************************************
    * Parse a single formula into TPTP format
    */
-  public void tptpParse(boolean query) throws ParseException, IOException {
+  public void tptpParse(boolean query, KB kb) throws ParseException, IOException {
 
+      if (kb == null) 
+          kb = new KB("",KBmanager.getMgr().getPref("kbDir"));
+      
       //System.out.println("INFO in KIF.tptpParse(): formula: " + f.theFormula);
       StreamTokenizer_s st;
       int parenLevel;
@@ -1347,7 +1471,7 @@ public class Formula implements Comparable {
 
       theTPTPFormula = null;
       ArrayList parsedForm = null;
-      parsedForm = preProcess(query);
+      parsedForm = preProcess(query,kb);
       Iterator g = parsedForm.iterator();
 
       //----Peforms function on each current processed axiom
@@ -1559,9 +1683,11 @@ public class Formula implements Comparable {
      */
     public static void main(String[] args) {
 
+        KB kb = new KB("C:\\SourceForge\\KBs\\Merge.kif","");
         Formula f = new Formula();
-        f.read("(subAttribute Foo GovernmentPerson)");
-        System.out.println(f.toProlog());
+        f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
+        System.out.println(f.addTypeRestrictions(kb));
+        
         //f.read("(documentation Foo \"Blah, blah blah.\")");
         //System.out.println(f.getArgument(5));
         /* System.out.println(f.parseList("(=> (holds__ contraryAttribute ?ROW1) (holds__ foo ?ROW1)) " +
