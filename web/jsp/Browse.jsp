@@ -56,7 +56,6 @@ August 9, Acapulco, Mexico.
   
   else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term 
                                                              // that is not present in the KB.      
-      System.out.println("Doesn't contain " + term);
       ArrayList relations = kb.getNearestRelations(term);
       ArrayList nonRelations = kb.getNearestNonRelations(term);
       show.append(" <FONT face='Arial,helvetica' size=+3> <b> ");          
@@ -96,7 +95,7 @@ August 9, Acapulco, Mexico.
       if (tm != null) {
           show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
           show.append("<td width='40%' valign=top><small>");
-          show.append(WordNetUtilities.formatWords(tm));
+          show.append(WordNetUtilities.formatWordsList(tm,kbName));
           show.append("</small></td>");
       }
       show.append("</td></TABLE>");
@@ -118,7 +117,7 @@ August 9, Acapulco, Mexico.
           if (tm != null) {
               show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
               show.append("<td width='40%'><small>");
-              show.append(WordNetUtilities.formatWords(tm));
+              show.append(WordNetUtilities.formatWords(tm,kbName));
               show.append("</small></td>");
           }
           else
