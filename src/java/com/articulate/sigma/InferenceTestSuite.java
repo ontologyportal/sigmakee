@@ -138,7 +138,7 @@ public class InferenceTestSuite {
                     ArrayList theQueries = null;
                     theQuery.theFormula = query;
 
-                    theQueries = theQuery.preProcess(true);
+                    theQueries = theQuery.preProcess(true,kb);
                     Iterator q = theQueries.iterator();
                     while (q.hasNext()) {
                         processedStmt = ((Formula)q.next()).theFormula;

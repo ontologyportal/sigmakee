@@ -430,7 +430,7 @@ public class Diagnostics {
             Iterator it = formulaSet.iterator();
             while (it.hasNext()) {
                 Formula query = (Formula) it.next();
-                ArrayList processedQueries = query.preProcess(false); // may be multiple because of row vars.
+                ArrayList processedQueries = query.preProcess(false,kb); // may be multiple because of row vars.
                 //System.out.println(" query = " + query);
                 //System.out.println(" processedQueries = " + processedQueries);
 
