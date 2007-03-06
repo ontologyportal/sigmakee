@@ -185,8 +185,8 @@ public class KIF {
                   expression.append(")");
                   if (parenLevel == 0) {                                    // The end of the statement...
                       f.theFormula = expression.toString().intern();
-                      if (KBmanager.getMgr().getPref("TPTP").equals("yes")) 
-                          f.tptpParse(false);   // not a query
+                      //if (KBmanager.getMgr().getPref("TPTP").equals("yes"))                       
+                          //f.tptpParse(false,null);   // not a query
 
                       if (formulaSet.contains(expression.toString())) {
                           String warning = "Duplicate formula at line " + f.startLine + ": " + expression;
