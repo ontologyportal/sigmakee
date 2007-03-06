@@ -74,7 +74,7 @@ August 9, Acapulco, Mexico.
             if (req.equalsIgnoreCase("ask")) {
                 Formula query = new Formula();
                 query.theFormula = stmt;
-                processedStmt = query.preProcess(true);
+                processedStmt = query.preProcess(true,kb);
                 result = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
             }
             if (req.equalsIgnoreCase("tell")) {
