@@ -193,7 +193,7 @@ August 9, Acapulco, Mexico.
                     conjectureFormula.theFormula = stmt;
                     conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
                     //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theFormula);
-                    conjectureFormula.tptpParse(true);
+                    conjectureFormula.tptpParse(true,kb);
                     //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theTPTPFormula);
                     kbFileName = kb.writeTPTPFile(null,conjectureFormula,
                                                   sanitize.equals("sanitize"),systemChosen);
