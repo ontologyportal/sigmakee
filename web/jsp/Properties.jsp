@@ -117,6 +117,17 @@ August 9, Acapulco, Mexico.
           cache = "no";
   }
 
+  String holdsPrefix = request.getParameter("holdsPrefix");
+  if (holdsPrefix != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("holdsPrefix",holdsPrefix);
+  }
+  else {
+      holdsPrefix = KBmanager.getMgr().getPref("holdsPrefix");
+      if (holdsPrefix == null)
+          holdsPrefix = "no";
+  }
+
   String showcached = request.getParameter("showcached");
   if (showcached != null) {
       changed = true;
@@ -148,6 +159,17 @@ August 9, Acapulco, Mexico.
       TPTP = KBmanager.getMgr().getPref("TPTP");
       if (TPTP == null)
           TPTP = "yes";
+  }
+
+  String typePrefix = request.getParameter("typePrefix");
+  if (typePrefix != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("typePrefix",typePrefix);
+  }
+  else {
+      typePrefix = KBmanager.getMgr().getPref("typePrefix");
+      if (typePrefix == null)
+          typePrefix = "yes";
   }
 
   String inferenceTestDir = request.getParameter("inferenceTestDir");
@@ -278,7 +300,34 @@ August 9, Acapulco, Mexico.
         %> > no
     : Perform TPTP translation (KB reload required)</label><P>
 
-    <INPUT type="submit" name="submit">
+    <label for="holdsPrefix">  
+    <INPUT type="radio" name="holdsPrefix" value="yes" <%                            // default to no TPTP
+        if (KBmanager.getMgr().getPref("holdsPrefix") != null &&
+            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes")) 
+            out.print("checked=no"); 
+        %> > yes</input> 
+    <INPUT type="radio" name="holdsPrefix" value="no" <% 
+        if (KBmanager.getMgr().getPref("holdsPrefix") == null ||
+            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("no")) 
+            out.print("checked=yes"); 
+        %> > no
+    : prefix all clauses with "holds" (otherwise instantiate all variables in predicate position, 
+    which is not yet implemented)</label><P>
+
+    <label for="typePrefix">  
+    <INPUT type="radio" name="typePrefix" value="yes" <%                            // default to no TPTP
+        if (KBmanager.getMgr().getPref("typePrefix") != null &&
+            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes")) 
+            out.print("checked=no"); 
+        %> > yes</input> 
+    <INPUT type="radio" name="typePrefix" value="no" <% 
+        if (KBmanager.getMgr().getPref("typePrefix") == null ||
+            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("no")) 
+            out.print("checked=yes"); 
+        %> > no
+    : Add a "sortal" antecedent to every axiom </label><P>
+
+    <INPUT type="submit" name="submit"> <b>Note that many options require a restart of Tomcat and Sigma</b>
 </FORM>
 
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
