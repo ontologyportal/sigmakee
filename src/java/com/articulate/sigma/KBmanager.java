@@ -57,6 +57,8 @@ public class KBmanager {
         preferences.put("showcached","yes");  
         preferences.put("loadCELT","no");  
         preferences.put("TPTP","no");  
+        preferences.put("typePrefix","no");  
+        preferences.put("holdsPrefix","yes");  // if no then instantiate variables in predicate position
     }
 
     /** ***************************************************************
@@ -354,11 +356,23 @@ public class KBmanager {
 
     public static void main(String[] args) {
 
+        try {
+
+            KBmanager.getMgr().initializeOnce();
+        } catch (IOException ioe ) {
+            System.out.println(ioe.getMessage());
+        }
+
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        System.out.println(KBmanager.getMgr().getKBnames());
-        System.out.println(kb.name);
-        System.out.println(LanguageFormatter.htmlParaphrase("", "(or (instance ?X0 Relation) (not (instance ?X0 TotalValuedRelation)))", 
-                                                      kb.getFormatMap("en"), kb.getTermFormatMap("en"), "en"));
+
+        Formula f = new Formula();
+        f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
+        System.out.println(f.preProcess(false,kb));
+
+        //System.out.println(KBmanager.getMgr().getKBnames());
+        //System.out.println(kb.name);
+        //System.out.println(LanguageFormatter.htmlParaphrase("", "(or (instance ?X0 Relation) (not (instance ?X0 TotalValuedRelation)))", 
+        //                                              kb.getFormatMap("en"), kb.getTermFormatMap("en"), "en"));
 
     }
 
