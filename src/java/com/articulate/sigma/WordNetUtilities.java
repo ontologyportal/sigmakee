@@ -290,7 +290,7 @@ public class WordNetUtilities {
     /** *************************************************************** 
      * HTML format a TreeMap of word senses and their associated synset
      */
-    public static String formatWords(TreeMap words) {
+    public static String formatWords(TreeMap words, String kbName) {
 
         StringBuffer result = new StringBuffer();
         int count = 0;
@@ -302,10 +302,46 @@ public class WordNetUtilities {
             result.append(word); 
             result.append("&POS=");
             result.append(synset.substring(0,1));
+            result.append("&kb=");
+            result.append(kbName);
             result.append("&synset=");
             result.append(synset.substring(1,synset.length()));
             result.append("\">" + word + "</a>");
             count++;
+            if (it.hasNext() && count < 50) 
+                result.append(", ");          
+        }
+        if (it.hasNext() && count >= 50) 
+            result.append("...");      
+        return result.toString();
+    }
+
+    /** *************************************************************** 
+     * HTML format a TreeMap of ArrayLists word senses
+     */
+    public static String formatWordsList(TreeMap words, String kbName) {
+
+        StringBuffer result = new StringBuffer();
+        int count = 0;
+        Iterator it = words.keySet().iterator();
+        while (it.hasNext() && count < 50) {
+            String word = (String) it.next();
+            ArrayList synsetList = (ArrayList) words.get(word);
+            for (int i = 0; i < synsetList.size(); i++) {
+                String synset = (String) synsetList.get(i);
+                result.append("<a href=\"WordNet.jsp?word=");
+                result.append(word); 
+                result.append("&POS=");
+                result.append(synset.substring(0,1));
+                result.append("&kb=");
+                result.append(kbName);
+                result.append("&synset=");
+                result.append(synset.substring(1,synset.length()));
+                result.append("\">" + word + "</a>");
+                count++;
+                if (i < synsetList.size() - 1) 
+                    result.append(", ");          
+            }
             if (it.hasNext() && count < 50) 
                 result.append(", ");          
         }
