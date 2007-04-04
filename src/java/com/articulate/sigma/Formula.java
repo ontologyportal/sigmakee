@@ -163,6 +163,141 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Returns the LISP 'cdr' of the formula as a new Formula, if
+     * possible, else returns null.
+     *
+     * Note that this operation has no side effect on the Formula.
+     *
+     * @return a Formula, or null.
+     */
+    public Formula cdrAsFormula() {
+	String thisCdr = this.cdr();
+	if ( KB.isNonEmptyString(thisCdr) && listP(thisCdr) ) {
+	    Formula f = new Formula();
+	    f.read(thisCdr);
+	    return f;
+	}
+	return null;
+    }
+
+    /** ***************************************************************
+     * Returns the LISP 'cadr' (the second list element) of the
+     * formula.
+     * 
+     * Note that this operation has no side effect on the Formula.
+     *
+     * @return a String, or null.
+     *
+     */
+    public String cadr() {
+	Formula fCdr = this.cdrAsFormula();
+	if ( fCdr != null ) {
+	    return fCdr.car();
+	}
+	return null;
+    }
+
+    /** ***************************************************************
+     * Returns the LISP 'cddr' of the formula - the rest of the rest,
+     * or the list minus its first two elements.
+     * 
+     * Note that this operation has no side effect on the Formula.
+     *
+     * @return a String, or null.
+     *
+     */
+    public String cddr() {
+	Formula fCdr = this.cdrAsFormula();
+	if ( fCdr != null ) {
+	    return fCdr.cdr();
+	}
+	return null;
+    }
+
+    /** ***************************************************************
+     * Returns the LISP 'cddr' of the formula as a new Formula, if
+     * possible, else returns null.
+     *
+     * Note that this operation has no side effect on the Formula.
+     *
+     * @return a Formula, or null.
+     */
+    public Formula cddrAsFormula() {
+	String thisCddr = this.cddr();
+	if ( KB.isNonEmptyString(thisCddr) && listP(thisCddr) ) {
+	    Formula f = new Formula();
+	    f.read(thisCddr);
+	    return f;
+	}
+	return null;
+    }	    
+
+    /** ***************************************************************
+     * Returns the LISP 'caddr' of the formula, which is the third
+     * list element of the formula.
+     * 
+     * Note that this operation has no side effect on the Formula.
+     *
+     * @return a String, or null.
+     *
+     */
+    public String caddr() {
+	Formula fCddr = this.cddrAsFormula();
+	if ( fCddr != null ) {
+	    return fCddr.car();
+	}
+	return null;
+    }
+
+    /** ***************************************************************
+     * Returns the LISP 'nthcdr' of the formula as a Formula.
+     * 
+     * Note that this operation has no side effect on the Formula.
+     *
+     * @param n The index of the cdr to return.  The 0th nthcdr is the
+     * original formula itself.  The 1st nthcdr should be the same as
+     * calling this.cdrAsFormula().  The 2nd nthcdr should be the same
+     * as calling this.cddrAsFormula();
+     *
+     * @return a Formula, or null.
+     *
+     */
+    public Formula nthCdrAsFormula(int n) {
+	Formula ans = this;
+	for ( int i = 0 ; i < n ; i++ ) {
+	    if ( ans == null ) {
+		break;
+	    }
+	    ans = ans.cdrAsFormula();
+	}
+	return ans;
+    }
+
+    /** ***************************************************************
+     * Returns the LISP 'nthcar' of the formula as a String.
+     * 
+     * Note that this operation has no side effect on the Formula.
+     *
+     * @param n The index of the car to return.  The 0th nthcar is the
+     * same as the car of the 0th nthcdr, or
+     * (this.nthCdrAsFormula(0)).car();
+     *
+     * @return a String, or null.
+     *
+     */
+    public String nthCar(int n) {
+	String ans = null;
+	Formula f = this.nthCdrAsFormula( n );
+	if ( f != null ) {
+	    ans = f.car();
+	    if ( !(KB.isNonEmptyString(ans)) ) {
+		ans = null;
+	    }
+	}
+	return ans;
+    }
+	    	
+    /** ***************************************************************
      * Test whether the String is a LISP atom.
      */
     public static boolean atom(String s) {
@@ -245,6 +380,8 @@ public class Formula implements Comparable {
         //System.out.println("INFO in Formula.validArgsRecurse(): Formula: " + f.theFormula);
         if (f.theFormula == "" || !f.listP() || f.atom() || f.empty()) return "";
         String pred = f.car();
+
+	// AB: predF is created here, but never used. (?)
         Formula predF = new Formula();
         predF.read(pred);
 
