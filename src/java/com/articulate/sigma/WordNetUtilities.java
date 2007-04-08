@@ -56,6 +56,19 @@ public class WordNetUtilities {
         return formula.replaceAll("&%","");
     }
 
+    /** *************************************************************** 
+     * Convert a list of Terms in the format "&%term1 &%term2" to an ArrayList
+     * of bare term Strings
+     */
+    public static ArrayList convertTermList (String termList) {
+
+        ArrayList result = new ArrayList();
+        String[] list = termList.split(" ");
+        for (int i = 0; i < list.length; i++) 
+            result.add(getBareSUMOTerm(list[i]));        
+        return result;
+    }
+
     /** ***************************************************************
     *  Get a SUMO term mapping suffix.
     */
