@@ -89,10 +89,13 @@ public class WNdiagnostics {
                 break;
             }
             if (term != null) {
-                if (term.charAt(0) != '(') {
-                    term = term.substring(2,term.length()-1);
-                    if (!kb.terms.contains(term)) 
-                        result.add(POS+synset);                     
+                ArrayList termList = WordNetUtilities.convertTermList(term);
+                for (int i = 0; i < termList.size(); i++) {
+                    String newterm = (String) termList.get(i);
+                    if (newterm.charAt(0) != '(') {
+                        if (!kb.terms.contains(newterm)) 
+                            result.add(POS+synset);                     
+                    }
                 }
             }
             if (result.size() > 50) {
@@ -172,5 +175,82 @@ public class WNdiagnostics {
         }
         return result;
     }
+
+    /** ***************************************************************
+     * Create an HTML-formatted table that counts WordNet-SUMO mapping
+     * types.
+     */
+    public static String countMappings()  {
+
+        int equals = 0;
+        int plus = 0;
+        int ampersand = 0;
+        int leftbr = 0;
+        int rightbr = 0;
+        int colon = 0;
+        Iterator it = WordNet.wn.nounSUMOHash.keySet().iterator(); // Keys are synset Strings, values are SUMO 
+                                                      // terms with the &% prefix and =, +, @ or [ suffix. 
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String mapping = (String) WordNet.wn.nounSUMOHash.get(key);
+            switch (mapping.charAt(mapping.length()-1)) {
+              case '=': equals++; break;
+              case '+': plus++; break;
+              case '@': ampersand++; break;
+              case '[': leftbr++; break;
+              case ']': rightbr++; break;
+              case ':': colon++; break;
+            }
+        }
+        it = WordNet.wn.verbSUMOHash.keySet().iterator(); // Keys are synset Strings, values are SUMO 
+                                                      // terms with the &% prefix and =, +, @ or [ suffix. 
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String mapping = (String) WordNet.wn.verbSUMOHash.get(key);
+
+            switch (mapping.charAt(mapping.length()-1)) {
+              case '=': equals++; break;
+              case '+': plus++; break;
+              case '@': ampersand++; break;
+              case '[': leftbr++; break;
+              case ']': rightbr++; break;
+              case ':': colon++; break;
+            }
+        }
+        it = WordNet.wn.adjectiveSUMOHash.keySet().iterator(); // Keys are synset Strings, values are SUMO 
+                                                      // terms with the &% prefix and =, +, @ or [ suffix. 
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String mapping = (String) WordNet.wn.adjectiveSUMOHash.get(key);
+            switch (mapping.charAt(mapping.length()-1)) {
+              case '=': equals++; break;
+              case '+': plus++; break;
+              case '@': ampersand++; break;
+              case '[': leftbr++; break;
+              case ']': rightbr++; break;
+              case ':': colon++; break;
+            }
+        }
+        it = WordNet.wn.adverbSUMOHash.keySet().iterator(); // Keys are synset Strings, values are SUMO 
+                                                      // terms with the &% prefix and =, +, @ or [ suffix. 
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String mapping = (String) WordNet.wn.adverbSUMOHash.get(key);
+            switch (mapping.charAt(mapping.length()-1)) {
+              case '=': equals++; break;
+              case '+': plus++; break;
+              case '@': ampersand++; break;
+              case '[': leftbr++; break;
+              case ']': rightbr++; break;
+              case ':': colon++; break;
+            }
+        }
+        String result = "<table><tr><td>equivalent</td><td>subsuming</td><td>instance</td>"+
+                        "<td>anti-subsuming</td><td>anti-instance</td><td>anti-equivalent</td></tr>\n" +
+                        "<td>" + equals + "</td><td>" + plus + "</td><td>" + ampersand + "</td><td>" + 
+                        "<td>" + leftbr + "</td><td>" + rightbr + "</td><td>" + colon + "</td></tr></table>\n"; 
+        return result;
+    }
+
 }
 
