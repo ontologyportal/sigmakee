@@ -238,14 +238,18 @@ public class HTMLformatter {
         StringBuffer html = new StringBuffer();
         if (result != null && result.toString().length() > 0) {
             BasicXMLparser res = new BasicXMLparser(result.toString());
-            // System.out.print("INFO in AskTell.jsp: Number of XML elements: ");
-            // System.out.println(res.elements.size());
+
+            System.out.print("INFO in AskTell.jsp: Number of XML elements: ");
+            System.out.println(res.elements.size());
+
             ProofProcessor pp = new ProofProcessor(res.elements);
             for (int i = 0; i < pp.numAnswers(); i++) {
                 ArrayList proofSteps = pp.getProofSteps(i);
                 proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
-                // System.out.print("Proof steps: ");
-                // System.out.println(proofSteps.size());
+
+                System.out.print("Proof steps: ");
+                System.out.println(proofSteps.size());
+
                 if (i != 0) 
                     html = html.append(lineHtml + "\n");
                 html = html.append("Answer " + "\n");
@@ -254,14 +258,17 @@ public class HTMLformatter {
                 if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
                     html = html.append("<P><TABLE width=95%%>" + "\n");
                     for (int j = 0; j < proofSteps.size(); j++) {
-                        //System.out.print("Printing proof step: ");
-                        //System.out.println(j);
+
+                        System.out.print("Printing proof step: ");
+
+                        System.out.println(j);
                         html = html.append("<TR>" + "\n");
                         html = html.append("<TD valign=top>" + "\n");
                         html = html.append(j+1);
                         html = html.append(". </TD>" + "\n");
                         html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language) + "\n");                       
-                        // System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       
+                        System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       
+
                         html = html.append("</TR>\n" + "\n");
                     }
                     html = html.append("</TABLE>" + "\n");
