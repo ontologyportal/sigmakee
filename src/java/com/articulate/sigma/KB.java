@@ -140,7 +140,7 @@ public class KB {
      */
     public void cache() {
 
-        String filename = kbDir + File.separator + File.separator + this.name + "_Cache.kif"; // Note that the double separator shouldn't be needed.
+        String filename = kbDir + File.separator + this.name + "_Cache.kif"; // Note that the double separator shouldn't be needed.
         filename = filename.intern();
         ArrayList cached = new ArrayList();
         cacheElements("instance",cached);
@@ -754,6 +754,8 @@ public class KB {
      */
     public String tell(String formula) {
 
+	System.out.println( "INFO in KB.tell( " + this + ", " + formula + " )" );
+
         KIF kif = new KIF();
         kif.parseStatement(formula,this.name + _userAssertionsString);
         merge(kif);
@@ -778,11 +780,15 @@ public class KB {
                     KBmanager.getMgr().writeConfiguration();
                 }
                 writeUserAssertion(formula,filename);
+
+		System.out.println( "Assert: " + f );
+
                 return inferenceEngine.assertFormula(f.theFormula);
             }
         }
-        catch (IOException ioe) {
-            System.out.println("Error in KB.tell(): " + ioe.getMessage());
+        catch ( Exception ex ) {
+	    ex.printStackTrace();
+            // System.out.println("Error in KB.tell(): " + ioe.getMessage());
         }
         /* collectParents();
 	   if (KBmanager.getMgr().getPref("cache") != null &&
@@ -1146,13 +1152,13 @@ public class KB {
         //System.out.print("INFO KB.addConstituent(): Number of formulas ");
         //System.out.println(file.formulas.values().size());
         loadVampire();
-	System.out.println( "filename == " + filename );
+	// System.out.println( "filename == " + filename );
 	int startIdx = filename.lastIndexOf(File.separator);
-	System.out.println( "startIdx == " + startIdx );
+	// System.out.println( "startIdx == " + startIdx );
 	int lastIdx = filename.length();
-	System.out.println( "lastIdx == " + lastIdx );
+	// System.out.println( "lastIdx == " + lastIdx );
 	String subStr = filename.substring( startIdx, lastIdx );
-	System.out.println( "subStr == " + subStr );
+	// System.out.println( "subStr == " + subStr );
         if (subStr.compareTo("_Cache.kif") != 0) {
             collectParentsAndChildren();
             collectDisjointness();
@@ -1940,11 +1946,14 @@ public class KB {
     public String writeInferenceEngineFormulas(TreeSet forms) throws IOException {
 
         String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
-	System.out.println( "file separator == " + File.separator );
+	// System.out.println( "file separator == " + File.separator );
         String inferenceEngineDir = inferenceEngine.substring(0,inferenceEngine.lastIndexOf(File.separator));
-	System.out.println( "inferenceEngineDir == " + inferenceEngineDir );
+	while ( inferenceEngineDir.endsWith(File.separator) ) {
+	    inferenceEngineDir = inferenceEngineDir.substring(0,inferenceEngineDir.lastIndexOf(File.separator));
+	}
+	// System.out.println( "inferenceEngineDir == " + inferenceEngineDir );
         String filename = inferenceEngineDir + File.separator + this.name + "-v.kif";
-	System.out.println( "filename == " + filename );
+	// System.out.println( "filename == " + filename );
         FileWriter fr = null;
         PrintWriter pr = null;
 
@@ -1982,18 +1991,35 @@ public class KB {
             try {
                 String filename = writeInferenceEngineFormulas(forms);
                 System.out.println("INFO in KB.loadVampire(): writing formulas to " + filename);
+
+		// Added by AB, 4/2007, in an attempt to improve test
+		// performance in Windows:
+		if ( inferenceEngine instanceof Vampire ) {
+		    try {
+			String os = System.getProperty( "os.name" );
+			if ( (os instanceof String) 
+			     && Pattern.matches( "(?i:.*win.*)", os ) ) {
+			    inferenceEngine.terminate();
+			}
+		    }
+		    catch ( Exception ex ) {
+			ex.printStackTrace();
+		    }
+		}
                 inferenceEngine = new Vampire(filename);
             }
-            catch (IOException ioe) {
+            catch ( Exception ioe ) {
                 System.out.println("Error in KB.loadVampire(): " + ioe.getMessage());
+		ioe.printStackTrace();
             }
         }
         else {
             try {
                 inferenceEngine = new Vampire(inferenceEngine.EMPTY_FILE);
             }
-            catch (IOException ioe) {
+            catch ( Exception ioe ) {
                 System.out.println("Error in KB.loadVampire(): " + ioe.getMessage());
+		ioe.printStackTrace();
             }
         }
     }
@@ -2020,7 +2046,22 @@ public class KB {
             ArrayList al = (ArrayList) formulas.get(form);
             Formula f = (Formula) al.get(0);
             newFormula.theFormula = new String(f.theFormula);
-            processed = newFormula.preProcess(false,this);   // not queries
+	    String before = newFormula.theFormula;
+	    processed = newFormula.preProcess(false,this);   // not queries
+
+	    /*
+	    if ( before.startsWith("(=>")
+		 || before.startsWith("(<=>") ) {
+		System.out.println( "INFO in KB.preProcess( " + before + " )" );
+		if ( processed.size() > 0 ) {
+		    System.out.println( "Processed example: " + ((Formula) processed.get(0)) );
+		}
+		else {
+		    System.out.println( "Processed list is empty" );
+		}
+	    }
+	    */
+
             if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {  
                 try {
                     f.tptpParse(false,this);   // not a query
@@ -2078,7 +2119,7 @@ public class KB {
         try {
             fr = new FileWriter(fname);
             pr = new PrintWriter(fr);
-            pr.println("% Copyright © 2006 Articulate Software Incorporated");
+            pr.println("% Copyright (c) 2006 Articulate Software Incorporated");
             pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
             pr.println("% This is a very lossy translation to prolog of the KIF ontologies available at www.ontologyportal.org\n");
 
