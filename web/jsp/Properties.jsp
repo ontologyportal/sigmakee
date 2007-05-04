@@ -311,8 +311,7 @@ August 9, Acapulco, Mexico.
             KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("no")) 
             out.print("checked=yes"); 
         %> > no
-    : prefix all clauses with "holds" (otherwise instantiate all variables in predicate position, 
-    which is not yet implemented)</label><P>
+    : prefix all clauses with "holds" </label><P>
 
     <label for="typePrefix">  
     <INPUT type="radio" name="typePrefix" value="yes" <%                            // default to no TPTP
