@@ -81,6 +81,13 @@ August 9, Acapulco, Mexico.
 
 <%
   show = new StringBuffer();
+  show.append(WNdiagnostics.countMappings());
+%>
+<br><b>&nbsp;Mapping statistics</B>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><BR>
+<%
+  show = new StringBuffer();
   ArrayList synsetsWithoutTerms = WNdiagnostics.synsetsWithoutTerms();
   show.append(HTMLformatter.synsetList(synsetsWithoutTerms,kbHref));
 %>
