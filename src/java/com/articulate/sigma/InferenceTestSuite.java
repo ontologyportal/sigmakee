@@ -73,13 +73,14 @@ public class InferenceTestSuite {
         String proof = null;
         String processedStmt = null;
         String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
-        String outputDirString = KBmanager.getMgr().getPref("testOutputDir");
+        String outputDirString = inferenceTestDir;
         File outputDir = new File(outputDirString);
         if (!outputDir.exists())
             outputDir.mkdir();
         String sep = File.separator;
         String language = "en";
-        int timeout = 30;
+        // int timeout = 30;
+	int timeout = 120;
         int maxAnswers = 1;
         totalTime = 0;
         long duration = 0;
@@ -93,6 +94,12 @@ public class InferenceTestSuite {
             return("No test files found in " + inferenceTestDir);
         }
         for (int i = 0; i < files.length; i++) {
+
+
+	    System.out.println();
+	    System.out.println( "STARTING NEW TEST" );
+	    System.out.println();
+
             kb.deleteUserAssertions();
             timeout = 30;
             if (files[i].endsWith(".tq")) {
@@ -193,6 +200,11 @@ public class InferenceTestSuite {
                 result = result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
             }
         }
+
+	System.out.println();
+	System.out.println( "ALL QUERIES FINISHED" );
+	System.out.println();
+
         result = result.append("</table><P>\n");
         result = result.append("Total time: ");
         result = result.append(String.valueOf(totalTime/1000));
