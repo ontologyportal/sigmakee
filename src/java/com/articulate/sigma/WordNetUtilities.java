@@ -584,7 +584,8 @@ public class WordNetUtilities {
     /** ***************************************************************
      * This is a utility routine that should not be called during 
      * normal Sigma operation.  It does most of the actual work for 
-     * updateWNversion()
+     * updateWNversion().  The output is a set of WordNet data files
+     * with a "-new" suffix.
      */
     public void updateWNversionProcess(String fileName, String pattern, String posNum) throws IOException {
 
@@ -619,7 +620,7 @@ public class WordNetUtilities {
                         if (term == null) {                         
                             pw.println(line.trim());
                             System.out.println("Error in WordNetUtilities.updateWNversionProcess(): No term for synsets (old, new): " + 
-                                               oldsynset + " " + newsynset);
+                                               posNum + oldsynset + " " + posNum + newsynset);
                         }
                         else
                             pw.println(line + " " + term);
@@ -680,42 +681,49 @@ public class WordNetUtilities {
      * Port the mappings from one version of WordNet to another. It
      * calls updateWNversionReading to do most of the work. It assumes
      * that the mapping file has the new synset first and the old one
-     * second.
+     * second.  File names are for the new WordNet version, which will
+     * need to have different names from the old version that WordNet.java
+     * needs to read in order to get the existing mappings.
      * This is a utility which should not be called during normal Sigma
-     * operation.
+     * operation.  Mapping files are in a simple format produced by
+     * University of Catalonia and available at
+     * http://www.lsi.upc.edu/~nlp/web/index.php?option=com_content&task=view&id=21&Itemid=57
+     * If that address changes you may also start at
+     * http://www.lsi.upc.edu/~nlp/web/ and go to Resources and then an
+     * item on WordNet mappings.
      */
     public void updateWNversion() throws IOException {
 
-        String fileName = "wn21-20.noun";
+        String fileName = "wn30-21.noun";
         String pattern = "^(\\d+) (\\d+) .*$";
         String posNum = "1";
         updateWNversionReading(fileName,pattern,posNum);
-        fileName = "wn21-20.verb";
+        fileName = "wn30-21.verb";
         pattern = "^(\\d+) (\\d+) .*$";
         posNum = "2";
         updateWNversionReading(fileName,pattern,posNum);
-        fileName = "wn21-20.adj";
+        fileName = "wn30-21.adj";
         pattern = "^(\\d+) (\\d+) .*$";
         posNum = "3";
         updateWNversionReading(fileName,pattern,posNum);
-        fileName = "wn21-20.adv";
+        fileName = "wn30-21.adv";
         pattern = "^(\\d+) (\\d+) .*$";
         posNum = "4";
         updateWNversionReading(fileName,pattern,posNum);
 
-        fileName = "data.noun";
+        fileName = "data3.noun";
         pattern = "^([0-9]{8}) .+$";
         posNum = "1";
         updateWNversionProcess(fileName,pattern,posNum);
-        fileName = "data.verb";
+        fileName = "data3.verb";
         pattern = "^([0-9]{8}) .+$";
         posNum = "2";
         updateWNversionProcess(fileName,pattern,posNum);
-        fileName = "data.adj";
+        fileName = "data3.adj";
         pattern = "^([0-9]{8}) .+$";
         posNum = "3";
         updateWNversionProcess(fileName,pattern,posNum);
-        fileName = "data.adv";
+        fileName = "data3.adv";
         pattern = "^([0-9]{8}) .+$";
         posNum = "4";
         updateWNversionProcess(fileName,pattern,posNum);
@@ -731,7 +739,7 @@ public class WordNetUtilities {
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
             WordNetUtilities wnu = new WordNetUtilities();
-            wnu.deduceMissingLinks();
+            wnu.updateWNversion();
         }
         catch (IOException ioe) {
             System.out.println("Error in WordNet.main(): IOException: " + ioe.getMessage());
