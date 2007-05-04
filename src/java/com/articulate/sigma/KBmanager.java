@@ -50,7 +50,7 @@ public class KBmanager {
 
         String sep = File.separator;
         preferences.put("kbDir",System.getProperty("user.dir") + sep + "KBs");
-        preferences.put("testOutputDir",System.getProperty("user.dir") + sep + "webapps" + sep + "sigma" + sep + "tests");
+        //preferences.put("testOutputDir",System.getProperty("user.dir") + sep + "tests");
         preferences.put("inferenceTestDir","C:\\Program Files\\Apache Tomcat 4.0\\tests");  
         preferences.put("inferenceEngine","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe");  
         preferences.put("cache","no");  
