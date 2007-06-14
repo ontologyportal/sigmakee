@@ -89,6 +89,7 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
+    <pathelement path="src/java/ClientHttpRequest"/>
 </path>
 
 </project>
