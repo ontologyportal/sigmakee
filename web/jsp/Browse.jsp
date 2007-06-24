@@ -111,6 +111,16 @@ August 9, Acapulco, Mexico.
           show.append("</b></FONT>");
           if (kb.getTermFormatMap(language) != null && kb.getTermFormatMap(language).containsKey(term.intern()))
               show.append("(" + (String) kb.getTermFormatMap(language).get(term.intern()) + ")");
+          ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);
+          if (pictures != null && pictures.size() > 0) {
+              show.append("<br>");
+              for (int i = 0; i < pictures.size(); i++) {
+                  Formula f = (Formula) pictures.get(i);
+                  String url = f.getArgument(2);
+                  String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
+                  show.append("<a href=http://simple.wikipedia.org/wiki/Image:" + imageFile + "><img width=100 src=" + url + "></a>");
+              }
+          }
           show.append("</td>");
           WordNet.initOnce();
           TreeMap tm = WordNet.wn.getWordsFromTerm(term);
@@ -142,8 +152,24 @@ August 9, Acapulco, Mexico.
                       formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
                       if (f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0) 
                           show.append(kb.formatDocumentation(kbHref,formattedFormula));                                              
-                      else
-                          show.append(formattedFormula);
+                      else {
+                          if (f.theFormula.length() > 20 && f.theFormula.substring(1,20).compareTo("sharedDocumentation") == 0) {
+                              String textID = f.getArgument(2);
+                              ArrayList sharedDoc = kb.askWithRestriction(0,"sharedDocumentationText",1,textID);
+                              if (sharedDoc.size() > 0) {
+                                  Formula fText = (Formula) sharedDoc.get(0);
+                                  String doc = fText.getArgument(2);
+                                  Formula newFormula = new Formula();
+                                  newFormula.read("(sharedDocumentation " + term + " " + doc + ")");
+                                  formattedFormula = newFormula.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
+                                  show.append(kb.formatDocumentation(kbHref,formattedFormula));                                              
+                              }
+                              else
+                                  show.append(formattedFormula);                              
+                          }
+                          else
+                              show.append(formattedFormula);
+                      }
                       String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length());
                       show.append("<A href=\"EditFile.jsp?file=" + f.sourceFile + "&line=");
                       show.append((new Integer(f.startLine)).toString() + "\">");
