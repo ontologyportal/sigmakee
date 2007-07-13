@@ -37,54 +37,64 @@ public class Graph {
                                         int above, int below, String indentChars) {
 
         ArrayList result = new ArrayList();
-        result = createGraphBody(kb,term,relation,above,0,indentChars,above,true);
-        result.addAll(createGraphBody(kb,term,relation,0,below,indentChars,above,false));
+	HashSet checkAbove = new HashSet();
+	HashSet checkBelow = new HashSet();
+        result = createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true);
+        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false));
         return result;
     }
 
     /** *************************************************************
      * The main body for createGraph().
      */
-    private static ArrayList createGraphBody(KB kb, String term, String relation, 
-                                        int above, int below, String indentChars,int level, boolean show) {
+    private static ArrayList createGraphBody(KB kb, Set check, String term, String relation, 
+					     int above, int below, String indentChars,int level, boolean show) {
 
         ArrayList result = new ArrayList();
         ArrayList parents = new ArrayList();
         ArrayList children = new ArrayList();
 
-        if (above > 0) {
-            ArrayList stmtAbove = kb.askWithRestriction(0,relation,1,term);
-            for (int i = 0; i < stmtAbove.size(); i++) {
-                Formula f = (Formula) stmtAbove.get(i);
-                String newTerm = f.getArgument(2);
-                result.addAll(createGraphBody(kb,newTerm,relation,above-1,0,indentChars,level-1,true));
-            }
-        }
+	if ( ! check.contains(term) ) {
+	    if (above > 0) {
+		ArrayList stmtAbove = kb.askWithRestriction(0,relation,1,term);
+		for (int i = 0; i < stmtAbove.size(); i++) {
+		    Formula f = (Formula) stmtAbove.get(i);
+		    String newTerm = f.getArgument(2);
+		    if ( ! newTerm.equals(term) ) {
+			result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true));
+		    }
+		    check.add( term );
+		}
+	    }
 
-        StringBuffer prefix = new StringBuffer();
-        for (int i = 0; i < level; i++)
-            prefix = prefix.append(indentChars);
+	    StringBuffer prefix = new StringBuffer();
+	    for (int i = 0; i < level; i++)
+		prefix = prefix.append(indentChars);
         
-        String hostname = KBmanager.getMgr().getPref("hostname");
-        if (hostname == null)
-            hostname = "localhost";
-        String port = KBmanager.getMgr().getPref("port");
-        if (port == null)
-            port = "8080";
-        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
-        String formattedTerm = "<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>";
+	    String hostname = KBmanager.getMgr().getPref("hostname");
+	    if (hostname == null)
+		hostname = "localhost";
+	    String port = KBmanager.getMgr().getPref("port");
+	    if (port == null)
+		port = "8080";
+	    String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
+	    String formattedTerm = "<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>";
         
-        if (show) 
-            result.add(prefix + formattedTerm);
+	    if (show) 
+		result.add(prefix + formattedTerm);
         
-        if (below > 0) {
-            ArrayList stmtBelow = kb.askWithRestriction(0,relation,2,term);
-            for (int i = 0; i < stmtBelow.size(); i++) {
-                Formula f = (Formula) stmtBelow.get(i);
-                String newTerm = f.getArgument(1);
-                result.addAll(createGraphBody(kb,newTerm,relation,0,below-1,indentChars,level+1,true));
-            }
-        }
+	    if (below > 0) {
+		ArrayList stmtBelow = kb.askWithRestriction(0,relation,2,term);
+		for (int i = 0; i < stmtBelow.size(); i++) {
+		    Formula f = (Formula) stmtBelow.get(i);
+		    String newTerm = f.getArgument(1);
+		    if ( ! newTerm.equals(term) ) {
+			result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true));
+		    }
+		    check.add( term );
+		}
+	    }
+	}
         
         return result;
     }
