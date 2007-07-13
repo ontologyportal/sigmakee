@@ -28,63 +28,82 @@ public class Diagnostics {
     public static ArrayList termsWithoutDoc(KB kb) {
 
         System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
-        ArrayList result = new ArrayList();
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            ArrayList forms = kb.ask("arg",1,term);
-            if (forms == null || forms.size() < 1) 
-                result.add(term);
-            else {
-                boolean found = false;
-                for (int i = 0; i < forms.size(); i++) {
-                    Formula formula = (Formula) forms.get(i);
-                    if (formula.theFormula.substring(1,14).equalsIgnoreCase("documentation")) 
-                        found = true;
-                }
-                if (found == false)
-                    result.add(term);
-            }
 
-            if (result.size() > 99) {
+        ArrayList result = new ArrayList();
+	String term = null;
+	ArrayList forms = null;
+	Iterator it2 = null;
+	Formula formula = null;
+	String pred = null;
+        Iterator it = kb.terms.iterator();
+	int count = 0;
+        while ( it.hasNext() ) {
+            term = (String) it.next();
+            forms = kb.ask("arg",1,term);
+            if ( forms == null || forms.isEmpty() ) {
+                result.add(term);
+	    }
+            else {
+		boolean found = false;
+		it2 = forms.iterator();
+		while ( it2.hasNext() ) {
+		    formula = (Formula) it2.next();
+		    pred = formula.car();
+		    if ( pred.equals("documentation") ) {
+			found = true;
+			break;
+		    }
+                }
+                if ( ! found ) {
+                    result.add(term);
+		    count++;
+		}
+            }
+            if ( count > 99 ) {
                 result.add("limited to 100 results");
-                return result;
+                break;
             }
         }
         return result;
     }
 
     /** *****************************************************************
-     * Return a list of terms that do not have a documentation string.
+     * Return a list of terms that do not have a parent term.
      */
     public static ArrayList termsWithoutParent(KB kb) {
 
         System.out.println("INFO in Diagnostics.termsWithoutParent(): "); 
         ArrayList result = new ArrayList();
+	List preds = Arrays.asList( "instance", "subclass", "subAttribute", "subrelation", "subCollection" );
+	String term = null;
+	String pred = null;
+	ArrayList forms = null;
         Iterator it = kb.terms.iterator();
+	Iterator it2 = null;
+	int count = 0;
         while (it.hasNext()) {
-            String term = (String) it.next();
-            ArrayList forms = kb.ask("arg",1,term);
-            if (forms == null || forms.size() < 1) 
+            term = (String) it.next();
+            forms = kb.ask("arg",1,term);
+            if ( forms == null || forms.isEmpty() ) {
                 result.add(term);
+		count++;
+	    }
             else {
                 boolean found = false;
-                for (int i = 0; i < forms.size(); i++) {
-                    Formula formula = (Formula) forms.get(i);
-                    if (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") || 
-                        formula.theFormula.substring(1,9).equalsIgnoreCase("subclass") ||
-                        formula.theFormula.substring(1,13).equalsIgnoreCase("subAttribute") ||
-                        formula.theFormula.substring(1,12).equalsIgnoreCase("subrelation") ||
-                        formula.theFormula.substring(1,14).equalsIgnoreCase("subCollection")) 
-                        found = true;
-                }
-                if (found == false)
-                    result.add(term);
+		it2 = forms.iterator();
+		while ( it2.hasNext() ) {
+		    pred = ((Formula) it2.next()).car();
+		    found = preds.contains(pred);
+		    if ( found ) { break; };
+		}
+                if ( ! found ) { 
+		    result.add(term); 
+		    count++;
+		}
             }
-
-            if (result.size() > 99) {
+            if ( count > 99 ) {
                 result.add("limited to 100 results");
-                return result;
+                break;
             }
         }
         return result;
@@ -93,6 +112,7 @@ public class Diagnostics {
     /** *****************************************************************
      * Return a list of terms that have parents which are disjoint.
      */
+    /*
     public static ArrayList childrenOfDisjointParents(KB kb) {
 
         System.out.println("INFO in Diagnostics.childrenOfDisjointParents(): "); 
@@ -135,6 +155,63 @@ public class Diagnostics {
         ArrayList res = new ArrayList();
         res.addAll(result);
         return res;
+    }
+    */
+
+    /** *****************************************************************
+     * Return a list of terms that have parents which are disjoint.
+     */
+    public static ArrayList childrenOfDisjointParents(KB kb) {
+
+        System.out.println("INFO in Diagnostics.childrenOfDisjointParents(): "); 
+        ArrayList result = new ArrayList();
+	String term = null;
+	String termX = null;
+	String termY = null;
+	Set parentSet = null;
+	Object[] parents = null;
+	Set disjoints = null;
+        Iterator it = kb.terms.iterator();
+	int count = 0;
+	boolean contradiction = false;
+        while (it.hasNext()) {
+	    contradiction = false;
+            term = (String) it.next();
+	    parentSet = kb.getCachedRelationValues( "subclass", term, 1, 2 );
+	    parents = null;
+	    if ( (parentSet != null) && !parentSet.isEmpty() ) {
+		parents = parentSet.toArray();
+	    }
+	    if ( parents != null ) {
+                for ( int i = 0 ; (i < parents.length) && !contradiction ; i++ ) {
+                    termX = (String) parents[i];
+		    disjoints = kb.getCachedRelationValues( "disjoint", termX, 1, 2 );
+                    if ( (disjoints != null) && !disjoints.isEmpty() ) {
+                        for ( int j = (i + 1) ; j < parents.length ; j++ ) {
+                            termY = (String) parents[j];
+			    if ( disjoints.contains(termY) ) {
+                                result.add( term );
+				contradiction = true;
+				count++;
+                                System.out.println( "INFO in Diagnostics.childrenOfDisjointParents(): " 
+						    + termX 
+						    + " and " 
+						    + termY 
+						    + " are disjoint parents of " 
+						    + term  );
+				break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ( count > 99 ) {
+                result.add("limited to 100 results");
+		break;
+            }
+        }
+        return result;
     }
 
     /** *****************************************************************
@@ -343,7 +420,9 @@ public class Diagnostics {
         if (KBmanager.getMgr().existsKB(kbName)) {
             KBmanager.getMgr().removeKB(kbName);
         }
-        String emptyCFilename = kbDir + File.separator + "emptyConstituent.txt";
+	File dir = new File( kbDir );
+	File emptyCFile = new File( dir, "emptyConstituent.txt" );
+        String emptyCFilename = emptyCFile.getAbsolutePath();
         FileWriter fw = null; 
         PrintWriter pw = null;
         KBmanager.getMgr().addKB(kbName);
@@ -351,7 +430,7 @@ public class Diagnostics {
         System.out.println("empty = " + empty);
 
         try { // Fails elsewhere if no constituents, or empty constituent, thus...
-            fw = new FileWriter(emptyCFilename);
+            fw = new FileWriter( emptyCFile );
             pw = new PrintWriter(fw);   
             pw.println("(instance instance BinaryPredicate)\n");
             if (pw != null) pw.close();
@@ -426,8 +505,8 @@ public class Diagnostics {
         System.out.println("=================== Consistency Testing ===================");
         try {
             Formula theQuery = new Formula();
-            TreeSet formulaSet = kb.getFormulas(); // POD defined this method. Is there another way?
-            Iterator it = formulaSet.iterator();
+            Collection allFormulas = kb.formulaMap.values();
+            Iterator it = allFormulas.iterator();
             while (it.hasNext()) {
                 Formula query = (Formula) it.next();
                 ArrayList processedQueries = query.preProcess(false,kb); // may be multiple because of row vars.
