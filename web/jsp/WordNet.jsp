@@ -2,9 +2,27 @@
 
 <%
 
-  String sumokbname = KBmanager.getMgr().getPref("sumokbname");
-  if (sumokbname == null)
-      sumokbname = "SUMO";
+  String kbname = KBmanager.getMgr().getPref("sumokbname");
+Set kbNames = KBmanager.getMgr().getKBnames();
+
+// This is a kluge.  We need some way of specifying the "current",
+// loaded KB.  There might not be a value for the key "sumokbname", or
+// it might be stale.  For now, if we can't find kbname in the Set of
+// loaded KBs, we just take the first value retrieved from the Set and
+// bind kbname to it.  If all else fails, we use the name "SUMO", but
+// this won't be of much use if a KB named "SUMO" is not loaded.
+if ( ! kbNames.isEmpty() ) {
+    if ( (! Formula.isNonEmptyString(kbname)) || (! kbNames.contains(kbname)) ) {
+	Iterator it = kbNames.iterator();
+	while ( it.hasNext() ) {
+	    kbname = (String) it.next();
+	    break;
+	}
+    }
+}
+if ( ! Formula.isNonEmptyString(kbname) ) {
+      kbname = "SUMO";
+}
   String word = request.getParameter("word");
   String writeProlog = request.getParameter("writeProlog");
   String synset = request.getParameter("synset");
@@ -71,14 +89,14 @@ August 9, Acapulco, Mexico.
 */
 
   WordNet.initOnce();
-  KB kb = KBmanager.getMgr().getKB(sumokbname);
+  KB kb = KBmanager.getMgr().getKB(kbname);
   if (writeProlog != null) 
       WordNet.wn.writeProlog(kb);
   if (word !=null && word != "")
-      out.println(WordNet.wn.page(word,Integer.decode(POS).intValue(),sumokbname,synset));
+      out.println(WordNet.wn.page(word,Integer.decode(POS).intValue(),kbname,synset));
   else
       if (synset !=null && synset != "")
-          out.println(WordNet.wn.displaySynset(sumokbname,synset));  
+          out.println(WordNet.wn.displaySynset(kbname,synset));  
 %>
 <BR>
 
