@@ -51,18 +51,22 @@ public class ProofProcessor {
             (expectedAnswer.equalsIgnoreCase("yes"))) 
             return true;
         BasicXMLelement bindingSet = (BasicXMLelement) answer.subelements.get(0);
-        if (!((String) bindingSet.attributes.get("type")).equalsIgnoreCase("definite"))
-            return false;
-        BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(0); 
+	if ( bindingSet != null ) {
+	    String attr =  (String) bindingSet.attributes.get("type");
+	    if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) ) {
+		return false;
+	    }
+	    BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(0); 
             // The bindingSet element should just have one subelement, since non-definite answers are rejected.
-        for (int j = 0; j < binding.subelements.size(); j++) {
-            BasicXMLelement variableBinding = (BasicXMLelement) binding.subelements.get(j);
-            String variable = (String) variableBinding.attributes.get("name");
-            String value = (String) variableBinding.attributes.get("value");
-            result = result.append("(" + variable + " " + value + ")");
-            if (j < binding.subelements.size()-1) 
-                result = result.append(" ");
-        }
+	    for (int j = 0; j < binding.subelements.size(); j++) {
+		BasicXMLelement variableBinding = (BasicXMLelement) binding.subelements.get(j);
+		String variable = (String) variableBinding.attributes.get("name");
+		String value = (String) variableBinding.attributes.get("value");
+		result = result.append("(" + variable + " " + value + ")");
+		if (j < binding.subelements.size()-1) 
+		    result = result.append(" ");
+	    }
+	}
 
         System.out.println("INFO in ProofProcessor().equalsAnswer: answer: " + result.toString() + " expected answer: " + expectedAnswer);
         return result.toString().equalsIgnoreCase(expectedAnswer);
