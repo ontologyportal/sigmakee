@@ -1,4 +1,3 @@
-
 package com.articulate.sigma;
 
 import java.util.*;
@@ -42,6 +41,9 @@ public class InferenceTestSuite {
      /** Total time */
     public static long totalTime = 0;
 
+     /** Default timeout for queries with unspecified timeouts */
+    public static int TIMEOUT = 120;
+
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
      * true if any pair of answers is different.  Return false otherwise.
@@ -73,14 +75,12 @@ public class InferenceTestSuite {
         String proof = null;
         String processedStmt = null;
         String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
-        String outputDirString = inferenceTestDir;
+        String outputDirString = KBmanager.getMgr().getPref("testOutputDir");
         File outputDir = new File(outputDirString);
         if (!outputDir.exists())
             outputDir.mkdir();
         String sep = File.separator;
         String language = "en";
-        // int timeout = 30;
-	int timeout = 120;
         int maxAnswers = 1;
         totalTime = 0;
         long duration = 0;
@@ -100,8 +100,9 @@ public class InferenceTestSuite {
 	    System.out.println( "STARTING NEW TEST" );
 	    System.out.println();
 
+	    int timeout = TIMEOUT;
+
             kb.deleteUserAssertions();
-            timeout = 30;
             if (files[i].endsWith(".tq")) {
                 KIF test = new KIF();
                 try {
@@ -149,12 +150,9 @@ public class InferenceTestSuite {
                     Iterator q = theQueries.iterator();
                     while (q.hasNext()) {
                         processedStmt = ((Formula)q.next()).theFormula;
-                        Date before = new Date();
-                        long start = before.getTime();
+                        long start = System.currentTimeMillis();
                         proof = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
-                        Date after = new Date();
-                        long end = after.getTime();
-                        duration = end - start;
+                        duration = System.currentTimeMillis() - start;
                         
                         System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
                         System.out.println(duration);
