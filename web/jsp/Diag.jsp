@@ -74,7 +74,7 @@ August 9, Acapulco, Mexico.
 <br>
 
 <%
-  show = new StringBuffer();
+  show.setLength( 0 );
   ArrayList termsWithoutParent = Diagnostics.termsWithoutParent(kb);
   show.append(HTMLformatter.termList(termsWithoutParent,kbHref));
 %>
@@ -83,7 +83,7 @@ August 9, Acapulco, Mexico.
   <%=show.toString() %><BR>
 
 <%
-  show = new StringBuffer();
+  show.setLength( 0 );
   ArrayList unrooted = Diagnostics.unrootedTerms(kb);
   unrooted.removeAll(termsWithoutParent);
   show.append(HTMLformatter.termList(unrooted,kbHref));
@@ -93,7 +93,7 @@ August 9, Acapulco, Mexico.
   <%=show.toString() %><BR>
 
 <%
-  show = new StringBuffer();
+  show.setLength( 0 );
   ArrayList disjoint = Diagnostics.childrenOfDisjointParents(kb);
   show.append(HTMLformatter.termList(disjoint,kbHref));
 %>
@@ -102,6 +102,7 @@ August 9, Acapulco, Mexico.
   <%=show.toString() %><BR>
 
 <%
+  show.setLength( 0 );
   ArrayList termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
   show.append(HTMLformatter.termList(termsWithoutDoc,kbHref));
 %>
@@ -111,7 +112,7 @@ August 9, Acapulco, Mexico.
   <%=show.toString() %><BR>
 
 <%
-  show = new StringBuffer();
+  show.setLength( 0 );
   ArrayList extra = Diagnostics.extraSubclassInPartition(kb);
   show.append(HTMLformatter.termList(extra,kbHref));
 %>
@@ -121,7 +122,7 @@ August 9, Acapulco, Mexico.
 
 
 <%
-  show = new StringBuffer();
+  show.setLength( 0 );
   ArrayList norule = Diagnostics.termsWithoutRules(kb);
   show.append(HTMLformatter.termList(norule,kbHref));
 %>
@@ -130,7 +131,7 @@ August 9, Acapulco, Mexico.
   <%=show.toString() %><BR>
 
 <%
-  show = new StringBuffer();
+  show.setLength( 0 );
   ArrayList noquant = Diagnostics.quantifierNotInBody(kb);
   show.append(HTMLformatter.browserSectionFormat(noquant,null,null,kbHref,kb,language));
 %>
