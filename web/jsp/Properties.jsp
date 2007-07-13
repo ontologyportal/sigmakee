@@ -180,7 +180,7 @@ August 9, Acapulco, Mexico.
   else {
       inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
       if (inferenceTestDir == null)
-          inferenceTestDir = "yes";
+          inferenceTestDir = "";
   }
 
   String editorCommand = request.getParameter("editorCommand");
@@ -206,8 +206,91 @@ August 9, Acapulco, Mexico.
           lineNumberCommand = "";
   }
 
-  if (changed == true)
+if (changed == true) {
       KBmanager.getMgr().writeConfiguration();
+}
+
+// Force retranslation and new inference engine creation if inference
+// parameters have changed.
+int oldBitVal = KBmanager.getMgr().getOldInferenceBitValue();
+int newBitVal = KBmanager.getMgr().getInferenceBitValue();
+boolean bitsChanged = false;
+Set kbNames = KBmanager.getMgr().getKBnames();
+String kbName = null;
+KB kb = null;
+Iterator it = null;
+if ( (kbNames != null) && !(kbNames.isEmpty()) ) {
+    if ( oldBitVal != newBitVal ) {
+	if ( oldBitVal != -1 ) {
+	    bitsChanged = true;
+	}
+	KBmanager.getMgr().setOldInferenceBitValue( newBitVal );
+	if ( bitsChanged ) {
+	    boolean useTypePrefixChanged = ((oldBitVal & KBmanager.USE_TYPE_PREFIX)
+					    != (newBitVal & KBmanager.USE_TYPE_PREFIX));
+	    boolean useHoldsPrefixChanged = ((oldBitVal & KBmanager.USE_HOLDS_PREFIX)
+					    != (newBitVal & KBmanager.USE_HOLDS_PREFIX));
+	    boolean useCacheChanged = ((oldBitVal & KBmanager.USE_CACHE)
+				       != (newBitVal & KBmanager.USE_CACHE));
+	    boolean useTptpTurnedOn = ((oldBitVal & KBmanager.USE_TPTP)
+				       < (newBitVal & KBmanager.USE_TPTP));
+	    it = kbNames.iterator();
+	    while ( it.hasNext() ) {
+		kbName = (String) it.next();
+		kb = KBmanager.getMgr().getKB( kbName );
+		if ( kb != null ) {
+		    boolean callReload = false;
+		    boolean callLoadVampire = false;
+		    boolean callCache = false;
+		    boolean callTptpParse = false;
+		    if ( useCacheChanged ) {
+			callLoadVampire = true;
+			int oldCacheSetting = (oldBitVal & KBmanager.USE_CACHE);
+			int newCacheSetting = (newBitVal & KBmanager.USE_CACHE);
+			boolean cachingTurnedOn = (newCacheSetting > oldCacheSetting);
+			if ( cachingTurnedOn ) {
+			    callCache = true;
+			}
+			// We know the cache setting has changed, so
+			// if caching has not been newly set to "yes",
+			// it must have been newly set to "no", and we
+			// should reload everything.
+			else {
+			    callReload = true;
+			}
+		    }
+		    if ( useTypePrefixChanged || useHoldsPrefixChanged ) {
+			callLoadVampire = true;
+		    }
+
+		    if ( callReload ) {
+			System.out.println( "INFO in Properties.jsp: reloading the entire KB" );
+			kb.reload();
+		    }
+		    else if ( callCache ) {
+			System.out.println( "INFO in Properties.jsp: writing the cache file and reloading Vampire" );
+			kb.cache();
+			kb.loadVampire();
+		    }
+		    else if ( callLoadVampire ) {
+			System.out.println( "INFO in Properties.jsp: reloading Vampire" );
+			kb.loadVampire();
+		    }
+		    else if ( useTptpTurnedOn ) {
+			// If we reach this point, the only action
+			// required is that a TPTP translation be
+			// generated and stored in the
+			// Formula.theTPTPFormula field for each
+			// formula.
+			System.out.println( "INFO in Properties.jsp: generating TPTP for all formulas" );
+			kb.tptpParse();
+		    }
+		}
+	    }
+	}
+    }
+}
+
 %>
 
 <FORM method="POST" ACTION="Properties.jsp">
@@ -247,19 +330,6 @@ August 9, Acapulco, Mexico.
     <INPUT type="text" name="lineNumberCommand" value=<%=lineNumberCommand %> >
     Command line option for text editor to set cursor at a particular line</label><P>
 
-    <label for="cache">  
-    <INPUT type="radio" name="cache" value="yes" <%                            // default to no caching
-        if (KBmanager.getMgr().getPref("cache") != null &&
-            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-    <INPUT type="radio" name="cache" value="no" <% 
-        if (KBmanager.getMgr().getPref("cache") == null ||
-            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
-        %> > no
-    : Should caching be employed</label><P>
-
     <label for="showcached">                                                   
     <INPUT type="radio" name="showcached" value="yes" <%                       // default to showing cached statements
         if (KBmanager.getMgr().getPref("showcached") == null ||
@@ -270,8 +340,7 @@ August 9, Acapulco, Mexico.
         if (KBmanager.getMgr().getPref("showcached") != null &&
             KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
             out.print("checked=no"); %> > no
-    : Should cached statements be shown in the term browser</label><P>
-
+    : Show cached statements in the term browser</label><P>
 
     <label for="loadCELT">  
     <INPUT type="radio" name="loadCELT" value="yes" <%                            // default to no CELT
@@ -284,49 +353,75 @@ August 9, Acapulco, Mexico.
             KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("no")) 
             out.print("checked=yes"); 
         %> > no
-    : Should CELT be loaded at startup</label><P>
+    : Load CELT at startup</label><P>
 
-     
-    <label for="TPTP">  
-    <INPUT type="radio" name="TPTP" value="yes" <%                            // default to no TPTP
-        if (KBmanager.getMgr().getPref("TPTP") != null &&
-            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-    <INPUT type="radio" name="TPTP" value="no" <% 
-        if (KBmanager.getMgr().getPref("TPTP") == null ||
-            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
-        %> > no
-    : Perform TPTP translation (KB reload required)</label><P>
 
-    <label for="holdsPrefix">  
-    <INPUT type="radio" name="holdsPrefix" value="yes" <%                            // default to no TPTP
-        if (KBmanager.getMgr().getPref("holdsPrefix") != null &&
-            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-    <INPUT type="radio" name="holdsPrefix" value="no" <% 
-        if (KBmanager.getMgr().getPref("holdsPrefix") == null ||
-            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
-        %> > no
-    : prefix all clauses with "holds" </label><P>
+<p><strong>Formula Translation Options</strong></p>
 
-    <label for="typePrefix">  
-    <INPUT type="radio" name="typePrefix" value="yes" <%                            // default to no TPTP
-        if (KBmanager.getMgr().getPref("typePrefix") != null &&
-            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-    <INPUT type="radio" name="typePrefix" value="no" <% 
-        if (KBmanager.getMgr().getPref("typePrefix") == null ||
-            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
-        %> > no
-    : Add a "sortal" antecedent to every axiom </label><P>
+      <ol>
+	<li>
+	    <label for="typePrefix">  
+	    <INPUT type="radio" name="typePrefix" value="yes" <% 
+		if (KBmanager.getMgr().getPref("typePrefix") != null &&
+		    KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes")) 
+		    out.print("checked=no"); 
+		%> > yes</input> 
+	    <INPUT type="radio" name="typePrefix" value="no" <% 
+		if (KBmanager.getMgr().getPref("typePrefix") == null ||
+		    KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("no")) 
+		    out.print("checked=yes"); 
+		%> > no
+	    : Add a "sortal" antecedent to every axiom </label><P>
+	</li>
 
-    <INPUT type="submit" name="submit"> <b>Note that many options require a restart of Tomcat and Sigma</b>
+	<li>
+	    <label for="holdsPrefix">  
+	    <INPUT type="radio" name="holdsPrefix" value="yes" <%
+		if (KBmanager.getMgr().getPref("holdsPrefix") != null &&
+		    KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes")) 
+		    out.print("checked=no"); 
+		%> > yes</input> 
+	    <INPUT type="radio" name="holdsPrefix" value="no" <% 
+		if (KBmanager.getMgr().getPref("holdsPrefix") == null ||
+		    KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("no")) 
+		    out.print("checked=yes"); 
+		%> > no
+		: Prefix all clauses with "holds" (otherwise instantiate all variables in predicate position)</label><P>
+	</li>
+
+	<li>
+	    <label for="cache">  
+	    <INPUT type="radio" name="cache" value="yes" <%   // default to no caching
+		if (KBmanager.getMgr().getPref("cache") != null &&
+		    KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) 
+		    out.print("checked=no"); 
+		%> > yes</input> 
+	    <INPUT type="radio" name="cache" value="no" <% 
+		if (KBmanager.getMgr().getPref("cache") == null ||
+		    KBmanager.getMgr().getPref("cache").equalsIgnoreCase("no")) 
+		    out.print("checked=yes"); 
+		%> > no
+	    : Employ statement caching</label><P>
+	</li>
+
+	<li>
+	    <label for="TPTP">  
+	    <INPUT type="radio" name="TPTP" value="yes" <%   // default to no TPTP
+		if (KBmanager.getMgr().getPref("TPTP") != null &&
+		    KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) 
+		    out.print("checked=no"); 
+		%> > yes</input> 
+	    <INPUT type="radio" name="TPTP" value="no" <% 
+		if (KBmanager.getMgr().getPref("TPTP") == null ||
+		    KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("no")) 
+		    out.print("checked=yes"); 
+		%> > no
+	    : Perform TPTP translation</label><P>
+	</li>
+      </ol>
+
+
+  <INPUT type="submit" value="Save"> <b>Some options require a restart of Tomcat and Sigma.  Changing a translation option will force the KB to be reloaded.</b>
 </FORM>
 
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
