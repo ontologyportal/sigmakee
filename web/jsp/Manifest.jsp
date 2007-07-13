@@ -35,8 +35,19 @@ August 9, Acapulco, Mexico.
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
     if (saveAs != null && saveAs.equals("prolog")) 
         kb.writePrologFile(kb.name + ".pl");    
-    if (saveAs != null && saveAs.equals("TPTP")) 
-        kb.writeTPTPFile(kb.name + ".tptp",null,false,"");    
+if (saveAs != null && saveAs.equals("TPTP")) {
+    // Force translation of the KB to TPTP, even if the user has not
+    // requested this on the Preferences page.
+	if ( ! KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes") ) {
+	    System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas" );
+	    kb.tptpParse();
+	}
+        String tptpFn = kb.writeTPTPFile(kb.name + ".tptp",null,false,"");
+        KBmanager.getMgr().setError( KBmanager.getMgr().getError()
+				     + "\nWrote file "
+				     + tptpFn
+				     + "\n<br/>" );
+}
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
         owt.kb = kb;
@@ -46,18 +57,21 @@ August 9, Acapulco, Mexico.
         int i = kb.constituents.indexOf(constituent.intern());
         if (i == -1) {
             System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
-            result = kb.reload();
         }
         else {
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
-            result = kb.reload();       
         }
+	result = kb.reload();
     }
     else if (constituent != null) {
-        kb.addConstituent(constituent);
+        kb.addConstituent(constituent, true, false);
         //System.out.println("INFO in Manifest.jsp (top): The error string is : " + KBmanager.getMgr().getError());
         KBmanager.getMgr().writeConfiguration();
+	if ( KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes") ) {
+	    kb.cache();
+	}
+	kb.loadVampire();
     }
 %>
 <HTML>
@@ -131,7 +145,7 @@ August 9, Acapulco, Mexico.
     <FORM name=save ID=save action="Manifest.jsp" method="GET">
         <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
         <B>Filename:</B><INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
-        <INPUT type="submit" NAME="submit" VALUE="submit">
+        <INPUT type="submit" NAME="submit" VALUE="Save">
         <select name="saveAs">
             <option value="OWL">OWL
             <option value="prolog">Prolog
