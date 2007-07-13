@@ -58,9 +58,15 @@ public class HTMLformatter {
                 result.append("[KB]");
         }
         result.append("</td><td width=40% valign=top>");
-        if (language != null && language.length() > 0)
-            result.append(LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
-                                                     KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), language));        
+        if (language != null && language.length() > 0) {
+	    String pph = LanguageFormatter.htmlParaphrase( kbHref,
+							   f.theFormula, 
+							   KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
+							   KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), 
+							   language );
+	    if ( pph == null ) { pph = ""; }
+            result.append( pph );        
+	}
         result.append("</td>");
         return result.toString();
     }
@@ -131,9 +137,12 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormat(ArrayList forms, String header, 
-                                              String htmlDivider, String kbHref, 
-                                              KB kb, String language) {
+    public static String browserSectionFormat( ArrayList forms, 
+					       String header, 
+					       String htmlDivider, 
+					       String kbHref, 
+					       KB kb, 
+					       String language ) {
 
         StringBuffer show = new StringBuffer();
 
@@ -144,6 +153,7 @@ public class HTMLformatter {
             if (htmlDivider != null) 
                 show.append(htmlDivider);
             show.append("<TABLE width=95%%>");
+	    String pph = null;
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
                 show.append("<TR><TD width=50%% valign=top>");
@@ -151,8 +161,13 @@ public class HTMLformatter {
                 show.append(f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length()) + 
                             " " + (new Integer(f.startLine)).toString() + 
                             "-" + (new Integer(f.endLine)).toString() + "</TD>\n<TD width=40%% valign=top>");
-                show.append(LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, kb.getFormatMap(language), 
-                                                       kb.getTermFormatMap(language), language) + "</TD></TR>\n"); 
+		pph = LanguageFormatter.htmlParaphrase( kbHref,
+							f.theFormula, 
+							kb.getFormatMap(language), 
+							kb.getTermFormatMap(language), 
+							language );
+		if ( pph == null ) { pph = ""; }
+                show.append( pph + "</TD></TR>\n"); 
             }
             show.append("</TABLE>\n");
         }     
@@ -235,20 +250,22 @@ public class HTMLformatter {
     public static String formatProofResult(String result, String stmt, String processedStmt, 
                                            String lineHtml, String kbName, String language) {
 
+	// System.out.println( "INFO in HTMLformatter.formatProofResult(): " + result );
+
         StringBuffer html = new StringBuffer();
         if (result != null && result.toString().length() > 0) {
             BasicXMLparser res = new BasicXMLparser(result.toString());
 
-            System.out.print("INFO in AskTell.jsp: Number of XML elements: ");
-            System.out.println(res.elements.size());
+            // System.out.print("INFO in AskTell.jsp: Number of XML elements: ");
+            // System.out.println(res.elements.size());
 
             ProofProcessor pp = new ProofProcessor(res.elements);
             for (int i = 0; i < pp.numAnswers(); i++) {
                 ArrayList proofSteps = pp.getProofSteps(i);
                 proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
 
-                System.out.print("Proof steps: ");
-                System.out.println(proofSteps.size());
+                // System.out.print("Proof steps: ");
+                // System.out.println(proofSteps.size());
 
                 if (i != 0) 
                     html = html.append(lineHtml + "\n");
@@ -259,16 +276,16 @@ public class HTMLformatter {
                     html = html.append("<P><TABLE width=95%%>" + "\n");
                     for (int j = 0; j < proofSteps.size(); j++) {
 
-                        System.out.print("Printing proof step: ");
+                        // System.out.print("Printing proof step: ");
 
-                        System.out.println(j);
+                        // System.out.println(j);
                         html = html.append("<TR>" + "\n");
                         html = html.append("<TD valign=top>" + "\n");
                         html = html.append(j+1);
                         html = html.append(". </TD>" + "\n");
                         html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language) + "\n");                       
-                        System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       
-
+                        // System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       
+			
                         html = html.append("</TR>\n" + "\n");
                     }
                     html = html.append("</TABLE>" + "\n");
