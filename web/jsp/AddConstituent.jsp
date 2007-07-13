@@ -19,7 +19,8 @@ August 9, Acapulco, Mexico.
 
   StringBuffer result = new StringBuffer();
   String fileName = "";    
-  String srcDir = KBmanager.getMgr().getPref("kbDir");      
+  String srcDir = KBmanager.getMgr().getPref("kbDir");
+  File dir = new File( srcDir );
   //System.out.println("INFO in AddConstituent.jsp: KB dir: " + srcDir);
   MultipartRequest multiPartRequest = null;
   String kbName = null;
@@ -44,14 +45,19 @@ August 9, Acapulco, Mexico.
       while (fileTags.hasMoreElements()) {                    
           String fileTag = fileTags.nextElement().toString();
           fileName = multiPartRequest.getOriginalFileName(fileTag);
+	  File file = new File( dir, fileName );
           //System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
           //System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
           if (KBmanager.getMgr().getKB(kbName) == null) 
               KBmanager.getMgr().addKB(kbName);
           KB kb = KBmanager.getMgr().getKB(kbName);
           kb = KBmanager.getMgr().getKB(kbName);
-          result.append(kb.addConstituent(srcDir + File.separator + fileName));
-          // kb.cache();
+          result.append( kb.addConstituent(file.getCanonicalPath(), true, false) );
+	  String cacheVal = KBmanager.getMgr().getPref("cache");
+	  if ( (cacheVal != null) && cacheVal.equalsIgnoreCase("yes") ) {
+	      result.append( kb.cache() );
+	  }
+	  kb.loadVampire();
       }
       KBmanager.getMgr().writeConfiguration();
   }
