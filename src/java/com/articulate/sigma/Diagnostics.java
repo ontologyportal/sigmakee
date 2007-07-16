@@ -522,7 +522,7 @@ public class Diagnostics {
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.theFormula);
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
-                    proof = empty.inferenceEngine.submitQuery(processedQuery,timeout,maxAnswers);
+                    proof = empty.ask(processedQuery,timeout,maxAnswers);
                     String a = reportAnswer(kb,proof,query,processedQuery,"Redundancy");
                     //  if (answer.length() != 0) return answer;
                     answer = answer + a;
@@ -530,7 +530,7 @@ public class Diagnostics {
 
                     StringBuffer negatedQuery = new StringBuffer();
                     negatedQuery.append("(not " + processedQuery + ")");
-                    proof = empty.inferenceEngine.submitQuery(negatedQuery.toString(),timeout,maxAnswers);
+                    proof = empty.ask(negatedQuery.toString(),timeout,maxAnswers);
                     a = reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency");
                     if (a.length() != 0) {
                         answer = answer + a;
@@ -540,8 +540,8 @@ public class Diagnostics {
                 empty.tell(query.theFormula);
             }
         }
-        catch (IOException ioe) {
-            return("Error in Diagnostics.kbConsistencyCheck while executing query: " + ioe.getMessage());
+        catch ( Exception ex ) {
+            return("Error in Diagnostics.kbConsistencyCheck() while executing query: " + ex.getMessage());
         }
         return "No contradictions or redundancies found.";
     }
