@@ -19,7 +19,6 @@ August 9, Acapulco, Mexico.
     System.out.println("INFO in AskTell.jsp");
     String result = null;        
     StringBuffer status = new StringBuffer();
-    String processedStmt = null;
     ArrayList processedStmts = null;
 
     String hostname = KBmanager.getMgr().getPref("hostname");
@@ -88,14 +87,11 @@ August 9, Acapulco, Mexico.
     if (req != null && !syntaxError) {
         try {
             if (req.equalsIgnoreCase("ask")) {
-                Formula query = new Formula();
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-                query.theFormula = stmt;
-                processedStmts = query.preProcess(true,kb);
-                if (processedStmts.size() != 0) { 
-                    result = kb.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);
-                }
+
+		result = kb.ask( stmt, timeout, maxAnswers );
+
             }
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula();
@@ -149,11 +145,15 @@ August 9, Acapulco, Mexico.
     <br>
     Maximum answers: <input TYPE="TEXT" NAME="maxAnswers" VALUE="<%=maxAnswers%>">
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
-    <INPUT type="submit" name="request" value="ask">
+
+<% if ( kb.inferenceEngine == null ) { %>
+    <INPUT type="submit" name="request" value="Ask" disabled>
+<% } else { %>
+    <INPUT type="submit" name="request" value="Ask">
+<% } %>
 
 <% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
-    <INPUT type="submit" name="request" value="tell"><BR>
-
+    <INPUT type="submit" name="request" value="Tell"><BR>
 <% } %>
 </FORM>
 <table ALIGN='LEFT' WIDTH='80%'><tr><TD BGCOLOR='#AAAAAA'>
@@ -170,7 +170,12 @@ August 9, Acapulco, Mexico.
        out.println("<font color='red'>A syntax error was detected in your input.</font>");
     }
     else {
-        out.println(HTMLformatter.formatProofResult(result,stmt,processedStmt,lineHtml,kbName,language));
+        out.println(HTMLformatter.formatProofResult( result,
+						     stmt,
+						     stmt,  // This should be the processed stmt.
+						     lineHtml,
+						     kbName,
+						     language ));
     }
 %>
 

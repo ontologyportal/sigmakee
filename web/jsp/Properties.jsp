@@ -40,15 +40,23 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
   boolean changed = false;
+
+boolean ieChanged = false;
   String inferenceEngine = request.getParameter("inferenceEngine");
+String iePref = KBmanager.getMgr().getPref("inferenceEngine");
+if ( iePref == null ) { iePref = ""; }
   if (inferenceEngine != null) {
-      changed = true;
-      KBmanager.getMgr().setPref("inferenceEngine",inferenceEngine);
+      if ( ! inferenceEngine.equals(iePref) ) {
+	  changed = true;
+	  ieChanged = true;
+	  KBmanager.getMgr().setPref("inferenceEngine",inferenceEngine);
+      }
   }
   else {
       inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
-      if (inferenceEngine == null)
+      if (inferenceEngine == null) {
           inferenceEngine = "";
+      }
   }
 
   String celtdir = request.getParameter("celtdir");
@@ -225,66 +233,66 @@ if ( (kbNames != null) && !(kbNames.isEmpty()) ) {
 	    bitsChanged = true;
 	}
 	KBmanager.getMgr().setOldInferenceBitValue( newBitVal );
-	if ( bitsChanged ) {
-	    boolean useTypePrefixChanged = ((oldBitVal & KBmanager.USE_TYPE_PREFIX)
-					    != (newBitVal & KBmanager.USE_TYPE_PREFIX));
-	    boolean useHoldsPrefixChanged = ((oldBitVal & KBmanager.USE_HOLDS_PREFIX)
-					    != (newBitVal & KBmanager.USE_HOLDS_PREFIX));
-	    boolean useCacheChanged = ((oldBitVal & KBmanager.USE_CACHE)
-				       != (newBitVal & KBmanager.USE_CACHE));
-	    boolean useTptpTurnedOn = ((oldBitVal & KBmanager.USE_TPTP)
-				       < (newBitVal & KBmanager.USE_TPTP));
-	    it = kbNames.iterator();
-	    while ( it.hasNext() ) {
-		kbName = (String) it.next();
-		kb = KBmanager.getMgr().getKB( kbName );
-		if ( kb != null ) {
-		    boolean callReload = false;
-		    boolean callLoadVampire = false;
-		    boolean callCache = false;
-		    boolean callTptpParse = false;
-		    if ( useCacheChanged ) {
-			callLoadVampire = true;
-			int oldCacheSetting = (oldBitVal & KBmanager.USE_CACHE);
-			int newCacheSetting = (newBitVal & KBmanager.USE_CACHE);
-			boolean cachingTurnedOn = (newCacheSetting > oldCacheSetting);
-			if ( cachingTurnedOn ) {
-			    callCache = true;
-			}
-			// We know the cache setting has changed, so
-			// if caching has not been newly set to "yes",
-			// it must have been newly set to "no", and we
-			// should reload everything.
-			else {
-			    callReload = true;
-			}
+    }
+    if ( ieChanged || bitsChanged ) {
+	boolean useTypePrefixChanged = ((oldBitVal & KBmanager.USE_TYPE_PREFIX)
+					!= (newBitVal & KBmanager.USE_TYPE_PREFIX));
+	boolean useHoldsPrefixChanged = ((oldBitVal & KBmanager.USE_HOLDS_PREFIX)
+					 != (newBitVal & KBmanager.USE_HOLDS_PREFIX));
+	boolean useCacheChanged = ((oldBitVal & KBmanager.USE_CACHE)
+				   != (newBitVal & KBmanager.USE_CACHE));
+	boolean useTptpTurnedOn = ((oldBitVal & KBmanager.USE_TPTP)
+				   < (newBitVal & KBmanager.USE_TPTP));
+	it = kbNames.iterator();
+	while ( it.hasNext() ) {
+	    kbName = (String) it.next();
+	    kb = KBmanager.getMgr().getKB( kbName );
+	    if ( kb != null ) {
+		boolean callReload = false;
+		boolean callLoadVampire = false;
+		boolean callCache = false;
+		boolean callTptpParse = false;
+		if ( useCacheChanged ) {
+		    callLoadVampire = true;
+		    int oldCacheSetting = (oldBitVal & KBmanager.USE_CACHE);
+		    int newCacheSetting = (newBitVal & KBmanager.USE_CACHE);
+		    boolean cachingTurnedOn = (newCacheSetting > oldCacheSetting);
+		    if ( cachingTurnedOn ) {
+			callCache = true;
 		    }
-		    if ( useTypePrefixChanged || useHoldsPrefixChanged ) {
-			callLoadVampire = true;
+		    // We know the cache setting has changed, so
+		    // if caching has not been newly set to "yes",
+		    // it must have been newly set to "no", and we
+		    // should reload everything.
+		    else {
+			callReload = true;
 		    }
+		}
+		if ( ieChanged || useTypePrefixChanged || useHoldsPrefixChanged ) {
+		    callLoadVampire = true;
+		}
 
-		    if ( callReload ) {
-			System.out.println( "INFO in Properties.jsp: reloading the entire KB" );
-			kb.reload();
-		    }
-		    else if ( callCache ) {
-			System.out.println( "INFO in Properties.jsp: writing the cache file and reloading Vampire" );
-			kb.cache();
-			kb.loadVampire();
-		    }
-		    else if ( callLoadVampire ) {
-			System.out.println( "INFO in Properties.jsp: reloading Vampire" );
-			kb.loadVampire();
-		    }
-		    else if ( useTptpTurnedOn ) {
-			// If we reach this point, the only action
-			// required is that a TPTP translation be
-			// generated and stored in the
-			// Formula.theTPTPFormula field for each
-			// formula.
-			System.out.println( "INFO in Properties.jsp: generating TPTP for all formulas" );
-			kb.tptpParse();
-		    }
+		if ( callReload ) {
+		    System.out.println( "INFO in Properties.jsp: reloading the entire KB" );
+		    kb.reload();
+		}
+		else if ( callCache ) {
+		    System.out.println( "INFO in Properties.jsp: writing the cache file and reloading Vampire" );
+		    kb.cache();
+		    kb.loadVampire();
+		}
+		else if ( callLoadVampire ) {
+		    System.out.println( "INFO in Properties.jsp: reloading Vampire" );
+		    kb.loadVampire();
+		}
+		else if ( useTptpTurnedOn ) {
+		    // If we reach this point, the only action
+		    // required is that a TPTP translation be
+		    // generated and stored in the
+		    // Formula.theTPTPFormula field for each
+		    // formula.
+		    System.out.println( "INFO in Properties.jsp: generating TPTP for all formulas" );
+		    kb.tptpParse();
 		}
 	    }
 	}

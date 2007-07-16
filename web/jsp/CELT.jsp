@@ -22,7 +22,6 @@ August 9, Acapulco, Mexico.
     System.out.println("INFO in CELT.jsp");
     String result = null;        
     StringBuffer sbStatus = new StringBuffer();
-    String processedStmt = null;
 
     String hostname = KBmanager.getMgr().getPref("hostname");
     if (hostname == null)
@@ -72,10 +71,7 @@ August 9, Acapulco, Mexico.
     if (req != null) {
         try {
             if (req.equalsIgnoreCase("ask")) {
-                Formula query = new Formula();
-                query.theFormula = stmt;
-                processedStmt = query.preProcess(true,kb);
-                result = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
+		result = kb.ask( stmt, timeout, maxAnswers );
             }
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula();

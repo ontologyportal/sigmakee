@@ -33,21 +33,28 @@ August 9, Acapulco, Mexico.
     KB kb = KBmanager.getMgr().getKB(kbName);
     if (kb == null || kbName == null)
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
-    if (saveAs != null && saveAs.equals("prolog")) 
-        kb.writePrologFile(kb.name + ".pl");    
-if (saveAs != null && saveAs.equals("TPTP")) {
+if (saveAs != null && saveAs.equals("prolog")) {
+    String prologFile = kb.writePrologFile(kb.name + ".pl");
+    String statusStr = ( "\nWrote file " + prologFile + "\n<br/>" );
+    if ( ! Formula.isNonEmptyString(prologFile) ) {
+	statusStr = "\nCould not write a Prolog file\n<br/>";
+    }
+    KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
+}
+    if (saveAs != null && saveAs.equals("TPTP")) {
     // Force translation of the KB to TPTP, even if the user has not
     // requested this on the Preferences page.
 	if ( ! KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes") ) {
 	    System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas" );
 	    kb.tptpParse();
 	}
-        String tptpFn = kb.writeTPTPFile(kb.name + ".tptp",null,false,"");
-        KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-				     + "\nWrote file "
-				     + tptpFn
-				     + "\n<br/>" );
-}
+        String tptpFile = kb.writeTPTPFile(kb.name + ".tptp",null,false,"");
+	String statusStr = ( "\nWrote file " + tptpFile + "\n<br/>" );
+	if ( ! Formula.isNonEmptyString(tptpFile) ) {
+	    statusStr = "\nCould not write a TPTP file\n<br/>";
+	}
+        KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
+    }
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
         owt.kb = kb;
