@@ -1121,15 +1121,17 @@ public class KB {
 
 	System.out.println( "INFO in KB.tell( " + this + ", " + formula + " )" );
 
-        KIF kif = new KIF();
-        kif.parseStatement( formula, this.name + _userAssertionsString );
-        merge( kif );
-        Formula f = new Formula();
-        ArrayList theFormulas = null;
-        f.theFormula = formula;
-        theFormulas = f.preProcess( false, this );  // tell is not a query
-
+	String result = "";
         try {
+	    KIF kif = new KIF();
+	    kif.parseStatement( formula, this.name + _userAssertionsString );
+	    merge( kif );
+	    result = ( "Added " + formula + " for browsing" );
+	    Formula f = new Formula();
+	    ArrayList theFormulas = null;
+	    f.theFormula = formula;
+	    theFormulas = f.preProcess( false, this );  // tell is not a query
+
 	    if ( KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes") ) {
 		f.tptpParse( false, this, theFormulas );
 	    }
@@ -1152,7 +1154,7 @@ public class KB {
 		// System.out.println( "Assert: " + f );
 		
 		if ( inferenceEngine != null ) {
-		    return inferenceEngine.assertFormula(f.theFormula);
+		    result = inferenceEngine.assertFormula(f.theFormula);
 		}
             }
         }
@@ -1164,8 +1166,55 @@ public class KB {
 	   if (KBmanager.getMgr().getPref("cache") != null &&
 	   KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
 	   cache();        */   // caching is currently not efficient enough to invoke it after every assertion
-        return "";
+        return result;
     }
+
+    /** *************************************************************
+     * Submits a query to the inference engine.  Returns an XML
+     * formatted String that contains the response of the inference
+     * engine.  It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @param timeout The number of seconds after which the inference
+     * engine should give up.
+     *
+     * @param maxAnswers The maximum number of answers (binding sets)
+     * the inference engine should return.
+     *
+     * @return A String indicating the status of the ask operation.
+     */
+    public String ask(String suoKifFormula, int timeout, int maxAnswers) {
+
+	System.out.println( "INFO in KB.ask( " + suoKifFormula + ", " + timeout + ", " + maxAnswers + " )" );
+
+	String result = "";
+	try {
+
+	    // Start by assuming that the ask is futile.
+	    result = "<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n<summary proofs=\"0\"/>\n</queryResponse>\n";
+	    result = result.replaceAll("&lt;","<");
+	    result = result.replaceAll("&gt;",">");
+	    
+	    if ( Formula.isNonEmptyString(suoKifFormula) ) {
+		Formula query = new Formula();
+		query.read( suoKifFormula );
+		ArrayList processedStmts = query.preProcess( true, this );
+                if ( !processedStmts.isEmpty() && (this.inferenceEngine instanceof Vampire) ) {
+                    result = this.inferenceEngine.submitQuery( ((Formula)processedStmts.get(0)).theFormula,
+							       timeout,
+							       maxAnswers );
+                }
+	    }
+	}
+	catch ( Exception ex ) {
+	    ex.printStackTrace();
+	}
+	return result;
+    }
+
 
     /** ***************************************************************
      * Takes a term and returns true if the term occurs in the KB.
@@ -1209,17 +1258,8 @@ public class KB {
      */
     public int getCountRelations() {
 
-        int result = 0;
-        Iterator it = terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            if (childOf(term,"Relation")) {            
-                result++;
-                // System.out.println("INFO in KB.getCountRelations(): " + term);
-            }
-        }
-        return result;
-    }      
+	return this.getAllInstances("Relation").size();
+    }
     
     /** ***************************************************************
      *  Count the number of formulas in the knowledge base in order to
@@ -2119,7 +2159,7 @@ public class KB {
      *
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
-    protected TreeSet getAllInstances(String className) {
+    public TreeSet getAllInstances(String className) {
 	if ( Formula.isNonEmptyString(className) ) {
 	    TreeSet input = new TreeSet();
 	    input.add( className );
@@ -2394,41 +2434,52 @@ public class KB {
     /** *************************************************************
      * Save the contents of the current KB to a file.
      */
-    public String writeInferenceEngineFormulas(TreeSet forms) throws IOException {
+    public String writeInferenceEngineFormulas(TreeSet forms) {
 
-	String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
 	// System.out.println( "file separator == " + File.separator );
-	String inferenceEngineDir = inferenceEngine.substring(0,inferenceEngine.lastIndexOf(File.separator));
-	while ( inferenceEngineDir.endsWith(File.separator) ) {
-	    inferenceEngineDir = inferenceEngineDir.substring(0,inferenceEngineDir.lastIndexOf(File.separator));
-	}
-	// System.out.println( "inferenceEngineDir == " + inferenceEngineDir );
-	File dir = new File( inferenceEngineDir );
-	File file = new File( dir, (this.name + "-v.kif") );
-	String filename = file.getCanonicalPath();
-	// System.out.println( "filename == " + filename );
+
 	FileWriter fr = null;
 	PrintWriter pr = null;
-
+	String filename = null;
 	try {
-	    fr = new FileWriter(filename);
-	    pr = new PrintWriter(fr);
-	    Iterator it = forms.iterator();
-	    while (it.hasNext())
-		pr.println((String) it.next() + "\n");                       
+	    String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
+	    if ( Formula.isNonEmptyString(inferenceEngine) ) {
+		File executable = new File( inferenceEngine );
+		if ( executable.exists() ) {
+		    File dir = executable.getParentFile();
+		    File file = new File( dir, (this.name + "-v.kif") );
+		    filename = file.getCanonicalPath();
+
+		    // System.out.println( "filename == " + filename );
+
+		    fr = new FileWriter(filename);
+		    pr = new PrintWriter(fr);
+		    Iterator it = forms.iterator();
+		    while (it.hasNext()) {
+			pr.println((String) it.next() + "\n");                       
+		    }
+		}
+	    }
 	}
-	catch (java.io.IOException e) {
-	    System.out.println("Error in KB.writeInferenceEngineFormulas(): Error writing file " + filename);
+	catch ( Exception ex ) {
+	    System.out.println( "Error in KB.writeInferenceEngineFormulas(): " + ex.getMessage() );
+	    ex.printStackTrace();
 	}
-	finally {
-	    if (pr != null) {
+	if (pr != null) {
+	    try {
 		pr.close();
 	    }
-	    if (fr != null) {
-		fr.close();
+	    catch ( Exception e1 ) {
 	    }
 	}
-	return this.name + "-v.kif";
+	if (fr != null) {
+	    try {
+		fr.close();
+	    }
+	    catch ( Exception e2 ) {
+	    }
+	}
+	return filename;
     }
 
     /** *************************************************************
@@ -2438,41 +2489,47 @@ public class KB {
     public void loadVampire() {
 
 	// System.out.println("INFO in KB.loadVampire()");
-	if ( Formula.isNonEmptyString(KBmanager.getMgr().getPref("inferenceEngine"))
-	     && !(formulaMap.isEmpty()) ) {
-	    try {
+
+	try {
+	    if ( ! formulaMap.isEmpty() ) {
+
 		System.out.println( "INFO in KB.loadVampire(): preprocessing " + formulaMap.size() + " formulas" );
 
 		TreeSet forms = preProcess( formulaMap.keySet() );
-
 		String filename = writeInferenceEngineFormulas(forms);
-		System.out.println( "INFO in KB.loadVampire(): " + forms.size() + " formulas saved to " + filename );
+		boolean vFileSaved = Formula.isNonEmptyString(filename);
+		if ( vFileSaved ) {
+		    System.out.println( "INFO in KB.loadVampire(): " + forms.size() + " formulas saved to " + filename );
+		}
+		else {
+		    System.out.println( "INFO in KB.loadVampire(): new -v.kif file not written" );
+		}
+
 		if ( inferenceEngine instanceof Vampire ) {
 		    System.out.println( "INFO in KB.loadVampire(): terminating inference engine" );
-		    try {
-			long t1 = System.currentTimeMillis();
-			inferenceEngine.terminate();
-			System.out.println( "INFO in KB.loadVampire(): inference engine terminated in "
-					    + ((System.currentTimeMillis() - t1) / 1000.0)
-					    + " seconds" );
-		    }
-		    catch ( Exception ex ) {
-			ex.printStackTrace();			
-		    }
-		    inferenceEngine = null;
+		    long t1 = System.currentTimeMillis();
+		    inferenceEngine.terminate();
+		    System.out.println( "INFO in KB.loadVampire(): inference engine terminated in "
+					+ ((System.currentTimeMillis() - t1) / 1000.0)
+					+ " seconds" );
 		}
-		System.out.println( "INFO in KB.loadVampire(): getting new inference engine" );
-		inferenceEngine = Vampire.getNewInstance( filename );
-		System.out.println( "INFO in KB.loadVampire(): inferenceEngine == " + inferenceEngine );
+
+		inferenceEngine = null;
+
+		if ( Formula.isNonEmptyString(KBmanager.getMgr().getPref("inferenceEngine")) && vFileSaved ) {
+		    System.out.println( "INFO in KB.loadVampire(): getting new inference engine" );
+		    inferenceEngine = Vampire.getNewInstance( filename );
+		}
+		System.out.println( "INFO in KB.loadVampire(): inferenceEngine == " + inferenceEngine );		
 	    }
-	    catch ( Exception e ) {
-		System.out.println("Error in KB.loadVampire(): " + e.getMessage());
-		e.printStackTrace();
-	    }
-	    if ( !(inferenceEngine instanceof Vampire) ) {
-		KBmanager.getMgr().setError(  KBmanager.getMgr().getError()
-					      + "\nNo inference engine is available\n<br>" );
-	    }
+	}
+	catch ( Exception e ) {
+	    System.out.println("Error in KB.loadVampire(): " + e.getMessage());
+	    e.printStackTrace();
+	}
+	if ( !(inferenceEngine instanceof Vampire) ) {
+	    KBmanager.getMgr().setError(  KBmanager.getMgr().getError()
+					  + "\nNo local inference engine is available\n<br>" );
 	}
 	return;
     }
@@ -2639,15 +2696,17 @@ public class KB {
 
     /** *************************************************************
      */
-    public void writePrologFile(String fname) throws IOException {
+    public String writePrologFile(String fname) {
 
 	FileWriter fr = null;
 	PrintWriter pr = null;
+	String result = null;
 
-	System.out.println("INFO in KB.writePrologFile()");
 	try {
-	    fr = new FileWriter(fname);
-	    pr = new PrintWriter(fr);
+	    File file = new File( fname );
+	    System.out.println("INFO in KB.writePrologFile(): Writing " + file.getCanonicalPath() );
+	    fr = new FileWriter( file );
+	    pr = new PrintWriter( fr );
 	    pr.println("% Copyright (c) 2006 Articulate Software Incorporated");
 	    pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
 	    pr.println("% This is a very lossy translation to prolog of the KIF ontologies available at www.ontologyportal.org\n");
@@ -2665,18 +2724,28 @@ public class KB {
 	    pr.println("\n% subclass");
 	    writePrologFormulas(ask("arg",0,"subclass"),pr);            
 	    System.out.println(" ");
+
+	    result = file.getCanonicalPath();
 	}
-	catch (java.io.IOException e) {
-	    throw new IOException("Error writing prolog file. " + e.getMessage());
+	catch ( Exception e ) {
+	    e.printStackTrace();
+	    System.out.println( "Error in KB.writePrologFile(): " + e.getMessage() );
 	}
-	finally {
-	    if (pr != null) {
+	if ( pr != null ) {
+	    try {
 		pr.close();
 	    }
-	    if (fr != null) {
-		fr.close();
+	    catch ( Exception e1 ) {
 	    }
 	}
+	if ( fr != null ) {
+	    try {
+		fr.close();
+	    }
+	    catch ( Exception e2 ) {
+	    }
+	}
+	return result;
     }
 
     /** *************************************************************
@@ -2745,6 +2814,7 @@ public class KB {
 				 boolean onlyPlainFOL, 
 				 String reasoner ) throws IOException {
 
+	String result = null;
 	String sanitizedKBName;
 	File outputFile;
 	PrintWriter pr = null;
@@ -2754,7 +2824,7 @@ public class KB {
 	boolean sanitizedFormula;
 	boolean commentedFormula;
 
-	System.out.println("INFO in KB.writeTPTPFile()");
+	System.out.println("INFO in KB.writeTPTPFile(): Writing " + fileName );
 	sanitizedKBName = name.replaceAll("\\W","_");
 	try {
 	    //----If file name is a directory, create filename therein
@@ -2846,16 +2916,21 @@ public class KB {
 			       ",conjecture,(" + theTPTPFormula + ")).");
 		}
 	    }
+	    result = fileName;
 	}
-	catch (java.io.IOException e) {
-	    throw new IOException("Error writing TPTP file. " + e.getMessage());
+	catch ( Exception e ) {
+	    System.out.println( "Error in KB.writeTPTPFile(): " + e.getMessage() );
+	    e.printStackTrace();
 	}
-	finally {
-	    if (pr != null) {
+	if ( pr != null)  {
+	    try {
 		pr.close();
 	    }
+	    catch ( Exception e1 ) {
+	    }
 	}
-	return(fileName);
+
+	return result;
     }
 
     /** *************************************************************

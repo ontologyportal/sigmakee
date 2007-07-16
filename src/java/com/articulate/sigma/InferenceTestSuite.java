@@ -151,7 +151,7 @@ public class InferenceTestSuite {
                     while (q.hasNext()) {
                         processedStmt = ((Formula)q.next()).theFormula;
                         long start = System.currentTimeMillis();
-                        proof = kb.inferenceEngine.submitQuery(processedStmt,timeout,maxAnswers);
+                        proof = kb.ask(processedStmt,timeout,maxAnswers);
                         duration = System.currentTimeMillis() - start;
                         
                         System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
@@ -159,8 +159,8 @@ public class InferenceTestSuite {
                         totalTime = totalTime + duration;
                     }
                 }
-                catch (IOException ioe) {
-                    return("Error in InferenceTestSuite.test() while executing query: " + ioe.getMessage());
+                catch ( Exception ex ) {
+                    return("Error in InferenceTestSuite.test() while executing query: " + ex.getMessage());
                 }
                 String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
                 String outFilename = files[i].substring(0,files[i].length()-3) + "-res.html";
