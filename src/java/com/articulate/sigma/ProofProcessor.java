@@ -15,6 +15,7 @@ August 9, Acapulco, Mexico.
 
 import java.util.*;
 import java.io.*;
+import java.text.ParseException;
 
 /** Process results from the Vampire inference engine.
  */
@@ -152,6 +153,7 @@ public class ProofProcessor {
                 BasicXMLelement conclusion = (BasicXMLelement) step.subelements.get(1);
                 BasicXMLelement conclusionFormula = (BasicXMLelement) conclusion.subelements.get(0);
                 ProofStep processedStep = new ProofStep();
+                processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
                 processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
                 processedStep.axiom = removeAnswerClause(processedStep.axiom);
                 if (conclusionFormula.attributes.containsKey("number"))
@@ -182,5 +184,59 @@ public class ProofProcessor {
         else
             System.out.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
         return 0;
+    }
+
+    /** ***************************************************************
+    *  A main method, used only for testing.  It should not be called
+    *  during normal operation.
+    */
+    public static void main (String[] args) {
+
+       ArrayList translatedFormulae;
+
+       try {
+           FileReader r = new FileReader("xmltest.xml");
+           LineNumberReader lr = new LineNumberReader(r);
+           String line;
+           StringBuffer result = new StringBuffer();
+           while ((line = lr.readLine()) != null) {
+               result.append(line + "\n");
+               // System.out.println(line);
+           }
+
+           BasicXMLparser res = new BasicXMLparser(result.toString());
+           result = new StringBuffer();
+           ProofProcessor pp = new ProofProcessor(res.elements);
+           for (int i = 0; i < pp.numAnswers(); i++) {
+               ArrayList proofSteps = pp.getProofSteps(i);
+               proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
+               if (i != 0) 
+                   result.append("\n");
+               result.append("Answer " + "\n");
+               result.append(i+1);
+               result.append("\n");
+               result.append(". " + pp.returnAnswer(i) + "\n");
+               if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
+                   for (int j = 0; j < proofSteps.size(); j++) {
+                       result.append(((ProofStep) proofSteps.get(j)).formulaType);
+                       result.append(" ");
+                       result.append(((ProofStep) proofSteps.get(j)).number);
+                       result.append(" ");
+                       try {
+                           result.append(Formula.tptpParseSUOKIFString(
+(((ProofStep) proofSteps.get(j)).axiom)));                       
+                       } catch(ParseException e) {
+                           System.out.println(e.getMessage() + " in " +
+(((ProofStep) proofSteps.get(j)).axiom));
+                       }
+                       result.append("\n");
+                   }
+               }
+           }
+           System.out.println(result.toString());
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in ProofProcessor.main(): IOException: " + ioe.getMessage());
+        }     
     }
 }

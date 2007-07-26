@@ -19,6 +19,9 @@ import java.io.*;
  /** A trivial structure to hold the elements of a proof step. */
 public class ProofStep {
      
+     /** A String of the type clause or formula */
+    public String formulaType = null;
+
      /** A String containing a valid KIF expression, that is the axiom 
       *  expressing the conclusion of this proof step. */
     public String axiom = null;
