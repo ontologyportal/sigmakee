@@ -2215,7 +2215,7 @@ public class Formula implements Comparable {
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
      */
-    private String translateWord(StreamTokenizer_s st,boolean hasArguments) {
+    private static String translateWord(StreamTokenizer_s st,boolean hasArguments) {
 
 	int translateIndex;
 
@@ -2287,7 +2287,7 @@ public class Formula implements Comparable {
      * for which the arity is desired
      * @return the integer arity of the given logical operator
      */
-    private int operatorArity(StreamTokenizer_s st) {
+    private static int operatorArity(StreamTokenizer_s st) {
 
 	int translateIndex;
 	String kifOps[] = {"forall", "exists", "not", "and", "or", "=>", "<=>"};
@@ -2310,7 +2310,7 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      */
-    private void incrementTOS(Stack countStack) {
+    private static void incrementTOS(Stack countStack) {
 
 	countStack.push(new Integer((Integer)countStack.pop()+1));
     }
@@ -2319,7 +2319,7 @@ public class Formula implements Comparable {
      * Add the current token, if a variable, to the list of variables
      * @param variables is the list of variables
      */
-    private void addVariable(StreamTokenizer_s st,Vector variables) {
+    private static void addVariable(StreamTokenizer_s st,Vector variables) {
 
 	String tptpVariable;
 
@@ -2334,23 +2334,11 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Parse a single formula into TPTP format
      */
-    public void tptpParse( boolean query, KB kb ) throws ParseException, IOException {
-	this.tptpParse( query, kb, null );
-	return;
-    }
+    public static String tptpParseSUOKIFString(String suoString) 
+	throws ParseException, IOException {
 
-    /** ***************************************************************
-     * Parse a single formula into TPTP format
-     */
-    public void tptpParse( boolean query, KB kb, List preProcessedForms ) throws ParseException, IOException {
-
-	if (kb == null) 
-	    kb = new KB("",KBmanager.getMgr().getPref("kbDir"));
-      
-	//System.out.println("INFO in KIF.tptpParse(): formula: " + f.theFormula);
 	StreamTokenizer_s st;
 	int parenLevel;
-      
 	boolean inQuantifierVars;
 	boolean lastWasOpen;
 	boolean inHOL;
@@ -2362,12 +2350,215 @@ public class Formula implements Comparable {
 	int index;
 	int arity;
 	String quantification;
+	String translatedFormula = null;
 
-	List processed = null;
+	StringBuffer tptpFormula = new StringBuffer(suoString.length());
+
+	parenLevel = 0;
+	countStack.push(0);
+	lastWasOpen = false;
+	inQuantifierVars = false;
+	inHOL = false;
+	inHOLCount = 0;
+
+	st = new StreamTokenizer_s(new StringReader(suoString));
+	KIF.setupStreamTokenizer(st);
+
+	do {
+	    st.nextToken();
+	    //----Open bracket
+	    if (st.ttype==40) {
+		if (lastWasOpen) {    //----Should not have (( in KIF
+		    System.out.println("ERROR: Double open bracket at " + 
+				       tptpFormula);
+		    throw new ParseException("Parsing error in " + 
+					     suoString,0);
+		}
+		//----Track nesting of ()s for hol__, so I know when to close the '
+		if (inHOL) {
+		    inHOLCount++;
+		}
+		lastWasOpen = true;
+		parenLevel++;
+		//----Operators
+	    } else if (st.ttype == StreamTokenizer.TT_WORD && 
+		       (arity = operatorArity(st)) > 0) {
+		//----Operators must be preceded by a (
+		if (!lastWasOpen) {   
+		    System.out.println("ERROR: Missing ( before " + 
+				       st.sval + " at " + tptpFormula);
+		    return(null);
+		}
+		//----This is the start of a new term - put in the infix operator if not the
+		//----first term for this operator
+		if ((Integer)(countStack.peek()) > 0) 
+		    tptpFormula.append((String)operatorStack.peek()); 
+		//----If this is the start of a hol__ situation, quote it all
+		if (inHOL && inHOLCount == 1) 
+		    tptpFormula.append("'");
+		//----()s around all operator expressions
+		tptpFormula.append("(");      
+		//----Output unary as prefix
+		if (arity == 1) {
+		    tptpFormula.append(translateWord(st,false));
+		    //----Note the new operator (dummy) with 0 operands so far
+		    countStack.push(new Integer(0));
+		    operatorStack.push(",");
+		    //----Check if the next thing will be the quantified variables
+		    if (st.sval.equals("forall") || 
+			st.sval.equals("exists")) {
+			inQuantifierVars = true;
+		    }
+		    //----Binary operator
+		} else if (arity == 2) {
+		    //----Note the new operator with 0 operands so far
+		    countStack.push(new Integer(0));
+		    operatorStack.push(translateWord(st,false));
+		}
+		lastWasOpen = false;                      
+		//----Back tick - token translation to TPTP. Everything gets ''ed 
+	    } else if (st.ttype == 96) {
+		//----They may be nested - only start the situation at the outer one
+		if (!inHOL) {
+		    inHOL = true;
+		    inHOLCount = 0;
+		}
+		//----Quote - Term token translation to TPTP
+	    } else if (st.ttype == 34 ||
+		       st.ttype == StreamTokenizer.TT_NUMBER || 
+		       (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
+		       st.ttype == StreamTokenizer.TT_WORD) {                              
+		//----Start of a predicate or variable list
+		if (lastWasOpen) {
+		    //----Variable list
+		    if (inQuantifierVars) {
+			tptpFormula.append("[");
+			tptpFormula.append(translateWord(st,false));
+			incrementTOS(countStack);
+			//----Predicate
+		    } else {
+			//----This is the start of a new term - put in the infix operator if not the
+			//----first term for this operator
+			if ((Integer)(countStack.peek()) > 0) 
+			    tptpFormula.append((String)operatorStack.peek());
+			//----If this is the start of a hol__ situation, quote it all
+			if (inHOL && inHOLCount == 1) 
+			    tptpFormula.append("'");
+			//----Predicate of function and (
+			tptpFormula.append(translateWord(st,true));
+			tptpFormula.append("(");
+			//----Note the , for between arguments with 0 arguments so far
+			countStack.push(new Integer(0));
+			operatorStack.push(",");
+		    }
+		    //----Argument or quantified variable
+		} else {
+		    //----This is the start of a new term - put in the infix operator if not the
+		    //----first term for this operator
+		    if ((Integer)(countStack.peek()) > 0) {
+			tptpFormula.append((String)operatorStack.peek());
+		    }
+		    //----Output the word
+		    tptpFormula.append(translateWord(st,false));
+		    //----Increment counter for this level
+		    incrementTOS(countStack);
+		}
+		//----Collect variables that are used and quantified
+		if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
+		    if (inQuantifierVars) {
+			addVariable(st,quantifiedVariables);
+		    } else {
+			addVariable(st,allVariables);
+		    }
+		}
+		lastWasOpen = false; 
+		//----Close bracket.
+	    } else if (st.ttype==41) {
+		//----Track nesting of ()s for hol__, so I know when to close the '
+		if (inHOL) 
+		    inHOLCount--;
+		//----End of quantified variable list
+		if (inQuantifierVars) {
+		    //----Fake restarting the argument list because the quantified variable list
+		    //----does not use the operator from the surrounding expression
+		    countStack.pop();
+		    countStack.push(0);
+		    tptpFormula.append("] : ");
+		    inQuantifierVars = false;
+		    //----End of predicate or operator list
+		} else {
+		    //----Pop off the stacks to reveal the next outer layer
+		    countStack.pop();
+		    operatorStack.pop();
+		    //----Close the expression
+		    tptpFormula.append(")");  
+		    //----If this closes a HOL expression, close the '
+		    if (inHOL && inHOLCount == 0) {
+			tptpFormula.append("'");
+			inHOL = false;
+		    }
+		    //----Note that another expression has been completed
+		    incrementTOS(countStack);
+		}
+		lastWasOpen = false;
+              
+		parenLevel--;
+		//----End of the statement being processed. Universally quantify free variables
+		if (parenLevel == 0) {
+		    //findFreeVariables(allVariables,quantifiedVariables);
+		    allVariables.removeAll(quantifiedVariables);
+		    if (allVariables.size() > 0) {
+			quantification = "! [";
+			for (index = 0;index < allVariables.size();index++) {
+			    if (index > 0) {
+				quantification += ",";
+			    }
+			    quantification += 
+				(String)allVariables.elementAt(index);
+			}
+			quantification += "] : ";
+			tptpFormula.insert(0,"( " + quantification);
+			tptpFormula.append(" )");
+		    }
+		    if (translatedFormula == null) {
+			translatedFormula = "( " + tptpFormula.toString() + " )";
+		    } else {
+			translatedFormula += "& ( " + tptpFormula.toString() + 
+			    " )";
+		    }
+		    if ((Integer)(countStack.pop()) != 1) {
+			System.out.println(
+					   "Error in KIF.tptpParse(): Not one formula");
+		    }
+		} else if (parenLevel < 0) {
+		    System.out.print("ERROR: Extra closing bracket at " + 
+				     tptpFormula.toString());
+		    throw new ParseException("Parsing error in " + 
+					     suoString,0);
+		}                  
+	    } else if (st.ttype != StreamTokenizer.TT_EOF) {
+		System.out.println("ERROR: Illegal character '" +
+				   (char)st.ttype + "' at " + tptpFormula.toString());
+		throw new ParseException("Parsing error in " + 
+					 suoString,0);
+	    }              
+	} while (st.ttype != StreamTokenizer.TT_EOF);
+	return(translatedFormula);
+    }
+    /** ***************************************************************
+     * Parse formulae into TPTP format
+     */
+    public void tptpParse( boolean query, KB kb, List preProcessedForms ) throws ParseException, IOException {
+
+	if (kb == null) 
+	    kb = new KB("",KBmanager.getMgr().getPref("kbDir"));
+      
+	//System.out.println("INFO in KIF.tptpParse(): formula: " + f.theFormula);
+      
+	List processed;
 	if ( preProcessedForms != null ) {
 	    processed = preProcessedForms;
-	}
-	if ( processed == null ) {
+	} else {
 	    processed = preProcess( query, kb );
 	}
 	this.clearTheTptpFormulas();	
@@ -2376,201 +2567,18 @@ public class Formula implements Comparable {
 	//----Peforms function on each current processed axiom
 	while (g.hasNext()) {
 	    Object next = g.next();
-	    Formula p = (Formula) next;
-	    //System.out.println("INFO in KIF.tptpParse(): ##############");
-	    //System.out.println("INFO in KIF.tptpParse(): " + f.theFormula);
-	    //System.out.println("INFO in KIF.tptpParse(): --------------");
-	    //System.out.println("INFO in KIF.tptpParse(): " + p.theFormula);
- 
-	    st = new StreamTokenizer_s(new StringReader(p.theFormula));
-	    KIF.setupStreamTokenizer(st);
-
-	    StringBuffer tptpFormula = new StringBuffer(p.theFormula.length());
-	    parenLevel = 0;
-	    countStack.push(0);
-	    lastWasOpen = false;
-	    inQuantifierVars = false;
-	    inHOL = false;
-	    inHOLCount = 0;
-
-	    do {
-		st.nextToken();
-		//----Open bracket
-		if (st.ttype==40) {
-		    if (lastWasOpen) {    //----Should not have (( in KIF
-			System.out.println("ERROR: Double open bracket at " + 
-					   tptpFormula);
-			throw new ParseException("Parsing error in " + 
-						 p.theFormula,startLine);
-		    }
-		    //----Track nesting of ()s for hol__, so I know when to close the '
-		    if (inHOL) {
-			inHOLCount++;
-		    }
-		    lastWasOpen = true;
-		    parenLevel++;
-		    //----Operators
-		} else if (st.ttype == StreamTokenizer.TT_WORD && 
-			   (arity = operatorArity(st)) > 0) {
-		    //----Operators must be preceded by a (
-		    if (!lastWasOpen) {   
-			System.out.println("ERROR: Missing ( before " + 
-					   st.sval + " at " + tptpFormula);
-			return;
-		    }
-		    //----This is the start of a new term - put in the infix operator if not the
-		    //----first term for this operator
-		    if ((Integer)(countStack.peek()) > 0) 
-			tptpFormula.append((String)operatorStack.peek()); 
-		    //----If this is the start of a hol__ situation, quote it all
-		    if (inHOL && inHOLCount == 1) 
-			tptpFormula.append("'");
-		    //----()s around all operator expressions
-		    tptpFormula.append("(");      
-		    //----Output unary as prefix
-		    if (arity == 1) {
-			tptpFormula.append(translateWord(st,false));
-			//----Note the new operator (dummy) with 0 operands so far
-			countStack.push(new Integer(0));
-			operatorStack.push(",");
-			//----Check if the next thing will be the quantified variables
-			if (st.sval.equals("forall") || 
-			    st.sval.equals("exists")) {
-			    inQuantifierVars = true;
-			}
-			//----Binary operator
-		    } else if (arity == 2) {
-			//----Note the new operator with 0 operands so far
-			countStack.push(new Integer(0));
-			operatorStack.push(translateWord(st,false));
-		    }
-		    lastWasOpen = false;                      
-		    //----Back tick - token translation to TPTP. Everything gets ''ed 
-		} else if (st.ttype == 96) {
-		    //----They may be nested - only start the situation at the outer one
-		    if (!inHOL) {
-			inHOL = true;
-			inHOLCount = 0;
-		    }
-		    //----Quote - Term token translation to TPTP
-		} else if (st.ttype == 34 ||
-			   st.ttype == StreamTokenizer.TT_NUMBER || 
-			   (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
-			   st.ttype == StreamTokenizer.TT_WORD) {                              
-		    //----Start of a predicate or variable list
-		    if (lastWasOpen) {
-			//----Variable list
-			if (inQuantifierVars) {
-			    tptpFormula.append("[");
-			    tptpFormula.append(translateWord(st,false));
-			    incrementTOS(countStack);
-			    //----Predicate
-			} else {
-			    //----This is the start of a new term - put in the infix operator if not the
-			    //----first term for this operator
-			    if ((Integer)(countStack.peek()) > 0) 
-				tptpFormula.append((String)operatorStack.peek());
-			    //----If this is the start of a hol__ situation, quote it all
-			    if (inHOL && inHOLCount == 1) 
-				tptpFormula.append("'");
-			    //----Predicate of function and (
-			    tptpFormula.append(translateWord(st,true));
-			    tptpFormula.append("(");
-			    //----Note the , for between arguments with 0 arguments so far
-			    countStack.push(new Integer(0));
-			    operatorStack.push(",");
-			}
-			//----Argument or quantified variable
-		    } else {
-			//----This is the start of a new term - put in the infix operator if not the
-			//----first term for this operator
-			if ((Integer)(countStack.peek()) > 0) {
-			    tptpFormula.append((String)operatorStack.peek());
-			}
-			//----Output the word
-			tptpFormula.append(translateWord(st,false));
-			//----Increment counter for this level
-			incrementTOS(countStack);
-		    }
-		    //----Collect variables that are used and quantified
-		    if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
-			if (inQuantifierVars) {
-			    addVariable(st,quantifiedVariables);
-			} else {
-			    addVariable(st,allVariables);
-			}
-		    }
-		    lastWasOpen = false; 
-		    //----Close bracket.
-		} else if (st.ttype==41) {
-		    //----Track nesting of ()s for hol__, so I know when to close the '
-		    if (inHOL) 
-			inHOLCount--;
-		    //----End of quantified variable list
-		    if (inQuantifierVars) {
-			//----Fake restarting the argument list because the quantified variable list
-			//----does not use the operator from the surrounding expression
-			countStack.pop();
-			countStack.push(0);
-			tptpFormula.append("] : ");
-			inQuantifierVars = false;
-			//----End of predicate or operator list
-		    } else {
-			//----Pop off the stacks to reveal the next outer layer
-			countStack.pop();
-			operatorStack.pop();
-			//----Close the expression
-			tptpFormula.append(")");  
-			//----If this closes a HOL expression, close the '
-			if (inHOL && inHOLCount == 0) {
-			    tptpFormula.append("'");
-			    inHOL = false;
-			}
-			//----Note that another expression has been completed
-			incrementTOS(countStack);
-		    }
-		    lastWasOpen = false;
-                  
-		    parenLevel--;
-		    //----End of the statement being processed. Universally quantify free variables
-		    if (parenLevel == 0) {
-			//findFreeVariables(allVariables,quantifiedVariables);
-			allVariables.removeAll(quantifiedVariables);
-			if (allVariables.size() > 0) {
-			    quantification = "! [";
-			    for (index = 0;index < allVariables.size();index++) {
-				if (index > 0) {
-				    quantification += ",";
-				}
-				quantification += 
-				    (String)allVariables.elementAt(index);
-			    }
-			    quantification += "] : ";
-			    tptpFormula.insert(0,"( " + quantification);
-			    tptpFormula.append(" )");
-			}
-			//----Adds the final TPTP formula to the formula list and resets 
-			//----variables
-			getTheTptpFormulas().add( "( " + tptpFormula.toString() + " )" );
-			if ((Integer)(countStack.pop()) != 1) {
-			    System.out.println(
-					       "Error in KIF.tptpParse(): Not one formula");
-			}
-		    } else if (parenLevel < 0) {
-			System.out.print("ERROR: Extra closing bracket at " + 
-					 tptpFormula.toString());
-			throw new ParseException("Parsing error in " + 
-						 p.theFormula,startLine);
-		    }                  
-		} else if (st.ttype != StreamTokenizer.TT_EOF) {
-		    System.out.println("ERROR: Illegal character '" +
-				       (char)st.ttype + "' at " + tptpFormula.toString());
-		    throw new ParseException("Parsing error in " + 
-					     p.theFormula,startLine);
-		}              
-	    } while (st.ttype != StreamTokenizer.TT_EOF);
+	    Formula f = (Formula) next;
+	    getTheTptpFormulas().add(tptpParseSUOKIFString(f.theFormula));
 	}
     }
+    /** ***************************************************************
+     * Parse formulae into TPTP format
+     */
+    public void tptpParse( boolean query, KB kb ) throws ParseException, IOException {
+	this.tptpParse( query, kb, null );
+	return;
+    }
+
 
     ///////////////////////////////////////////////////////
     /*
@@ -4602,119 +4610,119 @@ public class Formula implements Comparable {
      */
     public static void main(String[] args) {
 
-	FileWriter fw = null;
-	try {
-	    long t1 = System.currentTimeMillis();
-	    int count = 0;
-	    String inpath = args[0];
-	    String outpath = args[1];
-	    if ( isNonEmptyString(inpath) && isNonEmptyString(outpath) ) {
-		File infile = new File( inpath );
-		if ( infile.exists() ) {
-		    KIF kif = new KIF();
-		    kif.setParseMode( KIF.RELAXED_PARSE_MODE );
-		    kif.readFile( infile.getCanonicalPath() );
-		    if ( ! kif.formulas.isEmpty() ) {
-			File outfile = new File( outpath );
-			if ( outfile.exists() ) { outfile.delete(); }
-			fw = new FileWriter( outfile, true );
-			Iterator it = kif.formulas.values().iterator();
-			Iterator it2 = null;
-			Formula f = null;
-			Formula clausalForm = null;
-			while ( it.hasNext() ) {
-			    it2 = ((List) it.next()).iterator();
-			    while ( it2.hasNext() ) {
-				f = (Formula) it2.next();
-				clausalForm = f.clausify();
-				if ( clausalForm != null ) {
-				    fw.write( clausalForm.theFormula );
-				    fw.write( "\n" );
-				    count++;
-				}
-			    }
-			}
-			fw.close();
-			fw = null;
-		    }
-		}
-	    }
-	    long dur = (System.currentTimeMillis() - t1);
-	    System.out.println( count 
-				+ " clausal forms written in "
-				+ (dur / 1000.0)
-				+ " seconds" );
+	/*
+	  FileWriter fw = null;
+	  try {
+	  long t1 = System.currentTimeMillis();
+	  int count = 0;
+	  String inpath = args[0];
+	  String outpath = args[1];
+	  if ( isNonEmptyString(inpath) && isNonEmptyString(outpath) ) {
+	  File infile = new File( inpath );
+	  if ( infile.exists() ) {
+	  KIF kif = new KIF();
+	  kif.setParseMode( KIF.RELAXED_PARSE_MODE );
+	  kif.readFile( infile.getCanonicalPath() );
+	  if ( ! kif.formulas.isEmpty() ) {
+	  File outfile = new File( outpath );
+	  if ( outfile.exists() ) { outfile.delete(); }
+	  fw = new FileWriter( outfile, true );
+	  Iterator it = kif.formulas.values().iterator();
+	  Iterator it2 = null;
+	  Formula f = null;
+	  Formula clausalForm = null;
+	  while ( it.hasNext() ) {
+	  it2 = ((List) it.next()).iterator();
+	  while ( it2.hasNext() ) {
+	  f = (Formula) it2.next();
+	  clausalForm = f.clausify();
+	  if ( clausalForm != null ) {
+	  fw.write( clausalForm.theFormula );
+	  fw.write( "\n" );
+	  count++;
+	  }
+	  }
+	  }
+	  fw.close();
+	  fw = null;
+	  }
+	  }
+	  }
+	  long dur = (System.currentTimeMillis() - t1);
+	  System.out.println( count 
+	  + " clausal forms written in "
+	  + (dur / 1000.0)
+	  + " seconds" );
+	  }
+	  catch ( Exception ex ) {
+	  ex.printStackTrace();
+	  }
+	  finally {
+	  if ( fw != null ) {
+	  try {
+	  fw.close();
+	  }
+	  catch ( Exception e2 ) {
+	  e2.printStackTrace();
+	  }
+	  }
+	  return;
+	  }
+	*/
+
+	String[] strArr = 
+	    { "(forall (?X) (=> (forall (?Y) (P ?X ?Y)) (not (forall (?Y) (=> (Q ?X ?Y) (R ?X ?Y))))))",
+
+	      "TRUE",
+
+	      "FALSE",
+
+	      "(or (instance ?X ?Y) (instance ?X ?Z) (not (instance ?Y Class)) (not (instance ?Z Class)))",
+
+	      "(acquainted GeorgeWBush DickCheney)",
+
+	      "(instance a b)",
+
+	      "(or a b (and c d) (and e f))",
+
+	      "(exists (?X ?Y) (and (instance ?X Man) (instance ?Y Canine) (possesses ?X ?Y)))",
+
+	      "(=> (instance ?X Animal) (not (exists (?Y) (and (instance ?Y Crankshaft) (part ?Y ?X)))))",
+
+	      "(=> (inverse ?REL1 ?REL2) (forall (?INST1 ?INST2) (<=> (holds ?REL1 ?INST1 ?INST2) (holds ?REL2 ?INST2 ?INST1))))",
+
+	      "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))",
+
+	      "(=> (and (disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (holds ?REL1 @ROW2)) (not (holds ?REL2 @ROW2)))",
+
+	      "(=> (inverse ?REL1 ?REL2) (forall (?INST1 ?INST2) (<=> (?REL1 ?INST1 ?INST2) (?REL2 ?INST2 ?INST1))))",
+
+	      "(<=> (instance ?REL TotalValuedRelation) (exists (?VALENCE) (and (instance ?REL Relation) (valence ?REL ?VALENCE) (=> (forall (?NUMBER ?ELEMENT ?CLASS) (=> (and (lessThan ?NUMBER ?VALENCE) (domain ?REL ?NUMBER ?CLASS) (equal ?ELEMENT (ListOrderFn (ListFn @ROW) ?NUMBER))) (instance ?ELEMENT ?CLASS))) (exists (?ITEM) (holds ?REL @ROW ?ITEM))))))"
+	    };
+		
+	for ( int i = 0 ; i < strArr.length ; i++ ) {
+	    System.out.println();
+	    System.out.println( "OLD " + i + ": " + strArr[i] );
+	    System.out.println();
+	    Formula f = new Formula();
+	    f.read( strArr[i] );
+	    System.out.println();
+	    // System.out.println( "NEW " + i + ": " + f.clausifyWithRenameInfo() );
+	    // System.out.println( "NEW " + i + ": " + f.clausify() );
+	    // System.out.println( "NEW " + i + ": " + f.clausify().operatorsOut() );
+	    System.out.println();
+	    System.out.println( "PREP " + i + ": " + f.prepareIndexedQueryLiterals() );
+	    System.out.println();
 	}
-	catch ( Exception ex ) {
-	    ex.printStackTrace();
-	}
-	finally {
-	    if ( fw != null ) {
-		try {
-		    fw.close();
-		}
-		catch ( Exception e2 ) {
-		    e2.printStackTrace();
-		}
-	    }
-	    return;
+
+	for ( int i = 0 ; i < strArr.length ; i++ ) {
+	    Formula f = new Formula();
+	    f.read( strArr[i] );
+	    System.out.println();
+	    f.gatherPredVars();
+	    System.out.println();
 	}
     }
-
-    /*
-      String[] strArr = 
-      { "(forall (?X) (=> (forall (?Y) (P ?X ?Y)) (not (forall (?Y) (=> (Q ?X ?Y) (R ?X ?Y))))))",
-
-      "TRUE",
-
-      "FALSE",
-
-      "(or (instance ?X ?Y) (instance ?X ?Z) (not (instance ?Y Class)) (not (instance ?Z Class)))",
-
-      "(acquainted GeorgeWBush DickCheney)",
-
-      "(instance a b)",
-
-      "(or a b (and c d) (and e f))",
-
-      "(exists (?X ?Y) (and (instance ?X Man) (instance ?Y Canine) (possesses ?X ?Y)))",
-
-      "(=> (instance ?X Animal) (not (exists (?Y) (and (instance ?Y Crankshaft) (part ?Y ?X)))))",
-
-      "(=> (inverse ?REL1 ?REL2) (forall (?INST1 ?INST2) (<=> (holds ?REL1 ?INST1 ?INST2) (holds ?REL2 ?INST2 ?INST1))))",
-
-      "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))",
-
-      "(=> (and (disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (holds ?REL1 @ROW2)) (not (holds ?REL2 @ROW2)))",
-
-      "(=> (inverse ?REL1 ?REL2) (forall (?INST1 ?INST2) (<=> (?REL1 ?INST1 ?INST2) (?REL2 ?INST2 ?INST1))))",
-
-      "(<=> (instance ?REL TotalValuedRelation) (exists (?VALENCE) (and (instance ?REL Relation) (valence ?REL ?VALENCE) (=> (forall (?NUMBER ?ELEMENT ?CLASS) (=> (and (lessThan ?NUMBER ?VALENCE) (domain ?REL ?NUMBER ?CLASS) (equal ?ELEMENT (ListOrderFn (ListFn @ROW) ?NUMBER))) (instance ?ELEMENT ?CLASS))) (exists (?ITEM) (holds ?REL @ROW ?ITEM))))))"
-      };
-		
-      for ( int i = 0 ; i < strArr.length ; i++ ) {
-      System.out.println();
-      System.out.println( "OLD " + i + ": " + strArr[i] );
-      System.out.println();
-      Formula f = new Formula();
-      f.read( strArr[i] );
-      System.out.println();
-      // System.out.println( "NEW " + i + ": " + f.clausifyWithRenameInfo() );
-      // System.out.println( "NEW " + i + ": " + f.clausify() );
-      // System.out.println( "NEW " + i + ": " + f.clausify().operatorsOut() );
-      System.out.println();
-      System.out.println( "PREP " + i + ": " + f.prepareIndexedQueryLiterals() );
-      System.out.println();
-      }
-
-      for ( int i = 0 ; i < strArr.length ; i++ ) {
-      Formula f = new Formula();
-      f.read( strArr[i] );
-      System.out.println();
-      f.gatherPredVars();
-      System.out.println();
-      }
-    */
 
     /*
       KB kb = new KB("C:\\SourceForge\\KBs\\Merge.kif","");
