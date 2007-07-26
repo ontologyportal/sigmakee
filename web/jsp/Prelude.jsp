@@ -9,7 +9,8 @@
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <%
- if (KBmanager.getMgr().getPref("userName") == null && request.getParameter("userName") == null) { %>
+ if ( !Formula.isNonEmptyString(KBmanager.getMgr().getPref("userName"))
+      && !Formula.isNonEmptyString(request.getParameter("userName")) ) { %>
 
  <META HTTP-EQUIV="Refresh" CONTENT="0; URL=login.html">
  <%
