@@ -53,7 +53,7 @@ public class KBmanager {
     private static KBmanager manager = new KBmanager();
     private HashMap preferences = new HashMap();
 
-    private HashMap kbs = new HashMap();
+    protected HashMap kbs = new HashMap();
     private boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
@@ -389,12 +389,16 @@ public class KBmanager {
     public Set getKBnames() {
         return kbs.keySet();
     }
-    
+
     /** ***************************************************************
      * Get the preference corresponding to the given kef.
-     */    
+     */
     public String getPref(String key) {
-        return (String) preferences.get(key);
+	String ans = (String) preferences.get(key);
+	if ( ans == null ) {
+	    ans = "";
+	}
+	return ans;
     }
     
     /** ***************************************************************
