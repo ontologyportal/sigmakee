@@ -2495,7 +2495,7 @@ public class KB {
 
 		System.out.println( "INFO in KB.loadVampire(): preprocessing " + formulaMap.size() + " formulas" );
 
-		TreeSet forms = preProcess( formulaMap.keySet() );
+		TreeSet forms = preProcess( getFormulas() );
 		String filename = writeInferenceEngineFormulas(forms);
 		boolean vFileSaved = Formula.isNonEmptyString(filename);
 		if ( vFileSaved ) {
@@ -2916,21 +2916,25 @@ public class KB {
 			       ",conjecture,(" + theTPTPFormula + ")).");
 		}
 	    }
+	    if ( pr != null ) {
+		pr.flush();
+	    }
 	    result = fileName;
 	}
 	catch ( Exception e ) {
 	    System.out.println( "Error in KB.writeTPTPFile(): " + e.getMessage() );
 	    e.printStackTrace();
 	}
-	if ( pr != null)  {
-	    try {
-		pr.close();
+	finally {
+	    if ( pr != null)  {
+		try {
+		    pr.close();
+		}
+		catch ( Exception e1 ) {
+		}
 	    }
-	    catch ( Exception e1 ) {
-	    }
+	    return result;
 	}
-
-	return result;
     }
 
     /** *************************************************************
@@ -2981,65 +2985,75 @@ public class KB {
     }
 
     /** *************************************************************
-     * A test method.
+     * This method currently takes one command-line argument, which
+     * should be the absolute pathname of the directory in which the
+     * source Merge,kif file is located.  The resulting tptp file will
+     * be named TPTP-TEST-KB.tptp, and will be written to the same
+     * directory.
      */
-    public static void main (String args[]) {
+    public static void main (String[] args) {
 
 	try {
-	    KBmanager mgr = KBmanager.getMgr();
-	    if ( mgr != null ) {
-		mgr.initializeOnce();
+	    if ( args[0] == null ) {
+		System.out.println( "Usage: java -classpath <path> com.articulate.sigma.KB <kb-dir>" );
+		System.exit( 1 );
 	    }
 
-	    KB kb = new KB("PV-TEST","c:\\nsiegel\\articulate\\work\\inference");
-	    // KB kb = new KB("PV-TEST","/Users/nsiegel/articulate/work/inference");
+	    KBmanager mgr = KBmanager.getMgr();
 
-	    kb.addConstituent("c:\\nsiegel\\articulate\\work\\KBs\\Merge.kif");
-	    // kb.addConstituent("/Users/nsiegel/articulate/work/KBs/Merge.kif");
-	    // kb.addConstituent("c:\\nsiegel\\articulate\\work\\KBs\\Mid-level-ontology.kif");
-        
+	    // These three parameters, along with the consituent
+	    // (.kif) files loaded, determine the set of SUO-KIF
+	    // assertions that will serve as the source for a
+	    // translation of the KB to TPTP.
+	    mgr.setPref("holdsPrefix", "no");
+	    mgr.setPref("typePrefix", "no");
+	    mgr.setPref("cache", "no");
 
-	    kb.cache();
-        
-	    System.out.println();
-	    String[] strArr = 
-		{ "(forall (?X) (=> (forall (?Y) (P ?X ?Y)) (not (forall (?Y) (=> (Q ?X ?Y) (R ?X ?Y))))))",
+	    // This parameter determines if the entire KB will be
+	    // translated to TPTP as part of the loading and
+	    // processing of the .kif constituent files.
+	    mgr.setPref("TPTP", "yes");
 
-		  "TRUE",
+	    mgr.setPref("inferenceEngine", null);
 
-		  "FALSE",
+	    mgr.setPref("kbDir", args[0]);
 
-		  "(or (instance ?X ?Y) (instance ?X ?Z) (not (instance ?Y Class)) (not (instance ?Z Class)))",
+	    mgr.kbs.clear();
 
-		  "(acquainted GeorgeWBush DickCheney)",
+	    mgr.addKB("TPTP-TEST-KB");
+	    
+	    KB kb = mgr.getKB("TPTP-TEST-KB");
 
-		  "(instance a b)",
+	    kb.constituents.clear();
 
-		  "(or a b (and c d) (and e f))",
+	    File kbDir = new File(mgr.getPref("kbDir"));
+	    
+	    File kifFileToLoad = new File(kbDir, "Merge.kif");	    
 
-		  "(=> (instance ?X Animal) (not (exists (?Y) (and (instance ?Y Crankshaft) (part ?Y ?X)))))",
+	    kb.addConstituent( kifFileToLoad.getCanonicalPath(),
 
-		  "(=> (inverse ?REL1 ?REL2) (forall (?INST1 ?INST2) (<=> (holds ?REL1 ?INST1 ?INST2) (holds ?REL2 ?INST2 ?INST1))))",
+			       // Compute caches of "virtual" assertions,
+			       true, 
 
-		  "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))",
+			       // Don't write a file of processed
+			       // SUO-KIF formulas for the inference
+			       // engine, and don't try to start an
+			       // inference engine process.
+			       false  
+			       );
 
-		  "(=> (and (disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (holds ?REL1 @ROW2)) (not (holds ?REL2 @ROW2)))",
+	    // 
+	    kb.preProcess( kb.getFormulas() );
 
-		  "(<=> (instance ?REL TotalValuedRelation) (exists (?VALENCE) (and (instance ?REL Relation) (valence ?REL ?VALENCE) (=> (forall (?NUMBER ?ELEMENT ?CLASS) (=> (and (lessThan ?NUMBER ?VALENCE) (domain ?REL ?NUMBER ?CLASS) (equal ?ELEMENT (ListOrderFn (ListFn @ROW) ?NUMBER))) (instance ?ELEMENT ?CLASS))) (exists (?ITEM) (holds ?REL @ROW ?ITEM))))))"
-		};
-		
-	    for ( int i = 0 ; i < strArr.length ; i++ ) {	    
-		System.out.println();
-		System.out.println( "INPUT " + i + ": " + strArr[i] );
-		System.out.println();
-		Formula f = new Formula();
-		f.read( strArr[i] );
-		System.out.println();
-		// System.out.println( "NEW " + i + ": " + f.clausifyWithRenameInfo().toString() );
-		// System.out.println( "NEW " + i + ": " + f.clausify().toString() );
-		// System.out.println( "NEW " + i + ": " + f.clausify().operatorsOut().toString() );
-		System.out.println( "OUTPUT " + i + ": " + f.expandRowVars(kb) );
-		System.out.println();
+	    File tptpFile = new File(kbDir, kb.name + ".tptp");
+
+	    String fileWritten = kb.writeTPTPFile( tptpFile.getCanonicalPath(), null, false, "none" );
+
+	    if ( Formula.isNonEmptyString(fileWritten) ) {
+		System.out.println( "File written: " + fileWritten );
+	    }
+	    else {
+		System.out.println( "Could not write " + tptpFile.getCanonicalPath() );
 	    }
 	}
 	catch ( Exception e ) {

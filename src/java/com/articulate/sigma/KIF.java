@@ -60,8 +60,10 @@ public class KIF {
 
     /** The set of all terms in the knowledge base.  This is a set of Strings. */
     public TreeSet terms = new TreeSet();
+
     /** A HashMap of ArrayLists of Formulas.  @see KIF.createKey for key format. */
     public HashMap formulas = new HashMap();    
+
     /** A "raw" HashSet of unique Strings which are the formulas from the file without 
      *  any further processing, in the order which they appear in the file. */
     public LinkedHashSet formulaSet = new LinkedHashSet();
@@ -510,10 +512,10 @@ public class KIF {
     }
 
     /** ***************************************************************
-     * Test method for this class.  Currently, it write the TPTP output
+     * Test method for this class.  Currently, it writes the TPTP output
      * to a file.
      */
-    public static void main(String args[]) throws IOException {
+    public static void main(String[] args) throws IOException {
 
 	Iterator it;
 	KIF kifp = new KIF();
@@ -548,30 +550,36 @@ public class KIF {
 
 	fw = null;
 	pw = null;
-	File fil = new File(args[0] + ".tptp");
+	File outfile = new File(args[0] + ".tptp");
 
 	try {
-	    fw = new FileWriter(fil);
+	    fw = new FileWriter(outfile);
 	    pw = new PrintWriter(fw);
 
-	    it = kifp.tptpFormulaSet.iterator();
+	    it = kifp.formulaSet.iterator();
 	    while (it.hasNext()) {
 		axiomCount++;
 		form = (String) it.next();
+		form = Formula.tptpParseSUOKIFString( form );
 		form = "fof(axiom" + axiomCount + ",axiom,(" + form + ")).";
 		if (form.indexOf('"') < 0 && form.indexOf('\'') < 0) 
 		    pw.println(form + '\n');
 	    }
 	}
-	catch (java.io.IOException e) {
-	    throw new IOException("Error writing file " + fil + "\n" + e.getMessage());
+	catch ( Exception ex ) {
+	    System.out.println( "Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage() );
+	    ex.printStackTrace();
 	}
 	finally {
-	    if (pw != null) {
-		pw.close();
+	    try {
+		if (pw != null) {
+		    pw.close();
+		}
+		if (fw != null) {
+		    fw.close();
+		}
 	    }
-	    if (fw != null) {
-		fw.close();
+	    catch ( Exception e3 ) {
 	    }
 	}
     }
