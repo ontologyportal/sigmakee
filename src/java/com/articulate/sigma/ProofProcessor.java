@@ -187,21 +187,60 @@ public class ProofProcessor {
     }
 
     /** ***************************************************************
+     * Convert XML proof to TPTP format
+     */
+    public static String tptpProof(ArrayList proofSteps) 
+throws IOException {
+
+        StringBuffer result = new StringBuffer();
+
+        for (int j = 0; j < proofSteps.size(); j++) {
+            ProofStep step = (ProofStep) proofSteps.get(j);
+            boolean isLeaf = step.premises.isEmpty() || 
+(step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
+//DEBUG result.append(step.formulaType);
+//----All are fof because the conversion from SUO-KIF quantifies the variables
+            result.append("fof(");
+            result.append(step.number);
+            result.append(",");
+            if (isLeaf) {
+                result.append("axiom");
+            } else {
+                result.append("plain");
+            }
+            result.append(",");
+//DEBUG System.out.println("===\n" + step.axiom);
+            try {
+                result.append(Formula.tptpParseSUOKIFString(step.axiom));                       
+            } catch(ParseException e) {
+                System.out.println(e.getMessage() + " in " + step.axiom);
+            }
+            if (!isLeaf) {
+                result.append(",inference(rule,[],[" + step.premises.get(0));
+                for (int parent = 1; parent < step.premises.size(); parent++) {
+                    result.append("," + step.premises.get(parent));
+                }
+                result.append("])");
+            }
+            result.append("  ).\n");
+        }
+
+        return(result.toString());
+    }
+    /** ***************************************************************
     *  A main method, used only for testing.  It should not be called
     *  during normal operation.
     */
     public static void main (String[] args) {
 
-       ArrayList translatedFormulae;
-
        try {
-           FileReader r = new FileReader("xmltest.xml");
+           FileReader r = new FileReader(args[0]);
            LineNumberReader lr = new LineNumberReader(r);
            String line;
            StringBuffer result = new StringBuffer();
            while ((line = lr.readLine()) != null) {
                result.append(line + "\n");
-               // System.out.println(line);
+//DEBUG System.out.println(line);
            }
 
            BasicXMLparser res = new BasicXMLparser(result.toString());
@@ -210,27 +249,13 @@ public class ProofProcessor {
            for (int i = 0; i < pp.numAnswers(); i++) {
                ArrayList proofSteps = pp.getProofSteps(i);
                proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
-               if (i != 0) 
+               if (i != 0) {
                    result.append("\n");
-               result.append("Answer " + "\n");
-               result.append(i+1);
-               result.append("\n");
-               result.append(". " + pp.returnAnswer(i) + "\n");
+               }
+               result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i) +
+"\n");
                if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
-                   for (int j = 0; j < proofSteps.size(); j++) {
-                       result.append(((ProofStep) proofSteps.get(j)).formulaType);
-                       result.append(" ");
-                       result.append(((ProofStep) proofSteps.get(j)).number);
-                       result.append(" ");
-                       try {
-                           result.append(Formula.tptpParseSUOKIFString(
-(((ProofStep) proofSteps.get(j)).axiom)));                       
-                       } catch(ParseException e) {
-                           System.out.println(e.getMessage() + " in " +
-(((ProofStep) proofSteps.get(j)).axiom));
-                       }
-                       result.append("\n");
-                   }
+                   result.append(tptpProof(proofSteps));
                }
            }
            System.out.println(result.toString());

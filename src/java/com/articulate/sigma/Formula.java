@@ -2222,21 +2222,24 @@ public class Formula implements Comparable {
 	String kifOps[] = {"forall", "exists", "not", "and", "or", "=>", "<=>"};
 	String tptpOps[] = {"! ", "? ", "~ ", " & ", " | " ," => " , " <=> "};
 
-	String kifPredicates[] = {"equal","<=","<",">",">=",
-				  "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo"};
+	String kifPredicates[] = {"TRUE","FALSE",
+"equal","<=","<",">",">=",
+"lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo"};
 
-	String tptpPredicates[] = {"equal","lesseq","less","greater","greatereq",
-				   "lesseq","less","greater","greatereq"};
+	String tptpPredicates[] = {"$true","$false",
+"equal","lesseq","less","greater","greatereq",
+"lesseq","less","greater","greatereq"};
 
 	String kifFunctions[] = {"MultiplicationFn", "DivisionFn", "AdditionFn", "SubtractionFn"};
 	String tptpFunctions[] = {"times","divide","plus","minus"};
 
-	//DEBUG System.out.println("Translating word " + st.sval + " with hasArguments " + hasArguments);
+//DEBUG System.out.println("Translating word " + st.sval + " with hasArguments " + hasArguments);
 
 	//----Places single quotes around strings, and replace \n by space
-	if (st.ttype == 34) {
-	    return("'" + st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
-	}
+    if (st.ttype == 34) {
+        return("'" + 
+st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+    }
 	//----Fix variables to have leading V_
 	if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
 	    return("V_" + st.sval.substring(1).replace('-','_'));
@@ -2244,7 +2247,7 @@ public class Formula implements Comparable {
 	//----Translate special predicates
 	translateIndex = 0;
 	while (translateIndex < kifPredicates.length &&
-	       !st.sval.equals(kifPredicates[translateIndex])) {
+!st.sval.equals(kifPredicates[translateIndex])) {
 	    translateIndex++;
 	}
 	if (translateIndex < kifPredicates.length) {
@@ -2335,215 +2338,219 @@ public class Formula implements Comparable {
      * Parse a single formula into TPTP format
      */
     public static String tptpParseSUOKIFString(String suoString) 
-	throws ParseException, IOException {
+    throws ParseException, IOException {
 
-	StreamTokenizer_s st;
-	int parenLevel;
-	boolean inQuantifierVars;
-	boolean lastWasOpen;
-	boolean inHOL;
-	int inHOLCount;
-	Stack operatorStack = new Stack();
-	Stack countStack = new Stack();
-	Vector quantifiedVariables = new Vector();
-	Vector allVariables = new Vector();
-	int index;
-	int arity;
-	String quantification;
-	String translatedFormula = null;
+    StreamTokenizer_s st;
+    int parenLevel;
+    boolean inQuantifierVars;
+    boolean lastWasOpen;
+    boolean inHOL;
+    int inHOLCount;
+    Stack operatorStack = new Stack();
+    Stack countStack = new Stack();
+    Vector quantifiedVariables = new Vector();
+    Vector allVariables = new Vector();
+    int index;
+    int arity;
+    String quantification;
+    String translatedFormula = null;
 
-	StringBuffer tptpFormula = new StringBuffer(suoString.length());
+    StringBuffer tptpFormula = new StringBuffer(suoString.length());
 
-	parenLevel = 0;
-	countStack.push(0);
-	lastWasOpen = false;
-	inQuantifierVars = false;
-	inHOL = false;
-	inHOLCount = 0;
+    parenLevel = 0;
+    countStack.push(0);
+    lastWasOpen = false;
+    inQuantifierVars = false;
+    inHOL = false;
+    inHOLCount = 0;
 
-	st = new StreamTokenizer_s(new StringReader(suoString));
-	KIF.setupStreamTokenizer(st);
+    st = new StreamTokenizer_s(new StringReader(suoString));
+    KIF.setupStreamTokenizer(st);
 
-	do {
-	    st.nextToken();
-	    //----Open bracket
-	    if (st.ttype==40) {
-		if (lastWasOpen) {    //----Should not have (( in KIF
-		    System.out.println("ERROR: Double open bracket at " + 
-				       tptpFormula);
-		    throw new ParseException("Parsing error in " + 
-					     suoString,0);
-		}
-		//----Track nesting of ()s for hol__, so I know when to close the '
-		if (inHOL) {
-		    inHOLCount++;
-		}
-		lastWasOpen = true;
-		parenLevel++;
-		//----Operators
-	    } else if (st.ttype == StreamTokenizer.TT_WORD && 
-		       (arity = operatorArity(st)) > 0) {
-		//----Operators must be preceded by a (
-		if (!lastWasOpen) {   
-		    System.out.println("ERROR: Missing ( before " + 
-				       st.sval + " at " + tptpFormula);
-		    return(null);
-		}
-		//----This is the start of a new term - put in the infix operator if not the
-		//----first term for this operator
-		if ((Integer)(countStack.peek()) > 0) 
-		    tptpFormula.append((String)operatorStack.peek()); 
-		//----If this is the start of a hol__ situation, quote it all
-		if (inHOL && inHOLCount == 1) 
-		    tptpFormula.append("'");
-		//----()s around all operator expressions
-		tptpFormula.append("(");      
-		//----Output unary as prefix
-		if (arity == 1) {
-		    tptpFormula.append(translateWord(st,false));
-		    //----Note the new operator (dummy) with 0 operands so far
-		    countStack.push(new Integer(0));
-		    operatorStack.push(",");
-		    //----Check if the next thing will be the quantified variables
-		    if (st.sval.equals("forall") || 
-			st.sval.equals("exists")) {
-			inQuantifierVars = true;
-		    }
-		    //----Binary operator
-		} else if (arity == 2) {
-		    //----Note the new operator with 0 operands so far
-		    countStack.push(new Integer(0));
-		    operatorStack.push(translateWord(st,false));
-		}
-		lastWasOpen = false;                      
-		//----Back tick - token translation to TPTP. Everything gets ''ed 
-	    } else if (st.ttype == 96) {
-		//----They may be nested - only start the situation at the outer one
-		if (!inHOL) {
-		    inHOL = true;
-		    inHOLCount = 0;
-		}
-		//----Quote - Term token translation to TPTP
-	    } else if (st.ttype == 34 ||
-		       st.ttype == StreamTokenizer.TT_NUMBER || 
-		       (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
-		       st.ttype == StreamTokenizer.TT_WORD) {                              
-		//----Start of a predicate or variable list
-		if (lastWasOpen) {
-		    //----Variable list
-		    if (inQuantifierVars) {
-			tptpFormula.append("[");
-			tptpFormula.append(translateWord(st,false));
-			incrementTOS(countStack);
-			//----Predicate
-		    } else {
-			//----This is the start of a new term - put in the infix operator if not the
-			//----first term for this operator
-			if ((Integer)(countStack.peek()) > 0) 
-			    tptpFormula.append((String)operatorStack.peek());
-			//----If this is the start of a hol__ situation, quote it all
-			if (inHOL && inHOLCount == 1) 
-			    tptpFormula.append("'");
-			//----Predicate of function and (
-			tptpFormula.append(translateWord(st,true));
-			tptpFormula.append("(");
-			//----Note the , for between arguments with 0 arguments so far
-			countStack.push(new Integer(0));
-			operatorStack.push(",");
-		    }
-		    //----Argument or quantified variable
-		} else {
-		    //----This is the start of a new term - put in the infix operator if not the
-		    //----first term for this operator
-		    if ((Integer)(countStack.peek()) > 0) {
-			tptpFormula.append((String)operatorStack.peek());
-		    }
-		    //----Output the word
-		    tptpFormula.append(translateWord(st,false));
-		    //----Increment counter for this level
-		    incrementTOS(countStack);
-		}
-		//----Collect variables that are used and quantified
-		if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
-		    if (inQuantifierVars) {
-			addVariable(st,quantifiedVariables);
-		    } else {
-			addVariable(st,allVariables);
-		    }
-		}
-		lastWasOpen = false; 
-		//----Close bracket.
-	    } else if (st.ttype==41) {
-		//----Track nesting of ()s for hol__, so I know when to close the '
-		if (inHOL) 
-		    inHOLCount--;
-		//----End of quantified variable list
-		if (inQuantifierVars) {
-		    //----Fake restarting the argument list because the quantified variable list
-		    //----does not use the operator from the surrounding expression
-		    countStack.pop();
-		    countStack.push(0);
-		    tptpFormula.append("] : ");
-		    inQuantifierVars = false;
-		    //----End of predicate or operator list
-		} else {
-		    //----Pop off the stacks to reveal the next outer layer
-		    countStack.pop();
-		    operatorStack.pop();
-		    //----Close the expression
-		    tptpFormula.append(")");  
-		    //----If this closes a HOL expression, close the '
-		    if (inHOL && inHOLCount == 0) {
-			tptpFormula.append("'");
-			inHOL = false;
-		    }
-		    //----Note that another expression has been completed
-		    incrementTOS(countStack);
-		}
-		lastWasOpen = false;
+    do {
+        st.nextToken();
+//----Open bracket
+        if (st.ttype==40) {
+        if (lastWasOpen) {    //----Should not have (( in KIF
+            System.out.println("ERROR: Double open bracket at " + tptpFormula);
+            throw new ParseException("Parsing error in " + suoString,0);
+        }
+//----Track nesting of ()s for hol__, so I know when to close the '
+        if (inHOL) {
+            inHOLCount++;
+        }
+        lastWasOpen = true;
+        parenLevel++;
+//----Operators
+        } else if (st.ttype == StreamTokenizer.TT_WORD && 
+(arity = operatorArity(st)) > 0) {
+//----Operators must be preceded by a (
+            if (!lastWasOpen) {   
+                System.out.println("ERROR: Missing ( before " + 
+st.sval + " at " + tptpFormula);
+                return(null);
+            }
+//----This is the start of a new term - put in the infix operator if not the
+//----first term for this operator
+            if ((Integer)(countStack.peek()) > 0) {
+                tptpFormula.append((String)operatorStack.peek()); 
+            }
+//----If this is the start of a hol__ situation, quote it all
+            if (inHOL && inHOLCount == 1) {
+                tptpFormula.append("'");
+            }
+//----()s around all operator expressions
+            tptpFormula.append("(");      
+//----Output unary as prefix
+            if (arity == 1) {
+                tptpFormula.append(translateWord(st,false));
+//----Note the new operator (dummy) with 0 operands so far
+                countStack.push(new Integer(0));
+                operatorStack.push(",");
+//----Check if the next thing will be the quantified variables
+                if (st.sval.equals("forall") || st.sval.equals("exists")) {
+                    inQuantifierVars = true;
+                }
+//----Binary operator
+            } else if (arity == 2) {
+//----Note the new operator with 0 operands so far
+                countStack.push(new Integer(0));
+                operatorStack.push(translateWord(st,false));
+            }
+            lastWasOpen = false;                      
+//----Back tick - token translation to TPTP. Everything gets ''ed 
+        } else if (st.ttype == 96) {
+//----They may be nested - only start the situation at the outer one
+            if (!inHOL) {
+                inHOL = true;
+                inHOLCount = 0;
+            }
+//----Quote - Term token translation to TPTP
+        } else if (st.ttype == 34 ||
+               st.ttype == StreamTokenizer.TT_NUMBER || 
+               (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
+               st.ttype == StreamTokenizer.TT_WORD) {                              
+//----Start of a predicate or variable list
+            if (lastWasOpen) {
+//----Variable list
+                if (inQuantifierVars) {
+                    tptpFormula.append("[");
+                    tptpFormula.append(translateWord(st,false));
+                    incrementTOS(countStack);
+//----Predicate
+                } else {
+//----This is the start of a new term - put in the infix operator if not the
+//----first term for this operator
+                    if ((Integer)(countStack.peek()) > 0) {
+                        tptpFormula.append((String)operatorStack.peek());
+                    }
+//----If this is the start of a hol__ situation, quote it all
+                    if (inHOL && inHOLCount == 1) {
+                        tptpFormula.append("'");
+                    }
+//----Predicate or function and (
+                    tptpFormula.append(translateWord(st,true));
+                    tptpFormula.append("(");
+//----Note the , for between arguments with 0 arguments so far
+                    countStack.push(new Integer(0));
+                    operatorStack.push(",");
+                }
+//----Argument or quantified variable
+            } else {
+//----This is the start of a new term - put in the infix operator if not the
+//----first term for this operator
+                if ((Integer)(countStack.peek()) > 0) {
+                    tptpFormula.append((String)operatorStack.peek());
+                }
+//----Output the word
+                tptpFormula.append(translateWord(st,false));
+//----Increment counter for this level
+                incrementTOS(countStack);
+            }
+//----Collect variables that are used and quantified
+            if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
+                if (inQuantifierVars) {
+                    addVariable(st,quantifiedVariables);
+                } else {
+                    addVariable(st,allVariables);
+                }
+            }
+            lastWasOpen = false; 
+//----Close bracket.
+        } else if (st.ttype==41) {
+//----Track nesting of ()s for hol__, so I know when to close the '
+            if (inHOL) {
+                inHOLCount--;
+            }
+//----End of quantified variable list
+            if (inQuantifierVars) {
+//----Fake restarting the argument list because the quantified variable list
+//----does not use the operator from the surrounding expression
+                countStack.pop();
+                countStack.push(0);
+                tptpFormula.append("] : ");
+                inQuantifierVars = false;
+//----End of predicate or operator list
+            } else {
+//----Pop off the stacks to reveal the next outer layer
+                countStack.pop();
+                operatorStack.pop();
+//----Close the expression
+                tptpFormula.append(")");  
+//----If this closes a HOL expression, close the '
+                if (inHOL && inHOLCount == 0) {
+                    tptpFormula.append("'");
+                    inHOL = false;
+                }
+//----Note that another expression has been completed
+                incrementTOS(countStack);
+            }
+            lastWasOpen = false;
               
-		parenLevel--;
-		//----End of the statement being processed. Universally quantify free variables
-		if (parenLevel == 0) {
-		    //findFreeVariables(allVariables,quantifiedVariables);
-		    allVariables.removeAll(quantifiedVariables);
-		    if (allVariables.size() > 0) {
-			quantification = "! [";
-			for (index = 0;index < allVariables.size();index++) {
-			    if (index > 0) {
-				quantification += ",";
-			    }
-			    quantification += 
-				(String)allVariables.elementAt(index);
-			}
-			quantification += "] : ";
-			tptpFormula.insert(0,"( " + quantification);
-			tptpFormula.append(" )");
-		    }
-		    if (translatedFormula == null) {
-			translatedFormula = "( " + tptpFormula.toString() + " )";
-		    } else {
-			translatedFormula += "& ( " + tptpFormula.toString() + 
-			    " )";
-		    }
-		    if ((Integer)(countStack.pop()) != 1) {
-			System.out.println(
-					   "Error in KIF.tptpParse(): Not one formula");
-		    }
-		} else if (parenLevel < 0) {
-		    System.out.print("ERROR: Extra closing bracket at " + 
-				     tptpFormula.toString());
-		    throw new ParseException("Parsing error in " + 
-					     suoString,0);
-		}                  
-	    } else if (st.ttype != StreamTokenizer.TT_EOF) {
-		System.out.println("ERROR: Illegal character '" +
-				   (char)st.ttype + "' at " + tptpFormula.toString());
-		throw new ParseException("Parsing error in " + 
-					 suoString,0);
-	    }              
-	} while (st.ttype != StreamTokenizer.TT_EOF);
-	return(translatedFormula);
+            parenLevel--;
+//----End of the statement being processed. Universally quantify free variables
+            if (parenLevel == 0) {
+//findFreeVariables(allVariables,quantifiedVariables);
+                allVariables.removeAll(quantifiedVariables);
+                if (allVariables.size() > 0) {
+                    quantification = "! [";
+                    for (index = 0;index < allVariables.size();index++) {
+                        if (index > 0) {
+                            quantification += ",";
+                        }
+                        quantification += (String)allVariables.elementAt(index);
+                    }
+                    quantification += "] : ";
+                    tptpFormula.insert(0,"( " + quantification);
+                    tptpFormula.append(" )");
+                }
+                if (translatedFormula == null) {
+                    translatedFormula = "( " + tptpFormula.toString() + " )";
+                } else {
+                    translatedFormula += "& ( " + tptpFormula.toString() + " )";
+                }
+                if ((Integer)(countStack.pop()) != 1) {
+                    System.out.println(
+"Error in KIF.tptpParse(): Not one formula");
+                }
+            } else if (parenLevel < 0) {
+                System.out.print("ERROR: Extra closing bracket at " + 
+tptpFormula.toString());
+                throw new ParseException("Parsing error in " + suoString,0);
+            }                  
+        } else if (st.ttype != StreamTokenizer.TT_EOF) {
+            System.out.println("ERROR: Illegal character '" +
+(char)st.ttype + "' at " + tptpFormula.toString());
+            throw new ParseException("Parsing error in " + suoString,0);
+        }              
+    } while (st.ttype != StreamTokenizer.TT_EOF);
+
+//----Bare word like $false didn't get done by a closing )
+    if (translatedFormula == null) {
+        translatedFormula = tptpFormula.toString();
+    }
+
+    return(translatedFormula);
     }
     /** ***************************************************************
      * Parse formulae into TPTP format
