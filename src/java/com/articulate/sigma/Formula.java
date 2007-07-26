@@ -2234,9 +2234,9 @@ public class Formula implements Comparable {
 	//DEBUG System.out.println("Translating word " + st.sval + " with hasArguments " + hasArguments);
 
 	//----Places single quotes around strings, and replace \n by space
-        if (st.ttype == 34) {
-            return("'" + st.sval.replaceAll("[\n\t\r\f]"," ") + "'");
-        }
+	if (st.ttype == 34) {
+	    return("'" + st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+	}
 	//----Fix variables to have leading V_
 	if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
 	    return("V_" + st.sval.substring(1).replace('-','_'));
