@@ -35,23 +35,24 @@ August 9, Acapulco, Mexico.
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
 if (saveAs != null && saveAs.equals("prolog")) {
     String prologFile = kb.writePrologFile(kb.name + ".pl");
-    String statusStr = ( "\nWrote file " + prologFile + "\n<br/>" );
+    String statusStr = ( "\n<br/>Wrote file " + prologFile + "\n<br/>" );
     if ( ! Formula.isNonEmptyString(prologFile) ) {
-	statusStr = "\nCould not write a Prolog file\n<br/>";
+	statusStr = "\n<br/>Could not write a Prolog file\n<br/>";
     }
     KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
 }
-    if (saveAs != null && saveAs.equals("TPTP")) {
+    if (saveAs != null && (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL"))) {
     // Force translation of the KB to TPTP, even if the user has not
     // requested this on the Preferences page.
 	if ( ! KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes") ) {
 	    System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas" );
 	    kb.tptpParse();
 	}
-        String tptpFile = kb.writeTPTPFile(kb.name + ".tptp",null,false,"");
-	String statusStr = ( "\nWrote file " + tptpFile + "\n<br/>" );
+	boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
+        String tptpFile = kb.writeTPTPFile(kb.name + ".tptp",null,onlyPlainFOL,"");
+	String statusStr = ( "\n<br/>Wrote file " + tptpFile + "\n<br/>" );
 	if ( ! Formula.isNonEmptyString(tptpFile) ) {
-	    statusStr = "\nCould not write a TPTP file\n<br/>";
+	    statusStr = "\n<br/>Could not write a TPTP file\n<br/>";
 	}
         KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
     }
@@ -157,6 +158,7 @@ if (saveAs != null && saveAs.equals("prolog")) {
             <option value="OWL">OWL
             <option value="prolog">Prolog
             <option value="TPTP">TPTP
+            <option value="tptpFOL">TPTP FOL
         </select>
     </FORM>
 
