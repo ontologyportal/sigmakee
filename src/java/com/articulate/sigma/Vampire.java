@@ -83,7 +83,7 @@ public class Vampire {
 		error = "No pathname has been set for \"inferenceEngine\"";
 		System.out.println( "Error in Vampire.getNewInstance(): " + error );
 		KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-					     + "\n" + error + "\n<br/>" );
+					     + "\n<br/>" + error + "\n<br/>" );
 	    }
 
 	    File vampireExecutable = null;
@@ -93,7 +93,7 @@ public class Vampire {
 		    error = ( "The executable file " + vampireExecutable.getCanonicalPath() + " does not exist" );
 		    System.out.println( "Error in Vampire.getNewInstance(): " + error );
 		    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-						 + "\n" + error + "\n<br/>" );
+						 + "\n<br/>" + error + "\n<br/>" );
 		}
 	    }
 
@@ -104,7 +104,7 @@ public class Vampire {
 		    error = ( "The file " + kbFileName + " does not exist" );
 		    System.out.println( "INFO in Vampire.getNewInstance(): " + error );
 		    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-						 + "\n" + error + "\n<br/>" );
+						 + "\n<br/>" + error + "\n<br/>" );
 		}
 	    }
 
@@ -162,10 +162,13 @@ public class Vampire {
 					    + (duration / 1000.0) 
 					    + " seconds" );
 			if ( ! badFormulas.isEmpty() ) {
+			    int bc = badFormulas.size();
 			    Iterator it2 = badFormulas.iterator();
 			    System.out.println( "INFO in Vampire.getNewInstance(): "
-						+ badFormulas.size()
-						+ " BAD FORMULAS in " 
+						+ bc
+						+ " FORMULA"
+						+ ((bc == 1) ? "" : "S")
+						+ " REJECTED from " 
 						+ kbFile.getCanonicalPath() );
 			    int badCount = 1;
 			    String badStr = null;
@@ -173,7 +176,7 @@ public class Vampire {
 			    while ( it2.hasNext() ) {
 				badStr = ( "[" + badCount++ + "] " + ((String)it2.next()) );
 				System.out.println( badStr );
-				mgrErrStr += ( "\n" + "Bad formula: " + badStr + "\n<br>" );
+				mgrErrStr += ( "\n<br/>" + "Bad formula: " + badStr + "\n<br/>" );
 			    }
 			    KBmanager.getMgr().setError( mgrErrStr );
 			}

@@ -892,7 +892,7 @@ public class LanguageFormatter {
 		str = (String) it.next();
 		System.out.println( "Error in LanguageFormatter.expandStar(): " );
 		System.out.println( "  " + str );
-		errStr += ( str + "<br/>" );
+		errStr += ( "\n<br/>" + str + "\n<br/>" );
 	    }
 	    KBmanager.getMgr().setError( errStr );
 	}

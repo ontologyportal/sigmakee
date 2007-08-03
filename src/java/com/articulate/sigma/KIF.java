@@ -60,10 +60,8 @@ public class KIF {
 
     /** The set of all terms in the knowledge base.  This is a set of Strings. */
     public TreeSet terms = new TreeSet();
-
     /** A HashMap of ArrayLists of Formulas.  @see KIF.createKey for key format. */
     public HashMap formulas = new HashMap();    
-
     /** A "raw" HashSet of unique Strings which are the formulas from the file without 
      *  any further processing, in the order which they appear in the file. */
     public LinkedHashSet formulaSet = new LinkedHashSet();
@@ -359,7 +357,7 @@ public class KIF {
 	    StringBuffer warnings = new StringBuffer();
 	    while (it.hasNext()) {
 		String w = (String) it.next();
-		warnings.append(w + "<br>\n");
+		warnings.append( "\n<br/>" + w + "<br/>\n");
 	    }
 	    KBmanager.getMgr().setError(warnings.toString());
 	}
@@ -449,12 +447,13 @@ public class KIF {
 	    parse(fr);
 	}
 	catch (ParseException pe) {
-	    String er = "Error in KIF.readFile(): " + pe.getMessage() + " at line " +  pe.getErrorOffset();
-	    KBmanager.getMgr().setError(er);
-	    System.out.println(er);
+	    String er = ( pe.getMessage() + " at line " +  pe.getErrorOffset() );
+	    KBmanager.getMgr().setError( "\n<br/>" + er + "\n<br/>" );
+	    System.out.println( "Error in KIF.readFile(): " + er );
 	}
 	catch (java.io.IOException e) {
-	    KBmanager.getMgr().setError("Error in KIF.readFile(): IO exception parsing file " + filename);
+	    KBmanager.getMgr().setError("\n<br/>Error in KIF.readFile(): IO exception parsing file " 
+					+ filename + "\n<br/>");
 	    throw new IOException("Error in KIF.readFile(): IO exception parsing file " + filename);
 	}
     }
@@ -512,10 +511,10 @@ public class KIF {
     }
 
     /** ***************************************************************
-     * Test method for this class.  Currently, it writes the TPTP output
+     * Test method for this class.  Currently, it write the TPTP output
      * to a file.
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String args[]) throws IOException {
 
 	Iterator it;
 	KIF kifp = new KIF();
@@ -550,36 +549,30 @@ public class KIF {
 
 	fw = null;
 	pw = null;
-	File outfile = new File(args[0] + ".tptp");
+	File fil = new File(args[0] + ".tptp");
 
 	try {
-	    fw = new FileWriter(outfile);
+	    fw = new FileWriter(fil);
 	    pw = new PrintWriter(fw);
 
-	    it = kifp.formulaSet.iterator();
+	    it = kifp.tptpFormulaSet.iterator();
 	    while (it.hasNext()) {
 		axiomCount++;
 		form = (String) it.next();
-		form = Formula.tptpParseSUOKIFString( form );
 		form = "fof(axiom" + axiomCount + ",axiom,(" + form + ")).";
 		if (form.indexOf('"') < 0 && form.indexOf('\'') < 0) 
 		    pw.println(form + '\n');
 	    }
 	}
-	catch ( Exception ex ) {
-	    System.out.println( "Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage() );
-	    ex.printStackTrace();
+	catch (java.io.IOException e) {
+	    throw new IOException("Error writing file " + fil + "\n" + e.getMessage());
 	}
 	finally {
-	    try {
-		if (pw != null) {
-		    pw.close();
-		}
-		if (fw != null) {
-		    fw.close();
-		}
+	    if (pw != null) {
+		pw.close();
 	    }
-	    catch ( Exception e3 ) {
+	    if (fw != null) {
+		fw.close();
 	    }
 	}
     }
