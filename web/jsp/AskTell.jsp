@@ -138,7 +138,7 @@ August 9, Acapulco, Mexico.
 <%
     if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
 %>
-        Try <a href="SystemOnTPTP.jsp?kb=<%=kbName %>&lang=<%=language %>">"System On TPTP"</a> interface (experimental)
+        Try <a href="SystemOnTPTP.jsp?kb=<%=kbName %>&lang=<%=language %>&sanitize=yes">"System On TPTP"</a> interface (experimental)
 <%
     }
 %>

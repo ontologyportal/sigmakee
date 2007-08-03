@@ -202,7 +202,6 @@ if ( iePref == null ) { iePref = ""; }
           editorCommand = "";
   }
 
-
   String lineNumberCommand = request.getParameter("lineNumberCommand");
   if (lineNumberCommand != null) {
       changed = true;
