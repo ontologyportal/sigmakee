@@ -89,7 +89,7 @@ if ( language == null ) {
        tstpFormat = "";
    }
    if (sanitize == null) {
-       sanitize = "sanitize";
+       sanitize = "no";
    }
    if (stmt == null || stmt.equalsIgnoreCase("null")) {
        stmt = "(exists (?X) (instance ?X Relation))";
@@ -146,8 +146,8 @@ if ( language == null ) {
    out.println(HTMLformatter.createMenu("systemChosen",systemChosen,
                                         systemList));
 %>
-   <INPUT TYPE="CHECKBOX" NAME="sanitize" VALUE="sanitize"
-<% if (sanitize.equals("sanitize")) { out.print(" CHECKED"); } %>
+   <INPUT TYPE="CHECKBOX" NAME="sanitize" VALUE="yes"
+<% if (sanitize.equalsIgnoreCase("yes")) { out.print(" CHECKED"); } %>
    >Sanitize
    <BR>
    <INPUT TYPE="CHECKBOX" NAME="tstpFormat" VALUE="-S"
@@ -213,7 +213,7 @@ if ( language == null ) {
                    //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.getTheTptpFormulas());
                    kbFileName = kb.writeTPTPFile( null,
                                                   conjectureFormula,
-                                                  sanitize.equals("sanitize"),
+                                                  sanitize.equalsIgnoreCase("yes"),
                                                   systemChosen );
                    URLParameters.put("ProblemSource","UPLOAD");
                    URLParameters.put("UPLOADProblem",new File(kbFileName));
