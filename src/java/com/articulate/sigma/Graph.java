@@ -99,4 +99,87 @@ public class Graph {
         return result;
     }
 
+    /** *************************************************************
+     * Create a ArrayList with a set of terms comprising a hierarchy
+     *
+     * @param kb the knowledge base being graphed
+     * @param term the term in the KB being graphed
+     * @param relation the binary relation that is used to forms the arcs
+     *                 in the graph.
+     * @param above the number of levels above the given term in the graph
+     * @param below the number of levels below the given term in the graph
+     * @param indentChars a String of characters to be used for indenting the terms
+     */
+    public static HashSet createDotGraph(KB kb, String term, String relation) {
+
+        HashSet result = new HashSet();
+	HashSet start = new HashSet();
+	HashSet checked = new HashSet();
+        start.add(term);
+        createDotGraphBody(kb,start,checked,relation,true,result);
+        start.add(term);
+        createDotGraphBody(kb,start,checked,relation,false,result);
+        return result;
+    }
+
+    /** *************************************************************
+     * The main body for createGraph().
+     */
+    private static void createDotGraphBody(KB kb, HashSet startSet, HashSet checkedSet, 
+                                                String relation, boolean upSearch, HashSet result) {
+
+        //System.out.println("StartSet: " + startSet.toString());
+        //System.out.println("CheckedSet: " + checkedSet.toString());
+
+        while (startSet.size() > 0) {
+            Iterator it = startSet.iterator();
+            String term = (String) it.next();
+            boolean removed = startSet.remove(term);
+            if (!removed) 
+                System.out.println("Error in createDotGraphBody(): " + term + " not removed");
+            ArrayList stmts;
+            if (upSearch)
+                stmts = kb.askWithRestriction(0,relation,1,term);
+            else
+                stmts = kb.askWithRestriction(0,relation,2,term);
+            for (int i = 0; i < stmts.size(); i++) {
+                Formula f = (Formula) stmts.get(i);
+                String newTerm;
+                if (upSearch) 
+                    newTerm = f.getArgument(2);
+                else 
+                    newTerm = f.getArgument(1);
+                String s = "  \"" + term + "\" -> \"" + newTerm + "\";";
+                //System.out.println(s);
+                result.add(s);
+                checkedSet.add(term);
+                startSet.add(newTerm);
+                createDotGraphBody(kb,startSet,checkedSet,relation,upSearch,result);
+            } 
+        }
+    }
+
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void main(String[] args) {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (IOException ioe ) {
+            System.out.println(ioe.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        Graph g = new Graph();
+        HashSet result = g.createDotGraph(kb,"Entity","subclass");
+        System.out.println("digraph G {");
+        System.out.println("  rankdir=LR");
+        Iterator it = result.iterator();
+        while (it.hasNext()) {
+            String s = (String) it.next();
+            System.out.println(s);
+        }
+        System.out.println("}");
+    }
 }
