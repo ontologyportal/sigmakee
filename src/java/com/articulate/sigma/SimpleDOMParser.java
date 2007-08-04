@@ -289,7 +289,7 @@ public class SimpleDOMParser {
         /** String fname = "";
         try {
 //            String _projectFileName = "projects-energy.xml";
-//            fname = System.getProperty("user.dir") + File.separator + _projectFileName;
+//            fname = KBmanager.getMgr().getPref("baseDir") + File.separator + _projectFileName;
             fname = "test.xml";
             System.out.println(fname);
             File f = new File(fname);
