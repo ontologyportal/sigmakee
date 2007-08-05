@@ -46,7 +46,7 @@ August 9, Acapulco, Mexico.
     }
     
     if (stmt != null)
-        System.out.println(stmt.trim());
+        System.out.println("  text box input: " + stmt.trim());
 
     KB kb = KBmanager.getMgr().getKB(kbName);
     if (stmt == null || stmt.equalsIgnoreCase("null"))   // check if there is an attribute for stmt
