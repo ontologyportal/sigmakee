@@ -53,7 +53,7 @@ public class KBmanager {
     private static KBmanager manager = new KBmanager();
     private HashMap preferences = new HashMap();
 
-    private HashMap kbs = new HashMap();
+    protected HashMap kbs = new HashMap();
     private boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
@@ -78,12 +78,12 @@ public class KBmanager {
     private void setDefaultAttributes() {
 
         String sep = File.separator;
-	String base = System.getenv("SIGMA_HOME");
-	if (base == null || base == "") {
-	    base = System.getProperty("user.dir");
-	}
-	preferences.put("baseDir",base);
-	preferences.put("kbDir",base + sep + "KBs");
+        String base = System.getenv("SIGMA_HOME");
+        if (base == null || base == "") {
+            base = System.getProperty("user.dir");
+        }
+        preferences.put("baseDir",base);
+        preferences.put("kbDir",base + sep + "KBs");
         preferences.put("testOutputDir",System.getProperty("user.dir") + sep + "webapps" + sep + "sigma" + sep + "tests");
         preferences.put("inferenceTestDir","C:\\Program Files\\Apache Tomcat 4.0\\tests");  
         preferences.put("inferenceEngine","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe");  
@@ -115,45 +115,45 @@ public class KBmanager {
                         String kbName = (String) element.getAttribute("name");
                         addKB(kbName);
                         KB kb = getKB(kbName);
-			List constituentsToAdd = new ArrayList();
-			boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
+                        List constituentsToAdd = new ArrayList();
+                        boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
                         for (int j = 0; j < element.getChildElements().size(); j++) {
                             SimpleElement kbConst = (SimpleElement) element.getChildElements().get(j);
                             if (!kbConst.getTagName().equals("constituent")) 
                                 System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                             String filename = (String) kbConst.getAttribute("filename");
-			    if ( Formula.isNonEmptyString(filename) ) {
-				if ( filename.endsWith(KB._cacheFileSuffix) ) {
-				    if ( useCacheFile ) {
-					constituentsToAdd.add( filename );
-				    }
-				}
-				else {
-				    constituentsToAdd.add( filename );
-				}
-			    }
+                            if ( Formula.isNonEmptyString(filename) ) {
+                                if ( filename.endsWith(KB._cacheFileSuffix) ) {
+                                    if ( useCacheFile ) {
+                                        constituentsToAdd.add( filename );
+                                    }
+                                }
+                                else {
+                                    constituentsToAdd.add( filename );
+                                }
+                            }
                         }
-			if ( !(constituentsToAdd.isEmpty()) ) {
-			    Iterator it = constituentsToAdd.iterator();
-			    while ( it.hasNext() ) {
-				String filename = (String) it.next();
-				try {                            
-				    result.append(kb.addConstituent(filename, false, false)); 
-				} 
-				catch (IOException ioe) {
-				    System.out.println("Error in KBmanager.fromXML(): " + ioe.getMessage());
-				}
-			    }
-			    kb.buildRelationCaches();
-			    if ( useCacheFile ) {
-				result.append( kb.cache() );
-			    }
-			    kb.loadVampire();
-			}
+                        if ( !(constituentsToAdd.isEmpty()) ) {
+                            Iterator it = constituentsToAdd.iterator();
+                            while ( it.hasNext() ) {
+                                String filename = (String) it.next();
+                                try {                            
+                                    result.append(kb.addConstituent(filename, false, false)); 
+                                } 
+                                catch (IOException ioe) {
+                                    System.out.println("Error in KBmanager.fromXML(): " + ioe.getMessage());
+                                }
+                            }
+                            kb.buildRelationCaches();
+                            if ( useCacheFile ) {
+                                result.append( kb.cache() );
+                            }
+                            kb.loadVampire();
+                        }
                     }
                     else {
                         System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
-		    }
+                    }
                 }
             }
         }
@@ -174,7 +174,7 @@ public class KBmanager {
         String fname = "config.xml";
         StringBuffer xml = new StringBuffer();
         String dir = System.getProperty("user.dir") + File.separator + "KBs";
-	// System.out.println( "dir == " + dir );
+        // System.out.println( "dir == " + dir );
         File fDir = new File(dir);
         if (!fDir.exists())
             fDir.mkdir();
@@ -208,11 +208,11 @@ public class KBmanager {
             setDefaultAttributes();
             try {
                 SimpleElement configuration = readConfiguration();
-		// System.out.println( "configuration == " + configuration );
+                // System.out.println( "configuration == " + configuration );
                 String result = fromXML(configuration);
                 if ( Formula.isNonEmptyString(result) ) {
                     error = result;
-		}
+                }
                 LanguageFormatter.readKeywordMap((String) preferences.get("kbDir"));
             }
             catch (IOException ioe) {
@@ -220,7 +220,7 @@ public class KBmanager {
                 System.out.println(ioe.getMessage());
             }
             initialized = true;
-	    // System.out.println( "inferenceEngine == " + KBmanager.getMgr().getPref("inferenceEngine") );
+            // System.out.println( "inferenceEngine == " + KBmanager.getMgr().getPref("inferenceEngine") );
         }
     }
 
@@ -297,9 +297,9 @@ public class KBmanager {
         PrintWriter pw = null;
         Iterator it; 
         String dir = (String) preferences.get("kbDir");
-	File fDir = new File( dir );
+        File fDir = new File( dir );
         String fname = "config.xml";
-	File file = new File( fDir, fname );
+        File file = new File( fDir, fname );
         String key;
         String value;
         KB kb = null;
@@ -372,7 +372,7 @@ public class KBmanager {
     public void remove(String name) {
         kbs.remove(name);
     }
-	
+    
     /** ***************************************************************
      * Get the one instance of KBmanager from its class variable.
      */
@@ -380,10 +380,10 @@ public class KBmanager {
 
         if (manager == null) {
             manager = new KBmanager();
-	}
+        }
         return manager;
     }
-	
+    
     /** ***************************************************************
      * Get the Set of KB names in this manager.
      */
@@ -395,10 +395,10 @@ public class KBmanager {
      * Get the preference corresponding to the given kef.
      */    
     public String getPref(String key) {
-	String ans = (String) preferences.get(key);
-	if ( ans == null ) {
-	    ans = "";
-	}
+        String ans = (String) preferences.get(key);
+        if ( ans == null ) {
+            ans = "";
+        }
         return ans;
     }
     
@@ -420,17 +420,17 @@ public class KBmanager {
      * settings.
      */
     public int getInferenceBitValue () {
-	int bv = 0;
-	String[] keys = { "typePrefix", "holdsPrefix", "cache", "TPTP" };
-	int[] vals = { USE_TYPE_PREFIX, USE_HOLDS_PREFIX, USE_CACHE, USE_TPTP };
-	String pref = null;
-	for ( int i = 0 ; i < keys.length ; i++ ) {
-	    pref = this.getPref( keys[i] );
-	    if ( Formula.isNonEmptyString(pref) && pref.equalsIgnoreCase("yes") ) {
-		bv += vals[i];
-	    }
-	}
-	return bv;
+        int bv = 0;
+        String[] keys = { "typePrefix", "holdsPrefix", "cache", "TPTP" };
+        int[] vals = { USE_TYPE_PREFIX, USE_HOLDS_PREFIX, USE_CACHE, USE_TPTP };
+        String pref = null;
+        for ( int i = 0 ; i < keys.length ; i++ ) {
+            pref = this.getPref( keys[i] );
+            if ( Formula.isNonEmptyString(pref) && pref.equalsIgnoreCase("yes") ) {
+                bv += vals[i];
+            }
+        }
+        return bv;
     }
 
     /** ***************************************************************
@@ -440,7 +440,7 @@ public class KBmanager {
      * configuration at the time the value was set.
      */
     public int getOldInferenceBitValue () {
-	return this.oldInferenceBitValue;
+        return this.oldInferenceBitValue;
     }
 
     /** ***************************************************************
@@ -449,8 +449,8 @@ public class KBmanager {
      * @return void
      */
     public void setOldInferenceBitValue ( int bv ) {
-	this.oldInferenceBitValue = bv;
-	return;
+        this.oldInferenceBitValue = bv;
+        return;
     }
 
     /** ***************************************************************

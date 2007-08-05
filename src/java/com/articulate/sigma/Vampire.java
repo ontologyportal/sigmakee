@@ -72,129 +72,129 @@ public class Vampire {
      */
     public static Vampire getNewInstance ( String kbFileName ) {
 
-	Vampire vpr = null;
-	String error = null;
+        Vampire vpr = null;
+        String error = null;
 
-	try {
+        try {
 
-	    String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
+            String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
 
-	    if ( ! Formula.isNonEmptyString(inferenceEngine) ) {
-		error = "No pathname has been set for \"inferenceEngine\"";
-		System.out.println( "Error in Vampire.getNewInstance(): " + error );
-		KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-					     + "\n<br/>" + error + "\n<br/>" );
-	    }
+            if ( ! Formula.isNonEmptyString(inferenceEngine) ) {
+                error = "No pathname has been set for \"inferenceEngine\"";
+                System.out.println( "Error in Vampire.getNewInstance(): " + error );
+                KBmanager.getMgr().setError( KBmanager.getMgr().getError()
+                                             + "\n<br/>" + error + "\n<br/>" );
+            }
 
-	    File vampireExecutable = null;
-	    if ( error == null ) {
-		vampireExecutable = new File( inferenceEngine );
-		if ( ! vampireExecutable.exists() ) {
-		    error = ( "The executable file " + vampireExecutable.getCanonicalPath() + " does not exist" );
-		    System.out.println( "Error in Vampire.getNewInstance(): " + error );
-		    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-						 + "\n<br/>" + error + "\n<br/>" );
-		}
-	    }
+            File vampireExecutable = null;
+            if ( error == null ) {
+                vampireExecutable = new File( inferenceEngine );
+                if ( ! vampireExecutable.exists() ) {
+                    error = ( "The executable file " + vampireExecutable.getCanonicalPath() + " does not exist" );
+                    System.out.println( "Error in Vampire.getNewInstance(): " + error );
+                    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
+                                                 + "\n<br/>" + error + "\n<br/>" );
+                }
+            }
 
-	    File kbFile = null;
-	    if ( error == null ) {
-		kbFile = new File( kbFileName );
-		if ( ! kbFile.exists() ) {
-		    error = ( "The file " + kbFileName + " does not exist" );
-		    System.out.println( "INFO in Vampire.getNewInstance(): " + error );
-		    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-						 + "\n<br/>" + error + "\n<br/>" );
-		}
-	    }
+            File kbFile = null;
+            if ( error == null ) {
+                kbFile = new File( kbFileName );
+                if ( ! kbFile.exists() ) {
+                    error = ( "The file " + kbFileName + " does not exist" );
+                    System.out.println( "INFO in Vampire.getNewInstance(): " + error );
+                    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
+                                                 + "\n<br/>" + error + "\n<br/>" );
+                }
+            }
 
-	    if ( error == null ) {
+            if ( error == null ) {
 
-		File vampireDirectory = vampireExecutable.getParentFile();
+                File vampireDirectory = vampireExecutable.getParentFile();
 
-		System.out.println( "INFO in Vampire.getNewInstance(): executable == " + vampireExecutable.getCanonicalPath() );
-		System.out.println( "INFO in Vampire.getNewInstance(): directory == " + vampireDirectory.getCanonicalPath() );
+                System.out.println( "INFO in Vampire.getNewInstance(): executable == " + vampireExecutable.getCanonicalPath() );
+                System.out.println( "INFO in Vampire.getNewInstance(): directory == " + vampireDirectory.getCanonicalPath() );
 
-		// It should only ever be necessary to write this file once.
-		File initFile = new File( vampireDirectory, "init-v.kif" );
-		if ( ! initFile.exists() ) {
-		    PrintWriter pw = new PrintWriter( initFile );
-		    pw.println( "(instance Process Entity)" );
-		    pw.flush();
-		    try {
-			pw.close();
-		    }
-		    catch ( Exception e1 ) {
-		    }
-		}
+                // It should only ever be necessary to write this file once.
+                File initFile = new File( vampireDirectory, "init-v.kif" );
+                if ( ! initFile.exists() ) {
+                    PrintWriter pw = new PrintWriter( initFile );
+                    pw.println( "(instance Process Entity)" );
+                    pw.flush();
+                    try {
+                        pw.close();
+                    }
+                    catch ( Exception e1 ) {
+                    }
+                }
 
-		System.out.println( "INFO in Vampire.getNewInstance(): Starting vampire as " 
-				    + vampireExecutable.getCanonicalPath() + " " + initFile.getCanonicalPath() );
-	    
-		Vampire vprInst = new Vampire( vampireExecutable, initFile );
-		if ( vprInst instanceof Vampire ) {
-		    KIF kif = new KIF();
-		    kif.setParseMode( KIF.RELAXED_PARSE_MODE );
-		    kif.readFile( kbFile.getCanonicalPath() );
-		    if ( ! kif.formulaSet.isEmpty() ) {
-			List badFormulas = new ArrayList();
-			Iterator it = kif.formulaSet.iterator();
-			String formStr = null;
-			String response = null;
-			int goodCount = 0;
-			long start = System.currentTimeMillis();
-			while ( it.hasNext() ) {
-			    formStr = (String) it.next();
-			    response = vprInst.assertFormula( formStr );
-			    if ( ! (response.indexOf("Formula has been added") >= 0) ) {
-				badFormulas.add( formStr );
-			    }
-			    else {
-				goodCount++ ;
-			    }
-			}
-			long duration = (System.currentTimeMillis() - start);
+                System.out.println( "INFO in Vampire.getNewInstance(): Starting vampire as " 
+                                    + vampireExecutable.getCanonicalPath() + " " + initFile.getCanonicalPath() );
+        
+                Vampire vprInst = new Vampire( vampireExecutable, initFile );
+                if ( vprInst instanceof Vampire ) {
+                    KIF kif = new KIF();
+                    kif.setParseMode( KIF.RELAXED_PARSE_MODE );
+                    kif.readFile( kbFile.getCanonicalPath() );
+                    if ( ! kif.formulaSet.isEmpty() ) {
+                        List badFormulas = new ArrayList();
+                        Iterator it = kif.formulaSet.iterator();
+                        String formStr = null;
+                        String response = null;
+                        int goodCount = 0;
+                        long start = System.currentTimeMillis();
+                        while ( it.hasNext() ) {
+                            formStr = (String) it.next();
+                            response = vprInst.assertFormula( formStr );
+                            if ( ! (response.indexOf("Formula has been added") >= 0) ) {
+                                badFormulas.add( formStr );
+                            }
+                            else {
+                                goodCount++ ;
+                            }
+                        }
+                        long duration = (System.currentTimeMillis() - start);
 
-			System.out.println( goodCount 
-					    + " formulas asserted to " 
-					    + vprInst 
-					    + " in " 
-					    + (duration / 1000.0) 
-					    + " seconds" );
-			if ( ! badFormulas.isEmpty() ) {
-			    int bc = badFormulas.size();
-			    Iterator it2 = badFormulas.iterator();
-			    System.out.println( "INFO in Vampire.getNewInstance(): "
-						+ bc
-						+ " FORMULA"
-						+ ((bc == 1) ? "" : "S")
-						+ " REJECTED from " 
-						+ kbFile.getCanonicalPath() );
-			    int badCount = 1;
-			    String badStr = null;
-			    String mgrErrStr = KBmanager.getMgr().getError();
-			    while ( it2.hasNext() ) {
-				badStr = ( "[" + badCount++ + "] " + ((String)it2.next()) );
-				System.out.println( badStr );
-				mgrErrStr += ( "\n<br/>" + "Bad formula: " + badStr + "\n<br/>" );
-			    }
-			    KBmanager.getMgr().setError( mgrErrStr );
-			}
-		    
-			if ( goodCount > 0 ) {
+                        System.out.println( goodCount 
+                                            + " formulas asserted to " 
+                                            + vprInst 
+                                            + " in " 
+                                            + (duration / 1000.0) 
+                                            + " seconds" );
+                        if ( ! badFormulas.isEmpty() ) {
+                            int bc = badFormulas.size();
+                            Iterator it2 = badFormulas.iterator();
+                            System.out.println( "INFO in Vampire.getNewInstance(): "
+                                                + bc
+                                                + " FORMULA"
+                                                + ((bc == 1) ? "" : "S")
+                                                + " REJECTED from " 
+                                                + kbFile.getCanonicalPath() );
+                            int badCount = 1;
+                            String badStr = null;
+                            String mgrErrStr = KBmanager.getMgr().getError();
+                            while ( it2.hasNext() ) {
+                                badStr = ( "[" + badCount++ + "] " + ((String)it2.next()) );
+                                System.out.println( badStr );
+                                mgrErrStr += ( "\n<br/>" + "Bad formula: " + badStr + "\n<br/>" );
+                            }
+                            KBmanager.getMgr().setError( mgrErrStr );
+                        }
+            
+                        if ( goodCount > 0 ) {
 
-			    // If we've made it this far, we have a usable Vampire instance.
-			    vpr = vprInst;
-			}
-		    }
-		}
-	    }
-	}
-	catch ( Exception ex ) {
-	    System.out.println( ex.getMessage() );
-	    ex.printStackTrace();
-	}
-	return vpr;
+                            // If we've made it this far, we have a usable Vampire instance.
+                            vpr = vprInst;
+                        }
+                    }
+                }
+            }
+        }
+        catch ( Exception ex ) {
+            System.out.println( ex.getMessage() );
+            ex.printStackTrace();
+        }
+        return vpr;
     }
 
     /** *************************************************************
@@ -246,35 +246,33 @@ public class Vampire {
      * @return answer to the assertion (in the XML syntax)
      * @throws IOException should not normally be thrown
      */
-    public String assertFormula (String formula) 
-        throws IOException
-    {
-	try {
-	    String assertion = ( "<assertion> " + formula + " </assertion>\n" );
+    public String assertFormula(String formula) throws IOException {
+        try {
+            String assertion = ( "<assertion> " + formula + " </assertion>\n" );
 
-	    // System.out.println( "INFO Vampire.assertFormula(): " + assertion );
+            // System.out.println( "INFO Vampire.assertFormula(): " + assertion );
 
-	    _writer.write( assertion );
-	    _writer.flush();
-	}
-	catch ( Exception ex ) {
-	    System.out.println( ex.getMessage() );
-	    ex.printStackTrace();
-	}
-	String result = "";
-	for (;;) {
-	    String line = _reader.readLine();
-	    if (line.indexOf("Error:") != -1) {
-		throw new IOException(line);
-	    }
+            _writer.write( assertion );
+            _writer.flush();
+        }
+        catch ( Exception ex ) {
+            System.out.println( ex.getMessage() );
+            ex.printStackTrace();
+        }
+        String result = "";
+        for (;;) {
+            String line = _reader.readLine();
+            if (line.indexOf("Error:") != -1) {
+                throw new IOException(line);
+            }
 
-	    // System.out.println("INFO Vampire.assertFormula(): Response: " + line);
+            // System.out.println("INFO Vampire.assertFormula(): Response: " + line);
 
-	    result += line + "\n";
-	    if (line.indexOf("</assertionResponse>") != -1) {
-		return result;
-	    }
-	}
+            result += line + "\n";
+            if (line.indexOf("</assertionResponse>") != -1) {
+                return result;
+            }
+        }
     }
 
     /** *************************************************************
@@ -284,23 +282,23 @@ public class Vampire {
      *
      * @throws IOException should not normally be thrown
      */
-     public void terminate () 
-        throws IOException	       
-     {
-	 System.out.println();
-	 System.out.println( "TERMINATING " + this );
-	 try {
-	     _writer.write("<bye/>\n");
-	     _writer.close();
-	     _reader.close();
-	     System.out.println( "DESTROYING the Process " + _vampire );
-	     System.out.println();
-	     _vampire.destroy();
-	 }
-	 catch ( Exception ex ) {
-	     ex.printStackTrace();
-	 }
-     }
+    public void terminate () 
+        throws IOException           
+    {
+        System.out.println();
+        System.out.println( "TERMINATING " + this );
+        try {
+            _writer.write("<bye/>\n");
+            _writer.close();
+            _reader.close();
+            System.out.println( "DESTROYING the Process " + _vampire );
+            System.out.println();
+            _vampire.destroy();
+        }
+        catch ( Exception ex ) {
+            ex.printStackTrace();
+        }
+    }
 
     /** *************************************************************
      * Submit a query.
@@ -316,40 +314,40 @@ public class Vampire {
     {
         String result = "";
 
-	String query = ( "<query timeLimit='" 
-			 + timeLimit 
-			 + "' bindingsLimit='" 
-			 + bindingsLimit 
-			 + "'> " 
-			 + formula 
-			 + " </query>\n" );
+        String query = ( "<query timeLimit='" 
+                         + timeLimit 
+                         + "' bindingsLimit='" 
+                         + bindingsLimit 
+                         + "'> " 
+                         + formula 
+                         + " </query>\n" );
         
         System.out.println("INFO in Vampire.submitQuery(): " + query );
 
-	try {
-	    _writer.write( query );
-	    _writer.flush();
-	}
-	catch ( Exception ex ) {
-	    System.out.println("Error in Vampire.submitQuery(): " + ex.getMessage());
-	    ex.printStackTrace();
-	}
-	for (;;) {
-	    String line = _reader.readLine();
+        try {
+            _writer.write( query );
+            _writer.flush();
+        }
+        catch ( Exception ex ) {
+            System.out.println("Error in Vampire.submitQuery(): " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        for (;;) {
+            String line = _reader.readLine();
 
-	    if (line.indexOf("Error:") != -1) {
-		throw new IOException(line);
-	    }
-	    result += line + "\n";
-	    if ((line.indexOf("</queryResponse>") != -1) ||      // result is ok.
-		(line.indexOf("</assertionResponse>") != -1))  { // result is syntax error.
-		System.out.println("INFO in Vampire.submitQuery(): ===================================");
-		System.out.println(result);
-		result = result.replaceAll("&lt;","<");
-		result = result.replaceAll("&gt;",">");
-		return result;
-	    }
-	}
+            if (line.indexOf("Error:") != -1) {
+                throw new IOException(line);
+            }
+            result += line + "\n";
+            if ((line.indexOf("</queryResponse>") != -1) ||      // result is ok.
+                (line.indexOf("</assertionResponse>") != -1))  { // result is syntax error.
+                System.out.println("INFO in Vampire.submitQuery(): ===================================");
+                System.out.println(result);
+                result = result.replaceAll("&lt;","<");
+                result = result.replaceAll("&gt;",">");
+                return result;
+            }
+        }
     }
 
     /** *************************************************************
