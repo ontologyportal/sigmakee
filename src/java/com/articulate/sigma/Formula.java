@@ -2218,26 +2218,24 @@ public class Formula implements Comparable {
                                                            ignoreStrings,
                                                            translateIneq,
                                                            translateMath);
+                    fnew.read(theNewFormula);
 		    // Increment the timer for preProcessRecurse().
 		    KB.ppTimers[6] += (System.currentTimeMillis() - t1);
 
-		    if (passesPreProcessTest(query, theNewFormula)) {
-			fnew.read(theNewFormula);
+		    if (fnew.isOkForInference(query, kb)) {
 			fnew.sourceFile = this.sourceFile;
 			results.add(fnew);
 		    }
 		    else {
 			System.out.println("WARNING in Formula.preProcess()");
 			System.out.println("  REJECTING " + theNewFormula);
-		    }
+                        KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+                                                    + "\n<br/>Formula rejected for inference: "
+                                                    + theNewFormula
+                                                    + "<br/>\n");
+                    }
 		}
 	    }
-            // 	    System.out.println("INFO in Formula.preProcess()");
-            // 	    System.out.println("  results == " 
-            // 				+ ((results.size() > 20) 
-            // 				    ? (results.subList(0, 5) + " and " + (results.size() - 5) + " more ...")
-            // 				    : results));
-
 	}
 	catch (Exception ex) {
 	    ex.printStackTrace();
@@ -2246,34 +2244,41 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Returns true if the input string, which represents a formula,
-     * passes a series of matching tests designed to filter out
-     * expressions that are not syntactically valid SUO-KIF;
-     * otherwise, returns false.
+     * Returns true if this Formula appears not to have any of the
+     * characteristics that would cause it to be rejected during
+     * translation to TPTP form, or cause problems during inference.
+     * Otherwise, returns false.
      *
-     * @param candidate controls whether to add universal or existential
-     * quantification.  If true, add existential.
+     * @param query true if this Formula represents a query, else
+     * false.
+     *
+     * @param kb The KB object to be used for evaluating the
+     * suitability of this Formula.
      *
      * @return boolean
      */
-    private static boolean passesPreProcessTest(boolean query, String candidate) {
-	boolean pass = true;
+    private boolean isOkForInference(boolean query, KB kb) {
+	boolean pass = false;
+        // kb isn't used yet, because the checks below are purely
+        // syntactic.  But it probably will be used in the near
+        // future.
 	try {
-	    pass = (isNonEmptyString(candidate)
-                    && !(
-                         // (equal ?X ?Y ?Z ...) - equal is strictly binary. 
-                         candidate.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*")
+	    pass = !(// (equal ?X ?Y ?Z ...) - equal is strictly binary. 
+                     this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*")
 
-                         // (<relation> ?X ...) - no free variables
-                         // in atomic formulas unless they are
-                         // queries.
-                         || (!query && candidate.matches("^\\(\\s*\\w+\\s+\\?\\w+.*\\)$"))
-
-                         ||
-                         // add more patterns here
-                         false
-			 )
-		    );	    
+                     // (<relation> ?X ...) - no free variables in an
+                     // atomic formula that doesn't contain a string
+                     // unless the formula is a query.
+                     || (!query 
+                         && !isLogicalOperator(this.car())
+                         // The formula does not contain a string.
+                         && !this.theFormula.matches("^\\(\\s*.*\\\".*\\)$")
+                         // The formula contains a free variable.
+                         && this.theFormula.matches("^\\(\\s*.*\\?\\w+.*\\)$"))
+                     
+                     || // ... add more patterns here                         
+                     false
+                     );
 	}
 	catch (Exception ex) {
 	    ex.printStackTrace();
