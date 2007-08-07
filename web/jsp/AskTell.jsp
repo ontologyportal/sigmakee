@@ -22,7 +22,7 @@ August 9, Acapulco, Mexico.
     ArrayList processedStmts = null;
 
     String hostname = KBmanager.getMgr().getPref("hostname");
-    if (hostname == null)
+    if ((hostname == null) || hostname.equals(""))
         hostname = "localhost";
     String kbName = request.getParameter("kb");
     String language = request.getParameter("lang");
@@ -40,7 +40,7 @@ August 9, Acapulco, Mexico.
     if (request.getParameter("timeout") != null)
         timeout= Integer.parseInt(request.getParameter("timeout"));
     
-    if (kbName == null) {
+    if ((kbName == null) || kbName.equals("")) {
         System.out.println("Error: No knowledge base specified");
         return;
     }
@@ -97,7 +97,7 @@ August 9, Acapulco, Mexico.
                 Formula statement = new Formula();
                 statement.theFormula = stmt;
                 String port = KBmanager.getMgr().getPref("port");
-                if (port == null)
+                if ((port == null) || port.equals(""))
                     port = "8080";
                 String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));

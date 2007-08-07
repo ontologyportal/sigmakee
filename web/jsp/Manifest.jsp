@@ -33,14 +33,14 @@ August 9, Acapulco, Mexico.
     KB kb = KBmanager.getMgr().getKB(kbName);
     if (kb == null || kbName == null)
         response.sendRedirect("KBs.jsp");  // That KB does not exist    
-if (saveAs != null && saveAs.equals("prolog")) {
-    String prologFile = kb.writePrologFile(kb.name + ".pl");
-    String statusStr = ( "\n<br/>Wrote file " + prologFile + "\n<br/>" );
-    if ( ! Formula.isNonEmptyString(prologFile) ) {
-	statusStr = "\n<br/>Could not write a Prolog file\n<br/>";
+    if (saveAs != null && saveAs.equals("prolog")) {
+        String prologFile = kb.writePrologFile(kb.name + ".pl");
+        String statusStr = ( "\n<br/>Wrote file " + prologFile + "\n<br/>" );
+        if ( ! Formula.isNonEmptyString(prologFile) ) {
+            statusStr = "\n<br/>Could not write a Prolog file\n<br/>";
+        }
+        KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
     }
-    KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
-}
     if (saveAs != null && (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL"))) {
     // Force translation of the KB to TPTP, even if the user has not
     // requested this on the Preferences page.
@@ -163,6 +163,7 @@ if (saveAs != null && saveAs.equals("prolog")) {
     </FORM>
 
 <% } 
+
   String er = KBmanager.getMgr().getError();
   //out.println("INFO in Manifest.jsp: Error string is : " + er);
   if (er != "" && er != null) {
