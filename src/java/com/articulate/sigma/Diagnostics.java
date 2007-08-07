@@ -30,34 +30,34 @@ public class Diagnostics {
         System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
 
         ArrayList result = new ArrayList();
-	String term = null;
-	ArrayList forms = null;
-	Iterator it2 = null;
-	Formula formula = null;
-	String pred = null;
+        String term = null;
+        ArrayList forms = null;
+        Iterator it2 = null;
+        Formula formula = null;
+        String pred = null;
         Iterator it = kb.terms.iterator();
-	int count = 0;
+        int count = 0;
         while ( it.hasNext() ) {
             term = (String) it.next();
             forms = kb.ask("arg",1,term);
             if ( forms == null || forms.isEmpty() ) {
                 result.add(term);
-	    }
+            }
             else {
-		boolean found = false;
-		it2 = forms.iterator();
-		while ( it2.hasNext() ) {
-		    formula = (Formula) it2.next();
-		    pred = formula.car();
-		    if ( pred.equals("documentation") ) {
-			found = true;
-			break;
-		    }
+                boolean found = false;
+                it2 = forms.iterator();
+                while ( it2.hasNext() ) {
+                    formula = (Formula) it2.next();
+                    pred = formula.car();
+                    if ( pred.equals("documentation") ) {
+                        found = true;
+                        break;
+                    }
                 }
                 if ( ! found ) {
                     result.add(term);
-		    count++;
-		}
+                    count++;
+                }
             }
             if ( count > 99 ) {
                 result.add("limited to 100 results");
@@ -74,32 +74,32 @@ public class Diagnostics {
 
         System.out.println("INFO in Diagnostics.termsWithoutParent(): "); 
         ArrayList result = new ArrayList();
-	List preds = Arrays.asList( "instance", "subclass", "subAttribute", "subrelation", "subCollection" );
-	String term = null;
-	String pred = null;
-	ArrayList forms = null;
+        List preds = Arrays.asList( "instance", "subclass", "subAttribute", "subrelation", "subCollection" );
+        String term = null;
+        String pred = null;
+        ArrayList forms = null;
         Iterator it = kb.terms.iterator();
-	Iterator it2 = null;
-	int count = 0;
+        Iterator it2 = null;
+        int count = 0;
         while (it.hasNext()) {
             term = (String) it.next();
             forms = kb.ask("arg",1,term);
             if ( forms == null || forms.isEmpty() ) {
                 result.add(term);
-		count++;
-	    }
+                count++;
+            }
             else {
                 boolean found = false;
-		it2 = forms.iterator();
-		while ( it2.hasNext() ) {
-		    pred = ((Formula) it2.next()).car();
-		    found = preds.contains(pred);
-		    if ( found ) { break; };
-		}
+                it2 = forms.iterator();
+                while ( it2.hasNext() ) {
+                    pred = ((Formula) it2.next()).car();
+                    found = preds.contains(pred);
+                    if ( found ) { break; };
+                }
                 if ( ! found ) { 
-		    result.add(term); 
-		    count++;
-		}
+                    result.add(term); 
+                    count++;
+                }
             }
             if ( count > 99 ) {
                 result.add("limited to 100 results");
@@ -112,94 +112,45 @@ public class Diagnostics {
     /** *****************************************************************
      * Return a list of terms that have parents which are disjoint.
      */
-    /*
-    public static ArrayList childrenOfDisjointParents(KB kb) {
-
-        System.out.println("INFO in Diagnostics.childrenOfDisjointParents(): "); 
-        TreeSet result = new TreeSet();
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            ArrayList subs = kb.askWithRestriction(0, "subclass", 1, term);
-            if (subs.size() > 1) {
-                ArrayList parents = new ArrayList();
-                for (int i = 0; i < subs.size(); i++) {
-                    Formula exp = (Formula) subs.get(i);
-                    String expression = exp.theFormula;
-                    String parent = expression.substring(expression.indexOf(" ",10)+1,expression.indexOf(")",10));
-                    parents.add(parent.intern());
-                }
-                for (int i = 0; i < parents.size(); i++) {
-                    String term1 = (String) parents.get(i);
-                    HashSet d = (HashSet) kb.disjoint.get(term1.intern());
-                    if (d != null && d.size() > 0) {
-                        for (int j = i+1; j < parents.size(); j++) {
-                            String term2 = (String) parents.get(j);
-                            if (d.contains(term2.intern())) {
-                                result.add(term);
-                                System.out.println("INFO in Diagnostics.childrenOfDisjointParents(): " + term1 + 
-                                                   " and " + term2 + " are disjoint parents of " + term + ".");
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (result.size() > 99) {
-                result.add("limited to 100 results");
-                ArrayList res = new ArrayList();
-                res.addAll(result);
-                return res;
-            }
-        }
-        ArrayList res = new ArrayList();
-        res.addAll(result);
-        return res;
-    }
-    */
-
-    /** *****************************************************************
-     * Return a list of terms that have parents which are disjoint.
-     */
     public static ArrayList childrenOfDisjointParents(KB kb) {
 
         System.out.println("INFO in Diagnostics.childrenOfDisjointParents(): "); 
         ArrayList result = new ArrayList();
-	String term = null;
-	String termX = null;
-	String termY = null;
-	Set parentSet = null;
-	Object[] parents = null;
-	Set disjoints = null;
+        String term = null;
+        String termX = null;
+        String termY = null;
+        Set parentSet = null;
+        Object[] parents = null;
+        Set disjoints = null;
         Iterator it = kb.terms.iterator();
-	int count = 0;
-	boolean contradiction = false;
+        int count = 0;
+        boolean contradiction = false;
         while (it.hasNext()) {
-	    contradiction = false;
+            contradiction = false;
             term = (String) it.next();
-	    parentSet = kb.getCachedRelationValues( "subclass", term, 1, 2 );
-	    parents = null;
-	    if ( (parentSet != null) && !parentSet.isEmpty() ) {
-		parents = parentSet.toArray();
-	    }
-	    if ( parents != null ) {
+            parentSet = kb.getCachedRelationValues( "subclass", term, 1, 2 );
+            parents = null;
+            if ( (parentSet != null) && !parentSet.isEmpty() ) {
+                parents = parentSet.toArray();
+            }
+            if ( parents != null ) {
                 for ( int i = 0 ; (i < parents.length) && !contradiction ; i++ ) {
                     termX = (String) parents[i];
-		    disjoints = kb.getCachedRelationValues( "disjoint", termX, 1, 2 );
+                    disjoints = kb.getCachedRelationValues( "disjoint", termX, 1, 2 );
                     if ( (disjoints != null) && !disjoints.isEmpty() ) {
                         for ( int j = (i + 1) ; j < parents.length ; j++ ) {
                             termY = (String) parents[j];
-			    if ( disjoints.contains(termY) ) {
+                            if ( disjoints.contains(termY) ) {
                                 result.add( term );
-				contradiction = true;
-				count++;
+                                contradiction = true;
+                                count++;
                                 System.out.println( "INFO in Diagnostics.childrenOfDisjointParents(): " 
-						    + termX 
-						    + " and " 
-						    + termY 
-						    + " are disjoint parents of " 
-						    + term  );
-				break;
+                                                    + termX 
+                                                    + " and " 
+                                                    + termY 
+                                                    + " are disjoint parents of " 
+                                                    + term  );
+                                break;
                             }
                         }
                     }
@@ -208,7 +159,7 @@ public class Diagnostics {
 
             if ( count > 99 ) {
                 result.add("limited to 100 results");
-		break;
+                break;
             }
         }
         return result;
@@ -420,8 +371,8 @@ public class Diagnostics {
         if (KBmanager.getMgr().existsKB(kbName)) {
             KBmanager.getMgr().removeKB(kbName);
         }
-	File dir = new File( kbDir );
-	File emptyCFile = new File( dir, "emptyConstituent.txt" );
+        File dir = new File( kbDir );
+        File emptyCFile = new File( dir, "emptyConstituent.txt" );
         String emptyCFilename = emptyCFile.getAbsolutePath();
         FileWriter fw = null; 
         PrintWriter pw = null;
@@ -552,12 +503,12 @@ public class Diagnostics {
     public static void main(String args[]) {
 
         try {
-             KBmanager.getMgr().initializeOnce();
-             KB kb = KBmanager.getMgr().getKB("SUMO");
-             System.out.println(Diagnostics.unrootedTerms(kb));
-         }
-         catch (IOException ioe) {
-             System.out.println("Error in Diagnostics.main(): IOException: " + ioe.getMessage());
-         }      
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            System.out.println(Diagnostics.unrootedTerms(kb));
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in Diagnostics.main(): IOException: " + ioe.getMessage());
+        }      
     }
 }
