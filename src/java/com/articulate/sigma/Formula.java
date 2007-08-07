@@ -2154,10 +2154,8 @@ public class Formula implements Comparable {
 		Object obj0 = predVarInstantiations.get(0);
 		if (isNonEmptyString(obj0) && ((String) obj0).equalsIgnoreCase("reject")) {
 		    predVarInstantiations.clear();
-		    String errStr = ("No predicate instantiations for \n"
-                                     + this.toString());
-		    System.out.println("WARNING in Formula.preProcess()");
-		    System.out.println("  " + errStr);
+		    System.out.println("WARNING in Formula.preProcess(): No predicate instantiations for\n" + this);
+		    String errStr = "No predicate instantiations for <br/>" + this.htmlFormat(kb);
 		    KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                                 + ("\n<br/>" + errStr + "\n<br/>"));
 		}
@@ -2230,8 +2228,8 @@ public class Formula implements Comparable {
 			System.out.println("WARNING in Formula.preProcess()");
 			System.out.println("  REJECTING " + theNewFormula);
                         KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                    + "\n<br/>Formula rejected for inference: "
-                                                    + theNewFormula
+                                                    + "\n<br/>Formula rejected for inference:<br/>"
+                                                    + fnew.htmlFormat(kb)
                                                     + "<br/>\n");
                     }
 		}
@@ -2444,6 +2442,23 @@ public class Formula implements Comparable {
     public String htmlFormat(String html) {
 
         return format(html,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
+    }
+
+    /** ***************************************************************
+     * Format a formula for HTML presentation.
+     */
+    public String htmlFormat(KB kb) {
+        String hostname = KBmanager.getMgr().getPref("hostname");
+        if (!isNonEmptyString(hostname)) {
+            hostname = "localhost";
+        }
+        String port = KBmanager.getMgr().getPref("port");
+        if (!isNonEmptyString(port)) {
+            port = "8080";
+        }
+        String kbHref = ("http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kb.name);
+
+        return format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
     }
 
     /** ***************************************************************

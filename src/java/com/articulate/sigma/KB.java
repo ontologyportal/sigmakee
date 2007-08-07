@@ -3304,11 +3304,10 @@ public class KB {
                     // }
                 }
                 if (f.getTheTptpFormulas().isEmpty()) {
-                    String addErrStr = ("No TPTP formula for " + f);
+                    String addErrStr = "No TPTP formula for <br/>" + f.htmlFormat(this);
                     KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                                 + "<br/>\n" + addErrStr + "\n<br/>");
-                    System.out.println("INFO in KB.writeTPTPFile()");
-                    System.out.println("  " + addErrStr);
+                    System.out.println("INFO in KB.writeTPTPFile(): No TPTP formula for\n" + f);
                 }
             }
             //----Print conjecture if one has been supplied
