@@ -49,10 +49,10 @@ public class KBmanager {
      */    
     public static final int USE_TPTP         = 8;
 
-    
     private static KBmanager manager = new KBmanager();
-    private HashMap preferences = new HashMap();
+    private static final String CONFIG_FILE = "config.xml";
 
+    private HashMap preferences = new HashMap();
     protected HashMap kbs = new HashMap();
     private boolean initialized = false;
     private int oldInferenceBitValue = -1;
@@ -77,22 +77,44 @@ public class KBmanager {
      */
     private void setDefaultAttributes() {
 
-        String sep = File.separator;
-        String base = System.getenv("SIGMA_HOME");
-        if (base == null || base == "") {
-            base = System.getProperty("user.dir");
+        try {
+            String sep = File.separator;
+            String base = System.getenv("SIGMA_HOME");
+            if (base == null || base == "") {
+                base = System.getProperty("user.dir");
+            }
+            System.out.println("INFO in KBmanager.setDefaultAttributes(): base == " + base);
+            String tomcatRoot = System.getenv("CATALINA_HOME");
+            System.out.println("INFO in KBmanager.setDefaultAttributes(): CATALINA_HOME == " + tomcatRoot);
+            if ((tomcatRoot == null) || tomcatRoot.equals("")) {
+                tomcatRoot = System.getProperty("user.dir");
+            }
+            File tomcatRootDir = new File(tomcatRoot);
+            File baseDir = new File(base);
+            File kbDir = new File(baseDir, "KBs");
+            File inferenceTestDir = new File(kbDir, "tests");
+            // The links for the test results files will be broken if
+            // they are not put under [Tomcat]/webapps/sigma.
+            // Unfortunately, we don't know where [Tomcat] is.
+            File testOutputDir = new File(tomcatRootDir,("webapps" + sep + "sigma" + sep + "tests"));
+            preferences.put("baseDir",baseDir.getCanonicalPath());
+            preferences.put("kbDir",kbDir.getCanonicalPath());
+            preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());  
+            preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
+            // No way to determine the full inferenceEngine path without
+            // asking the user.
+            preferences.put("inferenceEngine", "kif");
+            preferences.put("loadCELT","no");  
+            preferences.put("showcached","yes");  
+            preferences.put("typePrefix","yes");  
+            preferences.put("holdsPrefix","no");  // if no then instantiate variables in predicate position
+            preferences.put("cache","no");
+            preferences.put("TPTP","yes");  
         }
-        preferences.put("baseDir",base);
-        preferences.put("kbDir",base + sep + "KBs");
-        preferences.put("testOutputDir",System.getProperty("user.dir") + sep + "webapps" + sep + "sigma" + sep + "tests");
-        preferences.put("inferenceTestDir","C:\\Program Files\\Apache Tomcat 4.0\\tests");  
-        preferences.put("inferenceEngine","C:\\Artic\\vampire\\Vampire_VSWorkspace\\vampire\\Release\\kif.exe");  
-        preferences.put("cache","no");  
-        preferences.put("showcached","yes");  
-        preferences.put("loadCELT","no");  
-        preferences.put("TPTP","no");  
-        preferences.put("typePrefix","no");  
-        preferences.put("holdsPrefix","yes");  // if no then instantiate variables in predicate position
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
     }
 
     /** ***************************************************************
@@ -171,29 +193,40 @@ public class KBmanager {
 
         SimpleElement configuration = null;
         System.out.println("INFO in KBmanager.readConfiguration()"); 
-        String fname = "config.xml";
         StringBuffer xml = new StringBuffer();
-        String dir = System.getProperty("user.dir") + File.separator + "KBs";
-        // System.out.println( "dir == " + dir );
-        File fDir = new File(dir);
-        if (!fDir.exists())
-            fDir.mkdir();
-        File f = new File( fDir, fname );
-        if (!f.exists()) 
+        String kbDirStr = (String) preferences.get("kbDir");
+        File kbDir = null;
+        if ((kbDirStr == null) || kbDirStr.equals("")) {
+            kbDirStr = System.getProperty("user.dir");
+        }
+        kbDir = new File(kbDirStr);
+        if (!kbDir.exists()) {
+            kbDir.mkdir();
+            preferences.put("kbDir", kbDir.getCanonicalPath());
+        }
+        File configFile = new File(kbDir, CONFIG_FILE);
+        if (!configFile.exists()) {
             writeConfiguration();
-        BufferedReader br = new BufferedReader(new FileReader( f ));
+        }
 
+        BufferedReader br = null;
         try {
+            br = new BufferedReader(new FileReader(configFile));
             SimpleDOMParser sdp = new SimpleDOMParser();
             configuration = sdp.parse(br);
         }
         catch (java.io.IOException e) {
             System.out.println("Error in KBmanager.readConfiguration(): IO exception parsing file " + 
-                               fname + "\n" + e.getMessage());
+                               configFile.getCanonicalPath() + "\n" + e.getMessage());
         }
         finally {
-            if (br != null) 
-                br.close();
+            if (br != null) {
+                try {
+                    br.close();
+                }
+                catch (Exception ex) {
+                }
+            }
         }
         return configuration;
     }
@@ -202,9 +235,8 @@ public class KBmanager {
      * Read in any KBs defined in the configuration.
      */
     public void initializeOnce() throws IOException {
-
-        System.out.println("INFO in KBmanager.initializeOnce() ");
         if (!initialized) {
+            System.out.println("INFO in KBmanager.initializeOnce() ");
             setDefaultAttributes();
             try {
                 SimpleElement configuration = readConfiguration();
@@ -213,6 +245,8 @@ public class KBmanager {
                 if ( Formula.isNonEmptyString(result) ) {
                     error = result;
                 }
+                System.out.println("INFO in KBmanager.initializeOnce()");
+                System.out.println("  kbDir == " + preferences.get("kbDir"));
                 LanguageFormatter.readKeywordMap((String) preferences.get("kbDir"));
             }
             catch (IOException ioe) {
@@ -297,9 +331,8 @@ public class KBmanager {
         PrintWriter pw = null;
         Iterator it; 
         String dir = (String) preferences.get("kbDir");
-        File fDir = new File( dir );
-        String fname = "config.xml";
-        File file = new File( fDir, fname );
+        File fDir = new File(dir);
+        File file = new File(fDir, CONFIG_FILE);
         String key;
         String value;
         KB kb = null;
