@@ -42,7 +42,7 @@ public class InferenceTestSuite {
     public static long totalTime = 0;
 
     /** Default timeout for queries with unspecified timeouts */
-    public static int TIMEOUT = 120;
+    public static int TIMEOUT = 30;
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -74,12 +74,38 @@ public class InferenceTestSuite {
         PrintWriter pw = null;
         String proof = null;
         String processedStmt = null;
-        String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
-        String outputDirString = KBmanager.getMgr().getPref("testOutputDir");
-        File outputDir = new File(outputDirString);
-        if (!outputDir.exists())
-            outputDir.mkdir();
-        String sep = File.separator;
+        String inferenceTestDirPath = KBmanager.getMgr().getPref("inferenceTestDir");
+        if ((inferenceTestDirPath == null) || inferenceTestDirPath.equals("")) {
+            return("The Sigma preference \"inferenceTestDir\" has not been set");
+        }
+        File inferenceTestDir = new File(inferenceTestDirPath);
+        if (!inferenceTestDir.isDirectory() && !inferenceTestDir.mkdir()) {
+            return("Could not find or create " + inferenceTestDir.getCanonicalPath());
+        }
+        File outputDir = null;
+        String outputDirPath = KBmanager.getMgr().getPref("testOutputDir");
+        if ((outputDirPath != null) && !outputDirPath.equals("")) {
+            // testOutputDir is set.
+            outputDir = new File(outputDirPath);
+        }
+        if (!outputDir.isDirectory() && !outputDir.mkdirs()) {
+            File baseDir = new File(KBmanager.getMgr().getPref("baseDir"));
+            if (baseDir.isDirectory()) {
+                File webappsDir = new File(baseDir, "webapps");
+                if (webappsDir.isDirectory()) {
+                    File waSigmaDir = new File(webappsDir, "sigma");
+                    if (waSigmaDir.isDirectory()) {
+                        outputDir = new File(waSigmaDir, "tests");
+                    }
+                }
+            }
+        }
+        if ((outputDir == null) || !outputDir.isDirectory()) {
+            return("Could not find or create " + outputDir);
+        }
+
+        // At this point, inferenceTestDir and outputDir shouild be
+        // set to viable values.
         String language = "en";
         int maxAnswers = 1;
         totalTime = 0;
@@ -87,39 +113,54 @@ public class InferenceTestSuite {
         result = result.append("<h2>Inference tests</h2>\n");
         result = result.append("<table><tr><td>name</td><td>test file</td><td>result</td><td>Time (ms)</td></tr>");
 
-        File dir = new File(inferenceTestDir);
-        String[] files = dir.list();
+        File[] files = inferenceTestDir.listFiles();
+        boolean testFilesPresent = false;
         if (files == null || files.length == 0) {
-            System.out.println("INFO in InferenceTestSuite.test(): No test files found in " + inferenceTestDir);
-            return("No test files found in " + inferenceTestDir);
+            System.out.println("INFO in InferenceTestSuite.test(): No test files found in " + inferenceTestDir.getCanonicalPath());
+            return("No test files found in " + inferenceTestDir.getCanonicalPath());
         }
-        for (int i = 0; i < files.length; i++) {
-
-
-            System.out.println();
-            System.out.println( "STARTING NEW TEST" );
-            System.out.println();
+        int i = 0;
+        for (i = 0; i < files.length; i++) {
+            if (files[i].getName().endsWith(".tq")) {
+                testFilesPresent = true;
+                break;
+            }
+        }
+        if (!testFilesPresent) {
+            System.out.println("INFO in InferenceTestSuite.test(): No test files found in " + inferenceTestDir.getCanonicalPath());
+            return("No test files found in " + inferenceTestDir.getCanonicalPath());
+        }
+        for (i = 0; i < files.length; i++) {
 
             int timeout = TIMEOUT;
 
+            // This probably isn't necessary.  Make this a preferences
+            // parameter.
             kb.deleteUserAssertions();
-            if (files[i].endsWith(".tq")) {
+
+            if (files[i].getCanonicalPath().endsWith(".tq")) {
+
+                System.out.println();
+                System.out.println("STARTING TEST " + files[i].getName());
+                System.out.println();
+
                 KIF test = new KIF();
                 try {
-                    test.readFile(inferenceTestDir + File.separator + files[i]);
+                    test.readFile(files[i].getCanonicalPath());
                 }
                 catch (Exception e) {
-                    return("Error in InferenceTestSuite.test(): exception reading file: " + inferenceTestDir + File.separator + files[i] + ". " + e.getMessage());
+                    return("Error in InferenceTestSuite.test(): exception reading file: " + files[i].getCanonicalPath() + ". " + e.getMessage());
                 }
+                File outfile = new File(outputDir, files[i].getName());
                 try {
-                    test.writeFile(outputDirString + File.separator + files[i]);
+                    test.writeFile(outfile.getCanonicalPath());
                 }
                 catch (IOException ioe) {
-                    return("Error in InferenceTestSuite.test(): exception writing file: " + outputDirString + File.separator + files[i] + ". " + ioe.getMessage());
+                    return("Error in InferenceTestSuite.test(): exception writing file: " + outfile.getCanonicalPath() + ". " + ioe.getMessage());
                 }
                 System.out.println("INFO in InferenceTestSuite.test(): num formulas: " + String.valueOf(test.formulaSet.size()));
                 Iterator it = test.formulaSet.iterator();
-                String note = files[i];
+                String note = files[i].getName();
                 String query = null;
                 ArrayList answerList = new ArrayList();
                 while (it.hasNext()) {
@@ -163,22 +204,27 @@ public class InferenceTestSuite {
                     return("Error in InferenceTestSuite.test() while executing query: " + ex.getMessage());
                 }
                 String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-                String outFilename = files[i].substring(0,files[i].length()-3) + "-res.html";
-                String fullOutFilename = outputDirString + File.separator + outFilename;
+                String rfn = files[i].getName();
+                String resultsFilename = rfn.substring(0,rfn.length()-3) + "-res.html";
+                File resultsFile = new File(outputDir, resultsFilename);
                 try {
-                    fw = new FileWriter(fullOutFilename);
+                    fw = new FileWriter(resultsFile);
                     pw = new PrintWriter(fw);
                     pw.println(HTMLformatter.formatProofResult(proof,query,processedStmt,lineHtml,kb.name,language));
                 }
                 catch (java.io.IOException e) {
-                    throw new IOException("Error writing file " + outFilename);
+                    throw new IOException("Error writing file " + resultsFile.getCanonicalPath());
                 }
                 finally {
-                    if (pw != null) {
-                        pw.close();
+                    try {
+                        if (pw != null) {
+                            pw.close();
+                        }
+                        if (fw != null) {
+                            fw.close();
+                        }
                     }
-                    if (fw != null) {
-                        fw.close();
+                    catch (Exception ex) {
                     }
                 }
                 BasicXMLparser res = new BasicXMLparser(proof);
@@ -193,14 +239,14 @@ public class InferenceTestSuite {
                     resultString = "succeed";
                     pass++;
                 }
-                result = result.append("<tr><td>" + note + "</td><td><a href=\"tests/" + files[i] + "\">" + files[i] + "</a></td>");
-                result = result.append("<td><a href=\"tests/" + outFilename + "\">" + resultString + "</a></td>");
+                result = result.append("<tr><td>" + note + "</td><td><a href=\"" + outputDir.getName() + "/" + files[i].getName() + "\">" + files[i].getName() + "</a></td>");
+                result = result.append("<td><a href=\"" + outputDir.getName() + "/" + resultsFile.getName() + "\">" + resultString + "</a></td>");
                 result = result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
             }
         }
 
         System.out.println();
-        System.out.println( "ALL QUERIES FINISHED" );
+        System.out.println("ALL TEST QUERIES FINISHED");
         System.out.println();
 
         result = result.append("</table><P>\n");
