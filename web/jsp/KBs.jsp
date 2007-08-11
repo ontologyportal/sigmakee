@@ -23,6 +23,8 @@ August 9, Acapulco, Mexico.
 <%
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
     KBmanager.getMgr().initializeOnce();
+    System.out.println("INFO in KB.jsp: baseDir == " + KBmanager.getMgr().getPref("baseDir"));
+    System.out.println("INFO in KB.jsp:   kbDir == " + KBmanager.getMgr().getPref("kbDir"));
     if (request.getParameter("userName") != null)
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
 %>
@@ -126,9 +128,6 @@ August 9, Acapulco, Mexico.
 	  else {
               out.println("<TD>WordNet Check</TD>");
 	  }
-          // if (kb.inferenceEngine == null && kb.celt == null)
-          //     out.println("<TD>Ask/Tell</TD>");
-          // else                                      // inference engine is available
           out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName + "\">Ask/Tell</A>&nbsp;</TD>");
 
           if (KBmanager.getMgr().getPref("userName") != null 
