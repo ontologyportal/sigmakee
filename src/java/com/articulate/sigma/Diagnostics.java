@@ -68,6 +68,33 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * Return a list of terms that have more than one documentation string.
+     */
+    public static ArrayList termsWithMultipleDoc(KB kb) {
+
+        System.out.println("INFO in Diagnostics.termsWithMultipleDoc(): "); 
+
+        ArrayList result = new ArrayList();
+        String term = null;
+        ArrayList forms = null;
+        Iterator it = kb.terms.iterator();
+        int count = 0;
+        while ( it.hasNext() ) {
+            term = (String) it.next();
+            forms = kb.askWithRestriction(0,"documentation",1,term);
+            if (forms.size() > 1) {
+                result.add(term);
+                count++;
+            }
+            if ( count > 99 ) {
+                result.add("limited to 100 results");
+                break;
+            }
+        }
+        return result;
+    }
+
+    /** *****************************************************************
      * Return a list of terms that do not have a parent term.
      */
     public static ArrayList termsWithoutParent(KB kb) {
