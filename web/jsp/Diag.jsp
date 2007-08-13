@@ -113,6 +113,16 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  ArrayList termsWithMultipleDoc = Diagnostics.termsWithMultipleDoc(kb);
+  show.append(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
+%>
+
+<br><b>&nbsp;Warning: Terms with multiple documentation</B>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><BR>
+
+<%
+  show.setLength( 0 );
   ArrayList extra = Diagnostics.extraSubclassInPartition(kb);
   show.append(HTMLformatter.termList(extra,kbHref));
 %>
