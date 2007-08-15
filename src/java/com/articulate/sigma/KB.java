@@ -419,95 +419,100 @@ public class KB {
 
         System.out.println("INFO in KB.computeTransitiveCacheClosure(" + relationName + ")");
 
-        long t1 = System.currentTimeMillis();
-        int count = 0;
-        if (cachedTransitiveRelationNames.contains(relationName)) {
-            RelationCache c1 = getRelationCache(relationName, 1, 2);
-            RelationCache c2 = getRelationCache(relationName, 2, 1);
-            RelationCache inst1 = null;
-            RelationCache inst2 = null;
-            boolean isSubrelationCache = relationName.equals("subrelation");
-            if (isSubrelationCache) {
-                inst1 = getRelationCache("instance", 1, 2);
-                inst2 = getRelationCache("instance", 2, 1);
-            }
-            Set c1Keys = c1.keySet();
-            Iterator it1 = null;
-            Iterator it2 = null;
-            String keyTerm = null;
-            String valTerm = null;
-            Set valSet = null;
-            Set valSet2 = null;
-            Object[] valArr = null;
-            boolean changed = true;
-            while (changed) {
-                changed = false;
-                it1 = c1Keys.iterator();
-                while (it1.hasNext()) {
-                    keyTerm = (String) it1.next();
-                    valSet = (Set) c1.get(keyTerm);
-                    valArr = valSet.toArray();
-                    for (int i = 0 ; i < valArr.length ; i++) {
-                        valTerm = (String) valArr[i];
+        try {
+            long t1 = System.currentTimeMillis();
+            int count = 0;
+            if (cachedTransitiveRelationNames.contains(relationName)) {
+                RelationCache c1 = getRelationCache(relationName, 1, 2);
+                RelationCache c2 = getRelationCache(relationName, 2, 1);
+                RelationCache inst1 = null;
+                RelationCache inst2 = null;
+                boolean isSubrelationCache = relationName.equals("subrelation");
+                if (isSubrelationCache) {
+                    inst1 = getRelationCache("instance", 1, 2);
+                    inst2 = getRelationCache("instance", 2, 1);
+                }
+                Set c1Keys = c1.keySet();
+                Iterator it1 = null;
+                Iterator it2 = null;
+                String keyTerm = null;
+                String valTerm = null;
+                Set valSet = null;
+                Set valSet2 = null;
+                Object[] valArr = null;
+                boolean changed = true;
+                while (changed) {
+                    changed = false;
+                    it1 = c1Keys.iterator();
+                    while (it1.hasNext()) {
+                        keyTerm = (String) it1.next();
+                        valSet = (Set) c1.get(keyTerm);
+                        valArr = valSet.toArray();
+                        for (int i = 0 ; i < valArr.length ; i++) {
+                            valTerm = (String) valArr[i];
 
-                        valSet2 = (Set) c1.get(valTerm);
-                        if (valSet2 != null) {
-                            it2 = valSet2.iterator();
-                            while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
-                                if (valSet.add(it2.next())) {
+                            valSet2 = (Set) c1.get(valTerm);
+                            if (valSet2 != null) {
+                                it2 = valSet2.iterator();
+                                while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
+                                    if (valSet.add(it2.next())) {
+                                        changed = true;
+                                        count++;
+                                    }
+                                }
+                            }
+
+                            if (count < MAX_CACHE_SIZE) {
+                                valSet2 = (Set) c2.get(valTerm);
+                                if (valSet2 == null) {
+                                    valSet2 = new HashSet();
+                                    c2.put(valTerm, valSet2);
+                                }
+                                if (valSet2.add(keyTerm)) {
                                     changed = true;
                                     count++;
                                 }
                             }
                         }
-
-                        if (count < MAX_CACHE_SIZE) {
-                            valSet2 = (Set) c2.get(valTerm);
-                            if (valSet2 == null) {
-                                valSet2 = new HashSet();
-                                c2.put(valTerm, valSet2);
-                            }
-                            if (valSet2.add(keyTerm)) {
-                                changed = true;
-                                count++;
-                            }
+                        // Here we try to make sure that every Relation
+                        // has at least some entry in the "instance"
+                        // caches, since this information is sometimes
+                        // considered redundant and so could be left out
+                        // of .kif files.
+                        valTerm = "Relation";
+                        if (keyTerm.endsWith("Fn")) {
+                            valTerm = "Function";
                         }
+                        else if (Character.isLowerCase(keyTerm.charAt(0)) && (keyTerm.indexOf("(") == -1)) {
+                            valTerm = "Predicate";
+                        }
+                        addRelationCacheEntry(inst1, keyTerm, valTerm);
+                        addRelationCacheEntry(inst2, valTerm, keyTerm);
                     }
-                    // Here we try to make sure that every Relation
-                    // has at least some entry in the "instance"
-                    // caches, since this information is sometimes
-                    // considered redundant and so could be left out
-                    // of .kif files.
-                    valTerm = "Relation";
-                    if (keyTerm.endsWith("Fn")) {
-                        valTerm = "Function";
+                    if (changed) {
+                        c1.setIsClosureComputed(true);
+                        c2.setIsClosureComputed(true);
                     }
-                    else if (Character.isLowerCase(keyTerm.charAt(0)) && (keyTerm.indexOf("(") == -1)) {
-                        valTerm = "Predicate";
-                    }
-                    addRelationCacheEntry(inst1, keyTerm, valTerm);
-                    addRelationCacheEntry(inst2, valTerm, keyTerm);
-                }
-                if (changed) {
-                    c1.setIsClosureComputed(true);
-                    c2.setIsClosureComputed(true);
                 }
             }
-        }
-        System.out.println("  "
-                           + count 
-                           + " "
-                           + relationName 
-                           + " entries computed in " 
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
+            System.out.println("  "
+                               + count 
+                               + " "
+                               + relationName 
+                               + " entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
 
-        /*
-          if (relationName.equals("subclass")) {
-          printParents();
-          printChildren();
-          }
-        */
+            /*
+              if (relationName.equals("subclass")) {
+              printParents();
+              printChildren();
+              }
+            */
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return;
     }
 
@@ -521,63 +526,68 @@ public class KB {
 
         System.out.println("INFO in KB.computeInstanceCacheClosure()");
 
-        long t1 = System.currentTimeMillis();
-        RelationCache ic1 = getRelationCache("instance", 1, 2);
-        RelationCache ic2 = getRelationCache("instance", 2, 1);
-        RelationCache sc1 = getRelationCache("subclass", 1, 2);
-        Set ic1KeySet = ic1.keySet();
-        Iterator it1 = ic1KeySet.iterator();
-        Iterator it2 = null;
-        String ic1KeyTerm = null;
-        Set ic1ValSet = null;
-        Object[] ic1ValArr = null;
-        String ic1ValTerm = null;
-        Set sc1ValSet = null;
-        Set ic2ValSet = null;
+        try {
+            long t1 = System.currentTimeMillis();
+            RelationCache ic1 = getRelationCache("instance", 1, 2);
+            RelationCache ic2 = getRelationCache("instance", 2, 1);
+            RelationCache sc1 = getRelationCache("subclass", 1, 2);
+            Set ic1KeySet = ic1.keySet();
+            Iterator it1 = ic1KeySet.iterator();
+            Iterator it2 = null;
+            String ic1KeyTerm = null;
+            Set ic1ValSet = null;
+            Object[] ic1ValArr = null;
+            String ic1ValTerm = null;
+            Set sc1ValSet = null;
+            Set ic2ValSet = null;
 
-        int count = 0;
-        while (it1.hasNext()) {
-            ic1KeyTerm = (String) it1.next();
-            ic1ValSet = (Set) ic1.get(ic1KeyTerm);
-            ic1ValArr = ic1ValSet.toArray();
-            for (int i = 0 ; i < ic1ValArr.length ; i++) {
-                ic1ValTerm = (String) ic1ValArr[i];
-                if (ic1ValTerm != null) {
-                    sc1ValSet = (Set) sc1.get(ic1ValTerm);
-                    if (sc1ValSet != null) {
-                        it2 = sc1ValSet.iterator();
-                        while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
-                            if (ic1ValSet.add(it2.next())) {
-                                count++;
+            int count = 0;
+            while (it1.hasNext()) {
+                ic1KeyTerm = (String) it1.next();
+                ic1ValSet = (Set) ic1.get(ic1KeyTerm);
+                ic1ValArr = ic1ValSet.toArray();
+                for (int i = 0 ; i < ic1ValArr.length ; i++) {
+                    ic1ValTerm = (String) ic1ValArr[i];
+                    if (ic1ValTerm != null) {
+                        sc1ValSet = (Set) sc1.get(ic1ValTerm);
+                        if (sc1ValSet != null) {
+                            it2 = sc1ValSet.iterator();
+                            while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
+                                if (ic1ValSet.add(it2.next())) {
+                                    count++;
+                                }
                             }
                         }
                     }
                 }
-            }
         
-            if (count < MAX_CACHE_SIZE) {
-                it2 = ic1ValSet.iterator();
-                while (it2.hasNext()) {
-                    ic1ValTerm = (String) it2.next();
-                    ic2ValSet = (Set) ic2.get(ic1ValTerm);
-                    if (ic2ValSet == null) {
-                        ic2ValSet = new HashSet();
-                        ic2.put(ic1ValTerm, ic2ValSet);
-                    }
-                    if (ic2ValSet.add(ic1KeyTerm)) {
-                        count++;
+                if (count < MAX_CACHE_SIZE) {
+                    it2 = ic1ValSet.iterator();
+                    while (it2.hasNext()) {
+                        ic1ValTerm = (String) it2.next();
+                        ic2ValSet = (Set) ic2.get(ic1ValTerm);
+                        if (ic2ValSet == null) {
+                            ic2ValSet = new HashSet();
+                            ic2.put(ic1ValTerm, ic2ValSet);
+                        }
+                        if (ic2ValSet.add(ic1KeyTerm)) {
+                            count++;
+                        }
                     }
                 }
             }
-        }
 
-        ic1.setIsClosureComputed(true);
-        ic2.setIsClosureComputed(true);
-        System.out.println("  "
-                           + count
-                           + " instance entries computed in " 
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
+            ic1.setIsClosureComputed(true);
+            ic2.setIsClosureComputed(true);
+            System.out.println("  "
+                               + count
+                               + " instance entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return;
     }
 
@@ -591,83 +601,87 @@ public class KB {
 
         System.out.println("INFO in KB.computeDisjointCacheClosure()");
 
-        long t1 = System.currentTimeMillis();
-        RelationCache dc1 = getRelationCache("disjoint", 1, 2);
-        RelationCache sc2 = getRelationCache("subclass", 2, 1);
-        Set dc1KeySet      = null;
-        Object[] dc1KeyArr = null;
-        String dc1KeyTerm  = null;
-        Set dc1ValSet      = null;
-        Object[] dc1ValArr = null;
-        String dc1ValTerm  = null;
-        Set sc2ValSet      = null;
-        Iterator it        = null;
-        String sc2ValTerm  = null;
-        Set dc1ValSet2     = null;
+        try {
+            long t1 = System.currentTimeMillis();
+            RelationCache dc1 = getRelationCache("disjoint", 1, 2);
+            RelationCache sc2 = getRelationCache("subclass", 2, 1);
+            Set dc1KeySet      = null;
+            Object[] dc1KeyArr = null;
+            String dc1KeyTerm  = null;
+            Set dc1ValSet      = null;
+            Object[] dc1ValArr = null;
+            String dc1ValTerm  = null;
+            Set sc2ValSet      = null;
+            Iterator it        = null;
+            String sc2ValTerm  = null;
+            Set dc1ValSet2     = null;
 
-        int count = -1;
-        int passes = 0;
-        boolean changed = true;
+            int count = -1;
+            int passes = 0;
+            boolean changed = true;
 
-        // One pass is sufficient.
-        // while (changed) {
-        dc1KeySet = dc1.keySet();
-        dc1KeyArr = dc1KeySet.toArray();
-        changed = false;
-        for (int i = 0 ; (i < dc1KeyArr.length) && (count < MAX_CACHE_SIZE) ; i++) {
+            // One pass is sufficient.
+            // while (changed) {
+            dc1KeySet = dc1.keySet();
+            dc1KeyArr = dc1KeySet.toArray();
+            changed = false;
+            for (int i = 0 ; (i < dc1KeyArr.length) && (count < MAX_CACHE_SIZE) ; i++) {
 
-            dc1KeyTerm = (String) dc1KeyArr[i];
-            dc1ValSet = (Set) dc1.get(dc1KeyTerm);
-            dc1ValArr = dc1ValSet.toArray();
-            for (int j = 0 ; j < dc1ValArr.length ; j++) {
-                dc1ValTerm = (String) dc1ValArr[j];
-                sc2ValSet = (Set) sc2.get(dc1ValTerm);
+                dc1KeyTerm = (String) dc1KeyArr[i];
+                dc1ValSet = (Set) dc1.get(dc1KeyTerm);
+                dc1ValArr = dc1ValSet.toArray();
+                for (int j = 0 ; j < dc1ValArr.length ; j++) {
+                    dc1ValTerm = (String) dc1ValArr[j];
+                    sc2ValSet = (Set) sc2.get(dc1ValTerm);
+                    if (sc2ValSet != null) {
+                        if (dc1ValSet.addAll(sc2ValSet)) {
+                            changed = true;
+                        }
+                    }
+                }
+
+                sc2ValSet = (Set) sc2.get(dc1KeyTerm);
                 if (sc2ValSet != null) {
-                    if (dc1ValSet.addAll(sc2ValSet)) {
-                        changed = true;
+                    it = sc2ValSet.iterator();
+                    while (it.hasNext()) {
+                        sc2ValTerm = (String) it.next();
+                        dc1ValSet2 = (Set) dc1.get(sc2ValTerm);
+                        if (dc1ValSet2 == null) {
+                            dc1ValSet2 = new HashSet();
+                            dc1.put(sc2ValTerm, dc1ValSet2);
+                        }
+                        if (dc1ValSet2.addAll(dc1ValSet)) {
+                            changed = true;
+                        }
                     }
                 }
-            }
 
-            sc2ValSet = (Set) sc2.get(dc1KeyTerm);
-            if (sc2ValSet != null) {
-                it = sc2ValSet.iterator();
+                it = dc1.values().iterator();
+                count = 0;
                 while (it.hasNext()) {
-                    sc2ValTerm = (String) it.next();
-                    dc1ValSet2 = (Set) dc1.get(sc2ValTerm);
-                    if (dc1ValSet2 == null) {
-                        dc1ValSet2 = new HashSet();
-                        dc1.put(sc2ValTerm, dc1ValSet2);
-                    }
-                    if (dc1ValSet2.addAll(dc1ValSet)) {
-                        changed = true;
-                    }
+                    dc1ValSet = (HashSet) it.next();
+                    count += dc1ValSet.size();
                 }
             }
 
-            it = dc1.values().iterator();
-            count = 0;
-            while (it.hasNext()) {
-                dc1ValSet = (HashSet) it.next();
-                count += dc1ValSet.size();
+            if (changed) {
+                dc1.setIsClosureComputed(true);
             }
+
+            // System.out.println("  " + count + " disjoint entries after pass " + ++passes);
+            // }
+
+            System.out.println("  "
+                               + count
+                               + " disjoint entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
+
+            // printDisjointness();
         }
-
-        if (changed) {
-            dc1.setIsClosureComputed(true);
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-
-        // System.out.println("  " + count + " disjoint entries after pass " + ++passes);
-        // }
-
-        System.out.println("  "
-                           + count
-                           + " disjoint entries computed in " 
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
-
-        // printDisjointness();
-
         return;
     }
 
@@ -684,12 +698,12 @@ public class KB {
 
         System.out.println("INFO in KB.cacheRelnsWithRelnArgs()");
 
-        long t1 = System.currentTimeMillis();
-        if (relnsWithRelnArgs == null) {
-            relnsWithRelnArgs = new HashMap();
-        }
-        relnsWithRelnArgs.clear();
         try {
+            long t1 = System.currentTimeMillis();
+            if (relnsWithRelnArgs == null) {
+                relnsWithRelnArgs = new HashMap();
+            }
+            relnsWithRelnArgs.clear();
             Set relnClasses = getCachedRelationValues("subclass", "Relation", 2, 1);
 
             // System.out.println("  relnClasses == " + relnClasses);
@@ -756,15 +770,15 @@ public class KB {
                     relnsWithRelnArgs.put("format", signature);
                 }
             }
+            System.out.println("  "
+                               + relnsWithRelnArgs.size()
+                               + " relation argument entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        System.out.println("  "
-                           + relnsWithRelnArgs.size()
-                           + " relation argument entries computed in " 
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
         return;
     }
 
@@ -784,8 +798,8 @@ public class KB {
 
     private void cacheRelationValences() {
         System.out.println("INFO in KB.cacheRelationValences()");
-        long t1 = System.currentTimeMillis();
         try {
+            long t1 = System.currentTimeMillis();
             Set relations = getCachedRelationValues ("instance", "Relation", 2, 1);
             if (relations != null) {
                 RelationCache ic1 = getRelationCache("instance", 1, 2);
@@ -834,15 +848,15 @@ public class KB {
                     }
                 }
             }
+            System.out.println("  "
+                               + relationValences.size()
+                               + " relation valence entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        System.out.println("  "
-                           + relationValences.size()
-                           + " relation valence entries computed in " 
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
         return;
     }
 
@@ -889,18 +903,23 @@ public class KB {
     }
 
     protected boolean containsRelnWithRelnArg(String input) {
-        if (Formula.isNonEmptyString(input)) {
-            List relns = listRelnsWithRelnArgs();
-            if (relns != null) {
-                int len = relns.size();
-                String reln = null;
-                for (int i = 0 ; i < len ; i++) {
-                    reln = (String) relns.get(i);
-                    if (input.indexOf(reln) >= 0) {
-                        return true;
+        try {
+            if (Formula.isNonEmptyString(input)) {
+                List relns = listRelnsWithRelnArgs();
+                if (relns != null) {
+                    int len = relns.size();
+                    String reln = null;
+                    for (int i = 0 ; i < len ; i++) {
+                        reln = (String) relns.get(i);
+                        if (input.indexOf(reln) >= 0) {
+                            return true;
+                        }
                     }
                 }
             }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return false;
     }
@@ -1015,25 +1034,30 @@ public class KB {
      */
     public void buildRelationCaches() {
 
-        long t1 = System.currentTimeMillis();
-        initRelationCaches();
-        cacheGroundAssertions();
+        try {
+            long t1 = System.currentTimeMillis();
+            initRelationCaches();
+            cacheGroundAssertions();
 
-        Iterator it = cachedTransitiveRelationNames.iterator();
-        String relationName = null;
-        while (it.hasNext()) {
-            relationName = (String) it.next();
-            computeTransitiveCacheClosure(relationName);
+            Iterator it = cachedTransitiveRelationNames.iterator();
+            String relationName = null;
+            while (it.hasNext()) {
+                relationName = (String) it.next();
+                computeTransitiveCacheClosure(relationName);
+            }
+
+            computeInstanceCacheClosure();
+            computeDisjointCacheClosure();
+            cacheRelnsWithRelnArgs();
+            cacheRelationValences();
+
+            System.out.println("Total elapsed time to build all relation caches: "
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
         }
-
-        computeInstanceCacheClosure();
-        computeDisjointCacheClosure();
-        cacheRelnsWithRelnArgs();
-        cacheRelationValences();
-
-        System.out.println("Total elapsed time to build all relation caches: "
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return;
     }
 
@@ -1047,99 +1071,104 @@ public class KB {
 
         // System.out.println("formulas == " + formulas.toString());
 
-        long t1 = System.currentTimeMillis();
-        String relation = null;
-        String arg1 = null;
-        String arg2 = null;
-        List forms = null;
-        Formula formula = null;
-        RelationCache c1 = null;
-        RelationCache c2 = null;
+        try {
+            long t1 = System.currentTimeMillis();
+            String relation = null;
+            String arg1 = null;
+            String arg2 = null;
+            List forms = null;
+            Formula formula = null;
+            RelationCache c1 = null;
+            RelationCache c2 = null;
 
-        Iterator formsIt = null;
-        Iterator it = getCachedRelationNames().iterator(); 
-        int total = 0;
-        int count = -1;
-        while (it.hasNext()) {                   
+            Iterator formsIt = null;
+            Iterator it = getCachedRelationNames().iterator(); 
+            int total = 0;
+            int count = -1;
+            while (it.hasNext()) {                   
 
-            count = 0;
-            relation = (String) it.next();
-            forms = ask("arg", 0, relation);
-            // System.out.println(forms.size() + " " + relation + " assertions retrieved");
+                count = 0;
+                relation = (String) it.next();
+                forms = ask("arg", 0, relation);
+                // System.out.println(forms.size() + " " + relation + " assertions retrieved");
 
-            if (forms != null) {
+                if (forms != null) {
 
-                // System.out.print(relation);
+                    // System.out.print(relation);
 
-                c1 = getRelationCache(relation, 1, 2);
-                c2 = getRelationCache(relation, 2, 1);
-                formsIt = forms.iterator();
-                while (formsIt.hasNext()) {
-                    formula = (Formula) formsIt.next();
-                    if ((formula.theFormula.indexOf("(",2) == -1) 
-                        && !(formula.sourceFile.endsWith(_cacheFileSuffix))) {
+                    c1 = getRelationCache(relation, 1, 2);
+                    c2 = getRelationCache(relation, 2, 1);
+                    formsIt = forms.iterator();
+                    while (formsIt.hasNext()) {
+                        formula = (Formula) formsIt.next();
+                        if ((formula.theFormula.indexOf("(",2) == -1) 
+                            && !(formula.sourceFile.endsWith(_cacheFileSuffix))) {
 
-                        arg1 = formula.getArgument(1).intern();
-                        arg2 = formula.getArgument(2).intern();
-                        count += addRelationCacheEntry(c1, arg1, arg2);
-                        count += addRelationCacheEntry(c2, arg2, arg1);
+                            arg1 = formula.getArgument(1).intern();
+                            arg2 = formula.getArgument(2).intern();
+                            count += addRelationCacheEntry(c1, arg1, arg2);
+                            count += addRelationCacheEntry(c2, arg2, arg1);
 
-                        // Special cases.
-                        if (cachedReflexiveRelationNames.contains(relation)) {
-                            count += addRelationCacheEntry(c1, arg1, arg1);
-                            count += addRelationCacheEntry(c1, arg2, arg2);
-                            count += addRelationCacheEntry(c2, arg1, arg1);
-                            count += addRelationCacheEntry(c2, arg2, arg2);
-                        }
-                        else if (relation.equals("disjoint")) {
-                            count += addRelationCacheEntry(c1, arg2, arg1);
+                            // Special cases.
+                            if (cachedReflexiveRelationNames.contains(relation)) {
+                                count += addRelationCacheEntry(c1, arg1, arg1);
+                                count += addRelationCacheEntry(c1, arg2, arg2);
+                                count += addRelationCacheEntry(c2, arg1, arg1);
+                                count += addRelationCacheEntry(c2, arg2, arg2);
+                            }
+                            else if (relation.equals("disjoint")) {
+                                count += addRelationCacheEntry(c1, arg2, arg1);
+                            }
                         }
                     }
                 }
-            }
 
-            // More ways of collecting implied disjointness
-            // assertions.
-            if (relation.equals("disjoint")) {
-                List partitions = ask("arg", 0, "partition");
-                List decompositions = ask("arg", 0, "disjointDecomposition");
-                forms = new ArrayList();
-                if (partitions != null) {
-                    forms.addAll(partitions);
-                }
-                if (decompositions != null) {
-                    forms.addAll(decompositions);
-                }
-                c1 = getRelationCache(relation, 1, 2);
-                List arglist = null;
-                formsIt = forms.iterator();
-                while (formsIt.hasNext()) {
-                    formula = (Formula) formsIt.next();
-                    if ((formula.theFormula.indexOf("(",2) == -1) 
-                        && !(formula.sourceFile.endsWith(_cacheFileSuffix))) {
+                // More ways of collecting implied disjointness
+                // assertions.
+                if (relation.equals("disjoint")) {
+                    List partitions = ask("arg", 0, "partition");
+                    List decompositions = ask("arg", 0, "disjointDecomposition");
+                    forms = new ArrayList();
+                    if (partitions != null) {
+                        forms.addAll(partitions);
+                    }
+                    if (decompositions != null) {
+                        forms.addAll(decompositions);
+                    }
+                    c1 = getRelationCache(relation, 1, 2);
+                    List arglist = null;
+                    formsIt = forms.iterator();
+                    while (formsIt.hasNext()) {
+                        formula = (Formula) formsIt.next();
+                        if ((formula.theFormula.indexOf("(",2) == -1) 
+                            && !(formula.sourceFile.endsWith(_cacheFileSuffix))) {
 
-                        arglist = formula.argumentsToArrayList(2);
-                        for (int i = 0 ; i < arglist.size() ; i++) {
-                            for (int j = 0 ; j < arglist.size() ; j++) {
-                                if (i != j) {
-                                    arg1 = ((String) arglist.get(i)).intern();
-                                    arg2 = ((String) arglist.get(j)).intern();
-                                    count += addRelationCacheEntry(c1, arg1, arg2);
-                                    count += addRelationCacheEntry(c1, arg2, arg1);
+                            arglist = formula.argumentsToArrayList(2);
+                            for (int i = 0 ; i < arglist.size() ; i++) {
+                                for (int j = 0 ; j < arglist.size() ; j++) {
+                                    if (i != j) {
+                                        arg1 = ((String) arglist.get(i)).intern();
+                                        arg2 = ((String) arglist.get(j)).intern();
+                                        count += addRelationCacheEntry(c1, arg1, arg2);
+                                        count += addRelationCacheEntry(c1, arg2, arg1);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                System.out.println("  " + count + " cache entries added for " + relation);
+                total += count;
             }
-            System.out.println("  " + count + " cache entries added for " + relation);
-            total += count;
+            System.out.println("  "
+                               + total
+                               + " ground assertions cached in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
         }
-        System.out.println("  "
-                           + total
-                           + " ground assertions cached in " 
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return;
     }
 
