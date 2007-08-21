@@ -189,44 +189,46 @@ public class ProofProcessor {
     /** ***************************************************************
      * Convert XML proof to TPTP format
      */
-    public static String tptpProof(ArrayList proofSteps) 
-throws IOException {
+    public static String tptpProof(ArrayList proofSteps) {
 
         StringBuffer result = new StringBuffer();
+        try {
 
-        for (int j = 0; j < proofSteps.size(); j++) {
-            ProofStep step = (ProofStep) proofSteps.get(j);
-            boolean isLeaf = step.premises.isEmpty() || 
-(step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
-//DEBUG result.append(step.formulaType);
-//----All are fof because the conversion from SUO-KIF quantifies the variables
-            result.append("fof(");
-            result.append(step.number);
-            result.append(",");
-            if (isLeaf) {
-                result.append("axiom");
-            } else {
-                result.append("plain");
-            }
-            result.append(",");
-//DEBUG System.out.println("===\n" + step.axiom);
-            try {
-                result.append(Formula.tptpParseSUOKIFString(step.axiom));                       
-            } catch(ParseException e) {
-                System.out.println(e.getMessage() + " in " + step.axiom);
-            }
-            if (!isLeaf) {
-                result.append(",inference(rule,[],[" + step.premises.get(0));
-                for (int parent = 1; parent < step.premises.size(); parent++) {
-                    result.append("," + step.premises.get(parent));
+            for (int j = 0; j < proofSteps.size(); j++) {
+                ProofStep step = (ProofStep) proofSteps.get(j);
+                boolean isLeaf = step.premises.isEmpty() || 
+                    (step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
+                //DEBUG result.append(step.formulaType);
+                //----All are fof because the conversion from SUO-KIF quantifies the variables
+                result.append("fof(");
+                result.append(step.number);
+                result.append(",");
+                if (isLeaf) {
+                    result.append("axiom");
+                } else {
+                    result.append("plain");
                 }
-                result.append("])");
-            }
-            result.append("  ).\n");
-        }
+                result.append(",");
+                //DEBUG System.out.println("===\n" + step.axiom);
 
+                result.append(Formula.tptpParseSUOKIFString(step.axiom));                       
+
+                if (!isLeaf) {
+                    result.append(",inference(rule,[],[" + step.premises.get(0));
+                    for (int parent = 1; parent < step.premises.size(); parent++) {
+                        result.append("," + step.premises.get(parent));
+                    }
+                    result.append("])");
+                }
+                result.append("  ).\n");
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return(result.toString());
     }
+
     /** ***************************************************************
     *  A main method, used only for testing.  It should not be called
     *  during normal operation.
