@@ -42,7 +42,7 @@ public class InferenceTestSuite {
     public static long totalTime = 0;
 
     /** Default timeout for queries with unspecified timeouts */
-    public static int TIMEOUT = 30;
+    public static int TIMEOUT = 60;
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -114,6 +114,7 @@ public class InferenceTestSuite {
         result = result.append("<table><tr><td>name</td><td>test file</td><td>result</td><td>Time (ms)</td></tr>");
 
         File[] files = inferenceTestDir.listFiles();
+        Arrays.sort(files);
         boolean testFilesPresent = false;
         if (files == null || files.length == 0) {
             System.out.println("INFO in InferenceTestSuite.test(): No test files found in " + inferenceTestDir.getCanonicalPath());
