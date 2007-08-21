@@ -446,48 +446,54 @@ public class KB {
                     it1 = c1Keys.iterator();
                     while (it1.hasNext()) {
                         keyTerm = (String) it1.next();
-                        valSet = (Set) c1.get(keyTerm);
-                        valArr = valSet.toArray();
-                        for (int i = 0 ; i < valArr.length ; i++) {
-                            valTerm = (String) valArr[i];
+                        if ((keyTerm == null) || keyTerm.equals("")) {
+                            System.out.println("Error in KB.computeTransitiveCacheClosure(" + relationName + ")");
+                            System.out.println("  keyTerm == " + ((keyTerm == null) ? null : "\"" + keyTerm + "\""));
+                        }
+                        else {
+                            valSet = (Set) c1.get(keyTerm);
+                            valArr = valSet.toArray();
+                            for (int i = 0 ; i < valArr.length ; i++) {
+                                valTerm = (String) valArr[i];
 
-                            valSet2 = (Set) c1.get(valTerm);
-                            if (valSet2 != null) {
-                                it2 = valSet2.iterator();
-                                while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
-                                    if (valSet.add(it2.next())) {
+                                valSet2 = (Set) c1.get(valTerm);
+                                if (valSet2 != null) {
+                                    it2 = valSet2.iterator();
+                                    while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
+                                        if (valSet.add(it2.next())) {
+                                            changed = true;
+                                            count++;
+                                        }
+                                    }
+                                }
+
+                                if (count < MAX_CACHE_SIZE) {
+                                    valSet2 = (Set) c2.get(valTerm);
+                                    if (valSet2 == null) {
+                                        valSet2 = new HashSet();
+                                        c2.put(valTerm, valSet2);
+                                    }
+                                    if (valSet2.add(keyTerm)) {
                                         changed = true;
                                         count++;
                                     }
                                 }
                             }
-
-                            if (count < MAX_CACHE_SIZE) {
-                                valSet2 = (Set) c2.get(valTerm);
-                                if (valSet2 == null) {
-                                    valSet2 = new HashSet();
-                                    c2.put(valTerm, valSet2);
-                                }
-                                if (valSet2.add(keyTerm)) {
-                                    changed = true;
-                                    count++;
-                                }
+                            // Here we try to make sure that every Relation
+                            // has at least some entry in the "instance"
+                            // caches, since this information is sometimes
+                            // considered redundant and so could be left out
+                            // of .kif files.
+                            valTerm = "Relation";
+                            if (keyTerm.endsWith("Fn")) {
+                                valTerm = "Function";
                             }
+                            else if (Character.isLowerCase(keyTerm.charAt(0)) && (keyTerm.indexOf("(") == -1)) {
+                                valTerm = "Predicate";
+                            }
+                            addRelationCacheEntry(inst1, keyTerm, valTerm);
+                            addRelationCacheEntry(inst2, valTerm, keyTerm);
                         }
-                        // Here we try to make sure that every Relation
-                        // has at least some entry in the "instance"
-                        // caches, since this information is sometimes
-                        // considered redundant and so could be left out
-                        // of .kif files.
-                        valTerm = "Relation";
-                        if (keyTerm.endsWith("Fn")) {
-                            valTerm = "Function";
-                        }
-                        else if (Character.isLowerCase(keyTerm.charAt(0)) && (keyTerm.indexOf("(") == -1)) {
-                            valTerm = "Predicate";
-                        }
-                        addRelationCacheEntry(inst1, keyTerm, valTerm);
-                        addRelationCacheEntry(inst2, valTerm, keyTerm);
                     }
                     if (changed) {
                         c1.setIsClosureComputed(true);
@@ -560,7 +566,6 @@ public class KB {
                         }
                     }
                 }
-        
                 if (count < MAX_CACHE_SIZE) {
                     it2 = ic1ValSet.iterator();
                     while (it2.hasNext()) {
@@ -1030,6 +1035,30 @@ public class KB {
     }
 
     /** *************************************************************
+     * Returns true if the subclass cache supports the conclusion that
+     * c1 is a subclass of c2, else returns false.
+     *
+     * @param c1 A String, the name of a SetOrClass.
+     *
+     * @param c2 A String, the name of a SetOrClass.
+     *
+     * @return boolean
+     */
+    public boolean isSubclass(String c1, String c2) {
+        boolean ans = false;
+        try {
+            if (Formula.isNonEmptyString(c1) && Formula.isNonEmptyString(c2)) {
+                Set classNames = getCachedRelationValues("subclass", c1, 1, 2);
+                ans = ((classNames != null) && classNames.contains(c2));
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** *************************************************************
      * Builds all of the relation caches for the current KB.
      */
     public void buildRelationCaches() {
@@ -1106,18 +1135,20 @@ public class KB {
 
                             arg1 = formula.getArgument(1).intern();
                             arg2 = formula.getArgument(2).intern();
-                            count += addRelationCacheEntry(c1, arg1, arg2);
-                            count += addRelationCacheEntry(c2, arg2, arg1);
+                            if (Formula.isNonEmptyString(arg1) && Formula.isNonEmptyString(arg2)) {
+                                count += addRelationCacheEntry(c1, arg1, arg2);
+                                count += addRelationCacheEntry(c2, arg2, arg1);
 
-                            // Special cases.
-                            if (cachedReflexiveRelationNames.contains(relation)) {
-                                count += addRelationCacheEntry(c1, arg1, arg1);
-                                count += addRelationCacheEntry(c1, arg2, arg2);
-                                count += addRelationCacheEntry(c2, arg1, arg1);
-                                count += addRelationCacheEntry(c2, arg2, arg2);
-                            }
-                            else if (relation.equals("disjoint")) {
-                                count += addRelationCacheEntry(c1, arg2, arg1);
+                                // Special cases.
+                                if (cachedReflexiveRelationNames.contains(relation)) {
+                                    count += addRelationCacheEntry(c1, arg1, arg1);
+                                    count += addRelationCacheEntry(c1, arg2, arg2);
+                                    count += addRelationCacheEntry(c2, arg1, arg1);
+                                    count += addRelationCacheEntry(c2, arg2, arg2);
+                                }
+                                else if (relation.equals("disjoint")) {
+                                    count += addRelationCacheEntry(c1, arg2, arg1);
+                                }
                             }
                         }
                     }
@@ -1149,8 +1180,10 @@ public class KB {
                                     if (i != j) {
                                         arg1 = ((String) arglist.get(i)).intern();
                                         arg2 = ((String) arglist.get(j)).intern();
-                                        count += addRelationCacheEntry(c1, arg1, arg2);
-                                        count += addRelationCacheEntry(c1, arg2, arg1);
+                                        if (Formula.isNonEmptyString(arg1) && Formula.isNonEmptyString(arg2)) {
+                                            count += addRelationCacheEntry(c1, arg1, arg2);
+                                            count += addRelationCacheEntry(c1, arg2, arg1);
+                                        }
                                     }
                                 }
                             }
@@ -1324,61 +1357,74 @@ public class KB {
      *
      * @param kif A KIF object.
      *
-     * @return void
+     * @param pathname The full, canonical pathname string of the
+     * constituent file in which the formula will be saved, if known.
+     *
+     * @return If any of the formulas are already present, returns an
+     * ArrayList containing the old (existing) formulas, else returns
+     * an empty ArrayList.
      */
-    private void merge(KIF kif) {
+    private ArrayList merge(KIF kif, String pathname) {
 
-        // Add all the terms from the new formula into the KB's current list
-        terms.addAll(kif.terms);                                   
+        ArrayList formulasPresent = new ArrayList();
+        try {
+            // Add all the terms from the new formula into the KB's current list
+            terms.addAll(kif.terms);                                   
 
-        Set keys = kif.formulas.keySet();
-        Iterator it = keys.iterator();
-        while (it.hasNext()) {
-            String key = (String) it.next();
-            ArrayList newValues = new ArrayList((ArrayList) kif.formulas.get(key));
-            if (formulas.containsKey(key)) {
-                ArrayList values = (ArrayList) formulas.get(key);
-                for (int i = 0; i < newValues.size(); i++) {
-                    Formula value = (Formula) newValues.get(i);
-                    if (key.charAt(0) == '(') {                    // The key is the formula itself. 
-                        String filename = value.sourceFile;        // Check if the formula has already been asserted from the same file.
+            Set keys = kif.formulas.keySet();
+            Iterator it = keys.iterator();
+            while (it.hasNext()) {
+                String key = (String) it.next();
+                ArrayList newFormulas = new ArrayList((ArrayList) kif.formulas.get(key));
+                if (formulas.containsKey(key)) {
+                    ArrayList oldFormulas = (ArrayList) formulas.get(key);
+                    for (int i = 0; i < newFormulas.size(); i++) {
+                        Formula newFormula = (Formula) newFormulas.get(i);
+                        if (pathname != null) {
+                            newFormula.sourceFile = pathname;
+                        }
+
                         boolean found = false;
-                        for (int j = 0; j < values.size(); j++) {
-                            Formula oldValue = (Formula) newValues.get(j);
-                            if (oldValue.sourceFile.compareTo (filename) == 0) {
+                        for (int j = 0; j < oldFormulas.size(); j++) {
+                            Formula oldFormula = (Formula) oldFormulas.get(j);
+                            if (newFormula.theFormula.equals(oldFormula.theFormula)) {
                                 found = true;
+                                formulasPresent.add(oldFormula);
+                                System.out.println("INFO in KB.merge)");
+                                System.out.println("  newFormula == " + newFormula);
+                                System.out.println("  oldFormula == " + oldFormula);
                             }
                         }
                         if (!found) {
                             // value.computeTheClausalForm();
-                            values.add(value);
-                            formulaMap.put(value.theFormula, value);
+                            oldFormulas.add(newFormula);
+                            formulaMap.put(newFormula.theFormula.intern(), newFormula);
                         }
                     }
-                    else {
-                        // value.computeTheClausalForm();
-                        values.add(value);
-                        formulaMap.put(value.theFormula, value);
+                }
+                else {
+                    formulas.put(key,newFormulas);
+                    Iterator it2 = newFormulas.iterator();
+                    Formula f = null;
+                    while (it2.hasNext()) {
+                        f = (Formula) it2.next();
+                        if (Formula.isNonEmptyString(f.theFormula)) {
+                            // f.computeTheClausalForm();
+                            formulaMap.put(f.theFormula.intern(), f);
+                        }
                     }
                 }
             }
-            else {
-                formulas.put(key,newValues);
-                Iterator it2 = newValues.iterator();
-                Formula f = null;
-                while (it2.hasNext()) {
-                    f = (Formula) it2.next();
-                    if (Formula.isNonEmptyString(f.theFormula)) {
-                        // f.computeTheClausalForm();
-                        formulaMap.put(f.theFormula, f);
-                    }
-                }
-            }
+            /* collectParents();
+               if (KBmanager.getMgr().getPref("cache") != null &&
+               KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
+               cache();  */     // caching is too slow to perform for just one formula
         }
-        /* collectParents();
-           if (KBmanager.getMgr().getPref("cache") != null &&
-           KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
-           cache();  */     // caching is too slow to perform for just one formula
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+        return formulasPresent;
     }
 
     /** *************************************************************
@@ -1445,97 +1491,111 @@ public class KB {
      */
     public String tell(String input) {
 
-        System.out.println("INFO in KB.tell(" + this.name + ")");
-        System.out.println("  " + input);
+        System.out.println("INFO in KB.tell(" + input + ")");
 
         String result = "The formula could not be added";
         try {
             // 1. Parse the input string.
             KIF kif = new KIF();
-            kif.parseStatement(input, this.name + _userAssertionsString);
-            merge(kif);
-
-            if (kif.formulaSet.isEmpty()) {
+            String msg = kif.parseStatement(input);
+            if (msg != null) {
+                result = "Error parsing \"" + input + "\": " + msg;
+            }
+            else if (kif.formulaSet.isEmpty()) {
                 result = "The input could not be parsed";
             }
             else {
-                ArrayList parsedFormulas = new ArrayList();
-                String fstr = null;
-                Formula parsedF = null;
-                Iterator it = kif.formulaSet.iterator();
-                boolean go = true;
-                while (go && it.hasNext()) {
-                    // 2. Confirm that the input has been converted into
-                    // 2. at least one Formula object and stored in
-                    // 2. this.formulaMap.
-                    fstr = (String) it.next();
-                    parsedF = (Formula) this.formulaMap.get(fstr.intern());
-                    if (parsedF == null) {
-                        go = false;
-                    }
-                    else {
-                        parsedFormulas.add(parsedF);
-                    }
+                // Make the pathname of the user assertions file.
+                File dir = new File(this.kbDir);
+                File file = new File(dir, (this.name + _userAssertionsString));
+                String filename = file.getCanonicalPath();
+                List formulasAlreadyPresent = merge(kif, filename);
+                if (!formulasAlreadyPresent.isEmpty()) {
+                    String sf = ((Formula)formulasAlreadyPresent.get(0)).sourceFile;
+                    result = "The formula was already added from " + sf;
                 }
-                if (go && !parsedFormulas.isEmpty()) {
-                    // 3. Prepare the user assertions file.
-                    File dir = new File(this.kbDir);
-                    File file = new File(dir, (this.name + _userAssertionsString));
-                    String filename = file.getCanonicalPath();
-                    if (!constituents.contains(filename)) {
-                        // System.out.println("INFO in KB.tell(): Adding file: " + filename + " to: " + constituents.toString());
-                        if (file.exists())                      // If the assertions file exists
-                            file.delete();
-                        constituents.add(filename);
-                        KBmanager.getMgr().writeConfiguration();
-                    }
-                    it = parsedFormulas.iterator();
-                    while (it.hasNext()) {
-                        parsedF = (Formula) it.next();
-                        // 4. Write the formula to the user assertions file.
-                        writeUserAssertion(parsedF.theFormula, filename);
-                    }
-
-                    result = "The formula has been added for browsing";
-
-                    boolean allAdded = (inferenceEngine != null);
-                    ArrayList processedFormulas = new ArrayList();
-                    it = parsedFormulas.iterator();
-                    while (it.hasNext()) {
-                        processedFormulas.clear();
-                        parsedF = (Formula) it.next();
-                        // 5. Preproccess the formula.
-                        processedFormulas.addAll(parsedF.preProcess(false, this));
-                        if (processedFormulas.isEmpty()) {
-                            allAdded = false;
+                else {
+                    ArrayList parsedFormulas = new ArrayList();
+                    String fstr = null;
+                    Formula parsedF = null;
+                    Iterator it = kif.formulaSet.iterator();
+                    boolean go = true;
+                    while (go && it.hasNext()) {
+                        // 2. Confirm that the input has been converted into
+                        // 2. at least one Formula object and stored in
+                        // 2. this.formulaMap.
+                        fstr = (String) it.next();
+                        parsedF = (Formula) this.formulaMap.get(fstr.intern());
+                        if (parsedF == null) {
+                            go = false;
                         }
                         else {
-                            // 6. If TPTP == yes, translate to TPTP.
-                            if (KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
-                                parsedF.tptpParse(false, this, processedFormulas);
+                            parsedFormulas.add(parsedF);
+                        }
+                    }
+                    System.out.println("INFO in KB.tell()");
+                    System.out.println("  parsedFormulas == " + parsedFormulas);
+                    if (go && !parsedFormulas.isEmpty()) {
+                        if (!constituents.contains(filename)) {
+                            // System.out.println("INFO in KB.tell():
+                            // Adding file: " + filename + " to: " +
+                            // constituents.toString()); 
 
-                                System.out.println("INFO in KB.tell()");
-                                System.out.println("  theTptpFormulas == " + parsedF.getTheTptpFormulas());
+                            // 3. If the assertions file exists, delete it.
+                            if (file.exists()) 
+                                file.delete();
+                            constituents.add(filename);
+                            KBmanager.getMgr().writeConfiguration();
+                        }
+                        it = parsedFormulas.iterator();
+                        while (it.hasNext()) {
+                            parsedF = (Formula) it.next();
+                            // 4. Write the formula to the user assertions file.
+                            writeUserAssertion(parsedF.theFormula, filename);
+                            parsedF.sourceFile = filename;
+                        }
+
+                        result = "The formula has been added for browsing";
+
+                        boolean allAdded = (inferenceEngine != null);
+                        ArrayList processedFormulas = new ArrayList();
+                        it = parsedFormulas.iterator();
+                        while (it.hasNext()) {
+                            processedFormulas.clear();
+                            parsedF = (Formula) it.next();
+                            // 5. Preproccess the formula.
+                            processedFormulas.addAll(parsedF.preProcess(false, this));
+                            if (processedFormulas.isEmpty()) {
+                                allAdded = false;
                             }
-                            // 7. If there is an inference engine,
-                            // 7. assert the formula to the
-                            // 7. inference engine's database.
-                            if (inferenceEngine != null) {
-                                String ieResult = null;
-                                Formula processedF = null;
-                                Iterator it2 = processedFormulas.iterator();
-                                while (it2.hasNext()) {
-                                    processedF = (Formula) it2.next();
-                                    ieResult = inferenceEngine.assertFormula(processedF.theFormula);
-                                    System.out.println("  " + ieResult);
-                                    if (ieResult.indexOf("Formula has been added") < 0) {
-                                        allAdded = false;
+                            else {
+                                // 6. If TPTP != no, translate to TPTP.
+                                if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("no")) {
+                                    parsedF.tptpParse(false, this, processedFormulas);
+
+                                    System.out.println("INFO in KB.tell()");
+                                    System.out.println("  theTptpFormulas == " + parsedF.getTheTptpFormulas());
+                                }
+                                // 7. If there is an inference engine,
+                                // 7. assert the formula to the
+                                // 7. inference engine's database.
+                                if (inferenceEngine != null) {
+                                    String ieResult = null;
+                                    Formula processedF = null;
+                                    Iterator it2 = processedFormulas.iterator();
+                                    while (it2.hasNext()) {
+                                        processedF = (Formula) it2.next();
+                                        ieResult = inferenceEngine.assertFormula(processedF.theFormula);
+                                        System.out.println("  " + ieResult);
+                                        if (ieResult.indexOf("Formula has been added") < 0) {
+                                            allAdded = false;
+                                        }
                                     }
                                 }
                             }
                         }
+                        result += (allAdded ? " and inference" : " but not for local inference");
                     }
-                    result += (allAdded ? " and inference" : " but not for local inference");
                 }
             }
         }
@@ -1547,8 +1607,8 @@ public class KB {
            if (KBmanager.getMgr().getPref("cache") != null &&
            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
            cache();        */   // caching is currently not efficient enough to invoke it after every assertion
-        System.out.println("INFO in KB.tell()");
-        System.out.println("  " + result);
+        System.out.println("INFO in KB.tell(" + input + ")");
+        System.out.println("  -> " + result);
         return result;
     }
 
@@ -2892,7 +2952,7 @@ public class KB {
         // System.out.println("INFO in KB.loadVampire()");
 
         try {
-            if (! formulaMap.isEmpty()) {
+            if (!formulaMap.isEmpty()) {
 
                 System.out.println("INFO in KB.loadVampire(): preprocessing " + formulaMap.size() + " formulas");
 
