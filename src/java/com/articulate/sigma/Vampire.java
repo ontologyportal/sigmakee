@@ -247,6 +247,7 @@ public class Vampire {
      * @throws IOException should not normally be thrown
      */
     public String assertFormula(String formula) throws IOException {
+        String result = "";
         try {
             String assertion = ( "<assertion> " + formula + " </assertion>\n" );
 
@@ -254,25 +255,26 @@ public class Vampire {
 
             _writer.write( assertion );
             _writer.flush();
+            for (;;) {
+                String line = _reader.readLine();
+                if (line.indexOf("Error:") != -1) {
+                    throw new IOException(line);
+                }
+
+                // System.out.println("INFO Vampire.assertFormula(): Response: " + line);
+
+                result += line + "\n";
+                if (line.indexOf("</assertionResponse>") != -1) {
+                    break;
+                }
+            }
         }
         catch ( Exception ex ) {
-            System.out.println( ex.getMessage() );
+            System.out.println("Error in Vampire.assertFormula(" + formula + ")");
+            System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
-        String result = "";
-        for (;;) {
-            String line = _reader.readLine();
-            if (line.indexOf("Error:") != -1) {
-                throw new IOException(line);
-            }
-
-            // System.out.println("INFO Vampire.assertFormula(): Response: " + line);
-
-            result += line + "\n";
-            if (line.indexOf("</assertionResponse>") != -1) {
-                return result;
-            }
-        }
+        return result;
     }
 
     /** *************************************************************
