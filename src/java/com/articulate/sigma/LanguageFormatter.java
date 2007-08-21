@@ -134,8 +134,8 @@ public class LanguageFormatter {
      */
     public static HashMap readKeywordMap(String dir) {
 
-        System.out.println("INFO in LanguageFormatter.readKeywordMap()");
-        System.out.println("  dir == " + dir);
+        // System.out.println("INFO in LanguageFormatter.readKeywordMap()");
+        // System.out.println("  dir == " + dir);
 	if ( keywordMap == null ) { keywordMap = new HashMap(); }
 	if ( keywordMap.isEmpty() ) {
 
