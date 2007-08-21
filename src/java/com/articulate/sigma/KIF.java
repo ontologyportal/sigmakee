@@ -43,7 +43,7 @@ public class KIF {
      * @return int Returns an integer value denoting the current parse
      * mode.
      */
-    public int getParseMode () {
+    public int getParseMode() {
         return this.parseMode;
     }
 
@@ -54,7 +54,7 @@ public class KIF {
      *
      * @return void
      */
-    public void setParseMode ( int mode ) {
+    public void setParseMode(int mode) {
         this.parseMode = mode;
     }
 
@@ -71,7 +71,7 @@ public class KIF {
 
     private String filename;
 
-    public String getFilename () {
+    public String getFilename() {
         return this.filename;
     }
 
@@ -142,7 +142,7 @@ public class KIF {
         int mode = this.getParseMode();
         System.out.println("INFO in KIF.parse(): filename == " + this.getFilename() );
         System.out.println("INFO in KIF.parse(): parseMode == "
-                           + ( (mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE" ) );
+                           + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));
         String key = null;
         ArrayList keySet;
         StringBuffer expression = new StringBuffer(40);
@@ -228,16 +228,16 @@ public class KIF {
                         f.theFormula = expression.toString().intern();
                         //if (KBmanager.getMgr().getPref("TPTP").equals("yes"))                       
                         //f.tptpParse(false,null);   // not a query
-
-                        if (formulaSet.contains(expression.toString())) {
+                        if (formulaSet.contains(f.theFormula)) {
                             String warning = "Duplicate formula at line " + f.startLine + ": " + expression;
                             // lineStart + totalLinesForComments + expression;
                             warningSet.add(warning);
                         }
                         // Check argument validity ONLY if we are in
                         // NORMAL_PARSE_MODE.
-                        if ( mode == NORMAL_PARSE_MODE ) {
-                            String validArgs = f.validArgs( file.getName(), new Integer(f.startLine) );
+                        if (mode == NORMAL_PARSE_MODE) {
+                            String validArgs = f.validArgs((file != null ? file.getName() : null), 
+                                                           (file != null ? new Integer(f.startLine) : null));
                             if (validArgs == null || validArgs == "") 
                                 validArgs = f.badQuantification();                      
                             if (validArgs != null && validArgs != "") 
@@ -246,11 +246,11 @@ public class KIF {
                         // formulaList.add(expression.intern());
                         if (formulaSet.size() % 100 == 0) 
                             System.out.print('.');
-                        keySet.add(expression.toString().intern());           // Make the formula itself a key
+                        keySet.add(f.theFormula);           // Make the formula itself a key
                         f.endLine = st.lineno() + totalLinesForComments;
                         for (int i = 0; i < keySet.size(); i++) {             // Add the expression but ...
                             if (formulas.containsKey(keySet.get(i))) {
-                                if (!formulaSet.contains(expression.toString().intern())) {  // don't add keys if formula is already present
+                                if (!formulaSet.contains(f.theFormula)) {  // don't add keys if formula is already present
                                     list = (ArrayList) formulas.get(keySet.get(i));
                                     if (!list.contains(f)) 
                                         list.add(f);
@@ -262,7 +262,7 @@ public class KIF {
                                 formulas.put((String) keySet.get(i),list);
                             }
                         }
-                        formulaSet.add(expression.toString().intern());
+                        formulaSet.add(f.theFormula);
 
                         inConsequent = false;
                         inRule = false;
@@ -312,15 +312,15 @@ public class KIF {
                     }
                     // Build the terms list and create special keys
                     // ONLY if we are in NORMAL_PARSE_MODE.
-                    if ( (mode == NORMAL_PARSE_MODE) 
-                         && (st.sval.charAt(0) != '?') 
-                         && (st.sval.charAt(0) != '@') ) {   // Variables are not terms
+                    if ((mode == NORMAL_PARSE_MODE) 
+                        && (st.sval.charAt(0) != '?') 
+                        && (st.sval.charAt(0) != '@')) {   // Variables are not terms
                         terms.add(st.sval);                  // collect all terms
                         key = createKey(st.sval,inAntecedent,inConsequent,argumentNum,parenLevel);
                         keySet.add(key);                     // Collect all the keys until the end of
                     }                                        // the statement is reached.
                 } 
-                else if ( (mode == RELAXED_PARSE_MODE) && (st.ttype == 96) ) { 
+                else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) { 
 
                     // AB: 5/2007
                     // allow '`' in relaxed parse mode.
@@ -343,13 +343,11 @@ public class KIF {
                 throw new ParseException("Parsing error in " + filename + ": Missing closing paranthesis.",f.startLine);
             }
         }
-        catch (java.io.FileNotFoundException e) {
-            throw new FileNotFoundException("kif file " + filename + " not found");
+        catch (Exception ex) {
+            warningSet.add("Error in KIF.parse(): " + ex.getMessage());
+            System.out.println("Error in KIF.parse(): " + ex.getMessage());
+            ex.printStackTrace();
         }
-        catch (java.io.IOException e) {
-            throw new IOException("IO exception parsing file " + filename);
-        }
-
         System.out.println( "x" );
 
         if (warningSet.size() > 0) {
@@ -357,6 +355,7 @@ public class KIF {
             StringBuffer warnings = new StringBuffer();
             while (it.hasNext()) {
                 String w = (String) it.next();
+                System.out.println("Warning in KIF.parse(): " + w);
                 warnings.append("\n<br/>" + w + "<br/>\n");
             }
             KBmanager.getMgr().setError(warnings.toString());
@@ -494,20 +493,16 @@ public class KIF {
     /** ***************************************************************
      * Parse a single formula.
      */
-    public String parseStatement(String formula, String f) {
+    public String parseStatement(String formula) {
 
         StringReader r = new StringReader(formula);
-        filename = f;
-        file = new File( f );
         try {
             parse(r);
         }
         catch (Exception e) {
             return e.getMessage();
         }
-        finally {
-            return null;
-        }
+        return null;
     }
 
     /** ***************************************************************
