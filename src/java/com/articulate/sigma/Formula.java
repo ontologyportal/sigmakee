@@ -1170,72 +1170,81 @@ public class Formula implements Comparable {
      *    (holds__ ?REL2 ?ARG1 ?ARG2))
      * etc.
      * 
-     * @return an ArrayList of Formulas
+     * @return an ArrayList of Formulas, or an empty ArrayList.
      */
     protected ArrayList expandRowVars(KB kb) {
 
         // System.out.println("INFO in Formula.expandRowVars(" + this + " ...)");
+        ArrayList resultList = new ArrayList();
+        try {
 
-        String input = this.theFormula;
-        TreeSet rowVars = null;
-        StringBuffer result = null; 
-        Iterator it = null;
-        if (input.indexOf('@') == -1) {
-            Formula f = new Formula();
-            f.read(input);
-            ArrayList resultList = new ArrayList();
-            resultList.add(f);
-            return resultList;
-        }
-        else {
-            rowVars = this.findRowVars();
-            it = rowVars.iterator();
-            result = new StringBuffer(input);
-            long t1 = 0L;
+            // This is a kluge, but right here is the best place to
+            // perform this check.  Continue only if this is not an
+            // obvious tautology.  If the test immediately below
+            // fails, this method will just return an empty List.
+            if (!this.isRule() || !this.getArgument(1).equals(this.getArgument(2))) {
 
-            // Iterate through the row variables
-            while (it.hasNext()) {
-                String row = (String) it.next();
+                Formula f = new Formula();
+                f.read(this.theFormula);
+                if (f.theFormula.indexOf('@') == -1) {
+                    f.sourceFile = this.sourceFile;
+                    resultList.add(f);
+                }
+                else {
+                    TreeSet rowVars = f.findRowVars();
+                    Iterator it = rowVars.iterator();
+                    StringBuffer result = new StringBuffer(f.theFormula);
+                    long t1 = 0L;
 
-                t1 = System.currentTimeMillis();
-                int[] range = this.getRowVarExpansionRange(kb, row);
-                // Increment the timer for getRowVarExpansionRange().
-                KB.ppTimers[3] += (System.currentTimeMillis() - t1);
+                    // Iterate through the row variables
+                    while (it.hasNext()) {
+                        String row = (String) it.next();
 
-                boolean hasVariableArityRelation = (range[0] == 0);
+                        t1 = System.currentTimeMillis();
+                        int[] range = this.getRowVarExpansionRange(kb, row);
+                        // Increment the timer for getRowVarExpansionRange().
+                        KB.ppTimers[3] += (System.currentTimeMillis() - t1);
 
-                t1 = System.currentTimeMillis();
-                range[1] = adjustExpansionCount(hasVariableArityRelation, range[1], row);
-                // Increment the timer for adjustExpansionCount().
-                KB.ppTimers[5] += (System.currentTimeMillis() - t1);
+                        boolean hasVariableArityRelation = (range[0] == 0);
 
-                StringBuffer rowResult = new StringBuffer();
-                StringBuffer rowReplace = new StringBuffer();
-                for (int j = 1 ; j < range[1] ; j++) {
-                    if (rowReplace.toString().length() > 0) {
-                        rowReplace = rowReplace.append(" ");
+                        t1 = System.currentTimeMillis();
+                        range[1] = adjustExpansionCount(hasVariableArityRelation, range[1], row);
+                        // Increment the timer for adjustExpansionCount().
+                        KB.ppTimers[5] += (System.currentTimeMillis() - t1);
+
+                        StringBuffer rowResult = new StringBuffer();
+                        StringBuffer rowReplace = new StringBuffer();
+                        for (int j = 1 ; j < range[1] ; j++) {
+                            if (rowReplace.toString().length() > 0) {
+                                rowReplace = rowReplace.append(" ");
+                            }
+                            rowReplace = rowReplace.append("?" + row + (new Integer(j)).toString());
+                            if (hasVariableArityRelation) {
+                                rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
+                            }
+                        }
+                        if (!hasVariableArityRelation) {
+                            rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
+                        }
+                        result = new StringBuffer(rowResult.toString());
                     }
-                    rowReplace = rowReplace.append("?" + row + (new Integer(j)).toString());
-                    if (hasVariableArityRelation) {
-                        rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
+                    ArrayList al = parseList(result.toString());
+                    // System.out.println("INFO in Formula.expandRowVars(" + this + ")");
+                    // System.out.println("  al == " + al);
+                    Formula newF = null;
+                    for (int i = 0; i < al.size(); i++) {
+                        newF = (Formula) al.get(i);
+                        // Copy the source file information for each expanded formula.
+                        newF.sourceFile = this.sourceFile;
+                        resultList.add(newF);
                     }
                 }
-                if (! hasVariableArityRelation) {
-                    rowResult = rowResult.append(result.toString().replaceAll("\\@" + row, rowReplace.toString()) + "\n");
-                }
-                result = new StringBuffer(rowResult.toString());
             }
         }
-        // Copy the source file information for each expanded formula.
-        ArrayList al = parseList(result.toString());
-        ArrayList newList = new ArrayList();
-        for (int i = 0; i < al.size(); i++) {
-            Formula f = this.copy();
-            f.theFormula = ((Formula) al.get(i)).theFormula;
-            newList.add(f);
-            //System.out.println("INFO in Formula.expandRowVars(): Adding formula : " + f);
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return newList;
+        return resultList;
     }
 
     /** ***************************************************************
@@ -1562,9 +1571,7 @@ public class Formula implements Comparable {
         if (!listP()) 
             return false;
         String pred = car();
-        if (pred.length() >= 2 && pred.substring(pred.length()-2).compareTo("Fn") == 0) 
-            return true;
-        return false;
+        return (pred.length() >= 2 && pred.endsWith("Fn"));
     }
 
     /** ***************************************************************
@@ -1746,49 +1753,44 @@ public class Formula implements Comparable {
      * A utility helper method for computing predicate data types.
      */
     private String[] addToTypeList(String pred, ArrayList al, String[] result, String classP) {
-
-        /*
-          System.out.print("INFO in addToTypeList(" + this + ", " + pred + ", " + al + ", [");
-          if ((result != null) && (result.length > 0)) {
-          for (int j = 0 ; j < result.length ; j++) {
-          if (j > 0) { System.out.print(","); }
-          System.out.print(result[j]);
-          }
-          }
-          System.out.println("], \"" + classP + "\")");
-        */
-
-        for (int i = 0; i < al.size(); i++) {
-
-            Formula f = (Formula) al.get(i);
-            //System.out.println("INFO in addToTypeList(): formula: " + f.theFormula);
-            String cl = f.getArgument(3);
-            String argnum;
-            if (f.theFormula.startsWith("(range"))
-                argnum = "0";
-            else
-                argnum = f.getArgument(2);
-            int num;
-            try {    
-                num = Integer.valueOf(argnum).intValue();
-            } catch (NumberFormatException nfe) {
-                KBmanager.getMgr().setError(KBmanager.getMgr().getError() + 
-                                            "\n<br/>Bad argument type declaration in formula " + f.theFormula +
-                                            " in file " + f.sourceFile + " at line " + f.startLine + "\n<br/>");
-                return result;
+        try {
+            Formula f = null;
+            // If the relations in al start with "(range", argnum will
+            // be 0, and the arg position of the desired classnames
+            // will be 2.
+            int argnum = 0;
+            int clPos = 2;
+            for (int i = 0; i < al.size(); i++) {
+                f = (Formula) al.get(i);
+                //System.out.println("INFO in addToTypeList(): formula: " + f.theFormula);
+                if (f.theFormula.startsWith("(domain")) {
+                    argnum = Integer.parseInt(f.getArgument(2));
+                    clPos = 3;
+                }
+                String cl = f.getArgument(clPos);
+                if ((result.length > argnum) && ((result[argnum] == null) || result[argnum].equals(""))) {
+                    result[argnum] = cl + classP;
+                }
+                else {
+                    KBmanager.getMgr().setError(KBmanager.getMgr().getError() 
+                                                + "\n<br/>Multiple type declarations found for predicate " 
+                                                + pred 
+                                                + " at argument " 
+                                                + argnum 
+                                                + " with class " 
+                                                + cl 
+                                                + " and existing argument " 
+                                                + result[argnum] 
+                                                + "\n<br/>");
+                    //System.out.println(KBmanager.getMgr().getError() + 
+                    //    "\nMultiple type declarations found for predicate " + pred +
+                    //    " at argument " + argnum + " with class " + cl + " and existing argument " +
+                    //    result[num]);
+                }
             }
-            if (result[num] == null || result[num] == "")
-                result[num] = cl + classP;
-            else {
-                KBmanager.getMgr().setError(KBmanager.getMgr().getError() + 
-                                            "\n<br/>Conflicting type declarations found for predicate " + pred +
-                                            " at argument " + argnum + " with class " + cl + " and existing argument " +
-                                            result[num] + "\n<br/>");
-                //System.out.println(KBmanager.getMgr().getError() + 
-                //    "\nConflicting type declarations found for predicate " + pred +
-                //    " at argument " + argnum + " with class " + cl + " and existing argument " +
-                //    result[num]);
-            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return result;
     }
@@ -1802,8 +1804,17 @@ public class Formula implements Comparable {
     private ArrayList getTypeList(String pred, KB kb) {
 
         //System.out.println("INFO in Formula.getTypeList(): pred: " + pred);
-        String[] r = new String[20];
         ArrayList result = new ArrayList();
+        int valence = kb.getValence(pred);
+        int len = MAX_PREDICATE_ARITY + 1;
+        if (valence == 0) {
+            len = 2;
+        }
+        else if (valence > 0) {
+            len = valence + 1;
+        }
+        String[] r = new String[len];
+
         ArrayList al = kb.askWithRestriction(0,"domain",1,pred);
         ArrayList al2 = kb.askWithRestriction(0,"domainSubclass",1,pred);
         ArrayList al3 = kb.askWithRestriction(0,"range",1,pred);
@@ -1818,103 +1829,325 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Find the argument type restriction for a given predicate and 
-     * argument number that is inherited from one of its super-relations.
-     * A "+" is appended to the type if the parameter must be a class.
-     * argument number 0 is used for the return type of a Function.
-     * Functions are not currently handled however.
+     * Find the argument type restriction for a given predicate and
+     * argument number that is inherited from one of its
+     * super-relations.  A "+" is appended to the type if the
+     * parameter must be a class.  Argument number 0 is used for the
+     * return type of a Function.
      */
-    private String findType(ArrayList types, int numarg, String pred, KB kb) {
+    private String findType(int numarg, String pred, KB kb) {
 
-        //System.out.println("INFO in Formula.findType(): pred: " + pred);
-        boolean found = false;
-        String newPred = pred;
-        while (!found) {
-            ArrayList parents = kb.askWithRestriction(0,"subrelation",1,newPred);
-            if (parents == null || parents.size() == 0) 
-                return "";    
-            String parent = newPred;
-            for (int i = 0; i < parents.size(); i++) {
-                Formula f = (Formula) parents.get(i);
-                parent = f.getArgument(2);
-                ArrayList axioms = kb.askWithRestriction(0,"domain",1,parent);
-                for (int j = 0; j < axioms.size(); j++) {
-                    f = (Formula) axioms.get(j);
-                    int argnum = Integer.valueOf(f.getArgument(2)).intValue();
-                    if (argnum == numarg) {
-                        found = true;
-                        return f.getArgument(3);
+        // System.out.println("INFO in Formula.findType(" + numarg + ", " + pred + ")");
+
+        String result = "";
+        try {
+            boolean found = false;
+            Set accumulator = new HashSet();
+            accumulator.add(pred);
+            List parents = new ArrayList();
+            Iterator it = null;
+            String newPred = null;
+            while (!found && !accumulator.isEmpty()) {
+                parents.clear();
+                parents.addAll(accumulator);
+                accumulator.clear();
+                List axioms = null;
+                Formula f = null;
+                it = parents.iterator();
+                while (!found && it.hasNext()) {
+                    newPred = (String) it.next();
+                    if (numarg > 0) {
+                        axioms = kb.askWithRestriction(0,"domain",1,newPred);
+                        for (int j = 0; j < axioms.size(); j++) {
+                            f = (Formula) axioms.get(j);
+                            int argnum = Integer.parseInt(f.getArgument(2));
+                            if (argnum == numarg) {
+                                result = f.getArgument(3);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            axioms = kb.askWithRestriction(0,"domainSubclass",1,newPred);
+                            for (int j = 0; j < axioms.size(); j++) {
+                                f = (Formula) axioms.get(j);
+                                int argnum = Integer.parseInt(f.getArgument(2));
+                                if (argnum == numarg) {
+                                    result = f.getArgument(3) + "+";
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
-                }
-                axioms = kb.askWithRestriction(0,"domainSubclass",1,parent);
-                for (int j = 0; j < axioms.size(); j++) {
-                    f = (Formula) axioms.get(j);
-                    int argnum = Integer.valueOf(f.getArgument(2)).intValue();
-                    if (argnum == numarg) {
-                        found = true;
-                        return f.getArgument(3) + "+";
+                    else if (numarg == 0) {
+                        axioms = kb.askWithRestriction(0,"range",1,newPred);
+                        if (!axioms.isEmpty()) {
+                            f = (Formula) axioms.get(0);
+                            result = f.getArgument(2);
+                            found = true;
+                        }
+                        if (!found) {
+                            axioms = kb.askWithRestriction(0,"rangeSubclass",1,newPred);
+                            if (!axioms.isEmpty()) {
+                                f = (Formula) axioms.get(0);
+                                result = f.getArgument(2) + "+";
+                                found = true;
+                            }
+                        }
+                    }
+                    if (!found) {
+                        Set newParents = kb.getCachedRelationValues("subrelation", newPred, 1, 2);
+                        if ((newParents != null) && !newParents.isEmpty()) {
+                            accumulator.addAll(newParents);
+                            accumulator.remove(newPred);
+                        }
                     }
                 }
             }
-            newPred = parent;
         }
-        return "";
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        // System.out.println("  -> " + result);
+        return result;
     }
 
+    /** ***************************************************************
+     * This method tries to remove all but the most specific relevant
+     * classes from the list of sortal classes for each variable key
+     * in varmap.
+     *
+     * @param varmap A HashMap in which variable type information is
+     * collected.  A "+" is appended to the type if the parameter must
+     * be a class.
+     *
+     * @param kb The KB used to determine if the classes stored in the
+     * set for each variable are redundant.
+     *
+     * @return void
+     */
+    private void winnowVarMap(Map varmap, KB kb) {
+        try {
+            if ((varmap instanceof Map) && !varmap.isEmpty()) {
+                Iterator it = varmap.keySet().iterator();
+                String key = null;
+                Set vals = null;
+                Object[] valArr = null;
+                String clX = null;
+                String clY = null;
+                String clX1 = null;
+                String clY1 = null;
+                while (it.hasNext()) {
+                    key = (String) it.next();
+                    vals = (Set) varmap.get(key);
+                    if ((vals != null) && (vals.size() > 1)) {
+                        valArr = vals.toArray();
+                        for (int i = 0; i < valArr.length; i++) {
+                            for (int j = 0; j < valArr.length; j++) {
+                                if (i != j) {
+                                    clX = (String) valArr[i];
+                                    clY = (String) valArr[j];
+                                    clX1 = clX;
+                                    clY1 = clY;
+                                    if (clX1.endsWith("+") && clY1.endsWith("+")) {
+                                        clX1 = clX1.substring(0, clX1.length() - 1);
+                                        clY1 = clY1.substring(0, clY1.length() - 1);
+                                    }
+                                    if (kb.isSubclass(clX1, clY1) && (vals.size() > 1)) {
+                                        vals.remove(clY);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
 
     /** ***************************************************************
      * Does most of the real work for addTypeRestrictions() by
      * recursing through the formula, collecting variables, finding
      * their type restrictions, and adding that information to the
-     * HashMap result
+     * HashMap collector.
      *
-     * @return a HashMap keys are var names values are types. A "+" 
-     * is appended to the type if the parameter must be a class
-     * Note this routine does not yet properly handle function return types.
+     * @param varmap A HashMap in which variable type information is
+     * collected.  A "+" is appended to the type if the parameter must
+     * be a class.
+     *
+     * @param scopedVars A list of variables that are currently within
+     * the scope of some quantifier, and so probably should not have
+     * sortals added for them.
+     *
+     * @param theFormula The String representation of this Formula.
+     *
+     * @param kb The KB used to determine predicate and variable arg
+     * types.
+     *
+     * @return void
      */
-    private HashMap addTypeRestrictionsRecurse(String theFormula, KB kb) {
+    private void addTypeRestrictionsRecurse(HashMap varmap, List scopedVars, String theFormula, KB kb) {
 
-        //System.out.println("INFO in Formula.addTypeRestrictionsRecurse(): formula: " + theFormula);
-        HashMap varmap = new HashMap(); 
-        Formula f = new Formula();
-        f.read(theFormula);
-        if (!f.listP()) 
-            return varmap;
-        String pred = f.car();
-        ArrayList types = new ArrayList();
-        if (!isLogicalOperator(pred)) 
-            types = getTypeList(pred,kb);
-        f.read(f.cdr());
-        int numarg = 0;
-        while (!f.empty()) {
-            numarg++;
-            String arg = f.car();
-            if (listP(arg)) 
-                varmap.putAll(addTypeRestrictionsRecurse(arg,kb));
-            else {
-                if (isVariable(arg) && !isLogicalOperator(pred)) {
-                    String type;
-                    if (numarg > types.size()) 
-                        type = findType(types,numarg,pred,kb);
-                    type = (String) types.get(numarg);
-                    if (type == null) 
-                        type = findType(types,numarg,pred,kb);
-                    if (isNonEmptyString(type) && !(type.equals("Entity"))) {
-                        varmap.put(arg,type);
+        // System.out.println("INFO in Formula.addTypeRestrictionsRecurse(" + theFormula + ")");
+
+        String pred = null;
+        try {
+            Formula f = new Formula();
+            f.read(theFormula);
+            if (!f.listP()) 
+                return;
+            pred = f.car();
+            int valence = kb.getValence(pred);
+            String arg1 = null;
+            String arg2 = null;
+            String var = null;
+            String term = null;
+            String cl = null;
+            Set varTypes = null;
+            Formula newF = null;
+            ArrayList types = new ArrayList();
+            // Special treatment for equal
+            if (pred.equals("equal")) {
+                arg1 = f.getArgument(1);
+                arg2 = f.getArgument(2);
+                if (isVariable(arg1)) { var = arg1; }
+                else { term = arg1; }
+                if (isVariable(arg2)) { var = arg2; }
+                else { term = arg2; }
+                if ((var != null) && (term != null)) {
+                    if (listP(term)) {
+                        newF = new Formula();
+                        newF.read(term);
+                        if (newF.isFunctionalTerm()) {
+                            String fn = newF.car();
+                            types = getTypeList(fn, kb);
+                            if (!types.isEmpty()) {
+                                cl = (String) types.get(0);
+                                if (cl == null) {
+                                    cl = findType(0, fn, kb);
+                                }
+                            }
+                            if ((cl != null) && !cl.equals("Entity")) {
+                                varTypes = (Set) varmap.get(var);
+                                if (varTypes == null) {
+                                    varTypes = new HashSet();
+                                    varmap.put(var, varTypes);
+                                }
+                                varTypes.add(cl);
+                            }
+                        }
                     }
-                }    
+                    else {
+                        Set ios = kb.getCachedRelationValues("instance", term, 1, 2);
+                        if ((ios != null) && !ios.isEmpty()) {
+                            varTypes = (Set) varmap.get(var);
+                            if (varTypes == null) {
+                                varTypes = new HashSet();
+                                varmap.put(var, varTypes);
+                            }
+                            varTypes.addAll(ios);
+                            varTypes.remove("Entity");
+                        }
+                    }
+                }
+            }
+            // Special treatment for instance or subclass, only if arg1 is
+            // a variable and arg2 is a functional term.
+            else if (pred.equals("instance") || pred.equals("subclass")) {
+                arg1 = f.getArgument(1);
+                arg2 = f.getArgument(2);
+                if (isVariable(arg1) && listP(arg2)) {
+                    newF = new Formula();
+                    newF.read(arg2);
+                    if (newF.isFunctionalTerm()) {
+                        String fn = newF.car();
+                        types = getTypeList(fn, kb);
+                        if (!types.isEmpty()) {
+                            cl = (String) types.get(0);
+                            if (cl == null) {
+                                cl = findType(0, fn, kb);
+                            }
+                        }
+                        if ((cl != null) && !cl.equals("Entity")) {
+                            if (pred.equals("subclass")) { cl += "+"; }
+                            varTypes = (Set) varmap.get(arg1);
+                            if (varTypes == null) {
+                                varTypes = new HashSet();
+                                varmap.put(arg1, varTypes);
+                            }
+                            varTypes.add(cl);
+                        }
+                    }
+                }
+            }
+            if (!isLogicalOperator(pred)) {
+                types = getTypeList(pred,kb);
             }
             f.read(f.cdr());
+            List newScopedVars = scopedVars;
+            int numarg = 0;
+            for (int i = 1; isNonEmptyString(f.theFormula) && !f.empty(); i++) {
+                numarg = i;
+                if (valence == 0) { // pred is a VariableArityRelation
+                    numarg = 1;
+                }
+                String arg = f.car();
+                if (listP(arg)) {
+                    newF = new Formula();
+                    newF.read(arg);
+                    String arg0 = newF.car();
+                    if (isQuantifierList(arg0, pred)) {
+                        newScopedVars = new ArrayList();
+                        newScopedVars.addAll(scopedVars);
+                        int arglen = newF.listLength();
+                        for (int j = 0; j < arglen; j++) {
+                            String argJ = newF.getArgument(j);
+                            if (isVariable(argJ) && !newScopedVars.contains(argJ)) {
+                                newScopedVars.add(argJ);
+                            }
+                        }
+                    }
+                    else {
+                        addTypeRestrictionsRecurse(varmap,newScopedVars,arg,kb);
+                    }
+                }
+                else if (isVariable(arg) 
+                         && !scopedVars.contains(arg)
+                         && !isVariable(pred)
+                         && !isLogicalOperator(pred)) {
+                    String type;
+                    if (numarg >= types.size()) {
+                        type = findType(numarg,pred,kb);
+                    }
+                    else {
+                        type = (String) types.get(numarg);
+                    }
+                    if (type == null) {
+                        type = findType(numarg,pred,kb);
+                    }
+                    if (isNonEmptyString(type) && !(type.equals("Entity"))) {
+                        varTypes = (Set) varmap.get(arg);
+                        if (varTypes == null) {
+                            varTypes = new HashSet();
+                            varmap.put(arg, varTypes);
+                        }
+                        varTypes.add(type);
+                    }
+                }
+                f.read(f.cdr());
+            }
         }
-        /*
-          if (theFormula.startsWith("(=>")
-          || theFormula.startsWith("(<=>")) {
-          System.out.println("INFO in addTypeRestrictionsRecurse(" + theFormula + ")");
-          System.out.println("varmap == " + varmap);
-          }
-        */
-
-        return varmap;
+        catch (Exception ex) {
+            System.out.println("Error in Formula.addTypeRestrictionsRecurse()");
+            System.out.println("  pred == " + pred);
+            ex.printStackTrace();
+        }
+        return;
     }
 
     /** ***************************************************************
@@ -1937,64 +2170,82 @@ public class Formula implements Comparable {
      */
     private String addTypeRestrictions(KB kb) { 
 
-        // System.out.println("INFO in Formula.addTypeRestrictions(" + this + " ...)");
+        // System.out.println("INFO in Formula.addTypeRestrictions(" + this + ")");
 
-        Formula f = new Formula();
-        f.read(theFormula);
-        String arg0 = f.getArgument(0);
-        if (arg0.equals("<=>")) {
-            // Do nothing.  If the formula is a biconditional, find type
-            // restrictions that apply to the entire formula.
-            ;
-        }
-        else if (arg0.equals("=>")) {
-            // If the formula is a conditional, find type restrictions for the
-            // antecedent.
-            f.read(f.getArgument(1));
-        }
-
-        HashMap varmap = new HashMap(); // keys are var names values are types
-        // a + is appended to the type if the parameter must be a class
-        varmap = addTypeRestrictionsRecurse(f.theFormula,kb);
-        StringBuffer form = new StringBuffer();
-        if (varmap.keySet().size() > 0) {
-            int nAdded = 0;
-            Iterator it = varmap.keySet().iterator();
-            while (it.hasNext()) {
-                String key = (String) it.next();
-                String value = (String) varmap.get(key);
-                String relation = "instance";
-                if (value.endsWith("+")) { 
-                    relation = "subclass";
-                    value = value.substring(0,value.length()-1);
-                }
-                String literal = "(" + relation + " " + key + " " + value + ")";
-                if (theFormula.indexOf(literal) < 0) {
-                    if (nAdded > 0) {
-                        form.append(" ");
+        String result = this.theFormula;
+        boolean requantify = false;
+        String quantvars = null;
+        try {
+            Formula f = new Formula();
+            f.read(this.theFormula);
+            if (f.listP() && f.car().equals("forall")) {
+                // If this Formula is explicitly universally
+                // quantified, remove the quantification in
+                // preparation for adding type restrictions.
+                quantvars = f.getArgument(1);
+                f.read(f.getArgument(2));
+                result = f.theFormula;
+                requantify = true;
+            }
+            if (!(requantify && f.car().equals("not"))) {
+                HashMap varmap = new HashMap(); // keys are var names values are types
+                // a + is appended to the type if the parameter must be a class
+                List scopedVars = new ArrayList();
+                addTypeRestrictionsRecurse(varmap,scopedVars,f.theFormula,kb);
+                winnowVarMap(varmap,kb);
+                if (!varmap.keySet().isEmpty()) {
+                    StringBuffer form = new StringBuffer();
+                    int nAdded = 0;
+                    Iterator it = varmap.keySet().iterator();
+                    Iterator it2 = null;
+                    String value = null;
+                    String relation = null;
+                    String literal = null;
+                    while (it.hasNext()) {
+                        String key = (String) it.next();
+                        Set valSet = (Set) varmap.get(key);
+                        it2 = valSet.iterator();
+                        while (it2.hasNext()) {                    
+                            value = (String) it2.next();
+                            relation = "instance";
+                            if (value.endsWith("+")) { 
+                                relation = "subclass";
+                                value = value.substring(0,value.length()-1);
+                            }
+                            literal = "(" + relation + " " + key + " " + value + ")";
+                            if (f.theFormula.indexOf(literal) < 0) {
+                                if (nAdded > 0) {
+                                    form.append(" ");
+                                }
+                                form.append(literal);
+                                nAdded++;
+                            }
+                        }
                     }
-                    form.append(literal);
-                    nAdded++;
+                    if (nAdded > 1) {
+                        form.insert(0, "(and ");
+                        form.append(")");
+                    }
+                    if (nAdded > 0) {
+                        form.insert(0, "(=> ");
+                        form.append(" " + f.theFormula + ")");
+                    }
+                    else {
+                        form.append(f.theFormula);
+                    }
+                    f.read(form.toString());
+                    result = f.theFormula;
                 }
             }
-            if (nAdded > 1) {
-                form.insert(0, "(and ");
-                form.append(")");
+            if (requantify) {
+                result = "(forall " + quantvars + " " + result + ")";
             }
-            if (nAdded > 0) {
-                form.insert(0, "(=> ");
-                form.append(" " + theFormula + ")");
-            }
-            else {
-                form.append(theFormula);
-            }
-
-            f.read(form.toString());
-
-            return form.toString();
         }
-
-        return theFormula;
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        // System.out.println("  -> " + result);
+        return result;
     }
 
     /** ***************************************************************
@@ -2007,7 +2258,7 @@ public class Formula implements Comparable {
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings, 
                                      boolean translateIneq, boolean translateMath) {
 
-        // System.out.println("INFO in Formula.preProcessRecurse(" + this + ", " + f + " ...)");
+        // System.out.println("INFO in Formula.preProcessRecurse(" + this + ")");
 
         String[] logOps = {"and", "or", "not", "=>", "<=>", "forall", "exists"};
         String[] matOps = {"equal", "AdditionFn", "SubtractionFn", "MultiplicationFn", "DivisionFn"};
@@ -2109,7 +2360,7 @@ public class Formula implements Comparable {
         ArrayList results = new ArrayList();
         try {
 
-            if (! isNonEmptyString(this.theFormula)) {
+            if (!isNonEmptyString(this.theFormula)) {
                 return results;
             }
 
@@ -2127,18 +2378,10 @@ public class Formula implements Comparable {
             // prefixes.
             Formula f = new Formula();
             f.read(this.theFormula);
-
-            t1 = System.currentTimeMillis();
-            if (f.isRule() && KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes")) {       
-                f.read(f.addTypeRestrictions(kb));
-            }
-
-            // Increment the timer for adding type restrictions.
-            KB.ppTimers[0] += (System.currentTimeMillis() - t1);
        
             t1 = System.currentTimeMillis();
             ArrayList predVarInstantiations = new ArrayList();
-            if (! addHoldsPrefix) {
+            if (!addHoldsPrefix) {
                 predVarInstantiations.addAll(f.instantiatePredVars(kb));
             }
 
@@ -2160,7 +2403,6 @@ public class Formula implements Comparable {
                                                 + ("\n<br/>" + errStr + "\n<br/>"));
                 }
             }
-
             // Increment the timer for pred var instantiation.
             KB.ppTimers[1] += (System.currentTimeMillis() - t1);
 
@@ -2209,6 +2451,16 @@ public class Formula implements Comparable {
                 String theNewFormula = null;
                 while (it.hasNext()) {
                     fnew = (Formula) it.next();
+
+                    t1 = System.currentTimeMillis();
+                    String arg0 = this.getArgument(0);
+                    if (!query 
+                        && isLogicalOperator(arg0) 
+                        && KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes")) {       
+                        fnew.read(fnew.addTypeRestrictions(kb));
+                    }
+                    // Increment the timer for adding type restrictions.
+                    KB.ppTimers[0] += (System.currentTimeMillis() - t1);
 
                     t1 = System.currentTimeMillis();
                     theNewFormula = fnew.preProcessRecurse(fnew,
@@ -2274,8 +2526,8 @@ public class Formula implements Comparable {
                          // The formula contains a free variable.
                          && this.theFormula.matches("^\\(\\s*.*\\?\\w+.*\\)$"))
      
-                     || // ... add more patterns here     
-                     false
+                     // ... add more patterns here, as needed.
+                     || false
                      );
         }
         catch (Exception ex) {
@@ -2676,220 +2928,227 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Parse a single formula into TPTP format
      */
-    public static String tptpParseSUOKIFString(String suoString) 
-        throws ParseException, IOException {
+    public static String tptpParseSUOKIFString(String suoString) {
 
-        StreamTokenizer_s st;
-        int parenLevel;
-        boolean inQuantifierVars;
-        boolean lastWasOpen;
-        boolean inHOL;
-        int inHOLCount;
-        Stack operatorStack = new Stack();
-        Stack countStack = new Stack();
-        Vector quantifiedVariables = new Vector();
-        Vector allVariables = new Vector();
-        int index;
-        int arity;
-        String quantification;
+        StreamTokenizer_s st = null;
         String translatedFormula = null;
 
-        StringBuffer tptpFormula = new StringBuffer(suoString.length());
+        try {
+            int parenLevel;
+            boolean inQuantifierVars;
+            boolean lastWasOpen;
+            boolean inHOL;
+            int inHOLCount;
+            Stack operatorStack = new Stack();
+            Stack countStack = new Stack();
+            Vector quantifiedVariables = new Vector();
+            Vector allVariables = new Vector();
+            int index;
+            int arity;
+            String quantification;
 
-        parenLevel = 0;
-        countStack.push(0);
-        lastWasOpen = false;
-        inQuantifierVars = false;
-        inHOL = false;
-        inHOLCount = 0;
+            StringBuffer tptpFormula = new StringBuffer(suoString.length());
 
-        st = new StreamTokenizer_s(new StringReader(suoString));
-        KIF.setupStreamTokenizer(st);
+            parenLevel = 0;
+            countStack.push(0);
+            lastWasOpen = false;
+            inQuantifierVars = false;
+            inHOL = false;
+            inHOLCount = 0;
 
-        do {
-            st.nextToken();
-            //----Open bracket
-            if (st.ttype==40) {
-                if (lastWasOpen) {    //----Should not have ((in KIF
-                    System.out.println("ERROR: Double open bracket at " + tptpFormula);
-                    throw new ParseException("Parsing error in " + suoString,0);
-                }
-                //----Track nesting of ()s for hol__, so I know when to close the '
-                if (inHOL) {
-                    inHOLCount++;
-                }
-                lastWasOpen = true;
-                parenLevel++;
-                //----Operators
-            } else if (st.ttype == StreamTokenizer.TT_WORD && 
-                       (arity = operatorArity(st)) > 0) {
-                //----Operators must be preceded by a (
-                if (!lastWasOpen) {   
-                    System.out.println("ERROR: Missing ( before " + 
-                                       st.sval + " at " + tptpFormula);
-                    return(null);
-                }
-                //----This is the start of a new term - put in the infix operator if not the
-                //----first term for this operator
-                if ((Integer)(countStack.peek()) > 0) {
-                    tptpFormula.append((String)operatorStack.peek()); 
-                }
-                //----If this is the start of a hol__ situation, quote it all
-                if (inHOL && inHOLCount == 1) {
-                    tptpFormula.append("'");
-                }
-                //----()s around all operator expressions
-                tptpFormula.append("(");      
-                //----Output unary as prefix
-                if (arity == 1) {
-                    tptpFormula.append(translateWord(st,false));
-                    //----Note the new operator (dummy) with 0 operands so far
-                    countStack.push(new Integer(0));
-                    operatorStack.push(",");
-                    //----Check if the next thing will be the quantified variables
-                    if (st.sval.equals("forall") || st.sval.equals("exists")) {
-                        inQuantifierVars = true;
+            st = new StreamTokenizer_s(new StringReader(suoString));
+            KIF.setupStreamTokenizer(st);
+
+            do {
+                st.nextToken();
+                //----Open bracket
+                if (st.ttype==40) {
+                    if (lastWasOpen) {    //----Should not have ((in KIF
+                        System.out.println("ERROR: Double open bracket at " + tptpFormula);
+                        throw new ParseException("Parsing error in " + suoString,0);
                     }
-                    //----Binary operator
-                } else if (arity == 2) {
-                    //----Note the new operator with 0 operands so far
-                    countStack.push(new Integer(0));
-                    operatorStack.push(translateWord(st,false));
-                }
-                lastWasOpen = false;      
-                //----Back tick - token translation to TPTP. Everything gets ''ed 
-            } else if (st.ttype == 96) {
-                //----They may be nested - only start the situation at the outer one
-                if (!inHOL) {
-                    inHOL = true;
-                    inHOLCount = 0;
-                }
-                //----Quote - Term token translation to TPTP
-            } else if (st.ttype == 34 ||
-                       st.ttype == StreamTokenizer.TT_NUMBER || 
-                       (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
-                       st.ttype == StreamTokenizer.TT_WORD) {      
-                //----Start of a predicate or variable list
-                if (lastWasOpen) {
-                    //----Variable list
-                    if (inQuantifierVars) {
-                        tptpFormula.append("[");
+                    //----Track nesting of ()s for hol__, so I know when to close the '
+                    if (inHOL) {
+                        inHOLCount++;
+                    }
+                    lastWasOpen = true;
+                    parenLevel++;
+                    //----Operators
+                } else if (st.ttype == StreamTokenizer.TT_WORD && 
+                           (arity = operatorArity(st)) > 0) {
+                    //----Operators must be preceded by a (
+                    if (!lastWasOpen) {   
+                        System.out.println("ERROR: Missing ( before " + 
+                                           st.sval + " at " + tptpFormula);
+                        return(null);
+                    }
+                    //----This is the start of a new term - put in the infix operator if not the
+                    //----first term for this operator
+                    if ((Integer)(countStack.peek()) > 0) {
+                        tptpFormula.append((String)operatorStack.peek()); 
+                    }
+                    //----If this is the start of a hol__ situation, quote it all
+                    if (inHOL && inHOLCount == 1) {
+                        tptpFormula.append("'");
+                    }
+                    //----()s around all operator expressions
+                    tptpFormula.append("(");      
+                    //----Output unary as prefix
+                    if (arity == 1) {
                         tptpFormula.append(translateWord(st,false));
-                        incrementTOS(countStack);
-                        //----Predicate
+                        //----Note the new operator (dummy) with 0 operands so far
+                        countStack.push(new Integer(0));
+                        operatorStack.push(",");
+                        //----Check if the next thing will be the quantified variables
+                        if (st.sval.equals("forall") || st.sval.equals("exists")) {
+                            inQuantifierVars = true;
+                        }
+                        //----Binary operator
+                    } else if (arity == 2) {
+                        //----Note the new operator with 0 operands so far
+                        countStack.push(new Integer(0));
+                        operatorStack.push(translateWord(st,false));
+                    }
+                    lastWasOpen = false;      
+                    //----Back tick - token translation to TPTP. Everything gets ''ed 
+                } else if (st.ttype == 96) {
+                    //----They may be nested - only start the situation at the outer one
+                    if (!inHOL) {
+                        inHOL = true;
+                        inHOLCount = 0;
+                    }
+                    //----Quote - Term token translation to TPTP
+                } else if (st.ttype == 34 ||
+                           st.ttype == StreamTokenizer.TT_NUMBER || 
+                           (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
+                           st.ttype == StreamTokenizer.TT_WORD) {      
+                    //----Start of a predicate or variable list
+                    if (lastWasOpen) {
+                        //----Variable list
+                        if (inQuantifierVars) {
+                            tptpFormula.append("[");
+                            tptpFormula.append(translateWord(st,false));
+                            incrementTOS(countStack);
+                            //----Predicate
+                        } else {
+                            //----This is the start of a new term - put in the infix operator if not the
+                            //----first term for this operator
+                            if ((Integer)(countStack.peek()) > 0) {
+                                tptpFormula.append((String)operatorStack.peek());
+                            }
+                            //----If this is the start of a hol__ situation, quote it all
+                            if (inHOL && inHOLCount == 1) {
+                                tptpFormula.append("'");
+                            }
+                            //----Predicate or function and (
+                            tptpFormula.append(translateWord(st,true));
+                            tptpFormula.append("(");
+                            //----Note the , for between arguments with 0 arguments so far
+                            countStack.push(new Integer(0));
+                            operatorStack.push(",");
+                        }
+                        //----Argument or quantified variable
                     } else {
                         //----This is the start of a new term - put in the infix operator if not the
                         //----first term for this operator
                         if ((Integer)(countStack.peek()) > 0) {
                             tptpFormula.append((String)operatorStack.peek());
                         }
-                        //----If this is the start of a hol__ situation, quote it all
-                        if (inHOL && inHOLCount == 1) {
-                            tptpFormula.append("'");
+                        //----Output the word
+                        tptpFormula.append(translateWord(st,false));
+                        //----Increment counter for this level
+                        incrementTOS(countStack);
+                    }
+                    //----Collect variables that are used and quantified
+                    if (isNonEmptyString(st.sval) && (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@')) {
+                        if (inQuantifierVars) {
+                            addVariable(st,quantifiedVariables);
+                        } else {
+                            addVariable(st,allVariables);
                         }
-                        //----Predicate or function and (
-                        tptpFormula.append(translateWord(st,true));
-                        tptpFormula.append("(");
-                        //----Note the , for between arguments with 0 arguments so far
-                        countStack.push(new Integer(0));
-                        operatorStack.push(",");
                     }
-                    //----Argument or quantified variable
-                } else {
-                    //----This is the start of a new term - put in the infix operator if not the
-                    //----first term for this operator
-                    if ((Integer)(countStack.peek()) > 0) {
-                        tptpFormula.append((String)operatorStack.peek());
+                    lastWasOpen = false; 
+                    //----Close bracket.
+                } else if (st.ttype==41) {
+                    //----Track nesting of ()s for hol__, so I know when to close the '
+                    if (inHOL) {
+                        inHOLCount--;
                     }
-                    //----Output the word
-                    tptpFormula.append(translateWord(st,false));
-                    //----Increment counter for this level
-                    incrementTOS(countStack);
-                }
-                //----Collect variables that are used and quantified
-                if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
+                    //----End of quantified variable list
                     if (inQuantifierVars) {
-                        addVariable(st,quantifiedVariables);
+                        //----Fake restarting the argument list because the quantified variable list
+                        //----does not use the operator from the surrounding expression
+                        countStack.pop();
+                        countStack.push(0);
+                        tptpFormula.append("] : ");
+                        inQuantifierVars = false;
+                        //----End of predicate or operator list
                     } else {
-                        addVariable(st,allVariables);
-                    }
-                }
-                lastWasOpen = false; 
-                //----Close bracket.
-            } else if (st.ttype==41) {
-                //----Track nesting of ()s for hol__, so I know when to close the '
-                if (inHOL) {
-                    inHOLCount--;
-                }
-                //----End of quantified variable list
-                if (inQuantifierVars) {
-                    //----Fake restarting the argument list because the quantified variable list
-                    //----does not use the operator from the surrounding expression
-                    countStack.pop();
-                    countStack.push(0);
-                    tptpFormula.append("] : ");
-                    inQuantifierVars = false;
-                    //----End of predicate or operator list
-                } else {
-                    //----Pop off the stacks to reveal the next outer layer
-                    countStack.pop();
-                    operatorStack.pop();
-                    //----Close the expression
-                    tptpFormula.append(")");  
-                    //----If this closes a HOL expression, close the '
-                    if (inHOL && inHOLCount == 0) {
-                        tptpFormula.append("'");
-                        inHOL = false;
-                    }
-                    //----Note that another expression has been completed
-                    incrementTOS(countStack);
-                }
-                lastWasOpen = false;
-      
-                parenLevel--;
-                //----End of the statement being processed. Universally quantify free variables
-                if (parenLevel == 0) {
-                    //findFreeVariables(allVariables,quantifiedVariables);
-                    allVariables.removeAll(quantifiedVariables);
-                    if (allVariables.size() > 0) {
-                        quantification = "! [";
-                        for (index = 0;index < allVariables.size();index++) {
-                            if (index > 0) {
-                                quantification += ",";
-                            }
-                            quantification += (String)allVariables.elementAt(index);
+                        //----Pop off the stacks to reveal the next outer layer
+                        countStack.pop();
+                        operatorStack.pop();
+                        //----Close the expression
+                        tptpFormula.append(")");  
+                        //----If this closes a HOL expression, close the '
+                        if (inHOL && inHOLCount == 0) {
+                            tptpFormula.append("'");
+                            inHOL = false;
                         }
-                        quantification += "] : ";
-                        tptpFormula.insert(0,"( " + quantification);
-                        tptpFormula.append(" )");
+                        //----Note that another expression has been completed
+                        incrementTOS(countStack);
                     }
-                    if (translatedFormula == null) {
-                        translatedFormula = "( " + tptpFormula.toString() + " )";
-                    } else {
-                        translatedFormula += "& ( " + tptpFormula.toString() + " )";
-                    }
-                    if ((Integer)(countStack.pop()) != 1) {
-                        System.out.println(
-                                           "Error in KIF.tptpParse(): Not one formula");
-                    }
-                } else if (parenLevel < 0) {
-                    System.out.print("ERROR: Extra closing bracket at " + 
-                                     tptpFormula.toString());
+                    lastWasOpen = false;
+      
+                    parenLevel--;
+                    //----End of the statement being processed. Universally quantify free variables
+                    if (parenLevel == 0) {
+                        //findFreeVariables(allVariables,quantifiedVariables);
+                        allVariables.removeAll(quantifiedVariables);
+                        if (allVariables.size() > 0) {
+                            quantification = "! [";
+                            for (index = 0;index < allVariables.size();index++) {
+                                if (index > 0) {
+                                    quantification += ",";
+                                }
+                                quantification += (String)allVariables.elementAt(index);
+                            }
+                            quantification += "] : ";
+                            tptpFormula.insert(0,"( " + quantification);
+                            tptpFormula.append(" )");
+                        }
+                        if (translatedFormula == null) {
+                            translatedFormula = "( " + tptpFormula.toString() + " )";
+                        } else {
+                            translatedFormula += "& ( " + tptpFormula.toString() + " )";
+                        }
+                        if ((Integer)(countStack.pop()) != 1) {
+                            System.out.println(
+                                               "Error in KIF.tptpParse(): Not one formula");
+                        }
+                    } else if (parenLevel < 0) {
+                        System.out.print("ERROR: Extra closing bracket at " + 
+                                         tptpFormula.toString());
+                        throw new ParseException("Parsing error in " + suoString,0);
+                    }      
+                } else if (st.ttype != StreamTokenizer.TT_EOF) {
+                    System.out.println("ERROR: Illegal character '" +
+                                       (char)st.ttype + "' at " + tptpFormula.toString());
                     throw new ParseException("Parsing error in " + suoString,0);
                 }      
-            } else if (st.ttype != StreamTokenizer.TT_EOF) {
-                System.out.println("ERROR: Illegal character '" +
-                                   (char)st.ttype + "' at " + tptpFormula.toString());
-                throw new ParseException("Parsing error in " + suoString,0);
-            }      
-        } while (st.ttype != StreamTokenizer.TT_EOF);
+            } while (st.ttype != StreamTokenizer.TT_EOF);
 
-        //----Bare word like $false didn't get done by a closing)
-        if (translatedFormula == null) {
-            translatedFormula = tptpFormula.toString();
+            //----Bare word like $false didn't get done by a closing)
+            if (translatedFormula == null) {
+                translatedFormula = tptpFormula.toString();
+            }
         }
-
-        return(translatedFormula);
+        catch (Exception ex2) {
+            System.out.println("Error in Formula.tptpParseSUOKIFString(" + suoString + ")");
+            System.out.println("  st.sval == " + st.sval);
+            System.out.println("  message == " + ex2.getMessage());
+            ex2.printStackTrace();
+        }
+        return translatedFormula;
     }
 
     /** ***************************************************************
@@ -2967,7 +3226,7 @@ public class Formula implements Comparable {
             // First we do some checks to see if it is worth
             // processing the formula.
             if (isLogicalOperator(arg0)
-                && theFormula.matches(".*\\(\\s*\\?.*")) {
+                && this.theFormula.matches(".*\\(\\s*\\?.*")) {
        
                 // Get all query lits for all pred vars, indexed by
                 // var.
@@ -3011,7 +3270,7 @@ public class Formula implements Comparable {
                         }
                     }
 
-                    if (! substForms.isEmpty()) {
+                    if (!substForms.isEmpty()) {
 
                         // Try to simplify the Formula.
                         Formula f = this;
@@ -3077,41 +3336,23 @@ public class Formula implements Comparable {
 
                                                 // Don't replace variables that
                                                 // are explicitly quantified.
-                                                if (! quantVars.contains(var)) {
+                                                if (!quantVars.contains(var)) {
 
-                                                    // NB: these substitutions must be
-                                                    // done in this order.  The last one
-                                                    // is used only if we are sure that
-                                                    // var occurs in arg0 position
-                                                    // somewhere in the template
-                                                    // (formula).
-                                                    List patterns = 
+                                                    List patternStrings = 
                                                         Arrays.asList("(\\W*\\()(\\s*holds\\s+\\" + var + ")(\\W+)",
-                                                                      "(\\W*\\()(\\s*\\" + var + ")(\\W+)",
+                                                                      // "(\\W*\\()(\\s*\\" + var + ")(\\W+)",
                                                                       "(\\W*)(\\" + var + ")(\\W+)" 
                                                                       );
-                                                    String g1 = null;
-                                                    // String g2 = null;
-                                                    String g3 = null;
+                                                    List patterns = new ArrayList();
+                                                    for (int j = 0; j < patternStrings.size(); j++) {
+                                                        patterns.add(Pattern.compile((String)(patternStrings.get(j))));
+                                                    }
                                                     Pattern p = null;
                                                     Matcher m = null;
-                                                    boolean isArg0Var = false;
-                                                    int lastP = patterns.size() - 1;
-                                                    StringBuffer sb = new StringBuffer();
                                                     for (int j = 0 ; j < patterns.size() ; j++) {
-                                                        if ((j < lastP) || isArg0Var) {
-                                                            sb.setLength(0);
-                                                            p = Pattern.compile((String)(patterns.get(j)));
-                                                            m = p.matcher(template);
-                                                            while (m.find()) {
-                                                                if (j < lastP) {
-                                                                    isArg0Var = true;
-                                                                }
-                                                                m.appendReplacement(sb, "$1" + term + "$3");
-                                                            }
-                                                            m.appendTail(sb);
-                                                            template = sb.toString();
-                                                        }
+                                                        p = (Pattern) patterns.get(j);
+                                                        m = p.matcher(template);
+                                                        template = m.replaceAll("$1" + term + "$3");
                                                     }
                                                 }
                                             }
