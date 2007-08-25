@@ -31,6 +31,12 @@ August 9, Acapulco, Mexico.
   if (up == null) up = "1";
   String down = request.getParameter("down");
   if (down == null) down = "1";
+  String limit = request.getParameter("limit");
+  try {
+      Integer.parseInt(limit);
+  } catch (NumberFormatException nfe) {
+      limit = "";
+  }
   KB kb = null;
   if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) 
       System.out.println(" no such knowledge base " + kbName);
@@ -75,7 +81,11 @@ August 9, Acapulco, Mexico.
       <%
           /* Present the text layout (grpah layout is in the else) */
           if (view.equals("text")) {
-              ArrayList result = Graph.createGraph(kb,term,relation,Integer.parseInt(up),Integer.parseInt(down),"&nbsp;&nbsp;&nbsp;&nbsp;");
+              ArrayList result = null;
+              if (limit != null && limit != "")
+                  result = Graph.createBoundedSizeGraph(kb,term,relation,Integer.parseInt(limit),"&nbsp;&nbsp;&nbsp;&nbsp;");              
+              else
+                  result = Graph.createGraph(kb,term,relation,Integer.parseInt(up),Integer.parseInt(down),"&nbsp;&nbsp;&nbsp;&nbsp;");
               for (int i = 0; i < result.size(); i++) {
                   String element = (String) result.get(i);
                   out.println(element+"<BR>");
@@ -111,9 +121,10 @@ August 9, Acapulco, Mexico.
   %>
 
   Relation: <input type="text" size="30" name="relation" value="<%=relation %>">
-  Term: <input type="text" size="30" name="term" value="<%=term %>">
+  Term: <input type="text" size="30" name="term" value="<%=term %>"><p>
   Levels &quot;above&quot;:<input type="text" size="2" name="up" value="<%=up %>">
   Levels &quot;below&quot;:<input type="text" size="2" name="down" value="<%=down %>">
+  Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>">
   <p>
   <table border="0">
   <tr>
