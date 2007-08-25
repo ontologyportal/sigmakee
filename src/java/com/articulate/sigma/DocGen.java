@@ -17,8 +17,8 @@ import java.io.*;
 
 public class DocGen {     
 
-    String header = "SUMO v. 75, June 2007";
-    String footer = "<table width=\"100%\"><tr class=\"title\"><td>" +
+    public static String header = "SUMO v. 75, June 2007";
+    public static String footer = "<table width=\"100%\"><tr class=\"title\"><td>" +
         "(c) IEEE free release, see www.ontologyportal.org</td></tr></table>\n";
 
     /** ***************************************************************
@@ -26,7 +26,7 @@ public class DocGen {
      *
      *  @return The set of relations in the knowledge base.
      */
-    private ArrayList getRelations(KB kb) {
+    private static ArrayList getRelations(KB kb) {
 
         ArrayList relations = new ArrayList();
         Iterator it = kb.terms.iterator();
@@ -40,7 +40,7 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private String generateTOCHeader(TreeMap alphaList, TreeMap pageList) {
+    private static String generateTOCHeader(TreeMap alphaList, TreeMap pageList) {
 
         StringBuffer result = new StringBuffer();
         result.append("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
@@ -60,7 +60,7 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private String generateTOCPage(KB kb, String filename, String header, TreeSet terms) {
+    private static String generateTOCPage(KB kb, String filename, String header, TreeSet terms) {
 
         StringBuffer result = new StringBuffer();
         Iterator it = terms.iterator();
@@ -84,19 +84,19 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private String createPage(KB kb, String term) {
+    public static String createPage(KB kb, String kbHref, String term) {
 
         StringBuffer result = new StringBuffer();
         result.append("<table width=\"100%\">");
         result.append("<tr id=\"" + term + "\">");
-        result.append("<td class=\"headword\">" + term + "</td></tr><tr>");
+        result.append("<td class=\"headword\">" + term + "</td></tr>\n<tr>");
 
         ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
         if (docs != null && docs.size() > 0) {
             Formula f = (Formula) docs.get(0);
             String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
-            docString = kb.formatDocumentation("",docString);
-            result.append("<td class=\"description\">" + docString + "</td></tr>");
+            docString = kb.formatDocumentation(kbHref,docString);
+            result.append("<td class=\"description\">" + docString + "</td></tr>\n");
         }
 
         ArrayList syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
@@ -108,9 +108,9 @@ public class DocGen {
                 if (i >0) result.append(", ");                
                 result.append("<i>" + s + "</i>");
             }
-            result.append("</td></tr>");
+            result.append("</td></tr>\n");
         }
-        result.append("</table>");
+        result.append("</table><P>\n");
         ArrayList relations = getRelations(kb);
 
         result.append("<table width=\"100%\">");
@@ -119,17 +119,19 @@ public class DocGen {
             result.append("<tr><td class=\"label\">Parents</td>");
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
-                String s = f.getArgument(2); 
-                if (i > 0) result.append("<tr>");                
-                result.append("<td class=\"cell\">" + s + "</td>");
-                docs = kb.askWithRestriction(0,"documentation",1,s);
-                if (docs != null && docs.size() > 0) {
-                    f = (Formula) docs.get(0);
-                    String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
-                    docString = kb.formatDocumentation("",docString);
-                    result.append("<td class=\"cell\">" + docString + "</td>");
+                if (!f.sourceFile.endsWith("_Cache.kif")) {
+                    String s = f.getArgument(2); 
+                    if (i > 0) result.append("<tr><td>&nbsp;</td>");                
+                    result.append("<td class=\"cell\">" + s + "</td>");
+                    docs = kb.askWithRestriction(0,"documentation",1,s);
+                    if (docs != null && docs.size() > 0) {
+                        f = (Formula) docs.get(0);
+                        String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
+                        docString = kb.formatDocumentation(kbHref,docString);
+                        result.append("<td class=\"cell\">" + docString + "</td>");
+                    }
+                    result.append("</tr>\n");
                 }
-                result.append("</tr>");
             }
         }
 
@@ -138,17 +140,19 @@ public class DocGen {
             result.append("<tr><td class=\"label\">Children</td>");
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
-                String s = f.getArgument(1); 
-                if (i > 0) result.append("<tr>");                
-                result.append("<td class=\"cell\">" + s + "</td>");
-                docs = kb.askWithRestriction(0,"documentation",1,s);
-                if (docs != null && docs.size() > 0) {
-                    f = (Formula) docs.get(0);
-                    String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
-                    docString = kb.formatDocumentation("",docString);
-                    result.append("<td class=\"cell\">" + docString + "</td>");
+                if (!f.sourceFile.endsWith("_Cache.kif")) {
+                    String s = f.getArgument(1); 
+                    if (i > 0) result.append("<tr><td>&nbsp;</td>");                
+                    result.append("<td class=\"cell\">" + s + "</td>");
+                    docs = kb.askWithRestriction(0,"documentation",1,s);
+                    if (docs != null && docs.size() > 0) {
+                        f = (Formula) docs.get(0);
+                        String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
+                        docString = kb.formatDocumentation(kbHref,docString);
+                        result.append("<td class=\"cell\">" + docString + "</td>");
+                    }
+                    result.append("</tr>\n");
                 }
-                result.append("</tr>");
             }
         }
         result.append("</table>\n");
@@ -158,7 +162,7 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private String saveIndexes(KB kb, TreeMap alphaList, TreeMap pageList) throws IOException {
+    private static String saveIndexes(KB kb, TreeMap alphaList, TreeMap pageList) throws IOException {
 
         String tocheader = generateTOCHeader(alphaList,pageList);
         FileWriter fw = null;
@@ -193,7 +197,7 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private void printPages(TreeMap pageList, String tocheader) throws IOException {
+    private static void printPages(TreeMap pageList, String tocheader) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
@@ -231,7 +235,7 @@ public class DocGen {
      * the String is the body of the page describing the term.  It is 
      * combined with a table of contents header created in saveIndexes().
      */
-    public void generateHTML(KB kb) {
+    public static void generateHTML(KB kb) {
 
         try {
             TreeSet firstCharSet = new TreeSet();
@@ -249,7 +253,7 @@ public class DocGen {
                     else
                         alphaList.put(firstChar,list);
                     list.add(term);
-                    pageList.put(term,createPage(kb,term));
+                    pageList.put(term,createPage(kb,"",term));
                 }
             }
             String tocheader = saveIndexes(kb,alphaList,pageList);
@@ -265,13 +269,12 @@ public class DocGen {
      */
     public static void main (String args[]) {
 
-        DocGen dg = new DocGen();
         try {
             KBmanager.getMgr().initializeOnce();
         } catch (IOException ioe ) {
             System.out.println(ioe.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        dg.generateHTML(kb);
+        DocGen.generateHTML(kb);
     }
 }
