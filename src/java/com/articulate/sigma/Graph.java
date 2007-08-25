@@ -20,6 +20,37 @@ import java.io.*;
  *  ordering relations.  Supports Graph.jsp.  */
 public class Graph {
 
+
+    /** *************************************************************
+     * Create a graph of a bounded size by incrementing the number of
+     * levels above and below until the limit is reached or there are
+     * no more levels in the knowledge base from the given term and 
+     * relation.
+     */
+    public static ArrayList createBoundedSizeGraph(KB kb, String term, String relation, 
+                                        int size, String indentChars) {
+
+        ArrayList result = new ArrayList();
+        ArrayList oldresult = new ArrayList();
+        int above = 1;
+        int below = 1;
+        int oldlimit = -1;
+        while ((result.size() < size) && (result.size() != oldlimit)) {
+            oldlimit = result.size();
+            //System.out.println("INFO in Graph.createBoundedSizeGraph(): result size : " + result.size());
+            //System.out.println("INFO in Graph.createBoundedSizeGraph(): above, below, oldlimit : " + above + 
+            //                   " " + below + " " + oldlimit);
+            oldresult = result;
+            HashSet checkAbove = new HashSet();
+            HashSet checkBelow = new HashSet();
+            result = createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true);
+            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false));
+            above++;
+            below++;
+        }
+        return oldresult;
+    }
+
     /** *************************************************************
      * Create a ArrayList with a set of terms comprising a hierarchy
      * Each term String will be prefixed with an appropriate number of
@@ -60,7 +91,7 @@ public class Graph {
 		for (int i = 0; i < stmtAbove.size(); i++) {
 		    Formula f = (Formula) stmtAbove.get(i);
 		    String newTerm = f.getArgument(2);
-		    if ( ! newTerm.equals(term) ) {
+		    if ( ! newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif")) {
 			result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true));
 		    }
 		    check.add( term );
@@ -88,7 +119,7 @@ public class Graph {
 		for (int i = 0; i < stmtBelow.size(); i++) {
 		    Formula f = (Formula) stmtBelow.get(i);
 		    String newTerm = f.getArgument(1);
-		    if ( ! newTerm.equals(term) ) {
+		    if ( ! newTerm.equals(term)  && !f.sourceFile.endsWith("_Cache.kif")) {
 			result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true));
 		    }
 		    check.add( term );
@@ -171,6 +202,9 @@ public class Graph {
             System.out.println(ioe.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
+
+        Graph.createBoundedSizeGraph(kb, "Process", "subclass", 50, "  ");
+        /*
         Graph g = new Graph();
         HashSet result = g.createDotGraph(kb,"Entity","subclass");
         System.out.println("digraph G {");
@@ -181,5 +215,6 @@ public class Graph {
             System.out.println(s);
         }
         System.out.println("}");
+        */
     }
 }
