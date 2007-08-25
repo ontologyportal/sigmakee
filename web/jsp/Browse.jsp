@@ -223,6 +223,9 @@ August 9, Acapulco, Mexico.
 
     forms = kb.ask("arg",0,term);
     show.append(HTMLformatter.browserSectionFormat(forms,"appearance as argument number 0", htmlDivider, kbHref, kb, language));
+
+    show.append("\n<P><P><small><a href=\"http://" + hostname + ":" + port + "/sigma/SimpleBrowse.jsp?lang=" + language + "&kb=" + kbName +
+                "&term=" + term + "\">Show simplified definition</a></small>\n");
  }
 %>
 
