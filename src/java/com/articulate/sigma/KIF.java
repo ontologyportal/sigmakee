@@ -332,7 +332,11 @@ public class KIF {
                     // System.out.println( "st.ttype == " + st.ttype );
                     //System.out.print("Error in KIF.parse(): Parsing Error: Illegal character at line: ");
                     //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
-                    throw new ParseException("Parsing error in " + filename + ": Illegal character.",f.startLine);                      
+                    throw new ParseException("Parsing error in " 
+                                             + filename 
+                                             + ": Illegal character near line " 
+                                             + f.startLine,
+                                             f.startLine);                      
                 }
                 // if (key != null)
                 //    display(st,inRule,inAntecedent,inConsequent,argumentNum,parenLevel,key);
@@ -340,7 +344,11 @@ public class KIF {
             if (keySet.size() != 0 || expression.length() > 0) {
                 //System.out.println("Error in KIF.parse(): Parsing error: ");
                 //System.out.println("Kif ends before parsing finishes.  Missing closing parenthesis.");
-                throw new ParseException("Parsing error in " + filename + ": Missing closing paranthesis.",f.startLine);
+                throw new ParseException("Parsing error in " 
+                                         + filename 
+                                         + ": Missing closing paranthesis near line " 
+                                         + f.startLine
+                                         ,f.startLine);
             }
         }
         catch (Exception ex) {
@@ -355,7 +363,7 @@ public class KIF {
             StringBuffer warnings = new StringBuffer();
             while (it.hasNext()) {
                 String w = (String) it.next();
-                System.out.println("Warning in KIF.parse(): " + w);
+                System.out.println((w.startsWith("Error") ? w : "Warning in KIF.parse(): " + w));
                 warnings.append("\n<br/>" + w + "<br/>\n");
             }
             KBmanager.getMgr().setError(warnings.toString());
