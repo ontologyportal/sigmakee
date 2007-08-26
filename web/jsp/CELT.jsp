@@ -55,7 +55,7 @@ August 9, Acapulco, Mexico.
         if (stmt.trim().charAt(0) != '(')
             english = true;
         else {
-            String msg = (new KIF()).parseStatement(stmt,"");
+            String msg = (new KIF()).parseStatement(stmt);
             if (msg != null) {
                 sbStatus.append("<font color='red'>Error: Syntax Error in statement: " + stmt);
                 sbStatus.append("Message: " + msg + "</font><br>\n");
