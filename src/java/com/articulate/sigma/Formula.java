@@ -1768,28 +1768,52 @@ public class Formula implements Comparable {
                     clPos = 3;
                 }
                 String cl = f.getArgument(clPos);
-                if ((result.length > argnum) && ((result[argnum] == null) || result[argnum].equals(""))) {
+                String errStr = null;
+                String mgrErrStr = null;
+                if ((argnum < 0) || (argnum >= result.length)) {
+                    errStr = "Possible arity confusion for " + pred;
+                    mgrErrStr = KBmanager.getMgr().getError();
+                    System.out.println("Error in Formula.addToTypeList(): "
+                                       + errStr
+                                       + ": al == " 
+                                       + al 
+                                       + ", result.length == " 
+                                       + result.length 
+                                       + ", classP == \"" 
+                                       + classP
+                                       + "\"");
+                    if (mgrErrStr.equals("") || (mgrErrStr.indexOf(errStr) == -1)) {
+                        KBmanager.getMgr().setError(mgrErrStr
+                                                    + "\n<br/>"
+                                                    + errStr
+                                                    + "\n<br/>");
+                    }
+                }
+                else if ((result[argnum] == null) || result[argnum].equals("")) {
                     result[argnum] = cl + classP;
                 }
                 else {
-                    KBmanager.getMgr().setError(KBmanager.getMgr().getError() 
-                                                + "\n<br/>Multiple type declarations found for predicate " 
-                                                + pred 
-                                                + " at argument " 
-                                                + argnum 
-                                                + " with class " 
-                                                + cl 
-                                                + " and existing argument " 
-                                                + result[argnum] 
-                                                + "\n<br/>");
-                    //System.out.println(KBmanager.getMgr().getError() + 
-                    //    "\nMultiple type declarations found for predicate " + pred +
-                    //    " at argument " + argnum + " with class " + cl + " and existing argument " +
-                    //    result[num]);
+                    errStr = ("Multiple type declarations found for predicate "
+                              + pred
+                              + " at argument " 
+                              + argnum 
+                              + " with class " 
+                              + cl 
+                              + " and existing argument " 
+                              + result[argnum]);
+                    mgrErrStr = KBmanager.getMgr().getError();
+                    System.out.println("Error in Formula.addToTypeList(): " + errStr);
+                    if (mgrErrStr.equals("") || (mgrErrStr.indexOf(errStr) == -1)) {
+                        KBmanager.getMgr().setError(KBmanager.getMgr().getError() 
+                                                    + "\n<br/>" 
+                                                    + errStr
+                                                    + "\n<br/>");
+                    }
                 }
             }
         }
         catch (Exception ex) {
+            System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -2019,7 +2043,7 @@ public class Formula implements Comparable {
                 else { term = arg1; }
                 if (isVariable(arg2)) { var = arg2; }
                 else { term = arg2; }
-                if ((var != null) && (term != null)) {
+                if ((var != null) && isNonEmptyString(term)) {
                     if (listP(term)) {
                         newF = new Formula();
                         newF.read(term);
@@ -2032,7 +2056,7 @@ public class Formula implements Comparable {
                                     cl = findType(0, fn, kb);
                                 }
                             }
-                            if ((cl != null) && !cl.equals("Entity")) {
+                            if (isNonEmptyString(cl) && !cl.equals("Entity")) {
                                 varTypes = (Set) varmap.get(var);
                                 if (varTypes == null) {
                                     varTypes = new HashSet();
@@ -2073,7 +2097,7 @@ public class Formula implements Comparable {
                                 cl = findType(0, fn, kb);
                             }
                         }
-                        if ((cl != null) && !cl.equals("Entity")) {
+                        if (isNonEmptyString(cl) && !cl.equals("Entity")) {
                             if (pred.equals("subclass")) { cl += "+"; }
                             varTypes = (Set) varmap.get(arg1);
                             if (varTypes == null) {
