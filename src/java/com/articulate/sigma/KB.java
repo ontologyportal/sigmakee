@@ -829,7 +829,7 @@ public class KB {
                             break;
                         case 1 : 
                             if (reln.endsWith("Fn")) {
-                                className = "UnaryFuncion";
+                                className = "UnaryFunction";
                             }
                             break;
                         case 2 : 
