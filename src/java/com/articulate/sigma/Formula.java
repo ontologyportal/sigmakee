@@ -32,6 +32,12 @@ public class Formula implements Comparable {
     public int startLine;       
     /** The line in the file on which the formula ends. */
     public int endLine;     
+    /** The length of the file in bytes at the position immediately
+     *  after the end of the formula.  This value is used only for
+     *  formulas entered via KB.tell().  In general, you should not
+     *  count on it being set to a value other than -1L.
+     */
+    public long endFilePosition = -1L;
     /** The formula. */
     public String theFormula;
 
