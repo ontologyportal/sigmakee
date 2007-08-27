@@ -1390,9 +1390,9 @@ public class KB {
                             if (newFormula.theFormula.equals(oldFormula.theFormula)) {
                                 found = true;
                                 formulasPresent.add(oldFormula);
-                                System.out.println("INFO in KB.merge)");
-                                System.out.println("  newFormula == " + newFormula);
-                                System.out.println("  oldFormula == " + oldFormula);
+                                // System.out.println("INFO in KB.merge)");
+                                // System.out.println("  newFormula == " + newFormula);
+                                // System.out.println("  oldFormula == " + oldFormula);
                             }
                         }
                         if (!found) {
@@ -1458,16 +1458,22 @@ public class KB {
      *
      * @param formula A String representing a SUO-KIF Formula.
      * @param fname A String denoting the pathname of the target file.
-     * @return void
+     * @return A long value indicating the number of bytes in the file
+     * after the formula has been written.  A value of 0L means that
+     * the file does not exist, and so could not be written for some
+     * reason.  A value of -1 probably means that some error occurred.
      */
-    private void writeUserAssertion(String formula, String fname) throws IOException {
+    private long writeUserAssertion(String formula, String fname) throws IOException {
 
+        long flen = -1L;
         FileWriter fr = null;
 
         try {
-            fr = new FileWriter(fname,true);   
+            File file = new File(fname);
+            fr = new FileWriter(file,true);   
             fr.write(formula);
             fr.write("\n");
+            flen = file.length();
         }
         catch (java.io.IOException e) {
             System.out.println("Error writing file " + fname);
@@ -1476,6 +1482,7 @@ public class KB {
             if (fr != null) 
                 fr.close();
         }
+        return flen;
     }
 
     /** *************************************************************
@@ -1551,7 +1558,7 @@ public class KB {
                         while (it.hasNext()) {
                             parsedF = (Formula) it.next();
                             // 4. Write the formula to the user assertions file.
-                            writeUserAssertion(parsedF.theFormula, filename);
+                            parsedF.endFilePosition = writeUserAssertion(parsedF.theFormula, filename);
                             parsedF.sourceFile = filename;
                         }
 
@@ -1593,6 +1600,15 @@ public class KB {
                                     }
                                 }
                             }
+
+                            // System.out.println("INFO in KB.tell(" + input + ")");
+                            // System.out.println("  parsedF == " + parsedF);
+                            // System.out.println("  formulaMap.get(parsedF.theFormula) == " 
+                            //                    + formulaMap.get(parsedF.theFormula));
+                            // System.out.println("  parsedF.sourceFile == " + parsedF.sourceFile);
+                            // System.out.println("  parsedF.endFilePosition == " + parsedF.endFilePosition);
+                            // System.out.println("  parsedF.theTptpFormulas == " + parsedF.getTheTptpFormulas());
+
                         }
                         result += (allAdded ? " and inference" : " but not for local inference");
                     }
@@ -3294,6 +3310,17 @@ public class KB {
 
         sanitizedKBName = name.replaceAll("\\W","_");
         try {
+
+            System.out.println("INFO in KB.writeTPTPFile(\"" 
+                               + fileName 
+                               + "\", " 
+                               + conjecture 
+                               + ", " 
+                               + onlyPlainFOL
+                               + ", \""
+                               + reasoner
+                               + "\")");
+
             //----If file name is a directory, create filename therein
             if (fileName == null) {
                 outputFile = File.createTempFile(sanitizedKBName, ".p",null);
@@ -3317,11 +3344,12 @@ public class KB {
                         Formula f2 = (Formula) o2;
                         int fileCompare = f1.sourceFile.compareTo(f2.sourceFile);
                         if (fileCompare == 0) {
-                            return((new Integer(f1.startLine)).compareTo(
-                                                                         new Integer(f2.startLine)));
-                        } else {
-                            return(fileCompare);
-                        }
+                            fileCompare = (new Integer(f1.startLine)).compareTo(new Integer(f2.startLine));
+                            if (fileCompare == 0) {
+                                fileCompare = (new Long(f1.endFilePosition)).compareTo(new Long(f2.endFilePosition));
+                            }
+                        } 
+                        return fileCompare;
                     } });
             orderedFormulae.addAll(formulaMap.values());
 
@@ -3332,6 +3360,8 @@ public class KB {
             while (ite.hasNext()) {
                 f = (Formula) ite.next();
                 tptpFormulas = f.getTheTptpFormulas();
+
+                // System.out.println("  1 : tptpFormulas == " + tptpFormulas);
 
                 //----If we are writing "sanitized" tptp, aka onlyPlainFOL,
                 //----here we rename all VariableArityRelations so that each
@@ -3356,6 +3386,7 @@ public class KB {
                         }
                         tmpF.tptpParse(false, this, withVarRenames);
                         tptpFormulas = tmpF.getTheTptpFormulas();
+                        // System.out.println("  2 : tptpFormulas == " + tptpFormulas);
                     }
                 }                
 
