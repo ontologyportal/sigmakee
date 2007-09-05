@@ -162,8 +162,9 @@ public class KBmanager {
                                 try {                            
                                     result.append(kb.addConstituent(filename, false, false)); 
                                 } 
-                                catch (IOException ioe) {
-                                    System.out.println("Error in KBmanager.fromXML(): " + ioe.getMessage());
+                                catch (Exception e1) {
+                                    System.out.println("ERROR in KBmanager.fromXML()");
+                                    System.out.println("  " + e1.getMessage());
                                 }
                             }
                             kb.buildRelationCaches();

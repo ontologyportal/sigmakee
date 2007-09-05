@@ -264,6 +264,7 @@ public class KB {
      */
     public String cache() {
 
+        System.out.println("ENTER KB.cache()");
         String result = "";
         FileWriter fr = null;
         try {
@@ -294,11 +295,18 @@ public class KB {
                 if (closureComputed) {
                     File dir = new File(kbDir);
                     File f = new File(dir, (this.name + _cacheFileSuffix));
+                    System.out.println("INFO in KB.cache()");
+                    System.out.println("  User cache file == " + f.getCanonicalPath());
                     if (f.exists()) {
+                        System.out.println("  Deleting " + f.getCanonicalPath());
                         f.delete();
+                        if (f.exists()) {
+                            System.out.println("  Could not delete " + f.getCanonicalPath());
+                        }
                     }
                     String filename = f.getCanonicalPath();
                     fr = new FileWriter(f, true);
+                    System.out.println("  Appending statements to " + f.getCanonicalPath());
                     it = caches.iterator();
                     while (it.hasNext()) {
                         rc = (RelationCache) it.next();
@@ -332,7 +340,8 @@ public class KB {
                         fr = null;
                     }
                     constituents.remove(filename);
-                    System.out.println("INFO in KB.cache(): Adding: " + filename);
+                    System.out.println("INFO in KB.cache()");
+                    System.out.println("  Adding " + filename);
                     result = addConstituent(filename, false, false);
                     KBmanager.getMgr().writeConfiguration();
                 }
@@ -350,6 +359,7 @@ public class KB {
                     ex.printStackTrace();
                 }
             }
+            System.out.println("EXIT KB.cache()");
             return result;
         }
     }
@@ -2008,109 +2018,121 @@ public class KB {
      * @param loadVampireP - If true, destroys the old Vampire process and
      * starts a new one.
      */
-    public String addConstituent(String filename, boolean buildCachesP, boolean loadVampireP) 
-        throws IOException {
+    public String addConstituent(String filename, boolean buildCachesP, boolean loadVampireP) {
 
+        System.out.println("ENTER KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
         long t1 = System.currentTimeMillis();
-        File constituent = new File(filename);
-        String canonicalPath = constituent.getCanonicalPath();
         StringBuffer result = new StringBuffer();
-        Iterator it;
-        Iterator it2;
-        KIF file = new KIF();
-        String key;
-        String internedFormula;
-        ArrayList list;
-        ArrayList newList;
-        Formula f;
 
-        if (constituents.contains(canonicalPath)) return "Error: " + canonicalPath + " already loaded.";
-        System.out.println("INFO in KB.addConstituent(): Adding " + canonicalPath);
-        try { 
-            file.readFile(canonicalPath);
-        }
-        catch (IOException ioe) {
-            throw new IOException(ioe.getMessage());
-        }
-        catch (ParseException pe) {
-            result.append(pe.getMessage() + "At line: " + pe.getErrorOffset());
-            //KBmanager.getMgr().setError(result.toString());
-            return result.toString();
-        }
-        System.out.println("INFO in KB.addConstituent(): Parsed file " 
-                           + canonicalPath 
-                           + " of size "
-                           + file.formulas.keySet().size());
-        it = file.formulas.keySet().iterator();
-        int count = 0;
-        while (it.hasNext()) {                
-            // Iterate through the formulas in the file, adding them to the KB, at the appropriate key.
-            key = (String) it.next();         
-            // Note that this is a slow operation that needs to be improved
-            // System.out.println("INFO KB.addConstituent(): Key " + key);
-            if ((count++ % 100) == 1) { System.out.print("."); }
-            list = (ArrayList) formulas.get(key);
-            if (list == null) {
-                list = new ArrayList();
-                formulas.put(key, list);
+        try {
+            File constituent = new File(filename);
+            String canonicalPath = constituent.getCanonicalPath();
+            Iterator it;
+            Iterator it2;
+            KIF file = new KIF();
+            String key;
+            String internedFormula;
+            ArrayList list;
+            ArrayList newList;
+            Formula f;
+
+            if (constituents.contains(canonicalPath)) return "Error: " + canonicalPath + " already loaded.";
+            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
+            System.out.println("  Adding " + canonicalPath);
+            try { 
+                file.readFile(canonicalPath);
             }
-            newList = (ArrayList) file.formulas.get(key);
-            it2 = newList.iterator();
-            while (it2.hasNext()) {
-                f = (Formula) it2.next();
-                internedFormula = f.theFormula.intern();
-                if (! list.contains(f)) {
-                    list.add(f);
-                    formulaMap.put(internedFormula, f);
-
-                    // Force translation to clausal form, since it
-                    // will be used multiple times later.
-                    // f.computeTheClausalForm();
+            catch (Exception ex1) {
+                result.append(ex1.getMessage());
+                if (ex1 instanceof ParseException) {
+                    result.append(" at line " + ((ParseException)ex1).getErrorOffset());
                 }
-                else {
-                    result.append("Warning: Duplicate axiom in ");
-                    result.append(f.sourceFile + " at line " + f.startLine + "<BR>");
-                    result.append(f.theFormula + "<P>");
-                    Formula existingFormula = (Formula) formulaMap.get(internedFormula);
-                    result.append("Warning: Existing formula appears in ");
-                    result.append(existingFormula.sourceFile + " at line " + existingFormula.startLine + "<BR>");
-                    result.append("<P>");
-                }
+                result.append(" in file " + canonicalPath);
+                return result.toString();
+            }
 
-                /*
-                  boolean found = false;
-                  for (int j = 0; j < list.size(); j++) {         
-                  if (j % 10000 == 1) System.out.print("!");            
-                  if (f.deepEquals((Formula) list.get(j))) 
-                  found = true;
-                  }
-                  if (!found) 
-                  list.add(newList.get(i));  
-                */  
+            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
+            System.out.println("  Parsed file " 
+                               + canonicalPath 
+                               + " of size "
+                               + file.formulas.keySet().size());
+            it = file.formulas.keySet().iterator();
+            int count = 0;
+            while (it.hasNext()) {                
+                // Iterate through the formulas in the file, adding them to the KB, at the appropriate key.
+                key = (String) it.next();         
+                // Note that this is a slow operation that needs to be improved
+                // System.out.println("INFO KB.addConstituent(): Key " + key);
+                if ((count++ % 100) == 1) { System.out.print("."); }
+                list = (ArrayList) formulas.get(key);
+                if (list == null) {
+                    list = new ArrayList();
+                    formulas.put(key, list);
+                }
+                newList = (ArrayList) file.formulas.get(key);
+                it2 = newList.iterator();
+                while (it2.hasNext()) {
+                    f = (Formula) it2.next();
+                    internedFormula = f.theFormula.intern();
+                    if (! list.contains(f)) {
+                        list.add(f);
+                        formulaMap.put(internedFormula, f);
+
+                        // Force translation to clausal form, since it
+                        // will be used multiple times later.
+                        // f.computeTheClausalForm();
+                    }
+                    else {
+                        result.append("Warning: Duplicate axiom in ");
+                        result.append(f.sourceFile + " at line " + f.startLine + "<BR>");
+                        result.append(f.theFormula + "<P>");
+                        Formula existingFormula = (Formula) formulaMap.get(internedFormula);
+                        result.append("Warning: Existing formula appears in ");
+                        result.append(existingFormula.sourceFile + " at line " + existingFormula.startLine + "<BR>");
+                        result.append("<P>");
+                    }
+
+                    /*
+                      boolean found = false;
+                      for (int j = 0; j < list.size(); j++) {         
+                      if (j % 10000 == 1) System.out.print("!");            
+                      if (f.deepEquals((Formula) list.get(j))) 
+                      found = true;
+                      }
+                      if (!found) 
+                      list.add(newList.get(i));  
+                    */  
+                }
+            }
+            System.out.println("x");
+
+            this.terms.addAll(file.terms);
+
+            if (! constituents.contains(canonicalPath)) {
+                constituents.add(canonicalPath);
+            }
+
+            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
+            System.out.println("  File "
+                               + canonicalPath
+                               + " loaded in "
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
+
+            if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) {
+                buildRelationCaches();
+            }
+
+            if (loadVampireP) {
+                loadVampire();
             }
         }
-        System.out.println("x");
-
-        this.terms.addAll(file.terms);
-
-        if (! constituents.contains(canonicalPath)) {
-            constituents.add(canonicalPath);
+        catch (Exception ex) {
+            result.append(ex.getMessage());
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
         }
-
-        System.out.println("Constituent file "
-                           + canonicalPath
-                           + " loaded in "
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds");
-
-        if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) {
-            buildRelationCaches();
-        }
-
-        if (loadVampireP) {
-            loadVampire();
-        }
-
+        System.out.println("EXIT KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
         return result.toString();
     }
 
@@ -2119,9 +2141,9 @@ public class KB {
      */
     public String reload() {
 
+        System.out.println("ENTER KB.reload()");
         StringBuffer result = new StringBuffer();
         try {
-            System.out.println("INFO in KB.reload(): Reloading.");
             ArrayList newConstituents = new ArrayList();
             Iterator ci = constituents.iterator();
             String cName = null;
@@ -2149,6 +2171,8 @@ public class KB {
             ci = newConstituents.iterator();
             while (ci.hasNext()) {
                 cName = (String) ci.next();
+                System.out.println("INFO in KB.reload()");
+                System.out.println("  constituent == " + cName);
                 result.append(addConstituent(cName, false, false));
             }
 
@@ -2156,8 +2180,7 @@ public class KB {
             buildRelationCaches();
 
             // If cache == yes, write the cache file.
-            String propVal = KBmanager.getMgr().getPref("cache");
-            if ((propVal != null) && propVal.equalsIgnoreCase("yes")) {
+            if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
                 result.append(this.cache());
             }
 
@@ -2171,6 +2194,7 @@ public class KB {
             ex.printStackTrace();
         }
 
+        System.out.println("EXIT KB.reload()");
         return result.toString();
     }
 
