@@ -137,11 +137,15 @@ public class KIF {
 
     /** ***************************************************************
      */
-    private void parse(Reader r) throws ParseException, IOException {
+    private void parse(Reader r) {
+
+        System.out.println("ENTER KIF.parse(" + r + ")");
 
         int mode = this.getParseMode();
-        System.out.println("INFO in KIF.parse(): filename == " + this.getFilename() );
-        System.out.println("INFO in KIF.parse(): parseMode == "
+        
+        System.out.println("INFO in KIF.parse()");
+        System.out.println("  filename == " + this.getFilename());
+        System.out.println("  parseMode == "
                            + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));
         String key = null;
         ArrayList keySet;
@@ -162,6 +166,7 @@ public class KIF {
       
         if (r == null) {
             System.err.println("No Input Reader Specified");
+            System.out.println("EXIT KIF.parse(" + r + ")");
             return;
         }
         try {
@@ -368,6 +373,7 @@ public class KIF {
             }
             KBmanager.getMgr().setError(warnings.toString());
         }
+        System.out.println("EXIT KIF.parse(" + r + ")");
         return;
     }
 
@@ -443,40 +449,61 @@ public class KIF {
      * Read a KIF file.
      * @param fname - the full pathname of the file.
      */
-    public void readFile(String fname) throws IOException, ParseException {
+    public void readFile(String fname) throws Exception {
 
-        filename = fname;
-        file = null;
+        System.out.println("ENTER KIF.readFile(\"" + fname + "\")");
+
+        FileReader fr = null;
+        Exception exThr = null;
         try {
-            file = new File( filename );
-            filename = file.getCanonicalPath();
-            FileReader fr = new FileReader( file );
+            this.file = new File(fname);
+            this.filename = file.getCanonicalPath();
+            fr = new FileReader(file);
             parse(fr);
         }
-        catch (ParseException pe) {
-            String er = "Error in KIF.readFile(): " + pe.getMessage() + " at line " +  pe.getErrorOffset();
-            KBmanager.getMgr().setError(KBmanager.getMgr().getError() + "\n<br/>" + er + "\n<br/>");
-            System.out.println(er);
+        catch (Exception ex) {
+            exThr = ex;
+            String er = ex.getMessage() + ((ex instanceof ParseException)
+                                           ? " at line " + ((ParseException)ex).getErrorOffset()
+                                           : "");
+            System.out.println("ERROR in KIF.readFile(\"" + fname + "\")");
+            System.out.println("  " + er);
+            KBmanager.getMgr().setError(KBmanager.getMgr().getError() 
+                                        + "\n<br/>" 
+                                        + er 
+                                        + " in file "
+                                        + fname
+                                        + "\n<br/>");
         }
-        catch (java.io.IOException e) {
-            String er = "Error in KIF.readFile(): IO exception parsing file " + filename;
-            KBmanager.getMgr().setError(KBmanager.getMgr().getError() + "\n<br/>" + er + "\n<br/>");
-            throw new IOException(er);
+        finally {
+            if (fr != null) {
+                try {
+                    fr.close();
+                }
+                catch (Exception ex2) {
+                }
+            }
         }
+        System.out.println("EXIT KIF.readFile(\"" + fname + "\")");
+        if (exThr != null) {
+            throw exThr;
+        }
+        return;
     }
   
     /** ***************************************************************
      * Write a KIF file.
      * @param fname - the name of the file to write, including full path.
      */
-    public void writeFile(String fname) throws IOException {
+    public void writeFile(String fname) {
+
+        System.out.println("ENTER KIF.writeFile(\"" + fname + "\")");
+        System.out.println("  number of formulas == " + formulaSet.size());
 
         FileWriter fr = null;
         PrintWriter pr = null;
         Iterator it;
         ArrayList formulaArray;
-
-        System.out.println("INFO in KIF.writeFile(): Filename: " + fname + " num formulas: " + String.valueOf(formulaSet.size()));
         try {
             fr = new FileWriter(fname);
             pr = new PrintWriter(fr);
@@ -485,17 +512,25 @@ public class KIF {
             while (it.hasNext())
                 pr.println((String) it.next());          
         }
-        catch (java.io.IOException e) {
-            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
+        catch (Exception ex) {
+            System.out.println("ERROR in KIF.writeFile(\"" + fname + "\")");
+            System.out.println("  " + ex.getMessage());
+            ex.printStackTrace();
         }
         finally {
-            if (pr != null) {
-                pr.close();
+            try {
+                if (pr != null) {
+                    pr.close();
+                }
+                if (fr != null) {
+                    fr.close();
+                }
             }
-            if (fr != null) {
-                fr.close();
+            catch (Exception ex2) {
             }
         }
+        System.out.println("EXIT KIF.writeFile(\"" + fname + "\")");
+        return;
     }
 
     /** ***************************************************************
@@ -533,13 +568,13 @@ public class KIF {
             System.out.println("Loading from " + args[0]);
             kifp.readFile(args[0]);
         }
-        catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
-        }
-        catch (ParseException pe) {
-            System.out.println(pe.getMessage());
-            System.out.print("In statement starting at line: ");
-            System.out.println(pe.getErrorOffset());
+        catch (Exception e1) {
+            String msg = e1.getMessage();
+            if (e1 instanceof ParseException) {
+                msg += (" in statement starting at line " 
+                        + ((ParseException)e1).getErrorOffset());
+            }
+            System.out.println(msg);
         }
         /*
           it = kifp.formulaSet.iterator();
@@ -568,7 +603,7 @@ public class KIF {
                     pw.println(form + '\n');
             }
         }
-        catch ( Exception ex ) {
+        catch (Exception ex) {
             System.out.println( "Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage() );
             ex.printStackTrace();
         }
