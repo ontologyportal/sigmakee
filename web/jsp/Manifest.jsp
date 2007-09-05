@@ -54,7 +54,7 @@ August 9, Acapulco, Mexico.
 	if ( ! Formula.isNonEmptyString(tptpFile) ) {
 	    statusStr = "\n<br/>Could not write a TPTP file\n<br/>";
 	}
-        KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
+        KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
     }
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
@@ -70,13 +70,19 @@ August 9, Acapulco, Mexico.
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
         }
+        System.out.println("INFO in Manifest.jsp");
+        System.out.println("  constituent == " + constituent);
+        System.out.println("  call: kb.reload()");
 	result = kb.reload();
     }
     else if (constituent != null) {
         kb.addConstituent(constituent, true, false);
         //System.out.println("INFO in Manifest.jsp (top): The error string is : " + KBmanager.getMgr().getError());
         KBmanager.getMgr().writeConfiguration();
-	if ( KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes") ) {
+	if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
+            System.out.println("INFO in Manifest.jsp");
+            System.out.println("  constituent == " + constituent);
+            System.out.println("  call: kb.cache()");
 	    kb.cache();
 	}
 	kb.loadVampire();

@@ -51,11 +51,9 @@ August 9, Acapulco, Mexico.
           if (KBmanager.getMgr().getKB(kbName) == null) 
               KBmanager.getMgr().addKB(kbName);
           KB kb = KBmanager.getMgr().getKB(kbName);
-          kb = KBmanager.getMgr().getKB(kbName);
           result.append( kb.addConstituent(file.getCanonicalPath(), true, false) );
-	  String cacheVal = KBmanager.getMgr().getPref("cache");
-	  if ( (cacheVal != null) && cacheVal.equalsIgnoreCase("yes") ) {
-	      result.append( kb.cache() );
+	  if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
+	      result.append(kb.cache());
 	  }
 	  kb.loadVampire();
       }
@@ -63,9 +61,9 @@ August 9, Acapulco, Mexico.
   }
   catch (Exception e) {
       System.out.println("Error in AddConstituent.jsp: " + e.getMessage());
+      System.out.println("  kbName == " + kbName);
+      System.out.println("  filename == " + fileName);
       e.printStackTrace();
-      System.out.println("kbName: " + kbName);
-      System.out.println("filename: " + fileName);
   }
 
   //if (result.toString() != null && result.toString() != "") 
