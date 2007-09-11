@@ -191,6 +191,17 @@ if ( iePref == null ) { iePref = ""; }
           inferenceTestDir = "";
   }
 
+  String tptpHomeDir = request.getParameter("tptpHomeDir");
+  if (tptpHomeDir != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("tptpHomeDir",tptpHomeDir);
+  }
+  else {
+      tptpHomeDir = KBmanager.getMgr().getPref("tptpHomeDir");
+      if (tptpHomeDir == null)
+          tptpHomeDir = "";
+  }
+
   String editorCommand = request.getParameter("editorCommand");
   if (editorCommand != null) {
       changed = true;
@@ -328,6 +339,10 @@ if ( (kbNames != null) && !(kbNames.isEmpty()) ) {
     <label for="inferenceTestDir">
     <INPUT type="text" SIZE=50 name="inferenceTestDir" value=<%=inferenceTestDir %> >
     Directory in which tests for the inference engine are found</label><P>
+
+    <label for="tptpHomeDir">
+    <INPUT type="text" SIZE=50 name="tptpHomeDir" value=<%=tptpHomeDir %> >
+    Directory in which local copy of TPTPWorld is installed</label><P>
 
     <label for="editorCommand">
     <INPUT type="text" name="editorCommand" value=<%=editorCommand %> >
