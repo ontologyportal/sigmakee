@@ -80,8 +80,12 @@ public class KBmanager {
         try {
             String sep = File.separator;
             String base = System.getenv("SIGMA_HOME");
+            String tptpHome = System.getenv("TPTP_HOME");
             if (base == null || base == "") {
                 base = System.getProperty("user.dir");
+            }
+            if (tptpHome == null || tptpHome == "") {
+                tptpHome = System.getProperty("user.dir");
             }
             System.out.println("INFO in KBmanager.setDefaultAttributes(): base == " + base);
             String tomcatRoot = System.getenv("CATALINA_HOME");
@@ -91,6 +95,7 @@ public class KBmanager {
             }
             File tomcatRootDir = new File(tomcatRoot);
             File baseDir = new File(base);
+            File tptpHomeDir = new File(tptpHome);
             File kbDir = new File(baseDir, "KBs");
             File inferenceTestDir = new File(kbDir, "tests");
             // The links for the test results files will be broken if
@@ -98,6 +103,7 @@ public class KBmanager {
             // Unfortunately, we don't know where [Tomcat] is.
             File testOutputDir = new File(tomcatRootDir,("webapps" + sep + "sigma" + sep + "tests"));
             preferences.put("baseDir",baseDir.getCanonicalPath());
+            preferences.put("tptpHomeDir",tptpHomeDir.getCanonicalPath());
             preferences.put("kbDir",kbDir.getCanonicalPath());
             preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());  
             preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
