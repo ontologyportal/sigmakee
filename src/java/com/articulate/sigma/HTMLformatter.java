@@ -222,11 +222,23 @@ public class HTMLformatter {
      *  Create an HTML menu, given an ArrayList of Strings.
      */
     public static String createMenu(String menuName, String selectedOption, ArrayList options) {
+        String params = null;
+        return createMenu(menuName, selectedOption, options, params);
+    }
+
+
+    /** *************************************************************
+     *  Create an HTML menu with an ID, given an ArrayList of Strings.
+     */
+    public static String createMenu(String menuName, String selectedOption, ArrayList options, String params) {
 
         StringBuffer result = new StringBuffer();
 
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=" + menuNameProcessed);
+        if (params != null) {
+            result.append(" " + params + " ");
+        }
         result.append(">\n  ");
         for (int i = 0; i < options.size(); i++) {
             result.append("<option value='");
