@@ -20,8 +20,11 @@ August 9, Acapulco, Mexico.
   }
 //-----------------------------------------------------------------------------
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
-  String SystemOnTPTP = KBmanager.getMgr().getPref("tptpHomeDir") + "/SystemExecution/SystemOnTPTP";
+  String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
+  String SystemOnTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
+  String tptp4X = TPTPWorld + "/ServiceTools/tptp4X";
   boolean tptpWorldExists = (new File(SystemOnTPTP)).exists();
+  String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
 
 //----Code for getting the list of systems
   String responseLine;
@@ -29,7 +32,8 @@ August 9, Acapulco, Mexico.
   String defaultSystemRemote = "";
   ArrayList<String> systemListLocal = new ArrayList<String>();
   ArrayList<String> systemListRemote = new ArrayList<String>();
-  BufferedReader myResponse;
+  BufferedReader reader;
+  BufferedWriter writer;
 
 //----If local copy of TPTPWorld exists, call local SystemOnTPTP
   if (tptpWorldExists) {
@@ -37,16 +41,16 @@ August 9, Acapulco, Mexico.
     Process proc = Runtime.getRuntime().exec(command);
     systemListLocal.add("Choose system");
     try {
-      myResponse = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+      reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 //----Read List of Local Systems
-      while ((responseLine = myResponse.readLine()) != null) {
+      while ((responseLine = reader.readLine()) != null) {
         systemListLocal.add(responseLine);
 //----Try use EP as the default system
         if (responseLine.startsWith("EP---")) {
           defaultSystemLocal = responseLine;
         }
       }
-      myResponse.close();
+      reader.close();
     } catch (Exception ioe) {
       System.err.println("Exception: " + ioe.getMessage());
     }
@@ -66,17 +70,17 @@ August 9, Acapulco, Mexico.
   URLParameters.put("ListStatus","SoTPTP");
 
   try {
-    myResponse = new BufferedReader(new InputStreamReader(
+    reader = new BufferedReader(new InputStreamReader(
     ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
 //----Read List of Remote Systems
-    while ((responseLine = myResponse.readLine()) != null) {
+    while ((responseLine = reader.readLine()) != null) {
       systemListRemote.add(responseLine);
 //----Try use EP as the default system
       if (responseLine.startsWith("EP---")) {
         defaultSystemRemote = responseLine;
       }
     }
-    myResponse.close();
+    reader.close();
   } catch (Exception ioe) {
     System.err.println("Exception: " + ioe.getMessage());
   }
@@ -173,7 +177,7 @@ August 9, Acapulco, Mexico.
         obj.setAttribute("style","display:none");
       }
       current_location = location;
-      var obj = window.document.getElementById("systemList" + location);
+      obj = window.document.getElementById("systemList" + location);
       if (obj) {
         obj.setAttribute("style","display:inline");
       }
@@ -181,7 +185,7 @@ August 9, Acapulco, Mexico.
 <% } %>
   //]]></script>
   </HEAD>
-  <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF>
+  <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF">
 
   <FORM name="SystemOnTPTP" ID="SystemOnTPTP" action="SystemOnTPTP.jsp" METHOD="POST">
   <TABLE width="95%" cellspacing="0" cellpadding="0">
@@ -209,6 +213,7 @@ August 9, Acapulco, Mexico.
   <TEXTAREA ROWS=5 COLS=70" NAME="stmt"><%=stmt%></TEXTAREA><BR>
   Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
   Query time limit:<INPUT TYPE=TEXT SIZE=3 NAME="timeout" VALUE="<%=timeout%>">
+  <BR>
   System:
 <%
   String params;
@@ -238,13 +243,14 @@ August 9, Acapulco, Mexico.
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
 <% if (location.equals("remote")) { out.print(" CHECKED"); } %>
   onClick="javascript:toggleList('Remote');">Remote SystemOnTPTP
+  <BR>
   <INPUT TYPE="CHECKBOX" NAME="sanitize" VALUE="yes"
 <% if (sanitize.equalsIgnoreCase("yes")) { out.print(" CHECKED"); } %>
   >Sanitize
-  <BR>
   <INPUT TYPE="CHECKBOX" NAME="tstpFormat" VALUE="-S"
 <% if (tstpFormat.equals("-S")) { out.print(" CHECKED"); } %>
   >TPTP&nbsp;format
+  <BR>
   <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q4"
 <% if (quietFlag.equals("-q4")) { out.print(" CHECKED"); } %>
   >Only TPTP format
@@ -263,7 +269,9 @@ August 9, Acapulco, Mexico.
   <INPUT TYPE=RADIO NAME="quietFlag" VALUE="IDV"
 <% if (quietFlag.equals("IDV")) { out.print(" CHECKED"); } %>
   >IDV-Proof tree
-
+  <INPUT TYPE=RADIO NAME="quietFlag" ID="hyperlinkedKIF" VALUE="hyperlinkedKIF"
+<% if (quietFlag.equals("hyperlinkedKIF")) { out.print(" CHECKED"); } %>
+  >Hyperlinked KIF
   <INPUT TYPE=SUBMIT NAME="request" value="SystemOnTPTP">
   </FORM>
   <hr>
@@ -275,35 +283,47 @@ August 9, Acapulco, Mexico.
   StringBuffer sbStatus = new StringBuffer();
   String kbFileName;
   Formula conjectureFormula;
+//----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)
+  String result = "";
+  String command;
+  Process proc;
 
 //----If there has been a request, do it and report result
   if (req != null && !syntaxError) {
     try {
 //----Add KB contents here
-          conjectureFormula = new Formula();
-          conjectureFormula.theFormula = stmt;
-          conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
-          //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theFormula);
-          conjectureFormula.tptpParse(true,kb);
-          //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.getTheTptpFormulas());
-          kbFileName = kb.writeTPTPFile(null,
-                                        conjectureFormula,
-                                        sanitize.equalsIgnoreCase("yes"),
-                                        systemChosen );
+      conjectureFormula = new Formula();
+      conjectureFormula.theFormula = stmt;
+      conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
+      //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theFormula);
+      conjectureFormula.tptpParse(true,kb);
+      //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.getTheTptpFormulas());
+      kbFileName = kb.writeTPTPFile(null,
+                                    conjectureFormula,
+                                    sanitize.equalsIgnoreCase("yes"),
+                                    systemChosen);
+//-----------------------------------------------------------------------------
+//----Call RemoteSoT
       if (location.equals("remote")) {
         if (req.equalsIgnoreCase("SystemOnTPTP")) {
           if (systemChosen.equals("Choose%20system")) {
             out.println("No system chosen");
+//          } else if (quietFlag.equals("hyperlinkedKIF")) {
+//            out.println("HyperlinkedKIF output not supported for remote SystemOnTPTP");
           } else {
 //----Need to check the name exists
             URLParameters.clear();
             URLParameters.put("NoHTML","1");
-            URLParameters.put("X2TPTP",tstpFormat);
             if (quietFlag.equals("IDV")) {
               URLParameters.put("IDV","-T");
               URLParameters.put("QuietFlag","-q4");
-            } else {
+              URLParameters.put("X2TPTP",tstpFormat);
+            } else if (quietFlag.equals("hyperlinkedKIF")) {
+              URLParameters.put("QuietFlag","-q3");
+              URLParameters.put("X2TPTP","-S");
+            }else {
               URLParameters.put("QuietFlag",quietFlag);
+              URLParameters.put("X2TPTP",tstpFormat);
             }
 //----Need to offer automode
             URLParameters.put("System___System",systemChosen);
@@ -313,19 +333,43 @@ August 9, Acapulco, Mexico.
             URLParameters.put("UPLOADProblem",new File(kbFileName));
             URLParameters.put("SubmitButton","RunSelectedSystems");
   
-            myResponse = new BufferedReader(new InputStreamReader(
+            reader = new BufferedReader(new InputStreamReader(
                          ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
             out.println("(Remote SystemOnTPTP call)");
-%>
-            <PRE>
-<%
-            while ((responseLine = myResponse.readLine()) != null) {
-              out.println(responseLine);
+            out.println("<PRE>");
+            while ((responseLine = reader.readLine()) != null) {
+              result += responseLine + "\n";
+              if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
             }
-%>
-            </PRE>
-<%
-            myResponse.close();
+            out.println("</PRE>");
+            reader.close();
+//-----------------------------------------------------------------------------
+//----Calling remote tptp4X 
+            /*
+            if (quietFlag.equals("hyperlinkedKIF")) {
+              URLParameters.clear();
+              URLParameters.put("NoHTML","1");
+              URLParameters.put("X2TPTP",tstpFormat);
+              URLParameters.put("QuietFlag","-q0");
+              URLParameters.put("System___System","tptp4X---0.0");
+              URLParameters.put("TimeLimit___TimeLimit", new Integer(30));
+              URLParameters.put("ProblemSource","FORMULAE");
+              URLParameters.put("FORMULAEProblem",result);
+              URLParameters.put("SubmitButton","RunSelectedSystems");
+              reader = new BufferedReader(new InputStreamReader(
+                           ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
+              while ((responseLine = reader.readLine()) != null) {
+                result += responseLine + "\n";
+              }
+              reader.close();
+              out.println(HTMLformatter.formatProofResult(result,
+                                                          stmt,
+                                                          stmt,
+                                                          lineHtml,
+                                                          kbName,
+                                                          language));       
+            }
+            */
           }
         }
         if (req.equalsIgnoreCase("tell")) {
@@ -344,30 +388,87 @@ August 9, Acapulco, Mexico.
         if (systemChosen.equals("Choose%20system")) {
           out.println("No system chosen");
         } else {
-          String command = SystemOnTPTP + " " + 
-                           quietFlag    + " " + 
-                           systemChosen + " " + 
-                           timeout      + " " + 
-                           tstpFormat   + " " +
-                           kbFileName;
-//          out.println("command: " + command);
-          out.println("(Local SystemOnTPTP call)");
-          Process proc = Runtime.getRuntime().exec(command);
-          BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-          responseLine = "";
-%>
-          <PRE>
-<%
-          while ((responseLine = reader.readLine()) != null) {
-            out.println(responseLine);
+          if (quietFlag.equals("hyperlinkedKIF")) {
+            command = SystemOnTPTP + " " +
+                      "-q3"        + " " +  // quietFlag
+                      systemChosen + " " + 
+                      timeout      + " " +
+                      "-S"         + " " +  //tstpFormat
+                      kbFileName;
+          } else {
+            command = SystemOnTPTP + " " + 
+                      quietFlag    + " " + 
+                      systemChosen + " " + 
+                      timeout      + " " + 
+                      tstpFormat   + " " +
+                      kbFileName;
           }
-%>
-          </PRE>
-<%
+          out.println("(Local SystemOnTPTP call)");
+          proc = Runtime.getRuntime().exec(command);
+          reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+          out.println("<PRE>");
+          while ((responseLine = reader.readLine()) != null) {
+            result += responseLine + "\n";
+            if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
+          }
+          out.println("</PRE>");
+          reader.close();
+//-----------------------------------------------------------------------------
+//----Calling local tptp4X (if tptpWorldExists and toggle button is on "local")
+/*
+          if (quietFlag.equals("hyperlinkedKIF")) {
+            command = tptp4X    + " " + 
+                      "-f sumo" + " " +
+                      "--";
+            proc = Runtime.getRuntime().exec(command);
+            writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
+            reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            writer.write(result);
+            writer.flush();
+            writer.close();
+            result = "";
+            while ((responseLine = reader.readLine()) != null) {
+              result += responseLine + "\n";
+            }
+            reader.close();
+            out.println(HTMLformatter.formatProofResult(result,
+                                                        stmt,
+                                                        stmt,
+                                                        lineHtml,
+                                                        kbName,
+                                                        language));       
+          }
+*/
         }
+      }
+      if (quietFlag.equals("hyperlinkedKIF")) {
+        if (tptpWorldExists) {
+          command = tptp4X    + " " + 
+                    "-f sumo" + " " +
+                    "--";
+          proc = Runtime.getRuntime().exec(command);
+          writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
+          reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+          writer.write(result);
+          writer.flush();
+          writer.close();
+          result = "";
+          while ((responseLine = reader.readLine()) != null) {
+            result += responseLine + "\n";
+          }
+          reader.close();
+          out.println(HTMLformatter.formatProofResult(result,
+                                                      stmt,
+                                                      stmt,
+                                                      lineHtml,
+                                                      kbName,
+                                                      language));       
+        } else {
+          out.println("Hyperlinked KIF output not supported for remote SystemOnTPTP at this time.  Need local installation of TPTPWorld.");
+        }
+      }
 //----Delete the kbFile
       (new File(kbFileName)).delete();
-      }
     } catch (IOException ioe) {
     out.println(ioe.getMessage());
     }
