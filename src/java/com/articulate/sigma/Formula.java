@@ -2237,8 +2237,9 @@ public class Formula implements Comparable {
                         it2 = valSet.iterator();
                         while (it2.hasNext()) {                    
                             value = (String) it2.next();
+                            value = value.trim();
                             relation = "instance";
-                            if (value.endsWith("+")) { 
+                            while (value.endsWith("+")) { 
                                 relation = "subclass";
                                 value = value.substring(0,value.length()-1);
                             }
