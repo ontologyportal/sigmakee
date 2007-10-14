@@ -950,22 +950,36 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Collect all the quantified variables in a formula
+     * Collect all the quantified variables in the input, which
+     * is the String representation of a Formula.
+     *
+     * @return An ArrayList of variables (Strings).
      */
     private ArrayList collectQuantifiedVariables(String theFormula) {
-
-        int startIndex = -1;    
         ArrayList quantVariables = new ArrayList();
-        while (theFormula.indexOf("(forall (?",startIndex) != -1 ||
-               theFormula.indexOf("(exists (?",startIndex) != -1) {
-            int forallIndex = theFormula.indexOf("(forall (?",startIndex);
-            int existsIndex = theFormula.indexOf("(exists (?",startIndex);
-            if ((forallIndex < existsIndex && forallIndex != -1) || existsIndex == -1) 
-                startIndex = forallIndex + 9;
-            else
-                startIndex = existsIndex + 9;
+        int startIndex = -1;
+        int tmpIndex = -1;
+        int forallIndex = theFormula.indexOf("(forall (?",startIndex);
+        int existsIndex = theFormula.indexOf("(exists (?",startIndex);
+        int kappaFnIndex = theFormula.indexOf("(KappaFn ?",startIndex);
+        while ((forallIndex != -1) || (existsIndex != -1) || (kappaFnIndex != -1)) {
+            if ((forallIndex < existsIndex && forallIndex != -1) || existsIndex == -1) {
+                tmpIndex = forallIndex;
+            }
+            else {
+                tmpIndex = existsIndex;
+            }
+            if ((tmpIndex < kappaFnIndex && tmpIndex != -1) || kappaFnIndex == -1) {
+                startIndex = tmpIndex + 9;
+            }
+            else {
+                startIndex = kappaFnIndex + 9;
+            }
+
             int i = startIndex;
-            while (theFormula.charAt(i) != ')' && i < theFormula.length()) {
+            while ((theFormula.charAt(i) != ')') && 
+                   (theFormula.charAt(i) != '(') &&
+                   (i < theFormula.length())) {
                 i++;
                 if (theFormula.charAt(i) == ' ') {
                     if (!quantVariables.contains(theFormula.substring(startIndex,i).intern()))
@@ -982,14 +996,20 @@ public class Formula implements Comparable {
                 //System.out.println(theFormula.substring(startIndex,i));
                 startIndex = i+1;
             }
-            else
+            else {
                 startIndex = theFormula.length();
+            }
+            forallIndex = theFormula.indexOf("(forall (?",startIndex);
+            existsIndex = theFormula.indexOf("(exists (?",startIndex);
+            kappaFnIndex = theFormula.indexOf("(KappaFn ?",startIndex);
         }
         return quantVariables;
     }
 
     /** ***************************************************************
-     * Collect all the quantified variables in a formula
+     * Collect all the quantified variables in this Formula.
+     *
+     * @return An ArrayList of variables (Strings).
      */
     private ArrayList collectQuantifiedVariables() {
 
@@ -1025,6 +1045,7 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      * Makes implicit quantification explicit.  
+     *
      * @param query controls whether to add universal or existential
      * quantification.  If true, add existential.
      * @result the formula as a String, with explicit quantification
@@ -1053,6 +1074,13 @@ public class Formula implements Comparable {
             return theFormula;
     }
 
+    /** ***************************************************************
+     *
+     * @param kb - The KB used to compute variable arity relations.
+     *
+     * @return Returns true if this Formula contains any variable
+     * arity relations, else returns false.
+     */
     protected boolean containsVariableArityRelation(KB kb) {
         boolean ans = false;
         try {
@@ -1073,6 +1101,13 @@ public class Formula implements Comparable {
         return ans;
     }
 
+    /** ***************************************************************
+     *
+     * @param kb - The KB used to compute variable arity relations.
+     *
+     * @return Returns true if this Formula contains any variable
+     * arity relations, else returns false.
+     */
     protected Formula renameVariableArityRelations(KB kb) {
         Formula result = this;
         try {
@@ -1327,7 +1362,7 @@ public class Formula implements Comparable {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        // System.out.println("    => " + revisedCount);
+        // System.out.println("    -> " + revisedCount);
         return revisedCount;
     }
 
@@ -1370,7 +1405,7 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
         // System.out.print("INFO in getRowVarExpansionRange(" + this + ", " + kb + ", " + rowVar + ")");
-        // System.out.println(" => [" + ans[0] + "," + ans[1] + "]");
+        // System.out.println(" -> [" + ans[0] + "," + ans[1] + "]");
         return ans;
     }
 
@@ -1491,7 +1526,7 @@ public class Formula implements Comparable {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        // System.out.println("INFO in getRowVarsMinMax(" + kb + ") => " + ans);
+        // System.out.println("INFO in getRowVarsMinMax(" + kb + ") -> " + ans);
         return ans;
     }
 
@@ -1593,8 +1628,12 @@ public class Formula implements Comparable {
      * Test whether this Formula is a rule
      */
     private boolean isRule() {
-
-        return (this.car().equals("=>") || this.car().equals("<=>"));
+        boolean ans = false;
+        if (this.listP()) {
+            String head = this.car();
+            ans = (head.equals("=>") || head.equals("<=>"));
+        }
+        return ans;
     }
 
     /** ***************************************************************
@@ -1655,7 +1694,7 @@ public class Formula implements Comparable {
      *
      */
     public static boolean isNonEmptyString(Object obj) {
-        return ((obj instanceof String) && (((String) obj).length() > 0));
+        return ((obj instanceof String) && !obj.equals(""));
     }
 
     /** ***************************************************************
@@ -1682,48 +1721,17 @@ public class Formula implements Comparable {
         return tuple;
     }
 
-    public ArrayList literalToArrayListRecurse() {
-        ArrayList tuple = new ArrayList();
-        try {
-            String arg = null;
-            Formula f = this;
-            if (f.listP()) {
-                int len = f.listLength();
-                for (int i = 0 ; i < len ; i++) {
-                    arg = f.getArgument(i);
-                    if (listP(arg)) {
-                        Formula newF = new Formula();
-                        newF.read(arg);
-                        tuple.add(newF.literalToArrayListRecurse());
-                    }
-                    else {
-                        tuple.add(arg);
-                    }
-                }
-            }
-            else {
-                tuple.add(f.theFormula);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return tuple;
-    }
-
     /** ***************************************************************
      * This method returns all SUO-KIF variables that occur in the
      * Formula.
      *
-     * @see gatherVariables_1(TreeSet accumulator)
+     * @see gatherVariables(TreeSet accumulator)
      * 
      * @return A TreeSet containing variables (Strings), or an empty
      * TreeSet if no variables can be found.
      */
     private TreeSet gatherVariables() {
-        TreeSet accumulator = new TreeSet();
-        this.gatherVariables_1(accumulator);
-        return accumulator;
+        return this.gatherVariables(null);
     }
 
     /** ***************************************************************
@@ -1732,28 +1740,122 @@ public class Formula implements Comparable {
      * @param accumulator A TreeSet used for storing variables
      * (Strings).
      * 
-     * @return void
+     * @return A TreeSet containing variables (Strings), or an empty
+     * TreeSet if no variables can be found.
      */
-    private void gatherVariables_1(TreeSet accumulator) {
+    private TreeSet gatherVariables(TreeSet accumulator) {
+        if (accumulator == null) {
+            accumulator = new TreeSet();
+        }
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP() && !(this.empty())) {
-                    String arg0 = this.car();
-                    Formula arg0F = new Formula();
-                    arg0F.read(arg0);
-                    arg0F.gatherVariables_1(accumulator);
-                    this.cdrAsFormula().gatherVariables_1(accumulator);
-                }
-                if (isVariable(this.theFormula)) {
-                    accumulator.add(this.theFormula);
-                }
+            if (this.listP() && !(this.empty())) {
+                String arg0 = this.car();
+                Formula arg0F = new Formula();
+                arg0F.read(arg0);
+                arg0F.gatherVariables(accumulator);
+                this.cdrAsFormula().gatherVariables(accumulator);
+            }
+            else if (isVariable(this.theFormula)) {
+                accumulator.add(this.theFormula);
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
+        return accumulator;
+    }
+
+    /** ***************************************************************
+     * This Map is used to cache sortal predicate argument type data
+     * whenever Formula.findType() or Formula.getTypeList() are going
+     * to called hundreds or thousands of times inside
+     * KB.preProcess().  The Map is cleared and SORTAL_TYPE_CACHE is
+     * set to null after each such use in KB.preProcess().
+     */
+    private static HashMap SORTAL_TYPE_CACHE = null;
+
+    /** ***************************************************************
+     * Clears the Map bound to SORTAL_TYPE_CACHE if the variable is
+     * not null, then sets SORTAL_TYPE_CACHE to null.
+     *
+     * @return void
+     */
+    protected static void destroySortalTypeCache() {
+        if (SORTAL_TYPE_CACHE != null) {
+            System.out.println("INFO in Formula.destroySortalTypeCache()");
+            System.out.println("  Clearing " + SORTAL_TYPE_CACHE.size() + " entries");
+            SORTAL_TYPE_CACHE.clear();
+        }
+        SORTAL_TYPE_CACHE = null;
         return;
-    } 
+    }
+
+    /** ***************************************************************
+     * Calls Formula.destroySortalTypeCache() to set SORTAL_TYPE_CACHE
+     * to null, then sets SORTAL_TYPE_CACHE to a new, empty HashMap.
+     *
+     * @return void
+     */
+    protected static void resetSortalTypeCache() {
+        destroySortalTypeCache();
+        SORTAL_TYPE_CACHE = new HashMap();
+        System.out.println("INFO in Formula.resetSortalTypeCache()");
+        System.out.println("  SORTAL_TYPE_CACHE == " + SORTAL_TYPE_CACHE);
+        return;
+    }
+
+    /** ***************************************************************
+     * A + is appended to the type if the parameter must be a class
+     *
+     * @return the type for each argument to the given predicate, where
+     * ArrayList element 0 is the result, if a function, 1 is the 
+     * first argument, 2 is the second etc.
+     */
+    private ArrayList getTypeList(String pred, KB kb) {
+
+        //System.out.println("INFO in Formula.getTypeList(): pred: " + pred);
+        ArrayList result = null;
+        try {
+            if (SORTAL_TYPE_CACHE != null) {
+                String key = "gtl" + pred + kb.name;
+                result = ((ArrayList) (SORTAL_TYPE_CACHE.get(key)));
+                if (result != null) {
+                    return result;
+                }
+                else {
+                    result = new ArrayList();
+                    SORTAL_TYPE_CACHE.put(key, result);
+                }
+            }
+            else {
+                result = new ArrayList();
+            }
+            int valence = kb.getValence(pred);
+            int len = MAX_PREDICATE_ARITY + 1;
+            if (valence == 0) {
+                len = 2;
+            }
+            else if (valence > 0) {
+                len = valence + 1;
+            }
+            String[] r = new String[len];
+
+            ArrayList al = kb.askWithRestriction(0,"domain",1,pred);
+            ArrayList al2 = kb.askWithRestriction(0,"domainSubclass",1,pred);
+            ArrayList al3 = kb.askWithRestriction(0,"range",1,pred);
+            ArrayList al4 = kb.askWithRestriction(0,"rangeSubclass",1,pred);
+            r = addToTypeList(pred,al,r,"");
+            r = addToTypeList(pred,al2,r,"+");
+            r = addToTypeList(pred,al3,r,"");
+            r = addToTypeList(pred,al4,r,"+");
+            for (int i = 0; i < r.length; i++) 
+                result.add(r[i]);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
 
     /** ***************************************************************
      * A utility helper method for computing predicate data types.
@@ -1779,7 +1881,7 @@ public class Formula implements Comparable {
                 if ((argnum < 0) || (argnum >= result.length)) {
                     errStr = "Possible arity confusion for " + pred;
                     mgrErrStr = KBmanager.getMgr().getError();
-                    System.out.println("Error in Formula.addToTypeList(): "
+                    System.out.println("WARNING in Formula.addToTypeList(): "
                                        + errStr
                                        + ": al == " 
                                        + al 
@@ -1799,13 +1901,13 @@ public class Formula implements Comparable {
                     result[argnum] = cl + classP;
                 }
                 else {
-                    errStr = ("Multiple type declarations found for predicate "
-                              + pred
-                              + " at argument " 
+                    errStr = ("Multiple types asserted for argument "
                               + argnum 
-                              + " with class " 
+                              + " of "
+                              + pred
+                              + ": "
                               + cl 
-                              + " and existing argument " 
+                              + ", " 
                               + result[argnum]);
                     mgrErrStr = KBmanager.getMgr().getError();
                     System.out.println("Error in Formula.addToTypeList(): " + errStr);
@@ -1826,39 +1928,6 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * A + is appended to the type if the parameter must be a class
-     * @return the type for each argument to the given predicate, where
-     * ArrayList element 0 is the result, if a function, 1 is the 
-     * first argument, 2 is the second etc.
-     */
-    private ArrayList getTypeList(String pred, KB kb) {
-
-        //System.out.println("INFO in Formula.getTypeList(): pred: " + pred);
-        ArrayList result = new ArrayList();
-        int valence = kb.getValence(pred);
-        int len = MAX_PREDICATE_ARITY + 1;
-        if (valence == 0) {
-            len = 2;
-        }
-        else if (valence > 0) {
-            len = valence + 1;
-        }
-        String[] r = new String[len];
-
-        ArrayList al = kb.askWithRestriction(0,"domain",1,pred);
-        ArrayList al2 = kb.askWithRestriction(0,"domainSubclass",1,pred);
-        ArrayList al3 = kb.askWithRestriction(0,"range",1,pred);
-        ArrayList al4 = kb.askWithRestriction(0,"rangeSubclass",1,pred);
-        r = addToTypeList(pred,al,r,"");
-        r = addToTypeList(pred,al2,r,"+");
-        r = addToTypeList(pred,al3,r,"");
-        r = addToTypeList(pred,al4,r,"+");
-        for (int i = 0; i < r.length; i++) 
-            result.add(r[i]);
-        return result;
-    }
-
-    /** ***************************************************************
      * Find the argument type restriction for a given predicate and
      * argument number that is inherited from one of its
      * super-relations.  A "+" is appended to the type if the
@@ -1869,8 +1938,28 @@ public class Formula implements Comparable {
 
         // System.out.println("INFO in Formula.findType(" + numarg + ", " + pred + ")");
 
-        String result = "";
+        if (DEBUG) {
+            System.out.println("ENTER findType(" + numarg + ", " + pred + ", " + kb + ")");
+        }
+
+        String result = null;
         try {
+            boolean cacheResult = false;
+            String key = null;
+            if (SORTAL_TYPE_CACHE != null) {
+                key = "ft" + numarg + pred + kb.name;
+                result = ((String) (SORTAL_TYPE_CACHE.get(key)));
+                if (result != null) {
+                    return result;
+                }
+                else {
+                    result = "";
+                    cacheResult = true;
+                }
+            }
+            else {
+                result = "";
+            }
             boolean found = false;
             Set accumulator = new HashSet();
             accumulator.add(pred);
@@ -1935,58 +2024,53 @@ public class Formula implements Comparable {
                     }
                 }
             }
+            if (cacheResult) {
+                SORTAL_TYPE_CACHE.put(key, result);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
         // System.out.println("  -> " + result);
+
+        if (DEBUG) {
+            System.out.println("EXIT findType(" + numarg + ", " + pred + ", " + kb + ") -> " + result);
+        }
         return result;
     }
 
     /** ***************************************************************
      * This method tries to remove all but the most specific relevant
-     * classes from the list of sortal classes for each variable key
-     * in varmap.
+     * classes from a List of sortal classes.
      *
-     * @param varmap A HashMap in which variable type information is
-     * collected.  A "+" is appended to the type if the parameter must
-     * be a class.
+     * @param types A List of classes (class name Strings) that
+     * constrain the value of a SUO-KIF variable.
      *
-     * @param kb The KB used to determine if the classes stored in the
-     * set for each variable are redundant.
+     * @param kb The KB used to determine if any of the classes in the
+     * List types are redundant.
      *
      * @return void
      */
-    private void winnowVarMap(Map varmap, KB kb) {
+    private void winnowTypeList(List types, KB kb) {
+
+        if (DEBUG) {
+            System.out.println("ENTER winnowTypeList(" + types + ", " + kb + ")");
+        }
+
         try {
-            if ((varmap instanceof Map) && !varmap.isEmpty()) {
-                Iterator it = varmap.keySet().iterator();
-                String key = null;
-                Set vals = null;
-                Object[] valArr = null;
+            if ((types instanceof List) && (types.size() > 1)) {
+                Object[] valArr = types.toArray();
                 String clX = null;
                 String clY = null;
-                String clX1 = null;
-                String clY1 = null;
-                while (it.hasNext()) {
-                    key = (String) it.next();
-                    vals = (Set) varmap.get(key);
-                    if ((vals != null) && (vals.size() > 1)) {
-                        valArr = vals.toArray();
-                        for (int i = 0; i < valArr.length; i++) {
-                            for (int j = 0; j < valArr.length; j++) {
-                                if (i != j) {
-                                    clX = (String) valArr[i];
-                                    clY = (String) valArr[j];
-                                    clX1 = clX;
-                                    clY1 = clY;
-                                    if (clX1.endsWith("+") && clY1.endsWith("+")) {
-                                        clX1 = clX1.substring(0, clX1.length() - 1);
-                                        clY1 = clY1.substring(0, clY1.length() - 1);
-                                    }
-                                    if (kb.isSubclass(clX1, clY1) && (vals.size() > 1)) {
-                                        vals.remove(clY);
-                                    }
+                for (int i = 0; i < valArr.length; i++) {
+                    for (int j = 0; j < valArr.length; j++) {
+                        if (i != j) {
+                            clX = (String) valArr[i];
+                            clY = (String) valArr[j];
+                            if (kb.isSubclass(clX, clY)) {
+                                types.remove(clY);
+                                if (types.size() < 2) {
+                                    return;
                                 }
                             }
                         }
@@ -1997,187 +2081,470 @@ public class Formula implements Comparable {
         catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        if (DEBUG) {
+            System.out.println("EXIT winnowTypeList(" + types + ", " + kb + ")");
+        }
+
         return;
     }
 
     /** ***************************************************************
-     * Does most of the real work for addTypeRestrictions() by
-     * recursing through the formula, collecting variables, finding
-     * their type restrictions, and adding that information to the
-     * HashMap collector.
+     * Does much of the real work for addTypeRestrictions() by
+     * recursing through the Formula and collecting type constraint
+     * information for the variable var.
      *
-     * @param varmap A HashMap in which variable type information is
-     * collected.  A "+" is appended to the type if the parameter must
-     * be a class.
+     * @param ios A List of classes (class name Strings) of which any
+     * binding for var must be an instance.
      *
-     * @param scopedVars A list of variables that are currently within
-     * the scope of some quantifier, and so probably should not have
-     * sortals added for them.
+     * @param scs A List of classes (class name Strings) of which any
+     * binding for var must be a subclass.
      *
-     * @param theFormula The String representation of this Formula.
+     * @param var A SUO-KIF variable.
      *
      * @param kb The KB used to determine predicate and variable arg
      * types.
      *
      * @return void
      */
-    private void addTypeRestrictionsRecurse(HashMap varmap, List scopedVars, String theFormula, KB kb) {
+    private void computeTypeRestrictions(List ios, List scs, String var, KB kb) {
 
-        // System.out.println("INFO in Formula.addTypeRestrictionsRecurse(" + theFormula + ")");
+        if (DEBUG) {
+            System.out.println("ENTER computeTypeRestrictions(" 
+                               + this + ", "
+                               + ios + ", "
+                               + scs + ", "
+                               + var + ", "
+                               + kb + ")");
+        }
 
         String pred = null;
         try {
             Formula f = new Formula();
-            f.read(theFormula);
+            f.read(this.theFormula);
             if (!f.listP()) 
                 return;
             pred = f.car();
-            int valence = kb.getValence(pred);
-            String arg1 = null;
-            String arg2 = null;
-            String var = null;
-            String term = null;
-            String cl = null;
-            Set varTypes = null;
-            Formula newF = null;
-            ArrayList types = new ArrayList();
-            // Special treatment for equal
-            if (pred.equals("equal")) {
-                arg1 = f.getArgument(1);
-                arg2 = f.getArgument(2);
-                if (isVariable(arg1)) { var = arg1; }
-                else { term = arg1; }
-                if (isVariable(arg2)) { var = arg2; }
-                else { term = arg2; }
-                if ((var != null) && isNonEmptyString(term)) {
-                    if (listP(term)) {
-                        newF = new Formula();
-                        newF.read(term);
-                        if (newF.isFunctionalTerm()) {
-                            String fn = newF.car();
-                            types = getTypeList(fn, kb);
-                            if (!types.isEmpty()) {
-                                cl = (String) types.get(0);
+            if (isQuantifier(pred)) {
+                Formula nextF = new Formula();
+                nextF.read(f.getArgument(2));
+                nextF.computeTypeRestrictions(ios, scs, var, kb);
+            }
+            else if (isLogicalOperator(pred)) {
+                int len = f.listLength();
+                for (int i = 1; i < len; i++) {
+                    Formula nextF = new Formula();
+                    nextF.read(f.getArgument(i));
+                    nextF.computeTypeRestrictions(ios, scs, var, kb);
+                }
+            }
+            else {
+                int len = f.listLength();
+                int valence = kb.getValence(pred);
+                List types = getTypeList(pred,kb);
+                int numarg = 0;
+                for (int i = 1; i < len; i++) {
+                    numarg = i;
+                    if (valence == 0) { // pred is a VariableArityRelation
+                        numarg = 1;
+                    }
+                    String arg = f.getArgument(i);
+                    if (listP(arg)) {
+                        Formula nextF = new Formula();
+                        nextF.read(arg);
+                        nextF.computeTypeRestrictions(ios, scs, var, kb);
+                    }
+                    else if (var.equals(arg)) {
+                        String type = null;
+                        if (numarg >= types.size()) {
+                            type = findType(numarg,pred,kb);
+                        }
+                        else {
+                            type = (String) types.get(numarg);
+                        }
+                        if (type == null) {
+                            type = findType(numarg,pred,kb);
+                        }
+                        if (!type.equals("") && !type.startsWith("Entity")) {
+                            boolean sc = false;
+                            while (type.endsWith("+")) {
+                                sc = true;
+                                type = type.substring(0, type.length() - 1);
+                            }
+                            if (sc) {
+                                if (!scs.contains(type)) {
+                                    scs.add(type);
+                                }
+                            }
+                            else if (!ios.contains(type)) {
+                                ios.add(type);
+                            }
+                        }
+                    }
+                }
+
+                String arg1 = null;
+                String arg2 = null;
+                String term = null;
+                String cl = null;
+
+                // Special treatment for equal
+                if (pred.equals("equal")) {
+                    arg1 = f.getArgument(1);
+                    arg2 = f.getArgument(2);
+                    if (var.equals(arg1)) { term = arg2; }
+                    else if (var.equals(arg2)) { term = arg1; }
+                    if (isNonEmptyString(term)) {
+                        if (listP(term)) {
+                            Formula nextF = new Formula();
+                            nextF.read(term);
+                            if (nextF.isFunctionalTerm()) {
+                                String fn = nextF.car();
+                                List classes = getTypeList(fn, kb);
+                                if (!classes.isEmpty()) {
+                                    cl = (String) classes.get(0);
+                                }
                                 if (cl == null) {
                                     cl = findType(0, fn, kb);
                                 }
-                            }
-                            if (isNonEmptyString(cl) && !cl.equals("Entity")) {
-                                varTypes = (Set) varmap.get(var);
-                                if (varTypes == null) {
-                                    varTypes = new HashSet();
-                                    varmap.put(var, varTypes);
+                                if (!cl.equals("") && !cl.startsWith("Entity")) {
+                                    boolean sc = false;
+                                    while (cl.endsWith("+")) {
+                                        sc = true;
+                                        cl = cl.substring(0, cl.length() - 1);
+                                    }
+                                    if (sc) {
+                                        if (!scs.contains(cl)) {
+                                            scs.add(cl);
+                                        }
+                                    }
+                                    else if (!ios.contains(cl)) {
+                                        ios.add(cl);
+                                    }
                                 }
-                                varTypes.add(cl);
                             }
                         }
-                    }
-                    else {
-                        Set ios = kb.getCachedRelationValues("instance", term, 1, 2);
-                        if ((ios != null) && !ios.isEmpty()) {
-                            varTypes = (Set) varmap.get(var);
-                            if (varTypes == null) {
-                                varTypes = new HashSet();
-                                varmap.put(var, varTypes);
+                        else {
+                            Set instanceOfs = kb.getCachedRelationValues("instance", term, 1, 2);
+                            if ((instanceOfs != null) && !instanceOfs.isEmpty()) {
+                                Iterator it = instanceOfs.iterator();
+                                String io = null;
+                                while (it.hasNext()) {
+                                    io = (String) it.next();
+                                    if (!io.equals("Entity") && !ios.contains(io)) {
+                                        ios.add(io);
+                                    }
+                                }
                             }
-                            varTypes.addAll(ios);
-                            varTypes.remove("Entity");
                         }
                     }
                 }
-            }
-            // Special treatment for instance or subclass, only if arg1 is
-            // a variable and arg2 is a functional term.
-            else if (pred.equals("instance") || pred.equals("subclass")) {
-                arg1 = f.getArgument(1);
-                arg2 = f.getArgument(2);
-                if (isVariable(arg1) && listP(arg2)) {
-                    newF = new Formula();
-                    newF.read(arg2);
-                    if (newF.isFunctionalTerm()) {
-                        String fn = newF.car();
-                        types = getTypeList(fn, kb);
-                        if (!types.isEmpty()) {
-                            cl = (String) types.get(0);
+                // Special treatment for instance or subclass, only if var.equals(arg1)
+                // and arg2 is a functional term.
+                else if (pred.equals("instance") || pred.equals("subclass")) {
+                    arg1 = f.getArgument(1);
+                    arg2 = f.getArgument(2);
+                    if (var.equals(arg1) && listP(arg2)) {
+                        Formula nextF = new Formula();
+                        nextF.read(arg2);
+                        if (nextF.isFunctionalTerm()) {
+                            String fn = nextF.car();
+                            List classes = getTypeList(fn, kb);
+                            if (!classes.isEmpty()) {
+                                cl = (String) classes.get(0);
+                            }
                             if (cl == null) {
                                 cl = findType(0, fn, kb);
                             }
-                        }
-                        if (isNonEmptyString(cl) && !cl.equals("Entity")) {
-                            if (pred.equals("subclass")) { cl += "+"; }
-                            varTypes = (Set) varmap.get(arg1);
-                            if (varTypes == null) {
-                                varTypes = new HashSet();
-                                varmap.put(arg1, varTypes);
-                            }
-                            varTypes.add(cl);
-                        }
-                    }
-                }
-            }
-            if (!isLogicalOperator(pred)) {
-                types = getTypeList(pred,kb);
-            }
-            f.read(f.cdr());
-            List newScopedVars = scopedVars;
-            int numarg = 0;
-            for (int i = 1; isNonEmptyString(f.theFormula) && !f.empty(); i++) {
-                numarg = i;
-                if (valence == 0) { // pred is a VariableArityRelation
-                    numarg = 1;
-                }
-                String arg = f.car();
-                if (listP(arg)) {
-                    newF = new Formula();
-                    newF.read(arg);
-                    String arg0 = newF.car();
-                    if (isQuantifierList(arg0, pred)) {
-                        newScopedVars = new ArrayList();
-                        newScopedVars.addAll(scopedVars);
-                        int arglen = newF.listLength();
-                        for (int j = 0; j < arglen; j++) {
-                            String argJ = newF.getArgument(j);
-                            if (isVariable(argJ) && !newScopedVars.contains(argJ)) {
-                                newScopedVars.add(argJ);
+                            if (!cl.equals("") && !cl.startsWith("Entity")) {
+                                while (cl.endsWith("+")) {
+                                    cl = cl.substring(0, cl.length() - 1);
+                                }
+                                if (pred.equals("subclass")) {
+                                    if (!scs.contains(cl)) {
+                                        scs.add(cl);
+                                    }
+                                }
+                                else if (!ios.contains(cl)) {
+                                    ios.add(cl);
+                                }
                             }
                         }
                     }
-                    else {
-                        addTypeRestrictionsRecurse(varmap,newScopedVars,arg,kb);
-                    }
                 }
-                else if (isVariable(arg) 
-                         && !scopedVars.contains(arg)
-                         && !isVariable(pred)
-                         && !isLogicalOperator(pred)) {
-                    String type;
-                    if (numarg >= types.size()) {
-                        type = findType(numarg,pred,kb);
-                    }
-                    else {
-                        type = (String) types.get(numarg);
-                    }
-                    if (type == null) {
-                        type = findType(numarg,pred,kb);
-                    }
-                    if (isNonEmptyString(type) && !(type.equals("Entity"))) {
-                        varTypes = (Set) varmap.get(arg);
-                        if (varTypes == null) {
-                            varTypes = new HashSet();
-                            varmap.put(arg, varTypes);
-                        }
-                        varTypes.add(type);
-                    }
-                }
-                f.read(f.cdr());
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in Formula.addTypeRestrictionsRecurse()");
+            System.out.println("Error in Formula.computeTypeRestrictions(" 
+                               + this + ", " 
+                               + ios + ", "
+                               + scs + ", "
+                               + var + ", "
+                               + kb + ")");
             System.out.println("  pred == " + pred);
+            System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
+
+        if (DEBUG) {
+            System.out.println("EXIT computeTypeRestrictions("
+                               + this + ", "
+                               + ios + ", "
+                               + scs + ", "
+                               + var + ", "
+                               + kb + " )");
+        }
+
         return;
+    }
+
+    /** ***************************************************************
+     * When invoked on a Formula that begins with explicit universal
+     * quantification, this method returns a String representation of
+     * the Formula with type constraints added for the top level
+     * quantified variables, if possible.  Otherwise, a String
+     * representation of the original Formula is returned.
+     *
+     * @param kb The KB used to determine predicate and variable arg
+     * types.
+     *
+     * @return A String representation of a Formula, with type
+     * restrictions added.
+     */
+    private String insertTypeRestrictionsU(KB kb) {
+
+        if (DEBUG) {
+            System.out.println("ENTER insertTypeRestrictionsU(" + this + ", " + kb + ")");
+        }
+
+        String result = "";
+        try {
+            Formula varlistF = new Formula();
+            varlistF.read(this.getArgument(1));
+            int vlen = varlistF.listLength();
+            Formula nextF = new Formula();
+            nextF.read(this.getArgument(2));
+            List constraints = new ArrayList();
+            List ios = new ArrayList();
+            List scs = new ArrayList();
+            Iterator classIt = null;
+            String constraint = null;
+            String var = null;
+            for (int i = 0; i < vlen; i++) {
+                ios.clear();
+                scs.clear();
+                var = varlistF.getArgument(i);
+                nextF.computeTypeRestrictions(ios, scs, var, kb);
+                if (!ios.isEmpty()) {
+                    winnowTypeList(ios, kb);
+                    classIt = ios.iterator();
+                    while (classIt.hasNext()) {
+                        constraint = "(instance " + var + " " + classIt.next() + ")";
+                        if (this.theFormula.indexOf(constraint) == -1) {
+                            constraints.add(constraint);
+                        }
+                    }
+                }
+                if (!scs.isEmpty()) {
+                    winnowTypeList(scs, kb);
+                    classIt = scs.iterator();
+                    while (classIt.hasNext()) {
+                        constraint = "(subclass " + var + " " + classIt.next() + ")";
+                        if (this.theFormula.indexOf(constraint) == -1) {
+                            constraints.add(constraint);
+                        }
+                    }
+                }
+            }
+            result += "(forall " + varlistF.theFormula;
+            if (constraints.isEmpty()) {
+                result += " " + nextF.insertTypeRestrictions(kb);
+            }
+            else {
+                result += " (=>";
+                int clen = constraints.size();
+                if (clen > 1) {
+                    result += " (and";
+                }
+                for (int j = 0; j < clen; j++) {
+                    result += " " + constraints.get(j);
+                }
+                if (clen > 1) {
+                    result += ")";
+                }
+                result += " " + nextF.insertTypeRestrictions(kb);
+                result += ")";
+            }
+            result += ")";
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            result = this.theFormula;
+        }
+
+        if (DEBUG) {
+            System.out.println("EXIT insertTypeRestrictionsU(" + this + ", " + kb + ") -> " + result);
+        }
+
+        return result;
+    }
+
+    /** ***************************************************************
+     * When invoked on a Formula that begins with explicit existential
+     * quantification, this method returns a String representation of
+     * the Formula with type constraints added for the top level
+     * quantified variables, if possible.  Otherwise, a String
+     * representation of the original Formula is returned.
+     *
+     * @param kb The KB used to determine predicate and variable arg
+     * types.
+     *
+     * @return A String representation of a Formula, with type
+     * restrictions added.
+     */
+    private String insertTypeRestrictionsE(KB kb) {
+
+        if (DEBUG) {
+            System.out.println("ENTER insertTypeRestrictionsE(" + this + ", " + kb + ")");
+        }
+
+        String result = "";
+        try {
+            Formula varlistF = new Formula();
+            varlistF.read(this.getArgument(1));
+            int vlen = varlistF.listLength();
+            Formula nextF = new Formula();
+            nextF.read(this.getArgument(2));
+            List constraints = new ArrayList();
+            List ios = new ArrayList();
+            List scs = new ArrayList();
+            Iterator classIt = null;
+            String constraint = null;
+            String var = null;
+            for (int i = 0; i < vlen; i++) {
+                ios.clear();
+                scs.clear();
+                var = varlistF.getArgument(i);
+                nextF.computeTypeRestrictions(ios, scs, var, kb);
+                if (!ios.isEmpty()) {
+                    winnowTypeList(ios, kb);
+                    classIt = ios.iterator();
+                    while (classIt.hasNext()) {
+                        constraint = "(instance " + var + " " + classIt.next() + ")";
+                        if (this.theFormula.indexOf(constraint) == -1) {
+                            constraints.add(constraint);
+                        }
+                    }
+                }
+                if (!scs.isEmpty()) {
+                    winnowTypeList(scs, kb);
+                    classIt = scs.iterator();
+                    while (classIt.hasNext()) {
+                        constraint = "(subclass " + var + " " + classIt.next() + ")";
+                        if (this.theFormula.indexOf(constraint) == -1) {
+                            constraints.add(constraint);
+                        }
+                    }
+                }
+            }
+            result += "(exists " + varlistF.theFormula;
+            if (constraints.isEmpty()) {
+                result += " " + nextF.insertTypeRestrictions(kb);
+            }
+            else {
+                result += " (and";
+                int clen = constraints.size();
+                for (int j = 0; j < clen; j++) {
+                    result += " " + constraints.get(j);
+                }
+                if (nextF.car().equals("and")) {
+                    int nextFLen = nextF.listLength();
+                    for (int k = 1; k < nextFLen; k++) {
+                        Formula ff = new Formula();
+                        ff.read(nextF.getArgument(k));
+                        result += " " + ff.insertTypeRestrictions(kb);
+                    }
+                }
+                else {
+                    result += " " + nextF.insertTypeRestrictions(kb);
+                }
+                result += ")";
+            }
+            result += ")";
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            result = this.theFormula;
+        }
+
+        if (DEBUG) {
+            System.out.println("EXIT insertTypeRestrictionsE(" + this + ", " + kb + ") -> " + result);
+        }
+
+        return result;
+    }
+
+    /** ***************************************************************
+     * When invoked on a Formula, this method returns a String
+     * representation of the Formula with type constraints added for
+     * all explicitly quantified variables, if possible.  Otherwise, a
+     * String representation of the original Formula is returned.
+     *
+     * @param kb The KB used to determine predicate and variable arg
+     * types.
+     *
+     * @return A String representation of a Formula, with type
+     * restrictions added.
+     */
+    private String insertTypeRestrictions(KB kb) {
+
+        if (DEBUG) {
+            System.out.println("ENTER insertTypeRestrictions(" + this + ", " + kb + ")");
+        }
+
+        String result = "";
+        try {
+            Formula f = new Formula();
+            f.read(this.theFormula);
+            if (f.listP() && !f.empty()) {
+                int len = f.listLength();
+                String arg0 = f.car();
+                if (isQuantifier(arg0) && (len == 3)) {
+                    if (arg0.equals("forall")) {
+                        result += f.insertTypeRestrictionsU(kb);
+                    }
+                    else {
+                        result += f.insertTypeRestrictionsE(kb);
+                    }
+                }
+                else {
+                    result += "(";
+                    for (int i = 0; i < len; i++) {
+                        if (i > 0) {
+                            result += " ";
+                        }
+                        Formula nextF = new Formula();
+                        nextF.read(f.getArgument(i));
+                        result += nextF.insertTypeRestrictions(kb);
+                    }
+                    result += ")";
+                }
+            }
+            else {
+                result += this.theFormula;
+            }
+        }
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+            result = this.theFormula;
+        }
+
+        if (DEBUG) {
+            System.out.println("EXIT insertTypeRestrictions(" + this + ", " + kb + ") -> " + result);
+        }
+
+        return result;
     }
 
     /** ***************************************************************
@@ -2202,80 +2569,25 @@ public class Formula implements Comparable {
 
         // System.out.println("INFO in Formula.addTypeRestrictions(" + this + ")");
 
+        if (DEBUG) {
+            System.out.println("ENTER addTypeRestrictions(" + this + ", " + kb + ")");
+        }
+
         String result = this.theFormula;
-        boolean requantify = false;
-        String quantvars = null;
         try {
             Formula f = new Formula();
             f.read(this.theFormula);
-            if (f.listP() && f.car().equals("forall")) {
-                // If this Formula is explicitly universally
-                // quantified, remove the quantification in
-                // preparation for adding type restrictions.
-                quantvars = f.getArgument(1);
-                f.read(f.getArgument(2));
-                result = f.theFormula;
-                requantify = true;
-            }
-            if (!(requantify && f.car().equals("not"))) {
-                HashMap varmap = new HashMap(); // keys are var names values are types
-                // a + is appended to the type if the parameter must be a class
-                List scopedVars = new ArrayList();
-                addTypeRestrictionsRecurse(varmap,scopedVars,f.theFormula,kb);
-                winnowVarMap(varmap,kb);
-                if (!varmap.keySet().isEmpty()) {
-                    StringBuffer form = new StringBuffer();
-                    int nAdded = 0;
-                    Iterator it = varmap.keySet().iterator();
-                    Iterator it2 = null;
-                    String value = null;
-                    String relation = null;
-                    String literal = null;
-                    while (it.hasNext()) {
-                        String key = (String) it.next();
-                        Set valSet = (Set) varmap.get(key);
-                        it2 = valSet.iterator();
-                        while (it2.hasNext()) {                    
-                            value = (String) it2.next();
-                            value = value.trim();
-                            relation = "instance";
-                            while (value.endsWith("+")) { 
-                                relation = "subclass";
-                                value = value.substring(0,value.length()-1);
-                            }
-                            literal = "(" + relation + " " + key + " " + value + ")";
-                            if (f.theFormula.indexOf(literal) < 0) {
-                                if (nAdded > 0) {
-                                    form.append(" ");
-                                }
-                                form.append(literal);
-                                nAdded++;
-                            }
-                        }
-                    }
-                    if (nAdded > 1) {
-                        form.insert(0, "(and ");
-                        form.append(")");
-                    }
-                    if (nAdded > 0) {
-                        form.insert(0, "(=> ");
-                        form.append(" " + f.theFormula + ")");
-                    }
-                    else {
-                        form.append(f.theFormula);
-                    }
-                    f.read(form.toString());
-                    result = f.theFormula;
-                }
-            }
-            if (requantify) {
-                result = "(forall " + quantvars + " " + result + ")";
-            }
+            f.read(f.makeQuantifiersExplicit(false));
+            result = f.insertTypeRestrictions(kb);
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        // System.out.println("  -> " + result);
+
+        if (DEBUG) {
+            System.out.println("EXIT addTypeRestrictions(" + this + ", " + kb + ") -> " + result);
+        }
+
         return result;
     }
 
@@ -2478,6 +2790,7 @@ public class Formula implements Comparable {
 
             if (! accumulator.isEmpty()) {
                 it = accumulator.iterator();
+                boolean addSortals = KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes");
                 Formula fnew = null;
                 String theNewFormula = null;
                 while (it.hasNext()) {
@@ -2486,8 +2799,8 @@ public class Formula implements Comparable {
                     t1 = System.currentTimeMillis();
                     String arg0 = this.getArgument(0);
                     if (!query 
-                        && isLogicalOperator(arg0) 
-                        && KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes")) {       
+                        && (isLogicalOperator(arg0) || arg0.equals("equal"))
+                        && addSortals) {       
                         fnew.read(fnew.addTypeRestrictions(kb));
                     }
                     // Increment the timer for adding type restrictions.
@@ -2541,8 +2854,7 @@ public class Formula implements Comparable {
     private boolean isOkForInference(boolean query, KB kb) {
         boolean pass = false;
         // kb isn't used yet, because the checks below are purely
-        // syntactic.  But it probably will be used in the near
-        // future.
+        // syntactic.  But it probably will be used in the future.
         try {
             pass = !(// (equal ?X ?Y ?Z ...) - equal is strictly binary. 
                      this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*")
@@ -3249,166 +3561,166 @@ public class Formula implements Comparable {
         ArrayList ans = new ArrayList();
 
         try {
-            String arg0 = null;
             if (this.listP()) {
-                arg0 = this.getArgument(0);
-            }
+                String arg0 = this.getArgument(0);
 
-            // First we do some checks to see if it is worth
-            // processing the formula.
-            if (isLogicalOperator(arg0)
-                && this.theFormula.matches(".*\\(\\s*\\?.*")) {
+
+                // First we do some checks to see if it is worth
+                // processing the formula.
+                if (isLogicalOperator(arg0)
+                    && this.theFormula.matches(".*\\(\\s*\\?.*")) {
        
-                // Get all query lits for all pred vars, indexed by
-                // var.
-                List indexedQueryLits = this.prepareIndexedQueryLiterals(kb);
+                    // Get all query lits for all pred vars, indexed by
+                    // var.
+                    List indexedQueryLits = this.prepareIndexedQueryLiterals(kb);
 
-                if (indexedQueryLits == null) {
-                    ans.add(this);
-                }
-                else {
+                    if (indexedQueryLits == null) {
+                        ans.add(this);
+                    }
+                    else {
 
-                    List substForms = new ArrayList();
-                    List varQueryTuples = null;
-                    List substTuples = null;
-                    List litsToRemove = null;
+                        List substForms = new ArrayList();
+                        List varQueryTuples = null;
+                        List substTuples = null;
+                        List litsToRemove = null;
 
-                    // First, gather all substitutions.
-                    Iterator it1 = indexedQueryLits.iterator();
-                    while (it1.hasNext()) {
-                        varQueryTuples = (List) it1.next();
-                        substTuples = computeSubstitutionTuples(kb, varQueryTuples);
-                        if ((substTuples instanceof List) && !(substTuples.isEmpty())) {
-                            if (substForms.isEmpty()) {
-                                substForms.add(substTuples);
-                            }
-                            else {
-                                int stSize = substTuples.size();
-                                int iSize = -1;
-                                int sfSize = substForms.size();
-                                int sfLast = (sfSize - 1);
-                                for (int i = 0 ; i < sfSize ; i++) {
-                                    iSize = ((List) substForms.get(i)).size();
-                                    if (stSize < iSize) {
-                                        substForms.add(i, substTuples);
-                                        break;
-                                    }
-                                    if (i == sfLast) {
-                                        substForms.add(substTuples);
+                        // First, gather all substitutions.
+                        Iterator it1 = indexedQueryLits.iterator();
+                        while (it1.hasNext()) {
+                            varQueryTuples = (List) it1.next();
+                            substTuples = computeSubstitutionTuples(kb, varQueryTuples);
+                            if ((substTuples instanceof List) && !(substTuples.isEmpty())) {
+                                if (substForms.isEmpty()) {
+                                    substForms.add(substTuples);
+                                }
+                                else {
+                                    int stSize = substTuples.size();
+                                    int iSize = -1;
+                                    int sfSize = substForms.size();
+                                    int sfLast = (sfSize - 1);
+                                    for (int i = 0 ; i < sfSize ; i++) {
+                                        iSize = ((List) substForms.get(i)).size();
+                                        if (stSize < iSize) {
+                                            substForms.add(i, substTuples);
+                                            break;
+                                        }
+                                        if (i == sfLast) {
+                                            substForms.add(substTuples);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    if (!substForms.isEmpty()) {
+                        if (!substForms.isEmpty()) {
 
-                        // Try to simplify the Formula.
-                        Formula f = this;
-                        it1 = substForms.iterator();
-                        Iterator it2 = null;
-                        while (it1.hasNext()) {
-                            substTuples = (List) it1.next();
-                            litsToRemove = (List) substTuples.get(0);
-                            it2 = litsToRemove.iterator();
-                            while (it2.hasNext()) {
-                                List lit = (List) it2.next();
-                                f = f.maybeRemoveMatchingLits(lit);
-                            }
-                        }
-
-                        // Now generate pred var instantions from the
-                        // possibly simplified formula.
-                        List templates = new ArrayList();
-                        templates.add(f.theFormula);
-                        Set accumulator = new HashSet();
-
-                        String template = null;
-                        String var = null;
-                        String term = null;
-                        ArrayList quantVars = null;
-                        int i = 0;
-
-                        // Iterate over all var plus query lits forms, getting
-                        // a list of substitution literals.
-                        it1 = substForms.iterator();
-                        while (it1.hasNext()) {
-                            substTuples = (List) it1.next();
-
-                            if ((substTuples instanceof List) && !(substTuples.isEmpty())) {
-
-                                // Iterate over all ground lits ...
-
-                                // Remove litsToRemove, which we have
-                                // already used above.
-                                litsToRemove = (List) substTuples.remove(0);
-
-                                // Remove and hold the tuple that
-                                // indicates the variable substitution
-                                // pattern.
-                                List varTuple = (List) substTuples.remove(0);
-
-                                it2 = substTuples.iterator();
+                            // Try to simplify the Formula.
+                            Formula f = this;
+                            it1 = substForms.iterator();
+                            Iterator it2 = null;
+                            while (it1.hasNext()) {
+                                substTuples = (List) it1.next();
+                                litsToRemove = (List) substTuples.get(0);
+                                it2 = litsToRemove.iterator();
                                 while (it2.hasNext()) {
-                                    List groundLit = (List) it2.next();
+                                    List lit = (List) it2.next();
+                                    f = f.maybeRemoveMatchingLits(lit);
+                                }
+                            }
 
-                                    // Iterate over all formula templates,
-                                    // substituting terms from each ground lit
-                                    // for vars in the template.
-                                    Iterator it3 = templates.iterator();
-                                    while (it3.hasNext()) {
-                                        template = (String) it3.next();
-                                        quantVars = collectQuantifiedVariables(template);
-                                        for (i = 0 ; i < varTuple.size() ; i++) {
-                                            var = (String) varTuple.get(i);
-                                            if (isVariable(var)) {
+                            // Now generate pred var instantions from the
+                            // possibly simplified formula.
+                            List templates = new ArrayList();
+                            templates.add(f.theFormula);
+                            Set accumulator = new HashSet();
 
-                                                term = (String) groundLit.get(i);
+                            String template = null;
+                            String var = null;
+                            String term = null;
+                            ArrayList quantVars = null;
+                            int i = 0;
 
-                                                // Don't replace variables that
-                                                // are explicitly quantified.
-                                                if (!quantVars.contains(var)) {
+                            // Iterate over all var plus query lits forms, getting
+                            // a list of substitution literals.
+                            it1 = substForms.iterator();
+                            while (it1.hasNext()) {
+                                substTuples = (List) it1.next();
 
-                                                    List patternStrings = 
-                                                        Arrays.asList("(\\W*\\()(\\s*holds\\s+\\" + var + ")(\\W+)",
-                                                                      // "(\\W*\\()(\\s*\\" + var + ")(\\W+)",
-                                                                      "(\\W*)(\\" + var + ")(\\W+)" 
-                                                                      );
-                                                    List patterns = new ArrayList();
-                                                    for (int j = 0; j < patternStrings.size(); j++) {
-                                                        patterns.add(Pattern.compile((String)(patternStrings.get(j))));
-                                                    }
-                                                    Pattern p = null;
-                                                    Matcher m = null;
-                                                    for (int j = 0 ; j < patterns.size() ; j++) {
-                                                        p = (Pattern) patterns.get(j);
-                                                        m = p.matcher(template);
-                                                        template = m.replaceAll("$1" + term + "$3");
+                                if ((substTuples instanceof List) && !(substTuples.isEmpty())) {
+
+                                    // Iterate over all ground lits ...
+
+                                    // Remove litsToRemove, which we have
+                                    // already used above.
+                                    litsToRemove = (List) substTuples.remove(0);
+
+                                    // Remove and hold the tuple that
+                                    // indicates the variable substitution
+                                    // pattern.
+                                    List varTuple = (List) substTuples.remove(0);
+
+                                    it2 = substTuples.iterator();
+                                    while (it2.hasNext()) {
+                                        List groundLit = (List) it2.next();
+
+                                        // Iterate over all formula templates,
+                                        // substituting terms from each ground lit
+                                        // for vars in the template.
+                                        Iterator it3 = templates.iterator();
+                                        while (it3.hasNext()) {
+                                            template = (String) it3.next();
+                                            quantVars = collectQuantifiedVariables(template);
+                                            for (i = 0 ; i < varTuple.size() ; i++) {
+                                                var = (String) varTuple.get(i);
+                                                if (isVariable(var)) {
+
+                                                    term = (String) groundLit.get(i);
+
+                                                    // Don't replace variables that
+                                                    // are explicitly quantified.
+                                                    if (!quantVars.contains(var)) {
+
+                                                        List patternStrings = 
+                                                            Arrays.asList("(\\W*\\()(\\s*holds\\s+\\" + var + ")(\\W+)",
+                                                                          // "(\\W*\\()(\\s*\\" + var + ")(\\W+)",
+                                                                          "(\\W*)(\\" + var + ")(\\W+)" 
+                                                                          );
+                                                        List patterns = new ArrayList();
+                                                        for (int j = 0; j < patternStrings.size(); j++) {
+                                                            patterns.add(Pattern.compile((String)(patternStrings.get(j))));
+                                                        }
+                                                        Pattern p = null;
+                                                        Matcher m = null;
+                                                        for (int j = 0 ; j < patterns.size() ; j++) {
+                                                            p = (Pattern) patterns.get(j);
+                                                            m = p.matcher(template);
+                                                            template = m.replaceAll("$1" + term + "$3");
+                                                        }
                                                     }
                                                 }
                                             }
+                                            accumulator.add(template);
                                         }
-                                        accumulator.add(template);
                                     }
+                                    templates.clear();
+                                    templates.addAll(accumulator);
+                                    accumulator.clear();
                                 }
-                                templates.clear();
-                                templates.addAll(accumulator);
-                                accumulator.clear();
                             }
+                            ans.addAll(KB.stringsToFormulas(templates));
                         }
-                        ans.addAll(KB.stringsToFormulas(templates));
+                        if (ans.isEmpty()) {
+                            ans.add("reject");
+                        }
                     }
-                    if (ans.isEmpty()) {
-                        ans.add("reject");
-                    }
+
+                    //         System.out.println("INFO in instantiatePredVars(" + this + ")");
+                    //         System.out.println("  -> " 
+                    //                     + ((ans.size() > 20) 
+                    //                     ? (ans.subList(0, 5) + " and " + (ans.size() - 5) + " more ...")
+                    //                     : ans));
+
                 }
-
-                //         System.out.println("INFO in instantiatePredVars(" + this + ")");
-                //         System.out.println("  -> " 
-                //                     + ((ans.size() > 20) 
-                //                     ? (ans.subList(0, 5) + " and " + (ans.size() - 5) + " more ...")
-                //                     : ans));
-
             }
         }
         catch (Exception ex) {
@@ -4414,60 +4726,58 @@ public class Formula implements Comparable {
     private Formula negationsIn_1() {  
         // System.out.println("INFO in negationsIn_1(" + theFormula + ")");
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP()) {
-                    if (this.empty()) { return this; }
-                    String arg0 = this.car();
-                    String arg1 = this.cadr();
-                    if (arg0.equals("not") && listP(arg1)) {
-                        Formula arg1F = new Formula();
-                        arg1F.read(arg1);
-                        String arg0_of_arg1 = arg1F.car();
-                        if (arg0_of_arg1.equals("not")) {
-                            String arg1_of_arg1 = arg1F.cadr();
-                            Formula arg1_of_arg1F = new Formula();
-                            arg1_of_arg1F.read(arg1_of_arg1);
-                            return arg1_of_arg1F;
-                        }
-                        if (isCommutative(arg0_of_arg1)) {
-                            String newOp = (arg0_of_arg1.equals("and") ? "or" : "and");
-                            return arg1F.cdrAsFormula().listAll("(not ", ")").cons(newOp);
-                        }
-                        if (isQuantifier(arg0_of_arg1)) {
-                            String vars = arg1F.cadr();
-                            String arg2_of_arg1 = arg1F.caddr();
-                            String quant = (arg0_of_arg1.equals("forall") ? "exists" : "forall");
-                            arg2_of_arg1 = ("(not " + arg2_of_arg1 + ")");
-                            Formula arg2_of_arg1F = new Formula();
-                            arg2_of_arg1F.read(arg2_of_arg1);
-                            String theNewFormula = ("(" + quant + " " + vars + " " 
-                                                    + arg2_of_arg1F.negationsIn_1().theFormula + ")");
-                            Formula newF = new Formula();
-                            newF.read(theNewFormula);
-                            return newF;
-                        }
-                        String theNewFormula = ("(not " + arg1F.negationsIn_1().theFormula + ")");
+            if (this.listP()) {
+                if (this.empty()) { return this; }
+                String arg0 = this.car();
+                String arg1 = this.cadr();
+                if (arg0.equals("not") && listP(arg1)) {
+                    Formula arg1F = new Formula();
+                    arg1F.read(arg1);
+                    String arg0_of_arg1 = arg1F.car();
+                    if (arg0_of_arg1.equals("not")) {
+                        String arg1_of_arg1 = arg1F.cadr();
+                        Formula arg1_of_arg1F = new Formula();
+                        arg1_of_arg1F.read(arg1_of_arg1);
+                        return arg1_of_arg1F;
+                    }
+                    if (isCommutative(arg0_of_arg1)) {
+                        String newOp = (arg0_of_arg1.equals("and") ? "or" : "and");
+                        return arg1F.cdrAsFormula().listAll("(not ", ")").cons(newOp);
+                    }
+                    if (isQuantifier(arg0_of_arg1)) {
+                        String vars = arg1F.cadr();
+                        String arg2_of_arg1 = arg1F.caddr();
+                        String quant = (arg0_of_arg1.equals("forall") ? "exists" : "forall");
+                        arg2_of_arg1 = ("(not " + arg2_of_arg1 + ")");
+                        Formula arg2_of_arg1F = new Formula();
+                        arg2_of_arg1F.read(arg2_of_arg1);
+                        String theNewFormula = ("(" + quant + " " + vars + " " 
+                                                + arg2_of_arg1F.negationsIn_1().theFormula + ")");
                         Formula newF = new Formula();
                         newF.read(theNewFormula);
                         return newF;
                     }
-                    if (isQuantifier(arg0)) {
-                        String arg2 = this.caddr();
-                        Formula arg2F = new Formula();
-                        arg2F.read(arg2);
-                        String newArg2 = arg2F.negationsIn_1().theFormula;
-                        String theNewFormula = ("(" + arg0 + " " + arg1 + " " + newArg2 + ")");
-                        Formula newF = new Formula();
-                        newF.read(theNewFormula);
-                        return newF;
-                    }
-                    if (listP(arg0)) {
-                        Formula arg0F = new Formula();
-                        arg0F.read(arg0);
-                        return this.cdrAsFormula().negationsIn_1().cons(arg0F.negationsIn_1().theFormula);
-                    }
-                    return this.cdrAsFormula().negationsIn_1().cons(arg0);
+                    String theNewFormula = ("(not " + arg1F.negationsIn_1().theFormula + ")");
+                    Formula newF = new Formula();
+                    newF.read(theNewFormula);
+                    return newF;
                 }
+                if (isQuantifier(arg0)) {
+                    String arg2 = this.caddr();
+                    Formula arg2F = new Formula();
+                    arg2F.read(arg2);
+                    String newArg2 = arg2F.negationsIn_1().theFormula;
+                    String theNewFormula = ("(" + arg0 + " " + arg1 + " " + newArg2 + ")");
+                    Formula newF = new Formula();
+                    newF.read(theNewFormula);
+                    return newF;
+                }
+                if (listP(arg0)) {
+                    Formula arg0F = new Formula();
+                    arg0F.read(arg0);
+                    return this.cdrAsFormula().negationsIn_1().cons(arg0F.negationsIn_1().theFormula);
+                }
+                return this.cdrAsFormula().negationsIn_1().cons(arg0);
             }
         }
         catch (Exception ex) {
@@ -4658,65 +4968,63 @@ public class Formula implements Comparable {
     private Formula renameVariables(Map topLevelVars, Map scopedRenames, Map allRenames) {
 
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP()) {
-                    if (this.empty()) { return this; }
-                    String arg0 = this.car();
-                    if (isQuantifier(arg0)) {
+            if (this.listP()) {
+                if (this.empty()) { return this; }
+                String arg0 = this.car();
+                if (isQuantifier(arg0)) {
            
-                        // Copy the scopedRenames map to protect
-                        // variable scope as we descend below this
-                        // quantifier.
-                        Map newScopedRenames = new HashMap(scopedRenames);
+                    // Copy the scopedRenames map to protect
+                    // variable scope as we descend below this
+                    // quantifier.
+                    Map newScopedRenames = new HashMap(scopedRenames);
 
-                        String oldVars = this.cadr();
-                        Formula oldVarsF = new Formula();
-                        oldVarsF.read(oldVars);
-                        String newVars = "";
-                        while (!(oldVarsF.empty())) {
-                            String oldVar = oldVarsF.car();
-                            String newVar = newVar(oldVar);
-                            newScopedRenames.put(oldVar, newVar);
-                            allRenames.put(newVar, oldVar);
-                            newVars += (" " + newVar);
-                            oldVarsF = oldVarsF.cdrAsFormula();
-                        }
-                        newVars = ("(" + newVars.trim() + ")");
-                        String arg2 = this.caddr();
-                        Formula arg2F = new Formula();
-                        arg2F.read(arg2);
-                        String newArg2 = arg2F.renameVariables(topLevelVars,newScopedRenames,allRenames).theFormula;
-                        String theNewFormula = ("(" + arg0 + " " + newVars + " " + newArg2 + ")");
-                        Formula newF = new Formula();
-                        newF.read(theNewFormula);
-                        return newF;
+                    String oldVars = this.cadr();
+                    Formula oldVarsF = new Formula();
+                    oldVarsF.read(oldVars);
+                    String newVars = "";
+                    while (!(oldVarsF.empty())) {
+                        String oldVar = oldVarsF.car();
+                        String newVar = newVar(oldVar);
+                        newScopedRenames.put(oldVar, newVar);
+                        allRenames.put(newVar, oldVar);
+                        newVars += (" " + newVar);
+                        oldVarsF = oldVarsF.cdrAsFormula();
                     }
-                    Formula arg0F = new Formula();
-                    arg0F.read(arg0);
-                    String newArg0 = arg0F.renameVariables(topLevelVars,scopedRenames,allRenames).theFormula;
-                    String newRest = 
-                        this.cdrAsFormula().renameVariables(topLevelVars,scopedRenames,allRenames).theFormula;
-                    Formula newRestF = new Formula();
-                    newRestF.read(newRest);
-                    String theNewFormula = newRestF.cons(newArg0).theFormula;
+                    newVars = ("(" + newVars.trim() + ")");
+                    String arg2 = this.caddr();
+                    Formula arg2F = new Formula();
+                    arg2F.read(arg2);
+                    String newArg2 = arg2F.renameVariables(topLevelVars,newScopedRenames,allRenames).theFormula;
+                    String theNewFormula = ("(" + arg0 + " " + newVars + " " + newArg2 + ")");
                     Formula newF = new Formula();
                     newF.read(theNewFormula);
                     return newF;
                 }
-                if (isVariable(this.theFormula)) {
-                    String rnv = (String) scopedRenames.get(this.theFormula);
+                Formula arg0F = new Formula();
+                arg0F.read(arg0);
+                String newArg0 = arg0F.renameVariables(topLevelVars,scopedRenames,allRenames).theFormula;
+                String newRest = 
+                    this.cdrAsFormula().renameVariables(topLevelVars,scopedRenames,allRenames).theFormula;
+                Formula newRestF = new Formula();
+                newRestF.read(newRest);
+                String theNewFormula = newRestF.cons(newArg0).theFormula;
+                Formula newF = new Formula();
+                newF.read(theNewFormula);
+                return newF;
+            }
+            if (isVariable(this.theFormula)) {
+                String rnv = (String) scopedRenames.get(this.theFormula);
+                if (!(isNonEmptyString(rnv))) {
+                    rnv = (String) topLevelVars.get(this.theFormula);
                     if (!(isNonEmptyString(rnv))) {
-                        rnv = (String) topLevelVars.get(this.theFormula);
-                        if (!(isNonEmptyString(rnv))) {
-                            rnv = newVar(this.theFormula);
-                            topLevelVars.put(this.theFormula, rnv);
-                            allRenames.put(rnv, this.theFormula);
-                        }
+                        rnv = newVar(this.theFormula);
+                        topLevelVars.put(this.theFormula, rnv);
+                        allRenames.put(rnv, this.theFormula);
                     }
-                    Formula newF = new Formula();
-                    newF.read(rnv);
-                    return newF;
                 }
+                Formula newF = new Formula();
+                newF.read(rnv);
+                return newF;
             }
         }
         catch (Exception ex) {
@@ -4809,79 +5117,77 @@ public class Formula implements Comparable {
     private Formula existentialsOut(Map evSubs, TreeSet iUQVs, TreeSet scopedUQVs) {
         // System.out.println("INFO in existentialsOut(" + this.theFormula + ", " + evSubs + ", " + iUQVs + ", " + scopedUQVs + ")");
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP()) {
-                    if (this.empty()) { return this; }
-                    String arg0 = this.car();
-                    if (arg0.equals("forall")) {
+            if (this.listP()) {
+                if (this.empty()) { return this; }
+                String arg0 = this.car();
+                if (arg0.equals("forall")) {
            
-                        // Copy the scoped variables set to protect
-                        // variable scope as we descend below this
-                        // quantifier.
-                        TreeSet newScopedUQVs = new TreeSet(scopedUQVs);
+                    // Copy the scoped variables set to protect
+                    // variable scope as we descend below this
+                    // quantifier.
+                    TreeSet newScopedUQVs = new TreeSet(scopedUQVs);
 
-                        String varList = this.cadr();           
-                        Formula varListF = new Formula();
-                        varListF.read(varList);
-                        while (!(varListF.empty())) {
-                            String var = varListF.car();
-                            newScopedUQVs.add(var);
-                            varListF.read(varListF.cdr());
-                        }
-                        String arg2 = this.caddr();
-                        Formula arg2F = new Formula();
-                        arg2F.read(arg2);
-                        String theNewFormula = ("(forall " 
-                                                + varList 
-                                                + " " 
-                                                + arg2F.existentialsOut(evSubs, iUQVs, newScopedUQVs).theFormula + ")");
-                        this.read(theNewFormula);
-                        return this;
+                    String varList = this.cadr();           
+                    Formula varListF = new Formula();
+                    varListF.read(varList);
+                    while (!(varListF.empty())) {
+                        String var = varListF.car();
+                        newScopedUQVs.add(var);
+                        varListF.read(varListF.cdr());
                     }
-                    if (arg0.equals("exists")) {
-
-                        // Collect the relevant universally quantified
-                        // variables.
-                        TreeSet uQVs = new TreeSet(iUQVs);
-                        uQVs.addAll(scopedUQVs);
-
-                        // Collect the existentially quantified
-                        // variables.
-                        ArrayList eQVs = new ArrayList();
-                        String varList = this.cadr();           
-                        Formula varListF = new Formula();
-                        varListF.read(varList);
-                        while (!(varListF.empty())) {
-                            String var = varListF.car();
-                            eQVs.add(var);
-                            varListF.read(varListF.cdr());
-                        }
-           
-                        // For each existentially quantified variable,
-                        // create a corresponding skolem term, and
-                        // store the pair in the evSubs map.
-                        for (int i = 0 ; i < eQVs.size() ; i++) {
-                            String var = (String) eQVs.get(i);
-                            String skTerm = newSkolemTerm(uQVs);
-                            evSubs.put(var, skTerm);
-                        }
-                        String arg2 = this.caddr();
-                        Formula arg2F = new Formula();
-                        arg2F.read(arg2);
-                        return arg2F.existentialsOut(evSubs, iUQVs, scopedUQVs);
-                    }
-                    Formula arg0F = new Formula();
-                    arg0F.read(arg0);
-                    String newArg0 = arg0F.existentialsOut(evSubs, iUQVs, scopedUQVs).theFormula;
-                    return this.cdrAsFormula().existentialsOut(evSubs, iUQVs, scopedUQVs).cons(newArg0);
-                }
-                if (isVariable(this.theFormula)) {
-                    String newTerm = (String) evSubs.get(this.theFormula);
-                    if (isNonEmptyString(newTerm)) {
-                        this.read(newTerm);
-                    }
+                    String arg2 = this.caddr();
+                    Formula arg2F = new Formula();
+                    arg2F.read(arg2);
+                    String theNewFormula = ("(forall " 
+                                            + varList 
+                                            + " " 
+                                            + arg2F.existentialsOut(evSubs, iUQVs, newScopedUQVs).theFormula + ")");
+                    this.read(theNewFormula);
                     return this;
                 }
+                if (arg0.equals("exists")) {
+
+                    // Collect the relevant universally quantified
+                    // variables.
+                    TreeSet uQVs = new TreeSet(iUQVs);
+                    uQVs.addAll(scopedUQVs);
+
+                    // Collect the existentially quantified
+                    // variables.
+                    ArrayList eQVs = new ArrayList();
+                    String varList = this.cadr();           
+                    Formula varListF = new Formula();
+                    varListF.read(varList);
+                    while (!(varListF.empty())) {
+                        String var = varListF.car();
+                        eQVs.add(var);
+                        varListF.read(varListF.cdr());
+                    }
+           
+                    // For each existentially quantified variable,
+                    // create a corresponding skolem term, and
+                    // store the pair in the evSubs map.
+                    for (int i = 0 ; i < eQVs.size() ; i++) {
+                        String var = (String) eQVs.get(i);
+                        String skTerm = newSkolemTerm(uQVs);
+                        evSubs.put(var, skTerm);
+                    }
+                    String arg2 = this.caddr();
+                    Formula arg2F = new Formula();
+                    arg2F.read(arg2);
+                    return arg2F.existentialsOut(evSubs, iUQVs, scopedUQVs);
+                }
+                Formula arg0F = new Formula();
+                arg0F.read(arg0);
+                String newArg0 = arg0F.existentialsOut(evSubs, iUQVs, scopedUQVs).theFormula;
+                return this.cdrAsFormula().existentialsOut(evSubs, iUQVs, scopedUQVs).cons(newArg0);
+            }
+            if (isVariable(this.theFormula)) {
+                String newTerm = (String) evSubs.get(this.theFormula);
+                if (isNonEmptyString(newTerm)) {
+                    this.read(newTerm);
+                }
+                return this;
             }
         }
         catch (Exception ex) {
@@ -4907,39 +5213,37 @@ public class Formula implements Comparable {
 
         // System.out.println("INFO in collectIUQVars(" + this.theFormula + ", " + iuqvs + ", " + scopedVars + ")");
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP() && !(this.empty())) {
-                    String arg0 = this.car();
-                    if (isQuantifier(arg0)) {
+            if (this.listP() && !(this.empty())) {
+                String arg0 = this.car();
+                if (isQuantifier(arg0)) {
            
-                        // Copy the scopedVars set to protect variable
-                        // scope as we descend below this quantifier.
-                        TreeSet newScopedVars = new TreeSet(scopedVars);
+                    // Copy the scopedVars set to protect variable
+                    // scope as we descend below this quantifier.
+                    TreeSet newScopedVars = new TreeSet(scopedVars);
 
-                        String varList = this.cadr();
-                        Formula varListF = new Formula();
-                        varListF.read(varList);
-                        while (!(varListF.empty())) {
-                            String var = varListF.car();
-                            newScopedVars.add(var);
-                            varListF = varListF.cdrAsFormula();
-                        }
-                        String arg2 = this.caddr();
-                        Formula arg2F = new Formula();
-                        arg2F.read(arg2);
-                        arg2F.collectIUQVars(iuqvs, newScopedVars);
+                    String varList = this.cadr();
+                    Formula varListF = new Formula();
+                    varListF.read(varList);
+                    while (!(varListF.empty())) {
+                        String var = varListF.car();
+                        newScopedVars.add(var);
+                        varListF = varListF.cdrAsFormula();
                     }
-                    else {
-                        Formula arg0F = new Formula();
-                        arg0F.read(arg0);
-                        arg0F.collectIUQVars(iuqvs, scopedVars);
-                        this.cdrAsFormula().collectIUQVars(iuqvs, scopedVars);
-                    }
+                    String arg2 = this.caddr();
+                    Formula arg2F = new Formula();
+                    arg2F.read(arg2);
+                    arg2F.collectIUQVars(iuqvs, newScopedVars);
                 }
-                else if (isVariable(this.theFormula) 
-                         && !(scopedVars.contains(this.theFormula))) {
-                    iuqvs.add(this.theFormula);
+                else {
+                    Formula arg0F = new Formula();
+                    arg0F.read(arg0);
+                    arg0F.collectIUQVars(iuqvs, scopedVars);
+                    this.cdrAsFormula().collectIUQVars(iuqvs, scopedVars);
                 }
+            }
+            else if (isVariable(this.theFormula) 
+                     && !(scopedVars.contains(this.theFormula))) {
+                iuqvs.add(this.theFormula);
             }
         }
         catch (Exception ex) {
@@ -4960,20 +5264,18 @@ public class Formula implements Comparable {
     private Formula universalsOut() {
         // System.out.println("INFO in universalsOut(" + this.theFormula + ")");
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP()) {
-                    if (this.empty()) { return this; }
-                    String arg0 = this.car();
-                    if (arg0.equals("forall")) {
-                        String arg2 = this.caddr();
-                        this.read(arg2);
-                        return this.universalsOut();
-                    }
-                    Formula arg0F = new Formula();
-                    arg0F.read(arg0);
-                    String newArg0 = arg0F.universalsOut().theFormula;
-                    return this.cdrAsFormula().universalsOut().cons(newArg0);
+            if (this.listP()) {
+                if (this.empty()) { return this; }
+                String arg0 = this.car();
+                if (arg0.equals("forall")) {
+                    String arg2 = this.caddr();
+                    this.read(arg2);
+                    return this.universalsOut();
                 }
+                Formula arg0F = new Formula();
+                arg0F.read(arg0);
+                String newArg0 = arg0F.universalsOut().theFormula;
+                return this.cdrAsFormula().universalsOut().cons(newArg0);
             }
         }
         catch (Exception ex) {
@@ -5031,58 +5333,56 @@ public class Formula implements Comparable {
 
         // System.out.println("INFO in nestedOperatorsOut_1(" + this.theFormula + ")");
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP()) {
-                    if (this.empty()) { return this; }
-                    String arg0 = this.car();
-                    if (isCommutative(arg0) || arg0.equals("not")) {
-                        ArrayList literals = new ArrayList();
-                        Formula restF = this.cdrAsFormula();
-                        while (!(restF.empty())) {
-                            String lit = restF.car();
-                            Formula litF = new Formula();
-                            litF.read (lit);
-                            if (litF.listP()) {
-                                String litFarg0 = litF.car();
-                                if (litFarg0.equals(arg0)) {
-                                    if (arg0.equals("not")) {
-                                        String theNewFormula = litF.cadr();
-                                        Formula newF = new Formula();
-                                        newF.read(theNewFormula);
-                                        return newF.nestedOperatorsOut_1();
-                                    }
-                                    Formula rest2F = litF.cdrAsFormula();
-                                    while (!(rest2F.empty())) {
-                                        String rest2arg0 = rest2F.car();
-                                        Formula rest2arg0F = new Formula();
-                                        rest2arg0F.read(rest2arg0);
-                                        literals.add(rest2arg0F.nestedOperatorsOut_1().theFormula);
-                                        rest2F = rest2F.cdrAsFormula();
-                                    }
+            if (this.listP()) {
+                if (this.empty()) { return this; }
+                String arg0 = this.car();
+                if (isCommutative(arg0) || arg0.equals("not")) {
+                    ArrayList literals = new ArrayList();
+                    Formula restF = this.cdrAsFormula();
+                    while (!(restF.empty())) {
+                        String lit = restF.car();
+                        Formula litF = new Formula();
+                        litF.read (lit);
+                        if (litF.listP()) {
+                            String litFarg0 = litF.car();
+                            if (litFarg0.equals(arg0)) {
+                                if (arg0.equals("not")) {
+                                    String theNewFormula = litF.cadr();
+                                    Formula newF = new Formula();
+                                    newF.read(theNewFormula);
+                                    return newF.nestedOperatorsOut_1();
                                 }
-                                else {
-                                    literals.add(litF.nestedOperatorsOut_1().theFormula);
+                                Formula rest2F = litF.cdrAsFormula();
+                                while (!(rest2F.empty())) {
+                                    String rest2arg0 = rest2F.car();
+                                    Formula rest2arg0F = new Formula();
+                                    rest2arg0F.read(rest2arg0);
+                                    literals.add(rest2arg0F.nestedOperatorsOut_1().theFormula);
+                                    rest2F = rest2F.cdrAsFormula();
                                 }
                             }
                             else {
-                                literals.add(lit);
+                                literals.add(litF.nestedOperatorsOut_1().theFormula);
                             }
-                            restF = restF.cdrAsFormula();
                         }
-                        String theNewFormula = ("(" + arg0);
-                        for (int i = 0 ; i < literals.size() ; i++) {
-                            theNewFormula += (" " + (String)literals.get(i));
+                        else {
+                            literals.add(lit);
                         }
-                        theNewFormula += ")";
-                        Formula newF = new Formula();
-                        newF.read(theNewFormula);
-                        return newF;
+                        restF = restF.cdrAsFormula();
                     }
-                    Formula arg0F = new Formula();
-                    arg0F.read(arg0);
-                    String newArg0 = arg0F.nestedOperatorsOut_1().theFormula;
-                    return this.cdrAsFormula().nestedOperatorsOut_1().cons(newArg0);
+                    String theNewFormula = ("(" + arg0);
+                    for (int i = 0 ; i < literals.size() ; i++) {
+                        theNewFormula += (" " + (String)literals.get(i));
+                    }
+                    theNewFormula += ")";
+                    Formula newF = new Formula();
+                    newF.read(theNewFormula);
+                    return newF;
                 }
+                Formula arg0F = new Formula();
+                arg0F.read(arg0);
+                String newArg0 = arg0F.nestedOperatorsOut_1().theFormula;
+                return this.cdrAsFormula().nestedOperatorsOut_1().cons(newArg0);
             }
         }
         catch (Exception ex) {
@@ -5136,57 +5436,55 @@ public class Formula implements Comparable {
 
         // System.out.println("INFO in disjunctionsIn_1(" + this.theFormula + ")");
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP()) {
-                    if (this.empty()) { return this; }
-                    String arg0 = this.car();
-                    if (arg0.equals("or")) {
-                        List disjuncts = new ArrayList();
-                        List conjuncts = new ArrayList();
-                        Formula restF = this.cdrAsFormula();
-                        while (!(restF.empty())) {
-                            String disjunct = restF.car();
-                            Formula disjunctF = new Formula();
-                            disjunctF.read(disjunct);
-                            if (disjunctF.listP() 
-                                && disjunctF.car().equals("and") 
-                                && conjuncts.isEmpty()) {
-                                Formula rest2F = disjunctF.cdrAsFormula().disjunctionsIn_1();
-                                while (!(rest2F.empty())) {
-                                    conjuncts.add(rest2F.car());
-                                    rest2F = rest2F.cdrAsFormula();
-                                }
+            if (this.listP()) {
+                if (this.empty()) { return this; }
+                String arg0 = this.car();
+                if (arg0.equals("or")) {
+                    List disjuncts = new ArrayList();
+                    List conjuncts = new ArrayList();
+                    Formula restF = this.cdrAsFormula();
+                    while (!(restF.empty())) {
+                        String disjunct = restF.car();
+                        Formula disjunctF = new Formula();
+                        disjunctF.read(disjunct);
+                        if (disjunctF.listP() 
+                            && disjunctF.car().equals("and") 
+                            && conjuncts.isEmpty()) {
+                            Formula rest2F = disjunctF.cdrAsFormula().disjunctionsIn_1();
+                            while (!(rest2F.empty())) {
+                                conjuncts.add(rest2F.car());
+                                rest2F = rest2F.cdrAsFormula();
                             }
-                            else {
-                                disjuncts.add(disjunct);
-                            }
-                            restF = restF.cdrAsFormula();
                         }
-
-                        if (conjuncts.isEmpty()) { return this; }
-
-                        Formula resultF = new Formula();
-                        resultF.read("()");
-                        String disjunctsString = "";
-                        for (int i = 0 ; i < disjuncts.size() ; i++) {
-                            disjunctsString += (" " + (String)disjuncts.get(i));
+                        else {
+                            disjuncts.add(disjunct);
                         }
-                        disjunctsString = ("(" + disjunctsString.trim() + ")");
-                        Formula disjunctsF = new Formula();
-                        disjunctsF.read(disjunctsString);
-                        for (int ci = 0 ; ci < conjuncts.size() ; ci++) {
-                            String newDisjuncts = 
-                                disjunctsF.cons((String)conjuncts.get(ci)).cons("or").disjunctionsIn_1().theFormula;
-                            resultF = resultF.cons(newDisjuncts);
-                        }
-                        resultF = resultF.cons("and");
-                        return resultF;
+                        restF = restF.cdrAsFormula();
                     }
-                    Formula arg0F = new Formula();
-                    arg0F.read(arg0);
-                    String newArg0 = arg0F.disjunctionsIn_1().theFormula;
-                    return this.cdrAsFormula().disjunctionsIn_1().cons(newArg0);
+
+                    if (conjuncts.isEmpty()) { return this; }
+
+                    Formula resultF = new Formula();
+                    resultF.read("()");
+                    String disjunctsString = "";
+                    for (int i = 0 ; i < disjuncts.size() ; i++) {
+                        disjunctsString += (" " + (String)disjuncts.get(i));
+                    }
+                    disjunctsString = ("(" + disjunctsString.trim() + ")");
+                    Formula disjunctsF = new Formula();
+                    disjunctsF.read(disjunctsString);
+                    for (int ci = 0 ; ci < conjuncts.size() ; ci++) {
+                        String newDisjuncts = 
+                            disjunctsF.cons((String)conjuncts.get(ci)).cons("or").disjunctionsIn_1().theFormula;
+                        resultF = resultF.cons(newDisjuncts);
+                    }
+                    resultF = resultF.cons("and");
+                    return resultF;
                 }
+                Formula arg0F = new Formula();
+                arg0F.read(arg0);
+                String newArg0 = arg0F.disjunctionsIn_1().theFormula;
+                return this.cdrAsFormula().disjunctionsIn_1().cons(newArg0);
             }
         }
         catch (Exception ex) {
@@ -5368,25 +5666,23 @@ public class Formula implements Comparable {
     private Formula standardizeApart_1(Map renames, Map reverseRenames) {
 
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                if (this.listP() && !(this.empty())) {
-                    String arg0 = this.car();
-                    Formula arg0F = new Formula();
-                    arg0F.read(arg0);
-                    arg0F = arg0F.standardizeApart_1(renames, reverseRenames);
-                    return this.cdrAsFormula().standardizeApart_1(renames,reverseRenames).cons(arg0F.theFormula);
+            if (this.listP() && !(this.empty())) {
+                String arg0 = this.car();
+                Formula arg0F = new Formula();
+                arg0F.read(arg0);
+                arg0F = arg0F.standardizeApart_1(renames, reverseRenames);
+                return this.cdrAsFormula().standardizeApart_1(renames,reverseRenames).cons(arg0F.theFormula);
+            }
+            if (isVariable(this.theFormula)) {
+                String rnv = (String) renames.get(this.theFormula);
+                if (!(isNonEmptyString(rnv))) {
+                    rnv = newVar(this.theFormula);
+                    renames.put(this.theFormula, rnv);
+                    reverseRenames.put(rnv, this.theFormula);
                 }
-                if (isVariable(this.theFormula)) {
-                    String rnv = (String) renames.get(this.theFormula);
-                    if (!(isNonEmptyString(rnv))) {
-                        rnv = newVar(this.theFormula);
-                        renames.put(this.theFormula, rnv);
-                        reverseRenames.put(rnv, this.theFormula);
-                    }
-                    Formula rnvF = new Formula();
-                    rnvF.read(rnv);
-                    return rnvF;
-                }
+                Formula rnvF = new Formula();
+                rnvF.read(rnv);
+                return rnvF;
             }
         }
         catch (Exception ex) {
