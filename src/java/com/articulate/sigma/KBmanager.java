@@ -116,6 +116,8 @@ public class KBmanager {
             preferences.put("holdsPrefix","no");  // if no then instantiate variables in predicate position
             preferences.put("cache","no");
             preferences.put("TPTP","yes");  
+            preferences.put("port","8080");
+            preferences.put("hostname","localhost");  
         }
         catch (Exception ex) {
             ex.printStackTrace();
