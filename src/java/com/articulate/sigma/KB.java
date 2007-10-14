@@ -1602,7 +1602,9 @@ public class KB {
                                     Iterator it2 = processedFormulas.iterator();
                                     while (it2.hasNext()) {
                                         processedF = (Formula) it2.next();
+                                        System.out.println("ENTER Vampire.assertFormula(" + processedF.theFormula + ")");
                                         ieResult = inferenceEngine.assertFormula(processedF.theFormula);
+                                        System.out.println("EXIT Vampire.assertFormula(" + processedF.theFormula + ")");
                                         System.out.println("  " + ieResult);
                                         if (ieResult.indexOf("Formula has been added") < 0) {
                                             allAdded = false;
@@ -2953,7 +2955,8 @@ public class KB {
                     pr = new PrintWriter(fr);
                     Iterator it = forms.iterator();
                     while (it.hasNext()) {
-                        pr.println((String) it.next() + "\n");                       
+                        pr.println((String) it.next());                       
+                        pr.println();
                     }
                     if (! file.exists()) {
                         filename = null;
@@ -3052,127 +3055,136 @@ public class KB {
      * @return a TreeSet of Strings. 
      */
     public TreeSet preProcess(Set forms) {
-
         // System.out.println("INFO in kb.preProcess()");
-        for (int i = 0 ; i < ppTimers.length ; i++) {
-            ppTimers[i] = 0L;
-        }
-
-        boolean tptpParseP = KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes");
-        long t1 = System.currentTimeMillis();
         TreeSet newTreeSet = new TreeSet();
-        String form = null;
-        Formula f = null;
-        // Formula newFormula = null;
-        ArrayList processed = null;         // An ArrayList of Formula(s).  
-        // If the Formula which is to be preprocessed does not contain row
-        // variables, then this list will have only one element.
-        Iterator it = forms.iterator();
-        while (it.hasNext()) {
-            form = (String) it.next();
-            f = (Formula) formulaMap.get(form);
-            // newFormula = new Formula();
-            // newFormula.theFormula = new String(f.theFormula);
-
-            // System.out.println("preProcess " + newFormula);
-
-            // processed = newFormula.preProcess(false,this);   // not queries
-            processed = f.preProcess(false,this);   // not queries
-
-            if (tptpParseP) {  
-                try {
-                    f.tptpParse(false, this, processed);   // not a query
-                }
-                catch (ParseException pe) {
-                    String er = "Error in KB.preProcess(): " + pe.getMessage() + " for formula in file " + f.sourceFile + " at line " +  f.startLine;
-                    KBmanager.getMgr().setError(KBmanager.getMgr().getError() + "\n<br/>" + er + "\n<br/>");
-                    System.out.println(er);
-                }
-                catch (IOException ioe) {
-                    System.out.println("Error in KB.preProcess: " + ioe.getMessage());
-                }
+        try {
+            for (int i = 0 ; i < ppTimers.length ; i++) {
+                ppTimers[i] = 0L;
             }
+            
+            Formula.resetSortalTypeCache();
 
-            Iterator itp = processed.iterator();
-            while (itp.hasNext()) {
-                Formula p = (Formula) itp.next();
-                if (p.theFormula != null) 
-                    newTreeSet.add(p.theFormula);
-            }
-        }
-        long dur = (System.currentTimeMillis() - t1);
-        System.out.println("INFO in KB.preProcess()");
-        System.out.println("  "
-                           + (dur / 1000.0)
-                           + " seconds total to produce "
-                           + newTreeSet.size()
-                           + " formulas");
-        System.out.println("    "
-                           + (ppTimers[0] / 1000.0)
-                           + " seconds adding type predicates");
-        System.out.println("    "
-                           + (ppTimers[1] / 1000.0)
-                           + " seconds instantiating predicate variables");
-        System.out.println("    "
-                           + (ppTimers[2] / 1000.0)
-                           + " seconds expanding row variables");
-        System.out.println("      "
-                           + (ppTimers[3] / 1000.0)
-                           + " seconds in Formula.getRowVarExpansionRange()");
-        System.out.println("        "
-                           + (ppTimers[4] / 1000.0)
-                           + " seconds in Formula.toNegAndPosLitsWithRenameInfo()");
-        System.out.println("      "
-                           + (ppTimers[5] / 1000.0)
-                           + " seconds in Formula.adjustExpansionCount()");
-        System.out.println("    "
-                           + (ppTimers[6] / 1000.0)
-                           + " seconds in Formula.preProcessRecurse()");
-        for (int i = 0 ; i < ppTimers.length ; i++) {
-            ppTimers[i] = 0L;
-        }
-
-        if (KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
-            int goodCount = 0;
-            int badCount = 0;
-            List badList = new ArrayList();
-            it = formulaMap.values().iterator();
+            boolean tptpParseP = KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes");
+            long t1 = System.currentTimeMillis();
+            String form = null;
+            Formula f = null;
+            // Formula newFormula = null;
+            ArrayList processed = null;         // An ArrayList of Formula(s).  
+            // If the Formula which is to be preprocessed does not contain row
+            // variables, then this list will have only one element.
+            Iterator it = forms.iterator();
             while (it.hasNext()) {
-                f = (Formula) it.next();
-                if (f.getTheTptpFormulas().isEmpty()) {
-                    badCount++;
-                    if (badCount < 11) {
-                        badList.add(f);
+                form = (String) it.next();
+                f = (Formula) formulaMap.get(form);
+                // newFormula = new Formula();
+                // newFormula.theFormula = new String(f.theFormula);
+
+                // System.out.println("preProcess " + newFormula);
+
+                // processed = newFormula.preProcess(false,this);   // not queries
+                processed = f.preProcess(false,this);   // not queries
+
+                if (tptpParseP) {  
+                    try {
+                        f.tptpParse(false, this, processed);   // not a query
+                    }
+                    catch (ParseException pe) {
+                        String er = "Error in KB.preProcess(): " + pe.getMessage() + " for formula in file " + f.sourceFile + " at line " +  f.startLine;
+                        KBmanager.getMgr().setError(KBmanager.getMgr().getError() + "\n<br/>" + er + "\n<br/>");
+                        System.out.println(er);
+                    }
+                    catch (IOException ioe) {
+                        System.out.println("Error in KB.preProcess: " + ioe.getMessage());
                     }
                 }
-                else {
-                    goodCount++;
-                    if (goodCount < 10) {
-                        System.out.println("Sample TPTP translation: " + f.getTheTptpFormulas().get(0));
-                    }
+
+                Iterator itp = processed.iterator();
+                while (itp.hasNext()) {
+                    Formula p = (Formula) itp.next();
+                    if (p.theFormula != null) 
+                        newTreeSet.add(p.theFormula);
                 }
             }
-            System.out.println("INFO in KB.preProcess(): TPTP translation succeeded for "
-                               + goodCount
-                               + " formula"
-                               + ((goodCount == 1) ? "" : "s"));
-            boolean someAreBad = (badCount > 0);
-            System.out.println("INFO in KB.preProcess(): TPTP translation failed for "
-                               + badCount
-                               + " formula"
-                               + ((badCount == 1) ? "" : "s")
-                               + (someAreBad ? ":" : ""));
-            if (someAreBad) {
-                it = badList.iterator();
-                for (int i = 1 ; it.hasNext() ; i++) {
+            long dur = (System.currentTimeMillis() - t1);
+            System.out.println("INFO in KB.preProcess()");
+            System.out.println("  "
+                               + (dur / 1000.0)
+                               + " seconds total to produce "
+                               + newTreeSet.size()
+                               + " formulas");
+            System.out.println("    "
+                               + (ppTimers[0] / 1000.0)
+                               + " seconds adding type predicates");
+            System.out.println("    "
+                               + (ppTimers[1] / 1000.0)
+                               + " seconds instantiating predicate variables");
+            System.out.println("    "
+                               + (ppTimers[2] / 1000.0)
+                               + " seconds expanding row variables");
+            System.out.println("      "
+                               + (ppTimers[3] / 1000.0)
+                               + " seconds in Formula.getRowVarExpansionRange()");
+            System.out.println("        "
+                               + (ppTimers[4] / 1000.0)
+                               + " seconds in Formula.toNegAndPosLitsWithRenameInfo()");
+            System.out.println("      "
+                               + (ppTimers[5] / 1000.0)
+                               + " seconds in Formula.adjustExpansionCount()");
+            System.out.println("    "
+                               + (ppTimers[6] / 1000.0)
+                               + " seconds in Formula.preProcessRecurse()");
+            for (int i = 0 ; i < ppTimers.length ; i++) {
+                ppTimers[i] = 0L;
+            }
+
+            if (tptpParseP) {
+                int goodCount = 0;
+                int badCount = 0;
+                List badList = new ArrayList();
+                it = formulaMap.values().iterator();
+                while (it.hasNext()) {
                     f = (Formula) it.next();
-                    System.out.println("[" + i + "]: " + f);
+                    if (f.getTheTptpFormulas().isEmpty()) {
+                        badCount++;
+                        if (badCount < 11) {
+                            badList.add(f);
+                        }
+                    }
+                    else {
+                        goodCount++;
+                        if (goodCount < 10) {
+                            System.out.println("Sample TPTP translation: " + f.getTheTptpFormulas().get(0));
+                        }
+                    }
                 }
-                if (badCount > 10) {
-                    System.out.println("  " + (badCount - 10) + " more ...");
+                System.out.println("INFO in KB.preProcess(): TPTP translation succeeded for "
+                                   + goodCount
+                                   + " formula"
+                                   + ((goodCount == 1) ? "" : "s"));
+                boolean someAreBad = (badCount > 0);
+                System.out.println("INFO in KB.preProcess(): TPTP translation failed for "
+                                   + badCount
+                                   + " formula"
+                                   + ((badCount == 1) ? "" : "s")
+                                   + (someAreBad ? ":" : ""));
+                if (someAreBad) {
+                    it = badList.iterator();
+                    for (int i = 1 ; it.hasNext() ; i++) {
+                        f = (Formula) it.next();
+                        System.out.println("[" + i + "]: " + f);
+                    }
+                    if (badCount > 10) {
+                        System.out.println("  " + (badCount - 10) + " more ...");
+                    }
                 }
             }
         }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+     
+        Formula.destroySortalTypeCache();
+
         return newTreeSet;
     }
 
@@ -3377,6 +3389,10 @@ public class KB {
                     } });
             orderedFormulae.addAll(formulaMap.values());
 
+            if (onlyPlainFOL) {
+                Formula.resetSortalTypeCache();
+            }
+
             Iterator ite = orderedFormulae.iterator();
             List tptpFormulas = null;
             Iterator tptpIt = null;
@@ -3399,16 +3415,16 @@ public class KB {
                     Formula tmpF = new Formula();
                     tmpF.read(f.theFormula);
                     List processed = tmpF.preProcess(false, this);
-                    List withVarRenames = null;
+                    List withRelnRenames = null;
                     if (!processed.isEmpty()) {
-                        withVarRenames = new ArrayList();
+                        withRelnRenames = new ArrayList();
                         Iterator it2 = processed.iterator();
                         Formula f2 = null;
                         while (it2.hasNext()) {
                             f2 = (Formula) it2.next();
-                            withVarRenames.add(f2.renameVariableArityRelations(this));
+                            withRelnRenames.add(f2.renameVariableArityRelations(this));
                         }
-                        tmpF.tptpParse(false, this, withVarRenames);
+                        tmpF.tptpParse(false, this, withRelnRenames);
                         tptpFormulas = tmpF.getTheTptpFormulas();
                         // System.out.println("  2 : tptpFormulas == " + tptpFormulas);
                     }
@@ -3474,6 +3490,11 @@ public class KB {
             System.out.println("Error in KB.writeTPTPFile(): " + e.getMessage());
             e.printStackTrace();
         }
+
+        if (onlyPlainFOL) {
+            Formula.destroySortalTypeCache();
+        }
+
         if (pr != null)  {
             try {
                 pr.close();
