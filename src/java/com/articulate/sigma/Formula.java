@@ -2788,7 +2788,7 @@ public class Formula implements Comparable {
             // Iterate over the formulas resulting from row var expansion,
             // passing each to preProcessRecurse for further processing.
 
-            if (! accumulator.isEmpty()) {
+            if (!accumulator.isEmpty()) {
                 it = accumulator.iterator();
                 boolean addSortals = KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes");
                 Formula fnew = null;
@@ -2798,9 +2798,10 @@ public class Formula implements Comparable {
 
                     t1 = System.currentTimeMillis();
                     String arg0 = this.getArgument(0);
-                    if (!query 
-                        && (isLogicalOperator(arg0) || arg0.equals("equal"))
-                        && addSortals) {       
+                    if (addSortals
+                        && !query 
+                        // isLogicalOperator(arg0) ||
+                        && (fnew.theFormula.indexOf('?') != -1)) {
                         fnew.read(fnew.addTypeRestrictions(kb));
                     }
                     // Increment the timer for adding type restrictions.
