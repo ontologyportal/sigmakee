@@ -24,6 +24,10 @@ cat << EOF
   should be invoked in the directory created when the Sigma
   .zip archive is unzipped.
 
+  $0 need not be run as root (superuser), but the user must
+  have sufficient permissions to modify (write, delete) files
+  under Tomcat's webapps directory.
+
 EOF
 
 }
@@ -63,7 +67,7 @@ PROMPT1
     then 
       echo
       echo "  $TOMCAT_ROOT is not writable."
-      echo "  You must run $0 as root (superuser)."
+      echo "  You must run $0 with sufficient permissions."
       usage
       exit 1
   fi
@@ -76,7 +80,7 @@ if [[ "$SIGMA_ROOT" && ((-d "$SIGMA_ROOT") && (! -w "$SIGMA_ROOT")) ]]
   then
     echo
     echo "  $SIGMA_ROOT is not writable."
-    echo "  You must run $0 as root (superuser)."
+    echo "  You must run $0 with sufficient permissions."
     usage
     exit 1
 fi
@@ -104,7 +108,7 @@ PROMPT2
     then 
       echo
       echo "  $SIGMA_ROOT is not writable."
-      echo "  You must run $0 as root (superuser)."
+      echo "  You must run $0 with sufficient permissions."
       usage
       exit 1
   fi
@@ -129,7 +133,7 @@ if [[ ! -w "$TOMCAT_WEBAPPS_DIR" ]]
     cat << EOF4
 
   $TOMCAT_WEBAPPS_DIR is not writable.  
-  You must run $0 as root (superuser).
+  You must run $0 with sufficient permissions.
 
 EOF4
 
@@ -184,7 +188,7 @@ if [[ ! ((-e "$SIGMA_KBS_DIR") && (-w "$SIGMA_KBS_DIR")) ]]
     cat << EOF5
 
   $SIGMA_KBS_DIR could not be created.  
-  You must run $0 as root (superuser).
+  You must run $0 with sufficient permissions.
 
 EOF5
 
@@ -229,7 +233,7 @@ if [[ ! ((-d "$TESTS_INPUT_DIR") && (-w "$TESTS_INPUT_DIR")) ]]
     cat << EOF22
 
   $TESTS_INPUT_DIR could not be created.  
-  You must run $0 as root (superuser).
+  You must run $0 with sufficient permissions.
 
 EOF22
 
