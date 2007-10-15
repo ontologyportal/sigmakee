@@ -3113,9 +3113,6 @@ public class KB {
                                + newTreeSet.size()
                                + " formulas");
             System.out.println("    "
-                               + (ppTimers[0] / 1000.0)
-                               + " seconds adding type predicates");
-            System.out.println("    "
                                + (ppTimers[1] / 1000.0)
                                + " seconds instantiating predicate variables");
             System.out.println("    "
@@ -3130,6 +3127,9 @@ public class KB {
             System.out.println("      "
                                + (ppTimers[5] / 1000.0)
                                + " seconds in Formula.adjustExpansionCount()");
+            System.out.println("    "
+                               + (ppTimers[0] / 1000.0)
+                               + " seconds adding type predicates");
             System.out.println("    "
                                + (ppTimers[6] / 1000.0)
                                + " seconds in Formula.preProcessRecurse()");
