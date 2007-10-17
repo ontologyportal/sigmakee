@@ -245,12 +245,19 @@ public class WNdiagnostics {
               case ':': colon++; break;
             }
         }
-        String result = "<table><tr><td>equivalent</td><td>subsuming</td><td>instance</td>"+
+        String result = "<table><tr bgcolor=#DDDDDD><td>equivalent</td><td>subsuming</td><td>instance</td>" +
                         "<td>anti-subsuming</td><td>anti-instance</td><td>anti-equivalent</td></tr>\n" +
-                        "<td>" + equals + "</td><td>" + plus + "</td><td>" + ampersand + "</td><td>" + 
-                        "<td>" + leftbr + "</td><td>" + rightbr + "</td><td>" + colon + "</td></tr></table>\n"; 
+                        "<td>" + equals + "</td><td>" + plus + "</td><td>" + ampersand + "</td>" + 
+                        "<td>" + leftbr + "</td><td>" + rightbr + "</td><td>" + colon + "</td></tr></table>\n" +
+                        "<table><tr bgcolor=#DDDDDD><td>nouns</td><td>verbs</td>" + 
+                        "<td>adjectives</td><td>adverbs</td></tr>\n" + 
+                        "<tr><td>" + WordNet.wn.nounSUMOHash.keySet().size() + 
+                        "</td><td>" + WordNet.wn.verbSUMOHash.keySet().size() + 
+                        "</td><td>" + WordNet.wn.adjectiveSUMOHash.keySet().size() + 
+                        "</td><td>" + WordNet.wn.adverbSUMOHash.keySet().size() + 
+                        "</td></tr></table>\n"; 
         return result;
-    }
-
+    }       
+             
 }
 
