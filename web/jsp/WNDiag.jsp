@@ -1,8 +1,8 @@
 
 <%@ include file="Prelude.jsp" %>
 <html>                                             
-<HEAD><TITLE> Knowledge base Browser</TITLE></HEAD>
-<BODY BGCOLOR="#FFFFFF">
+<head><title> Knowledge base Browser </title></head>
+<body BGCOLOR="#FFFFFF">
 
 <%
 
@@ -44,10 +44,11 @@ August 9, Acapulco, Mexico.
   try {
        WordNet.initOnce();
   }
-  catch (IOException ioe) {
-      System.out.println("Error in WNDiag.jsp: IOException: " + ioe.getMessage());
+  catch (Exception e) {
+      System.out.println("Error in WNDiag.jsp:" + e.getMessage());
+      e.printStackTrace();
       out.print("<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0; URL=KBs.jsp\">");
-  }   
+  } 
 %>
 
 <FORM action="WNDiag.jsp">
@@ -80,34 +81,48 @@ August 9, Acapulco, Mexico.
 <br>
 
 <%
-  show = new StringBuffer();
+
   ArrayList synsetsWithoutTerms = WNdiagnostics.synsetsWithoutTerms();
-  show.append(HTMLformatter.synsetList(synsetsWithoutTerms,kbHref));
-%>
-<br><b>&nbsp;Error: synsetsWithoutTerms</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
-<%
-  show = new StringBuffer();
   ArrayList synsetsWithoutFoundTerms = WNdiagnostics.synsetsWithoutFoundTerms(kb);
-  show.append(HTMLformatter.synsetList(synsetsWithoutFoundTerms,kbHref));
-%>
-<br><b>&nbsp;Error: synsetsWithoutFoundTerms</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
-<%
-  show = new StringBuffer();
   ArrayList nonMatchingTaxonomy = WNdiagnostics.nonMatchingTaxonomy(kbName,language);
-  for (int i = 0; i < nonMatchingTaxonomy.size(); i++) {
-      show.append((String) nonMatchingTaxonomy.get(i));
-  }
+
+boolean isError = !(synsetsWithoutTerms.isEmpty() &&
+                    synsetsWithoutFoundTerms.isEmpty() &&
+                    nonMatchingTaxonomy.isEmpty());
+
+if (!isError) {
+    out.println("<br><b>&nbsp;No errors found</b>");
+}
+else {
+
+    if (!synsetsWithoutTerms.isEmpty()) {
+        show.setLength(0);
+        show.append(HTMLformatter.synsetList(synsetsWithoutTerms,kbHref));
+        out.println("<br><b>&nbsp;Error: synsetsWithoutTerms</b>");
+        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>");
+        out.println(show.toString() + "<br>");
+    }
+
+    if (!synsetsWithoutFoundTerms.isEmpty()) {
+        show.setLength(0);
+        show.append(HTMLformatter.synsetList(synsetsWithoutFoundTerms,kbHref));
+        out.println("<br><b>&nbsp;Error: synsetsWithoutFoundTerms</b>");
+        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>");
+        out.println(show.toString() + "<br>");
+    }
+
+    if (!nonMatchingTaxonomy.isEmpty()) {
+        show.setLength(0);
+        for (int i = 0; i < nonMatchingTaxonomy.size(); i++) {
+            show.append((String) nonMatchingTaxonomy.get(i));
+        }
+        out.println("<br><b>&nbsp;Error: nonMatchingTaxonomy</b>");
+        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>");
+        out.println(show.toString() + "<br>");
+    }
+}
+
 %>
-<br><b>&nbsp;Error: nonMatchingTaxonomy</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
 
-
-</BODY>
-</HTML>
-
-
+</body>
+</html>
