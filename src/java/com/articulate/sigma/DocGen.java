@@ -84,13 +84,9 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    public static String createPage(KB kb, String kbHref, String term) {
+    private static String createDocs(KB kb, String kbHref, String term) {
 
         StringBuffer result = new StringBuffer();
-        result.append("<table width=\"100%\">");
-        result.append("<tr id=\"" + term + "\">");
-        result.append("<td class=\"headword\">" + term + "</td></tr>\n<tr>");
-
         ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
         if (docs != null && docs.size() > 0) {
             Formula f = (Formula) docs.get(0);
@@ -98,7 +94,14 @@ public class DocGen {
             docString = kb.formatDocumentation(kbHref,docString);
             result.append("<td class=\"description\">" + docString + "</td></tr>\n");
         }
+        return result.toString();
+    }
 
+    /** ***************************************************************
+     */
+    private static String createSynonyms(KB kb, String kbHref, String term) {
+
+        StringBuffer result = new StringBuffer();
         ArrayList syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
         if (syn != null && syn.size() > 0) {
             result.append("<tr><td><b>Synonym(s)</b>");
@@ -110,10 +113,14 @@ public class DocGen {
             }
             result.append("</td></tr>\n");
         }
-        result.append("</table><P>\n");
-        ArrayList relations = getRelations(kb);
+        return result.toString();
+    }
 
-        result.append("<table width=\"100%\">");
+    /** ***************************************************************
+     */
+    private static String createParents(KB kb, String kbHref, String term) {
+
+        StringBuffer result = new StringBuffer();
         ArrayList forms = kb.askWithRestriction(0,"subclass",1,term);
         if (forms != null && forms.size() > 0) {
             result.append("<tr><td class=\"label\">Parents</td>");
@@ -123,7 +130,7 @@ public class DocGen {
                     String s = f.getArgument(2); 
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td class=\"cell\">" + s + "</td>");
-                    docs = kb.askWithRestriction(0,"documentation",1,s);
+                    ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
                         String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
@@ -134,8 +141,15 @@ public class DocGen {
                 }
             }
         }
+        return result.toString();
+    }
 
-        forms = kb.askWithRestriction(0,"subclass",2,term);
+    /** ***************************************************************
+     */
+    private static String createChildren(KB kb, String kbHref, String term) {
+
+        StringBuffer result = new StringBuffer();
+        ArrayList forms = kb.askWithRestriction(0,"subclass",2,term);
         if (forms != null && forms.size() > 0) {
             result.append("<tr><td class=\"label\">Children</td>");
             for (int i = 0; i < forms.size(); i++) {
@@ -144,7 +158,7 @@ public class DocGen {
                     String s = f.getArgument(1); 
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td class=\"cell\">" + s + "</td>");
-                    docs = kb.askWithRestriction(0,"documentation",1,s);
+                    ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
                         String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
@@ -155,6 +169,58 @@ public class DocGen {
                 }
             }
         }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    private static String createRelations(KB kb, String kbHref, String term) {
+
+        StringBuffer result = new StringBuffer();
+        ArrayList relations = getRelations(kb);
+        boolean firstLine = true;
+        for (int i = 0; i < relations.size(); i++) {
+            String relation = (String) relations.get(i);
+            System.out.println("INFO in DocGen.createRElations(): relation: " + relation);
+            if (!relation.equals("subclass") && !relation.equals("instance") &&
+                !relation.equals("documentation")) {
+                ArrayList statements = kb.askWithRestriction(0,relation,1,term);
+                for (int j = 0; j < statements.size(); j++) {
+                    Formula f = (Formula) statements.get(j);
+                    if (!f.sourceFile.endsWith("_Cache.kif")) {
+                        String s = f.getArgument(2); 
+                        if (firstLine) {
+                            result.append("<tr><td class=\"label\">Relations</td>");                
+                            firstLine = false;
+                        }
+                        else {
+                            result.append("<tr><td>&nbsp;</td>");                
+                        }
+                        result.append("<td class=\"cell\">" + relation + "</td>");
+                        result.append("<td class=\"cell\">" + s + "</td></tr>\n");
+                    }
+                }                
+            }            
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    public static String createPage(KB kb, String kbHref, String term) {
+
+        StringBuffer result = new StringBuffer();
+        result.append("<table width=\"100%\">");
+        result.append("<tr id=\"" + term + "\">");
+        result.append("<td class=\"headword\">" + term + "</td></tr>\n<tr>");
+
+        result.append(DocGen.createDocs(kb,kbHref,term));
+        result.append(DocGen.createSynonyms(kb,kbHref,term));
+        result.append("</table><P>\n");
+        result.append("<table width=\"100%\">");
+        result.append(DocGen.createParents(kb,kbHref,term));
+        result.append(DocGen.createChildren(kb,kbHref,term));
+        result.append(DocGen.createRelations(kb,kbHref,term));
         result.append("</table>\n");
 
         return result.toString();
