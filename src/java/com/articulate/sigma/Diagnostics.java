@@ -23,12 +23,62 @@ import java.text.ParseException;
 public class Diagnostics {
 
     /** *****************************************************************
+     * Return a list of terms (for a given argument position) that do not 
+     * have a speicifed relation.
+     * @param kb the knowledge base
+     * @param rel the relation name
+     * @param argnum the argument position of the term
+     * @param limit the maximum number of results to return, or -1 if all
+     * @param letter the first letter of the term name
+     */
+    public static ArrayList termsWithoutRelation(KB kb, String rel, int argnum, 
+                                                 int limit, char letter) {
+
+        ArrayList result = new ArrayList();
+        String term = null;
+        ArrayList forms = null;
+        Iterator it2 = null;
+        Formula formula = null;
+        String pred = null;
+        Iterator it = kb.terms.iterator();
+        while ( it.hasNext() ) {
+            term = (String) it.next();
+            forms = kb.ask("arg",argnum,term);
+            if ( forms == null || forms.isEmpty() ) {
+                if (letter < 'A' || term.charAt(0) == letter) 
+                    result.add(term);                
+            }
+            else {
+                boolean found = false;
+                it2 = forms.iterator();
+                while ( it2.hasNext() ) {
+                    formula = (Formula) it2.next();
+                    pred = formula.car();
+                    if ( pred.equals(rel) ) {
+                        found = true;
+                        break;
+                    }
+                }
+                if ( ! found ) {
+                    if (letter < 'A' || term.charAt(0) == letter) 
+                        result.add(term);                    
+                }
+            }
+            if ( limit > 0 && result.size() > limit ) {
+                result.add("limited to " + limit + " results");
+                break;
+            }
+        }
+        return result;
+    }
+
+    /** *****************************************************************
      * Return a list of terms that do not have a documentation string.
      */
     public static ArrayList termsWithoutDoc(KB kb) {
 
-        System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
-
+        return termsWithoutRelation(kb,"documentation",1,100,' ');                                              
+        /**
         ArrayList result = new ArrayList();
         String term = null;
         ArrayList forms = null;
@@ -65,6 +115,7 @@ public class Diagnostics {
             }
         }
         return result;
+         * **/
     }
 
     /** *****************************************************************
