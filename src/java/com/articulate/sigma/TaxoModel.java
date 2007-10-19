@@ -117,7 +117,7 @@ public class TaxoModel {
 
     /** ***************************************************************
      */
-    public static String toHTML() {
+    public static String toHTML(String simple) {
 
         String hostname = KBmanager.getMgr().getPref("hostname");
         if (hostname == null)
@@ -125,7 +125,8 @@ public class TaxoModel {
         String port = KBmanager.getMgr().getPref("port");
         if (port == null)
            port = "8080";
-        kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + "&term=";
+        kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
+            "&simple=" + simple + "&term=";
         StringBuffer sb = new StringBuffer();
         sb.append(nodeTree.toHTML(kbHref));
         return sb.toString();
