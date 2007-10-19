@@ -41,6 +41,10 @@
         <fileset dir="web/jsp"/>
     </copy>
 
+    <copy todir="${deploy.home}">
+        <fileset file="web/simple.css"/>
+    </copy>
+
     <copy todir="${deploy.home}/pixmaps">
         <fileset dir="web/pixmaps"/>
     </copy>
@@ -61,6 +65,7 @@
 <target name="dist" depends="web_deploy" description="Create the *.war file and place in ${build.home}.">
     <war warfile="${dist.home}/${dist.war}" webxml="web.xml">
         <fileset dir="web/jsp"/>
+        <fileset file="web/simple.css"/>
         <zipfileset dir="web/pixmaps" prefix="pixmaps"/>
         <lib dir="${deploy.lib}"/>
         <classes dir="${deploy.classes}"/>
