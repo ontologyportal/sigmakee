@@ -1,0 +1,128 @@
+/* Basic stylesheet for laying out simple ontology pages */
+
+body  {
+	color : black;
+	background-color : white;
+	font-family : "Arial", sans-serif;
+}
+
+tr {
+	border: 0px none;
+}
+
+td {
+	font-size : x-small;
+}
+
+th {
+	color: black;
+	background-color: #E5E5E5;
+	font-size : x-small;
+	font-style: italic;
+}
+
+.arrow {
+	font-family : "Wingdings 3"
+}
+
+.headword {
+	background: ActiveCaption;
+	color: white;
+	font-weight: bold; 
+	font-size: large;
+	text-align: left;
+}
+
+.label {
+	font-weight: bold;
+	width: 120px;
+	text-align: right;
+	vertical-align: top;
+}
+
+.title {
+	color: Black;
+	font-size: large;
+	background: #E5E5E5;
+}
+
+.title_cell {
+	color: Black;
+	background-color: #E5E5E5;
+	font-size : x-small;
+	font-style: italic;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: top;
+}
+
+.rowheading {
+	color: Black;
+	font: x-small;
+	background: #E5E5E5;
+}
+
+.colheading {
+	color: Black;
+	font: x-small;
+	background: #E5E5E5;
+}
+
+.cell {
+	text-align: left;
+	vertical-align: top;
+}
+
+.cell2 {
+	color: Black;
+	font: bold x-small;
+	background: #E5E5E5;
+	font-style: italic;
+}
+
+.caption {
+	font-weight: bold;
+}
+
+.description {
+	font-size : small;
+}
+
+.letter {
+	font-size : small;
+	color: Black;
+	background-color: #F6F6F6;
+}
+
+.card {
+	text-align: center;
+	vertical-align: top;
+}
+
+.level2 {
+	padding-left: 15px;
+}
+
+.level3 {
+	padding-left: 30px;
+}
+
+.level4 {
+	padding-left: 45px;
+}
+
+.level5 {
+	padding-left: 60px;
+}
+
+.level6 {
+	padding-left: 75px;
+}
+
+.level7 {
+	padding-left: 90px;
+}
+
+.level8 {
+	padding-left: 105px;
+}
