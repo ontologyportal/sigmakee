@@ -25,11 +25,22 @@ public class TaxoModel {
     public static String defaultTerm = "Entity";
     public static String termPage = "SimpleBrowse.jsp";
     public static HashMap nodeMap = new HashMap();
-    public static TaxoNode nodeTree = new TaxoNode();
-
+    public static HashMap rootList = new HashMap();
 
     /** ***************************************************************
-     * Create all nodes from the given term up to the root.
+     * Remove any cached formulas from a list.
+     */
+    public static void newTree (String termName) {
+
+        rootList = new HashMap();
+        TaxoNode n = new TaxoNode();
+        n.name = termName;
+        rootList.put(n.name,n);
+        nodeMap.put(n.name,n);
+    }
+
+    /** ***************************************************************
+     * Remove any cached formulas from a list.
      */
     public static ArrayList removeCached (ArrayList forms) {
 
@@ -43,64 +54,81 @@ public class TaxoModel {
     }
 
     /** ***************************************************************
-     * Create all nodes from the given term up to the root.
+     * Remove the parents of this node.
      */
-    public static void createHierarchy (String nodeName) {
+    public static void collapseParentNodes (String nodeName) {
 
-        nodeMap = new HashMap();
-        nodeTree = new TaxoNode();
-        nodeTree.name = nodeName;
-        nodeMap.put(nodeName,nodeTree);
-        expandNode(nodeName);
-        TaxoNode child = nodeTree;
-        ArrayList forms = new ArrayList();
-        TaxoNode parent = new TaxoNode();
-        do {
-            System.out.println("INFO in TaxoModel.createHierarchy()");
-            KB kb = KBmanager.getMgr().getKB(kbName);
-            forms = kb.askWithRestriction(0,relation,1,nodeName);
-            forms = removeCached(forms);
-            System.out.println(relation + " " + nodeName);
-            System.out.println(forms.size());
-            for (int i = 0; i < forms.size(); i++) {
-                Formula form = (Formula) forms.get(i);
-                parent = new TaxoNode();
-                parent.name = form.getArgument(2);
-                if (parent.name.equals(child.name)) 
-                    return;
-                parent.childrenExpanded = true;
-                parent.children.add(child);
-                nodeMap.put(parent.name,parent);
-            }
-            System.out.println(parent.name);
-            child = parent;
-            nodeName = parent.name;
-        } while (forms != null && forms.size() > 0);
-    }
-
-    /** ***************************************************************
-     * Expand or contract a node based on its current state.
-     */
-    public static void toggleNode (String nodeName) {
-
-        if (!nodeMap.keySet().contains(nodeName)) 
-            createHierarchy(nodeName);        
         TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
-        n.childrenExpanded = ! n.childrenExpanded;
-        if (n.childrenExpanded) 
-            expandNode(nodeName);
-        else
-            n.children = new ArrayList();
+        for (int i = 0; i < n.parents.size(); i++) {
+            TaxoNode parent = (TaxoNode) n.parents.get(i);
+            collapseParentNodes(parent.name);
+            nodeMap.remove(parent.name);
+            if (rootList.keySet().contains(parent.name)) 
+                rootList.remove(parent.name);
+        }
+        n.parents = new ArrayList();
+        rootList.put(n.name,n);
     }
 
     /** ***************************************************************
      * Gather information from the knowledge base to create the data for
-     * the children of this node.
+     * the parents of this node.
+     */
+    public static void expandParentNodes (String nodeName) {
+
+        TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
+        n.parents = new ArrayList();
+        rootList = new HashMap();
+        KB kb = KBmanager.getMgr().getKB(kbName);
+        ArrayList forms = kb.askWithRestriction(0,relation,1,nodeName);
+        forms = removeCached(forms);
+        for (int i = 0; i < forms.size(); i++) {
+            Formula form = (Formula) forms.get(i);
+            TaxoNode parent = new TaxoNode();
+            parent.name = form.getArgument(2);
+            if (parent.name.equals(n.name)) 
+                return;
+            parent.childrenExpanded = false;
+            parent.oneChild = n;
+            n.parents.add(parent);
+            if (!nodeMap.keySet().contains(parent.name)) 
+                nodeMap.put(parent.name,parent);
+            rootList.put(parent.name,parent);
+        }
+    }
+
+    /** ***************************************************************
+     * Remove the children of this node.Called as the result of an &contract=term
+     * parameter sent to TreeView.jsp
+     */
+    public static void collapseNode (String nodeName) {
+
+        TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
+        n.childrenExpanded = false;
+        if (n.oneChild != null) {
+            collapseNode(n.oneChild.name);
+            nodeMap.remove(n.oneChild.name);
+        }
+        n.oneChild = null;
+        for (int i = 0; i < n.children.size(); i++) {
+            TaxoNode child = (TaxoNode) n.children.get(i);
+            collapseNode(child.name);
+            nodeMap.remove(child.name);
+        }
+        n.children = new ArrayList();
+    }
+
+    /** ***************************************************************
+     * Gather information from the knowledge base to create the data for
+     * the children of this node.  Called as the result of an &expand=term
+     * parameter sent to TreeView.jsp
      */
     public static void expandNode (String nodeName) {
 
         TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
         n.childrenExpanded = true;
+        n.oneChild = null;
+        n.children = new ArrayList();
         KB kb = KBmanager.getMgr().getKB(kbName);
         ArrayList forms = kb.askWithRestriction(0,relation,2,nodeName);
         forms = removeCached(forms);
@@ -108,11 +136,25 @@ public class TaxoModel {
             Formula form = (Formula) forms.get(i);
             TaxoNode child = new TaxoNode();
             child.name = form.getArgument(1);
-            child.childrenExpanded = false;
             n.children.add(child);
             nodeMap.put(child.name,child);
         }
+    }
 
+    /** ***************************************************************
+     * If the given name is already displayed, do nothing, otherwise
+     * create a new tree with that one node.
+     */
+    public static void displayTerm (String nodeName) {
+
+        if (!nodeMap.keySet().contains(nodeName)) {
+            nodeMap = new HashMap();
+            TaxoNode n = new TaxoNode();
+            n.name = nodeName;
+            nodeMap.put(nodeName,n);
+            rootList = new HashMap();
+            rootList.put(n.name,n);
+        }
     }
 
     /** ***************************************************************
@@ -128,7 +170,10 @@ public class TaxoModel {
         kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
             "&simple=" + simple + "&term=";
         StringBuffer sb = new StringBuffer();
-        sb.append(nodeTree.toHTML(kbHref));
+        for (int i = 0; i < rootList.values().size(); i++) {
+            TaxoNode n = (TaxoNode) rootList.values().toArray()[i];
+            sb.append(n.toHTML(kbHref,0));
+        }
         return sb.toString();
     }
 }
