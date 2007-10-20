@@ -10,6 +10,13 @@ set TOMCAT_WEBAPPs_DIR=
 set SIGMA_ROOT=
 set SIGMA_KBS_DIR=
 
+echo SIGMA_HOME=%SIGMA_HOME%
+echo.
+
+echo CATALINA_HOME=%CATALINA_HOME%
+echo.
+
+
 if exist "%CATALINA_HOME%" (
   set TOMCAT_ROOT=%CATALINA_HOME%
 ) else (
@@ -37,6 +44,9 @@ if not exist "%TOMCAT_WEBAPPs_DIR%" (
 )
 
 if not "%SIGMA_HOME%"=="" (
+  if not exist "%SIGMA_HOME%" (
+    mkdir "%SIGMA_HOME%"
+  )
   set SIGMA_ROOT=%SIGMA_HOME%
 ) else (
   set SIGMA_ROOT=%TOMCAT_ROOT%
