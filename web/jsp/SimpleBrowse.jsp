@@ -10,7 +10,6 @@
 <BODY BGCOLOR="#FFFFFF">
 
 <%
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -23,6 +22,13 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
+
+/**
+ * SimpleBrowse.jsp responds to several HTTPD parameters:
+ * term     = <name>   - the SUMO term to browse
+ * kb       = <name>   - the name of the knowledge base
+ * lang     = <lang>   - the name of the language used to display axiom paraphrases
+ * */
 %>
 
 <%

@@ -13,6 +13,14 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
+
+/**
+ * Browse.jsp responds to several HTTPD parameters:
+ * term     = <name>   - the SUMO term to browse
+ * kb       = <name>   - the name of the knowledge base
+ * lang     = <lang>   - the name of the language used to display axiom paraphrases
+ * */
+
  String term = request.getParameter("term");
  if (!Formula.isNonEmptyString(smpl))
      term = "";
