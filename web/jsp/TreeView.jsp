@@ -12,9 +12,36 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
+
+/**
+ * TreeView.jsp responds to several HTTPD parameters:
+ * term     = <name>   - the SUMO term to browse
+ * kb       = <name>   - the name of the knowledge base
+ * lang     = <lang>   - the name of the language used to display axiom paraphrases
+ * simple   = <yes/no> - whether to display a simplified view of the term
+ * contract = <name>   - a term name appearing in the tree view that should have hidden children (not yet implemented)
+ * expand   = <name>   - a term name appearing in the tree view that should have children displayed (not yet implemented)
+ * up       = <name>   - a node that should have its parents displayed (not yet implemented)
+ * down     = <name>   - a node that should not have its parents displayed (not yet implemented)
+ * */
+
+ String contract = request.getParameter("contract");
+ if (Formula.isNonEmptyString(contract)) 
+     TaxoModel.collapseNode(contract);
+ String expand = request.getParameter("expand");
+ if (Formula.isNonEmptyString(expand)) 
+     TaxoModel.expandNode(expand);
+ String up = request.getParameter("up");
+ if (Formula.isNonEmptyString(up)) 
+     TaxoModel.expandParentNodes(up);
+ String down = request.getParameter("down");
+ if (Formula.isNonEmptyString(down)) 
+     TaxoModel.collapseParentNodes(down);
+
  String term = request.getParameter("term");
- if (!Formula.isNonEmptyString(smpl))
-     term = "";
+ if (!Formula.isNonEmptyString(term)) 
+   term = TaxoModel.defaultTerm;
+ TaxoModel.displayTerm(term);
 %>
   <TITLE>TreeView Knowledge Base Browser - <%=term%></TITLE>
 <%
@@ -34,12 +61,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <%@ include file="BrowseBody.jsp" %>
 <%
   }
-  if (term == null) 
-    term = TaxoModel.defaultTerm;
-  TaxoModel.toggleNode(term);
-%>
-
-<%
   if (Formula.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
     <%@ include file="SimpleBrowseHeader.jsp" %>
@@ -59,27 +80,13 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 <table border=0 width='100%' height='100%'>
     <tr>
         <td height='100%' valign=top>
-        <% out.print(TaxoModel.toHTML(simple)); %><p>
-        <!-- form>           
-            <INPUT type="radio" name="simple" value="yes" <%   // default to simplified view
-        		if (simple == null || simple.equalsIgnoreCase("yes")) 
-        		    out.print("checked=yes"); 
-        		%>>yes</input>
-            <INPUT type="radio" name="simple" value="no" <%   // default to simplified view
-        		if (simple != null && simple.equalsIgnoreCase("no")) 
-        		    out.print("checked=no"); 
-        		%>>no</input><br>Show simplified definition
-            <input type="hidden" name="term" value=<%=term%>>
-            <INPUT type="submit" value="Submit">
-        </form -->
+            <% out.print(TaxoModel.toHTML(simple)); %><p>
         </td>
         <td valign="top" width="1" BGCOLOR='#A8BACF'>
           <IMG SRC='pixmaps/1pixel.gif' width=1 border=0>
         </td>
         <td valign=top>
             <%=show.toString() %>
-            <!-- iframe name=imageframe id=imageframe frameborder=0 width="100%" src="<%=TaxoModel.termPage%>?kb=<%=kbName%>&term=<%=term%>" height="100%">you 
-                shouldn't see this</iframe -->
         </td>
     </tr>
 </table><p>
