@@ -16,28 +16,47 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 /** ***************************************************************
  * Class that holds information about each node in the tree.
+ * A node may either display all its children, or just one, which leads
+ * to a particular child node the user is interested in.
  */
 public class TaxoNode {
 
     public String name = ""; // the name of the SUMO term;
-    public ArrayList parents = new ArrayList();       // ArrayList of TaxoNode(s)
+    public ArrayList parents = new ArrayList();     // ArrayList of TaxoNode(s)
     public ArrayList children = new ArrayList();    // ArrayList of TaxoNode(s)
     public boolean childrenExpanded = false;
+    public TaxoNode oneChild = null;                // only one child may be displayed
 
     /** ***************************************************************
      */
-    public String toHTML(String kbHref) {
+    public String toHTML(String kbHref, int indentLevel) {
 
         StringBuffer sb = new StringBuffer();
-        sb.append("<li><a href=\"" + kbHref + name + "\">" + name + "</a></li>\n");
+        int width = indentLevel * 10;
+        if (parents == null || parents.size() == 0) {
+            KB kb = KBmanager.getMgr().getKB(TaxoModel.kbName);
+            ArrayList forms = kb.askWithRestriction(0,TaxoModel.relation,1,name);
+            forms = TaxoModel.removeCached(forms);
+            if (forms.size() > 0) 
+                sb.append("<span style='white-space: nowrap;'><img src='pixmaps/trans.gif' width=" + width + " height=5><a href=\"" + kbHref + name + "&up=" + name + "\"><img border=0 height=11 src='pixmaps/arrowup.gif'></a>&nbsp;");
+            else
+                sb.append("<span style='white-space: nowrap;'><img src='pixmaps/trans.gif' width=" + width + " height=5>&nbsp;");
+        }
+        else
+            sb.append("<span style='white-space: nowrap;'><img src='pixmaps/trans.gif' width=" + width + " height=5><a href=\"" + kbHref + name + "&down=" + name + "\"><img border=0 height=11 src='pixmaps/arrowdown.gif'></a>&nbsp;");
+        if (childrenExpanded) 
+            sb.append("<a href=\"" + kbHref + name + "&contract=" + name + "\"><img border=0 src='pixmaps/minus.gif'></a>&nbsp;");
+        else
+            sb.append("<a href=\"" + kbHref + name + "&expand=" + name + "\"><img border=0 src='pixmaps/plus.gif'></a>&nbsp;");
+        sb.append("<a href=\"" + kbHref + name + "\">" + name + "</a></span><br>\n");
         if (childrenExpanded) {
-            sb.append("<ul>");
             for (int i = 0; i < children.size(); i++) {
                 TaxoNode child = (TaxoNode) children.get(i);
-                sb.append(child.toHTML(kbHref));
+                sb.append(child.toHTML(kbHref,indentLevel+1));
             }
-            sb.append("</ul>\n");
         }
+        if (oneChild != null) 
+            sb.append(oneChild.toHTML(kbHref,indentLevel+1));        
         return sb.toString();
     }
 }
