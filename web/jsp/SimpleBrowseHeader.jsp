@@ -48,26 +48,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           <td align="left" valign="top">
               <INPUT type="submit" value="Show">
           </TD>
+        <INPUT type="hidden" name="simple" value=<%=simple%>><br> 
       </tr>
       <TR>
           <TD><IMG SRC="pixmaps/1pixel.gif" Height="3"></TD>
       </TR>
 </FORM>
-<!-- show WordNet search input -->
-<!-- form method="GET" action="WordNet.jsp">
-  <tr>
-      <td WIDTH="100"><font face="Arial,helvetica"><b>English Word:&nbsp;</b></font></TD>
-      <td align="left" valign="top">
-          <input type="text" size="27" name="word">
-          <IMG SRC="pixmaps/1pixel.gif" WIDTH="3"></TD>
-      <TD align="left" valign="top">
-          <select name="POS">
-              <option value="1">Noun <option value="2">Verb <option value="3">Adjective <option value="4">Adverb
-          </select>
-      </TD>
-      <td align="left" valign="top">
-          <input type="submit" value="Show">
-      </TD>
-  </TR>
-  </TABLE>
-</form -->
