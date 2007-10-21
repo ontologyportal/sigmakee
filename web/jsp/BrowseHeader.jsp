@@ -51,6 +51,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
           <td align="left" valign="top">
               <INPUT type="submit" value="Show">
           </TD>
+        <INPUT type="hidden" name="simple" value=<%=simple%>><br> 
       </tr>
       <TR>
           <TD><IMG SRC="pixmaps/1pixel.gif" Height="3"></TD>
