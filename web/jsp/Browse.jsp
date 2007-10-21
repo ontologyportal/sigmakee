@@ -22,7 +22,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  * */
 
  String term = request.getParameter("term");
- if (!Formula.isNonEmptyString(smpl))
+ if (!Formula.isNonEmptyString(term))
      term = "";
 %>
 <html>
@@ -32,6 +32,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 <%
  String parentPage = "Browse.jsp";
 
+ String simple = "no";
  String kbName = "";
  String language = "";
  StringBuffer show = null;

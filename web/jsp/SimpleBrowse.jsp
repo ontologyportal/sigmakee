@@ -2,7 +2,7 @@
 <html>
 <%
  String term = request.getParameter("term");
- if (!Formula.isNonEmptyString(smpl))
+ if (!Formula.isNonEmptyString(term))
      term = "";
 %>
 <HEAD><!-- link rel="stylesheet" type="text/css" href="simple.css" /-->
@@ -36,6 +36,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  String kbName = "";
  String language = "";
  StringBuffer show = null;
+ String simple = "yes";
  KB kb = null;
 %>
 
