@@ -178,6 +178,9 @@ August 9, Acapulco, Mexico.
 						     language ));
     }
 %>
+<p>
+
+<%@ include file="Postlude.jsp" %>
 
 </BODY>
 </HTML>

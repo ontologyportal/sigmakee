@@ -161,6 +161,9 @@ August 9, Acapulco, Mexico.
   }
 %>
 </ul>
+<p>
+
+<%@ include file="Postlude.jsp" %>
 </BODY>
 </HTML>
 

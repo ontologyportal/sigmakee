@@ -149,6 +149,7 @@ August 9, Acapulco, Mexico.
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
 
+<%@ include file="Postlude.jsp" %>
 </BODY>
 </HTML>
 

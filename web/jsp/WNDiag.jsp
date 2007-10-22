@@ -123,6 +123,9 @@ else {
 }
 
 %>
+<p>
+
+<%@ include file="Postlude.jsp" %>
 
 </body>
 </html>

@@ -38,4 +38,7 @@ August 9, Acapulco, Mexico.
 <%
   out.println(sb.toString());
 %>
+<p>
+
+<%@ include file="Postlude.jsp" %>
 

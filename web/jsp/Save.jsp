@@ -53,6 +53,7 @@ SKB: <%= Util.genSelector( SKBMgr.getDefaultSKBMgr().getSKBKeys(), skbName, "skb
 </FORM>
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
-<small><i>&copy;2003 Teknowledge Corporation, All rights reserved</i></small>
+
+<%@ include file="Postlude.jsp" %>
 </BODY>
 </HTML>

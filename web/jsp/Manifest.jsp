@@ -186,6 +186,8 @@ August 9, Acapulco, Mexico.
 %>
 
 <P>
-  <A HREF="KBs.jsp" >Return to home page</A>
+  <A HREF="KBs.jsp" >Return to home page</A><p>
+
+<%@ include file="Postlude.jsp" %>
 </BODY>
 </HTML>
