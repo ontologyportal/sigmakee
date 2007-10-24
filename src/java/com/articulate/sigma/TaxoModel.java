@@ -47,7 +47,7 @@ public class TaxoModel {
         ArrayList result = new ArrayList();
         for (int i = 0; i < forms.size(); i++) {
             Formula f = (Formula) forms.get(i);
-            if (!f.sourceFile.endsWith("Cache.kif")) 
+            if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) 
                 result.add(f);
         }
         return result;
