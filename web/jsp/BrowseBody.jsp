@@ -131,7 +131,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 				    + language );
 	    }
 	}
-        ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);
+        ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);   // Handle picture diplay
         if (pictures != null && pictures.size() > 0) {
             show.append("<br>");
             for (int i = 0; i < pictures.size(); i++) {
@@ -139,6 +139,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
                 String url = f.getArgument(2);
                 if (url.startsWith("\"http://upload.wikimedia.org")) {
                     String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
+                    if (imageFile.matches("\\d+px-.*"))
+                        imageFile = imageFile.substring(imageFile.indexOf("px-")+3);
                     show.append( "<a href=\"http://simple.wikipedia.org/wiki/Image:" 
 				 + imageFile 
 				 + "\"><img width=100 src=" 
@@ -169,6 +171,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
     for (int arg = 1; arg < 6; arg++) {
         forms = kb.ask("arg",arg,term);
+        if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
+            forms = TaxoModel.removeCached(forms);
         if (forms != null && forms.size() > 0) {
             Collections.sort(forms);
             show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
