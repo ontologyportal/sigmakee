@@ -126,7 +126,7 @@ public class DocGen {
             result.append("<tr><td class=\"label\">Parents</td>");
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
-                if (!f.sourceFile.endsWith("_Cache.kif")) {
+                if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(2); 
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td class=\"cell\">" + s + "</td>");
@@ -154,7 +154,7 @@ public class DocGen {
             result.append("<tr><td class=\"label\">Children</td>");
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
-                if (!f.sourceFile.endsWith("_Cache.kif")) {
+                if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(1); 
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td class=\"cell\">" + s + "</td>");
@@ -187,7 +187,7 @@ public class DocGen {
                 ArrayList statements = kb.askWithRestriction(0,relation,1,term);
                 for (int j = 0; j < statements.size(); j++) {
                     Formula f = (Formula) statements.get(j);
-                    if (!f.sourceFile.endsWith("_Cache.kif")) {
+                    if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                         String s = f.getArgument(2); 
                         if (firstLine) {
                             result.append("<tr><td class=\"label\">Relations</td>");                
