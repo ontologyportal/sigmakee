@@ -93,12 +93,12 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 <%
   if (Formula.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&term=<%=term%>">Show without tree</a><p>
+    <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&term=<%=term%>">Show without tree</a></small><p>
 <%
   }
   else {
 %>
-    <a href="Browse.jsp?kb=<%=kbName%>&term=<%=term%>">Show without tree</a><p>
+    <small><a href="Browse.jsp?kb=<%=kbName%>&term=<%=term%>">Show without tree</a></small><p>
 <%
   }
 %>
