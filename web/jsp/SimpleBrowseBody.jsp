@@ -141,6 +141,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                 String url = f.getArgument(2);
                 if (url.startsWith("\"http://upload.wikimedia.org")) {
                     String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
+                    if (imageFile.matches("\\d+px-.*")) 
+                        imageFile = imageFile.substring(imageFile.indexOf("px-")+3);
                     show.append( "<a href=\"http://simple.wikipedia.org/wiki/Image:" 
                                  + imageFile + "\"><img width=100 src=" + url + "></a>" );
                 }
