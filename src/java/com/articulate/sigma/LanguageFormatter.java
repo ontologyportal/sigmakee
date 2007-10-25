@@ -978,12 +978,27 @@ public class LanguageFormatter {
      */
     public static void main(String[] args) {
 
-	readKeywordMap("C:\\Program Files\\Apache Software Foundation\\Tomcat 5.5\\KBs");
-	HashMap phraseMap = new HashMap();
-	phraseMap.put("foo","%1 is %n{nicht} a &%foo of %2");
-	HashMap termMap = new HashMap();
-	System.out.println(htmlParaphrase("","(=> (exists (?FOO ?BAR) (foo ?FOO ?BAR)) (bar ?BIZ ?BONG))",phraseMap,termMap,"en"));
-
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (IOException ioe ) {
+            System.out.println(ioe.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        HashMap varMap = new HashMap();
+        varMap.put ("FOO","Book");
+        varMap.put ("BAR","Object");
+        varMap.put ("BIZ","Book");
+        varMap.put ("BONG","Driving");
+        Formula f = new Formula();
+        f.read("(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))");
+	String result = htmlParaphrase("",f.theFormula,kb.getFormatMap("en"),
+                                         kb.getTermFormatMap("en"),"en");
+        Iterator it = varMap.keySet().iterator();
+        while (it.hasNext()) {
+            String varString = (String) it.next();
+            String varType = (String) varMap.get(varString);
+            result = result.replaceAll("\\?" + varString,"a(n) " + varType);
+        }
     }
 }
 
