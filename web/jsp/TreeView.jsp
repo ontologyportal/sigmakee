@@ -25,6 +25,20 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  * down     = <name>   - a node that should not have its parents displayed (not yet implemented)
  * */
 
+ boolean resetTree = false;
+ String kbName = request.getParameter("kb");
+ if (Formula.isNonEmptyString(kbName)) {
+     resetTree = (Formula.isNonEmptyString(TaxoModel.kbName) && !TaxoModel.kbName.equals(kbName));
+     TaxoModel.kbName = kbName;
+ }
+ else {
+     kbName = "";
+ }
+ String language = request.getParameter("lang");
+ if (!Formula.isNonEmptyString(language)) {
+     language = "en";
+ }
+
  String contract = request.getParameter("contract");
  if (Formula.isNonEmptyString(contract)) 
      TaxoModel.collapseNode(contract);
@@ -41,12 +55,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  String term = request.getParameter("term");
  if (!Formula.isNonEmptyString(term)) 
    term = TaxoModel.defaultTerm;
+ if (resetTree) { TaxoModel.newTree(term); }
  TaxoModel.displayTerm(term);
 %>
   <TITLE>TreeView Knowledge Base Browser - <%=term%></TITLE>
 <%
-  String kbName = "";
-  String language = "";
   StringBuffer show = null;
   KB kb = null;
   String parentPage = "TreeView.jsp";
@@ -93,7 +106,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 <%
   if (Formula.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&term=<%=term%>">Show without tree</a></small><p>
+    <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&lang=<%=language%>&term=<%=term%>">Show without tree</a></small><p>
 <%
   }
   else {
