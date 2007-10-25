@@ -128,8 +128,9 @@ public class DocGen {
                 Formula f = (Formula) forms.get(i);
                 if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(2); 
+                    String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
-                    result.append("<td class=\"cell\">" + s + "</td>");
+                    result.append("<td class=\"cell\">" + termHref + "</td>");
                     ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
@@ -156,8 +157,9 @@ public class DocGen {
                 Formula f = (Formula) forms.get(i);
                 if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(1); 
+                    String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
-                    result.append("<td class=\"cell\">" + s + "</td>");
+                    result.append("<td class=\"cell\">" + termHref + "</td>");
                     ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
@@ -181,14 +183,16 @@ public class DocGen {
         boolean firstLine = true;
         for (int i = 0; i < relations.size(); i++) {
             String relation = (String) relations.get(i);
-            System.out.println("INFO in DocGen.createRElations(): relation: " + relation);
+            // System.out.println("INFO in DocGen.createRElations(): relation: " + relation);
             if (!relation.equals("subclass") && !relation.equals("instance") &&
                 !relation.equals("documentation")) {
+                String relnHref = "<a href=\"" + kbHref + "&term=" + relation + "\">" + relation + "</a>";
                 ArrayList statements = kb.askWithRestriction(0,relation,1,term);
                 for (int j = 0; j < statements.size(); j++) {
                     Formula f = (Formula) statements.get(j);
                     if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                         String s = f.getArgument(2); 
+                        String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
                         if (firstLine) {
                             result.append("<tr><td class=\"label\">Relations</td>");                
                             firstLine = false;
@@ -196,8 +200,8 @@ public class DocGen {
                         else {
                             result.append("<tr><td>&nbsp;</td>");                
                         }
-                        result.append("<td class=\"cell\">" + relation + "</td>");
-                        result.append("<td class=\"cell\">" + s + "</td></tr>\n");
+                        result.append("<td class=\"cell\">" + relnHref + "</td>");
+                        result.append("<td class=\"cell\">" + termHref + "</td></tr>\n");
                     }
                 }                
             }            
