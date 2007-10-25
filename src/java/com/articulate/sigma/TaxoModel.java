@@ -21,18 +21,18 @@ public class TaxoModel {
 
     public static String kbHref = "";
     public static String relation = "subclass";
-    public static String kbName = "SUMO";
+    public static String kbName = "";
     public static String defaultTerm = "Entity";
     public static String termPage = "SimpleBrowse.jsp";
     public static HashMap nodeMap = new HashMap();
     public static HashMap rootList = new HashMap();
 
     /** ***************************************************************
-     * Remove any cached formulas from a list.
+     * Remove the old tree and start over from termName.
      */
     public static void newTree (String termName) {
 
-        rootList = new HashMap();
+        rootList.clear();  // = new HashMap();
         TaxoNode n = new TaxoNode();
         n.name = termName;
         rootList.put(n.name,n);
@@ -63,7 +63,7 @@ public class TaxoModel {
             TaxoNode parent = (TaxoNode) n.parents.get(i);
             collapseParentNodes(parent.name);
             nodeMap.remove(parent.name);
-            if (rootList.keySet().contains(parent.name)) 
+            if (rootList.containsKey(parent.name)) 
                 rootList.remove(parent.name);
         }
         n.parents = new ArrayList();
@@ -78,7 +78,7 @@ public class TaxoModel {
 
         TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
         n.parents = new ArrayList();
-        rootList = new HashMap();
+        rootList.clear();  // = new HashMap();
         KB kb = KBmanager.getMgr().getKB(kbName);
         ArrayList forms = kb.askWithRestriction(0,relation,1,nodeName);
         forms = removeCached(forms);
@@ -91,7 +91,7 @@ public class TaxoModel {
             parent.childrenExpanded = false;
             parent.oneChild = n;
             n.parents.add(parent);
-            if (!nodeMap.keySet().contains(parent.name)) 
+            if (!nodeMap.containsKey(parent.name)) 
                 nodeMap.put(parent.name,parent);
             rootList.put(parent.name,parent);
         }
@@ -147,12 +147,12 @@ public class TaxoModel {
      */
     public static void displayTerm (String nodeName) {
 
-        if (!nodeMap.keySet().contains(nodeName)) {
-            nodeMap = new HashMap();
+        if (!nodeMap.containsKey(nodeName)) {
+            nodeMap.clear();  // = new HashMap();
             TaxoNode n = new TaxoNode();
             n.name = nodeName;
             nodeMap.put(nodeName,n);
-            rootList = new HashMap();
+            rootList.clear(); // = new HashMap();
             rootList.put(n.name,n);
         }
     }
