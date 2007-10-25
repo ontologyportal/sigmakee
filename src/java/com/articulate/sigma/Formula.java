@@ -226,83 +226,82 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Return the LISP 'car' of the formula - the first element of the list.
      * Note that this operation has no side effect on the Formula.
+     * 
+     * Currently (10/24/2007) this method returns the empty string
+     * ("") when invoked on an empty list.  Technically, this is
+     * wrong.  In most LISPS, the car of the empty list is the empty
+     * list (or nil).  But some parts of the Sigma code apparently
+     * expect this method to return the empty string when invoked on
+     * an empty list.  
      */
     public String car() {
+        String ans = null;
         try {
-            //System.out.println("INFO in formula.car(): theFormula: " + theFormula);
-            if (!listP()) return null;       
-            //System.out.println("INFO in Formula.car: theformula: " + theFormula);
-            List quoteChars = Arrays.asList('"', '\'');
-            int i = 0;
-            while (theFormula.charAt(i) != '(') i++;
-            i++;
-            while (Character.isWhitespace(theFormula.charAt(i))) i++;
-            int start = i;
-            if (theFormula.charAt(i) == '(') {
-                boolean insideQuote = false;
-                char quoteCharInForce = '0';
-                int level = 0;
-                i++;
+            if (this.listP()) {
+                if (this.empty()) {
 
-                while (insideQuote || theFormula.charAt(i) != ')' || level > 0) {
-
-                    // if (DEBUG) { System.out.print(theFormula.charAt(i)); }
-
-                    if (quoteChars.contains(theFormula.charAt(i))) {
-                        if (theFormula.charAt(i-1) != '\\') {
-                            if (quoteCharInForce == '0') {
-                                quoteCharInForce = theFormula.charAt(i);
-                                insideQuote = true;
-                                /*
-                                  if (DEBUG) {
-                                  System.out.println("|insideQuote == " + insideQuote + "|");
-                                  }
-                                */
-                            }
-                            else if (quoteCharInForce == theFormula.charAt(i)) {
-                                quoteCharInForce = '0';
-                                insideQuote = false;
-                                /*
-                                  if (DEBUG) {
-                                  System.out.println("|insideQuote == " + insideQuote + "|");
-                                  }
-                                */
-                            }
-                        }
-                    } 
-                    if (! insideQuote) {
-                        if (theFormula.charAt(i) == ')') level--;
-                        if (theFormula.charAt(i) == '(') level++;
-                    }
-                    i++;    
-                }
-
-                // if (DEBUG) { System.out.println(); }
-
-                i++;
-            }
-            else {    
-                if (quoteChars.contains(theFormula.charAt(i))) {
-                    char quoteChar = theFormula.charAt(i);
-                    i++;
-                    while (((theFormula.charAt(i) != quoteChar || 
-                             (theFormula.charAt(i) == quoteChar && theFormula.charAt(i-1) == '\\')) &&
-                            i < theFormula.length() - 1)) {      
-                        i++;
-                    }
-                    i++;
+                    // NS: Clean this up someday. 
+                    ans = "";  // this.theFormula;
                 }
                 else {
-                    while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
-                }    
+                    String input = this.theFormula.trim();
+                    StringBuffer sb = new StringBuffer();
+                    List quoteChars = Arrays.asList('"', '\'');
+                    int i = 1;
+                    int len = theFormula.length();
+                    int end = len - 1;
+                    int level = 0;
+                    char prev = '0';
+                    char ch = prev;
+                    boolean insideQuote = false;
+                    char quoteCharInForce = '0';
+                    while (i < end) {
+                        ch = input.charAt(i);
+                        if (!insideQuote) {
+                            if (ch == '(') {
+                                sb.append(ch);
+                                level++;
+                            }
+                            else if (ch == ')') {
+                                sb.append(ch);
+                                level--;
+                                if (level <= 0) {
+                                    break;
+                                }
+                            }
+                            else if (Character.isWhitespace(ch) && (level <= 0)) {
+                                if (sb.length() > 0) {
+                                    break;
+                                }
+                            }
+                            else if (quoteChars.contains(ch) && (prev != '\\')) {
+                                sb.append(ch);
+                                insideQuote = true;
+                                quoteCharInForce = ch;
+                            }
+                            else {
+                                sb.append(ch);
+                            }
+                        }
+                        else if (quoteChars.contains(ch) && (ch == quoteCharInForce) && (prev != '\\')) {
+                            sb.append(ch);
+                            break;
+                        }
+                        else {
+                            sb.append(ch);
+                        }
+                        prev = ch;
+                        i++;
+                    }
+                    ans = sb.toString();
+                }
             }
-            return theFormula.substring(start,i);
         }
         catch (Exception ex) {
+            System.out.println("ERROR in Formula.car(" + this + ")");
             ex.printStackTrace();
         }
-        //System.out.println("INFO in formula.car() end: theFormula: " + theFormula.substring(start,i));
-        return null;
+        return ans;
     }
 
     /** ***************************************************************
@@ -311,86 +310,79 @@ public class Formula implements Comparable {
      * Note that this operation has no side effect on the Formula.
      */
     public String cdr() {
-
-        //System.out.println("INFO in formula.cdr(): theFormula: " + theFormula);
+        String ans = null;
         try {
-            if (! listP()) {
-                return null;
-            }
-            List quoteChars = Arrays.asList('"', '\'');
-            int i = 0;
-            while (theFormula.charAt(i) != '(') i++;
-            i++;
-            while (Character.isWhitespace(theFormula.charAt(i))) i++;
-            if (theFormula.charAt(i) == '(') {
-                boolean insideQuote = false;
-                char quoteCharInForce = '0';
-                int level = 0;
-                i++;
-
-                // if (DEBUG) { System.out.println(); }
-
-                while (insideQuote || theFormula.charAt(i) != ')' || level > 0) {
-
-                    // if (DEBUG) { System.out.print(theFormula.charAt(i)); }
-
-                    if (quoteChars.contains(theFormula.charAt(i))) {
-                        if (theFormula.charAt(i-1) != '\\') {
-                            if (quoteCharInForce == '0') {
-                                quoteCharInForce = theFormula.charAt(i);
-                                insideQuote = true;
-                                /*
-                                  if (DEBUG) {
-                                  System.out.println("|insideQuote == " + insideQuote + "|");
-                                  }
-                                */
-                            }
-                            else if (quoteCharInForce == theFormula.charAt(i)) {
-                                quoteCharInForce = '0';
-                                insideQuote = false;
-                                /*
-                                  if (DEBUG) {
-                                  System.out.println("|insideQuote == " + insideQuote + "|");
-                                  }
-                                */
-                            }
-                        }
-                    } 
-                    if (! insideQuote) {
-                        if (theFormula.charAt(i) == ')') level--;
-                        if (theFormula.charAt(i) == '(') level++;
-                    }
-                    i++;    
-                }
-
-                // if (DEBUG) { System.out.println(); }
-
-                i++;
-            }
-            else {
-                if (theFormula.charAt(i) == '"' || theFormula.charAt(i) == '\'') {
-                    char quoteChar = theFormula.charAt(i);
-                    i++;
-                    while (((theFormula.charAt(i) != quoteChar || 
-                             (theFormula.charAt(i) == quoteChar && theFormula.charAt(i-1) == '\\')) &&
-                            i < theFormula.length() - 1)) {      
-                        i++;
-                    }
-                    i++;
+            if (this.listP()) {
+                if (this.empty()) {
+                    ans = this.theFormula;
                 }
                 else {
-                    while (!Character.isWhitespace(theFormula.charAt(i)) && i < theFormula.length() - 1) i++;
+                    String input = theFormula.trim();
+                    List quoteChars = Arrays.asList('"', '\'');
+                    int i = 1;
+                    int len = theFormula.length();
+                    int end = len - 1;
+                    int level = 0;
+                    char prev = '0';
+                    char ch = prev;
+                    boolean insideQuote = false;
+                    char quoteCharInForce = '0';
+                    int carCount = 0;
+                    while (i < end) {
+                        ch = input.charAt(i);
+                        if (!insideQuote) {
+                            if (ch == '(') {
+                                carCount++;
+                                level++;
+                            }
+                            else if (ch == ')') {
+                                carCount++;
+                                level--;
+                                if (level <= 0) {
+                                    break;
+                                }
+                            }
+                            else if (Character.isWhitespace(ch) && (level <= 0)) {
+                                if (carCount > 0) {
+                                    break;
+                                }
+                            }
+                            else if (quoteChars.contains(ch) && (prev != '\\')) {
+                                carCount++;
+                                insideQuote = true;
+                                quoteCharInForce = ch;
+                            }
+                            else {
+                                carCount++;
+                            }
+                        }
+                        else if (quoteChars.contains(ch) && (ch == quoteCharInForce) && (prev != '\\')) {
+                            carCount++;
+                            break;
+                        }
+                        else {
+                            carCount++;
+                        }
+                        prev = ch;
+                        i++;
+                    }
+                    if (carCount > 0) {
+                        int j = i + 1;
+                        if (j < end) {
+                            ans = "(" + input.substring(j, end).trim() + ")";
+                        }
+                        else {
+                            ans = "()";
+                        }
+                    }
                 }
             }
-            while ((i < theFormula.length()) && Character.isWhitespace(theFormula.charAt(i))) i++;
-            int end = theFormula.lastIndexOf(')');
-            return "(" + theFormula.substring(i,end) + ")";
         }
         catch (Exception ex) {
-            System.out.println("\nError in Formula.cdr(" + theFormula + "): " + ex.getMessage());
+            System.out.println("ERROR in Formula.cdr(" + this + ")");
             ex.printStackTrace();
         }
-        return null;
+        return ans;
     }
 
     /** ***************************************************************
@@ -836,14 +828,20 @@ public class Formula implements Comparable {
     public String getArgument(int argnum) {
 
         String ans = "";
-        Formula form = new Formula();
-        form.read(theFormula);
-        for (int i = 0 ; form.listP() ; i++) {
-            ans = form.car();
-            if (i == argnum) { break; }
-            form.read(form.cdr());
+        try {
+            Formula form = new Formula();
+            form.read(theFormula);
+            for (int i = 0 ; form.listP() ; i++) {
+                ans = form.car();
+                if (i == argnum) { break; }
+                form.read(form.cdr());
+            }
+            if (ans == null) { ans = ""; }
         }
-        if (ans == null) { ans = ""; }
+        catch (Exception ex) {
+            System.out.println("ERROR in Formula.getArgument(" + this + ", " + argnum + ")");
+            ex.printStackTrace();
+        }
         return ans;
     }
 
@@ -858,11 +856,17 @@ public class Formula implements Comparable {
      */
     public int listLength() {
         int ans = -1;
-        if (this.listP()) {
-            int idx = 0;
-            while (isNonEmptyString(this.getArgument(idx))) {
-                ans = ++idx;
+        try {
+            if (this.listP()) {
+                int idx = 0;
+                while (isNonEmptyString(this.getArgument(idx))) {
+                    ans = ++idx;
+                }
             }
+        }
+        catch (Exception ex) {
+            System.out.println("ERROR in Formula.listLength(" + this + ")");
+            ex.printStackTrace();
         }
         return ans;
     }
@@ -1021,7 +1025,7 @@ public class Formula implements Comparable {
      */
     private ArrayList collectUnquantifiedVariables(String theFormula, ArrayList quantVariables) {
 
-        int startIndex = 0;    
+        int startIndex = 0;
         ArrayList unquantVariables = new ArrayList();
 
         while (theFormula.indexOf("?",startIndex) != -1) {
@@ -1051,27 +1055,34 @@ public class Formula implements Comparable {
      * @result the formula as a String, with explicit quantification
      */
     public String makeQuantifiersExplicit(boolean query) {
-
-        if (theFormula.indexOf("(documentation") == 0) 
-            return theFormula;
-        ArrayList quantVariables = collectQuantifiedVariables(theFormula);
-        ArrayList unquantVariables = collectUnquantifiedVariables(theFormula,quantVariables);
-
-        if (unquantVariables.size() > 0) {       // Quantify all the unquantified variables
-            StringBuffer quant = new StringBuffer("(forall (");  
-            if (query) 
-                quant = new StringBuffer("(exists (");     
-            for (int i = 0; i < unquantVariables.size(); i++) {
-                quant = quant.append((String) unquantVariables.get(i));
-                if (i < unquantVariables.size() - 1) 
-                    quant = quant.append(" ");
+        try {
+            List avoid = Arrays.asList("documentation",
+                                       "localDocumentation");
+            String arg0 = this.car();
+            if (avoid.contains(arg0)) {
+                return theFormula;
             }
-            //System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
-            //    quant.toString() + ") " + theFormula + ")");
-            return quant.toString() + ") " + theFormula + ")";
+            ArrayList quantVariables = collectQuantifiedVariables(theFormula);
+            ArrayList unquantVariables = collectUnquantifiedVariables(theFormula,quantVariables);
+
+            if (unquantVariables.size() > 0) {       // Quantify all the unquantified variables
+                StringBuffer quant = new StringBuffer("(forall (");  
+                if (query) 
+                    quant = new StringBuffer("(exists (");     
+                for (int i = 0; i < unquantVariables.size(); i++) {
+                    quant = quant.append((String) unquantVariables.get(i));
+                    if (i < unquantVariables.size() - 1) 
+                        quant = quant.append(" ");
+                }
+                //System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
+                //    quant.toString() + ") " + theFormula + ")");
+                return quant.toString() + ") " + theFormula + ")";
+            }
         }
-        else
-            return theFormula;
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return theFormula;
     }
 
     /** ***************************************************************
