@@ -25,10 +25,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  * down     = <name>   - a node that should not have its parents displayed (not yet implemented)
  * */
 
- boolean resetTree = false;
  String kbName = request.getParameter("kb");
  if (Formula.isNonEmptyString(kbName)) {
-     resetTree = (Formula.isNonEmptyString(TaxoModel.kbName) && !TaxoModel.kbName.equals(kbName));
      TaxoModel.kbName = kbName;
  }
  else {
@@ -55,7 +53,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  String term = request.getParameter("term");
  if (!Formula.isNonEmptyString(term)) 
    term = TaxoModel.defaultTerm;
- if (resetTree) { TaxoModel.newTree(term); }
  TaxoModel.displayTerm(term);
 %>
   <TITLE>TreeView Knowledge Base Browser - <%=term%></TITLE>

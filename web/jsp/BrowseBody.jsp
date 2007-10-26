@@ -72,9 +72,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
         if (relation != "" || nonRelation != "") {
             if (i == 15) {
                 show.append("<TR>\n");
-                show.append("  <TD><A href='Browse.jsp?kb="+ kbName +"&term=");
+                show.append("  <TD><A href='" + kbHref + "&term=");
                 show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                show.append("  <TD><A href='Browse.jsp?kb="+ kbName +"&term=");
+                show.append("  <TD><A href='" + kbHref + "&term=");
                 show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
                 show.append("</TR>\n");
                 show.append("<TR><TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD><TD>&nbsp;&nbsp;</TD>\n");
@@ -82,9 +82,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
             }
             else {
                 show.append("<TR>\n");
-                show.append("  <TD><A href='Browse.jsp?kb="+ kbName +"&term=");
+                show.append("  <TD><A href='" + kbHref + "&term=");
                 show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                show.append("  <TD><A href='Browse.jsp?kb="+ kbName +"&term=");
+                show.append("  <TD><A href='" + kbHref + "&term=");
                 show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
                 show.append("</TR>\n");
             }
@@ -116,7 +116,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 	    String fmValue = null;
 	    if ( fm != null ) { fmValue = (String) fm.get(term); }
 	    if ( fmValue == null ) {
-		System.out.println( "INFO in Browse.jsp: No format map entry for \""
+		System.out.println( "INFO in BrowseBody.jsp: No format map entry for \""
 				    + term
 				    + "\" in language "
 				    + language );
@@ -130,7 +130,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 		show.append("(" + tfmValue + ")");
 	    }
 	    else {
-		System.out.println( "INFO in Browse.jsp: No term format map entry for \""
+		System.out.println( "INFO in BrowseBody.jsp: No term format map entry for \""
 				    + term
 				    + "\" in language "
 				    + language );
