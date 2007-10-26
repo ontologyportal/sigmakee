@@ -1064,7 +1064,6 @@ public class Formula implements Comparable {
             }
             ArrayList quantVariables = collectQuantifiedVariables(theFormula);
             ArrayList unquantVariables = collectUnquantifiedVariables(theFormula,quantVariables);
-
             if (unquantVariables.size() > 0) {       // Quantify all the unquantified variables
                 StringBuffer quant = new StringBuffer("(forall (");  
                 if (query) 
@@ -2600,6 +2599,151 @@ public class Formula implements Comparable {
         }
 
         return result;
+    }
+
+    /** ***************************************************************
+     * This method returns a HashMap that maps each variable in this
+     * Formula to an ArrayList that contains a pair of ArrayLists.
+     * The first ArrayList of the pair contains the names of types
+     * (classes) of which the variable must be an instance.  The
+     * second ArrayList of the pair contains the names of types of
+     * which the variable must be a subclass.  Either list in the pair
+     * could be empty.  If the only instance or subclass sortal that
+     * can be computed for a variable is Entity, the lists will be
+     * empty.
+     * 
+     * @param kb The KB used to compute the sortal constraints for
+     * each variable.
+     *
+     * @return A HashMap
+     */
+    public HashMap computeVariableTypes(KB kb) { 
+
+        if (DEBUG) {
+            System.out.println("ENTER computeVariableTypes(" + this + ", " + kb + ")");
+        }
+
+        HashMap result = new HashMap();
+        try {
+            Formula f = new Formula();
+            f.read(this.theFormula);
+            f.read(f.makeQuantifiersExplicit(false));
+            f.computeVariableTypesR(result, kb);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        if (DEBUG) {
+            System.out.println("EXIT computeVariableTypes(" + this + ", " + kb + ") -> " + result);
+        }
+
+        return result;
+    }
+
+    /** ***************************************************************
+     * A recursive utility method used to collect type information for
+     * the variables in this Formula.
+     * 
+     * @param map A HashMap used to store type information for the
+     * variables in this Formula.
+     *
+     * @param kb The KB used to compute the sortal constraints for
+     * each variable.
+     *
+     * @return void
+     */
+    private void computeVariableTypesR(HashMap map, KB kb) {
+
+        if (DEBUG) {
+            System.out.println("ENTER computeVariableTypesR(" + this + ", " + map + ", " + kb + ")");
+        }
+
+        try {
+            Formula f = new Formula();
+            f.read(this.theFormula);
+            if (f.listP() && !f.empty()) {
+                int len = f.listLength();
+                String arg0 = f.car();
+                if (isQuantifier(arg0) && (len == 3)) {
+                        f.computeVariableTypesQ(map, kb);
+                }
+                else {
+                    for (int i = 0; i < len; i++) {
+                        Formula nextF = new Formula();
+                        nextF.read(f.getArgument(i));
+                        nextF.computeVariableTypesR(map, kb);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        if (DEBUG) {
+            System.out.println("EXIT computeVariableTypesR(" + this + ", " + map + ", " + kb + ")");
+        }
+        return;
+    }
+
+    /** ***************************************************************
+     * A recursive utility method used to collect type information for
+     * the variables in this Formula, which is assumed to have forall
+     * or exists as its arg0.
+     * 
+     * @param map A HashMap used to store type information for the
+     * variables in this Formula.
+     *
+     * @param kb The KB used to compute the sortal constraints for
+     * each variable.
+     *
+     * @return void
+     */
+    private void computeVariableTypesQ(HashMap map, KB kb) {
+
+        if (DEBUG) {
+            System.out.println("ENTER computeVariableTypesQ(" + this + ", " + map + ", " + kb + ")");
+        }
+        try {
+            Formula varlistF = new Formula();
+            varlistF.read(this.getArgument(1));
+            // System.out.println("varlistF == " + varlistF);
+            int vlen = varlistF.listLength();
+            // System.out.println("vlen == " + vlen);
+            Formula nextF = new Formula();
+            nextF.read(this.getArgument(2));
+            // System.out.println("nextF == " + nextF);
+            String var = null;
+            for (int i = 0; i < vlen; i++) {
+                ArrayList types = new ArrayList();
+                ArrayList ios = new ArrayList();
+                ArrayList scs = new ArrayList();
+                var = varlistF.getArgument(i);
+                // System.out.println("i == " + i + ", var == " + var);
+                nextF.computeTypeRestrictions(ios, scs, var, kb);
+                if (!ios.isEmpty()) {
+                    winnowTypeList(ios, kb);
+                }
+                if (!scs.isEmpty()) {
+                    winnowTypeList(scs, kb);
+                }
+                types.add(ios);
+                types.add(scs);
+                map.put(var, types);
+            }
+            nextF.computeVariableTypesR(map, kb);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        if (DEBUG) {
+            System.out.println("EXIT computeVariableTypesQ(" + this + ", " + map + ", " + kb + ")");
+        }
+
+        return;
     }
 
     /** ***************************************************************
