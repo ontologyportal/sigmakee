@@ -35,8 +35,9 @@ public class TaxoModel {
         rootList.clear();  // = new HashMap();
         TaxoNode n = new TaxoNode();
         n.name = termName;
-        rootList.put(n.name,n);
-        nodeMap.put(n.name,n);
+        String key = kbName + ":" + n.name;
+        rootList.put(key,n);
+        nodeMap.put(key,n);
     }
 
     /** ***************************************************************
@@ -58,16 +59,18 @@ public class TaxoModel {
      */
     public static void collapseParentNodes (String nodeName) {
 
-        TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
+        String key = kbName + ":" + nodeName;
+        TaxoNode n = (TaxoNode) nodeMap.get(key);
         for (int i = 0; i < n.parents.size(); i++) {
             TaxoNode parent = (TaxoNode) n.parents.get(i);
             collapseParentNodes(parent.name);
-            nodeMap.remove(parent.name);
-            if (rootList.containsKey(parent.name)) 
-                rootList.remove(parent.name);
+            String parentKey = kbName + ":" + parent.name;
+            nodeMap.remove(parentKey);
+            if (rootList.containsKey(parentKey)) 
+                rootList.remove(parentKey);
         }
         n.parents = new ArrayList();
-        rootList.put(n.name,n);
+        rootList.put(key,n);
     }
 
     /** ***************************************************************
@@ -76,7 +79,8 @@ public class TaxoModel {
      */
     public static void expandParentNodes (String nodeName) {
 
-        TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
+        String key = kbName + ":" + nodeName;
+        TaxoNode n = (TaxoNode) nodeMap.get(key);
         n.parents = new ArrayList();
         rootList.clear();  // = new HashMap();
         KB kb = KBmanager.getMgr().getKB(kbName);
@@ -91,9 +95,10 @@ public class TaxoModel {
             parent.childrenExpanded = false;
             parent.oneChild = n;
             n.parents.add(parent);
-            if (!nodeMap.containsKey(parent.name)) 
-                nodeMap.put(parent.name,parent);
-            rootList.put(parent.name,parent);
+            String parentKey = kbName + ":" + parent.name;
+            if (!nodeMap.containsKey(parentKey)) 
+                nodeMap.put(parentKey,parent);
+            rootList.put(parentKey,parent);
         }
     }
 
@@ -103,17 +108,20 @@ public class TaxoModel {
      */
     public static void collapseNode (String nodeName) {
 
-        TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
+        String key = kbName + ":" + nodeName;
+        TaxoNode n = (TaxoNode) nodeMap.get(key);
         n.childrenExpanded = false;
         if (n.oneChild != null) {
             collapseNode(n.oneChild.name);
-            nodeMap.remove(n.oneChild.name);
+            String oneChildKey = kbName + ":" + n.oneChild.name;
+            nodeMap.remove(oneChildKey);
         }
         n.oneChild = null;
         for (int i = 0; i < n.children.size(); i++) {
             TaxoNode child = (TaxoNode) n.children.get(i);
             collapseNode(child.name);
-            nodeMap.remove(child.name);
+            String childKey = kbName + ":" + child.name;
+            nodeMap.remove(childKey);
         }
         n.children = new ArrayList();
     }
@@ -125,7 +133,8 @@ public class TaxoModel {
      */
     public static void expandNode (String nodeName) {
 
-        TaxoNode n = (TaxoNode) nodeMap.get(nodeName);
+        String key = kbName + ":" + nodeName;
+        TaxoNode n = (TaxoNode) nodeMap.get(key);
         n.childrenExpanded = true;
         n.oneChild = null;
         n.children = new ArrayList();
@@ -137,7 +146,8 @@ public class TaxoModel {
             TaxoNode child = new TaxoNode();
             child.name = form.getArgument(1);
             n.children.add(child);
-            nodeMap.put(child.name,child);
+            String childKey = kbName + ":" + child.name;
+            nodeMap.put(childKey,child);
         }
     }
 
@@ -147,13 +157,14 @@ public class TaxoModel {
      */
     public static void displayTerm (String nodeName) {
 
-        if (!nodeMap.containsKey(nodeName)) {
+        String key = kbName + ":" + nodeName;
+        if (!nodeMap.containsKey(key)) {
             nodeMap.clear();  // = new HashMap();
             TaxoNode n = new TaxoNode();
             n.name = nodeName;
-            nodeMap.put(nodeName,n);
+            nodeMap.put(key,n);
             rootList.clear(); // = new HashMap();
-            rootList.put(n.name,n);
+            rootList.put(key,n);
         }
     }
 
@@ -170,8 +181,9 @@ public class TaxoModel {
         kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
             "&simple=" + simple + "&term=";
         StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < rootList.values().size(); i++) {
-            TaxoNode n = (TaxoNode) rootList.values().toArray()[i];
+        Object[] objArr = rootList.values().toArray();
+        for (int i = 0; i < objArr.length; i++) {
+            TaxoNode n = (TaxoNode) objArr[i];
             sb.append(n.toHTML(kbHref,0));
         }
         return sb.toString();
