@@ -61,10 +61,10 @@ public class OWLtranslator {
                 pw.println("  <owl:subPropertyOf rdf:resource=\"#" + superProp + "\" />");
             }
         }
-        ArrayList doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
-        if (doc.size() > 0) {
+        ArrayList doc = kb.askWithRestriction(0,"documentation",1,term);    // documentation expressions for term.
+        if (doc.size() > 0) {                                               // Note that this ignores the language parameter
             Formula form = (Formula) doc.get(0);
-            String documentation = form.getArgument(2);
+            String documentation = form.getArgument(3);
             if (documentation != null) 
                 pw.println("  <owl:comment>" + processDoc(documentation) + "</owl:comment>");
         }
@@ -157,7 +157,7 @@ public class OWLtranslator {
                     ArrayList doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
                     if (doc.size() > 0) {
                         form = (Formula) doc.get(0);
-                        documentation = form.getArgument(2);
+                        documentation = form.getArgument(3);
                     }
                     if (instances.size() > 0 && !kb.childOf(term,"BinaryRelation"))
                         writeInstances(pw,term,instances,documentation);   

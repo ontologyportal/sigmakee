@@ -71,7 +71,7 @@ public class DocGen {
             ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
             if (docs != null && docs.size() > 0) {
                 Formula f = (Formula) docs.get(0);
-                String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
+                String docString = f.getArgument(3);  
                 docString = kb.formatDocumentation("",docString);
                 result.append("<td>" + docString.substring(1,docString.length()) + "</td>\n");
             }
@@ -134,7 +134,7 @@ public class DocGen {
                     ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
-                        String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
+                        String docString = f.getArgument(3);  
                         docString = kb.formatDocumentation(kbHref,docString);
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
@@ -163,7 +163,7 @@ public class DocGen {
                     ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
-                        String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
+                        String docString = f.getArgument(3);  
                         docString = kb.formatDocumentation(kbHref,docString);
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
