@@ -1057,7 +1057,8 @@ public class Formula implements Comparable {
     public String makeQuantifiersExplicit(boolean query) {
         try {
             List avoid = Arrays.asList("documentation",
-                                       "localDocumentation");
+                                       "localDocumentation",
+                                       "externalImage");
             String arg0 = this.car();
             if (avoid.contains(arg0)) {
                 return theFormula;
