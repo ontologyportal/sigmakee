@@ -35,11 +35,10 @@ public class LanguageFormatter {
 
 	String ans = "";
 	HashMap hm = (HashMap) keywordMap.get(englishWord);
-	if ( hm != null ) {
+	if (hm != null) {
 	    ans = (String) hm.get(language);
-	    if ( ans == null ) {
-		ans = "";
-	    }
+	    if (ans == null)
+		ans = "";	   
 	}
 	return ans;
     }
@@ -136,8 +135,9 @@ public class LanguageFormatter {
 
         // System.out.println("INFO in LanguageFormatter.readKeywordMap()");
         // System.out.println("  dir == " + dir);
-	if ( keywordMap == null ) { keywordMap = new HashMap(); }
-	if ( keywordMap.isEmpty() ) {
+	if (keywordMap == null) 
+            keywordMap = new HashMap();
+	if (keywordMap.isEmpty()) {
 
 	    System.out.println( "INFO in LanguageFormatter.readKeywordMap(): filling keywordMap" );
 
@@ -234,9 +234,8 @@ public class LanguageFormatter {
      * For debugging ...
      */
     private static void printSpaces( int depth ) {
-	for ( int i = 0 ; i <= depth ; i++ ) {
-	    System.out.print( "  " );
-	}
+	for (int i = 0 ; i <= depth ; i++) 
+	    System.out.print( "  " );	
 	System.out.print( depth + ":" );
 	return;
     }
@@ -251,12 +250,8 @@ public class LanguageFormatter {
      *  @param termMap An association list of terms and their natural language format statements.
      *  @return A String, which is the paraphrased statement.
      */
-    public static String nlStmtPara( String stmt, 
-				     boolean isNegMode, 
-				     Map phraseMap, 
-				     Map termMap, 
-				     String language,
-				     int depth ) {
+    public static String nlStmtPara(String stmt, boolean isNegMode, Map phraseMap, 
+    				    Map termMap, String language, int depth) {
 
 	/*
 	System.out.println( "INFO in LanguageFormatter.nlStmtPara( " + depth + " ):" );
@@ -914,64 +909,91 @@ public class LanguageFormatter {
      * @param termMap the set of NL statements for terms that will be passed to nlStmtPara.
      * @param language the natural language in which the paraphrase should be generated.
      */
-    public static String htmlParaphrase(String href,String stmt, Map phraseMap, Map termMap, String language) {
+    public static String htmlParaphrase(String href,String stmt, Map phraseMap, Map termMap, KB kb, String language) {
 
 	int end;
 	int start = -1;
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        HashMap varMap = f.computeVariableTypes(kb);
 	String nlFormat = nlStmtPara(stmt,false,phraseMap,termMap,language,1);
-	if ( nlFormat != null ) {
+	if (nlFormat != null) {
 	    while (nlFormat.indexOf("&%") > -1) {
-
 		start = nlFormat.indexOf("&%",start+1);
 		int word = nlFormat.indexOf("$",start);
-		if (word == -1) {
-		    end = start + 2;
-		}
-		else {
-		    end = word + 1;
-		}
-		while (end < nlFormat.length() && Character.isJavaIdentifierPart(nlFormat.charAt(end))) {
-		    end++;
-		}
-		if (word == -1) {
-		    nlFormat = ( nlFormat.substring(0,start) 
-				 + "<a href=\"" 
-				 + href 
-				 + "&term=" 
-				 + nlFormat.substring(start+2,end) 
-				 + "\">" 
-				 + nlFormat.substring(start+1,end) 
-				 + "</a>" 
-				 + nlFormat.substring(end, nlFormat.length()) );
-		}
-		else {
-		    nlFormat = ( nlFormat.substring(0,start) 
-				 + "<a href=\"" 
-				 + href 
-				 + "&term=" 
-				 + nlFormat.substring(start+2,word) 
-				 + "\">" 
-				 + nlFormat.substring(word+1,end) 
-				 + "</a>" 
-				 + nlFormat.substring(end, nlFormat.length()) );
-		}
+		if (word == -1)
+		    end = start + 2;		
+		else
+		    end = word + 1;		
+		while (end < nlFormat.length() && Character.isJavaIdentifierPart(nlFormat.charAt(end)))
+		    end++;		
+		if (word == -1)
+		    nlFormat = (nlFormat.substring(0,start) + "<a href=\"" + href + "&term=" 
+				 + nlFormat.substring(start+2,end) + "\">" + nlFormat.substring(start+1,end) 
+				 + "</a>" + nlFormat.substring(end, nlFormat.length()) );		
+		else 
+		    nlFormat = (nlFormat.substring(0,start) + "<a href=\"" + href + "&term=" 
+				 + nlFormat.substring(start+2,word) + "\">" + nlFormat.substring(word+1,end) 
+				 + "</a>" + nlFormat.substring(end, nlFormat.length()) );		
 	    }
+            nlFormat = variableReplace(nlFormat,varMap,kb);
 	}
-	else { 
-	    nlFormat = ""; 
-	}
-	/*
-	if ( Formula.isNonEmptyString(nlFormat) ) {
-	    StringBuffer sb = new StringBuffer( nlFormat );
-	    sb.append( "." );
-	    char ch = sb.charAt( 0 );
-	    if ( Character.isLowerCase(ch) ) {
-		sb.setCharAt( 0, Character.toUpperCase(ch) );
-	    }
-	    nlFormat = sb.toString();
-	}
-	*/
+	else  
+	    nlFormat = ""; 	
 	return nlFormat;
+    }
+
+    /** **************************************************************
+     */
+    private static String getArticle(String s) {
+
+        if (s.charAt(0) == 'A' || s.charAt(0) == 'a' ||
+            s.charAt(0) == 'E' || s.charAt(0) == 'e' ||
+            s.charAt(0) == 'I' || s.charAt(0) == 'i' ||
+            s.charAt(0) == 'O' || s.charAt(0) == 'o' ||
+            s.charAt(0) == 'U' || s.charAt(0) == 'u') 
+            return "an ";
+        else
+            return "a ";        
+    }
+
+    /** **************************************************************
+     * Replace variables in a formula with paraphrases expressing their
+     * type.
+     */
+    public static String variableReplace(String form, HashMap varMap, KB kb) {
+
+        String result = form;
+        Iterator it = varMap.keySet().iterator();
+        while (it.hasNext()) {
+            String varString = (String) it.next();
+            ArrayList outerArray = (ArrayList) varMap.get(varString);
+            ArrayList instanceArray = (ArrayList) outerArray.get(0);
+            ArrayList subclassArray = (ArrayList) outerArray.get(1);
+            if (subclassArray.size() > 0) {
+                String varType = (String) subclassArray.get(0);
+                String varPretty = (String) kb.getTermFormatMap("en").get(varType);
+                if (Formula.isNonEmptyString(varPretty))
+                    result = result.replaceAll("\\?" + varString.substring(1),"a kind of " + varPretty);
+                else
+                    result = result.replaceAll("\\?" + varString.substring(1),"a kind of " + varType);
+            }
+            else
+                if (instanceArray.size() > 0) {
+                    String varType = (String) instanceArray.get(0);
+                    String varPretty = (String) kb.getTermFormatMap("en").get(varType);
+                    if (Formula.isNonEmptyString(varPretty))
+                        result = result.replaceAll("\\?" + varString.substring(1),getArticle(varPretty) + varPretty);
+                    else
+                        result = result.replaceAll("\\?" + varString.substring(1),getArticle(varType) + varType);
+                }
+                else
+                    result = result.replaceAll("\\?" + varString.substring(1),"a(n) entity");                
+        }
+
+        System.out.println("Paraphrase: " + result);
+        return result;
     }
 
     /** **************************************************************
@@ -984,21 +1006,13 @@ public class LanguageFormatter {
             System.out.println(ioe.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        HashMap varMap = new HashMap();
-        varMap.put ("FOO","Book");
-        varMap.put ("BAR","Object");
-        varMap.put ("BIZ","Book");
-        varMap.put ("BONG","Driving");
+
+        String stmt = "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
         Formula f = new Formula();
-        f.read("(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))");
-	String result = htmlParaphrase("",f.theFormula,kb.getFormatMap("en"),
-                                         kb.getTermFormatMap("en"),"en");
-        Iterator it = varMap.keySet().iterator();
-        while (it.hasNext()) {
-            String varString = (String) it.next();
-            String varType = (String) varMap.get(varString);
-            result = result.replaceAll("\\?" + varString,"a(n) " + varType);
-        }
+        f.read(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        HashMap varMap = f.computeVariableTypes(kb);
+        System.out.println("result: " + variableReplace(f.theFormula,varMap,kb));
     }
 }
 
