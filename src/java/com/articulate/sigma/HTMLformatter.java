@@ -20,6 +20,11 @@ import java.io.*;
  /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
+    public static String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" + 
+        "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
+    public static String kbHref = ""; // set by BrowseBody.jsp or SimpleBrowseBody.jsp
+    public static String language = "EnglishLanguage"; // set by BrowseBody.jsp or SimpleBrowseBody.jsp
+
     /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
@@ -27,7 +32,7 @@ public class HTMLformatter {
 
         StringBuffer result = new StringBuffer();
         Formula f = new Formula();
-
+        KB kb = KBmanager.getMgr().getKB(kbName);
         f.read(step.axiom);
         String axiom = new String(f.theFormula);
         f.theFormula = Formula.postProcess(f.theFormula);
@@ -59,13 +64,13 @@ public class HTMLformatter {
         }
         result.append("</td><td width=40% valign=top>");
         if (language != null && language.length() > 0) {
-	    String pph = LanguageFormatter.htmlParaphrase( kbHref,
-							   f.theFormula, 
-							   KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
-							   KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), 
-							   language );
-	    if ( pph == null ) { pph = ""; }
-            result.append( pph );        
+	    String pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, 
+                            KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
+                            KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), kb,
+                            language);
+	    if (pph == null)
+                pph = "";
+            result.append(pph);        
 	}
         result.append("</td>");
         return result.toString();
@@ -83,6 +88,140 @@ public class HTMLformatter {
             if (i < terms.size()-1)
                 show.append(", ");
         }
+        return show.toString();
+    }
+
+    /** *************************************************************
+     *  Show knowledge base statistics
+     */
+    public static String showStatistics(KB kb) {
+
+        StringBuffer show = new StringBuffer();
+        show.append("<b>Knowledge base statistics: </b><br><table>");
+        show.append("<tr bgcolor=#eeeeee><td>Total Terms</td><td>Total Axioms</td><td>Total Rules</td><tr><tr align='center'>\n");
+        show.append("<td>  " + kb.getCountTerms());
+        show.append("</td><td> " + kb.getCountAxioms());
+        show.append("</td><td> " + kb.getCountRules());
+        show.append("</td><tr> </table><P>\n");
+        show.append("Relations: " + kb.getCountRelations());
+        show.append("<P>\n");
+        return show.toString();
+    }
+
+    /** *************************************************************
+     *  Show knowledge base statements containing the given term at
+     * different argument positions.
+     */
+    public static String showFormulas(KB kb, String term) {
+
+        StringBuffer show = new StringBuffer();
+
+        for (int arg = 1; arg < 6; arg++) {
+            ArrayList forms = kb.ask("arg",arg,term);
+            if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
+                forms = TaxoModel.removeCached(forms);
+            if (forms != null && forms.size() > 0) {
+                Collections.sort(forms);
+                show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
+                show.append(htmlDivider + "<TABLE width='95%'>");
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula f = (Formula) forms.get(i);
+                    if ( KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
+                         !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
+                        show.append("<TR><TD WIDTH='50%' valign=top>");
+                        String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
+                        if (f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0)
+                            show.append(kb.formatDocumentation(kbHref,formattedFormula));
+                        else
+                            show.append(formattedFormula);
+                        String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length());
+                        show.append("<A href=\"EditFile.jsp?file=" + f.sourceFile + "&line=");
+                        show.append((new Integer(f.startLine)).toString() + "\">");
+                        show.append(sourceFilename);
+                        show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
+                        show.append("</A>");
+                        show.append("</TD>\n<TD width='40%' valign=top>");
+                        String pph = "";
+                        if (f.theFormula.substring(1,14).compareTo("documentation") == 0 || f.theFormula.substring(1,7).compareTo("format") == 0) 
+                            show.append("</TD></TR>\n");		    
+                        else 
+                            pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,kb.getFormatMap(language),kb.getTermFormatMap(language),kb,language);
+                        if (pph == null)
+                            pph = "";
+                        show.append(pph + "</TD></TR>\n");
+                    }                
+                }
+                show.append("</TABLE>\n");
+            }
+        }
+        return show.toString();
+    }
+
+    /** *************************************************************
+     *  Show knowledge base statistics
+     */
+    public static String showPictures(KB kb, String term) {
+
+        StringBuffer show = new StringBuffer();
+        ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);   // Handle picture diplay
+        if (pictures != null && pictures.size() > 0) {
+            show.append("<br>");
+            for (int i = 0; i < pictures.size(); i++) {
+                Formula f = (Formula) pictures.get(i);
+                String url = f.getArgument(2);
+                if (url.startsWith("\"http://upload.wikimedia.org")) {
+                    String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
+                    if (imageFile.matches("\\d+px-.*"))
+                        imageFile = imageFile.substring(imageFile.indexOf("px-")+3);
+                    show.append("<a href=\"http://simple.wikipedia.org/wiki/Image:" +
+                                imageFile + "\"><img width=100 src=" + url + "></a>" );
+                }
+                else 
+                    show.append("<a href=" + url + "><img width=100 src=" + url + "></a>");                
+            }
+        }
+        return show.toString();
+    }
+
+    /** *************************************************************
+     *  Show alphabetic list of neighbor terms
+     */
+    public static String showNeighborTerms(KB kb, String term) {
+
+        StringBuffer show = new StringBuffer();
+        ArrayList relations = kb.getNearestRelations(term);     // that is not present in the KB.
+        ArrayList nonRelations = kb.getNearestNonRelations(term);
+        show.append(" <FONT face='Arial,helvetica' size=+3> <b> ");
+        if (term != null)
+            show.append(term);
+        show.append("</b></FONT><br><br>");
+        show.append("<TABLE><tr><td>");
+        show.append("<TABLE>");
+        for (int i = 0; i < 30; i++) {
+            String relation = (String) relations.get(i);
+            String nonRelation = (String) nonRelations.get(i);
+            if (relation != "" || nonRelation != "") {
+                if (i == 15) {
+                    show.append("<TR>\n");
+                    show.append("  <TD><A href="+ kbHref +"&term=");
+                    show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
+                    show.append("  <TD><A href="+ kbHref +"&term=");
+                    show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
+                    show.append("</TR>\n");
+                    show.append("<TR><TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD><TD>&nbsp;&nbsp;</TD>\n");
+                    show.append("<TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD></TR>\n");
+                }
+                else {
+                    show.append("<TR>\n");
+                    show.append("  <TD><A href="+ kbHref +"&term=");
+                    show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
+                    show.append("  <TD><A href="+ kbHref +"&term=");
+                    show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
+                    show.append("</TR>\n");
+                }
+            }
+        }
+        show.append("</TABLE></td>");
         return show.toString();
     }
 
@@ -137,12 +276,8 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormat( ArrayList forms, 
-					       String header, 
-					       String htmlDivider, 
-					       String kbHref, 
-					       KB kb, 
-					       String language ) {
+    public static String browserSectionFormat(ArrayList forms, String header, 
+                                              KB kb, String language) {
 
         StringBuffer show = new StringBuffer();
 
@@ -161,13 +296,12 @@ public class HTMLformatter {
                 show.append(f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length()) + 
                             " " + (new Integer(f.startLine)).toString() + 
                             "-" + (new Integer(f.endLine)).toString() + "</TD>\n<TD width=40%% valign=top>");
-		pph = LanguageFormatter.htmlParaphrase( kbHref,
-							f.theFormula, 
-							kb.getFormatMap(language), 
-							kb.getTermFormatMap(language), 
-							language );
-		if ( pph == null ) { pph = ""; }
-                show.append( pph + "</TD></TR>\n"); 
+		pph = LanguageFormatter.htmlParaphrase(kbHref,
+    			 f.theFormula,kb.getFormatMap(language), 
+                         kb.getTermFormatMap(language), kb, language);
+		if (pph == null) 
+                    pph = ""; 
+                show.append(pph + "</TD></TR>\n"); 
             }
             show.append("</TABLE>\n");
         }     
