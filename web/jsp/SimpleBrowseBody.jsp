@@ -13,24 +13,21 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 
  show = new StringBuffer();       // Variable to contain the HTML page generated.
- String kbHref = null;
- String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
  kbName = null;   // Name of the knowledge base
  kb = null;   // The knowledge base object.
  String formattedFormula = null;
 
  term = request.getParameter("term");
  language = request.getParameter("lang");
- if (!Formula.isNonEmptyString(language)) {
-    language = "en";
- }
+ if (!Formula.isNonEmptyString(language)) 
+    language = "EnglishLanguage";
+ 
  kbName = request.getParameter("kb");
  kb = null;
  if (Formula.isNonEmptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
-     if (kb != null) {
-         TaxoModel.kbName = kbName;
-     }
+     if (kb != null) 
+         TaxoModel.kbName = kbName;     
  }
  if (kb == null)
      response.sendRedirect("login.html");
@@ -44,70 +41,16 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  String port = KBmanager.getMgr().getPref("port");
  if (port == null)
     port = "8080";
- kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&simple=yes&kb=" + kbName;
+ HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&simple=yes&kb=" + kbName;
 
- if (kb != null && (term == null || term.equals(""))) {       // Show statistics only when no term is specified.
-    show.append("<b>Knowledge base statistics: </b><br><table>");
-    show.append("<tr bgcolor=#eeeeee><td>Total Terms</td><td>Total Axioms</td><td>Total Rules</td><tr><tr align='center'>\n");
-    show.append("<td>  " + kb.getCountTerms());
-    show.append("</td><td> " + kb.getCountAxioms());
-    show.append("</td><td> " + kb.getCountRules());
-    show.append("</td><tr> </table><P>\n");
-    show.append("Relations: " + kb.getCountRelations());
-    show.append("<P>\n");
- }
-
- else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term
-                                                           // that is not present in the KB.
-    ArrayList relations = kb.getNearestRelations(term);
-    ArrayList nonRelations = kb.getNearestNonRelations(term);
-    show.append(" <FONT face='Arial,helvetica' size=+3> <b> ");
-    if (term != null)
-        show.append(term);
-    show.append("</b></FONT><br><br>");
-    show.append("<TABLE><tr><td>");
-    show.append("<TABLE>");
-
-    for (int i = 0; i < 30; i++) {
-        String relation = (String) relations.get(i);
-        String nonRelation = (String) nonRelations.get(i);
-        if (relation != "" || nonRelation != "") {
-            if (i == 15) {
-                show.append("<TR>\n");
-                show.append("  <TD><A href='" + kbHref + "&term=");
-                show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                show.append("  <TD><A href='" + kbHref + "&term=");
-                show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
-                show.append("</TR>\n");
-                show.append("<TR><TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD><TD>&nbsp;&nbsp;</TD>\n");
-                show.append("<TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD></TR>\n");
-            }
-            else {
-                show.append("<TR>\n");
-                show.append("  <TD><A href='" + kbHref + "&term=");
-                show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                show.append("  <TD><A href='" + kbHref + "&term=");
-                show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
-                show.append("</TR>\n");
-            }
-        }
-    }
-    show.append("</TABLE></td>");
-    /*
-    WordNet.initOnce();
-    TreeMap tm = WordNet.wn.getSensesFromWord(term);
-    if (tm != null) {
-        show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
-        show.append("<td width='40%' valign=top><small>");
-        show.append(WordNetUtilities.formatWordsList(tm,kbName));
-        show.append("</small></td>");
-    }
-    */
+ if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
+     show.append(HTMLformatter.showStatistics(kb);
+ else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term                                                           
+    show.append(HTMLformatter.showNeighborTerms(kb,term));
     show.append("</td></TABLE>");
  }
- else if (kb != null && kb.containsTerm(term)) {            // Build the HTML format for all the formulas in
-                                                           // which the given term appears.
-    show.append("<title>Sigma KEE - " + term + "</title>\n");
+ else if (kb != null && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in                                                           
+    show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
     ArrayList forms;
     show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
     if (term != null) {
@@ -117,73 +60,39 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     	if ( Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn") ) {
     	    Map fm = kb.getFormatMap(language);
     	    String fmValue = null;
-    	    if ( fm != null ) { fmValue = (String) fm.get(term); }
-    	    if ( fmValue == null ) {
-                System.out.println( "INFO in SimpleBrowseBody.jsp: No format map entry for \""
-    				    + term
-    				    + "\" in language "
-    				    + language );
-    	    }
+    	    if (fm != null) 
+                fmValue = (String) fm.get(term);
+    	    if (fmValue == null) 
+                System.out.println("INFO in SimpleBrowseBody.jsp: No format map entry for \"" +
+                                   term + "\" in language " + language);    	    
     	}
     	else {
     	    Map tfm = kb.getTermFormatMap(language);
     	    String tfmValue = null;
-    	    if ( tfm != null ) { tfmValue = (String) tfm.get(term); }
-    	    if ( tfmValue != null ) {
-                //show.append("(" + tfmValue + ")");
-    	    }
-    	    else {
-                System.out.println( "INFO in SimpleBrowseBody.jsp: No term format map entry for \""
-    				    + term
-    				    + "\" in language "
-    				    + language );
-    	    }
+    	    if (tfm != null) 
+                tfmValue = (String) tfm.get(term); 
+    	    if (tfmValue != null )
+                //show.append("(" + tfmValue + ")");    	    
+    	    else 
+                System.out.println("INFO in SimpleBrowseBody.jsp: No term format map entry for \"" +
+                                   term + "\" in language " + language);    	    
     	}
-        ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);
-        if (pictures != null && pictures.size() > 0) {
-            show.append("<br>");
-            for (int i = 0; i < pictures.size(); i++) {
-                Formula f = (Formula) pictures.get(i);
-                String url = f.getArgument(2);
-                if (url.startsWith("\"http://upload.wikimedia.org")) {
-                    String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
-                    if (imageFile.matches("\\d+px-.*")) 
-                        imageFile = imageFile.substring(imageFile.indexOf("px-")+3);
-                    show.append( "<a href=\"http://simple.wikipedia.org/wiki/Image:" 
-                                 + imageFile + "\"><img width=100 src=" + url + "></a>" );
-                }
-                else {
-                    show.append("<a href=" + url + "><img width=100 src=" + url + "></a>");
-                }
-            }
-        }
+        show.append(HTMLformatter.showPictures(kb,term));
         show.append("</td>");
-        /* WordNet.initOnce();
-        TreeMap tm = WordNet.wn.getWordsFromTerm(term);
-        if (tm != null) {
-            show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
-            show.append("<td width='40%'><small>");
-            show.append(WordNetUtilities.formatWords(tm,kbName));
-            show.append("</small></td>");
-        }
-        else
-            System.out.println("INFO in SimpleBrowse.jsp: No synsets for term " + term);
-            */
         show.append("</tr></table>\n");
     }
-    else {
-        show.append ("</b></FONT></td></tr></table>\n");
-    }
+    else 
+        show.append ("</b></FONT></td></tr></table>\n");    
     show.append(DocGen.createPage(kb,kbHref,term));
     show.append("<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");
 
-    if (!parentPage.equals("TreeView.jsp")) {
+    if (!parentPage.equals("TreeView.jsp")) 
         show.append("\n<P><P><small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
                     "?lang=" + language + "&simple=yes&kb=" + kbName + 
                     "&term=" + term + "\">Show simplified definition with tree view</a></small>\n");
-    }
+    
     show.append("\n<P><P><small><a href=\"http://" + hostname + ":" + port + "/sigma/Browse.jsp" + 
                 "?lang=" + language + "&kb=" + kbName + "&simple=no" + 
                 "&term=" + term + "\">Show full definition (without tree view)</a></small><br>\n");
