@@ -167,7 +167,7 @@ public class LanguageFormatter {
 		do {
 		    line = br.readLine();
 		    if (line != null) {
-			if (line.startsWith("en|")) { // The language key line.
+			if (line.startsWith("EnglishLanguage|")) { // The language key line.
 			    i = 0;
 			    while (line.indexOf('|',i) > 0) {
 				languageKeyArray.add(line.substring(i,line.indexOf('|',i)));
@@ -937,7 +937,7 @@ public class LanguageFormatter {
 				 + nlFormat.substring(start+2,word) + "\">" + nlFormat.substring(word+1,end) 
 				 + "</a>" + nlFormat.substring(end, nlFormat.length()) );		
 	    }
-            nlFormat = variableReplace(nlFormat,varMap,kb);
+            nlFormat = variableReplace(nlFormat,varMap,kb,language);
 	}
 	else  
 	    nlFormat = ""; 	
@@ -946,7 +946,7 @@ public class LanguageFormatter {
 
     /** **************************************************************
      */
-    private static String getArticle(String s) {
+    public static String getArticle(String s) {
 
         if (s.charAt(0) == 'A' || s.charAt(0) == 'a' ||
             s.charAt(0) == 'E' || s.charAt(0) == 'e' ||
@@ -962,7 +962,7 @@ public class LanguageFormatter {
      * Replace variables in a formula with paraphrases expressing their
      * type.
      */
-    public static String variableReplace(String form, HashMap varMap, KB kb) {
+    public static String variableReplace(String form, HashMap varMap, KB kb, String language) {
 
         String result = form;
         Iterator it = varMap.keySet().iterator();
@@ -973,7 +973,7 @@ public class LanguageFormatter {
             ArrayList subclassArray = (ArrayList) outerArray.get(1);
             if (subclassArray.size() > 0) {
                 String varType = (String) subclassArray.get(0);
-                String varPretty = (String) kb.getTermFormatMap("en").get(varType);
+                String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                 if (Formula.isNonEmptyString(varPretty))
                     result = result.replaceAll("\\?" + varString.substring(1),"a kind of " + varPretty);
                 else
@@ -982,7 +982,7 @@ public class LanguageFormatter {
             else
                 if (instanceArray.size() > 0) {
                     String varType = (String) instanceArray.get(0);
-                    String varPretty = (String) kb.getTermFormatMap("en").get(varType);
+                    String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                     if (Formula.isNonEmptyString(varPretty))
                         result = result.replaceAll("\\?" + varString.substring(1),getArticle(varPretty) + varPretty);
                     else
@@ -992,7 +992,7 @@ public class LanguageFormatter {
                     result = result.replaceAll("\\?" + varString.substring(1),"a(n) entity");                
         }
 
-        System.out.println("Paraphrase: " + result);
+        //System.out.println("Paraphrase: " + result);
         return result;
     }
 
@@ -1012,7 +1012,7 @@ public class LanguageFormatter {
         f.read(stmt);
         System.out.println("Formula: " + f.theFormula);
         HashMap varMap = f.computeVariableTypes(kb);
-        System.out.println("result: " + variableReplace(f.theFormula,varMap,kb));
+        System.out.println("result: " + variableReplace(f.theFormula,varMap,kb,"EnglishLanguage"));
     }
 }
 
