@@ -44,7 +44,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&simple=yes&kb=" + kbName;
 
  if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
-     show.append(HTMLformatter.showStatistics(kb);
+     show.append(HTMLformatter.showStatistics(kb));
  else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term                                                           
     show.append(HTMLformatter.showNeighborTerms(kb,term));
     show.append("</td></TABLE>");
@@ -57,7 +57,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         term = term.intern();
         //show.append(term);
         show.append("</b></FONT>");
-    	if ( Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn") ) {
+    	if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
     	    Map fm = kb.getFormatMap(language);
     	    String fmValue = null;
     	    if (fm != null) 
@@ -71,9 +71,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     	    String tfmValue = null;
     	    if (tfm != null) 
                 tfmValue = (String) tfm.get(term); 
-    	    if (tfmValue != null )
-                //show.append("(" + tfmValue + ")");    	    
-    	    else 
+    	    if (tfmValue == null)
                 System.out.println("INFO in SimpleBrowseBody.jsp: No term format map entry for \"" +
                                    term + "\" in language " + language);    	    
     	}
@@ -83,7 +81,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     }
     else 
         show.append ("</b></FONT></td></tr></table>\n");    
-    show.append(DocGen.createPage(kb,kbHref,term));
+    show.append(DocGen.createPage(kb,HTMLformatter.kbHref,term));
     show.append("<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");
