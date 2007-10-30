@@ -3554,13 +3554,122 @@ public class KB {
     }
 
     /** *************************************************************
+     */
+    private String prettyPrint(String term) {
+
+        if (term.endsWith("Fn")) 
+            term = term.substring(0,term.length()-2);
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < term.length(); i++) {
+            if (Character.isLowerCase(term.charAt(i)) || !Character.isLetter(term.charAt(i))) 
+                result.append(term.charAt(i));
+            else {
+                if (i + 1 < term.length() && Character.isUpperCase(term.charAt(i+1)))
+                    result.append(term.charAt(i));
+                else {
+                    if (i != 0) 
+                        result.append(" ");                
+                    result.append(Character.toLowerCase(term.charAt(i)));
+                }
+            }
+        }
+        return result.toString();
+
+    }
+
+    /** *************************************************************
+     */
+    private String allTerms() {
+
+        StringBuffer result = new StringBuffer();
+        Iterator it = terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            result.append("(termFormat EnglishLanguage " + term + " \"" + prettyPrint(term) + "\")\n");
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
+     */
+    private String functionFormat(String term, int i) {
+
+        switch (i) {
+          case 1: return "the &%" + prettyPrint(term) + " of %1"; 
+          case 2: return "the &%" + prettyPrint(term) + " of %1 and %2"; 
+          case 3: return "the &%" + prettyPrint(term) + " of %1, %2 and %3";
+          case 4: return "the &%" + prettyPrint(term) + " of %1, %2, %3 and %4";
+        }       
+        return "";
+    }
+
+    /** *************************************************************
+     */
+    private String allFunctionsOfArity(int i) {
+
+        String parent = "";
+        switch (i) {
+          case 1: parent = "UnaryFunction"; break;
+          case 2: parent = "BinaryFunction"; break;
+          case 3: parent = "TernaryFunction"; break;
+          case 4: parent = "QuaternaryFunction"; break;
+        }
+        if (parent == "") 
+            return "";
+        StringBuffer result = new StringBuffer();
+        Iterator it = terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (childOf(term,parent))
+                result.append("(format EnglishLanguage " + term + " \"" + functionFormat(term,i) + "\")\n");            
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
+     */
+    private String relationFormat(String term, int i) {
+
+        switch (i) {
+          case 2: return "%2 is %n " + LanguageFormatter.getArticle(term) + "&%" + prettyPrint(term) + " of %1"; 
+          case 3: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3"; 
+          case 4: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4";
+          case 5: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4 and %5";
+        }       
+        return "";
+    }
+
+    /** *************************************************************
+     */
+    private String allRelationsOfArity(int i) {
+
+        String parent = "";
+        switch (i) {
+          case 2: parent = "BinaryPredicate"; break;
+          case 3: parent = "TernaryPredicate"; break;
+          case 4: parent = "QuaternaryPredicate"; break;
+          case 5: parent = "QuintaryPredicate"; break;
+        }
+        if (parent == "") 
+            return "";
+        StringBuffer result = new StringBuffer();
+        Iterator it = terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (childOf(term,parent))
+                result.append("(format EnglishLanguage " + term + " \"" + relationFormat(term,i) + "\")\n");            
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
      * This method currently takes one command-line argument, which
      * should be the absolute pathname of the directory in which the
      * source Merge,kif file is located.  The resulting tptp file will
      * be named TPTP-TEST-KB.tptp, and will be written to the same
      * directory.
      */
-    public static void main(String[] args) {
+    public static void testTPTP(String[] args) {
 
         try {
             if (args[0] == null) {
@@ -3582,41 +3691,26 @@ public class KB {
             // translated to TPTP as part of the loading and
             // processing of the .kif constituent files.
             mgr.setPref("TPTP", "yes");
-
             mgr.setPref("inferenceEngine", null);
-
             mgr.setPref("kbDir", args[0]);
-
             mgr.kbs.clear();
-
-            mgr.addKB("TPTP-TEST-KB");
-                
+            mgr.addKB("TPTP-TEST-KB");              
             KB kb = mgr.getKB("TPTP-TEST-KB");
-
             kb.constituents.clear();
-
-            File kbDir = new File(mgr.getPref("kbDir"));
-                
+            File kbDir = new File(mgr.getPref("kbDir"));               
             File kifFileToLoad = new File(kbDir, "Merge.kif");    
-
             kb.addConstituent(kifFileToLoad.getCanonicalPath(),
-
                               // Compute caches of "virtual" assertions,
                               true, 
-
                               // Don't write a file of processed
                               // SUO-KIF formulas for the inference
                               // engine, and don't try to start an
                               // inference engine process.
                               false  
                               );
-
             kb.preProcess(kb.getFormulas());
-
             File tptpFile = new File(kbDir, kb.name + ".tptp");
-
             String fileWritten = kb.writeTPTPFile(tptpFile.getCanonicalPath(), null, false, "none");
-
             if (Formula.isNonEmptyString(fileWritten)) {
                 System.out.println("File written: " + fileWritten);
             }
@@ -3630,4 +3724,25 @@ public class KB {
         return;
     }
 
+    /** *************************************************************
+     */
+    public static void main(String[] args) {
+
+        // testTPTP(args);
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (IOException ioe ) {
+            System.out.println(ioe.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        System.out.println("-------------- Terms ---------------");
+        System.out.println(kb.allTerms());
+        for (int i = 1; i < 5; i++) {
+            System.out.println("-------------- Arity " + i + " Functions ---------------");
+            System.out.println(kb.allFunctionsOfArity(i));
+            System.out.println("-------------- Arity " + i + " Relations ---------------");
+            System.out.println(kb.allRelationsOfArity(i+1));
+        }
+    }
 }
