@@ -915,7 +915,7 @@ public class LanguageFormatter {
 	int start = -1;
         Formula f = new Formula();
         f.read(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        // System.out.println("Formula: " + f.theFormula);
         HashMap varMap = f.computeVariableTypes(kb);
 	String nlFormat = nlStmtPara(stmt,false,phraseMap,termMap,language,1);
 	if (nlFormat != null) {
