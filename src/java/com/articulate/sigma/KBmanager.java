@@ -516,7 +516,7 @@ public class KBmanager {
         //System.out.println(KBmanager.getMgr().getKBnames());
         //System.out.println(kb.name);
         //System.out.println(LanguageFormatter.htmlParaphrase("", "(or (instance ?X0 Relation) (not (instance ?X0 TotalValuedRelation)))", 
-        //                                              kb.getFormatMap("en"), kb.getTermFormatMap("en"), "en"));
+        //                                              kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), "EnglishLanguage"));
 
     }
 }

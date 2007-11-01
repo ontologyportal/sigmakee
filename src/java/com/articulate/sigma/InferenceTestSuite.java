@@ -106,7 +106,7 @@ public class InferenceTestSuite {
 
         // At this point, inferenceTestDir and outputDir shouild be
         // set to viable values.
-        String language = "en";
+        String language = "EnglishLanguage";
         int maxAnswers = 1;
         totalTime = 0;
         long duration = 0;

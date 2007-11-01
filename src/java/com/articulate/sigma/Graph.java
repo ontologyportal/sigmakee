@@ -81,6 +81,17 @@ public class Graph {
     private static ArrayList createGraphBody(KB kb, Set check, String term, String relation, 
 					     int above, int below, String indentChars,int level, boolean show) {
 
+        System.out.println("ENTER Graph.createGraphBody(" 
+                           + kb.name + ", "
+                           + check + ", "
+                           + term + ", "
+                           + relation + ", "
+                           + above + ", "
+                           + below + ", "
+                           + indentChars + ", "
+                           + level + ", "
+                           + show + ")");
+
         ArrayList result = new ArrayList();
         ArrayList parents = new ArrayList();
         ArrayList children = new ArrayList();
@@ -126,6 +137,18 @@ public class Graph {
 		}
 	    }
 	}
+
+        System.out.println("EXIT Graph.createGraphBody(" 
+                           + kb.name + ", "
+                           + check + ", "
+                           + term + ", "
+                           + relation + ", "
+                           + above + ", "
+                           + below + ", "
+                           + indentChars + ", "
+                           + level + ", "
+                           + show + ")");
+        System.out.println("  -> " + result);
         
         return result;
     }

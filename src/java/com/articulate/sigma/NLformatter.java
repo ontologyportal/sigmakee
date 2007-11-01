@@ -687,7 +687,7 @@ public class NLformatter {
       HashMap phraseMap = new HashMap();
       phraseMap.put("foo","%1 is a foo of %2");
       HashMap termMap = new HashMap();
-      System.out.println(nlStmtPara("(not (foo ?FOO ?BAR))",phraseMap,termMap,"en"));
+      System.out.println(nlStmtPara("(not (foo ?FOO ?BAR))",phraseMap,termMap,"EnglishLanguage"));
 
   }
 }

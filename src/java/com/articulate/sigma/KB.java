@@ -37,7 +37,7 @@ public class KB {
     public ArrayList constituents = new ArrayList();
 
     /** The natural language in which axiom paraphrases should be presented. */
-    public String language = "en";    
+    public String language = "EnglishLanguage";    
 
     /** The location of preprocessed KIF files, suitable for loading into Vampire. */
     public String kbDir = null;
@@ -1843,6 +1843,9 @@ public class KB {
      * Repopulates the format maps for lang.
      */
     private void reloadFormatMaps(String lang) {
+
+        // System.out.println("ENTER reloadFormatMaps(" + this.name + ", " + lang + ")");
+
         try {
 
             String lingua;
@@ -1891,7 +1894,7 @@ public class KB {
                     formatMap.put(key.intern(), format);
                 }
             }
-            System.out.println("INFO in KB.reloadFormatMaps(): "
+            System.out.println("INFO in KB.reloadFormatMaps(" + this.name + ", " + lang + "): "
                                + ((System.currentTimeMillis() - t1) / 1000.0)
                                + " seconds to build KB.formatMap");
 
@@ -1920,7 +1923,7 @@ public class KB {
                     termFormatMap.put(key.intern(),format);
                 }
             }
-            System.out.println("INFO in KB.reloadFormatMaps(): "
+            System.out.println("INFO in KB.reloadFormatMaps(" + this.name + ", " + lang + "): "
                                + ((System.currentTimeMillis() - t1) / 1000.0)
                                + " seconds to build KB.termFormatMap");
         }
@@ -1928,6 +1931,8 @@ public class KB {
             ex.printStackTrace();
         }
         language = lang;
+        // System.out.println("EXIT reloadFormatMaps(" + this.name + ", " + lang + ")");
+        // System.out.println("  language == " + language);
     }
 
     /** ***************************************************************
@@ -1941,7 +1946,7 @@ public class KB {
      *  and the values are format strings.
      */
     public HashMap getFormatMap(String lang) {
-
+        // System.out.println("ENTER getFormatMap(" + this.name + ", " + lang + ")");
         if ((formatMap == null) || formatMap.isEmpty() || (!lang.equalsIgnoreCase(language))) {
 
             // This is here to make sure LanguageFormatter.keywordMap
@@ -1950,6 +1955,7 @@ public class KB {
 
             reloadFormatMaps(lang);
         }
+        // System.out.println("EXIT getFormatMap(" + this.name + ", " + lang + ")");
         return formatMap;
     }
 
@@ -3040,12 +3046,14 @@ public class KB {
 
     /** A utility array for profiling subtasks in KB.preProcess(). */
     protected static long[] ppTimers = { 0L,  // type pred (sortal) computation
-                                         0L,  // pred var instantion
+                                         0L,  // pred var instantiation
                                          0L,  // row var expansion
                                          0L,  // Formula.getRowVarExpansionRange()
                                          0L,  // Formula.toNegAndPosLitsWithRenameInfo()
                                          0L,  // Formula.adjustExpansionCount()
-                                         0L   // Formula.preProcessRecurse()
+                                         0L,  // Formula.preProcessRecurse()
+                                         0L,  // Formula.makeQuantifiersExplicit()
+                                         0L   // Formula.insertTypeRestrictions()
     };
 
     /** ***************************************************************
@@ -3130,6 +3138,12 @@ public class KB {
             System.out.println("    "
                                + (ppTimers[0] / 1000.0)
                                + " seconds adding type predicates");
+            System.out.println("      "
+                               + (ppTimers[7] / 1000.0)
+                               + " seconds making quantifiers explicit");
+            System.out.println("      "
+                               + (ppTimers[8] / 1000.0)
+                               + " seconds inserting type restrictions");
             System.out.println("    "
                                + (ppTimers[6] / 1000.0)
                                + " seconds in Formula.preProcessRecurse()");
