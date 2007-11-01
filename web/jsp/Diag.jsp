@@ -27,8 +27,8 @@ August 9, Acapulco, Mexico.
   String formattedFormula = null;
 
   String language = request.getParameter("lang");
-  if (language == null)
-      language = "en";
+  if (!Formula.isNonEmptyString(language))
+      language = "EnglishLanguage";
   kbName = request.getParameter("kb");
   kb = KBmanager.getMgr().getKB(kbName);
   Map theMap = null;

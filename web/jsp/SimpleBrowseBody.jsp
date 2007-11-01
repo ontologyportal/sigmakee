@@ -21,7 +21,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  language = request.getParameter("lang");
  if (!Formula.isNonEmptyString(language)) 
     language = "EnglishLanguage";
- 
  kbName = request.getParameter("kb");
  kb = null;
  if (Formula.isNonEmptyString(kbName)) {

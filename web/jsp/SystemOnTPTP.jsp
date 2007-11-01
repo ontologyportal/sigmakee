@@ -88,8 +88,8 @@ August 9, Acapulco, Mexico.
 //-----------------------------------------------------------------------------
 //----Code for building the query part
   String language = request.getParameter("lang");
-  if ( language == null ) {
-    language = "en";
+  if (!Formula.isNonEmptyString(language)) {
+    language = "EnglishLanguage";
   }
   String kbName = request.getParameter("kb");
   KB kb;
