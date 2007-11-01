@@ -246,7 +246,11 @@ public class KIF {
                             if (validArgs == null || validArgs == "") 
                                 validArgs = f.badQuantification();                      
                             if (validArgs != null && validArgs != "") 
-                                throw new ParseException("Parsing error in " + filename + ".\n Invalid number of arguments. " + validArgs,f.startLine);  
+                                throw new ParseException("Parsing error in " 
+                                                         + filename 
+                                                         + ": Invalid number of arguments near line " 
+                                                         + f.startLine,
+                                                         f.startLine);  
                         }
                         // formulaList.add(expression.intern());
                         if (formulaSet.size() % 100 == 0) 
@@ -277,7 +281,11 @@ public class KIF {
                         keySet.clear();
                     }
                     else if (parenLevel < 0) {
-                        throw new ParseException("Parsing error in " + filename + ": Extra closing paranthesis found.",f.startLine);
+                        throw new ParseException("Parsing error in " 
+                                                 + filename 
+                                                 + ": Extra closing parenthesis found near line "
+                                                 + f.startLine,
+                                                 f.startLine);
                     }
                 }
                 else if (st.ttype==34) {                                      // " - it's a string
@@ -313,7 +321,11 @@ public class KIF {
                     if (expression.length() > 64000) {
                         //System.out.print("Error in KIF.parse(): Parsing error: Sentence Over 64000 characters.");
                         //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
-                        throw new ParseException("Parsing error in " + filename + ": Sentence Over 64000 characters.",f.startLine);                      
+                        throw new ParseException("Parsing error in " 
+                                                 + filename 
+                                                 + ": Sentence over 64000 characters new line "
+                                                 + f.startLine,
+                                                 f.startLine);                      
                     }
                     // Build the terms list and create special keys
                     // ONLY if we are in NORMAL_PARSE_MODE.
@@ -343,12 +355,8 @@ public class KIF {
                                              + f.startLine,
                                              f.startLine);                      
                 }
-                // if (key != null)
-                //    display(st,inRule,inAntecedent,inConsequent,argumentNum,parenLevel,key);
             } while (st.ttype != StreamTokenizer.TT_EOF);
             if (keySet.size() != 0 || expression.length() > 0) {
-                //System.out.println("Error in KIF.parse(): Parsing error: ");
-                //System.out.println("Kif ends before parsing finishes.  Missing closing parenthesis.");
                 throw new ParseException("Parsing error in " 
                                          + filename 
                                          + ": Missing closing paranthesis near line " 
