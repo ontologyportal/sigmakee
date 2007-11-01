@@ -1795,6 +1795,14 @@ public class Formula implements Comparable {
         if (SORTAL_TYPE_CACHE != null) {
             System.out.println("INFO in Formula.destroySortalTypeCache()");
             System.out.println("  Clearing " + SORTAL_TYPE_CACHE.size() + " entries");
+            Iterator it = SORTAL_TYPE_CACHE.values().iterator();
+            Object obj = null;
+            while (it.hasNext()) {
+                obj = it.next();
+                if (obj instanceof List) {
+                    ((List) obj).clear();
+                }
+            }
             SORTAL_TYPE_CACHE.clear();
         }
         SORTAL_TYPE_CACHE = null;
@@ -2588,8 +2596,15 @@ public class Formula implements Comparable {
         try {
             Formula f = new Formula();
             f.read(this.theFormula);
+            long t1 = System.currentTimeMillis();
             f.read(f.makeQuantifiersExplicit(false));
+            long t2 = System.currentTimeMillis();
             result = f.insertTypeRestrictions(kb);
+            long t3 = System.currentTimeMillis();
+            // Time makeQuantifiersExplicit
+            KB.ppTimers[7] += (t2 - t1);
+            // Time insertTypeRestrictions
+            KB.ppTimers[8] += (t3 - t2);
         }
         catch (Exception ex) {
             ex.printStackTrace();
