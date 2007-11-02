@@ -227,6 +227,54 @@ public class DocGen {
         result.append(DocGen.createRelations(kb,kbHref,term));
         result.append("</table>\n");
 
+        result.append(HTMLformatter.htmlDivider);
+        result.append("<P><table><tr><td><b>Other statements</b></td></tr>");
+        result.append("<tr><td class=\"cell\">There statements express (potentially complex) facts about the term, " +
+                      "and are automatically generated.</td></tr>\n<tr><td class=\"cell\">");
+
+        for (int argnum = 2; argnum < 6; argnum++) {
+            ArrayList forms = kb.ask("arg",argnum,term);
+            if (forms != null) {
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula form = (Formula) forms.get(i);
+                    result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
+                                   kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
+                }
+            }
+        }
+        ArrayList forms = kb.ask("ant",0,term);
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
+                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "\n");
+            }
+        }
+        forms = kb.ask("cons",0,term);
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
+                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "\n");
+            }
+        }
+        forms = kb.ask("stmt",0,term);
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
+                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
+            }
+        }
+        forms = kb.ask("arg",0,term);
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
+                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
+            }
+        }
+        result.append("</td></tr></table><P>");
         return result.toString();
     }
 
