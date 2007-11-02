@@ -945,17 +945,104 @@ public class LanguageFormatter {
     }
 
     /** **************************************************************
+     * Generate a linguistic article appropriate to how many times in a
+     * paraphrase a particular type has already occurred.
      */
-    public static String getArticle(String s) {
+    public static String getArticle(String s, int count, int occurrance) {
 
-        if (s.charAt(0) == 'A' || s.charAt(0) == 'a' ||
+        String ordinal = "";
+        switch (occurrance) {
+          case 3: ordinal = "third "; break;
+          case 4: ordinal = "forth "; break;
+          case 5: ordinal = "fifth "; break;
+          case 6: ordinal = "sixth "; break;
+          case 7: ordinal = "seventh "; break;
+          case 8: ordinal = "eighth "; break;
+          case 9: ordinal = "ninth "; break;
+          case 10: ordinal = "tenth "; break;
+          case 11: ordinal = "eleventh "; break;
+          case 12: ordinal = "twelfth "; break;
+        }
+        if (count == 1 && occurrance == 2)
+            return "another ";        
+        if (count > 1) {
+            if (occurrance == 1 || occurrance > 2) 
+                return "the " + ordinal;
+            else
+                return "the other ";
+        }
+        if ((s.charAt(0) == 'A' || s.charAt(0) == 'a' ||     // count = 1 (first occurrance of a type)
             s.charAt(0) == 'E' || s.charAt(0) == 'e' ||
             s.charAt(0) == 'I' || s.charAt(0) == 'i' ||
             s.charAt(0) == 'O' || s.charAt(0) == 'o' ||
-            s.charAt(0) == 'U' || s.charAt(0) == 'u') 
+            s.charAt(0) == 'U' || s.charAt(0) == 'u') &&
+            occurrance == 1)
             return "an ";
         else
-            return "a ";        
+            return "a " + ordinal;        
+    }
+
+    /** **************************************************************
+     * Replace variables with types, and articles appropriate to how many times
+     * they have occurred.
+     */
+    private static String incrementalVarReplace(String form, String varString, String varType,
+                                                String varPretty, String language, 
+                                                boolean isClass, HashMap typeMap) {
+
+        String result = new String(form);
+        boolean found = true;
+        int occurranceCounter = 1;
+        if (typeMap.keySet().contains(varType)) {
+            occurranceCounter = (Integer) typeMap.get(varType);
+            occurranceCounter++;
+            typeMap.put(varType,new Integer(occurranceCounter));
+        }
+        else
+            typeMap.put(varType,new Integer(1));
+        int count = 1;
+        while (found) {
+            if (result.indexOf(varString) > -1 && count < 20) {
+                if (isClass) 
+                    result = result.replaceFirst("\\?" + varString.substring(1),
+                                                 getArticle("kind",count,occurranceCounter) + "kind of " + varPretty);
+                else
+                    result = result.replaceFirst("\\?" + varString.substring(1),
+                                                 getArticle(varPretty,count,occurranceCounter) + varPretty);
+            }
+            else
+                found = false;
+            count++;
+        }
+        return result;
+    }
+
+    /** **************************************************************
+     * Collect all the variables occurring in a formula in order.  Return
+     * an ArrayList of Strings.
+     */
+    private static ArrayList collectOrderedVariables(String form) {
+
+        boolean inString = false;
+        boolean inVar = false;
+        String var = "";
+        ArrayList result = new ArrayList();
+        for (int i = 0; i < form.length(); i++) {
+            char ch = form.charAt(i);
+            switch (ch) {
+                case '"': inString = !inString; break;
+                case '?': if (!inString) inVar = true; break;
+            }
+            if (inVar && !Character.isLetterOrDigit(ch) && ch != '?') {
+                if (!result.contains(var)) 
+                    result.add(var);                
+                inVar = false;
+                var = "";
+            }
+            if (inVar) 
+                var = var + ch;
+        }
+        return result;
     }
 
     /** **************************************************************
@@ -965,7 +1052,9 @@ public class LanguageFormatter {
     public static String variableReplace(String form, HashMap varMap, KB kb, String language) {
 
         String result = form;
-        Iterator it = varMap.keySet().iterator();
+        HashMap typeMap = new HashMap();
+        ArrayList varList = collectOrderedVariables(form);
+        Iterator it = varList.iterator();
         while (it.hasNext()) {
             String varString = (String) it.next();
             ArrayList outerArray = (ArrayList) varMap.get(varString);
@@ -975,24 +1064,22 @@ public class LanguageFormatter {
                 String varType = (String) subclassArray.get(0);
                 String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                 if (Formula.isNonEmptyString(varPretty))
-                    result = result.replaceAll("\\?" + varString.substring(1),"a kind of " + varPretty);
+                    result = incrementalVarReplace(result,varString,varType,varPretty,language,true,typeMap);
                 else
-                    result = result.replaceAll("\\?" + varString.substring(1),"a kind of " + varType);
+                    result = incrementalVarReplace(result,varString,varType,varType,language,true,typeMap);
             }
             else
                 if (instanceArray.size() > 0) {
                     String varType = (String) instanceArray.get(0);
                     String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                     if (Formula.isNonEmptyString(varPretty))
-                        result = result.replaceAll("\\?" + varString.substring(1),getArticle(varPretty) + varPretty);
+                        result = incrementalVarReplace(result,varString,varType,varPretty,language,false,typeMap);
                     else
-                        result = result.replaceAll("\\?" + varString.substring(1),getArticle(varType) + varType);
+                        result = incrementalVarReplace(result,varString,varType,varType,language,false,typeMap);
                 }
                 else
-                    result = result.replaceAll("\\?" + varString.substring(1),"a(n) entity");                
+                    result = incrementalVarReplace(result,varString,"Entity","entity",language,false,typeMap);
         }
-
-        //System.out.println("Paraphrase: " + result);
         return result;
     }
 
@@ -1007,12 +1094,14 @@ public class LanguageFormatter {
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
 
-        String stmt = "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
+        // String stmt = "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
+        String stmt = "(=> (and (instance ?OBJ1 Object) (partlyLocated ?OBJ1 ?OBJ2)) (exists (?SUB) (and (part ?SUB ?OBJ1) (located ?SUB ?OBJ2))))";
+        //collectOrderedVariables(stmt);
         Formula f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.theFormula);
-        HashMap varMap = f.computeVariableTypes(kb);
-        System.out.println("result: " + variableReplace(f.theFormula,varMap,kb,"EnglishLanguage"));
+        System.out.println("result: " + htmlParaphrase("",stmt, kb.getFormatMap("EnglishLanguage"), 
+                            kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage"));
     }
 }
 
