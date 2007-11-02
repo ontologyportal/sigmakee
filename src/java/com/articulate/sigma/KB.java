@@ -3645,7 +3645,7 @@ public class KB {
     private String relationFormat(String term, int i) {
 
         switch (i) {
-          case 2: return "%2 is %n " + LanguageFormatter.getArticle(term) + "&%" + prettyPrint(term) + " of %1"; 
+          case 2: return "%2 is %n " + LanguageFormatter.getArticle(term,1,1) + "&%" + prettyPrint(term) + " of %1"; 
           case 3: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3"; 
           case 4: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4";
           case 5: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4 and %5";
