@@ -113,19 +113,19 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     forms = kb.ask("arg",0,term);
     show.append(HTMLformatter.browserSectionFormat(forms,"appearance as argument number 0", kb, language));
 
-    show.append("<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
+    show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");
     if (!parentPage.equals("TreeView.jsp")) 
-        show.append("\n<P><P><small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
+        show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
                     "?lang=" + language + "&kb=" + kbName + 
-                    "&term=" + term + "\">Show full definition with tree view</a></small>\n");
+                    "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
     
-    show.append("\n<P><P><small><a href=\"http://" + hostname + ":" + port + "/sigma/SimpleBrowse.jsp" + 
+    show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/SimpleBrowse.jsp" + 
                 "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
                 "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
-    show.append("\n<P><P><small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
+    show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
                 "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
-                "&term=" + term + "\">Show simplified definition (with tree view)</a></small>\n");
+                "&term=" + term + "\">Show simplified definition (with tree view)</a></small><br>\n");
  }
 %>
