@@ -3354,6 +3354,7 @@ public class KB {
         PrintWriter pr = null;
         int axiomIndex = 1;
         TreeSet orderedFormulae;
+        Formula f = null;
         String theTPTPFormula;
         boolean sanitizedFormula;
         boolean commentedFormula;
@@ -3410,9 +3411,12 @@ public class KB {
             Iterator ite = orderedFormulae.iterator();
             List tptpFormulas = null;
             Iterator tptpIt = null;
-            Formula f = null;
+            f = null;
             while (ite.hasNext()) {
                 f = (Formula) ite.next();
+
+                // System.out.println("  f == " + f);
+
                 tptpFormulas = f.getTheTptpFormulas();
 
                 // System.out.println("  1 : tptpFormulas == " + tptpFormulas);
@@ -3447,6 +3451,9 @@ public class KB {
                 tptpIt = tptpFormulas.iterator();
                 while (tptpIt.hasNext()) {
                     theTPTPFormula = (String) tptpIt.next();
+
+                    // System.out.println("  theTPTPFormula == " + theTPTPFormula);
+
                     commentedFormula = false;
                     if (onlyPlainFOL) {
                         //----Remove interpretations of arithmetic
@@ -3502,6 +3509,8 @@ public class KB {
         }
         catch (Exception e) {
             System.out.println("Error in KB.writeTPTPFile(): " + e.getMessage());
+            System.out.println("  fileName == " + fileName);
+            System.out.println("  f == " + f);
             e.printStackTrace();
         }
 
