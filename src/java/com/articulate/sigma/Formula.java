@@ -224,6 +224,68 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Returns true if the Formula contains no unbalanced parentheses
+     * or unbalanced quote characters, otherwise returns false.
+     * 
+     * @return boolean
+     */
+    public boolean isBalancedList() {
+        boolean ans = false;
+        try {
+            if (this.listP()) {
+                if (this.empty()) {
+                    ans = true;  
+                }
+                else {
+                    String input = this.theFormula.trim();
+                    List quoteChars = Arrays.asList('"', '\'');
+                    int i = 0;
+                    int len = theFormula.length();
+                    int end = len - 1;
+                    int pLevel = 0;
+                    int qLevel = 0;
+                    char prev = '0';
+                    char ch = prev;
+                    boolean insideQuote = false;
+                    char quoteCharInForce = '0';
+                    while (i < len) {
+                        ch = input.charAt(i);
+                        if (!insideQuote) {
+                            if (ch == '(') {
+                                pLevel++;
+                            }
+                            else if (ch == ')') {
+                                pLevel--;
+                            }
+                            else if (quoteChars.contains(ch) && (prev != '\\')) {
+                                insideQuote = true;
+                                quoteCharInForce = ch;
+                                qLevel++;
+                            }
+                        }
+                        else if (quoteChars.contains(ch) && (ch == quoteCharInForce) && (prev != '\\')) {
+                            insideQuote = false;
+                            quoteCharInForce = '0';
+                            qLevel--;
+                        }
+                        prev = ch;
+                        i++;
+                    }
+                    ans = ((pLevel == 0) && (qLevel == 0));
+                    // System.out.println("  qLevel == " + qLevel);
+                    // System.out.println("  pLevel == " + pLevel);
+                }
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("ERROR in Formula.isBalancedList(" + this + "): " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+
+    /** ***************************************************************
      * Return the LISP 'car' of the formula - the first element of the list.
      * Note that this operation has no side effect on the Formula.
      * 
@@ -237,7 +299,7 @@ public class Formula implements Comparable {
     public String car() {
         String ans = null;
         try {
-            if (this.listP()) {
+            if (this.isBalancedList()) {
                 if (this.empty()) {
 
                     // NS: Clean this up someday. 
@@ -285,7 +347,11 @@ public class Formula implements Comparable {
                         }
                         else if (quoteChars.contains(ch) && (ch == quoteCharInForce) && (prev != '\\')) {
                             sb.append(ch);
-                            break;
+                            insideQuote = false;
+                            quoteCharInForce = '0';
+                            if (level <= 0) {
+                                break;
+                            }
                         }
                         else {
                             sb.append(ch);
@@ -296,10 +362,13 @@ public class Formula implements Comparable {
                     ans = sb.toString();
                 }
             }
+            else {
+                throw new Exception("Unbalanced parentheses or quote characters");
+            }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in Formula.car(" + this + ")");
-            ex.printStackTrace();
+            System.out.println("ERROR in Formula.car(" + this + "): " + ex.getMessage());
+            // ex.printStackTrace();
         }
         return ans;
     }
@@ -312,7 +381,7 @@ public class Formula implements Comparable {
     public String cdr() {
         String ans = null;
         try {
-            if (this.listP()) {
+            if (this.isBalancedList()) {
                 if (this.empty()) {
                     ans = this.theFormula;
                 }
@@ -358,7 +427,11 @@ public class Formula implements Comparable {
                         }
                         else if (quoteChars.contains(ch) && (ch == quoteCharInForce) && (prev != '\\')) {
                             carCount++;
-                            break;
+                            insideQuote = false;
+                            quoteCharInForce = '0';
+                            if (level <= 0) {
+                                break;
+                            }
                         }
                         else {
                             carCount++;
@@ -377,10 +450,13 @@ public class Formula implements Comparable {
                     }
                 }
             }
+            else {
+                throw new Exception("Unbalanced parentheses or quote characters");
+            }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in Formula.cdr(" + this + ")");
-            ex.printStackTrace();
+            System.out.println("ERROR in Formula.cdr(" + this + "): " + ex.getMessage());
+            // ex.printStackTrace();
         }
         return ans;
     }
@@ -1055,34 +1131,41 @@ public class Formula implements Comparable {
      * @result the formula as a String, with explicit quantification
      */
     public String makeQuantifiersExplicit(boolean query) {
+        String result = this.theFormula;
         try {
-            List avoid = Arrays.asList("documentation",
-                                       "localDocumentation",
-                                       "externalImage");
+            String[] avoid = {"documentation",
+                              "localDocumentation",
+                              "externalImage"};
             String arg0 = this.car();
-            if (avoid.contains(arg0)) {
-                return theFormula;
-            }
-            ArrayList quantVariables = collectQuantifiedVariables(theFormula);
-            ArrayList unquantVariables = collectUnquantifiedVariables(theFormula,quantVariables);
-            if (unquantVariables.size() > 0) {       // Quantify all the unquantified variables
-                StringBuffer quant = new StringBuffer("(forall (");  
-                if (query) 
-                    quant = new StringBuffer("(exists (");     
-                for (int i = 0; i < unquantVariables.size(); i++) {
-                    quant = quant.append((String) unquantVariables.get(i));
-                    if (i < unquantVariables.size() - 1) 
-                        quant = quant.append(" ");
+            boolean go = true;
+            for (int k = 0; k < avoid.length; k++) {
+                if (avoid[k].equals(arg0)) {
+                    go = false;
+                    break;
                 }
-                //System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
-                //    quant.toString() + ") " + theFormula + ")");
-                return quant.toString() + ") " + theFormula + ")";
+            }
+            if (go) {
+                ArrayList quantVariables = collectQuantifiedVariables(theFormula);
+                ArrayList unquantVariables = collectUnquantifiedVariables(theFormula,quantVariables);
+                if (unquantVariables.size() > 0) {       // Quantify all the unquantified variables
+                    StringBuffer quant = new StringBuffer("(forall (");  
+                    if (query) 
+                        quant = new StringBuffer("(exists (");     
+                    for (int i = 0; i < unquantVariables.size(); i++) {
+                        quant = quant.append((String) unquantVariables.get(i));
+                        if (i < unquantVariables.size() - 1) 
+                            quant = quant.append(" ");
+                    }
+                    //System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
+                    //    quant.toString() + ") " + theFormula + ")");
+                    result = quant.toString() + ") " + theFormula + ")";
+                }
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        return theFormula;
+        return result;
     }
 
     /** ***************************************************************
@@ -1281,8 +1364,10 @@ public class Formula implements Comparable {
                         result = new StringBuffer(rowResult.toString());
                     }
                     ArrayList al = parseList(result.toString());
+
                     // System.out.println("INFO in Formula.expandRowVars(" + this + ")");
                     // System.out.println("  al == " + al);
+
                     Formula newF = null;
                     for (int i = 0; i < al.size(); i++) {
                         newF = (Formula) al.get(i);
@@ -1450,18 +1535,18 @@ public class Formula implements Comparable {
             if (!((clauseData instanceof ArrayList) && (clauseData.size() > 2))) {
                 return ans;
             }
-            /*
-              System.out.println();
-              System.out.println("clauseData == " + clauseData);
-              System.out.println();
-            */
+
+            // System.out.println();
+            // System.out.println("clauseData == " + clauseData);
+            // System.out.println();
+
             ArrayList clauses = (ArrayList) clauseData.get(0);
-            /*
-              System.out.println();
-              System.out.println("clauses == " + clauses);
-              System.out.println("clauses.size() == " + clauses.size());
-              System.out.println();
-            */
+
+            // System.out.println();
+            // System.out.println("clauses == " + clauses);
+            // System.out.println("clauses.size() == " + clauses.size());
+            // System.out.println();
+
             if (!(clauses instanceof ArrayList) || clauses.isEmpty()) {
                 return ans;
             }
@@ -1519,16 +1604,6 @@ public class Formula implements Comparable {
                                     minMax[1] = (arity + 1);
                                 }
                             }
-                            /*
-                              System.out.print("minMax == [ ");
-                              for (int j = 0 ; j < minMax.length ; j++) {
-                              if (j > 0) {
-                              System.out.print(", ");
-                              }
-                              System.out.print(minMax[j]);
-                              }
-                              System.out.println(" ]");
-                            */
                         }
                     }
                 }
@@ -2050,10 +2125,10 @@ public class Formula implements Comparable {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        // System.out.println("  -> " + result);
 
         if (DEBUG) {
-            System.out.println("EXIT findType(" + numarg + ", " + pred + ", " + kb + ") -> " + result);
+            System.out.println("EXIT findType(" + numarg + ", " + pred + ", " + kb + ")");
+            System.out.println("  result == " + result);
         }
         return result;
     }
@@ -2598,6 +2673,11 @@ public class Formula implements Comparable {
             f.read(this.theFormula);
             long t1 = System.currentTimeMillis();
             f.read(f.makeQuantifiersExplicit(false));
+            
+            if (DEBUG) {
+                System.out.println("  f == " + f);
+            }
+            
             long t2 = System.currentTimeMillis();
             result = f.insertTypeRestrictions(kb);
             long t3 = System.currentTimeMillis();
@@ -2611,7 +2691,8 @@ public class Formula implements Comparable {
         }
 
         if (DEBUG) {
-            System.out.println("EXIT addTypeRestrictions(" + this + ", " + kb + ") -> " + result);
+            System.out.println("EXIT addTypeRestrictions(" + this + ", " + kb + ")");
+            System.out.println("  result == " + result);
         }
 
         return result;
@@ -2869,7 +2950,9 @@ public class Formula implements Comparable {
      */
     public ArrayList preProcess(boolean query, KB kb) {
 
-        // System.out.println("INFO in Formula.preProcess(" + this + ", " + query + ", " + kb.name + ")");
+        if (DEBUG) {
+            System.out.println("ENTER Formula.preProcess(" + this + ", " + query + ", " + kb.name + ")");
+        }
 
         ArrayList results = new ArrayList();
         try {
@@ -2920,6 +3003,10 @@ public class Formula implements Comparable {
             // Increment the timer for pred var instantiation.
             KB.ppTimers[1] += (System.currentTimeMillis() - t1);
 
+            if (DEBUG) {
+                System.out.println("  predVarInstantiations == " + predVarInstantiations);
+            }
+
             // We do this to avoid adding up time spent in
             // Formula.toNegAndPosLitsWtihRenameInfo() while doing pred
             // var instantiation.  What we really want to know is how much
@@ -2951,6 +3038,10 @@ public class Formula implements Comparable {
                         }
                     }
                 }
+            }
+
+            if (DEBUG) {
+                System.out.println("  accumulator == " + accumulator);
             }
 
             // Increment the timer for row var expansion.
@@ -3006,6 +3097,12 @@ public class Formula implements Comparable {
         catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        if (DEBUG) {
+            System.out.println("EXIT Formula.preProcess(" + this + ", " + query + ", " + kb.name + ")");
+            System.out.println("  results == " + results);
+        }
+
         return results;
     }
 
@@ -3272,12 +3369,66 @@ public class Formula implements Comparable {
     private static List renameExceptions = Arrays.asList("en");
 
     /** ***************************************************************
+     * Encapsulates translateWord_1, which translates the logical
+     * operators and inequalities in SUO-KIF to their TPTP
+     * equivalents.
+     *
+     * @param st is the StreamTokenizer_s that contains the current token
+     * @return the String that is the translated token
+     */
+    private static String translateWord(StreamTokenizer_s st,boolean hasArguments) {
+        String result = null;
+        try {
+
+            if (DEBUG) {
+                System.out.println("ENTER Formula.translateWord("
+                                   + st.toString()
+                                   + ", "
+                                   + hasArguments
+                                   + ")");
+                System.out.println("  st.ttype == " + st.ttype);
+                System.out.println("  st.sval == " + st.sval);
+                System.out.println("  st.nval == " + st.nval);
+            }
+
+            result = translateWord_1(st, hasArguments);
+
+        }
+        catch (Exception ex) {
+            System.out.println("Error in Formula.translateWord(" 
+                               + st.toString() 
+                               + ", " 
+                               + hasArguments
+                               + "): "
+                               + ex.getMessage());
+            System.out.println("  st.ttype == " + st.ttype);
+            System.out.println("  st.sval == " + st.sval);
+            System.out.println("  st.nval == " + st.nval);
+            ex.printStackTrace();
+        }
+
+        if (DEBUG) {
+            System.out.println("EXIT Formula.translateWord("
+                               + st.toString()
+                               + ", "
+                               + hasArguments
+                               + ")");
+            System.out.println("  st.ttype == " + st.ttype);
+            System.out.println("  st.sval == " + st.sval);
+            System.out.println("  st.nval == " + st.nval);
+            System.out.println("  result == " + result);
+        }
+
+        return result;
+    }
+
+    /** ***************************************************************
      * Convert the logical operators and inequalities in SUO-KIF to 
      * their TPTP equivalents
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
      */
-    private static String translateWord(StreamTokenizer_s st,boolean hasArguments) {
+    private static String translateWord_1(StreamTokenizer_s st,boolean hasArguments) {
 
         int translateIndex;
 
@@ -3670,35 +3821,84 @@ public class Formula implements Comparable {
      * Parse formulae into TPTP format
      */
     public void tptpParse(boolean query, KB kb, List preProcessedForms) throws ParseException, IOException {
-
-        if (kb == null) 
-            kb = new KB("",KBmanager.getMgr().getPref("kbDir"));
-      
-        List processed;
-        if (preProcessedForms != null) {
-            processed = preProcessedForms;
-        } else {
-            processed = this.preProcess(query, kb);
+        if (DEBUG) {
+            System.out.println("ENTER Formula.tptpParse(" 
+                               + this
+                               + ", "
+                               + query
+                               + ", "
+                               + kb
+                               + ", "
+                               + preProcessedForms
+                               + ")");
         }
 
-        //     System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
-        //     System.out.println("  processed == " + processed);
+        try {
 
-        if (processed != null) {
-            this.clearTheTptpFormulas();    
-            Iterator g = processed.iterator();
-
-            //----Performs function on each current processed axiom
-            Formula f;
-            while (g.hasNext()) {
-                f = (Formula) g.next();
-                this.getTheTptpFormulas().add(tptpParseSUOKIFString(f.theFormula));
+            if (kb == null) 
+                kb = new KB("",KBmanager.getMgr().getPref("kbDir"));
+      
+            List processed;
+            if (preProcessedForms != null) {
+                processed = preProcessedForms;
+            } else {
+                processed = this.preProcess(query, kb);
             }
 
-            //         System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
-            //         System.out.println("  theTptpFormulas == " + this.getTheTptpFormulas());
+            if (DEBUG) {
+                System.out.println("  processed == " + processed);
+            }
 
+            //     System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
+            //     System.out.println("  processed == " + processed);
+
+            if (processed != null) {
+                this.clearTheTptpFormulas();    
+                Iterator g = processed.iterator();
+
+                //----Performs function on each current processed axiom
+                Formula f = null;
+                while (g.hasNext()) {
+                    f = (Formula) g.next();
+
+                    if (DEBUG) {
+                        System.out.println("  f == " + f);
+                    }
+
+                    this.getTheTptpFormulas().add(tptpParseSUOKIFString(f.theFormula));
+                }
+
+                //         System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
+                //         System.out.println("  theTptpFormulas == " + this.getTheTptpFormulas());
+
+            }
         }
+        catch (Exception ex) {
+            System.out.println("Error in Formula.tptpParse("
+                               + this
+                               + ", "
+                               + query
+                               + ", "
+                               + kb
+                               + ", "
+                               + preProcessedForms
+                               + "): "
+                               + ex.getMessage());
+            ex.printStackTrace();
+        }
+        if (DEBUG) {
+            System.out.println("EXIT Formula.tptpParse(" 
+                               + this
+                               + ", "
+                               + query
+                               + ", "
+                               + kb
+                               + ", "
+                               + preProcessedForms
+                               + ")");
+        }
+
+        return;
     }
 
     /** ***************************************************************
