@@ -275,6 +275,14 @@ August 9, Acapulco, Mexico.
   <INPUT TYPE=SUBMIT NAME="request" value="SystemOnTPTP">
   </FORM>
   <hr>
+
+<%
+//<APPLET CODE="IDVApplet" archive="http://web.cs.miami.edu/~strac/test/IDV/IDV.jar" WIDTH=800 HEIGHT=100 MAYSCRIPT=true>
+//  <PARAM NAME="URL" VALUE="http://web.cs.miami.edu/~strac/test/IDV/files/PUZ001+1.tptp">
+//  Hey, you cant see my applet!!!
+//</APPLET>
+%>
+
 <%
 //-----------------------------------------------------------------------------
 //----Code for doing the query
@@ -395,6 +403,13 @@ August 9, Acapulco, Mexico.
                       timeout      + " " +
                       "-S"         + " " +  //tstpFormat
                       kbFileName;
+          } else if (quietFlag.equals("IDV")) {
+            command = SystemOnTPTP + " " +
+                      "-q4"        + " " +  // quietFlag
+                      systemChosen + " " + 
+                      timeout      + " " +
+                      "-S"           + " " +  //tstpFormat
+                      kbFileName;            
           } else {
             command = SystemOnTPTP + " " + 
                       quietFlag    + " " + 
@@ -412,6 +427,7 @@ August 9, Acapulco, Mexico.
             if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
           }
           out.println("</PRE>");
+
           reader.close();
 //-----------------------------------------------------------------------------
 //----Calling local tptp4X (if tptpWorldExists and toggle button is on "local")
@@ -441,8 +457,24 @@ August 9, Acapulco, Mexico.
 */
         }
       }
-      if (quietFlag.equals("hyperlinkedKIF")) {
+      if (quietFlag.equals("IDV")) {
+%>
+ <APPLET CODE="IDVApplet" archive="http://selma.cs.miami.edu:8080/sigma/lib/IDV.jar" WIDTH=800 HEIGHT=100 MAYSCRIPT=true>
+   <PARAM NAME="TPTP" VALUE="<%out.println(result);%>">
+   Hey, you cant see my applet!!!
+ </APPLET>
+<%
+      } else if (quietFlag.equals("hyperlinkedKIF")) {
         if (tptpWorldExists) {
+  try {
+      out.println(TPTP2SUMO.HelloWorld() + "[");
+      out.println(TPTP2SUMO.convert("fof(ff1,axiom,f(a))."));
+      out.println("]" + TPTP2SUMO.HelloWorld());
+  } catch (Exception e) {}      
+
+
+
+          /*
           command = tptp4X    + " " + 
                     "-f sumo" + " " +
                     "--";
@@ -463,6 +495,7 @@ August 9, Acapulco, Mexico.
                                                       lineHtml,
                                                       kbName,
                                                       language));       
+          */
         } else {
           out.println("Hyperlinked KIF output not supported for remote SystemOnTPTP at this time.  Need local installation of TPTPWorld.");
         }
