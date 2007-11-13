@@ -203,20 +203,20 @@ public class HTMLformatter {
             if (relation != "" || nonRelation != "") {
                 if (i == 15) {
                     show.append("<TR>\n");
-                    show.append("  <TD><A href="+ kbHref +"&term=");
-                    show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                    show.append("  <TD><A href="+ kbHref +"&term=");
-                    show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
+                    show.append("  <TD><A href=\""+ kbHref +"&term=");
+                    show.append(   relation + "\">" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
+                    show.append("  <TD><A href=\""+ kbHref +"&term=");
+                    show.append(   nonRelation + "\">" + nonRelation + "</A>" + "</TD>\n");
                     show.append("</TR>\n");
                     show.append("<TR><TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD><TD>&nbsp;&nbsp;</TD>\n");
                     show.append("<TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD></TR>\n");
                 }
                 else {
                     show.append("<TR>\n");
-                    show.append("  <TD><A href="+ kbHref +"&term=");
-                    show.append(   relation + "'>" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                    show.append("  <TD><A href="+ kbHref +"&term=");
-                    show.append(   nonRelation + "'>" + nonRelation + "</A>" + "</TD>\n");
+                    show.append("  <TD><A href=\""+ kbHref +"&term=");
+                    show.append(   relation + "\">" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
+                    show.append("  <TD><A href=\""+ kbHref +"&term=");
+                    show.append(   nonRelation + "\">" + nonRelation + "</A>" + "</TD>\n");
                     show.append("</TR>\n");
                 }
             }
