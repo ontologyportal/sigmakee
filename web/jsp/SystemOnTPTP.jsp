@@ -472,7 +472,6 @@ August 9, Acapulco, Mexico.
       } else if (quietFlag.equals("hyperlinkedKIF")) {
         if (tptpWorldExists) {
   try {
-//      out.println(TPTP2SUMO.HelloWorld() + "[");
       newResult = TPTP2SUMO.convert(result);
       out.println(HTMLformatter.formatProofResult(newResult,
                                                   stmt,
@@ -480,7 +479,6 @@ August 9, Acapulco, Mexico.
                                                   lineHtml,
                                                   kbName,
                                                   language));       
-//      out.println("]" + TPTP2SUMO.HelloWorld());
   } catch (Exception e) {}      
 
 
