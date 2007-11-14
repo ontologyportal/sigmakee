@@ -48,7 +48,7 @@ public class TPTP2SUMO {
 
     for (SimpleTptpParserOutput.TopLevelItem item : Items) {
       //convertFormula(item, ftable);
-      result.append(convertTPTPFormula(item));
+      result.append(convertTPTPFormula(item, ftable));
     }
 
     //----End SUMO output
@@ -60,18 +60,25 @@ public class TPTP2SUMO {
     return result.toString();
   }
 
-  private static void gatherParents (SimpleTptpParserOutput.Source source, Vector<String> parents) {
+  private static Vector<String> gatherParents (SimpleTptpParserOutput.Source source) {    
+    Vector<String> parents = new Vector();
+    Vector<String> newParents = new Vector();
+    if (source == null) {
+      return parents;
+    }
     for (SimpleTptpParserOutput.ParentInfo p : ((SimpleTptpParserOutput.Source.Inference)source).getParentInfoList()) {
       SimpleTptpParserOutput.Source psource = p.getSource();
       if (psource._kind == SimpleTptpParserOutput.Source.Kind.Inference) {
-        gatherParents(psource, parents);
+        newParents = gatherParents(psource);
+        parents.addAll(newParents);
       } else if (!(p.toString()).contains("(") && !(p.toString()).contains(")")){
         parents.add(p.toString());
       }
     }
+    return parents;
   }
 
-  private static StringBuffer convertTPTPFormula (SimpleTptpParserOutput.TopLevelItem item) {
+  private static StringBuffer convertTPTPFormula (SimpleTptpParserOutput.TopLevelItem item, Hashtable ftable) {
     StringBuffer result = new StringBuffer();
     int indent = 12;
     int indented = 0;
@@ -80,19 +87,23 @@ public class TPTP2SUMO {
     result.append("\n");
     result.append("      <proofStep>\n");
     result.append("        <premises>\n");
+    SimpleTptpParserOutput.Annotations annotations = null;    
     //----Add parents info
     if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
       SimpleTptpParserOutput.AnnotatedFormula AF = ((SimpleTptpParserOutput.AnnotatedFormula)item);
-      //      gatherParents(AF.getAnnotations().getSource(),parents);
+      annotations = AF.getAnnotations();
     } else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
       SimpleTptpParserOutput.AnnotatedClause AC = ((SimpleTptpParserOutput.AnnotatedClause)item);
-      //      gatherParents(AC.getAnnotations().getSource(),parents);
+      annotations = AC.getAnnotations();
     } else {
       result.append("Error: TPTP Formula syntax unknown for converting");
       return null;
     }
-    for (String parent : parents) {
-      
+    if (annotations != null) {
+      //  parents = gatherParents(annotations.getSource());
+      for (String parent : parents) {
+        
+      }
     }
     result.append("        </premises>\n");
     result.append("        <conclusion>\n");

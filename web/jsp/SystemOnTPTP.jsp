@@ -37,7 +37,7 @@ August 9, Acapulco, Mexico.
 
 //----If local copy of TPTPWorld exists, call local SystemOnTPTP
   if (tptpWorldExists) {
-    String command = SystemOnTPTP + " " + "-w";
+    String command = SystemOnTPTP + " " + "-w" + " " + "SoTPTP";
     Process proc = Runtime.getRuntime().exec(command);
     systemListLocal.add("Choose system");
     try {
@@ -293,6 +293,7 @@ August 9, Acapulco, Mexico.
   Formula conjectureFormula;
 //----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)
   String result = "";
+  String newResult = "";
   String command;
   Process proc;
 
@@ -353,8 +354,10 @@ August 9, Acapulco, Mexico.
             reader.close();
 //-----------------------------------------------------------------------------
 //----Calling remote tptp4X 
+//----NOTE: remote tptp4x call phased out (using TPTP2SUMO.java for conversion)
             /*
             if (quietFlag.equals("hyperlinkedKIF")) {
+              out.println("<hr>");
               URLParameters.clear();
               URLParameters.put("NoHTML","1");
               URLParameters.put("X2TPTP",tstpFormat);
@@ -367,15 +370,16 @@ August 9, Acapulco, Mexico.
               reader = new BufferedReader(new InputStreamReader(
                            ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
               while ((responseLine = reader.readLine()) != null) {
-                result += responseLine + "\n";
+                newResult += responseLine + "\n";
               }
               reader.close();
-              out.println(HTMLformatter.formatProofResult(result,
+              out.println(HTMLformatter.formatProofResult(newResult,
                                                           stmt,
                                                           stmt,
                                                           lineHtml,
                                                           kbName,
                                                           language));       
+              out.println("<hr>");
             }
             */
           }
@@ -431,8 +435,9 @@ August 9, Acapulco, Mexico.
           reader.close();
 //-----------------------------------------------------------------------------
 //----Calling local tptp4X (if tptpWorldExists and toggle button is on "local")
-/*
+//----NOTE: local tptp4x call phased out (using TPTP2SUMO.java for conversion)
           if (quietFlag.equals("hyperlinkedKIF")) {
+            out.println("<hr>");
             command = tptp4X    + " " + 
                       "-f sumo" + " " +
                       "--";
@@ -442,19 +447,19 @@ August 9, Acapulco, Mexico.
             writer.write(result);
             writer.flush();
             writer.close();
-            result = "";
+            newResult = "";
             while ((responseLine = reader.readLine()) != null) {
-              result += responseLine + "\n";
+              newResult += responseLine + "\n";
             }
             reader.close();
-            out.println(HTMLformatter.formatProofResult(result,
+            out.println(HTMLformatter.formatProofResult(newResult,
                                                         stmt,
                                                         stmt,
                                                         lineHtml,
                                                         kbName,
                                                         language));       
+            out.println("<hr>");
           }
-*/
         }
       }
       if (quietFlag.equals("IDV")) {
@@ -467,9 +472,15 @@ August 9, Acapulco, Mexico.
       } else if (quietFlag.equals("hyperlinkedKIF")) {
         if (tptpWorldExists) {
   try {
-      out.println(TPTP2SUMO.HelloWorld() + "[");
-      out.println(TPTP2SUMO.convert("fof(ff1,axiom,f(a))."));
-      out.println("]" + TPTP2SUMO.HelloWorld());
+//      out.println(TPTP2SUMO.HelloWorld() + "[");
+      newResult = TPTP2SUMO.convert(result);
+      out.println(HTMLformatter.formatProofResult(newResult,
+                                                  stmt,
+                                                  stmt,
+                                                  lineHtml,
+                                                  kbName,
+                                                  language));       
+//      out.println("]" + TPTP2SUMO.HelloWorld());
   } catch (Exception e) {}      
 
 
