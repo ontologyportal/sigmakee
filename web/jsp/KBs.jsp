@@ -97,46 +97,38 @@ August 9, Acapulco, Mexico.
               out.println("<A href=\"Manifest.jsp?kb=" + kbName + "\">Manifest</A>");
           }
           out.println("</TD>");          
-          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName + "&lang=EnglishLanguage\">Browse</A></TD>");                                                      
-          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=EnglishLanguage\">Graph</A></TD>");                                                      
-          out.println("<TD><A href=\"Diag.jsp?kb=" + kbName + "&lang=EnglishLanguage\">Diagnostics</A></TD>");                                                 
-          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
-              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=EnglishLanguage\">Consistency Check</A></TD>"); 
-	  }
-	  else {
-              out.println("<TD>Consistency Check</TD>"); 
-	  }
-          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
-              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=EnglishLanguage\">Inference Tests</A></TD>");
-	  }
-	  else {
-              out.println("<TD>Inference Tests</TD>");
-	  }
-          if (kb.celt != null && KBmanager.getMgr().getPref("userName") != null && 
-              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName + "&lang=EnglishLanguage\">CELT Tests</A></TD>");
-	  }
-	  else {
-              out.println("<TD>CELT Tests</TD>");
-	  }
+          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName + "&lang=en\">Browse</A></TD>");                                                      
+          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=en\">Graph</A></TD>");                                                      
           if (KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=EnglishLanguage\">WordNet Check</A></TD>");                                                           
-	  }
-	  else {
-              out.println("<TD>WordNet Check</TD>");
-	  }
-          out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName + "\">Ask/Tell</A>&nbsp;</TD>");
+              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName + "&lang=en\">Diagnostics</A></TD>");                                                 
+          }
+          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=en\">Consistency Check</A></TD>"); 
+          }
+          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=en\">Inference Tests</A></TD>");
+          }
+          if (kb.celt != null && KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName + "&lang=en\">CELT Tests</A></TD>");
+          }
+          if (KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=en\">WordNet Check</A></TD>");                                                           
+          }
+
+          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName + "\">Ask/Tell</A>&nbsp;</TD>");
+          }
 
           if (KBmanager.getMgr().getPref("userName") != null 
-	      && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
               out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName + "\">Remove</A></TD></TR>");
-	  }
-	  else {
-              out.println("<TD>Remove</TD></TR>");
-	  }
+          }
       }
 %>
       </TABLE>
