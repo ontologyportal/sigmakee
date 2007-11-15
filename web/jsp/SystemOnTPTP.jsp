@@ -347,7 +347,9 @@ August 9, Acapulco, Mexico.
             out.println("(Remote SystemOnTPTP call)");
             out.println("<PRE>");
             while ((responseLine = reader.readLine()) != null) {
-              result += responseLine + "\n";
+              if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
+                result += responseLine + "\n";
+              }           
               if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
             }
             out.println("</PRE>");
@@ -427,7 +429,9 @@ August 9, Acapulco, Mexico.
           reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
           out.println("<PRE>");
           while ((responseLine = reader.readLine()) != null) {
-            result += responseLine + "\n";
+            if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
+              result += responseLine + "\n";
+            }
             if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
           }
           out.println("</PRE>");
@@ -436,6 +440,7 @@ August 9, Acapulco, Mexico.
 //-----------------------------------------------------------------------------
 //----Calling local tptp4X (if tptpWorldExists and toggle button is on "local")
 //----NOTE: local tptp4x call phased out (using TPTP2SUMO.java for conversion)
+          /*
           if (quietFlag.equals("hyperlinkedKIF")) {
             out.println("<hr>");
             command = tptp4X    + " " + 
@@ -460,11 +465,12 @@ August 9, Acapulco, Mexico.
                                                         language));       
             out.println("<hr>");
           }
+          */
         }
       }
       if (quietFlag.equals("IDV")) {
 %>
- <APPLET CODE="IDVApplet" archive="http://selma.cs.miami.edu:8080/sigma/lib/IDV.jar" WIDTH=800 HEIGHT=100 MAYSCRIPT=true>
+ <APPLET CODE="IDVApplet" archive="http://selma.cs.miami.edu:8080/sigma/lib/IDV.jar,http://selma.cs.miami.edu:8080/sigma/lib/TptpParser.jar,http://selma.cs.miami.edu:8080/sigma/lib/antlr-2.7.5.jar" WIDTH=800 HEIGHT=100 MAYSCRIPT=true>
    <PARAM NAME="TPTP" VALUE="<%out.println(result);%>">
    Hey, you cant see my applet!!!
  </APPLET>
