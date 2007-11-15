@@ -173,7 +173,12 @@ public class HTMLformatter {
                     String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
                     if (imageFile.matches("\\d+px-.*"))
                         imageFile = imageFile.substring(imageFile.indexOf("px-")+3);
-                    show.append("<a href=\"http://simple.wikipedia.org/wiki/Image:" +
+                    String domain = "http://simple.wikipedia.org/";
+                    if (url.indexOf("/en/") > -1) 
+                        domain = "http://en.wikipedia.org/";
+                    if (url.indexOf("/commons/") > -1) 
+                        domain = "http://commons.wikimedia.org/";
+                    show.append("<a href=\"" + domain + "wiki/Image:" +
                                 imageFile + "\"><img width=100 src=" + url + "></a>" );
                 }
                 else 
