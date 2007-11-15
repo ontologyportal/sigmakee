@@ -937,7 +937,8 @@ public class LanguageFormatter {
 				 + nlFormat.substring(start+2,word) + "\">" + nlFormat.substring(word+1,end) 
 				 + "</a>" + nlFormat.substring(end, nlFormat.length()) );		
 	    }
-            nlFormat = variableReplace(nlFormat,varMap,kb,language);
+            if (varMap != null && varMap.keySet().size() > 0) 
+                nlFormat = variableReplace(nlFormat,varMap,kb,language);
 	}
 	else  
 	    nlFormat = ""; 	
@@ -1057,28 +1058,35 @@ public class LanguageFormatter {
         Iterator it = varList.iterator();
         while (it.hasNext()) {
             String varString = (String) it.next();
-            ArrayList outerArray = (ArrayList) varMap.get(varString);
-            ArrayList instanceArray = (ArrayList) outerArray.get(0);
-            ArrayList subclassArray = (ArrayList) outerArray.get(1);
-            if (subclassArray.size() > 0) {
-                String varType = (String) subclassArray.get(0);
-                String varPretty = (String) kb.getTermFormatMap(language).get(varType);
-                if (Formula.isNonEmptyString(varPretty))
-                    result = incrementalVarReplace(result,varString,varType,varPretty,language,true,typeMap);
-                else
-                    result = incrementalVarReplace(result,varString,varType,varType,language,true,typeMap);
-            }
-            else
-                if (instanceArray.size() > 0) {
-                    String varType = (String) instanceArray.get(0);
-                    String varPretty = (String) kb.getTermFormatMap(language).get(varType);
-                    if (Formula.isNonEmptyString(varPretty))
-                        result = incrementalVarReplace(result,varString,varType,varPretty,language,false,typeMap);
-                    else
-                        result = incrementalVarReplace(result,varString,varType,varType,language,false,typeMap);
+            if (!DB.emptyString(varString)) {
+                ArrayList outerArray = (ArrayList) varMap.get(varString);
+                if (outerArray != null && outerArray.size() > 0) {
+                    ArrayList instanceArray = (ArrayList) outerArray.get(0);
+                    ArrayList subclassArray = (ArrayList) outerArray.get(1);
+                    if (subclassArray.size() > 0) {
+                        String varType = (String) subclassArray.get(0);
+                        String varPretty = (String) kb.getTermFormatMap(language).get(varType);
+                        if (Formula.isNonEmptyString(varPretty))
+                            result = incrementalVarReplace(result,varString,varType,varPretty,language,true,typeMap);
+                        else
+                            result = incrementalVarReplace(result,varString,varType,varType,language,true,typeMap);
+                    }
+                    else {
+                        if (instanceArray.size() > 0) {
+                            String varType = (String) instanceArray.get(0);
+                            String varPretty = (String) kb.getTermFormatMap(language).get(varType);
+                            if (Formula.isNonEmptyString(varPretty))
+                                result = incrementalVarReplace(result,varString,varType,varPretty,language,false,typeMap);
+                            else
+                                result = incrementalVarReplace(result,varString,varType,varType,language,false,typeMap);
+                        }
+                        else
+                            result = incrementalVarReplace(result,varString,"Entity","entity",language,false,typeMap);
+                    }
                 }
                 else
-                    result = incrementalVarReplace(result,varString,"Entity","entity",language,false,typeMap);
+                    System.out.println("Error in LanguageFormatter.variableReplace(): varString : " + varString + " formula: " + form);
+            }
         }
         return result;
     }
