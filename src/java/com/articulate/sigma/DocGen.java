@@ -229,7 +229,7 @@ public class DocGen {
 
         result.append(HTMLformatter.htmlDivider);
         result.append("<P><table><tr><td><b>Other statements</b></td></tr>");
-        result.append("<tr><td class=\"cell\">There statements express (potentially complex) facts about the term, " +
+        result.append("<tr><td class=\"cell\">These statements express (potentially complex) facts about the term, " +
                       "and are automatically generated.</td></tr>\n<tr><td class=\"cell\">");
 
         for (int argnum = 2; argnum < 6; argnum++) {
