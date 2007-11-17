@@ -157,16 +157,31 @@ public class HTMLformatter {
         return show.toString();
     }
 
+
     /** *************************************************************
-     *  Show knowledge base statistics
+     *  Show knowledge base pictures
      */
     public static String showPictures(KB kb, String term) {
+
+        return showNumberPictures(kb,term,4);
+    }
+
+    /** *************************************************************
+     *  Show knowledge base pictures
+     */
+    public static String showNumberPictures(KB kb, String term, int count) {
 
         StringBuffer show = new StringBuffer();
         ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);   // Handle picture diplay
         if (pictures != null && pictures.size() > 0) {
             show.append("<br>");
-            for (int i = 0; i < pictures.size(); i++) {
+            int numPictures = pictures.size();
+            boolean more = false;
+            if (pictures.size() > count) {
+                numPictures = count;
+                more = true;
+            }
+            for (int i = 0; i < numPictures; i++) {
                 Formula f = (Formula) pictures.get(i);
                 String url = f.getArgument(2);
                 if (url.startsWith("\"http://upload.wikimedia.org")) {
@@ -179,11 +194,13 @@ public class HTMLformatter {
                     if (url.indexOf("/commons/") > -1) 
                         domain = "http://commons.wikimedia.org/";
                     show.append("<a href=\"" + domain + "wiki/Image:" +
-                                imageFile + "\"><img width=100 src=" + url + "></a>" );
+                                imageFile + "\"><img width=100 src=" + url + "></a>\n" );
                 }
                 else 
-                    show.append("<a href=" + url + "><img width=100 src=" + url + "></a>");                
+                    show.append("<a href=" + url + "><img width=100 src=" + url + "></a>\n");                
             }
+            if (more) 
+                show.append("<a href=\"AllPictures.jsp?term=" + term + "&kb=" + kb.name + "\">more pictures...</a>");            
         }
         return show.toString();
     }
