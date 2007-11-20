@@ -310,7 +310,7 @@ public class Diagnostics {
     private static boolean quantifierNotInStatement(Formula f) {
 
         if (f.theFormula == null || f.theFormula.length() < 1 ||
-            f.theFormula.equals("()") || f.theFormula.indexOf("(") == -1)
+            !f.listP() || f.empty())
             return false;
         if (!f.car().equalsIgnoreCase("forall") &&                       // Recurse for complex expressions.
             !f.car().equalsIgnoreCase("exists")) {
@@ -357,29 +357,17 @@ public class Diagnostics {
 
         System.out.println("INFO in Diagnostics.quantifierNotInBody(): "); 
         ArrayList result = new ArrayList();
-        ArrayList forms = kb.ask("ant",-1,"forall");        // Collect all the axioms with quantifiers.
-        if (forms == null) 
-            forms = new ArrayList();
-        ArrayList forms2 = kb.ask("cons",-1,"forall");
-        if (forms2 != null) 
-            forms.addAll(forms2);
-        forms2 = kb.ask("stmt",-1,"forall");
-        if (forms2 != null) 
-            forms.addAll(forms2);
-        forms2 = kb.ask("ant",-1,"exists");
-        if (forms2 != null) 
-            forms.addAll(forms2);
-        forms2 = kb.ask("cons",-1,"exists");
-        if (forms2 != null) 
-            forms.addAll(forms2);
-        forms2 = kb.ask("stmt",-1,"exists");
-        if (forms2 != null) 
-            forms.addAll(forms2);
-        for (int i = 0; i < forms.size(); i++) {             // Iterate through all the axioms.
-            Formula form = (Formula) forms.get(i);
-            if (quantifierNotInStatement(form)) 
-                result.add(form);
-
+        Iterator it = kb.formulaMap.values().iterator();
+        Formula form = null;
+        while (it.hasNext()) {             // Iterate through all the axioms.
+            form = (Formula) it.next();
+            if ((form.theFormula.indexOf("forall") != -1) ||
+                (form.theFormula.indexOf("exists") != -1)) {
+                if (quantifierNotInStatement(form)) {
+                    result.add(form);
+                    // System.out.println("  " + form);
+                }
+            }
             if (result.size() > 19) {
                 result.add("limited to 20 results");
                 return result;
