@@ -299,7 +299,7 @@ public class Formula implements Comparable {
     public String car() {
         String ans = null;
         try {
-            if (this.isBalancedList()) {
+            if (this.listP()) {
                 if (this.empty()) {
 
                     // NS: Clean this up someday. 
@@ -362,9 +362,6 @@ public class Formula implements Comparable {
                     ans = sb.toString();
                 }
             }
-            else {
-                throw new Exception("Unbalanced parentheses or quote characters");
-            }
         }
         catch (Exception ex) {
             System.out.println("ERROR in Formula.car(" + this + "): " + ex.getMessage());
@@ -381,7 +378,7 @@ public class Formula implements Comparable {
     public String cdr() {
         String ans = null;
         try {
-            if (this.isBalancedList()) {
+            if (this.listP()) {
                 if (this.empty()) {
                     ans = this.theFormula;
                 }
@@ -449,9 +446,6 @@ public class Formula implements Comparable {
                         }
                     }
                 }
-            }
-            else {
-                throw new Exception("Unbalanced parentheses or quote characters");
             }
         }
         catch (Exception ex) {
@@ -1135,7 +1129,9 @@ public class Formula implements Comparable {
         try {
             String[] avoid = {"documentation",
                               "localDocumentation",
-                              "externalImage"};
+                              "externalImage",
+                              "format",
+                              "termFormat"};
             String arg0 = this.car();
             boolean go = true;
             for (int k = 0; k < avoid.length; k++) {
@@ -2961,6 +2957,24 @@ public class Formula implements Comparable {
                 return results;
             }
 
+            if (!this.isBalancedList()) {
+                String errStr = "Unbalanced parentheses or quotes";
+                System.out.println("Error in Formula.preProcess(" 
+                                   + this.theFormula
+                                   + ", "
+                                   + query 
+                                   + ", " 
+                                   + kb.name + ")");
+                System.out.println("  " + errStr);
+                KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+                                            + ("\n<br/>" 
+                                               + errStr 
+                                               + " in "
+                                               + this.theFormula
+                                               + "\n<br/>"));
+                return results;
+            }
+
             boolean ignoreStrings = false;
             boolean translateIneq = true;
             boolean translateMath = true;
@@ -3837,6 +3851,27 @@ public class Formula implements Comparable {
 
             if (kb == null) 
                 kb = new KB("",KBmanager.getMgr().getPref("kbDir"));
+
+            if (!this.isBalancedList()) {
+                String errStr = "Unbalanced parentheses or quotes";
+                System.out.println("Error in Formula.tptpParse(" 
+                                   + this.theFormula
+                                   + ", "
+                                   + query 
+                                   + ", " 
+                                   + kb.name 
+                                   + ", "
+                                   + preProcessedForms
+                                   + ")");
+                System.out.println("  " + errStr);
+                KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+                                            + ("\n<br/>" 
+                                               + errStr 
+                                               + " in "
+                                               + this.theFormula
+                                               + "\n<br/>"));
+                return;
+            }
       
             List processed;
             if (preProcessedForms != null) {
