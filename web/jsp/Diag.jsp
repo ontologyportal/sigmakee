@@ -143,11 +143,12 @@ August 9, Acapulco, Mexico.
 <%
   show.setLength( 0 );
   ArrayList noquant = Diagnostics.quantifierNotInBody(kb);
-  show.append(HTMLformatter.browserSectionFormat(noquant,null,null,kbHref,kb,language));
+  show.append(HTMLformatter.browserSectionFormat(noquant,
+                                                 "Warning: Extraneous quantified variables",
+                                                 kb,
+                                                 language));
 %>
-<br><b>&nbsp;Warning: Quantified variable doesn't appear in body of statement.</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
+  <%=show.toString() %></br>
 
 <%@ include file="Postlude.jsp" %>
 </BODY>
