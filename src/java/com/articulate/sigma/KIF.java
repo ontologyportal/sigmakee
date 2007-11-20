@@ -192,7 +192,11 @@ public class KIF {
                         if (keySet.size() != 0 || expression.length() > 0) {
                             //System.out.print("INFO in KIF.parse(): Parsing Error:");
                             //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
-                            throw new ParseException("Parsing error in " + filename + ": possible missing close parenthesis.",f.startLine);
+                            throw new ParseException("Parsing error in " 
+                                                     + filename 
+                                                     + ": possible missing close parenthesis near line "
+                                                     + f.startLine,
+                                                     f.startLine);
                         }
                         continue;
                     }
