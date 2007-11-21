@@ -38,7 +38,7 @@ August 9, Acapulco, Mexico.
                     <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
                     <td>&nbsp;&nbsp;</td>
                     <td align="left" valign="top"><img src="pixmaps/logoText.gif"><BR>
-                        <B>Welcome  <%=KBmanager.getMgr().getPref("userName")%></B></td>
+                        <B>Welcome <%=KBmanager.getMgr().getPref("userName")%></B></td>
                 </tr>
                 
             </table>
