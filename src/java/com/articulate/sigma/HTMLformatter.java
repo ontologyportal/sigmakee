@@ -114,9 +114,20 @@ public class HTMLformatter {
      */
     public static String showFormulas(KB kb, String term) {
 
-        StringBuffer show = new StringBuffer();
+        return showFormulasLimit(kb,term,25);
+    }
 
+    /** *************************************************************
+     *  Show knowledge base statements containing the given term at
+     * different argument positions.
+     */
+    public static String showFormulasLimit(KB kb, String term, int limit) {
+
+        StringBuffer show = new StringBuffer();
+       
         for (int arg = 1; arg < 6; arg++) {
+            int localLimit = limit;
+            String limitString = "";
             ArrayList forms = kb.ask("arg",arg,term);
             if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
                 forms = TaxoModel.removeCached(forms);
@@ -124,7 +135,12 @@ public class HTMLformatter {
                 Collections.sort(forms);
                 show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
                 show.append(htmlDivider + "<TABLE width='95%'>");
-                for (int i = 0; i < forms.size(); i++) {
+
+                if (forms.size() < localLimit) 
+                    localLimit = forms.size();
+                else
+                    limitString = "<tr><td>Display limited to " + (new Integer(localLimit)).toString() + " items.</td></tr>\n";
+                for (int i = 0; i < localLimit; i++) {
                     Formula f = (Formula) forms.get(i);
                     if ( KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                          !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
@@ -151,12 +167,12 @@ public class HTMLformatter {
                         show.append(pph + "</TD></TR>\n");
                     }                
                 }
+                show.append(limitString);
                 show.append("</TABLE>\n");
             }
         }
         return show.toString();
     }
-
 
     /** *************************************************************
      *  Show knowledge base pictures
@@ -298,10 +314,11 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormat(ArrayList forms, String header, 
-                                              KB kb, String language) {
+    public static String browserSectionFormatLimit(ArrayList forms, String header, 
+                                              KB kb, String language, int limit) {
 
         StringBuffer show = new StringBuffer();
+        String limitString = "";
 
         if (forms != null && forms.size() > 0) {
             Collections.sort(forms);
@@ -311,7 +328,12 @@ public class HTMLformatter {
                 show.append(htmlDivider);
             show.append("<TABLE width=95%%>");
 	    String pph = null;
-            for (int i = 0; i < forms.size(); i++) {
+            if (forms.size() < limit) 
+                limit = forms.size();
+            else
+                limitString = "<tr><td>Display limited to " + (new Integer(limit)).toString() + " items.</td></tr>\n";
+            
+            for (int i = 0; i < limit; i++) {
                 Formula f = (Formula) forms.get(i);
                 show.append("<TR><TD width=50%% valign=top>");
                 show.append(f.htmlFormat(kbHref) + "</td>\n<TD width=10%% valign=top BGCOLOR=#B8CADF>");
@@ -325,9 +347,19 @@ public class HTMLformatter {
                     pph = ""; 
                 show.append(pph + "</TD></TR>\n"); 
             }
+            show.append(limitString);
             show.append("</TABLE>\n");
         }     
         return show.toString();
+    }
+
+    /** *************************************************************
+     *  Create the HTML for a section of the Sigma term browser page.
+     */
+    public static String browserSectionFormat(ArrayList forms, String header, 
+                                              KB kb, String language) {
+
+        return browserSectionFormatLimit(forms, header,kb, language, 50);
     }
 
     /** *************************************************************
