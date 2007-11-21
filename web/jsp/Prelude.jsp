@@ -9,14 +9,26 @@
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <%
- if ( !Formula.isNonEmptyString(KBmanager.getMgr().getPref("userName"))
-      && !Formula.isNonEmptyString(request.getParameter("userName")) ) { %>
-
- <META HTTP-EQUIV="Refresh" CONTENT="0; URL=login.html">
- <%
-      // response.setContentLength(0);
-      // response.sendRedirect("login.html");
- }
+  ArrayList userPages = new ArrayList();
+  userPages.add("AllPictures.jsp");
+  userPages.add("Browse.jsp");
+  userPages.add("Graph.jsp");
+  userPages.add("KBs.jsp");
+  userPages.add("Manifest.jsp");
+  userPages.add("SimpleBrowse.jsp");
+  userPages.add("TreeView.jsp");
+  userPages.add("WordNet.jsp");
+  String URLString = request.getRequestURL().toString();
+  String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
+  System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
+  if (KBmanager.getMgr().getPref("userName") != null && 
+      !KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin") && !userPages.contains(pageString)) { 
+      out.println("<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0; URL=login.html\">");
+  }
+  if (!Formula.isNonEmptyString(KBmanager.getMgr().getPref("userName"))
+      && !Formula.isNonEmptyString(request.getParameter("userName"))) { 
+      out.println("<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0; URL=login.html\">");
+  }
 %>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 <%
@@ -35,7 +47,7 @@ August 9, Acapulco, Mexico.  See also www.ontologyportal.org
   String smpl = request.getParameter("simple");
   if (Formula.isNonEmptyString(smpl) && smpl.equals("yes")) {
 %>
-    <link rel="stylesheet" type="text/css" href="simple.css" />
+      <link rel="stylesheet" type="text/css" href="simple.css" />
 <%
   }
 %>
