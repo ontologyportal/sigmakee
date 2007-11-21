@@ -20,6 +20,7 @@ import java.io.*;
  *  ordering relations.  Supports Graph.jsp.  */
 public class Graph {
 
+    private static int graphsize = 0;      // a limit counter to prevent pathologically large graphs
 
     /** *************************************************************
      * Create a graph of a bounded size by incrementing the number of
@@ -67,11 +68,14 @@ public class Graph {
     public static ArrayList createGraph(KB kb, String term, String relation, 
                                         int above, int below, String indentChars) {
 
+        graphsize = 0;
         ArrayList result = new ArrayList();
 	HashSet checkAbove = new HashSet();
 	HashSet checkBelow = new HashSet();
         result = createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true);
         result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false));
+        if (graphsize == 100)
+            result.add("<P>Graph size limited to 100 terms.<P>\n");
         return result;
     }
 
@@ -81,31 +85,23 @@ public class Graph {
     private static ArrayList createGraphBody(KB kb, Set check, String term, String relation, 
 					     int above, int below, String indentChars,int level, boolean show) {
 
-        System.out.println("ENTER Graph.createGraphBody(" 
-                           + kb.name + ", "
-                           + check + ", "
-                           + term + ", "
-                           + relation + ", "
-                           + above + ", "
-                           + below + ", "
-                           + indentChars + ", "
-                           + level + ", "
-                           + show + ")");
+        System.out.println("ENTER Graph.createGraphBody(" + kb.name + ", " + check + ", "
+                           + term + ", " + relation + ", " + above + ", " + below + ", "
+                           + indentChars + ", " + level + ", " + show + ")");
 
         ArrayList result = new ArrayList();
         ArrayList parents = new ArrayList();
         ArrayList children = new ArrayList();
 
-	if ( ! check.contains(term) ) {
+	if (!check.contains(term) && graphsize < 100) {
 	    if (above > 0) {
 		ArrayList stmtAbove = kb.askWithRestriction(0,relation,1,term);
 		for (int i = 0; i < stmtAbove.size(); i++) {
 		    Formula f = (Formula) stmtAbove.get(i);
 		    String newTerm = f.getArgument(2);
-		    if ( ! newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif")) {
-			result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true));
-		    }
-		    check.add( term );
+		    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+			result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true));		    
+		    check.add(term);
 		}
 	    }
 
@@ -122,33 +118,28 @@ public class Graph {
 	    String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
 	    String formattedTerm = "<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>";
         
-	    if (show) 
-		result.add(prefix + formattedTerm);
+	    if (show) {
+                graphsize++;
+                if (graphsize < 100)                 
+                    result.add(prefix + formattedTerm);
+            }
         
 	    if (below > 0) {
 		ArrayList stmtBelow = kb.askWithRestriction(0,relation,2,term);
 		for (int i = 0; i < stmtBelow.size(); i++) {
 		    Formula f = (Formula) stmtBelow.get(i);
 		    String newTerm = f.getArgument(1);
-		    if ( ! newTerm.equals(term)  && !f.sourceFile.endsWith("_Cache.kif")) {
-			result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true));
-		    }
-		    check.add( term );
+		    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+			result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true));		    
+		    check.add(term);
 		}
 	    }
 	}
 
-        System.out.println("EXIT Graph.createGraphBody(" 
-                           + kb.name + ", "
-                           + check + ", "
-                           + term + ", "
-                           + relation + ", "
-                           + above + ", "
-                           + below + ", "
-                           + indentChars + ", "
-                           + level + ", "
-                           + show + ")");
-        System.out.println("  -> " + result);
+        //System.out.println("EXIT Graph.createGraphBody(" + kb.name + ", "+ check + ", "
+        //                   + term + ", " + relation + ", " + above + ", " + below + ", "
+        //                   + indentChars + ", " + level + ", " + show + ")");
+        //System.out.println("  -> " + result);
         
         return result;
     }
@@ -212,7 +203,6 @@ public class Graph {
             } 
         }
     }
-
 
     /** ***************************************************************
      * A test method.
