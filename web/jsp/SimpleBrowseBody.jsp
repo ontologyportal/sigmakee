@@ -80,8 +80,13 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         show.append("</tr></table>\n");
     }
     else 
-        show.append ("</b></FONT></td></tr></table>\n");    
-    show.append(DocGen.createPage(kb,HTMLformatter.kbHref,term));
+        show.append ("</b></FONT></td></tr></table>\n");  
+    int limit = 25;
+    if (KBmanager.getMgr().getPref("userName") != null && 
+        KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+        limit = 200;
+    }
+    show.append(DocGen.createPage(kb,HTMLformatter.kbHref,term,limit));
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");

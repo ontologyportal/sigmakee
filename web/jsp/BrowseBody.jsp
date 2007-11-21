@@ -98,20 +98,25 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
         show.append("</tr></table>\n");
     }
     else
-        show.append ("</b></FONT></td></tr></table>\n");   
+        show.append ("</b></FONT></td></tr></table>\n");
 
-    show.append(HTMLformatter.showFormulas(kb,term));
+    int limit = 25;
+    if (KBmanager.getMgr().getPref("userName") != null && 
+        KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+        limit = 200;
+    }
+    show.append(HTMLformatter.showFormulasLimit(kb,term,limit));
     forms = kb.ask("ant",0,term);
-    show.append(HTMLformatter.browserSectionFormat(forms,"antecedent", kb, language));
+    show.append(HTMLformatter.browserSectionFormatLimit(forms,"antecedent", kb, language,limit));
 
     forms = kb.ask("cons",0,term);
-    show.append(HTMLformatter.browserSectionFormat(forms,"consequent", kb, language));
+    show.append(HTMLformatter.browserSectionFormatLimit(forms,"consequent", kb, language,limit));
 
     forms = kb.ask("stmt",0,term);
-    show.append(HTMLformatter.browserSectionFormat(forms,"statement", kb, language));
+    show.append(HTMLformatter.browserSectionFormatLimit(forms,"statement", kb, language,limit));
 
     forms = kb.ask("arg",0,term);
-    show.append(HTMLformatter.browserSectionFormat(forms,"appearance as argument number 0", kb, language));
+    show.append(HTMLformatter.browserSectionFormatLimit(forms,"appearance as argument number 0", kb, language,limit));
 
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
