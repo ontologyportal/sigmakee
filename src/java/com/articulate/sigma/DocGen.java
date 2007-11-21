@@ -90,7 +90,7 @@ public class DocGen {
         ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
         if (docs != null && docs.size() > 0) {
             Formula f = (Formula) docs.get(0);
-            String docString = f.getArgument(2);  // Note this will become 3 if we add language to documentation
+            String docString = f.getArgument(3);  
             docString = kb.formatDocumentation(kbHref,docString);
             result.append("<td class=\"description\">" + docString + "</td></tr>\n");
         }
@@ -210,8 +210,11 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Create an HTML page that lists information about a particular term,
+     * with a limit on how many statements of each type should be
+     * displayed.
      */
-    public static String createPage(KB kb, String kbHref, String term) {
+    public static String createPage(KB kb, String kbHref, String term, int limit) {
 
         StringBuffer result = new StringBuffer();
         result.append("<table width=\"100%\">");
@@ -232,48 +235,89 @@ public class DocGen {
         result.append("<tr><td class=\"cell\">These statements express (potentially complex) facts about the term, " +
                       "and are automatically generated.</td></tr>\n<tr><td class=\"cell\">");
 
+        int localLimit = limit;
+        String limitString = "";
         for (int argnum = 2; argnum < 6; argnum++) {
+            localLimit = limit;
+            limitString = "";
             ArrayList forms = kb.ask("arg",argnum,term);
             if (forms != null) {
-                for (int i = 0; i < forms.size(); i++) {
+                if (forms.size() < localLimit) 
+                    localLimit = forms.size();
+                else
+                    limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
+                for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
                                    kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
                 }
             }
+            result.append(limitString);
         }
+
+        localLimit = limit;
+        limitString = "";
         ArrayList forms = kb.ask("ant",0,term);
         if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
+            if (forms.size() < localLimit) 
+                localLimit = forms.size();
+            else
+                limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
+            for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
                 result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
                                kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "\n");
             }
         }
+        result.append(limitString);
+
+        localLimit = limit;
+        limitString = "";
         forms = kb.ask("cons",0,term);
         if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
+            if (forms.size() < localLimit) 
+                localLimit = forms.size();
+            else
+                limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
+            for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
                 result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
                                kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "\n");
             }
         }
+        result.append(limitString);
+
+        localLimit = limit;
+        limitString = "";
         forms = kb.ask("stmt",0,term);
         if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
+            if (forms.size() < localLimit) 
+                localLimit = forms.size();
+            else
+                limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
+            for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
                 result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
                                kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
             }
         }
+        result.append(limitString);
+
+        localLimit = limit;
+        limitString = "";
         forms = kb.ask("arg",0,term);
         if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
+            if (forms.size() < localLimit) 
+                localLimit = forms.size();
+            else
+                limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
+            for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
                 result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
                                kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
             }
         }
+        result.append(limitString);
         result.append("</td></tr></table><P>");
         return result.toString();
     }
@@ -371,7 +415,7 @@ public class DocGen {
                     else
                         alphaList.put(firstChar,list);
                     list.add(term);
-                    pageList.put(term,createPage(kb,"",term));
+                    pageList.put(term,createPage(kb,"",term,200));
                 }
             }
             String tocheader = saveIndexes(kb,alphaList,pageList);
