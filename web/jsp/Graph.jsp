@@ -29,8 +29,14 @@ August 9, Acapulco, Mexico.
   if (term == null) term = "Process";
   String up = request.getParameter("up");
   if (up == null) up = "1";
+  int upint = Integer.parseInt(up);
+  if (upint > 10) 
+      upint = 1;
   String down = request.getParameter("down");
   if (down == null) down = "1";
+  int downint = Integer.parseInt(down);
+  if (downint > 10) 
+      downint = 1;
   String limit = request.getParameter("limit");
   try {
       Integer.parseInt(limit);
