@@ -114,63 +114,79 @@ public class HTMLformatter {
      */
     public static String showFormulas(KB kb, String term) {
 
-        return showFormulasLimit(kb,term,25);
+        return showFormulasLimit(kb,term,0,25);
     }
 
     /** *************************************************************
      *  Show knowledge base statements containing the given term at
      * different argument positions.
      */
-    public static String showFormulasLimit(KB kb, String term, int limit) {
+    public static String showFormulasLimitArg(KB kb, String term, int start, int limit, int arg, String type) {
 
         StringBuffer show = new StringBuffer();
        
-        for (int arg = 1; arg < 6; arg++) {
-            int localLimit = limit;
-            String limitString = "";
-            ArrayList forms = kb.ask("arg",arg,term);
-            if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
-                forms = TaxoModel.removeCached(forms);
-            if (forms != null && forms.size() > 0) {
-                Collections.sort(forms);
-                show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
-                show.append(htmlDivider + "<TABLE width='95%'>");
+        int localLimit = start + limit;
+        String limitString = "";
+        ArrayList forms = kb.ask(type,arg,term);
+        if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
+            forms = TaxoModel.removeCached(forms);
+        if (forms != null && forms.size() > 0) {
+            Collections.sort(forms);
+            show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
+            show.append(htmlDivider + "<TABLE width='95%'>");
 
-                if (forms.size() < localLimit) 
-                    localLimit = forms.size();
-                else
-                    limitString = "<tr><td>Display limited to " + (new Integer(localLimit)).toString() + " items.</td></tr>\n";
-                for (int i = 0; i < localLimit; i++) {
-                    Formula f = (Formula) forms.get(i);
-                    if ( KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
-                         !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
-                        show.append("<TR><TD WIDTH='50%' valign=top>");
-                        String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
-                        if (f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0)
-                            show.append(kb.formatDocumentation(kbHref,formattedFormula));
-                        else
-                            show.append(formattedFormula);
-                        String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length());
-                        show.append("<A href=\"EditFile.jsp?file=" + f.sourceFile + "&line=");
-                        show.append((new Integer(f.startLine)).toString() + "\">");
-                        show.append(sourceFilename);
-                        show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
-                        show.append("</A>");
-                        show.append("</TD>\n<TD width='40%' valign=top>");
-                        String pph = "";
-                        if (f.theFormula.substring(1,14).compareTo("documentation") == 0 || f.theFormula.substring(1,7).compareTo("format") == 0) 
-                            show.append("</TD></TR>\n");		    
-                        else 
-                            pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,kb.getFormatMap(language),kb.getTermFormatMap(language),kb,language);
-                        if (pph == null)
-                            pph = "";
-                        show.append(pph + "</TD></TR>\n");
-                    }                
-                }
-                show.append(limitString);
-                show.append("</TABLE>\n");
+            if (forms.size() < localLimit) 
+                localLimit = forms.size();
+            else {
+                limitString = "<tr><td><br></td></tr><tr><td>Display limited to " + 
+                        (new Integer(limit)).toString() + " items. " +
+                        "<a href=\"BrowseExtra.jsp?term=" + term + "&kb=" + kb.name + 
+                        "&start=" + (new Integer(start+limit)).toString() + "&arg=" + (new Integer(arg)).toString() +                       
+                        "&type=" + type + "\">Show next " + (new Integer(limit)).toString() + "</a></td></tr>\n";
             }
-        }
+            for (int i = start; i < localLimit; i++) {
+                Formula f = (Formula) forms.get(i);
+                if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
+                    !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
+                    show.append("<TR><TD WIDTH='50%' valign=top>");
+                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
+                    if (f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0)
+                        show.append(kb.formatDocumentation(kbHref,formattedFormula));
+                    else
+                        show.append(formattedFormula);
+                    String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length());
+                    show.append("<A href=\"EditFile.jsp?file=" + f.sourceFile + "&line=");
+                    show.append((new Integer(f.startLine)).toString() + "\">");
+                    show.append(sourceFilename);
+                    show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
+                    show.append("</A>");
+                    show.append("</TD>\n<TD width='40%' valign=top>");
+                    String pph = "";
+                    if (f.theFormula.substring(1,14).compareTo("documentation") == 0 || f.theFormula.substring(1,7).compareTo("format") == 0) 
+                        show.append("</TD></TR>\n");		    
+                    else 
+                        pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,kb.getFormatMap(language),kb.getTermFormatMap(language),kb,language);
+                    if (pph == null)
+                        pph = "";
+                    show.append(pph + "<br></TD></TR>\n");
+                }                
+            }
+            show.append(limitString);
+            show.append("</TABLE>\n");
+        }        
+        return show.toString();
+    }
+
+    /** *************************************************************
+     *  Show knowledge base statements containing the given term at
+     * different argument positions.
+     */
+    public static String showFormulasLimit(KB kb, String term, int start, int limit) {
+
+        StringBuffer show = new StringBuffer();
+       
+        for (int arg = 1; arg < 6; arg++)
+            show.append(showFormulasLimitArg(kb,term,start,limit,arg,"arg"));       
         return show.toString();
     }
 
@@ -314,11 +330,12 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormatLimit(ArrayList forms, String header, 
-                                              KB kb, String language, int limit) {
+    public static String browserSectionFormatLimit(String term, ArrayList forms, String header, 
+                                              KB kb, String language, int start, int limit, int arg, String type) {
 
         StringBuffer show = new StringBuffer();
         String limitString = "";
+        int localLimit = start + limit;
 
         if (forms != null && forms.size() > 0) {
             Collections.sort(forms);
@@ -328,12 +345,17 @@ public class HTMLformatter {
                 show.append(htmlDivider);
             show.append("<TABLE width=95%%>");
 	    String pph = null;
-            if (forms.size() < limit) 
-                limit = forms.size();
-            else
-                limitString = "<tr><td>Display limited to " + (new Integer(limit)).toString() + " items.</td></tr>\n";
+            if (forms.size() < localLimit) 
+                localLimit = forms.size();
+            else {
+                limitString = "<tr><td><br></td></tr><tr><td>Display limited to " + 
+                        (new Integer(limit)).toString() + " items. " +
+                        "<a href=\"BrowseExtra.jsp?term=" + term + "&kb=" + kb.name + 
+                        "&start=" + (new Integer(start+limit)).toString() + "&arg=" + (new Integer(arg)).toString() +
+                        "&type=" + type + "\">Show next " + (new Integer(limit)).toString() + "</a></td></tr>\n";
+            }
             
-            for (int i = 0; i < limit; i++) {
+            for (int i = start; i < localLimit; i++) {
                 Formula f = (Formula) forms.get(i);
                 show.append("<TR><TD width=50%% valign=top>");
                 show.append(f.htmlFormat(kbHref) + "</td>\n<TD width=10%% valign=top BGCOLOR=#B8CADF>");
@@ -356,10 +378,10 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormat(ArrayList forms, String header, 
-                                              KB kb, String language) {
+    public static String browserSectionFormat(String term, ArrayList forms, String header, 
+                                              KB kb, String language, int arg, String type) {
 
-        return browserSectionFormatLimit(forms, header,kb, language, 50);
+        return browserSectionFormatLimit(term, forms, header,kb, language, 0, 50, arg,type);
     }
 
     /** *************************************************************
