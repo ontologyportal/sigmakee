@@ -120,7 +120,7 @@ August 9, Acapulco, Mexico.
               out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=en\">WordNet Check</A></TD>");                                                           
           }
 
-          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+          if (KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
               out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName + "\">Ask/Tell</A>&nbsp;</TD>");
           }
