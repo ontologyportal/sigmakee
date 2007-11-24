@@ -21,8 +21,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  term = request.getParameter("term");
  language = request.getParameter("lang");
  if (!Formula.isNonEmptyString(language))
-    language = "EnglishLanguage";
- HTMLformatter.language = language;
+    language = HTMLformatter.language;
+ else
+    HTMLformatter.language = language;
  kbName = request.getParameter("kb");
  if (Formula.isNonEmptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
@@ -105,18 +106,18 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
         KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
         limit = 200;
     }
-    show.append(HTMLformatter.showFormulasLimit(kb,term,limit));
+    show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
     forms = kb.ask("ant",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(forms,"antecedent", kb, language,limit));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"antecedent", kb, language,0,limit,0,"ant"));
 
     forms = kb.ask("cons",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(forms,"consequent", kb, language,limit));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"consequent", kb, language,0,limit,0,"cons"));
 
     forms = kb.ask("stmt",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(forms,"statement", kb, language,limit));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"statement", kb, language,0,limit,0,"stmt"));
 
     forms = kb.ask("arg",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(forms,"appearance as argument number 0", kb, language,limit));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"appearance as argument number 0", kb, language,0,limit,0,"arg"));
 
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
