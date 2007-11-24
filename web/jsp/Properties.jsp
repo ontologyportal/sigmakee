@@ -224,6 +224,27 @@ if ( iePref == null ) { iePref = ""; }
           lineNumberCommand = "";
   }
 
+  String adminBrowserLimit = request.getParameter("adminBrowserLimit");
+  if (adminBrowserLimit != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("adminBrowserLimit",adminBrowserLimit);
+  }
+  else {
+      adminBrowserLimit = KBmanager.getMgr().getPref("adminBrowserLimit");
+      if (adminBrowserLimit == null)
+          adminBrowserLimit = "200";
+  }
+  String userBrowserLimit = request.getParameter("userBrowserLimit");
+  if (userBrowserLimit != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("userBrowserLimit",userBrowserLimit);
+  }
+  else {
+      userBrowserLimit = KBmanager.getMgr().getPref("userBrowserLimit");
+      if (userBrowserLimit == null)
+          userBrowserLimit = "25";
+  }
+
 if (changed == true) {
       KBmanager.getMgr().writeConfiguration();
 }
