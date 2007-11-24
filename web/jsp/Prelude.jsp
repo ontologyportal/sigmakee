@@ -12,6 +12,7 @@
   ArrayList userPages = new ArrayList();
   userPages.add("AllPictures.jsp");
   userPages.add("Browse.jsp");
+  userPages.add("BrowseExtra.jsp");
   userPages.add("Graph.jsp");
   userPages.add("KBs.jsp");
   userPages.add("Manifest.jsp");
@@ -20,7 +21,7 @@
   userPages.add("WordNet.jsp");
   String URLString = request.getRequestURL().toString();
   String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
-  System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
+  //System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
   if (KBmanager.getMgr().getPref("userName") != null && 
       !KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin") && !userPages.contains(pageString)) { 
       out.println("<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0; URL=login.html\">");
