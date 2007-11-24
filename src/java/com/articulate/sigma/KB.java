@@ -3748,6 +3748,20 @@ public class KB {
     }
 
     /** *************************************************************
+     * List all terms that don't have an externalImage link
+     */
+    private void termsWithNoPictureLinks() {
+
+        Iterator it = terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            ArrayList al = askWithRestriction(0,"externalImage",1,term);
+            if (al == null || al.size() < 1) 
+                System.out.println(term + ", ");            
+        }
+    }
+
+    /** *************************************************************
      */
     public static void main(String[] args) {
 
@@ -3759,13 +3773,14 @@ public class KB {
             System.out.println(ioe.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        System.out.println("-------------- Terms ---------------");
-        System.out.println(kb.allTerms());
-        for (int i = 1; i < 5; i++) {
+        kb.termsWithNoPictureLinks();
+        //System.out.println("-------------- Terms ---------------");
+        //System.out.println(kb.allTerms());
+        /** for (int i = 1; i < 5; i++) {
             System.out.println("-------------- Arity " + i + " Functions ---------------");
             System.out.println(kb.allFunctionsOfArity(i));
             System.out.println("-------------- Arity " + i + " Relations ---------------");
             System.out.println(kb.allRelationsOfArity(i+1));
-        }
+        } **/
     }
 }
