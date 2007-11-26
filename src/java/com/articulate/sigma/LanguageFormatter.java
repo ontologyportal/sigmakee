@@ -49,12 +49,13 @@ public class LanguageFormatter {
     private static String formatList(String list, String language) {
 
 	StringBuffer result = new StringBuffer();
+        String comma = getKeyword(",", language);
 	String[] ar = list.split(" ");
 	for (int i = 0; i < ar.length; i++) {
 	    if (i == 0) 
 		result.append(transliterate(ar[i],language));
 	    if (i > 0 && i < ar.length - 1) 
-		result.append(", " + transliterate(ar[i],language));
+		result.append(comma + " " + transliterate(ar[i],language));
 	    if (i == ar.length -1) 
 		result.append(" " + getKeyword("and",language) + " " + transliterate(ar[i],language));
 	}
@@ -84,35 +85,35 @@ public class LanguageFormatter {
 	else
 	    if (language.equals("ar")) {
 		StringBuffer result = new StringBuffer();
-		result.append('?');
+		result.append(getKeyword("?","ar"));
 		for (int i = 1; i < word.length(); i++) {
 		    switch (word.charAt(i)) {
-                    case 'A': result.append("\u0627\u0654"); break;
-                    case 'B': result.append("\uFE8F"); break;
-                    case 'C': result.append("\uFED9"); break;
-                    case 'D': result.append("\uFEA9"); break;
-                    case 'E': result.append("\u0650"); break;
-                    case 'F': result.append("\uFED1"); break;
-                    case 'G': result.append("\uFE9D"); break;
-                    case 'H': result.append("\uFEE9"); break;
-                    case 'I': result.append("\u0650"); break;
-                    case 'J': result.append("\uFE9D"); break;
-                    case 'K': result.append("\uFED9"); break;
-                    case 'L': result.append("\uFEDD"); break;
-                    case 'M': result.append("\uFEE1"); break;
-                    case 'N': result.append("\uFEE5"); break;
-                    case 'O': result.append("\u064F"); break;
-                    case 'P': result.append("\uFE8F"); break;
-                    case 'Q': result.append("\uFED5"); break;
-                    case 'R': result.append("\uFEAD"); break;
-                    case 'S': result.append("\uFEB1"); break;
-                    case 'T': result.append("\uFE95"); break;
-                    case 'U': result.append("\u064F"); break;
-                    case 'V': result.append("\uFE8F"); break;
-                    case 'W': result.append("\uFEED"); break;
-                    case 'X': result.append("\uFEAF"); break;
-                    case 'Y': result.append("\uFEF1"); break;
-                    case 'Z': result.append("\uFEAF"); 
+                    case 'A': result.append("&#x0627;&#x0654;"); break;
+                    case 'B': result.append("&#xFE8F;"); break;
+                    case 'C': result.append("&#xFED9;"); break;
+                    case 'D': result.append("&#xFEA9;"); break;
+                    case 'E': result.append("&#x0650;"); break;
+                    case 'F': result.append("&#xFED1;"); break;
+                    case 'G': result.append("&#xFE9D;"); break;
+                    case 'H': result.append("&#xFEE9;"); break;
+                    case 'I': result.append("&#x0650;"); break;
+                    case 'J': result.append("&#xFE9D;"); break;
+                    case 'K': result.append("&#xFED9;"); break;
+                    case 'L': result.append("&#xFEDD;"); break;
+                    case 'M': result.append("&#xFEE1;"); break;
+                    case 'N': result.append("&#xFEE5;"); break;
+                    case 'O': result.append("&#x064F;"); break;
+                    case 'P': result.append("&#xFE8F;"); break;
+                    case 'Q': result.append("&#xFED5;"); break;
+                    case 'R': result.append("&#xFEAD;"); break;
+                    case 'S': result.append("&#xFEB1;"); break;
+                    case 'T': result.append("&#xFE95;"); break;
+                    case 'U': result.append("&#x064F;"); break;
+                    case 'V': result.append("&#xFE8F;"); break;
+                    case 'W': result.append("&#xFEED;"); break;
+                    case 'X': result.append("&#xFEAF;"); break;
+                    case 'Y': result.append("&#xFEF1;"); break;
+                    case 'Z': result.append("&#xFEAF;"); 
 			result.append(word.charAt(i));
 		    }
 		}
@@ -454,6 +455,8 @@ public class LanguageFormatter {
 	    // System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): adding argument: " + ((String) args.get(args.size()-1)));
 	    f.read(f.cdr());
 	}
+        String COMMA = getKeyword(",",language);
+        String QUESTION = getKeyword("?",language);
 	String IF = getKeyword("if",language);
 	String THEN = getKeyword("then",language);
 	String AND = getKeyword("and",language);
@@ -477,7 +480,7 @@ public class LanguageFormatter {
 		sb.append(args.get(1)).append(" "+AND+" ").append("~{").append(args.get(0)).append("}");
 	    }
 	    else {
-		sb.append("<ul><li>"+IF+" ").append(args.get(0)).append(",<li>"+THEN+" ").append(args.get(1)).append("</ul>");
+		sb.append("<ul><li>"+IF+" ").append(args.get(0)).append(COMMA+"<li>"+THEN+" ").append(args.get(1)).append("</ul>");
 	    }
 	    ans = sb.toString();
 	    /*
