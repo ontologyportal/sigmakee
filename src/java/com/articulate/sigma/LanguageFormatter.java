@@ -382,14 +382,22 @@ public class LanguageFormatter {
      */
     private static String translateWord(Map termMap, String word, String language) {
 
-	if (termMap !=null && termMap.containsKey(word))
-	    return((String) termMap.get(word));
-	else {
-	    if (word.charAt(0) == '?') 
-		return transliterate(word,language);
-	    else
-		return (word);
-	}
+        String ans = word;
+        try {
+            if (termMap !=null && termMap.containsKey(word))
+                ans = ((String) termMap.get(word));
+            else if (word.charAt(0) == '?') 
+		ans = transliterate(word,language);
+            if (language.equalsIgnoreCase("ar") && !ans.startsWith("?") &&
+                ans.indexOf("&#x6") == -1) {
+                    // left-to-right embedding
+                    ans = ("&#x202a;" + ans + "&#x202c;");
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
     }
   
     /** ***************************************************************
@@ -720,6 +728,7 @@ public class LanguageFormatter {
 	    // System.out.println("arg: " + f.getArgument(num));
 	    // System.out.println("num: " + num);
 	    // System.out.println("str: " + strFormat);
+            
 	    strFormat = strFormat.replace(argPointer,nlStmtPara(f.getArgument((int) num),isNegMode,phraseMap,termMap,language,1));
 	    num++;
 	    argPointer = "%" + (new Integer(num)).toString();
@@ -921,15 +930,17 @@ public class LanguageFormatter {
         // System.out.println("Formula: " + f.theFormula);
         HashMap varMap = f.computeVariableTypes(kb);
 	String nlFormat = nlStmtPara(stmt,false,phraseMap,termMap,language,1);
+        String charsAllowed = "&#;";
 	if (nlFormat != null) {
 	    while (nlFormat.indexOf("&%") > -1) {
 		start = nlFormat.indexOf("&%",start+1);
 		int word = nlFormat.indexOf("$",start);
 		if (word == -1)
-		    end = start + 2;		
+		    end = start + 2;
 		else
-		    end = word + 1;		
-		while (end < nlFormat.length() && Character.isJavaIdentifierPart(nlFormat.charAt(end)))
+		    end = word + 1;
+		while (end < nlFormat.length() && (Character.isJavaIdentifierPart(nlFormat.charAt(end))
+                                                   || charsAllowed.indexOf(nlFormat.charAt(end)) != -1))
 		    end++;		
 		if (word == -1)
 		    nlFormat = (nlFormat.substring(0,start) + "<a href=\"" + href + "&term=" 
