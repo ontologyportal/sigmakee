@@ -70,6 +70,11 @@ public class HTMLformatter {
                             language);
 	    if (pph == null)
                 pph = "";
+            if (Formula.isNonEmptyString(pph)) {
+                if (language.equalsIgnoreCase("ar")) {
+                    pph = ("&#x202b;" + pph + "&#x202c;");
+                }
+            }
             result.append(pph);        
 	}
         result.append("</td>");
@@ -168,6 +173,11 @@ public class HTMLformatter {
                         pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,kb.getFormatMap(language),kb.getTermFormatMap(language),kb,language);
                     if (pph == null)
                         pph = "";
+                    if (Formula.isNonEmptyString(pph)) {
+                        if (language.equalsIgnoreCase("ar")) {
+                            pph = ("&#x202b;" + pph + "&#x202c;");
+                        }
+                    }
                     show.append(pph + "<br></TD></TR>\n");
                 }                
             }
@@ -367,6 +377,11 @@ public class HTMLformatter {
                          kb.getTermFormatMap(language), kb, language);
 		if (pph == null) 
                     pph = ""; 
+                if (Formula.isNonEmptyString(pph)) {
+                    if (language.equalsIgnoreCase("ar")) {
+                        pph = ("&#x202b;" + pph + "&#x202c;");
+                    }
+                }
                 show.append(pph + "</TD></TR>\n"); 
             }
             show.append(limitString);
