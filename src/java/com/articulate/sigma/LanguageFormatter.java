@@ -80,47 +80,48 @@ public class LanguageFormatter {
      */
     private static String transliterate(String word, String language) {
 
-	if (word.charAt(0) != '?') 
-	    return word;
-	else
-	    if (language.equals("ar")) {
-		StringBuffer result = new StringBuffer();
-		result.append(getKeyword("?","ar"));
-		for (int i = 1; i < word.length(); i++) {
-		    switch (word.charAt(i)) {
-                    case 'A': result.append("&#x0627;&#x0654;"); break;
-                    case 'B': result.append("&#xFE8F;"); break;
-                    case 'C': result.append("&#xFED9;"); break;
-                    case 'D': result.append("&#xFEA9;"); break;
-                    case 'E': result.append("&#x0650;"); break;
-                    case 'F': result.append("&#xFED1;"); break;
-                    case 'G': result.append("&#xFE9D;"); break;
-                    case 'H': result.append("&#xFEE9;"); break;
-                    case 'I': result.append("&#x0650;"); break;
-                    case 'J': result.append("&#xFE9D;"); break;
-                    case 'K': result.append("&#xFED9;"); break;
-                    case 'L': result.append("&#xFEDD;"); break;
-                    case 'M': result.append("&#xFEE1;"); break;
-                    case 'N': result.append("&#xFEE5;"); break;
-                    case 'O': result.append("&#x064F;"); break;
-                    case 'P': result.append("&#xFE8F;"); break;
-                    case 'Q': result.append("&#xFED5;"); break;
-                    case 'R': result.append("&#xFEAD;"); break;
-                    case 'S': result.append("&#xFEB1;"); break;
-                    case 'T': result.append("&#xFE95;"); break;
-                    case 'U': result.append("&#x064F;"); break;
-                    case 'V': result.append("&#xFE8F;"); break;
-                    case 'W': result.append("&#xFEED;"); break;
-                    case 'X': result.append("&#xFEAF;"); break;
-                    case 'Y': result.append("&#xFEF1;"); break;
-                    case 'Z': result.append("&#xFEAF;"); 
-			result.append(word.charAt(i));
-		    }
-		}
-		return result.toString();
-	    }
-	    else
-		return word;
+        return word;
+// 	if (word.charAt(0) != '?') 
+// 	    return word;
+// 	else
+// 	    if (language.equals("ar")) {
+// 		StringBuffer result = new StringBuffer();
+// 		result.append(getKeyword("?","ar"));
+// 		for (int i = 1; i < word.length(); i++) {
+// 		    switch (word.charAt(i)) {
+//                     case 'A': result.append("&#x0627;&#x0654;"); break;
+//                     case 'B': result.append("&#xFE8F;"); break;
+//                     case 'C': result.append("&#xFED9;"); break;
+//                     case 'D': result.append("&#xFEA9;"); break;
+//                     case 'E': result.append("&#x0650;"); break;
+//                     case 'F': result.append("&#xFED1;"); break;
+//                     case 'G': result.append("&#xFE9D;"); break;
+//                     case 'H': result.append("&#xFEE9;"); break;
+//                     case 'I': result.append("&#x0650;"); break;
+//                     case 'J': result.append("&#xFE9D;"); break;
+//                     case 'K': result.append("&#xFED9;"); break;
+//                     case 'L': result.append("&#xFEDD;"); break;
+//                     case 'M': result.append("&#xFEE1;"); break;
+//                     case 'N': result.append("&#xFEE5;"); break;
+//                     case 'O': result.append("&#x064F;"); break;
+//                     case 'P': result.append("&#xFE8F;"); break;
+//                     case 'Q': result.append("&#xFED5;"); break;
+//                     case 'R': result.append("&#xFEAD;"); break;
+//                     case 'S': result.append("&#xFEB1;"); break;
+//                     case 'T': result.append("&#xFE95;"); break;
+//                     case 'U': result.append("&#x064F;"); break;
+//                     case 'V': result.append("&#xFE8F;"); break;
+//                     case 'W': result.append("&#xFEED;"); break;
+//                     case 'X': result.append("&#xFEAF;"); break;
+//                     case 'Y': result.append("&#xFEF1;"); break;
+//                     case 'Z': result.append("&#xFEAF;"); 
+// 			result.append(word.charAt(i));
+// 		    }
+// 		}
+// 		return result.toString();
+// 	    }
+// 	    else
+// 		return word;
     }
 
     /** ***************************************************************
@@ -388,11 +389,11 @@ public class LanguageFormatter {
                 ans = ((String) termMap.get(word));
             else if (word.charAt(0) == '?') 
 		ans = transliterate(word,language);
-            if (language.equalsIgnoreCase("ar") && !ans.startsWith("?") &&
-                ans.indexOf("&#x6") == -1) {
-                    // left-to-right embedding
-                    ans = ("&#x202a;" + ans + "&#x202c;");
-            }
+//             if (language.equalsIgnoreCase("ar") && !ans.startsWith("?") &&
+//                 ans.indexOf("&#x6") == -1) {
+//                     // left-to-right embedding
+//                     ans = ("&#x202a;" + ans + "&#x202c;");
+//             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -488,7 +489,16 @@ public class LanguageFormatter {
 		sb.append(args.get(1)).append(" "+AND+" ").append("~{").append(args.get(0)).append("}");
 	    }
 	    else {
-		sb.append("<ul><li>"+IF+" ").append(args.get(0)).append(COMMA+"<li>"+THEN+" ").append(args.get(1)).append("</ul>");
+		sb.append("<ul><li>" 
+                          + (language.equalsIgnoreCase("ar") ? "&#x202b;" : "")
+                          + IF
+                          + " ").append(args.get(0)).append(COMMA
+                                                            + (language.equalsIgnoreCase("ar") ? "&#x202c;" : "")
+                                                            + "</li><li>"
+                                                            + (language.equalsIgnoreCase("ar") ? "&#x202b;" : "")
+                                                            + THEN
+                                                            + " ").append(args.get(1)).append((language.equalsIgnoreCase("ar") ? "&#x202c;" : "")
+                                                                                              + "</li></ul>");
 	    }
 	    ans = sb.toString();
 	    /*
@@ -955,7 +965,12 @@ public class LanguageFormatter {
                 nlFormat = variableReplace(nlFormat,varMap,kb,language);
 	}
 	else  
-	    nlFormat = ""; 	
+	    nlFormat = "";
+//         if (Formula.isNonEmptyString(nlFormat)) {
+//             if (language.equalsIgnoreCase("ar")) {
+//                 nlFormat = ("&#x202b;" + nlFormat + "&#x202c;");
+//             }
+//         }
 	return nlFormat;
     }
 
@@ -963,38 +978,66 @@ public class LanguageFormatter {
      * Generate a linguistic article appropriate to how many times in a
      * paraphrase a particular type has already occurred.
      */
-    public static String getArticle(String s, int count, int occurrance) {
+    public static String getArticle(String s, int count, int occurrence, String language) {
 
         String ordinal = "";
-        switch (occurrance) {
-          case 3: ordinal = "third "; break;
-          case 4: ordinal = "forth "; break;
-          case 5: ordinal = "fifth "; break;
-          case 6: ordinal = "sixth "; break;
-          case 7: ordinal = "seventh "; break;
-          case 8: ordinal = "eighth "; break;
-          case 9: ordinal = "ninth "; break;
-          case 10: ordinal = "tenth "; break;
-          case 11: ordinal = "eleventh "; break;
-          case 12: ordinal = "twelfth "; break;
+        switch (occurrence) {
+          case 3: ordinal = getKeyword("third",language); break;
+          case 4: ordinal = getKeyword("fourth",language); break;
+          case 5: ordinal = getKeyword("fifth",language); break;
+          case 6: ordinal = getKeyword("sixth",language); break;
+          case 7: ordinal = getKeyword("seventh",language); break;
+          case 8: ordinal = getKeyword("eighth",language); break;
+          case 9: ordinal = getKeyword("ninth",language); break;
+          case 10: ordinal = getKeyword("tenth",language); break;
+          case 11: ordinal = getKeyword("eleventh",language); break;
+          case 12: ordinal = getKeyword("twelfth",language); break;
         }
-        if (count == 1 && occurrance == 2)
-            return "another ";        
+        if (count == 1 && occurrence == 2)
+            return getKeyword("another",language);        
         if (count > 1) {
-            if (occurrance == 1 || occurrance > 2) 
-                return "the " + ordinal;
-            else
-                return "the other ";
+            if (occurrence == 1 || occurrence > 2) {
+                if (language.equalsIgnoreCase("ar")) {
+                    return ordinal;
+                }
+                else {
+                    return (getKeyword("the",language) + " " + ordinal);
+                }
+            }
+            else {
+                if (language.equalsIgnoreCase("ar")) {
+                    return (getKeyword("the",language) + getKeyword("other",language));
+                }
+                else {
+                    return (getKeyword("the",language) + " " + getKeyword("other",language));
+                }
+            }
         }
-        if ((s.charAt(0) == 'A' || s.charAt(0) == 'a' ||     // count = 1 (first occurrance of a type)
-            s.charAt(0) == 'E' || s.charAt(0) == 'e' ||
-            s.charAt(0) == 'I' || s.charAt(0) == 'i' ||
-            s.charAt(0) == 'O' || s.charAt(0) == 'o' ||
-            s.charAt(0) == 'U' || s.charAt(0) == 'u') &&
-            occurrance == 1)
-            return "an ";
-        else
-            return "a " + ordinal;        
+        // count = 1 (first occurrence of a type)
+        if (language.equalsIgnoreCase("EnglishLanguage")) {
+            if ((s.charAt(0) == 'A' || s.charAt(0) == 'a' || 
+                 s.charAt(0) == 'E' || s.charAt(0) == 'e' ||
+                 s.charAt(0) == 'I' || s.charAt(0) == 'i' ||
+                 s.charAt(0) == 'O' || s.charAt(0) == 'o' ||
+                 s.charAt(0) == 'U' || s.charAt(0) == 'u') &&
+                occurrence == 1)
+                return "an ";
+            else
+                return "a " + ordinal;
+        }
+        else if (language.equalsIgnoreCase("ar")) {
+            String defArt = getKeyword("the",language);
+            if (ordinal.startsWith(defArt)) {
+                // remove the definite article
+                ordinal = ordinal.substring(defArt.length());
+                // remove shadda
+                ordinal = ordinal.replace("&#x651;","");
+            }
+            return ordinal;
+        }
+        else {
+            return ordinal;
+        }
     }
 
     /** **************************************************************
@@ -1006,24 +1049,48 @@ public class LanguageFormatter {
                                                 boolean isClass, HashMap typeMap) {
 
         String result = new String(form);
+        if (!Formula.isNonEmptyString(varPretty)) {
+            varPretty = varType;
+        }
         boolean found = true;
-        int occurranceCounter = 1;
+        int occurrenceCounter = 1;
         if (typeMap.keySet().contains(varType)) {
-            occurranceCounter = (Integer) typeMap.get(varType);
-            occurranceCounter++;
-            typeMap.put(varType,new Integer(occurranceCounter));
+            occurrenceCounter = (Integer) typeMap.get(varType);
+            occurrenceCounter++;
+            typeMap.put(varType,new Integer(occurrenceCounter));
         }
         else
             typeMap.put(varType,new Integer(1));
         int count = 1;
         while (found) {
             if (result.indexOf(varString) > -1 && count < 20) {
-                if (isClass) 
-                    result = result.replaceFirst("\\?" + varString.substring(1),
-                                                 getArticle("kind",count,occurranceCounter) + "kind of " + varPretty);
-                else
-                    result = result.replaceFirst("\\?" + varString.substring(1),
-                                                 getArticle(varPretty,count,occurranceCounter) + varPretty);
+                String article = "";
+                String replacement = "";
+                if (isClass) {
+                    article = getArticle("kind",count,occurrenceCounter,language);
+                    replacement = (article
+                                   + " "
+                                   + getKeyword("kind of",language)
+                                   + " "
+                                   + varPretty);
+                    if (language.equalsIgnoreCase("ar")) {
+                        replacement = (getKeyword("kind of",language) + " " + varPretty);
+                    }
+                    result = result.replaceFirst("\\?" + varString.substring(1), replacement);
+                }
+                else {
+                    article = getArticle(varPretty,count,occurrenceCounter,language);
+                    replacement = (article + " " + varPretty);
+                    if (language.equalsIgnoreCase("ar")) {
+                        String defArt = getKeyword("the",language);
+                        if (article.startsWith(defArt) && !varPretty.startsWith(defArt)) {
+                            // This has to be refined to insert shadda for sun letters.
+                            varPretty = (defArt + varPretty);
+                        }
+                        replacement = (varPretty + " " + article);
+                    }
+                    result = result.replaceFirst("\\?" + varString.substring(1), replacement);
+                }
             }
             else
                 found = false;
