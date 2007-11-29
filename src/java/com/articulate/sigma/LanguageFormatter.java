@@ -1161,8 +1161,13 @@ public class LanguageFormatter {
                             else
                                 result = incrementalVarReplace(result,varString,varType,varType,language,false,typeMap);
                         }
-                        else
-                            result = incrementalVarReplace(result,varString,"Entity","entity",language,false,typeMap);
+                        else {
+                            String varPretty = (String) kb.getTermFormatMap(language).get("Entity");
+                            if (!Formula.isNonEmptyString(varPretty)) {
+                                varPretty = "entity";
+                            }
+                            result = incrementalVarReplace(result,varString,"Entity",varPretty,language,false,typeMap);
+                        }
                     }
                 }
                 else
