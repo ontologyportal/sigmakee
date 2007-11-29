@@ -14,6 +14,7 @@ import java.io.*;
  * parser.
  */
 public class SimpleDOMParser {
+
     private static final int[] cdata_start = {'<', '!', '[', 'C', 'D', 'A', 'T', 'A', '['};
     private static final int[] cdata_end = {']', ']', '>'};
 
@@ -29,6 +30,40 @@ public class SimpleDOMParser {
     }
 
     /** *****************************************************************
+     * Read the full path of an XML file and returns the SimpleElement 
+     * object that corresponds to its parsed format.
+    */
+    public static SimpleElement readFile (String filename) {
+
+        SimpleElement result = null;
+        StringBuffer xml = new StringBuffer();
+        File f = new File(filename);
+        BufferedReader br = null;
+
+        try {
+            br = new BufferedReader(new FileReader(f));
+            SimpleDOMParser sdp = new SimpleDOMParser();
+            result = sdp.parse(br);
+        }
+        catch (java.io.IOException e) {
+            System.out.println("Error in SimpleDOMParser.readFile(): IO exception parsing file " + 
+                               filename + "\n" + e.getMessage());
+        }
+        finally {
+            if (br != null) {
+                try {
+                    br.close();
+                }
+                catch (Exception ex) {
+                    System.out.println("Error in SimpleDOMParser.readFile(): IO exception parsing file " + 
+                                       filename + "\n" + ex.getMessage());
+                }
+            }
+        }
+        return result;
+    }
+
+    /** *****************************************************************
     */
     public SimpleElement parse(Reader reader) throws IOException {
 
@@ -40,7 +75,7 @@ public class SimpleDOMParser {
             
             String currentTag = readTag().trim();                               // remove the prepend or trailing white spaces
             if (currentTag.startsWith("</")) {                                  // close tag
-                tagName = currentTag.substring(2, currentTag.length()-1);
+                tagName = currentTag.substring(2, currentTag.length()-1).trim();
                 if (currentElement == null)                                     // no open tag
                     throw new IOException("Got close tag '" + tagName +
                                     "' without open tag.");                
@@ -57,22 +92,23 @@ public class SimpleDOMParser {
                 index = currentTag.indexOf(" ");
                 if (index < 0) {                                                // tag with no attributes                    
                     if (currentTag.endsWith("/>")) {                            // close tag as well                        
-                        tagName = currentTag.substring(1, currentTag.length()-2);
+                        tagName = currentTag.substring(1, currentTag.length()-2).trim();
                         currentTag = "/>";
                     } else {                                                    // open tag                        
-                        tagName = currentTag.substring(1, currentTag.length()-1);
+                        tagName = currentTag.substring(1, currentTag.length()-1).trim();
                         currentTag = "";
                     }
                 } 
                 else {                                                          // tag with attributes                        
-                    tagName = currentTag.substring(1, index);
-                    currentTag = currentTag.substring(index+1);
+                    tagName = currentTag.substring(1, index).trim();
+                    currentTag = currentTag.substring(index+1).trim();
                 }              
-                SimpleElement element = new SimpleElement(tagName);             // create new element
+                SimpleElement element = new SimpleElement(tagName.trim());             // create new element
                 
                 boolean isTagClosed = false;                                    // parse the attributes
                 while (currentTag.length() > 0) {                               // remove the prepend or trailing white spaces                    
                     currentTag = currentTag.trim();
+                    //System.out.println(currentTag);
                     if (currentTag.equals("/>")) {                              // close tag                                
                         isTagClosed = true;
                         break;
@@ -85,8 +121,8 @@ public class SimpleDOMParser {
                         throw new IOException("Invalid attribute for tag '" +
                                             tagName + "'.  With current tag=" + currentTag);                        
                     
-                    String attributeName = currentTag.substring(0, index);    // get attribute name
-                    currentTag = currentTag.substring(index+1);
+                    String attributeName = currentTag.substring(0, index).trim();    // get attribute name
+                    currentTag = currentTag.substring(index+1).trim();
                     
                     String attributeValue;                                    // get attribute value
                     boolean isQuoted = true;
@@ -110,12 +146,12 @@ public class SimpleDOMParser {
                             throw new IOException("Invalid attribute for tag '" +
                                             tagName + "'.  With current tag=" + currentTag);                        
                     if (isQuoted)
-                        attributeValue = currentTag.substring(1, index);
+                        attributeValue = currentTag.substring(1, index).trim();
                     else
-                        attributeValue = currentTag.substring(0, index);
+                        attributeValue = currentTag.substring(0, index).trim();
 
                     element.setAttribute(attributeName, attributeValue);      // add attribute to the new element
-                    currentTag = currentTag.substring(index+1);
+                    currentTag = currentTag.substring(index+1).trim();
                 }
                 
                 if (!isTagClosed)                                  // read the text between the open and close tag
@@ -216,6 +252,7 @@ public class SimpleDOMParser {
             sb.append((char)reader.read());        
         sb.append((char)reader.read());
 
+        //System.out.println("Tag: " + sb.toString());
         return sb.toString();
     }
 
