@@ -21,6 +21,243 @@ public class OWLtranslator {
 
     public KB kb;
 
+    /** ***************************************************************
+     */
+    private static String processStringForKIFOutput(String s) {
+
+        if (s == null) 
+            return null;
+        return s.replaceAll("\"","&quot;");
+    }
+
+    /** ***************************************************************
+     */
+    private static String StringToKIFid(String s) {
+
+        if (s == null) 
+            return s;
+        s = s.trim();
+        if (s.length() < 1)
+            return s;
+        if (!Character.isJavaIdentifierStart(s.charAt(0)) || 
+               s.charAt(0) > 122)
+               s = "S" + s.substring(1);
+        int i = 0;
+        while (i < s.length()) {
+            if (!Character.isJavaIdentifierPart(s.charAt(i)) || 
+                s.charAt(i) > 122) 
+                s = s.substring(0,i) + "-" + s.substring(i+1);
+            i++;
+        }
+        return s;
+    }
+
+    /** ***************************************************************
+     */
+    private static String getParentReference(SimpleElement se) {
+
+        String value = null;
+        ArrayList children = se.getChildElements();
+        if (children.size() > 0) {
+            SimpleElement child = (SimpleElement) children.get(0);
+            if (child.getTagName().equals("owl:Class")) {
+                value = child.getAttribute("rdf:ID");
+                if (value == null) 
+                    value = child.getAttribute("rdf:about");
+                if (value != null && value.indexOf("#") > -1) 
+                    value = value.substring(value.indexOf("#") + 1);
+            }
+        }
+        else {
+            value = se.getAttribute("rdf:resource");
+            if (value != null) {                
+                if (value.indexOf("#") > -1) 
+                    value = value.substring(value.indexOf("#") + 1);
+            }
+        }
+        return StringToKIFid(value);
+    }
+
+    /** ***************************************************************
+     * Write OWL format.
+     */
+    private static void decode(SimpleElement se, String parentTerm, String parentTag) {
+
+        String tag = se.getTagName();
+        String value = null;
+        // System.out.println(";; " + tag);
+        if (tag.equals("owl:Class") || tag.equals("owl:ObjectProperty") || 
+            tag.equals("owl:DatatypeProperty") || tag.equals("owl:FunctionalProperty") || 
+            tag.equals("owl:InverseFunctionalProperty") || tag.equals("owl:TransitiveProperty") || 
+            tag.equals("owl:SymmetricProperty")) {
+            parentTerm = se.getAttribute("rdf:ID");
+            if (parentTerm != null) {
+                if (parentTerm.indexOf("#") > -1) 
+                    parentTerm = parentTerm.substring(parentTerm.indexOf("#") + 1);
+            }
+            else {
+                parentTerm = se.getAttribute("rdf:about");
+                if (parentTerm != null) {
+                    if (parentTerm.indexOf("#") > -1) 
+                        parentTerm = parentTerm.substring(parentTerm.indexOf("#") + 1);
+                }
+            }
+            parentTerm = StringToKIFid(parentTerm);
+            if ((tag.equals("owl:ObjectProperty") || tag.equals("owl:DatatypeProperty") || 
+                 tag.equals("owl:InverseFunctionalProperty")) && parentTerm != null) 
+                System.out.println("(instance " + parentTerm + " BinaryRelation)");  
+            if (tag.equals("owl:TransitiveProperty") && parentTerm != null) 
+                System.out.println("(instance " + parentTerm + " TransitiveRelation)");              
+            if (tag.equals("owl:FunctionalProperty") && parentTerm != null) 
+                System.out.println("(instance " + parentTerm + " SingleValuedRelation)");              
+            if (tag.equals("owl:SymmetricProperty") && parentTerm != null) 
+                System.out.println("(instance " + parentTerm + " SymmetricRelation)");              
+        }
+        else if (tag.equals("rdfs:domain")) {
+            value = se.getAttribute("rdf:resource");
+            if (value != null) {                
+                if (value.indexOf("#") > -1) 
+                    value = value.substring(value.indexOf("#") + 1);
+                //kb.tell("(domain " + parentTerm + " 1 " + value + ")");
+                value = StringToKIFid(value);
+                if (value != null && parentTerm != null) 
+                    System.out.println("(domain " + parentTerm + " 1 " + value + ")");
+            }
+        }
+        else if (tag.equals("rdfs:range")) {
+            value = se.getAttribute("rdf:resource");
+            if (value != null) {                
+                if (value.indexOf("#") > -1) 
+                    value = value.substring(value.indexOf("#") + 1);
+                //kb.tell("(domain " + parentTerm + " 2 " + value + ")");
+                value = StringToKIFid(value);
+                if (value != null && parentTerm != null) 
+                    System.out.println("(domain " + parentTerm + " 2 " + value + ")");
+            }
+        }
+        else if (tag.equals("rdfs:comment")) {
+            String text = se.getText();
+            text = processStringForKIFOutput(text);
+            //kb.tell("(documentation " + parentTerm + " \"" + text + "\")");
+            if (parentTerm != null && text != null) 
+                System.out.println(DB.wordWrap("(documentation " + parentTerm + " \"" + text + "\")",70));
+        }
+        else if (tag.equals("owl:inverseOf")) {
+            ArrayList children = se.getChildElements();
+            if (children.size() > 0) {
+                SimpleElement child = (SimpleElement) children.get(0);
+                if (child.getTagName().equals("owl:ObjectProperty") || 
+                    child.getTagName().equals("owl:InverseFunctionalProperty")) {
+                    value = child.getAttribute("rdf:ID");
+                    if (value == null) 
+                        value = child.getAttribute("rdf:about");
+                    if (value == null) 
+                        value = child.getAttribute("rdf:resource");
+                    if (value != null && value.indexOf("#") > -1) 
+                        value = value.substring(value.indexOf("#") + 1);
+                }
+            }
+            //kb.tell("(inverse " + parentTerm + " " + value + ")");
+            value = StringToKIFid(value);
+            if (value != null && parentTerm != null) 
+                System.out.println("(inverse " + parentTerm + " " + value + ")");
+        }
+        else if (tag.equals("rdfs:subClassOf")) {
+            value = getParentReference(se);
+            value = StringToKIFid(value);
+            //kb.tell("(subclass " + parentTerm + " " + value + ")");
+            if (value != null) 
+                System.out.println("(subclass " + parentTerm + " " + value + ")");           
+            //else
+              //  System.out.println(";; missing or unparsed subclass statment for " + parentTerm);
+        }
+        else if (tag.equals("owl:Restriction")) { }
+        else if (tag.equals("owl:onProperty")) { }
+        else if (tag.equals("owl:unionOf")) { return; }
+        else if (tag.equals("owl:complimentOf")) { return; }
+        else if (tag.equals("owl:intersectionOf")) { return; }
+        else if (tag.equals("owl:cardinality")) { }
+        else if (tag.equals("owl:FunctionalProperty")) {
+            value = se.getAttribute("rdf:ID");
+            if (value != null) {                
+                if (value.indexOf("#") > -1) 
+                    value = value.substring(value.indexOf("#") + 1);
+                //kb.tell("(domain " + parentTerm + " 2 " + value + ")");
+                value = StringToKIFid(value);
+                System.out.println("(instance " + value + " SingleValuedRelation)");
+            }
+        }
+        else if (tag.equals("owl:minCardinality")) { }
+        else if (tag.equals("owl:maxCardinality")) { }
+        else if (tag.equals("rdf:type")) {
+            value = getParentReference(se);
+            value = StringToKIFid(value);
+            if (value != null) 
+                System.out.println("(instance " + parentTerm + " " + value + ")"); 
+           // else
+                // System.out.println(";; missing or unparsed subclass statment for " + parentTerm);
+        }
+        else {
+            value = se.getAttribute("rdf:resource");
+            if (value != null) {                
+                if (value.indexOf("#") > -1) 
+                    value = value.substring(value.indexOf("#") + 1);
+                //kb.tell("(domain " + parentTerm + " 2 " + value + ")");
+                value = StringToKIFid(value);
+                tag = StringToKIFid(tag);
+                if (value != null && parentTerm != null) 
+                    System.out.println("(" + tag + " " + parentTerm + " " + value + ")");
+            }
+            else {
+                String text = se.getText();
+                text = processStringForKIFOutput(text);
+                tag = StringToKIFid(tag);
+                if (!DB.emptyString(text)) {
+                    if (parentTerm != null && tag != null && text != null) 
+                        System.out.println("(" + tag + " " + parentTerm + " \"" + text + "\")"); 
+                }
+                else {
+                    ArrayList children = se.getChildElements();
+                    if (children.size() > 0) {
+                        SimpleElement child = (SimpleElement) children.get(0);
+                        if (child.getTagName().equals("owl:Class")) {
+                            value = child.getAttribute("rdf:ID");
+                            if (value == null) 
+                                value = child.getAttribute("rdf:about");
+                            if (value != null && value.indexOf("#") > -1) 
+                                value = value.substring(value.indexOf("#") + 1);
+                            if (value != null && parentTerm != null) 
+                                System.out.println("(" + tag + " " + parentTerm + " " + value + ")");
+                        }
+                    }
+                }
+            }
+        }
+
+        Set s = se.getAttributeNames();
+        Iterator it = s.iterator();
+        while (it.hasNext()) {
+            String att = (String) it.next();
+            String val = (String) se.getAttribute(att);
+        }
+        ArrayList al = se.getChildElements();
+        it = al.iterator();
+        while (it.hasNext()) {
+            SimpleElement child = (SimpleElement) it.next();
+            decode(child,parentTerm,tag);
+        }
+        //System.out.println(se.toString());
+    }
+
+    /** ***************************************************************
+     * Write OWL format.
+     */
+    public static void read(String filename) {
+
+        SimpleElement se = SimpleDOMParser.readFile(filename);
+        decode(se,"","");
+        //System.out.println(se.toString());
+    }
 
     /** ***************************************************************
      * Write OWL format.
@@ -189,7 +426,7 @@ public class OWLtranslator {
      * A test method.
      */
     public static void main(String args[]) {
-
+/**
         OWLtranslator ot = new OWLtranslator();
         ot.kb = new KB("foo","");
         try {
@@ -199,6 +436,8 @@ public class OWLtranslator {
         catch (Exception e) {
             System.out.println(e.getMessage());
         }
+ * */
+        read(args[0]);
     }
 
 }
