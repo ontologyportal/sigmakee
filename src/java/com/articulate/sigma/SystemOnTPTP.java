@@ -10,7 +10,7 @@ public class SystemOnTPTP {
   //private static final String SystemsDirectory = "../../../../../systems";
   //private static final String SystemsDirectory = "/home/graph/strac/geoff/Sigma/sigma/systems";
 
-  private static final String SystemsInfo = KBmanager.getMgr().getPref("baseDir") + "/systemInfo.xml";
+  private static final String SystemsInfo = SystemsDirectory + "/systemInfo.xml";
 
   private static Process process;
 
