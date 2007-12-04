@@ -21,23 +21,28 @@ August 9, Acapulco, Mexico.
 //-----------------------------------------------------------------------------
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
   String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
-  String SystemOnTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
+  String systemsDir = KBmanager.getMgr().getPref("systemsDir");
+  String SoTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
   String tptp4X = TPTPWorld + "/ServiceTools/tptp4X";
-  boolean tptpWorldExists = (new File(SystemOnTPTP)).exists();
+  boolean tptpWorldExists = (new File(SoTPTP)).exists();
+  boolean systemsDirExists = (new File(systemsDir)).exists();
   String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
 
 //----Code for getting the list of systems
   String responseLine;
   String defaultSystemLocal = "";
   String defaultSystemRemote = "";
+  String defaultSystemBuiltIn = "";
   ArrayList<String> systemListLocal = new ArrayList<String>();
   ArrayList<String> systemListRemote = new ArrayList<String>();
+  ArrayList<String> systemListBuiltIn = new ArrayList<String>();
   BufferedReader reader;
   BufferedWriter writer;
+        
 
 //----If local copy of TPTPWorld exists, call local SystemOnTPTP
   if (tptpWorldExists) {
-    String command = SystemOnTPTP + " " + "-w" + " " + "SoTPTP";
+    String command = SoTPTP + " " + "-w" + " " + "SoTPTP";
     Process proc = Runtime.getRuntime().exec(command);
     systemListLocal.add("Choose system");
     try {
@@ -55,6 +60,15 @@ August 9, Acapulco, Mexico.
       System.err.println("Exception: " + ioe.getMessage());
     }
   }
+
+//----If built in Systems Directory exist, call built-in SystemOnTPTP
+  if (systemsDirExists) {
+    out.println("SystemsDir: " + SystemOnTPTP.getSystemsDir());
+    out.println("SystemsInfo: " + SystemOnTPTP.getSystemsInfo());
+
+    systemListBuiltIn = SystemOnTPTP.listSystems();
+    defaultSystemBuiltIn = "EP---0.999";
+  }        
 
 //----Call RemoteSoT to retrieve remote list of systems
   Hashtable URLParameters = new Hashtable();
@@ -101,6 +115,7 @@ August 9, Acapulco, Mexico.
   String quietFlag = request.getParameter("quietFlag");
   String systemChosenLocal = request.getParameter("systemChosenLocal");
   String systemChosenRemote = request.getParameter("systemChosenRemote");
+  String systemChosenBuiltIn = request.getParameter("systemChosenBuiltIn");
   String location = request.getParameter("systemOnTPTP");  
   String tstpFormat = request.getParameter("tstpFormat");
   String sanitize = request.getParameter("sanitize");
@@ -126,9 +141,14 @@ August 9, Acapulco, Mexico.
   if (systemChosenRemote == null) {
     systemChosenRemote = defaultSystemRemote;
   }
+  if (systemChosenBuiltIn == null) {
+    systemChosenBuiltIn = defaultSystemBuiltIn;
+  }
   if (location == null) {
     if (tptpWorldExists) {
       location = "local";
+    } else if (systemsDirExists) {
+      location = "builtin";
     } else {
       location = "remote";
     }
@@ -163,6 +183,8 @@ August 9, Acapulco, Mexico.
 <% if (tptpWorldExists) { %>
 <%   if (location.equals("local")) { %>
     var current_location = "Local";
+<%   } else if (location.equals("builtin")) { %>
+    var current_location = "BuiltIn";
 <%   } else { %>
     var current_location = "Remote";
 <%   } %>
@@ -235,6 +257,11 @@ August 9, Acapulco, Mexico.
     out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
                                          systemListLocal, params)); 
   }
+  if (systemsDirExists) {
+    params = "ID=systemListBuiltIn style='display:none'";
+    out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
+                                         systemListBuiltIn, params));
+  }
 %>
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists) { out.print(" DISABLED"); } %>
@@ -243,6 +270,9 @@ August 9, Acapulco, Mexico.
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
 <% if (location.equals("remote")) { out.print(" CHECKED"); } %>
   onClick="javascript:toggleList('Remote');">Remote SystemOnTPTP
+  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="builtin"
+<% if (location.equals("builtin")) { out.print(" CHECKED"); } %>
+  onClick="javascript:toggleList('BuiltIn');">Built-In SystemOnTPTP
   <BR>
   <INPUT TYPE="CHECKBOX" NAME="sanitize" VALUE="yes"
 <% if (sanitize.equalsIgnoreCase("yes")) { out.print(" CHECKED"); } %>
@@ -352,6 +382,12 @@ August 9, Acapulco, Mexico.
               }           
               if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
             }
+            if (quietFlag.equals("hyperlinkedKIF")) {
+              out.println("<hr>");
+              out.println("(HyperlinkedKIF debug output.  Phase 1: return output from remoteSoT)\n");
+              out.println(result);
+              out.println("(debug output phase 1 completed)-----------------");
+            }
             out.println("</PRE>");
             reader.close();
 //-----------------------------------------------------------------------------
@@ -403,21 +439,21 @@ August 9, Acapulco, Mexico.
           out.println("No system chosen");
         } else {
           if (quietFlag.equals("hyperlinkedKIF")) {
-            command = SystemOnTPTP + " " +
+            command = SoTPTP + " " +
                       "-q3"        + " " +  // quietFlag
                       systemChosen + " " + 
                       timeout      + " " +
                       "-S"         + " " +  //tstpFormat
                       kbFileName;
           } else if (quietFlag.equals("IDV")) {
-            command = SystemOnTPTP + " " +
+            command = SoTPTP + " " +
                       "-q4"        + " " +  // quietFlag
                       systemChosen + " " + 
                       timeout      + " " +
                       "-S"           + " " +  //tstpFormat
                       kbFileName;            
           } else {
-            command = SystemOnTPTP + " " + 
+            command = SoTPTP + " " + 
                       quietFlag    + " " + 
                       systemChosen + " " + 
                       timeout      + " " + 
@@ -433,6 +469,11 @@ August 9, Acapulco, Mexico.
               result += responseLine + "\n";
             }
             if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
+          }
+          if (quietFlag.equals("hyperlinkedKIF")) {
+            out.println("(HyperlinkedKIF debug output.  Phase 1: return output from localSoT)\n");
+            out.println(result);
+            out.println("(debug output phase 1 completed)-----------------");
           }
           out.println("</PRE>");
 
@@ -479,12 +520,18 @@ August 9, Acapulco, Mexico.
         if (tptpWorldExists) {
   try {
       newResult = TPTP2SUMO.convert(result);
+      out.println("<hr>");
+      out.println("(HyperlinkedKIF debug output.  Phase 2: return output from TPTP2SUMO)\n");
+      out.println(newResult);
+      out.println("\n(debug output phase 2 completed)-----------------\n");
+      out.println("(HyperlinkedKIF debug output.  Phase 3: return output from HTMLformatter.formatProofResult)");
       out.println(HTMLformatter.formatProofResult(newResult,
                                                   stmt,
                                                   stmt,
                                                   lineHtml,
                                                   kbName,
                                                   language));       
+      out.println("\n(debug output phase 3 completed)-----------------");
   } catch (Exception e) {}      
 
 
