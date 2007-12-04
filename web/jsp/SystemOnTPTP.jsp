@@ -519,18 +519,18 @@ August 9, Acapulco, Mexico.
       } else if (quietFlag.equals("hyperlinkedKIF")) {
   try {
       newResult = TPTP2SUMO.convert(result);
-      out.println("<hr>");
-      out.println("(HyperlinkedKIF debug output.  Phase 2: return output from TPTP2SUMO)\n");
+      out.println("<hr><PRE>");      
+      out.println("(HyperlinkedKIF debug output.  Phase 2: return output from TPTP2SUMO)");
       out.println(newResult);
-      out.println("\n(debug output phase 2 completed)-----------------\n");
-      out.println("(HyperlinkedKIF debug output.  Phase 3: return output from HTMLformatter.formatProofResult)");
+      out.println("(debug output phase 2 completed)-----------------<PRE><br>");
+      out.println("(HyperlinkedKIF debug output.  Phase 3: return output from HTMLformatter.formatProofResult)<br>");
       out.println(HTMLformatter.formatProofResult(newResult,
                                                   stmt,
                                                   stmt,
                                                   lineHtml,
                                                   kbName,
                                                   language));       
-      out.println("\n(debug output phase 3 completed)-----------------");
+      out.println("(debug output phase 3 completed)-----------------");
   } catch (Exception e) {}      
 
 
