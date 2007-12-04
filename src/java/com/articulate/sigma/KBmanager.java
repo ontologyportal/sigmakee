@@ -81,11 +81,15 @@ public class KBmanager {
             String sep = File.separator;
             String base = System.getenv("SIGMA_HOME");
             String tptpHome = System.getenv("TPTP_HOME");
+            String systemsHome = System.getenv("SYSTEMS_HOME");
             if (base == null || base == "") {
                 base = System.getProperty("user.dir");
             }
             if (tptpHome == null || tptpHome == "") {
                 tptpHome = System.getProperty("user.dir");
+            }
+            if (systemsHome == null || systemsHome == "") {
+                systemsHome = System.getProperty("user.dir");
             }
             System.out.println("INFO in KBmanager.setDefaultAttributes(): base == " + base);
             String tomcatRoot = System.getenv("CATALINA_HOME");
@@ -96,6 +100,7 @@ public class KBmanager {
             File tomcatRootDir = new File(tomcatRoot);
             File baseDir = new File(base);
             File tptpHomeDir = new File(tptpHome);
+            File systemsDir = new File(systemsHome);
             File kbDir = new File(baseDir, "KBs");
             File inferenceTestDir = new File(kbDir, "tests");
             // The links for the test results files will be broken if
@@ -104,6 +109,7 @@ public class KBmanager {
             File testOutputDir = new File(tomcatRootDir,("webapps" + sep + "sigma" + sep + "tests"));
             preferences.put("baseDir",baseDir.getCanonicalPath());
             preferences.put("tptpHomeDir",tptpHomeDir.getCanonicalPath());
+            preferences.put("systemsDir",systemsDir.getCanonicalPath());
             preferences.put("kbDir",kbDir.getCanonicalPath());
             preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());  
             preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
