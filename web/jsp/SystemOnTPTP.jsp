@@ -517,7 +517,6 @@ August 9, Acapulco, Mexico.
  </APPLET>
 <%
       } else if (quietFlag.equals("hyperlinkedKIF")) {
-        if (tptpWorldExists) {
   try {
       newResult = TPTP2SUMO.convert(result);
       out.println("<hr>");
@@ -558,9 +557,6 @@ August 9, Acapulco, Mexico.
                                                       kbName,
                                                       language));       
           */
-        } else {
-          out.println("Hyperlinked KIF output not supported for remote SystemOnTPTP at this time.  Need local installation of TPTPWorld.");
-        }
       }
 //----Delete the kbFile
       (new File(kbFileName)).delete();
