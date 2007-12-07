@@ -202,6 +202,17 @@ if ( iePref == null ) { iePref = ""; }
           tptpHomeDir = "";
   }
 
+  String systemsDir = request.getParameter("systemsDir");
+  if (systemsDir != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("systemsDir",systemsDir);
+  }
+  else {
+      systemsDir = KBmanager.getMgr().getPref("systemsDir");
+      if (systemsDir == null)
+          systemsDir = "";
+  }
+
   String editorCommand = request.getParameter("editorCommand");
   if (editorCommand != null) {
       changed = true;
@@ -364,6 +375,10 @@ if ( (kbNames != null) && !(kbNames.isEmpty()) ) {
     <label for="tptpHomeDir">
     <INPUT type="text" SIZE=50 name="tptpHomeDir" value=<%=tptpHomeDir %> >
     Directory in which local copy of TPTPWorld is installed</label><P>
+
+    <label for="systemsDir">
+    <INPUT type="text" SIZE=50 name="systemsDir" value=<%=systemsDir %> >
+    Directory in which built in ATP systems are located</label><P>
 
     <label for="editorCommand">
     <INPUT type="text" name="editorCommand" value=<%=editorCommand %> >
