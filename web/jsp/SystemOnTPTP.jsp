@@ -22,10 +22,11 @@ August 9, Acapulco, Mexico.
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
   String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
+  String systemsInfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
   String SoTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
   String tptp4X = TPTPWorld + "/ServiceTools/tptp4X";
   boolean tptpWorldExists = (new File(SoTPTP)).exists();
-  boolean systemsDirExists = (new File(systemsDir)).exists();
+  boolean builtInExists = (new File(systemsDir)).exists() && (new File(systemsInfo)).exists();
   String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
 
 //----Code for getting the list of systems
@@ -62,9 +63,9 @@ August 9, Acapulco, Mexico.
   }
 
 //----If built in Systems Directory exist, call built-in SystemOnTPTP
-  if (systemsDirExists) {
-    out.println("SystemsDir: " + SystemOnTPTP.getSystemsDir());
-    out.println("SystemsInfo: " + SystemOnTPTP.getSystemsInfo());
+  if (builtInExists) {
+//    out.println("SystemsDir: " + SystemOnTPTP.getSystemsDir());
+//    out.println("SystemsInfo: " + SystemOnTPTP.getSystemsInfo());
 
     systemListBuiltIn = SystemOnTPTP.listSystems();
     defaultSystemBuiltIn = "EP---0.999";
@@ -147,13 +148,19 @@ August 9, Acapulco, Mexico.
   if (location == null) {
     if (tptpWorldExists) {
       location = "local";
-    } else if (systemsDirExists) {
+    } else if (builtInExists) {
       location = "builtin";
     } else {
       location = "remote";
     }
   }
-  systemChosen = location.equals("local") ? systemChosenLocal : systemChosenRemote;    
+  if (location.equals("local")) {
+    systemChosen = systemChosenLocal;
+  } else if (location.equals("builtin")) {
+    systemChosen = systemChosenBuiltIn;
+  } else {
+    systemChosen = systemChosenRemote;
+  }
 
   if (tstpFormat == null) {
     tstpFormat = "";
@@ -180,15 +187,14 @@ August 9, Acapulco, Mexico.
     function getTSTPDump () {
       return tstp_dump;
     }
-<% if (tptpWorldExists) { %>
-<%   if (location.equals("local")) { %>
+<% if (tptpWorldExists && location.equals("local")) { %>
     var current_location = "Local";
-<%   } else if (location.equals("builtin")) { %>
+<% } else if (builtInExists && location.equals("builtin")) { %>
     var current_location = "BuiltIn";
-<%   } else { %>
+<% } else { %>
     var current_location = "Remote";
-<%   } %>
-//----Toggle to either the local or remote list by showing one and hiding other
+<% } %>
+//----Toggle to either the local/builtin/remote list by showing new and hiding current
     function toggleList (location) {
       if (current_location == location) {
         return;
@@ -204,7 +210,6 @@ August 9, Acapulco, Mexico.
         obj.setAttribute("style","display:inline");
       }
     }
-<% } %>
   //]]></script>
   </HEAD>
   <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF">
@@ -239,15 +244,7 @@ August 9, Acapulco, Mexico.
   System:
 <%
   String params;
-  if (!tptpWorldExists || location.equals("remote")) {
-    params = "ID=systemListRemote style='display:inline'";
-  } else {
-    params = "ID=systemListRemote style='display:none'";
-  }
-  out.println(HTMLformatter.createMenu("systemChosenRemote",systemChosenRemote,
-                                       systemListRemote, params));
-%>
-<%
+  //----Create atp drop down list for local
   if (tptpWorldExists) {
     if (location.equals("local")) {
       params = "ID=systemListLocal style='display:inline'";
@@ -257,22 +254,36 @@ August 9, Acapulco, Mexico.
     out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
                                          systemListLocal, params)); 
   }
-  if (systemsDirExists) {
-    params = "ID=systemListBuiltIn style='display:none'";
+  //----Create atp drop down list for builtin
+  if (builtInExists) {
+    if (location.equals("builtin")) {
+      params = "ID=systemListBuiltIn style='display:inline'";
+    } else {
+      params = "ID=systemListBuiltIn style='display:none'";
+    }
     out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
                                          systemListBuiltIn, params));
   }
+  //----Create atp drop down list for remote
+  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) {
+    params = "ID=systemListRemote style='display:inline'";
+  } else {
+    params = "ID=systemListRemote style='display:none'";
+  }
+  out.println(HTMLformatter.createMenu("systemChosenRemote",systemChosenRemote,
+                                       systemListRemote, params));
 %>
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists) { out.print(" DISABLED"); } %>
 <% if (location.equals("local")) { out.print(" CHECKED"); } %>
   onClick="javascript:toggleList('Local');">Local SystemOnTPTP
+  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="builtin"
+<% if (!builtInExists) { out.print(" DISABLED"); } %>
+<% if (location.equals("builtin")) { out.print(" CHECKED"); } %>
+  onClick="javascript:toggleList('BuiltIn');">Built-In SystemOnTPTP
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
 <% if (location.equals("remote")) { out.print(" CHECKED"); } %>
   onClick="javascript:toggleList('Remote');">Remote SystemOnTPTP
-  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="builtin"
-<% if (location.equals("builtin")) { out.print(" CHECKED"); } %>
-  onClick="javascript:toggleList('BuiltIn');">Built-In SystemOnTPTP
   <BR>
   <INPUT TYPE="CHECKBOX" NAME="sanitize" VALUE="yes"
 <% if (sanitize.equalsIgnoreCase("yes")) { out.print(" CHECKED"); } %>
@@ -343,12 +354,10 @@ August 9, Acapulco, Mexico.
                                     systemChosen);
 //-----------------------------------------------------------------------------
 //----Call RemoteSoT
-      if (location.equals("remote")) {
-        if (req.equalsIgnoreCase("SystemOnTPTP")) {
+      if (req.equalsIgnoreCase("SystemOnTPTP")) {
+        if (location.equals("remote")) {
           if (systemChosen.equals("Choose%20system")) {
             out.println("No system chosen");
-//          } else if (quietFlag.equals("hyperlinkedKIF")) {
-//            out.println("HyperlinkedKIF output not supported for remote SystemOnTPTP");
           } else {
 //----Need to check the name exists
             URLParameters.clear();
@@ -421,94 +430,122 @@ August 9, Acapulco, Mexico.
             }
             */
           }
-        }
-        if (req.equalsIgnoreCase("tell")) {
-          Formula statement = new Formula();
-          statement.theFormula = stmt;
-          String port = KBmanager.getMgr().getPref("port");
-          if (port == null) {
-            port = "8080";
-          }
-          String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
-          sbStatus.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
-        }
-      } else {
+        } else if (location.equals("local")) {
 //-----------------------------------------------------------------------------
 //----Call local copy of TPTPWorld instead of using RemoteSoT
-        if (systemChosen.equals("Choose%20system")) {
-          out.println("No system chosen");
-        } else {
-          if (quietFlag.equals("hyperlinkedKIF")) {
-            command = SoTPTP + " " +
-                      "-q3"        + " " +  // quietFlag
-                      systemChosen + " " + 
-                      timeout      + " " +
-                      "-S"         + " " +  //tstpFormat
-                      kbFileName;
-          } else if (quietFlag.equals("IDV")) {
-            command = SoTPTP + " " +
-                      "-q4"        + " " +  // quietFlag
-                      systemChosen + " " + 
-                      timeout      + " " +
-                      "-S"           + " " +  //tstpFormat
-                      kbFileName;            
+          if (systemChosen.equals("Choose%20system")) {
+            out.println("No system chosen");
           } else {
-            command = SoTPTP + " " + 
-                      quietFlag    + " " + 
-                      systemChosen + " " + 
-                      timeout      + " " + 
-                      tstpFormat   + " " +
-                      kbFileName;
-          }
-          out.println("(Local SystemOnTPTP call)");
-          proc = Runtime.getRuntime().exec(command);
-          reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-          out.println("<PRE>");
-          while ((responseLine = reader.readLine()) != null) {
-            if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
-              result += responseLine + "\n";
+            if (quietFlag.equals("hyperlinkedKIF")) {
+              command = SoTPTP + " " +
+                        "-q3"        + " " +  // quietFlag
+                        systemChosen + " " + 
+                        timeout      + " " +
+                        "-S"         + " " +  //tstpFormat
+                        kbFileName;
+            } else if (quietFlag.equals("IDV")) {
+              command = SoTPTP + " " +
+                        "-q4"        + " " +  // quietFlag
+                        systemChosen + " " + 
+                        timeout      + " " +
+                        "-S"           + " " +  //tstpFormat
+                        kbFileName;            
+            } else {
+              command = SoTPTP + " " + 
+                        quietFlag    + " " + 
+                        systemChosen + " " + 
+                        timeout      + " " + 
+                        tstpFormat   + " " +
+                        kbFileName;
             }
-            if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
-          }
-          if (quietFlag.equals("hyperlinkedKIF")) {
-            out.println("(HyperlinkedKIF debug output.  Phase 1: return output from localSoT)\n");
-            out.println(result);
-            out.println("(debug output phase 1 completed)-----------------");
-          }
-          out.println("</PRE>");
-
-          reader.close();
+            out.println("(Local SystemOnTPTP call)");
+            proc = Runtime.getRuntime().exec(command);
+            reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            out.println("<PRE>");
+            while ((responseLine = reader.readLine()) != null) {
+              if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
+                result += responseLine + "\n";
+              }
+              if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
+            }
+            if (quietFlag.equals("hyperlinkedKIF")) {
+              out.println("(HyperlinkedKIF debug output.  Phase 1: return output from localSoT)\n");
+              out.println(result);
+              out.println("(debug output phase 1 completed)-----------------");
+            }
+            out.println("</PRE>");
+            reader.close();
 //-----------------------------------------------------------------------------
 //----Calling local tptp4X (if tptpWorldExists and toggle button is on "local")
 //----NOTE: local tptp4x call phased out (using TPTP2SUMO.java for conversion)
-          /*
-          if (quietFlag.equals("hyperlinkedKIF")) {
-            out.println("<hr>");
-            command = tptp4X    + " " + 
-                      "-f sumo" + " " +
-                      "--";
-            proc = Runtime.getRuntime().exec(command);
-            writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
-            reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            writer.write(result);
-            writer.flush();
-            writer.close();
-            newResult = "";
-            while ((responseLine = reader.readLine()) != null) {
-              newResult += responseLine + "\n";
+            /*
+            if (quietFlag.equals("hyperlinkedKIF")) {
+              out.println("<hr>");
+              command = tptp4X    + " " + 
+                        "-f sumo" + " " +
+                        "--";
+              proc = Runtime.getRuntime().exec(command);
+              writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
+              reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+              writer.write(result);
+              writer.flush();
+              writer.close();
+              newResult = "";
+              while ((responseLine = reader.readLine()) != null) {
+                newResult += responseLine + "\n";
+              }
+              reader.close();
+              out.println(HTMLformatter.formatProofResult(newResult,
+                                                          stmt,
+                                                          stmt,
+                                                          lineHtml,
+                                                          kbName,
+                                                          language));       
+              out.println("<hr>");
             }
-            reader.close();
-            out.println(HTMLformatter.formatProofResult(newResult,
-                                                        stmt,
-                                                        stmt,
-                                                        lineHtml,
-                                                        kbName,
-                                                        language));       
-            out.println("<hr>");
+            */
           }
-          */
+        } else if (location.equals("builtin")) {
+//-----------------------------------------------------------------------------
+//----Call built in SystemOnTPTP instead of using RemoteSoT or local
+          if (systemChosen.equals("Choose%20system")) {
+            out.println("No system chosen");
+          } else {
+//----Set quiet flag
+            String qq;
+            String format;
+            if (quietFlag.equals("IDV")) {
+              qq = "-q4";
+              format = "-S";
+            } else if (quietFlag.equals("hyperlinkedKIF")) {
+              qq = "-q3";
+              format = "-S";
+            } else {
+              qq = quietFlag;
+              format = tstpFormat;
+            }
+            out.println("chosen system: " + systemChosen);
+            result = SystemOnTPTP.SystemOnTPTP(systemChosen, timeout, qq, format, kbFileName);
+            out.println("(Built-In SystemOnTPTP call)");
+            out.println("<PRE>");
+            out.println(result);
+            out.println("</PRE><br><hr>");
+          }            
+        } else {
+          out.println("INTERNAL ERROR: chosen option not valid: " + location + ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.");
         }
       }
+      if (req.equalsIgnoreCase("tell")) {
+        Formula statement = new Formula();
+        statement.theFormula = stmt;
+        String port = KBmanager.getMgr().getPref("port");
+        if (port == null) {
+          port = "8080";
+        }
+        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
+        sbStatus.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
+      }
+
       if (quietFlag.equals("IDV")) {
 %>
  <APPLET CODE="IDVApplet" archive="http://selma.cs.miami.edu:8080/sigma/lib/IDV.jar,http://selma.cs.miami.edu:8080/sigma/lib/TptpParser.jar,http://selma.cs.miami.edu:8080/sigma/lib/antlr-2.7.5.jar" WIDTH=800 HEIGHT=100 MAYSCRIPT=true>
