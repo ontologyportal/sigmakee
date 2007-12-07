@@ -1,0 +1,33 @@
+ <systems>
+
+   <system value='E'>
+     <version value='0.999'/>
+     <url value='http://www.eprover.org/'/>
+     <command value='eproof --print-statistics -xAuto -tAuto --cpu-limit=%d --memory-limit=Auto --tstp-in --tstp-out %s'/>
+     <statuses>
+       <status name='Theorem' value='SZS status Theorem'/>
+       <status name='CounterSatisfiable' value='SZS status CounterSatisfiable'/>
+       <status name='Unsatisfiable' value='SZS status Unsatisfiable'/>
+       <status name='Satisfiable' value='SZS status Satisfiable'/>
+     </statuses>
+     <status value='READY'/>
+   </system>
+
+   <system value='EP'>
+     <version value='0.999'/>
+     <url value='http://www.eprover.org/'/>
+     <command value='eproof --print-statistics -xAuto -tAuto --cpu-limit=%d --memory-limit=Auto --tstp-in --tstp-out %s'/>
+     <statuses>
+       <status name='Theorem' value='SZS status Theorem'/>
+       <status name='CounterSatisfiable' value='SZS status CounterSatisfiable'/>
+       <status name='Unsatisfiable' value='SZS status Unsatisfiable'/>
+       <status name='Satisfiable' value='SZS status Satisfiable'/>
+     </statuses>
+     <solutions>
+       <solution name='CNFRefutation' start='SZS output start CNFRefutation' end='SZS output end CNFRefutation'/>
+       <solution name='Saturation' start='SZS output start Saturation' end='SZS output end Saturation'/>
+     </solutions>
+     <status value='READY'/>
+   </system>
+
+ </systems>
