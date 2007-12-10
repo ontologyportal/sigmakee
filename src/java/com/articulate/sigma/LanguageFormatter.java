@@ -53,11 +53,11 @@ public class LanguageFormatter {
 	String[] ar = list.split(" ");
 	for (int i = 0; i < ar.length; i++) {
 	    if (i == 0) 
-		result.append(transliterate(ar[i],language));
+		result.append(ar[i]);
 	    if (i > 0 && i < ar.length - 1) 
-		result.append(comma + " " + transliterate(ar[i],language));
+		result.append(comma + " " + ar[i]);
 	    if (i == ar.length -1) 
-		result.append(" " + getKeyword("and",language) + " " + transliterate(ar[i],language));
+		result.append(" " + getKeyword("and",language) + " " + ar[i]);
 	}
 	return result.toString();
     }
@@ -65,63 +65,8 @@ public class LanguageFormatter {
     /** ***************************************************************
      */
     private static boolean logicalOperator(String word) {
-
-	if (word.equals("if") || word.equals("then") || word.equals("=>") ||
-	    word.equals("and") || word.equals("or") ||
-	    word.equals("<=>") || word.equals("not") ||
-	    word.equals("forall") || word.equals("exists") ||
-	    word.equals("holds")) 
-	    return true;
-	else
-	    return false;
-    }
-
-    /** ***************************************************************
-     */
-    private static String transliterate(String word, String language) {
-
-        return word;
-// 	if (word.charAt(0) != '?') 
-// 	    return word;
-// 	else
-// 	    if (language.equals("ar")) {
-// 		StringBuffer result = new StringBuffer();
-// 		result.append(getKeyword("?","ar"));
-// 		for (int i = 1; i < word.length(); i++) {
-// 		    switch (word.charAt(i)) {
-//                     case 'A': result.append("&#x0627;&#x0654;"); break;
-//                     case 'B': result.append("&#xFE8F;"); break;
-//                     case 'C': result.append("&#xFED9;"); break;
-//                     case 'D': result.append("&#xFEA9;"); break;
-//                     case 'E': result.append("&#x0650;"); break;
-//                     case 'F': result.append("&#xFED1;"); break;
-//                     case 'G': result.append("&#xFE9D;"); break;
-//                     case 'H': result.append("&#xFEE9;"); break;
-//                     case 'I': result.append("&#x0650;"); break;
-//                     case 'J': result.append("&#xFE9D;"); break;
-//                     case 'K': result.append("&#xFED9;"); break;
-//                     case 'L': result.append("&#xFEDD;"); break;
-//                     case 'M': result.append("&#xFEE1;"); break;
-//                     case 'N': result.append("&#xFEE5;"); break;
-//                     case 'O': result.append("&#x064F;"); break;
-//                     case 'P': result.append("&#xFE8F;"); break;
-//                     case 'Q': result.append("&#xFED5;"); break;
-//                     case 'R': result.append("&#xFEAD;"); break;
-//                     case 'S': result.append("&#xFEB1;"); break;
-//                     case 'T': result.append("&#xFE95;"); break;
-//                     case 'U': result.append("&#x064F;"); break;
-//                     case 'V': result.append("&#xFE8F;"); break;
-//                     case 'W': result.append("&#xFEED;"); break;
-//                     case 'X': result.append("&#xFEAF;"); break;
-//                     case 'Y': result.append("&#xFEF1;"); break;
-//                     case 'Z': result.append("&#xFEAF;"); 
-// 			result.append(word.charAt(i));
-// 		    }
-// 		}
-// 		return result.toString();
-// 	    }
-// 	    else
-// 		return word;
+        String logops = "if,then,=>,and,or,<=>,not,forall,exists,holds";
+        return (logops.indexOf(word) != -1);
     }
 
     /** ***************************************************************
@@ -226,7 +171,7 @@ public class LanguageFormatter {
     private static String processAtom(String atom, Map termMap, String language) {
 
 	if (atom.charAt(0) == '?') 
-	    return transliterate(atom,language);
+	    return atom;
 	if (termMap.containsKey(atom)) 
 	    return (String) termMap.get(atom);
 	return atom;
@@ -347,7 +292,7 @@ public class LanguageFormatter {
 	else {  
 	    // predicate has no paraphrase
 	    if (pred.charAt(0) == '?') {
-		result.append(transliterate(pred,language));
+		result.append(pred);
 	    }
 	    else {
 		if (termMap.containsKey(pred)) {
@@ -388,12 +333,7 @@ public class LanguageFormatter {
             if (termMap !=null && termMap.containsKey(word))
                 ans = ((String) termMap.get(word));
             else if (word.charAt(0) == '?') 
-		ans = transliterate(word,language);
-//             if (language.equalsIgnoreCase("ar") && !ans.startsWith("?") &&
-//                 ans.indexOf("&#x6") == -1) {
-//                     // left-to-right embedding
-//                     ans = ("&#x202a;" + ans + "&#x202c;");
-//             }
+		ans = word;
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -489,15 +429,16 @@ public class LanguageFormatter {
 		sb.append(args.get(1)).append(" "+AND+" ").append("~{").append(args.get(0)).append("}");
 	    }
 	    else {
+                // Special handling for Arabic.
 		sb.append("<ul><li>" 
-                          + (language.equalsIgnoreCase("ar") ? "&#x202b;" : "")
+                          + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
                           + IF
                           + " ").append(args.get(0)).append(COMMA
-                                                            + (language.equalsIgnoreCase("ar") ? "&#x202c;" : "")
+                                                            + (language.equalsIgnoreCase("ar") ? "</span>" : "")
                                                             + "</li><li>"
-                                                            + (language.equalsIgnoreCase("ar") ? "&#x202b;" : "")
+                                                            + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
                                                             + THEN
-                                                            + " ").append(args.get(1)).append((language.equalsIgnoreCase("ar") ? "&#x202c;" : "")
+                                                            + " ").append(args.get(1)).append((language.equalsIgnoreCase("ar") ? "</span>" : "")
                                                                                               + "</li></ul>");
 	    }
 	    ans = sb.toString();
@@ -733,13 +674,25 @@ public class LanguageFormatter {
 
 	int num = 1;                                          // handle arguments
 	String argPointer = "%" + (new Integer(num)).toString();
+        String arg = "";
+        String para = "";
 	while (strFormat.indexOf(argPointer) > -1) {
 	    // System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + f.theFormula);
 	    // System.out.println("arg: " + f.getArgument(num));
 	    // System.out.println("num: " + num);
 	    // System.out.println("str: " + strFormat);
             
-	    strFormat = strFormat.replace(argPointer,nlStmtPara(f.getArgument((int) num),isNegMode,phraseMap,termMap,language,1));
+            arg = f.getArgument(num);
+            para = (Formula.isVariable(arg) ? arg : nlStmtPara(arg,isNegMode,phraseMap,termMap,language,1));
+            if (Formula.atom(arg)) {
+                // Add the hyperlink placeholder for arg.
+                strFormat = (Formula.isVariable(arg)
+                             ? strFormat.replace(argPointer, para)
+                             : strFormat.replace(argPointer, ("&%" + arg + "$" + para)));
+            }
+            else {
+                strFormat = strFormat.replace(argPointer,para);
+            }
 	    num++;
 	    argPointer = "%" + (new Integer(num)).toString();
 	}
@@ -942,6 +895,13 @@ public class LanguageFormatter {
 	String nlFormat = nlStmtPara(stmt,false,phraseMap,termMap,language,1);
         String charsAllowed = "&#;";
 	if (nlFormat != null) {
+//             if (varMap != null && varMap.keySet().size() > 0) {
+//                 nlFormat = variableReplace(nlFormat,varMap,kb,language);
+//                 System.out.println("INFO in LanguageFormatter.htmlParaphrase()");
+//                 System.out.println("  href == " + href);
+//                 System.out.println("  stmt == " + stmt);
+//                 System.out.println("  nlFormat1 == " + nlFormat);
+//             }
 	    while (nlFormat.indexOf("&%") > -1) {
 		start = nlFormat.indexOf("&%",start+1);
 		int word = nlFormat.indexOf("$",start);
@@ -960,17 +920,13 @@ public class LanguageFormatter {
 		    nlFormat = (nlFormat.substring(0,start) + "<a href=\"" + href + "&term=" 
 				 + nlFormat.substring(start+2,word) + "\">" + nlFormat.substring(word+1,end) 
 				 + "</a>" + nlFormat.substring(end, nlFormat.length()) );		
+                // System.out.println("  nlFormatN == " + nlFormat);
 	    }
             if (varMap != null && varMap.keySet().size() > 0) 
                 nlFormat = variableReplace(nlFormat,varMap,kb,language);
 	}
 	else  
 	    nlFormat = "";
-//         if (Formula.isNonEmptyString(nlFormat)) {
-//             if (language.equalsIgnoreCase("ar")) {
-//                 nlFormat = ("&#x202b;" + nlFormat + "&#x202c;");
-//             }
-//         }
 	return nlFormat;
     }
 
@@ -1015,12 +971,8 @@ public class LanguageFormatter {
         }
         // count = 1 (first occurrence of a type)
         if (language.equalsIgnoreCase("EnglishLanguage")) {
-            if ((s.charAt(0) == 'A' || s.charAt(0) == 'a' || 
-                 s.charAt(0) == 'E' || s.charAt(0) == 'e' ||
-                 s.charAt(0) == 'I' || s.charAt(0) == 'i' ||
-                 s.charAt(0) == 'O' || s.charAt(0) == 'o' ||
-                 s.charAt(0) == 'U' || s.charAt(0) == 'u') &&
-                occurrence == 1)
+            String vowels = "AEIOUaeiou";
+            if ((vowels.indexOf(s.charAt(0)) != -1) && (occurrence == 1))
                 return "an ";
             else
                 return "a " + ordinal;
@@ -1031,7 +983,7 @@ public class LanguageFormatter {
                 // remove the definite article
                 ordinal = ordinal.substring(defArt.length());
                 // remove shadda
-                ordinal = ordinal.replace("&#x651;","");
+                ordinal = ordinal.replaceFirst("\\&\\#\\x651\\;","");
             }
             return ordinal;
         }
@@ -1062,8 +1014,10 @@ public class LanguageFormatter {
         else
             typeMap.put(varType,new Integer(1));
         int count = 1;
+        int idx = -1;
         while (found) {
-            if (result.indexOf(varString) > -1 && count < 20) {
+            idx = result.indexOf(varString);
+            if (idx > -1 && count < 20) {
                 String article = "";
                 String replacement = "";
                 if (isClass) {
@@ -1076,7 +1030,7 @@ public class LanguageFormatter {
                     if (language.equalsIgnoreCase("ar")) {
                         replacement = (getKeyword("kind of",language) + " " + varPretty);
                     }
-                    result = result.replaceFirst("\\?" + varString.substring(1), replacement);
+                    // System.out.println("  replacement == " + replacement);
                 }
                 else {
                     article = getArticle(varPretty,count,occurrenceCounter,language);
@@ -1089,8 +1043,10 @@ public class LanguageFormatter {
                         }
                         replacement = (varPretty + " " + article);
                     }
-                    result = result.replaceFirst("\\?" + varString.substring(1), replacement);
+                    // System.out.println("  replacement == " + replacement);
                 }
+                result = result.replaceFirst("\\?" + varString.substring(1),replacement);
+                // System.out.println("  result == " + result);
             }
             else
                 found = false;
