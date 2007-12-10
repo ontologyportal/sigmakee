@@ -72,7 +72,8 @@ public class HTMLformatter {
                 pph = "";
             if (Formula.isNonEmptyString(pph)) {
                 if (language.equalsIgnoreCase("ar")) {
-                    pph = ("&#x202b;" + pph + "&#x202c;");
+                    pph = ("<span dir=\"rtl\">" + pph + "</span>");
+                    // pph = ("&#x202b;" + pph + "&#x202c;");
                 }
             }
             result.append(pph);        
@@ -175,7 +176,8 @@ public class HTMLformatter {
                         pph = "";
                     if (Formula.isNonEmptyString(pph)) {
                         if (language.equalsIgnoreCase("ar")) {
-                            pph = ("&#x202b;" + pph + "&#x202c;");
+                            pph = ("<span dir=\"rtl\">" + pph + "</span>");
+                            // pph = ("&#x202b;" + pph + "&#x202c;");
                         }
                     }
                     show.append(pph + "<br></TD></TR>\n");
@@ -379,7 +381,8 @@ public class HTMLformatter {
                     pph = ""; 
                 if (Formula.isNonEmptyString(pph)) {
                     if (language.equalsIgnoreCase("ar")) {
-                        pph = ("&#x202b;" + pph + "&#x202c;");
+                        pph = ("<span dir=\"rtl\">" + pph + "</span>");
+                        // pph = ("&#x202b;" + pph + "&#x202c;");
                     }
                 }
                 show.append(pph + "</TD></TR>\n"); 

@@ -78,8 +78,12 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     	    String tfmValue = null;
     	    if (tfm != null)
                 tfmValue = (String) tfm.get(term);
-    	    if (tfmValue != null) 
+    	    if (tfmValue != null) {
+                if (language.equalsIgnoreCase("ar")) {
+                    tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
+                }
                 show.append("(" + tfmValue + ")");	    
+            }
     	    else
                 System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
                                    term + "\" in language " + language);	   
