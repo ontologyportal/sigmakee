@@ -56,90 +56,90 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     }
     show.append("</td></TABLE>");
  }
- else if (kb != null && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in                                                         
-    show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
-    ArrayList forms;
-    show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
-    if (term != null) {
-    	term = term.intern();
-        show.append(term);
-        show.append("</b></FONT>");
-    	if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-    	    Map fm = kb.getFormatMap(language);
-    	    String fmValue = null;
-    	    if (fm != null)
-                fmValue = (String) fm.get(term); 
-    	    if (fmValue == null)
-                System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" +
-                                   term + "\" in language " + language);	   
-    	}
-    	else {
-    	    Map tfm = kb.getTermFormatMap(language);
-    	    String tfmValue = null;
-    	    if (tfm != null)
-                tfmValue = (String) tfm.get(term);
-    	    if (tfmValue != null) {
-                if (language.equalsIgnoreCase("ar")) {
-                    tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
-                }
-                show.append("(" + tfmValue + ")");	    
-    	    else
-                System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
-                                   term + "\" in language " + language);	   
-    	}
-        show.append(HTMLformatter.showPictures(kb,term));
-        show.append("</td>");
-        WordNet.initOnce();
-        TreeMap tm = WordNet.wn.getWordsFromTerm(term);
-        if (tm != null) {
-            show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
-            show.append("<td width='40%'><small>");
-            show.append(WordNetUtilities.formatWords(tm,kbName));
-            show.append("</small></td>");
-        }
-        else
-            System.out.println("INFO in BrowseBody.jsp: No synsets for term " + term);
-        show.append("</tr></table>\n");
-    }
-    else
-        show.append ("</b></FONT></td></tr></table>\n");
+ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in                                                         
+     show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
+     show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
 
-    int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
-    if (KBmanager.getMgr().getPref("userName") != null && 
-        KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-        limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
-    }
-    // show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
+     term = term.intern();
+     show.append(term);
+     show.append("</b></FONT>");
+     if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
+         Map fm = kb.getFormatMap(language);
+         String fmValue = null;
+         if (fm != null)
+             fmValue = (String) fm.get(term); 
+         if (fmValue == null)
+             System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" +
+                                term + "\" in language " + language);	   
+     }
+     else {
+         Map tfm = kb.getTermFormatMap(language);
+         String tfmValue = null;
+         if (tfm != null)
+             tfmValue = (String) tfm.get(term);
+         if (tfmValue != null) {
+             if (language.equalsIgnoreCase("ar")) {
+                 tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
+             }
+             show.append("(" + tfmValue + ")");
+         }
+         else {
+             System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
+                                term + "\" in language " + language);	   
+         }
+         show.append(HTMLformatter.showPictures(kb,term));
+         show.append("</td>");
+         WordNet.initOnce();
+         TreeMap tm = WordNet.wn.getWordsFromTerm(term);
+         if (tm != null) {
+             show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
+             show.append("<td width='40%'><small>");
+             show.append(WordNetUtilities.formatWords(tm,kbName));
+             show.append("</small></td>");
+         }
+         else {
+             System.out.println("INFO in BrowseBody.jsp: No synsets for term " + term);
+         }
+         show.append("</tr></table>\n");
+     }
+     show.append ("</b></FONT></td></tr></table>\n");
 
-    for (int arg = 1; arg < 6; arg++) {
-        String argHeader = "<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>";
-        show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,0,limit,arg,"arg"));
-    }
-    //forms = kb.ask("ant",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,0,limit,0,"ant"));
+     int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
+     if (KBmanager.getMgr().getPref("userName") != null && 
+         KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
+     }
+     // show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
 
-    //forms = kb.ask("cons",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, language,0,limit,0,"cons"));
+     for (int arg = 1; arg < 6; arg++) {
+         String argHeader = "<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>";
+         show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,0,limit,arg,"arg"));
+     }
+     //forms = kb.ask("ant",0,term);
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,0,limit,0,"ant"));
 
-    //forms = kb.ask("stmt",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,0,limit,0,"stmt"));
+     //forms = kb.ask("cons",0,term);
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, language,0,limit,0,"cons"));
 
-    //forms = kb.ask("arg",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,0,limit,0,"arg"));
+     //forms = kb.ask("stmt",0,term);
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,0,limit,0,"stmt"));
 
-    show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
-                "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
-                "</table><BR>\n");
-    if (!parentPage.equals("TreeView.jsp")) 
-        show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
-                    "?lang=" + language + "&kb=" + kbName + 
-                    "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
+     //forms = kb.ask("arg",0,term);
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,0,limit,0,"arg"));
+
+     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
+                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
+                 "</table><BR>\n");
+     if (!parentPage.equals("TreeView.jsp")) 
+         show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
+                     "?lang=" + language + "&kb=" + kbName + 
+                     "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
     
-    show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/SimpleBrowse.jsp" + 
-                "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
-                "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
-    show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
-                "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
-                "&term=" + term + "\">Show simplified definition (with tree view)</a></small><br>\n");
+     show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/SimpleBrowse.jsp" + 
+                 "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
+                 "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
+     show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
+                 "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
+                 "&term=" + term + "\">Show simplified definition (with tree view)</a></small><br>\n");
  }
 %>
