@@ -183,7 +183,7 @@ public class LanguageFormatter {
             }
         }
 	if (atom.charAt(0) == '?') 
-	    return transliterate(atom,language);
+	    return atom;
 	if (termMap.containsKey(atom)) 
 	    return (String) termMap.get(atom);
 	return atom;
@@ -446,11 +446,16 @@ public class LanguageFormatter {
 	    }
 	    else {
                 // Special handling for Arabic.
-		sb.append("<ul><li>" + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
-                          + IF + " ").append(args.get(0)).append(COMMA + (language.equalsIgnoreCase("ar") ? "</span>" : "")
-                                                                 + "</li><li>" + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
-                                                                 + THEN + " ").append(args.get(1)).append((language.equalsIgnoreCase("ar") ? "</span>" : "")
-	    }
+		sb.append("<ul><li>"
+                           + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
+                           + IF
+                           + " ").append(args.get(0)).append(COMMA
+                                                             + (language.equalsIgnoreCase("ar") ? "</span>" : "")
+                                                             + "</li><li>"
+                                                             + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
+                                                             + THEN
+                                                             + " ").append(args.get(1)).append((language.equalsIgnoreCase("ar") ? "</span>" : "")
+                                                                                               + "</li></ul>");	    }
 	    ans = sb.toString();
 	    /*
 	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
