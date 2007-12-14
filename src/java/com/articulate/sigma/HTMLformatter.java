@@ -117,16 +117,16 @@ public class HTMLformatter {
     /** *************************************************************
      *  Show knowledge base statements containing the given term at
      * different argument positions.
-     */
+     
     public static String showFormulas(KB kb, String term) {
 
         return showFormulasLimit(kb,term,0,25);
     }
 
-    /** *************************************************************
+    ** *************************************************************
      *  Show knowledge base statements containing the given term at
      * different argument positions.
-     */
+     
     public static String showFormulasLimitArg(KB kb, String term, int start, int limit, int arg, String type) {
 
         StringBuffer show = new StringBuffer();
@@ -156,14 +156,15 @@ public class HTMLformatter {
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
                     show.append("<TR><TD WIDTH='50%' valign=top>");
                     String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
-                    if (f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0)
+                    if ((f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0) ||
+                        (f.theFormula.length() > 8 && f.theFormula.substring(1,8).compareTo("comment") == 0))
                         show.append(kb.formatDocumentation(kbHref,formattedFormula));
                     else
                         show.append(formattedFormula);
-                    String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length());
-                    show.append("<A href=\"EditFile.jsp?file=" + f.sourceFile + "&line=");
-                    show.append((new Integer(f.startLine)).toString() + "\">");
-                    show.append(sourceFilename);
+                    String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
+                    show.append("<A href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
+                    if (!DB.emptyString(sourceFilename)) 
+                        show.append(sourceFilename);
                     show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
                     show.append("</A>");
                     show.append("</TD>\n<TD width='40%' valign=top>");
@@ -189,10 +190,10 @@ public class HTMLformatter {
         return show.toString();
     }
 
-    /** *************************************************************
+    ** *************************************************************
      *  Show knowledge base statements containing the given term at
      * different argument positions.
-     */
+     *
     public static String showFormulasLimit(KB kb, String term, int start, int limit) {
 
         StringBuffer show = new StringBuffer();
@@ -201,7 +202,7 @@ public class HTMLformatter {
             show.append(showFormulasLimitArg(kb,term,start,limit,arg,"arg"));       
         return show.toString();
     }
-
+*/
     /** *************************************************************
      *  Show knowledge base pictures
      */
@@ -257,17 +258,21 @@ public class HTMLformatter {
         StringBuffer show = new StringBuffer();
         ArrayList relations = kb.getNearestRelations(term);     // that is not present in the KB.
         ArrayList nonRelations = kb.getNearestNonRelations(term);
+        String termAbove = kb.getAlphaBefore(term,15);
+        String termBelow = kb.getAlphaAfter(term,15);
+        String lowcaseTerm = Character.toLowerCase(term.charAt(0)) + term.substring(1);
         show.append(" <FONT face='Arial,helvetica' size=+3> <b> ");
         if (term != null)
             show.append(term);
         show.append("</b></FONT><br><br>");
         show.append("<TABLE><tr><td>");
         show.append("<TABLE>");
+        show.append("<tr><td><i><A href=\""+ kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</A>" + "</i></TD></tr>\n");
         for (int i = 0; i < 30; i++) {
             String relation = (String) relations.get(i);
             String nonRelation = (String) nonRelations.get(i);
             if (relation != "" || nonRelation != "") {
-                if (i == 15) {
+                if (i == 14) {
                     show.append("<TR>\n");
                     show.append("  <TD><A href=\""+ kbHref +"&term=");
                     show.append(   relation + "\">" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
@@ -275,7 +280,7 @@ public class HTMLformatter {
                     show.append(   nonRelation + "\">" + nonRelation + "</A>" + "</TD>\n");
                     show.append("</TR>\n");
                     show.append("<TR><TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD><TD>&nbsp;&nbsp;</TD>\n");
-                    show.append("<TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD></TR>\n");
+                    show.append("<TD><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></TD></TR>\n");
                 }
                 else {
                     show.append("<TR>\n");
@@ -287,6 +292,7 @@ public class HTMLformatter {
                 }
             }
         }
+        show.append("<tr><td><i><A href=\""+ kbHref +"&term=" + termBelow + "*\">next " + 25 + "</A>" + "</i></TD></tr>\n");
         show.append("</TABLE></td>");
         return show.toString();
     }
@@ -342,13 +348,16 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormatLimit(String term, ArrayList forms, String header, 
+    public static String browserSectionFormatLimit(String term, String header, 
                                               KB kb, String language, int start, int limit, int arg, String type) {
 
+        ArrayList forms = kb.ask(type,arg,term);
         StringBuffer show = new StringBuffer();
         String limitString = "";
         int localLimit = start + limit;
 
+        if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
+            forms = TaxoModel.removeCached(forms);
         if (forms != null && forms.size() > 0) {
             Collections.sort(forms);
             if (header != null) 
@@ -369,23 +378,33 @@ public class HTMLformatter {
             
             for (int i = start; i < localLimit; i++) {
                 Formula f = (Formula) forms.get(i);
-                show.append("<TR><TD width=50%% valign=top>");
-                show.append(f.htmlFormat(kbHref) + "</td>\n<TD width=10%% valign=top BGCOLOR=#B8CADF>");
-                show.append(f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1,f.sourceFile.length()) + 
-                            " " + (new Integer(f.startLine)).toString() + 
-                            "-" + (new Integer(f.endLine)).toString() + "</TD>\n<TD width=40%% valign=top>");
-		pph = LanguageFormatter.htmlParaphrase(kbHref,
-    			 f.theFormula,kb.getFormatMap(language), 
+                if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
+                    !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
+                    show.append("<TR><TD width=50%% valign=top>");
+                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
+                    if ((f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0) ||
+                        (f.theFormula.length() > 8 && f.theFormula.substring(1,8).compareTo("comment") == 0))
+                        show.append(kb.formatDocumentation(kbHref,formattedFormula));
+                    else
+                        show.append(formattedFormula);
+                    String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
+                    show.append("<A href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
+                    if (!DB.emptyString(sourceFilename)) 
+                        show.append(sourceFilename);
+                    show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
+                    show.append("</A>");
+                    show.append("</TD>\n<TD width='40%' valign=top>");
+        	    pph = LanguageFormatter.htmlParaphrase(kbHref,
+            		 f.theFormula,kb.getFormatMap(language), 
                          kb.getTermFormatMap(language), kb, language);
-		if (pph == null) 
-                    pph = ""; 
-                if (Formula.isNonEmptyString(pph)) {
-                    if (language.equalsIgnoreCase("ar")) {
-                        pph = ("<span dir=\"rtl\">" + pph + "</span>");
-                        // pph = ("&#x202b;" + pph + "&#x202c;");
+        	    if (pph == null) 
+                        pph = ""; 
+                    if (Formula.isNonEmptyString(pph)) {
+                        if (language.equalsIgnoreCase("ar")) 
+                            pph = ("&#x202b;" + pph + "&#x202c;");                        
                     }
+                    show.append(pph + "</TD></TR>\n"); 
                 }
-                show.append(pph + "</TD></TR>\n"); 
             }
             show.append(limitString);
             show.append("</TABLE>\n");
@@ -396,10 +415,10 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormat(String term, ArrayList forms, String header, 
+    public static String browserSectionFormat(String term, String header, 
                                               KB kb, String language, int arg, String type) {
 
-        return browserSectionFormatLimit(term, forms, header,kb, language, 0, 50, arg,type);
+        return browserSectionFormatLimit(term, header,kb, language, 0, 50, arg,type);
     }
 
     /** *************************************************************
@@ -454,6 +473,32 @@ public class HTMLformatter {
         return createMenu(menuName, selectedOption, options, params);
     }
 
+    /** *************************************************************
+     * hyperlink formulas in error messages
+     */
+    public static String formatErrors(KB kb, String kbHref) {
+
+        StringBuffer result = new StringBuffer();
+        Iterator it = kb.errors.iterator();
+        while (it.hasNext()) {
+            String err = (String) it.next();
+            int p = err.indexOf("(");
+            String begin = "";
+            String end = "";
+            if (p > -1) {
+                begin = err.substring(0,p);
+                end = err.substring(p);
+                Formula f = new Formula();
+                f.theFormula = end;
+                end = f.htmlFormat(kbHref);
+            }
+            else
+                begin = err;
+                
+            result.append(begin + end + "<br>\n");
+        }
+        return result.toString();
+    }
 
     /** *************************************************************
      *  Create an HTML menu with an ID, given an ArrayList of Strings.
