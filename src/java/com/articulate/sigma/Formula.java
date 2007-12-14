@@ -197,6 +197,17 @@ public class Formula implements Comparable {
     public void read(String s) {
         theFormula = s;
     }
+
+    /** ***************************************************************
+     * Read a String into the variable 'theFormula'.
+     */
+    public String createID() {
+
+        String fname = sourceFile;
+        if (!DB.emptyString(fname) && fname.lastIndexOf(File.separator) > -1) 
+            fname = fname.substring(fname.lastIndexOf(File.separator)+1);
+        return (new Integer(theFormula.hashCode())).toString() + fname;
+    }
     
     /** ***************************************************************
      * Copy the Formula.
@@ -1972,40 +1983,23 @@ public class Formula implements Comparable {
                     errStr = "Possible arity confusion for " + pred;
                     mgrErrStr = KBmanager.getMgr().getError();
                     System.out.println("WARNING in Formula.addToTypeList(): "
-                                       + errStr
-                                       + ": al == " 
-                                       + al 
-                                       + ", result.length == " 
-                                       + result.length 
-                                       + ", classP == \"" 
-                                       + classP
-                                       + "\"");
+                                       + errStr + ": al == " + al + ", result.length == " + result.length 
+                                       + ", classP == \"" + classP + "\"");
                     if (mgrErrStr.equals("") || (mgrErrStr.indexOf(errStr) == -1)) {
-                        KBmanager.getMgr().setError(mgrErrStr
-                                                    + "\n<br/>"
-                                                    + errStr
-                                                    + "\n<br/>");
+                        KBmanager.getMgr().setError(mgrErrStr + "\n<br/>" + errStr + "\n<br/>");
                     }
                 }
                 else if ((result[argnum] == null) || result[argnum].equals("")) {
                     result[argnum] = cl + classP;
                 }
                 else {
-                    errStr = ("Multiple types asserted for argument "
-                              + argnum 
-                              + " of "
-                              + pred
-                              + ": "
-                              + cl 
-                              + ", " 
-                              + result[argnum]);
+                    errStr = ("Multiple types asserted for argument " + argnum 
+                              + " of " + pred + ": " + cl + ", " + result[argnum]);
                     mgrErrStr = KBmanager.getMgr().getError();
                     System.out.println("Error in Formula.addToTypeList(): " + errStr);
                     if (mgrErrStr.equals("") || (mgrErrStr.indexOf(errStr) == -1)) {
                         KBmanager.getMgr().setError(KBmanager.getMgr().getError() 
-                                                    + "\n<br/>" 
-                                                    + errStr
-                                                    + "\n<br/>");
+                                                    + "\n<br/>" + errStr + "\n<br/>");
                     }
                 }
             }
@@ -3227,13 +3221,12 @@ public class Formula implements Comparable {
                         //System.out.println("INFO in format(): Deleting at end of : |" + formatted.toString() + "|");
                         formatted = formatted.deleteCharAt(formatted.length()-1);
                     }
-                    formatted = formatted.append(eolChars);
-                    for (int j = 0; j < indentLevel; j++) {
-                        formatted = formatted.append(indentChars);
-                    }
+                    formatted.append(eolChars);
+                    for (int j = 0; j < indentLevel; j++) 
+                        formatted.append(indentChars);                    
                 }
                 if (theFormula.charAt(i) == '(' && indentLevel == 0 && i == 0) 
-                    formatted = formatted.append(theFormula.charAt(i));
+                    formatted.append(theFormula.charAt(i));
                 if (Character.isJavaIdentifierStart(theFormula.charAt(i)) && !inToken && !inVariable) {
                     token = new StringBuffer(theFormula.charAt(i));
                     inToken = true;
@@ -3254,8 +3247,6 @@ public class Formula implements Comparable {
                 if (theFormula.charAt(i) == ')') {
                     if (!inVarlist)
                         indentLevel--;
-
-
                     else
                         inVarlist = false;
                 }
@@ -3268,31 +3259,33 @@ public class Formula implements Comparable {
                 if (!(Character.isJavaIdentifierPart(theFormula.charAt(i)) || theFormula.charAt(i) == '-') && inToken) {
                     inToken = false;
                     if (hyperlink != "")
-                        formatted = formatted.append("<a href=\"" + hyperlink + "&term=" + token + "\">" + token + "</a>");
+                        formatted.append("<a href=\"" + hyperlink + "&term=" + token + "\">" + token + "</a>");
                     else
-                        formatted = formatted.append(token);
+                        formatted.append(token);
                     token = new StringBuffer();
                 }
                 if (!inToken && i>0 && !(Character.isWhitespace(theFormula.charAt(i)) && theFormula.charAt(i-1) == '(')) {
                     if (Character.isWhitespace(theFormula.charAt(i))) { 
                         if (!Character.isWhitespace(theFormula.charAt(i-1)))
-                            formatted = formatted.append(" ");
+                            formatted.append(" ");
                     }
                     else
-                        formatted = formatted.append(theFormula.charAt(i));
+                        formatted.append(theFormula.charAt(i));
                 }
             }
             else {     // In a comment
-                formatted = formatted.append(theFormula.charAt(i));
+                formatted.append(theFormula.charAt(i));
+                if (i > 70 && theFormula.charAt(i) == '/')      // add spaces to long URL strings 
+                    formatted.append(" ");                
                 if (theFormula.charAt(i) == '"') 
                     inComment = false;
             }
         }
         if (inToken) {    // A term which is outside of parenthesis, typically, a binding.
             if (hyperlink != "")
-                formatted = formatted.append("<a href=\"" + hyperlink + "&term=" + token + "\">" + token + "</a>");
+                formatted.append("<a href=\"" + hyperlink + "&term=" + token + "\">" + token + "</a>");
             else
-                formatted = formatted.append(token);
+                formatted.append(token);
         }
         return formatted.toString();
     }
