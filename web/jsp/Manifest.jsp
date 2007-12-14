@@ -61,6 +61,9 @@ August 9, Acapulco, Mexico.
         owt.kb = kb;
         owt.write(saveFile);
     }
+    if (saveAs != null && saveAs.equals("KIF")) {
+        kb.writeFile(kbName + "kif");
+    }
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
         if (i == -1) {
@@ -163,6 +166,7 @@ August 9, Acapulco, Mexico.
         <select name="saveAs">
             <option value="OWL">OWL
             <option value="prolog">Prolog
+            <option value="KIF">KIF
             <option value="TPTP">TPTP
             <option value="tptpFOL">TPTP FOL
         </select>
