@@ -99,7 +99,7 @@ public class KB {
 
     /** 
      * A HashMap of ArrayLists of Formulas, containing all the
-     * formulas in the KB.  Keys are both the formula itself, and term
+     * formulas in the KB.  Keys are the formula itself, a formula ID, and term
      * indexes created in KIF.createKey().
      */
     private HashMap formulas = new HashMap();                                                   
@@ -109,6 +109,12 @@ public class KB {
 
     /** The natural language strings for terms in the KB. */
     private HashMap termFormatMap = null;
+
+    /** Errors and warnings found during loading of the KB constituents. */
+    public TreeSet errors = new TreeSet();
+
+    /** whether the contents of the KB have been modified without updating the caches */
+    public boolean modifiedContents = false;
 
     /** *************************************************************
      * Constructor which takes the name of the KB and the location
@@ -511,13 +517,8 @@ public class KB {
                     }
                 }
             }
-            System.out.println("  "
-                               + count 
-                               + " "
-                               + relationName 
-                               + " entries computed in " 
-                               + ((System.currentTimeMillis() - t1) / 1000.0)
-                               + " seconds");
+            System.out.println("  " + count + " " + relationName + " entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
 
             /*
               if (relationName.equals("subclass")) {
@@ -594,11 +595,8 @@ public class KB {
 
             ic1.setIsClosureComputed(true);
             ic2.setIsClosureComputed(true);
-            System.out.println("  "
-                               + count
-                               + " instance entries computed in " 
-                               + ((System.currentTimeMillis() - t1) / 1000.0)
-                               + " seconds");
+            System.out.println("  " + count + " instance entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -679,19 +677,13 @@ public class KB {
                 }
             }
 
-            if (changed) {
-                dc1.setIsClosureComputed(true);
-            }
-
+            if (changed)
+                dc1.setIsClosureComputed(true);            
             // System.out.println("  " + count + " disjoint entries after pass " + ++passes);
             // }
 
-            System.out.println("  "
-                               + count
-                               + " disjoint entries computed in " 
-                               + ((System.currentTimeMillis() - t1) / 1000.0)
-                               + " seconds");
-
+            System.out.println("  " + count + " disjoint entries computed in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
             // printDisjointness();
         }
         catch (Exception ex) {
@@ -998,7 +990,6 @@ public class KB {
      * defined as an instance.
      *
      * @param term A String.
-     *
      * @return An ArrayList.
      */
     public ArrayList instancesOf(String term) {
@@ -1012,9 +1003,7 @@ public class KB {
      * child of the given "parent".
      *
      * @param child A String, the name of a term.
-     *
      * @param parent A String, the name of a term.
-     *
      * @return true if child and parent constitute an actual or
      * implied relation in the current KB, else false.
      */
@@ -1049,9 +1038,7 @@ public class KB {
      * c1 is a subclass of c2, else returns false.
      *
      * @param c1 A String, the name of a SetOrClass.
-     *
      * @param c2 A String, the name of a SetOrClass.
-     *
      * @return boolean
      */
     public boolean isSubclass(String c1, String c2) {
@@ -1203,11 +1190,8 @@ public class KB {
                 System.out.println("  " + count + " cache entries added for " + relation);
                 total += count;
             }
-            System.out.println("  "
-                               + total
-                               + " ground assertions cached in " 
-                               + ((System.currentTimeMillis() - t1) / 1000.0)
-                               + " seconds");
+            System.out.println("  " + total + " ground assertions cached in " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1760,6 +1744,38 @@ public class KB {
     }
     
     /** ***************************************************************
+     *  An accessor providing a Formulas.
+     */
+    public Formula getFormulaByKey(String key) {
+
+        ArrayList al = (ArrayList) formulas.get(key);
+        if (al != null && al.size() > 0) 
+            return (Formula) al.get(0);
+        else
+            return null;
+    }
+    
+    /** ***************************************************************
+     */
+    public void rehashFormula(Formula f, String formID) {
+
+        ArrayList al = (ArrayList) formulas.get(formID);
+        if (al != null && al.size() > 0) {
+            if (al.size() == 1) {
+                formulas.remove(formID);
+                al = new ArrayList();
+                al.add(f);
+                if (!formulas.keySet().contains(f.createID())) 
+                    formulas.put(f.createID(),al);
+            }
+            else
+                System.out.println("INFO in KB.rehashFormula(): Formula hash collision for: " + formID + " and formula " + f.theFormula);
+        }
+        else
+            System.out.println("INFO in KB.rehashFormula(): No formula for hash: " + formID + " and formula " + f.theFormula);
+    }
+    
+    /** ***************************************************************
      *  Count the number of rules in the knowledge base in order to
      *  present statistics to the user. Note that the number of rules
      *  is a subset of the number of formulas.
@@ -1800,25 +1816,44 @@ public class KB {
      * 15-29 alphabetically greater.  If the term is at the beginning or end
      * of the alphabet, fill in blank items with the empty string: "".
      */
-    private ArrayList getNearestTerms(String term) {
+    private ArrayList getNearestKTerms(String term, int k) {
 
-        ArrayList al = arrayListWithBlanks(30);
+        ArrayList al;
+        if (k == 0) 
+            al = arrayListWithBlanks(1);
+        else
+            al = arrayListWithBlanks(2*k);
         Object[] t = terms.toArray();
         int i = 0;
         while (i < t.length && ((String) t[i]).compareTo(term) < 0) 
             i++;
+        if (k == 0) {
+            al.set(0,(String) t[i]);
+            return al;
+        }
         int lower = i;
-        while (i - lower < 15 && lower > 0) { 
+        while (i - lower < k && lower > 0) { 
             lower--;
-            al.set(15 - (i - lower),(String) t[lower]);
+            al.set(k - (i - lower),(String) t[lower]);
         }
         int upper = i-1;
         System.out.println(t.length);
-        while (upper - i < 14 && upper < t.length-1) {        
+        while (upper - i < (k-1) && upper < t.length-1) {        
             upper++;
-            al.set(15 + (upper - i),(String) t[upper]);
+            al.set(k + (upper - i),(String) t[upper]);
         }
         return al;       
+    }
+
+    /** ***************************************************************
+     * Get the alphabetically nearest terms to the given term, which
+     * is not in the KB.  Elements 0-14 should be alphabetically lesser and 
+     * 15-29 alphabetically greater.  If the term is at the beginning or end
+     * of the alphabet, fill in blank items with the empty string: "".
+     */
+    private ArrayList getNearestTerms(String term) {
+        
+        return getNearestKTerms(term,15);       
     }
 
     /** ***************************************************************
@@ -1837,6 +1872,50 @@ public class KB {
 
         term = Character.toLowerCase(term.charAt(0)) + term.substring(1,term.length());
         return getNearestTerms(term);
+    }
+
+    /** ***************************************************************
+     * Get the alphabetically num lower neighbor of this initial term, which
+     * must exist in the current KB otherwise an empty string is returned.
+     */
+    public String getAlphaBefore(String term, int num) {
+
+        if (!terms.contains(term)) {
+            ArrayList al = getNearestKTerms(term,0);
+            term = (String) al.get(0);
+        }
+        if (terms.size() < 1) 
+            return "";
+        ArrayList tal = new ArrayList(terms);
+        int i = tal.indexOf(term.intern());
+        if (i < 0) 
+            return "";        
+        i = i - num;
+        if (i < 0) 
+            i = 0;
+        return (String) tal.get(i);
+    }
+
+    /** ***************************************************************
+     * Get the alphabetically num higher neighbor of this initial term, which
+     * must exist in the current KB otherwise an empty string is returned.
+     */
+    public String getAlphaAfter(String term, int num) {
+
+        if (!terms.contains(term)) {
+            ArrayList al = getNearestKTerms(term,0);
+            term = (String) al.get(0);
+        }
+        if (terms.size() < 1) 
+            return "";
+        ArrayList tal = new ArrayList(terms);
+        int i = tal.indexOf(term.intern());
+        if (i < 0) 
+            return "";        
+        i = i + num;
+        if (i >= tal.size()) 
+            i = tal.size() - 1;
+        return (String) tal.get(i);
     }
 
     /** ***************************************************************
@@ -2049,21 +2128,18 @@ public class KB {
             System.out.println("  Adding " + canonicalPath);
             try { 
                 file.readFile(canonicalPath);
+                errors.addAll(file.warningSet);
             }
             catch (Exception ex1) {
                 result.append(ex1.getMessage());
-                if (ex1 instanceof ParseException) {
-                    result.append(" at line " + ((ParseException)ex1).getErrorOffset());
-                }
+                if (ex1 instanceof ParseException)
+                    result.append(" at line " + ((ParseException)ex1).getErrorOffset());                
                 result.append(" in file " + canonicalPath);
                 return result.toString();
             }
 
             System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
-            System.out.println("  Parsed file " 
-                               + canonicalPath 
-                               + " of size "
-                               + file.formulas.keySet().size());
+            System.out.println("  Parsed file " + canonicalPath + " of size " + file.formulas.keySet().size());
             it = file.formulas.keySet().iterator();
             int count = 0;
             while (it.hasNext()) {                
@@ -2082,13 +2158,9 @@ public class KB {
                 while (it2.hasNext()) {
                     f = (Formula) it2.next();
                     internedFormula = f.theFormula.intern();
-                    if (! list.contains(f)) {
-                        list.add(f);
-                        formulaMap.put(internedFormula, f);
-
-                        // Force translation to clausal form, since it
-                        // will be used multiple times later.
-                        // f.computeTheClausalForm();
+                    if (! list.contains(f)) {                   // Force translation to clausal form, since it
+                        list.add(f);                            // will be used multiple times later.
+                        formulaMap.put(internedFormula, f);     // f.computeTheClausalForm();                       
                     }
                     else {
                         result.append("Warning: Duplicate axiom in ");
@@ -2121,19 +2193,13 @@ public class KB {
             }
 
             System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
-            System.out.println("  File "
-                               + canonicalPath
-                               + " loaded in "
-                               + ((System.currentTimeMillis() - t1) / 1000.0)
-                               + " seconds");
+            System.out.println("  File " + canonicalPath + " loaded in "
+                               + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+            if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) 
+                buildRelationCaches();            
 
-            if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) {
-                buildRelationCaches();
-            }
-
-            if (loadVampireP) {
-                loadVampire();
-            }
+            if (loadVampireP) 
+                loadVampire();            
         }
         catch (Exception ex) {
             result.append(ex.getMessage());
@@ -2886,20 +2952,38 @@ public class KB {
         int j;
         String term = "";
         String newFormula = documentation;
+        boolean namespace = false;
 
         while (newFormula.indexOf("&%") != -1) {
             i = newFormula.indexOf("&%");
             j = i + 2;
-            while (Character.isJavaIdentifierPart(newFormula.charAt(j)) && j < newFormula.length()) 
+            //while (Character.isJavaIdentifierPart(newFormula.charAt(j)) && j < newFormula.length()) 
+            //    j++;
+            while ((Character.isJavaIdentifierPart(newFormula.charAt(j)) || newFormula.charAt(j) == '^') 
+                   && j < newFormula.length()) {
+                if (newFormula.charAt(j) == '^') {
+                    newFormula = newFormula.replaceFirst("\\^","_");
+                    namespace = true;
+                }
                 j++;
+            }
             //System.out.println("Candidate term: " + newFormula.substring(i+2,j));
-
+            
             while (!containsTerm(newFormula.substring(i+2,j)) && j > i + 2) 
                 j--;
             term = newFormula.substring(i+2,j);
+            String termPrint = term;
+            if (namespace) {
+                ArrayList al = askWithRestriction(0,"termFormat",2,term);
+                if (al.size() > 0) {
+                    Formula f = (Formula) al.get(0);
+                    termPrint = f.getArgument(3);
+                    termPrint = termPrint.replaceAll("\"","");
+                }
+            }
             if (term != "" && containsTerm(newFormula.substring(i+2,j))) {
                 newFormula = newFormula.substring(0,i) +
-                    "<a href=\"" + href + "&term=" + term + "\">" + term + "</a>" +
+                    "<a href=\"" + href + "&term=" + term + "\">" + termPrint + "</a>" +
                     newFormula.substring(j,newFormula.toString().length());
             }
             else
