@@ -77,6 +77,8 @@ public class Diagnostics {
      */
     public static ArrayList termsWithoutDoc(KB kb) {
 
+        System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
+
         return termsWithoutRelation(kb,"documentation",1,100,' ');                                              
         /**
         ArrayList result = new ArrayList();
@@ -125,6 +127,35 @@ public class Diagnostics {
 
         System.out.println("INFO in Diagnostics.termsWithMultipleDoc(): "); 
 
+        Set result = new HashSet();
+        Set withDoc = new HashSet();
+        Formula f = null;
+        String term = "";
+        String key = "";
+        ArrayList forms = kb.ask("arg", 0, "documentation");
+        if (!forms.isEmpty()) {
+            Iterator it = forms.iterator();
+            while (it.hasNext()) {
+                f = (Formula) it.next();
+
+                // Append term and language to make a key.
+                term = f.getArgument(1);
+                key = (term + f.getArgument(2));
+
+                if (withDoc.contains(key)) {
+                    result.add(term);
+                }
+                else {
+                    withDoc.add(key);
+                }
+                if (result.size() > 99) {
+                    result.add("limited to 100 results");
+                    break;
+                }
+            }
+        }
+
+        /*
         ArrayList result = new ArrayList();
         String term = null;
         ArrayList forms = null;
@@ -142,7 +173,8 @@ public class Diagnostics {
                 break;
             }
         }
-        return result;
+        */
+        return new ArrayList(result);
     }
 
     /** *****************************************************************
@@ -222,12 +254,14 @@ public class Diagnostics {
                                 result.add( term );
                                 contradiction = true;
                                 count++;
+                                /*
                                 System.out.println( "INFO in Diagnostics.childrenOfDisjointParents(): " 
                                                     + termX 
                                                     + " and " 
                                                     + termY 
                                                     + " are disjoint parents of " 
                                                     + term  );
+                                */
                                 break;
                             }
                         }
@@ -396,7 +430,9 @@ public class Diagnostics {
                 boolean isClassOrInstance = false;
                 for (int i = 0; i < forms.size(); i++) {
                     Formula formula = (Formula) forms.get(i);
-                    System.out.println("INFO in Diagnostics.unrootedTerms(): Formula: " + formula.theFormula);
+
+                    // System.out.println("INFO in Diagnostics.unrootedTerms(): Formula: " + formula.theFormula);
+
                     if ((formula.theFormula.length() > 13) &&
                         (formula.theFormula.indexOf(")") == formula.theFormula.length()-1) &&
                         (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") ||
@@ -404,11 +440,15 @@ public class Diagnostics {
                          formula.theFormula.substring(1,12).equalsIgnoreCase("subrelation") ||
                          formula.theFormula.substring(1,9).equalsIgnoreCase("subclass"))) {
                         isClassOrInstance = true;
-                        System.out.println("INFO in Diagnostics.unrootedTerms(): found a candidate ");
+
+                        // System.out.println("INFO in Diagnostics.unrootedTerms(): found a candidate ");
+
                         int firstSpace = formula.theFormula.indexOf(" ");
                         int secondSpace = formula.theFormula.indexOf(" ",firstSpace+1);
                         String parent = formula.theFormula.substring(secondSpace+1,formula.theFormula.length()-1);
-                        System.out.println("INFO in Diagnostics.unrootedTerms(): parent: " + parent);
+
+                        // System.out.println("INFO in Diagnostics.unrootedTerms(): parent: " + parent);
+
                         HashSet parentList = (HashSet) kb.parents.get(parent.intern());
                         if ((parentList != null && parentList.contains("Entity")) || parent.equalsIgnoreCase("Entity")) {
                             found = true;                                                                     
