@@ -19,6 +19,11 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+  System.out.println("INFO in Diag.jsp: Running diagnostics");
+  long t0 = System.currentTimeMillis();
+  long t1 = t0;
+  long t2 = t0;
+
   StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
   String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
@@ -75,7 +80,10 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList termsWithoutParent = Diagnostics.termsWithoutParent(kb);
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms without parents");
   show.append(HTMLformatter.termList(termsWithoutParent,kbHref));
 %>
 <br><b>&nbsp;Error: Terms without parent</B>
@@ -84,8 +92,11 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList unrooted = Diagnostics.unrootedTerms(kb);
   unrooted.removeAll(termsWithoutParent);
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting unrooted terms");
   show.append(HTMLformatter.termList(unrooted,kbHref));
 %>
 <br><b>&nbsp;Error: Terms without a root at Entity</B>
@@ -94,7 +105,10 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList disjoint = Diagnostics.childrenOfDisjointParents(kb);
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting children of disjoint parents");
   show.append(HTMLformatter.termList(disjoint,kbHref));
 %>
 <br><b>&nbsp;Error: Terms with disjoint parents</B>
@@ -103,7 +117,10 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms without documentation");
   show.append(HTMLformatter.termList(termsWithoutDoc,kbHref));
 %>
 
@@ -113,7 +130,10 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList termsWithMultipleDoc = Diagnostics.termsWithMultipleDoc(kb);
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms with multiple documentation");
   show.append(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
 %>
 
@@ -123,7 +143,10 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList extra = Diagnostics.extraSubclassInPartition(kb);
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting subclasses of partitioned classes");
   show.append(HTMLformatter.termList(extra,kbHref));
 %>
 <br><b>&nbsp;Warning: Terms that are subclasses of a partitioned class</B>
@@ -133,7 +156,10 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList norule = Diagnostics.termsWithoutRules(kb);
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms without rules");
   show.append(HTMLformatter.termList(norule,kbHref));
 %>
 <br><b>&nbsp;Warning: Terms that do not appear in any rules</B>
@@ -142,13 +168,27 @@ August 9, Acapulco, Mexico.
 
 <%
   show.setLength( 0 );
+  t1 = System.currentTimeMillis();
   ArrayList noquant = Diagnostics.quantifierNotInBody(kb);
-  show.append(HTMLformatter.browserSectionFormat(noquant,
-                                                 "Warning: Extraneous quantified variables",
-                                                 kb,
-                                                 language));
+  t2 = System.currentTimeMillis();
+  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting formulae with extraneous quantifiers");
+  if (!noquant.isEmpty()) {
+      Iterator it = noquant.iterator();
+      while (it.hasNext()) {
+          Formula f = (Formula) it.next();
+          show.append(f.htmlFormat(kb));
+          show.append("<br/><br/>");
+      }
+  }
 %>
-  <%=show.toString() %></br>
+<br><b>&nbsp;Warning: Formulae with extraneous quantified variables</b>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><br/>
+
+<%
+    System.out.println(((System.currentTimeMillis() - t0) / 1000.0) + " seconds to run all diagnostics");
+%>
+
 
 <%@ include file="Postlude.jsp" %>
 </BODY>
