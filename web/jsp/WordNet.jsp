@@ -27,6 +27,7 @@ if ( ! Formula.isNonEmptyString(kbname) ) {
   String writeProlog = request.getParameter("writeProlog");
   String synset = request.getParameter("synset");
   String POS = request.getParameter("POS");
+  String key = request.getParameter("key");
       
   if (POS == null)
       POS = "1";  
@@ -95,8 +96,11 @@ August 9, Acapulco, Mexico.
   if (word !=null && word != "")
       out.println(WordNet.wn.page(word,Integer.decode(POS).intValue(),kbname,synset));
   else
-      if (synset !=null && synset != "")
-          out.println(WordNet.wn.displaySynset(kbname,synset));  
+      if (synset != null && synset != "")
+          out.println(WordNet.wn.displaySynset(kbname,synset)); 
+      else if (key != null) {
+          out.println(WordNet.wn.displayByKey(kbname,key)); 
+      }
 %>
 <BR>
 
