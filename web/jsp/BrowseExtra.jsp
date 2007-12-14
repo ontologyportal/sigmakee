@@ -63,7 +63,6 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     show.append(HTMLformatter.showStatistics(kb));
  else if (kb != null && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in                                                         
     show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
-    ArrayList forms;
     show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
     if (term != null) {
     	term = term.intern();
