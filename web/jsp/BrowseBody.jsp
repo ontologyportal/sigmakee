@@ -83,7 +83,6 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
                     tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
                 }
                 show.append("(" + tfmValue + ")");	    
-            }
     	    else
                 System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
                                    term + "\" in language " + language);	   
@@ -110,18 +109,23 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
         KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
-    show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
-    forms = kb.ask("ant",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"antecedent", kb, language,0,limit,0,"ant"));
+    // show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
 
-    forms = kb.ask("cons",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"consequent", kb, language,0,limit,0,"cons"));
+    for (int arg = 1; arg < 6; arg++) {
+        String argHeader = "<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>";
+        show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,0,limit,arg,"arg"));
+    }
+    //forms = kb.ask("ant",0,term);
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,0,limit,0,"ant"));
 
-    forms = kb.ask("stmt",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"statement", kb, language,0,limit,0,"stmt"));
+    //forms = kb.ask("cons",0,term);
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, language,0,limit,0,"cons"));
 
-    forms = kb.ask("arg",0,term);
-    show.append(HTMLformatter.browserSectionFormatLimit(term, forms,"appearance as argument number 0", kb, language,0,limit,0,"arg"));
+    //forms = kb.ask("stmt",0,term);
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,0,limit,0,"stmt"));
+
+    //forms = kb.ask("arg",0,term);
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,0,limit,0,"arg"));
 
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
