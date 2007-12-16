@@ -2226,21 +2226,17 @@ public class KB {
 
                 // Don't reuse the same cached data.  Instead, recompute
                 // it.
-                if (!(cName.endsWith(_cacheFileSuffix))) {
-                    newConstituents.add(cName);
-                }
+                if (!(cName.endsWith(_cacheFileSuffix))) 
+                    newConstituents.add(cName);                
             }
             constituents.clear();
-            language = "en";                  
             formulas.clear();
             formulaMap.clear();
             terms.clear();
-            if (formatMap != null) {
-                formatMap.clear();
-            }
-            if (termFormatMap != null) {
-                termFormatMap.clear();
-            }
+            if (formatMap != null) 
+                formatMap.clear();            
+            if (termFormatMap != null) 
+                termFormatMap.clear();            
 
             ci = newConstituents.iterator();
             while (ci.hasNext()) {
@@ -2248,15 +2244,10 @@ public class KB {
                 System.out.println("INFO in KB.reload()");
                 System.out.println("  constituent == " + cName);
                 result.append(addConstituent(cName, false, false));
-            }
-
-            // Rebuild the in-memory relation caches.
-            buildRelationCaches();
-
-            // If cache == yes, write the cache file.
-            if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
-                result.append(this.cache());
-            }
+            }           
+            buildRelationCaches();                                              // Rebuild the in-memory relation caches.            
+            if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))    // If cache == yes, write the cache file.
+                result.append(this.cache());            
 
             // At this point, we have reloaded all constituents, have
             // rebuilt the relation caches, and, if cache == yes, have
