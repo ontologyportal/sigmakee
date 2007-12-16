@@ -32,11 +32,8 @@ August 9, Acapulco, Mexico.
 
       try {  
           boolean isError = false;
-
           System.out.println("request == " + request);
-
           multiPartRequest = new MultipartRequest(request,srcDir,postSize);
-
           System.out.println("multiPartRequest == " + multiPartRequest);
 
           kbName = multiPartRequest.getParameter("kb");
@@ -69,11 +66,8 @@ August 9, Acapulco, Mexico.
               else {
                   while (fileTags.hasMoreElements()) {                    
                       String fileTag = fileTags.nextElement().toString();
-
                       System.out.println("fileTag == " + fileTag);
-
                       fileName = multiPartRequest.getOriginalFileName(fileTag);
-
                       System.out.println("fileName == " + fileName);
 
                       File file = null;
@@ -82,7 +76,6 @@ August 9, Acapulco, Mexico.
                       }
 
                       System.out.println("file == " + file);
-
                       if ((file == null) || !file.exists()) {
                           String errStr = "Error: The input file does not exist or cannot be read";
                           KBmanager.getMgr().setError(KBmanager.getMgr().getError()
@@ -129,9 +122,7 @@ August 9, Acapulco, Mexico.
       catch (Exception e) {
           String errStr = "ERROR in AddConstituent.jsp: " + e.getMessage();
           KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                      + "\n<br/>"
-                                      + errStr 
-                                      + "\n<br/>");
+                                      + "\n<br/>" + errStr + "\n<br/>");
           System.out.println(errStr);
           System.out.println("  kbName == " + kbName);
           System.out.println("  filename == " + fileName);
