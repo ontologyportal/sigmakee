@@ -11,18 +11,18 @@
 // loaded KBs, we just take the first value retrieved from the Set and
 // bind kbname to it.  If all else fails, we use the name "SUMO", but
 // this won't be of much use if a KB named "SUMO" is not loaded.
-if ( ! kbNames.isEmpty() ) {
-    if ( (! Formula.isNonEmptyString(kbname)) || (! kbNames.contains(kbname)) ) {
-	Iterator it = kbNames.iterator();
-	while ( it.hasNext() ) {
-	    kbname = (String) it.next();
-	    break;
-	}
-    }
-}
-if ( ! Formula.isNonEmptyString(kbname) ) {
+  if (!kbNames.isEmpty()) {
+      if ((!Formula.isNonEmptyString(kbname)) || (!kbNames.contains(kbname))) {
+          Iterator it = kbNames.iterator();
+          while (it.hasNext()) {
+              kbname = (String) it.next();
+              break;
+          }
+      }
+  }
+  if (!Formula.isNonEmptyString(kbname)) 
       kbname = "SUMO";
-}
+
   String word = request.getParameter("word");
   String writeProlog = request.getParameter("writeProlog");
   String synset = request.getParameter("synset");
@@ -86,7 +86,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
   WordNet.initOnce();

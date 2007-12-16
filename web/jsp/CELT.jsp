@@ -28,7 +28,7 @@ August 9, Acapulco, Mexico.
         hostname = "localhost";
     String kbName = request.getParameter("kb");
     String language = request.getParameter("lang");
-    language = HTMLformatter.processLanguage(language);
+    language = HTMLformatter.processLanguage(language,kb);
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String href = "Browse.jsp?kb=" + kbName + "&lang=" + language + "&term=";

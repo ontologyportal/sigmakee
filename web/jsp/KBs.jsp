@@ -28,15 +28,12 @@ August 9, Acapulco, Mexico.
     if (request.getParameter("userName") != null)
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
 
-    String language = HTMLformatter.language;
-    language = HTMLformatter.processLanguage(language);
     String hostname = KBmanager.getMgr().getPref("hostname");
     if (hostname == null)
        hostname = "localhost";
     String port = KBmanager.getMgr().getPref("port");
     if (port == null)
        port = "8080";
-    HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language;
 %>
 
 			
@@ -94,6 +91,9 @@ August 9, Acapulco, Mexico.
               first = false;
           }
           KB kb = (KB) KBmanager.getMgr().getKB(kbName);
+          String language = HTMLformatter.language;
+          language = HTMLformatter.processLanguage(language,kb);
+          HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language;
 %>
           <TR VALIGN="center" <%= odd==false? "bgcolor=#eeeeee":""%>>
             <TD><%=kbName%></TD>
@@ -157,21 +157,24 @@ August 9, Acapulco, Mexico.
     </FORM><P>
 <%  } 
 
-  kbNames = KBmanager.getMgr().getKBnames().iterator();
-
-  while (kbNames.hasNext()) {
-      kbName = (String) kbNames.next();
-      KB kb = (KB) KBmanager.getMgr().getKB(kbName);
-      if (kb.errors.size() > 0)
-          out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
-      out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
-      kb.errors = new TreeSet();
-  }  
-
-  out.println("<p>\n");
-  if (KBmanager.getMgr().getError().length() > 0)
-      out.println("<b>Other Errors</b>\n");
-  out.println(KBmanager.getMgr().getError());  
+  if (KBmanager.getMgr().getPref("userName") != null && 
+      KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+      kbNames = KBmanager.getMgr().getKBnames().iterator();
+    
+      while (kbNames.hasNext()) {
+         kbName = (String) kbNames.next();
+         KB kb = (KB) KBmanager.getMgr().getKB(kbName);
+         if (kb.errors.size() > 0)
+             out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
+         out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
+         kb.errors = new TreeSet();
+     }  
+   
+     out.println("<p>\n");
+     if (KBmanager.getMgr().getError().length() > 0)
+         out.println("<b>Other Errors</b>\n");
+     out.println(KBmanager.getMgr().getError());  
+  }
 %>
 </ul>
 <p>

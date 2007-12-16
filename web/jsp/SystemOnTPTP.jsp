@@ -102,12 +102,16 @@ August 9, Acapulco, Mexico.
 
 //-----------------------------------------------------------------------------
 //----Code for building the query part
-  String language = request.getParameter("lang");
-  if (!Formula.isNonEmptyString(language)) {
-    language = "EnglishLanguage";
-  }
+
   String kbName = request.getParameter("kb");
   KB kb;
+  if (kbName == null) {
+    kb = null;
+  } else {
+    kb = KBmanager.getMgr().getKB(kbName);
+  }
+  String language = request.getParameter("lang");
+  language = HTMLformatter.processLanguage(language,kb);
   String stmt = request.getParameter("stmt");
   int maxAnswers = 1;
   int timeout = 30;
@@ -122,11 +126,6 @@ August 9, Acapulco, Mexico.
   String sanitize = request.getParameter("sanitize");
   String systemChosen;
 
-  if (kbName == null) {
-    kb = null;
-  } else {
-    kb = KBmanager.getMgr().getKB(kbName);
-  }
   if (request.getParameter("maxAnswers") != null) {
     maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
   }

@@ -29,7 +29,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  if (kb == null)
      response.sendRedirect("login.html");
  language = request.getParameter("lang");
- language = HTMLformatter.processLanguage(language);
+ language = HTMLformatter.processLanguage(language,kb);
  Map theMap = null;     // Map of natural language format strings.
 
  String hostname = KBmanager.getMgr().getPref("hostname");

@@ -35,6 +35,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  StringBuffer show = new StringBuffer();
  KB kb = null;
  String language = HTMLformatter.language;
+ language = HTMLformatter.processLanguage(language,kb);
  term = request.getParameter("term");
  kbName = request.getParameter("kb");
  if (Formula.isNonEmptyString(kbName)) {

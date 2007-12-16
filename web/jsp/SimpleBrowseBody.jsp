@@ -17,10 +17,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  kb = null;   // The knowledge base object.
  String formattedFormula = null;
 
- term = request.getParameter("term");
- language = request.getParameter("lang");
- language = HTMLformatter.processLanguage(language);
- 
  kbName = request.getParameter("kb");
  kb = null;
  if (Formula.isNonEmptyString(kbName)) {
@@ -30,6 +26,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  }
  if (kb == null)
      response.sendRedirect("login.html");
+ term = request.getParameter("term");
+ language = request.getParameter("lang");
+ language = HTMLformatter.processLanguage(language,kb);
+ 
  if (kb != null && kb.containsTerm(term))
     show.append("<title>Sigma KEE - " + term + "</title></HEAD>\n<BODY BGCOLOR=\"#FFFFFF\">\n");
  Map theMap = null;     // Map of natural language format strings.

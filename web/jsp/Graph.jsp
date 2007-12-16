@@ -21,9 +21,14 @@ August 9, Acapulco, Mexico.
 */
 
   String kbName = request.getParameter("kb");
+  KB kb = null;
+  if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) 
+      System.out.println(" no such knowledge base " + kbName);
+  else
+      kb = KBmanager.getMgr().getKB(kbName);
   String view = "text";
   String language = request.getParameter("lang");
-  language = HTMLformatter.processLanguage(language);
+  language = HTMLformatter.processLanguage(language,kb);
   String relation = request.getParameter("relation");
   if (relation == null) relation = "subclass";
   String term = request.getParameter("term");
@@ -44,11 +49,6 @@ August 9, Acapulco, Mexico.
   } catch (NumberFormatException nfe) {
       limit = "";
   }
-  KB kb = null;
-  if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) 
-      System.out.println(" no such knowledge base " + kbName);
-  else
-      kb = KBmanager.getMgr().getKB(kbName);
 
 %>
 

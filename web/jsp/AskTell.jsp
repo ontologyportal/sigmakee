@@ -25,8 +25,9 @@ August 9, Acapulco, Mexico.
     if ((hostname == null) || hostname.equals(""))
         hostname = "localhost";
     String kbName = request.getParameter("kb");
+    KB kb = KBmanager.getMgr().getKB(kbName);
     String language = request.getParameter("lang");
-    language = HTMLformatter.processLanguage(language);
+    language = HTMLformatter.processLanguage(language,kb);
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String href = "Browse.jsp?kb=" + kbName + "&lang=" + language + "&term=";
@@ -49,7 +50,6 @@ August 9, Acapulco, Mexico.
     if (stmt != null)
         System.out.println("  text box input: " + stmt.trim());
 
-    KB kb = KBmanager.getMgr().getKB(kbName);
     if (stmt == null || stmt.equalsIgnoreCase("null"))   // check if there is an attribute for stmt
         stmt="(instance ?X Relation)";    
     else {
