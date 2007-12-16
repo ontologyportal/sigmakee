@@ -63,7 +63,7 @@ public class CELTTestSuite {
         String port = KBmanager.getMgr().getPref("port");
         if (port == null)
             port = "8080";
-        String html = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=en&kb=" + kb.name;
+        String html = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=EnglishLanguage&kb=" + kb.name;
 
         while (it.hasNext()) {
             String formula = (String) it.next();
