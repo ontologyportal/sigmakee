@@ -82,6 +82,27 @@ public class HTMLformatter {
         return result.toString();
     }
 
+
+    /** *************************************************************
+     */
+    public static String processLanguage(String lang, KB kb) {
+
+        if (kb == null || !kb.availableLanguages().contains(lang)) 
+            lang = "EnglishLanguage";        
+        if (Formula.isNonEmptyString(lang)) {
+            HTMLformatter.language = lang;  
+            return lang;
+        }
+        else {
+            if (Formula.isNonEmptyString(HTMLformatter.language)) 
+                return HTMLformatter.language;     
+            else {
+                HTMLformatter.language = lang;
+                return "EnglishLanguage";
+            }
+        }
+    }
+
     /** *************************************************************
      *  Show a hyperlinked list of terms.
      */
