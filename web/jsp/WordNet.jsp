@@ -3,7 +3,7 @@
 <%
 
   String kbname = KBmanager.getMgr().getPref("sumokbname");
-Set kbNames = KBmanager.getMgr().getKBnames();
+  Set kbNames = KBmanager.getMgr().getKBnames();
 
 // This is a kluge.  We need some way of specifying the "current",
 // loaded KB.  There might not be a value for the key "sumokbname", or

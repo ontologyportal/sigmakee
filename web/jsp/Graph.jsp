@@ -23,6 +23,7 @@ August 9, Acapulco, Mexico.
   String kbName = request.getParameter("kb");
   String view = "text";
   String language = request.getParameter("lang");
+  language = HTMLformatter.processLanguage(language);
   String relation = request.getParameter("relation");
   if (relation == null) relation = "subclass";
   String term = request.getParameter("term");

@@ -26,6 +26,7 @@ August 9, Acapulco, Mexico.
         hostname = "localhost";
     String kbName = request.getParameter("kb");
     String language = request.getParameter("lang");
+    language = HTMLformatter.processLanguage(language);
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String href = "Browse.jsp?kb=" + kbName + "&lang=" + language + "&term=";
@@ -170,12 +171,7 @@ August 9, Acapulco, Mexico.
        out.println("<font color='red'>A syntax error was detected in your input.</font>");
     }
     else {
-        out.println(HTMLformatter.formatProofResult( result,
-						     stmt,
-						     stmt,  // This should be the processed stmt.
-						     lineHtml,
-						     kbName,
-						     language ));
+        out.println(HTMLformatter.formatProofResult(result,stmt,stmt,lineHtml,kbName,language ));
     }
 %>
 <p>

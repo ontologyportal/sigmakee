@@ -19,11 +19,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  String formattedFormula = null;
 
  term = request.getParameter("term");
- language = request.getParameter("lang");
- if (!Formula.isNonEmptyString(language))
-    language = HTMLformatter.language;
- else
-    HTMLformatter.language = language;
+
  kbName = request.getParameter("kb");
  if (Formula.isNonEmptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
@@ -32,6 +28,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  }
  if (kb == null)
      response.sendRedirect("login.html");
+ language = request.getParameter("lang");
+ language = HTMLformatter.processLanguage(language);
  Map theMap = null;     // Map of natural language format strings.
 
  String hostname = KBmanager.getMgr().getPref("hostname");
