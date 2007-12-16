@@ -29,6 +29,7 @@ August 9, Acapulco, Mexico.
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
 
     String language = HTMLformatter.language;
+    language = HTMLformatter.processLanguage(language);
     String hostname = KBmanager.getMgr().getPref("hostname");
     if (hostname == null)
        hostname = "localhost";
@@ -106,27 +107,27 @@ August 9, Acapulco, Mexico.
               out.println("<A href=\"Manifest.jsp?kb=" + kbName + "\">Manifest</A>");
           }
           out.println("</TD>");          
-          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName + "&lang=en\">Browse</A></TD>");                                                      
-          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=en\">Graph</A></TD>");                                                      
+          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName + "&lang=" + language + "\">Browse</A></TD>");                                                      
+          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=" + language + "\">Graph</A></TD>");                                                      
           if (KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName + "&lang=en\">Diagnostics</A></TD>");                                                 
+              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
           }
           if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=en\">Consistency Check</A></TD>"); 
+              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=" + language + "\">Consistency Check</A></TD>"); 
           }
           if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=en\">Inference Tests</A></TD>");
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=" + language + "\">Inference Tests</A></TD>");
           }
           if (kb.celt != null && KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName + "&lang=en\">CELT Tests</A></TD>");
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName + "&lang=" + language + "\">CELT Tests</A></TD>");
           }
           if (KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
-              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=en\">WordNet Check</A></TD>");                                                           
+              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=" + language + "\">WordNet Check</A></TD>");                                                           
           }
 
           if (KBmanager.getMgr().getPref("userName") != null && 
@@ -161,13 +162,15 @@ August 9, Acapulco, Mexico.
   while (kbNames.hasNext()) {
       kbName = (String) kbNames.next();
       KB kb = (KB) KBmanager.getMgr().getKB(kbName);
-      out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
+      if (kb.errors.size() > 0)
+          out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
       out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
       kb.errors = new TreeSet();
   }  
 
   out.println("<p>\n");
-  out.println("<b>Other Errors</b>\n");
+  if (KBmanager.getMgr().getError().length() > 0)
+      out.println("<b>Other Errors</b>\n");
   out.println(KBmanager.getMgr().getError());  
 %>
 </ul>
