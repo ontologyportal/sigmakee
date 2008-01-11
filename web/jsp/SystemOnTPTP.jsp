@@ -22,7 +22,8 @@ August 9, Acapulco, Mexico.
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
   String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
-  String systemsInfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
+//  String systemsInfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
+  String systemsInfo = systemsDir + "/systemsInfo.xml";
   String SoTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
   String tptp4X = TPTPWorld + "/ServiceTools/tptp4X";
   boolean tptpWorldExists = (new File(SoTPTP)).exists();
@@ -595,7 +596,7 @@ August 9, Acapulco, Mexico.
           */
       }
 //----Delete the kbFile
-      (new File(kbFileName)).delete();
+//      (new File(kbFileName)).delete();
     } catch (IOException ioe) {
     out.println(ioe.getMessage());
     }
