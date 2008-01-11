@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import java.util.*;
 import java.io.*;
+import java.util.regex.*;
 
 class ATPSystem {
   public String name;
@@ -97,7 +98,8 @@ public class SystemOnTPTP {
   //private static final String SystemsDirectory = "../../../../../systems";
   //private static final String SystemsDirectory = "/home/graph/strac/geoff/Sigma/sigma/systems";
 
-  private static final String SystemsInfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
+    //  private static final String SystemsInfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
+  private static final String SystemsInfo = SystemsDirectory + "/" + "systemsInfo.xml";
 
   private static Vector<ATPSystem> atpSystemList = null;
   private static Process process;
@@ -122,6 +124,7 @@ public class SystemOnTPTP {
     private String solutionType = "";
 
     private ATPSystem atpSystem;
+    private String commandLine;
 
     private int solvedIndex = -1;
     private int solutionIndex = -1;
@@ -130,12 +133,13 @@ public class SystemOnTPTP {
     private BufferedReader reader; // reader for process output
     private BufferedReader error;  // error reader for process error messages
 
-    public ATPThread (Process process, ATPSystem atpSystem, String quietFlag, String format, String filename) {
+    public ATPThread (Process process, ATPSystem atpSystem, String quietFlag, String format, String commandLine, String filename) {
       this.process = process;
       this.atpSystem = atpSystem;
       this.quietFlag = quietFlag;
       this.format = format;
       this.filename = filename;
+      this.commandLine = commandLine;
       setDaemon(true);
     }
     
@@ -265,6 +269,7 @@ public class SystemOnTPTP {
     public String q2 () {
       String res = "";
       res += "Pretty Print of Solution:\n";
+      res += "command Line: " + commandLine + "\n";
       res += getSolution() + "\n";
       res += q3();
       return res;
@@ -366,19 +371,29 @@ public class SystemOnTPTP {
     // make sure prover exists
     String systemDir = SystemsDirectory + "/" + systemVersion;
     if (!(new File(systemDir)).exists()) {
-      return "SystemOnTPTP.java ERROR: Prover (" + systemVersion + ") does not exist inside System Directory: " + SystemsDirectory;
+      return "SystemOnTPTP.java ERROR: Prover (" + systemVersion + ") does not exist inside System Directory: " + SystemsDirectory + " [systemDir: " + systemDir + "]";
     } 
+    commandLine = "";
 
     // build command line    
-    commandLine = String.format(SystemsDirectory + "/" + systemVersion + "/" + atpSystem.command, limit, filename);
-
+    boolean sd_match = Pattern.matches(".*%s.*%d.*", atpSystem.command);
+    boolean ds_match = Pattern.matches(".*%d.*%s.*", atpSystem.command);
+    boolean s_match = Pattern.matches(".*%s.*", atpSystem.command);
+    if (sd_match) {
+      commandLine = String.format(SystemsDirectory + "/" + systemVersion + "/" + atpSystem.command, filename, limit);
+    } else if (ds_match) {
+      commandLine = String.format(SystemsDirectory + "/" + systemVersion + "/" + atpSystem.command, limit, filename);
+    } else if (s_match) {
+      commandLine = String.format(SystemsDirectory + "/" + systemVersion + "/" + atpSystem.command, filename);
+    }
+    
     try {
       // create process for atp call
       System.out.println("command line: " + commandLine);
       SystemOnTPTP.process = Runtime.getRuntime().exec(commandLine);
       
       // create thread for atp call    
-      atp = new ATPThread(process, atpSystem, quietFlag, format, filename);
+      atp = new ATPThread(process, atpSystem, quietFlag, format, commandLine, filename);
       // start atp system on the problem
       atp.start();
       // time limit is in seconds
