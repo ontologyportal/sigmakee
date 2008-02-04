@@ -112,10 +112,10 @@ public class TPTP2SUMO {
 
     // print out answer (if exists)
     // (CURRENTLY: only metis proof prints variable bindings)
-    //StringBuffer binding = AnswerExtractor.extractAnswers(ftable);
+    StringBuffer binding = AnswerExtractor.extractAnswers(ftable);
 
     //----Append proof after bindings (xml order matters)
-    //result.append(binding);
+    result.append(binding);
     result.append(proof);
 
     //----End SUMO output
@@ -697,6 +697,7 @@ public class TPTP2SUMO {
       // identify variables
       // if any literal starts with a capital letter, it is therefore a variable
       ArrayList<Binding> unsolvedBindings = identifyVariables(conjecture);
+      assert unsolvedBindings != null;
 
       if (unsolvedBindings.isEmpty()) {
         System.out.println(" no variables.");
@@ -714,9 +715,12 @@ public class TPTP2SUMO {
       
       ArrayList<Binding> finalBindings = new ArrayList();
       finalBindings.addAll(unsolvedBindings);
+      
+      assert finalBindings != null;
 
       // from conjecture to false clause: identify bindings
       // stop when all variables are binded
+      assert conjecture != null;
       for (TPTP2SUMO.Formula child : conjecture.child) {        
         //        System.out.println("working on child: " + getName(child.item));
         unsolvedBindings = extractBinding(child, unsolvedBindings);
@@ -726,21 +730,25 @@ public class TPTP2SUMO {
         System.out.println(" failed to bind: ");
       }
 
+      ArrayList<Binding> finalB = new ArrayList();
+      
       for (Binding bind : finalBindings) {
+        assert bind != null;
         String variable = bind.variable;
         String answer = bind.getFinalBinding();
-        if (variable == null || answer == null) {
-          finalBindings.remove(finalBindings.indexOf(bind));
-        } else {
-          System.out.println("bind: " + variable + " to " + answer);
+        if (variable != null && answer != null) {
+          finalB.add(bind);
         }
       }
-
-      if (!finalBindings.isEmpty()) {
+      
+      if (!finalB.isEmpty()) {
         binding.append("  <bindingSet type='definite'>\n");
         binding.append("    <binding>\n");
-        for (Binding bind : finalBindings) {
-          binding.append("      <var name='?" + bind.variable + "' value='" + bind.binding + "'/>\n");
+        for (Binding bind : finalB) {
+          assert bind.binding != null;
+          //          if (bind.binding != null) {
+            binding.append("      <var name='?" + bind.variable + "' value='" + bind.binding + "'/>\n");
+            //          }
         }
         binding.append("    </binding>\n");
         binding.append("  </bindingSet>\n");
