@@ -20,7 +20,7 @@
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" classpath="src/java/JARs/antlr-2.7.5.jar:.">
+    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" classpath="src/java/JARs/antlr-2.7.5.jar:src/java/JARs/TptpParser.jar:lib/servlet.jar:.">
         <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
@@ -70,6 +70,7 @@
 	<copy todir="${deploy.lib}">
           <fileset dir="${basedir}/lib" />
           <fileset file="${basedir}/src/java/JARs/antlr-2.7.5.jar" />
+          <fileset file="${basedir}/src/java/JARs/TptpParser.jar" />
         </copy>
 
 </target>
