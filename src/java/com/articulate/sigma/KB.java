@@ -3422,6 +3422,21 @@ public class KB {
                                 Formula conjecture, 
                                 boolean onlyPlainFOL, 
                                 String reasoner) throws IOException {
+      final boolean isQuestion = false;
+      return writeTPTPFile(fileName,
+                           conjecture,
+                           onlyPlainFOL,
+                           reasoner,
+                           isQuestion);
+    }
+
+    /** *************************************************************
+     */
+    public String writeTPTPFile(String fileName,
+                                Formula conjecture, 
+                                boolean onlyPlainFOL, 
+                                String reasoner,
+                                boolean isQuestion) throws IOException {
 
         String result = null;
         String sanitizedKBName;
@@ -3574,10 +3589,16 @@ public class KB {
                 // below is probably unnecessary.  I don't know if the
                 // provers on the target server can even handle
                 // multiple conjectures.
+                String type = "";
+                if (isQuestion) {
+                  type = "question";
+                } else {
+                  type = "conjecture";
+                }
                 while (tptpIt.hasNext()) {
                     theTPTPFormula = (String) tptpIt.next();
                     pr.println("fof(prove_from_" + sanitizedKBName + 
-                               ",conjecture,(" + theTPTPFormula + ")).");
+                               "," + type + ",(" + theTPTPFormula + ")).");
                 }
             }
             result = canonicalPath;

@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import java.util.*;
 import java.io.*;
+import javax.servlet.jsp.*;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -42,7 +43,7 @@ public class InferenceTestSuite {
     public static long totalTime = 0;
 
     /** Default timeout for queries with unspecified timeouts */
-    public static int TIMEOUT = 60;
+    public static int TIMEOUT = 600;
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -65,7 +66,18 @@ public class InferenceTestSuite {
      * Note that this procedure deletes any prior user assertions.
      */
     public static String test(KB kb) throws IOException  {
+      return test(kb, null, null);
+    }
 
+    /** ***************************************************************
+     * The main method that controls running a set of tests and returning
+     * the result as an HTML page showing test results and links to proofs.
+     * Note that this procedure deletes any prior user assertions.
+     */
+    public static String test(KB kb, String systemChosen, JspWriter out) throws IOException  {
+      if (out != null) {
+        out.print("Starting test suite");
+      }
         System.out.println("INFO in InferenceTestSuite.test(): Note that any prior user assertions will be deleted.");
         StringBuffer result = new StringBuffer();
         FileWriter fw = null;
@@ -131,6 +143,11 @@ public class InferenceTestSuite {
             System.out.println("INFO in InferenceTestSuite.test(): No test files found in " + inferenceTestDir.getCanonicalPath());
             return("No test files found in " + inferenceTestDir.getCanonicalPath());
         }
+
+        File allResultsFile = new File(outputDir, "TestSuiteResults");
+        FileWriter afw = new FileWriter(allResultsFile);
+        PrintWriter apw = new PrintWriter(afw);
+
         for (i = 0; i < files.length; i++) {
 
             int timeout = TIMEOUT;
@@ -193,7 +210,44 @@ public class InferenceTestSuite {
                     while (q.hasNext()) {
                         processedStmt = ((Formula)q.next()).theFormula;
                         long start = System.currentTimeMillis();
-                        proof = kb.ask(processedStmt,timeout,maxAnswers);
+                        if (systemChosen == null) {
+                          proof = kb.ask(processedStmt,timeout,maxAnswers);
+                        } else {
+                          Formula conjectureFormula;
+                          conjectureFormula = new Formula();
+                          conjectureFormula.theFormula = processedStmt;
+                          conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
+                          conjectureFormula.tptpParse(true,kb);
+                          String kbFileName = kb.writeTPTPFile(null,
+                                                               conjectureFormula,
+                                                               true,
+                                                               systemChosen,
+                                                               false);
+                          String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
+                          String SoTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
+                          String command = SoTPTP + " " +
+                                           "-q2"        + " " +  // quietFlag
+                                           systemChosen + " " + 
+                                           timeout      + " " +
+                                           kbFileName;
+                          Process proc = Runtime.getRuntime().exec(command);
+                          BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                          String responseLine;
+                          String res = "";
+                          while ((responseLine = reader.readLine()) != null) {
+                            
+                            res += responseLine + "\n";
+                          } 
+                          res += "\n<hr>";
+                          if (out != null) {
+                            out.println("filename: " + files[i].getName());
+                            out.println("time limit: " + timeout);
+                            out.println(res);
+                            out.flush();
+                          }
+                          proof = res;
+                          //proof = TPTP2SUMO.convert(res);
+                        }
                         duration = System.currentTimeMillis() - start;
                         
                         System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
@@ -211,7 +265,13 @@ public class InferenceTestSuite {
                 try {
                     fw = new FileWriter(resultsFile);
                     pw = new PrintWriter(fw);
-                    pw.println(HTMLformatter.formatProofResult(proof,query,processedStmt,lineHtml,kb.name,language));
+                    if (systemChosen != null) {
+                      pw.println(proof);
+                      apw.println(proof);
+                      apw.flush();
+                    } else {
+                      pw.println(HTMLformatter.formatProofResult(proof,query,processedStmt,lineHtml,kb.name,language));
+                    }
                 }
                 catch (java.io.IOException e) {
                     throw new IOException("Error writing file " + resultsFile.getCanonicalPath());
@@ -244,6 +304,9 @@ public class InferenceTestSuite {
                 result = result.append("<td><a href=\"" + outputDir.getName() + "/" + resultsFile.getName() + "\">" + resultString + "</a></td>");
                 result = result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
             }
+        }
+        if (systemChosen != null) {
+          return "Mission Success: inference test suite completed";
         }
 
         System.out.println();

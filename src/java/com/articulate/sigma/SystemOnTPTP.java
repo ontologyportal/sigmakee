@@ -2,7 +2,9 @@ package com.articulate.sigma;
 
 import java.util.*;
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.regex.*;
+import tptp_parser.*;
 
 class ATPSystem {
   public String name;
@@ -94,6 +96,9 @@ class ATPSystem {
 
 public class SystemOnTPTP {
 
+
+
+  public static final String NEW_LINE_TEXT = "%------------------------------------------------------------------------------\n";
   private static final String SystemsDirectory = KBmanager.getMgr().getPref("systemsDir");
   //private static final String SystemsDirectory = "../../../../../systems";
   //private static final String SystemsDirectory = "/home/graph/strac/geoff/Sigma/sigma/systems";
@@ -104,24 +109,31 @@ public class SystemOnTPTP {
   private static Vector<ATPSystem> atpSystemList = null;
   private static Process process;
 
-  private static final String TIMEOUT = "Timeout";
-  private static final String GIVEUP  = "Give Up";
+  private static final String SOLVED_TYPE_TIMEOUT = "Timeout";
+  private static final String SOLVED_TYPE_GIVEUP  = "Give Up";
+  private static final String SOLUTION_TYPE_NONE = "None";
+  private static final String SOLUTION_TYPE_ASSURANCE = "Assurance";
 
   private static class ATPThread extends Thread { 
 
+    private int limit;
     private long startTime;
-    private long stopTime;
+    private long stopSolvedTime;
+    private long stopSolutionTime;
 
     private Process process;    
     private final String filename;
     private final String quietFlag;
     private final String format;
 
+    private String harness = "";
+    private String commentedResponse = "";
     private String response = ""; // process response
     private String solution = ""; // solution results within response
-    private String status = SystemOnTPTP.TIMEOUT; // status of prover
+    private String solvedType = SystemOnTPTP.SOLVED_TYPE_TIMEOUT; // solvedType of prover
 
-    private String solutionType = "";
+    private String solutionType = SystemOnTPTP.SOLUTION_TYPE_NONE; // default solution type
+
 
     private ATPSystem atpSystem;
     private String commandLine;
@@ -145,15 +157,19 @@ public class SystemOnTPTP {
     
     private void checkSolved (String responseLine) {
       if (solvedIndex != -1) {
-        // already have a solved status
+        // already have a solved solvedType
         return;
       } else {
-        // check if responseLine has a solved status in it
+        // check if responseLine has a solved type in it
         int size = atpSystem.solved[0].size();
         for (int i = 0; i < size; i++) {
           if (responseLine.contains(atpSystem.solved[1].elementAt(i))) {
             solvedIndex = i;
-            status = atpSystem.solved[0].elementAt(i);
+            solvedType = atpSystem.solved[0].elementAt(i);
+            // record time taken for prover to solve problem
+            stopSolvedTime = System.currentTimeMillis();      
+            // found solution, solution is at least of type "Assurance"
+            solutionType = SystemOnTPTP.SOLUTION_TYPE_ASSURANCE;
             return;
           }
         }
@@ -190,41 +206,63 @@ public class SystemOnTPTP {
 
     public void run () {
       System.out.println("---Start thread");
+      harness += "SystemOnTPTP.java - Start atp thread: " + atpSystem.name + "---" + atpSystem.version + "\n";
       startTime = System.currentTimeMillis();      
       String responseLine = "";
+      // Set initial response info (start of system output)
+      response += "% START OF SYSTEM OUTPUT\n";
+      // Set initial commented response info ("original system output")
+      commentedResponse += "%----START OF ORIGINAL SYSTEM OUTPUT\n";
       try {
         reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         error  = new BufferedReader(new InputStreamReader(process.getErrorStream()));
         while ((responseLine = reader.readLine()) != null) { 
           checkSolved(responseLine);
           checkSolution(responseLine);
-          response += responseLine + "\n";
+          if (!responseLine.equals("")) {
+            response += responseLine + "\n";
+          }
+          commentedResponse += "% " + responseLine + "\n";
         }
         reader.close();
         while ((responseLine = error.readLine()) != null) {
-          // check every responseLine to see if it matches solutions and solved statuses
-          response += responseLine + "\n";
+          // check every responseLine to see if it matches solutions and solved types
+          if (!responseLine.equals("")) {
+            response += responseLine + "\n";
+          }
+          commentedResponse += "% " + responseLine + "\n";
         }
         error.close();
-        if (status.equals(SystemOnTPTP.TIMEOUT)) {
-          status = SystemOnTPTP.GIVEUP;
+        if (solvedType.equals(SystemOnTPTP.SOLVED_TYPE_TIMEOUT)) {
+          solvedType = SystemOnTPTP.SOLVED_TYPE_GIVEUP;
         }
       } catch (Exception e) {
         System.out.println("SystemOnTPTP.java Exception: " + e);
+        harness += "SystemOnTPTP.java - could not finish thread successfully: " + atpSystem.name + "---" + atpSystem.version + "\n";
       }
-      stopTime = System.currentTimeMillis();
+      // Set final response info (end of system output)
+      response += "% END OF SYSTEM OUTPUT\n";
+      // Set final commented response info
+      commentedResponse += "%----END OF ORIGINAL SYSTEM OUTPUT\n";
+      // record time taken to finish retrieving solution
+      stopSolutionTime = System.currentTimeMillis();
       System.out.println("---End thread");
+      harness += "SystemOnTPTP.java - End atp thread, finished calling atp system successfully: " + atpSystem.name + "---" + atpSystem.version + "\n";
     }
     
-    public double getTime () {
-      return (double)(stopTime - startTime) / 1000.0;
+    public double getSolvedTime () {
+      return (double)(stopSolvedTime - startTime) / 1000.0;
+    }
+    public double getSolutionTime () {
+      return (double)(stopSolutionTime - startTime) / 1000.0;
     }
     
     public String getResponse () {
-      System.out.println("\n-----");
-      System.out.println(response);
-      System.out.println("\n-----");
       return response;
+    }
+    // take each response line and comment
+    public String getCommentedResponse () {
+      return commentedResponse;
     }
 
     public String getSolution () {
@@ -246,60 +284,84 @@ public class SystemOnTPTP {
       }
     }
 
-    public String getStatus () {
-      return status;
+    // return information about this process
+    public String getHeader () {
+      String res = "";
+      SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM  d HH:mm:ss z yyyy");
+      Calendar cal = Calendar.getInstance();
+      res += "% File       : " + atpSystem.name + "---" + atpSystem.version + "\n";
+      res += "% Problem    : " + filename + "\n";
+      res += "% Transform  : " + "none" + "\n";
+      res += "% Format     : " + "tptp:raw" + "\n";
+      res += "% Command    : " + atpSystem.command + "\n";
+      res += "\n";
+      res += "% Computer   : " + System.getenv("HOST") + "\n";
+      //      res += "% Model      : " + "" + "\n";
+      //      res += "% CPU        : " + "" + "\n";
+      res += "% OS Arch    : " + System.getProperty("os.arch") + "\n";
+      res += "% OS         : " + System.getProperty("os.name") + " " + System.getProperty("os.version") + "\n";
+      res += "% JVM Version: " + System.getProperty("java.vm.version") + "\n";
+      //      res += "% Free Mem.  : " + Runtime.getRuntime().freeMemory() + "\n";
+      res += "% Memory     : " + Runtime.getRuntime().totalMemory()  + "\n";
+      res += "% CPULimit   : " + limit + "s" + "\n";
+      res += "% Date       : " + sdf.format(cal.getTime()) + "\n";
+      res += "\n";
+      res += "% Result     : " + solvedType + " " + getSolvedTime() + "s" + "\n";
+      res += "% Output     : " + solutionType + " " + getSolutionTime() + "s" + "\n";
+      res += "\n";
+      res += "% Comments   : \n";
+      return res;
+    }
+
+    public String getSolvedType () {
+      return solvedType;
     }
     
     public String getSolutionType () {
       return solutionType;
     }
 
-    // return everything
-    public String q0 () {
-      String res = "";
-      res += q01() + "\n";
-      res += q2();
-      return res;
-    }
-    // return system information
-    public String q01 () {
-      return getResponse();
-    }
-    // return my start info (currently, lets just pretty print tptp solution)
-    public String q2 () {
-      String res = "";
-      res += "Pretty Print of Solution:\n";
-      res += "command Line: " + commandLine + "\n";
-      res += getSolution() + "\n";
-      res += q3();
-      return res;
-    }
-    // return my result
-    public String q3 () {
-      String res = "";
-      res += "% END OF SYSTEM OUTPUT\n";
-      res += "RESULT: " + filename + " - " + atpSystem.name + "---" + atpSystem.version + " - says " + getStatus() + " - Total time: " + getTime() + "\n";
-      res += "OUTPUT: " + filename + " - " + atpSystem.name + "---" + atpSystem.version + " - says " + getSolutionType() + " - Total time: " + getTime();
-      return res;
-    }
-
     public String getResults () {
-      // if format == -S, bypass quiet flags and only print tptp format
+      String res = "";
+      // return HARNESS if q0, q1, q2
+      if (quietFlag.equals("-q0") ||
+          quietFlag.equals("-q1") ||
+          quietFlag.equals("-q2")) {
+        res += harness;
+      }
+
+      // return system output (between, including, start/end) if q0, q1, q01
       if (format.equals("-S")) {
-        return getSolution();
+        // return pretty print system output
+        res += SystemOnTPTP.NEW_LINE_TEXT;
+        res += getHeader();
+        res += SystemOnTPTP.NEW_LINE_TEXT;
+        res += getSolution();
+        res += SystemOnTPTP.NEW_LINE_TEXT;
+        res += getCommentedResponse();
+        res += SystemOnTPTP.NEW_LINE_TEXT;
+      } else if (quietFlag.equals("-q0") ||
+                 quietFlag.equals("-q1") ||
+                 quietFlag.equals("-q01")) {
+        // return system output
+        res += getResponse();
       }
-      if (quietFlag.equals("-q0")) {
-        return q0();
-      } else if (quietFlag.equals("-q01")) {
-        return q01();
-      } else if (quietFlag.equals("-q2")) {
-        return q2();
-      } else if (quietFlag.equals("-q3")) {
-        return q3();
-      } else {
-        // -q4: return nothing
-        return "";
+
+      // return RESULT/OUTPUT if q0, q1, q2
+      if (quietFlag.equals("-q0") ||
+          quietFlag.equals("-q1") ||
+          quietFlag.equals("-q2")) {
+        res += "RESULT: " + filename + " - " + atpSystem.name + "---" + atpSystem.version + " - says " + getSolvedType() + " - Total time: " + getSolvedTime() + "\n";
+        res += "OUTPUT: " + filename + " - " + atpSystem.name + "---" + atpSystem.version + " - says " + getSolutionType() + " - Total time: " + getSolutionTime();
       }
+
+      // return SHORT RESULT/OUTPUT if q3
+      if (quietFlag.equals("-q3")) {
+        res += filename + " - " + getSolvedType() + " - Total time: " + getSolvedTime() + "\n";
+        res += filename + " - " + getSolutionType() + " - Total time: " + getSolutionTime();
+      }
+
+      return res;
     }
   }
 
