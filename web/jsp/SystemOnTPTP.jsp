@@ -314,6 +314,15 @@ August 9, Acapulco, Mexico.
 <% if (quietFlag.equals("hyperlinkedKIF")) { out.print(" CHECKED"); } %>
   >Hyperlinked KIF
   <INPUT TYPE=SUBMIT NAME="request" value="SystemOnTPTP">
+<% if ( kb.inferenceEngine == null ) { %>
+    <INPUT type="submit" name="request" value="Ask" disabled>
+<% } else { %>
+    <INPUT type="submit" name="request" value="Ask">
+<% } %>
+<% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
+    <INPUT type="submit" name="request" value="Tell"><BR>
+<% } %>
+    <INPUT type="submit" name="request" value="Test"><BR>
   </FORM>
   <hr>
 
@@ -338,23 +347,38 @@ August 9, Acapulco, Mexico.
   String command;
   Process proc;
 
+  out.println("..............");
+  out.flush();
 //----If there has been a request, do it and report result
   if (req != null && !syntaxError) {
     try {
-//----Add KB contents here
-      conjectureFormula = new Formula();
-      conjectureFormula.theFormula = stmt;
-      conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
-      //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theFormula);
-      conjectureFormula.tptpParse(true,kb);
-      //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.getTheTptpFormulas());
-      kbFileName = kb.writeTPTPFile(null,
-                                    conjectureFormula,
-                                    sanitize.equalsIgnoreCase("yes"),
-                                    systemChosen);
+      if (req.equalsIgnoreCase("tell")) {
+        Formula statement = new Formula();
+        statement.theFormula = stmt;
+        String port = KBmanager.getMgr().getPref("port");
+        if ((port == null) || port.equals(""))
+          port = "8080";
+        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
+        out.println("Status: ");
+        out.println(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
+      } else if (req.equalsIgnoreCase("test")) {
+        out.println("<PRE>");
+        out.println(InferenceTestSuite.test(kb, systemChosen, out));
+        out.println("</PRE>");
+      } else if (req.equalsIgnoreCase("SystemOnTPTP")) {
 //-----------------------------------------------------------------------------
 //----Call RemoteSoT
-      if (req.equalsIgnoreCase("SystemOnTPTP")) {
+        //----Add KB contents here
+        conjectureFormula = new Formula();
+        conjectureFormula.theFormula = stmt;
+        conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
+        //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theFormula);
+        conjectureFormula.tptpParse(true,kb);
+        //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.getTheTptpFormulas());
+        kbFileName = kb.writeTPTPFile(null,
+                                      conjectureFormula,
+                                      sanitize.equalsIgnoreCase("yes"),
+                                      systemChosen);
         if (location.equals("remote")) {
           if (systemChosen.equals("Choose%20system")) {
             out.println("No system chosen");
@@ -518,7 +542,7 @@ August 9, Acapulco, Mexico.
               qq = "-q4";
               format = "-S";
             } else if (quietFlag.equals("hyperlinkedKIF")) {
-              qq = "-q3";
+              qq = "-q4";
               format = "-S";
             } else {
               qq = quietFlag;
@@ -529,23 +553,23 @@ August 9, Acapulco, Mexico.
             out.println("(Built-In SystemOnTPTP call)");
             out.println("<PRE>");
             out.println(result);
+            if (quietFlag.equals("IDV")) {
+              StringTokenizer st = new StringTokenizer(result,"\n");
+              String temp = "";
+              while (st.hasMoreTokens()) {
+                String next = st.nextToken(); 
+                if (!next.equals("") && !next.substring(0,1).equals("%")) {
+                  temp += next + "\n";   
+                }
+              }
+              result = temp;
+            }
             out.println("</PRE><br><hr>");
           }            
         } else {
           out.println("INTERNAL ERROR: chosen option not valid: " + location + ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.");
         }
       }
-      if (req.equalsIgnoreCase("tell")) {
-        Formula statement = new Formula();
-        statement.theFormula = stmt;
-        String port = KBmanager.getMgr().getPref("port");
-        if (port == null) {
-          port = "8080";
-        }
-        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
-        sbStatus.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
-      }
-
       if (quietFlag.equals("IDV")) {
 %>
  <APPLET CODE="IDVApplet" archive="http://selma.cs.miami.edu:8080/sigma/lib/IDV.jar,http://selma.cs.miami.edu:8080/sigma/lib/TptpParser.jar,http://selma.cs.miami.edu:8080/sigma/lib/antlr-2.7.5.jar" WIDTH=800 HEIGHT=100 MAYSCRIPT=true>
@@ -555,12 +579,15 @@ August 9, Acapulco, Mexico.
 <%
       } else if (quietFlag.equals("hyperlinkedKIF")) {
   try {
+      out.println("result: " + result);
+      out.flush();
       newResult = TPTP2SUMO.convert(result);
       out.println("<hr><PRE>");      
       out.println("(HyperlinkedKIF debug output.  Phase 2: return output from TPTP2SUMO)");
       out.println(newResult);
       out.println("(debug output phase 2 completed)-----------------<PRE><br>");
       out.println("(HyperlinkedKIF debug output.  Phase 3: return output from HTMLformatter.formatProofResult)<br>");
+      out.flush();
       out.println(HTMLformatter.formatProofResult(newResult,
                                                   stmt,
                                                   stmt,
@@ -568,6 +595,7 @@ August 9, Acapulco, Mexico.
                                                   kbName,
                                                   language));       
       out.println("(debug output phase 3 completed)-----------------");
+      out.flush();
   } catch (Exception e) {}      
 
 
