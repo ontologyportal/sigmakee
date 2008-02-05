@@ -94,7 +94,7 @@ public class KIF {
         st.wordChars(95,95);       // _
         st.ordinaryChar(96);       // `
         st.wordChars(97,122);      // a-z
-        st.ordinaryChars(123,127); // {|}~
+        st.ordinaryChars(123,255); // {|}~
         // st.parseNumbers();
         st.quoteChar('"');
         st.commentChar(';');
