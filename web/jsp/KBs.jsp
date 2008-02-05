@@ -159,6 +159,11 @@ August 9, Acapulco, Mexico.
 
   if (KBmanager.getMgr().getPref("userName") != null && 
       KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+      out.println("<A href=\"MiscUtilities.jsp\">Other Utilities</A><P>");                                                           
+  }
+
+  if (KBmanager.getMgr().getPref("userName") != null && 
+      KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
       kbNames = KBmanager.getMgr().getKBnames().iterator();
     
       while (kbNames.hasNext()) {
