@@ -199,6 +199,17 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     */
+    public static String integerToPaddedString(int i, int digits) {
+
+        String result = Integer.toString(i);
+        while (result.length() < digits) {
+            result = "0" + result;
+        }
+        return result;
+    }
+
+    /** ***************************************************************
      * Read a String into the variable 'theFormula'.
      */
     public String createID() {
@@ -3134,8 +3145,8 @@ public class Formula implements Comparable {
         // syntactic.  But it probably will be used in the future.
         try {
             pass = !(// (equal ?X ?Y ?Z ...) - equal is strictly binary. 
-                     this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*")
-
+                     this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*") ||
+                     this.theFormula.matches(".*[\\x7F-\\xFF].*")
                      // (<relation> ?X ...) - no free variables in an
                      // atomic formula that doesn't contain a string
                      // unless the formula is a query.
