@@ -176,6 +176,35 @@ public class DocGen {
 
     /** ***************************************************************
      */
+    private static String createInstances(KB kb, String kbHref, String term) {
+
+        StringBuffer result = new StringBuffer();
+        ArrayList forms = kb.askWithRestriction(0,"instance",2,term);
+        if (forms != null && forms.size() > 0) {
+            result.append("<tr><td class=\"label\">Child instances</td>");
+            for (int i = 0; i < forms.size(); i++) {
+                Formula f = (Formula) forms.get(i);
+                if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                    String s = f.getArgument(1); 
+                    String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
+                    if (i > 0) result.append("<tr><td>&nbsp;</td>");                
+                    result.append("<td class=\"cell\">" + termHref + "</td>");
+                    ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
+                    if (docs != null && docs.size() > 0) {
+                        f = (Formula) docs.get(0);
+                        String docString = f.getArgument(3);  
+                        docString = kb.formatDocumentation(kbHref,docString);
+                        result.append("<td class=\"cell\">" + docString + "</td>");
+                    }
+                    result.append("</tr>\n");
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
     private static String createRelations(KB kb, String kbHref, String term) {
 
         StringBuffer result = new StringBuffer();
@@ -227,6 +256,7 @@ public class DocGen {
         result.append("<table width=\"100%\">");
         result.append(DocGen.createParents(kb,kbHref,term));
         result.append(DocGen.createChildren(kb,kbHref,term));
+        result.append(DocGen.createInstances(kb,kbHref,term));
         result.append(DocGen.createRelations(kb,kbHref,term));
         result.append("</table>\n");
 
