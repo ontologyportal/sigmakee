@@ -54,7 +54,7 @@ KB kb = null;
           if (!Formula.isNonEmptyString(kbName)) {
               System.out.println();
           }
-          if (action.equals("kifFromCSV")) {
+          if (action != null && action != "" && action.equals("kifFromCSV")) {
               Enumeration fileTags = multiPartRequest.getFileNames(); // There should be just one filename though.
               System.out.println("fileTags == " + fileTags);
               if (fileTags == null) {
@@ -78,51 +78,53 @@ KB kb = null;
                       }
 
                       System.out.println("file == " + file);
-                      if ((file == null) || !file.exists()) {
-                          String errStr = "Error: The input file does not exist or cannot be read";
-                          KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                      + "\n<br/>" + errStr + "\n<br/>");
-                          System.out.println(errStr);
-                          isError = true;
-                          response.sendRedirect("KBs.jsp"); 
-                          break;
-                      }
-                      else if (file.length() == 0) {
-                          try {
-                              file.delete();
+                      if (action.equals("kifFromCSV")) {
+                          if ((file == null) || !file.exists()) {
+                              String errStr = "Error: The input file does not exist or cannot be read";
+                              KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+                                                          + "\n<br/>" + errStr + "\n<br/>");
+                              System.out.println(errStr);
+                              isError = true;
+                              response.sendRedirect("KBs.jsp"); 
+                              break;
                           }
-                          catch (Exception ex) {
+                          else if (file.length() == 0) {
+                              try {
+                                  file.delete();
+                              }
+                              catch (Exception ex) {
+                              }
+                              String errStr = "Error: The input file does not exist or cannot be read";
+                              KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+                                                          + "\n<br/>" + errStr + "\n<br/>");
+                              System.out.println(errStr);
+                              isError = true;
+                              response.sendRedirect("KBs.jsp"); 
+                              break;
                           }
-                          String errStr = "Error: The input file does not exist or cannot be read";
-                          KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                      + "\n<br/>" + errStr + "\n<br/>");
-                          System.out.println(errStr);
-                          isError = true;
-                          response.sendRedirect("KBs.jsp"); 
-                          break;
-                      }
-                      else {
-                          String outputFilename = file.getCanonicalPath().substring(0,file.getCanonicalPath().lastIndexOf(".")) + ".kif";
-                          System.out.println("INFO in ProcessFile.jsp: Writing file: " + outputFilename);
-                          ArrayList al = DB.readSpreadsheet(file.getCanonicalPath());
-                          try {                              
-                              DB.processSpreadsheet(al,namespace,outputFilename);
-                          } catch (java.io.IOException e) {
-                              System.out.println("Error writing file " + file.getCanonicalPath() + "\n" + e.getMessage());
-                          }
-                          Set kbs = KBmanager.getMgr().getKBnames();
-                          Iterator it = kbs.iterator();
-                          while (it.hasNext()) {
-                              String kbn = (String) it.next();
-                              KB kb2 = KBmanager.getMgr().getKB(kbn);
-                              ArrayList constituents = kb2.constituents;
-                              boolean reloaded = false;
-                              for (int i = 0; i < constituents.size(); i++) {
-                                  String conName = (String) constituents.get(i);
-                                  if (conName.endsWith(file.getCanonicalPath()) && !reloaded) {
-                                      System.out.println("INFO in Processfile.jsp: Reloading KB");
-                                      kb2.reload();
-                                      reloaded = true;
+                          else {
+                              String outputFilename = file.getCanonicalPath().substring(0,file.getCanonicalPath().lastIndexOf(".")) + ".kif";
+                              System.out.println("INFO in ProcessFile.jsp: Writing file: " + outputFilename);
+                              ArrayList al = DB.readSpreadsheet(file.getCanonicalPath());
+                              try {                              
+                                  DB.processSpreadsheet(al,namespace,outputFilename);
+                              } catch (java.io.IOException e) {
+                                  System.out.println("Error writing file " + file.getCanonicalPath() + "\n" + e.getMessage());
+                              }
+                              Set kbs = KBmanager.getMgr().getKBnames();
+                              Iterator it = kbs.iterator();
+                              while (it.hasNext()) {
+                                  String kbn = (String) it.next();
+                                  KB kb2 = KBmanager.getMgr().getKB(kbn);
+                                  ArrayList constituents = kb2.constituents;
+                                  boolean reloaded = false;
+                                  for (int i = 0; i < constituents.size(); i++) {
+                                      String conName = (String) constituents.get(i);
+                                      if (conName.endsWith(file.getCanonicalPath()) && !reloaded) {
+                                          System.out.println("INFO in Processfile.jsp: Reloading KB");
+                                          kb2.reload();
+                                          reloaded = true;
+                                      }
                                   }
                               }
                           }
