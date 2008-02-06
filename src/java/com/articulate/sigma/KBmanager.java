@@ -443,6 +443,21 @@ public class KBmanager {
     }
     
     /** ***************************************************************
+     * Get the the complete list of languages available in all KBs
+     */
+    public ArrayList allAvailableLanguages() {
+
+        ArrayList result = new ArrayList();
+        Iterator it = kbs.keySet().iterator();
+        while (it.hasNext()) {
+            String kbName = (String) it.next();
+            KB kb = (KB) getKB(kbName);
+            result.addAll(kb.availableLanguages());
+        }
+        return result;
+    }
+    
+    /** ***************************************************************
      * Get the preference corresponding to the given kef.
      */    
     public String getPref(String key) {
