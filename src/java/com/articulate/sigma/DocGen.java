@@ -18,8 +18,20 @@ import java.io.*;
 public class DocGen {     
 
     public static String header = "SUMO v. 75, June 2007";
-    public static String footer = "<table width=\"100%\"><tr class=\"title\"><td>" +
+    public static String footer = "<table width='100%'><tr class='title'><td>" +
         "(c) IEEE free release, see www.ontologyportal.org</td></tr></table>\n";
+
+    /** ***************************************************************
+     */
+    public static void setHeader(String h) {
+        header = h;
+    }
+
+    /** ***************************************************************
+     */
+    public static void setFooter(String f) {
+        footer = f;
+    }
 
     /** ***************************************************************
      *  Collect relations in the knowledge base 
@@ -44,15 +56,27 @@ public class DocGen {
 
         StringBuffer result = new StringBuffer();
         result.append("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
-                   "<link rel=\"stylesheet\" type=\"text/css\" href=\"coa.css\"></head><body>\n");
+                   "<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\"></head><body>\n");
         result.append("<table width=\"100%\"><tr><td colspan=\"35\" class=\"title\">\n");
         result.append(header + "</td></tr><tr class=\"letter\">\n");
 
-        Iterator it = alphaList.keySet().iterator();
-        while (it.hasNext()) {
-            String letter2 = (String) it.next();
-            String filelink = "letter-" + letter2 + ".html";      
-            result.append("<td><a href=\"" + filelink + "\">" + letter2 + "</a></td>\n");
+        for (char c = 65; c < 90; c++) {
+            String cString = Character.toString(c);
+            if (alphaList.keySet().contains(cString)) {
+                String filelink = "letter-" + cString + ".html";      
+                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
+            }
+            else                 
+                result.append("<td>" + cString + "</td>\n");
+        }
+        for (char c = 97; c < 122; c++) {
+            String cString = Character.toString(c);
+            if (alphaList.keySet().contains(cString)) {
+                String filelink = "letter-" + cString + ".html";      
+                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
+            }
+            else                 
+                result.append("<td>" + cString + "</td>\n");
         }
         result.append("</td></tr></table>");
         return result.toString();
@@ -63,8 +87,8 @@ public class DocGen {
     private static String generateTOCPage(KB kb, String filename, String header, TreeSet terms) {
 
         StringBuffer result = new StringBuffer();
-        Iterator it = terms.iterator();
         result.append("<table width=\"100%\">");
+        Iterator it = terms.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
             result.append("<tr><td><a href=\"" + term + ".html\">" + term + "</a></td>\n");
@@ -73,7 +97,8 @@ public class DocGen {
                 Formula f = (Formula) docs.get(0);
                 String docString = f.getArgument(3);  
                 docString = kb.formatDocumentation("",docString);
-                result.append("<td>" + docString.substring(1,docString.length()) + "</td>\n");
+                if (docString.length() > 1)                 
+                    result.append("<td>" + docString.substring(1,docString.length()) + "</td>\n");
             }
             result.append("</tr>\n");
         }
@@ -243,7 +268,7 @@ public class DocGen {
      * with a limit on how many statements of each type should be
      * displayed.
      */
-    public static String createPage(KB kb, String kbHref, String term, int limit) {
+    public static String createPage(KB kb, String kbHref, String term, int limit, String language) {
 
         StringBuffer result = new StringBuffer();
         result.append("<table width=\"100%\">");
@@ -278,8 +303,8 @@ public class DocGen {
                     limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
-                    result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
-                                   kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
+                    result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap(language), 
+                                   kb.getTermFormatMap(language), kb,language) + "<br>\n");
                 }
             }
             result.append(limitString);
@@ -295,8 +320,8 @@ public class DocGen {
                 limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
             for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
-                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "\n");
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap(language), 
+                               kb.getTermFormatMap(language), kb,language) + "\n");
             }
         }
         result.append(limitString);
@@ -311,8 +336,8 @@ public class DocGen {
                 limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
             for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
-                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "\n");
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap(language), 
+                               kb.getTermFormatMap(language), kb,language) + "\n");
             }
         }
         result.append(limitString);
@@ -327,8 +352,8 @@ public class DocGen {
                 limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
             for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
-                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap(language), 
+                               kb.getTermFormatMap(language), kb,language) + "<br>\n");
             }
         }
         result.append(limitString);
@@ -343,8 +368,8 @@ public class DocGen {
                 limitString = "<br>Display limited to " + (new Integer(localLimit)).toString() + " statements of each type.<P>\n";
             for (int i = 0; i < localLimit; i++) {
                 Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap("EnglishLanguage"), 
-                               kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage") + "<br>\n");
+                result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, kb.getFormatMap(language), 
+                               kb.getTermFormatMap(language), kb,language) + "<br>\n");
             }
         }
         result.append(limitString);
@@ -353,43 +378,61 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     *  Generate and save all the index pages that link to the
+     *  individual term pages.
+     *  @param alphaList is a map of all the terms keyed by their
+     *                   first letter
+     *  @pageList is a map of all term pages keyed by term name
+     *  @dir is the directory in which to save the pages
      */
-    private static String saveIndexes(KB kb, TreeMap alphaList, TreeMap pageList) throws IOException {
+    private static String saveIndexes(KB kb, TreeMap alphaList, TreeMap pageList, String dir) throws IOException {
 
         String tocheader = generateTOCHeader(alphaList,pageList);
         FileWriter fw = null;
         PrintWriter pw = null; 
-        Iterator it = alphaList.keySet().iterator();
-        while (it.hasNext()) {
-            String letter = (String) it.next();
-            TreeSet terms = (TreeSet) alphaList.get(letter);
-            String filename = "letter-" + letter + ".html";
-            try {
+        String filename = "";
+        try {
+            Iterator it = alphaList.keySet().iterator();
+            while (it.hasNext()) {
+                String letter = (String) it.next();
+                TreeSet terms = (TreeSet) alphaList.get(letter);
+                filename = dir + File.separator + "letter-" + letter + ".html";
                 fw = new FileWriter(filename);
                 pw = new PrintWriter(fw);
                 String page = generateTOCPage(kb,filename,header,terms);
                 pw.println(tocheader);
                 pw.println(page);
-                pw.println(footer);
+                pw.println(footer); 
+                pw.close();
+                fw.close();
+            }   
+            fw = new FileWriter(dir + File.separator + "index.html");
+            pw = new PrintWriter(fw);
+            pw.println(tocheader);
+            pw.println(footer);
+            pw.close();
+            fw.close();
+        }
+        catch (java.io.IOException e) {
+            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
+        }
+        finally {
+            if (pw != null) {
+                pw.close();
             }
-            catch (java.io.IOException e) {
-                throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
+            if (fw != null) {
+                fw.close();
             }
-            finally {
-                if (pw != null) {
-                    pw.close();
-                }
-                if (fw != null) {
-                    fw.close();
-                }
-            }
-        }   
+        }
+
         return tocheader;
     }
 
     /** ***************************************************************
+     *  Save pages below the KBs directory in a directory called
+     *  HTML.  If that already exists, use HTML1, HTML2 etc.
      */
-    private static void printPages(TreeMap pageList, String tocheader) throws IOException {
+    private static void printPages(TreeMap pageList, String tocheader, String dir) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
@@ -397,7 +440,8 @@ public class DocGen {
         while (it.hasNext()) {
             String term = (String) it.next();
             String page = (String) pageList.get(term);
-            String filename = term + ".html";
+            String filename = dir + File.separator + term + ".html";
+            System.out.println("Info in DocGen.printPages(): filename : " + filename);
             try {
                 fw = new FileWriter(filename);
                 pw = new PrintWriter(fw);
@@ -417,6 +461,26 @@ public class DocGen {
                 }
             }
         }   
+    }
+
+    /** ***************************************************************
+     *  Save pages below the SIGMA_HOME directory in a directory
+     *  called HTML.  If that already exists, use HTML1, HTML2 etc.
+     */
+    private static String generateDir() throws IOException {
+
+        String dir = KBmanager.getMgr().getPref("baseDir");
+        String subdir = "HTML";
+        int counter = 0;
+        String path = dir + File.separator + subdir;
+        File f = new File(path);
+        while (f.exists()) {
+            counter++;
+            path = dir + File.separator + subdir + Integer.toString(counter);
+            f = new File(path);
+        }
+        f.mkdir();
+        return path;
     }
 
     /** ***************************************************************
@@ -427,7 +491,7 @@ public class DocGen {
      * the String is the body of the page describing the term.  It is 
      * combined with a table of contents header created in saveIndexes().
      */
-    public static void generateHTML(KB kb) {
+    public static void generateHTML(KB kb, String language) {
 
         try {
             TreeSet firstCharSet = new TreeSet();
@@ -445,14 +509,68 @@ public class DocGen {
                     else
                         alphaList.put(firstChar,list);
                     list.add(term);
-                    pageList.put(term,createPage(kb,"",term,200));
+                    pageList.put(term,createPage(kb,"",term,200,language));
                 }
             }
-            String tocheader = saveIndexes(kb,alphaList,pageList);
-            printPages(pageList,tocheader);
+            String dir = generateDir();
+            String tocheader = saveIndexes(kb,alphaList,pageList,dir);
+            printPages(pageList,tocheader,dir);
         }
         catch (java.io.IOException e) {
             System.out.println(e.getMessage());
+        }
+    }      
+
+    /** ***************************************************************
+     * Generate a single HTML page showing all terms.
+     */
+    public static void generateSingleHTML(KB kb, String language) throws IOException {
+
+        FileWriter fw = null;
+        PrintWriter pw = null; 
+        try {
+            fw = new FileWriter(KBmanager.getMgr().getPref("baseDir") + File.separator + kb.name+ "-AllTerms.html");
+            pw = new PrintWriter(fw);
+            pw.println("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
+                       "<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\"></head><body>\n");
+            pw.println(DocGen.header);
+            pw.println("<table border=0><tr bgcolor=#CCCCCC><td>Name</td><td>Documentation</td></tr>\n");
+            boolean even = true;
+            Iterator it = kb.terms.iterator();
+            while (it.hasNext()) {
+                String term = (String) it.next();
+                if (even)
+                    pw.println("<tr><td>");
+                else
+                    pw.println("<tr bgcolor=#CCCCCC><td>");
+                even = !even;
+                pw.println(term);
+                pw.println("</td>");
+                ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
+                if (docs != null && docs.size() > 0) {
+                    Formula f = (Formula) docs.get(0);
+                    String docString = f.getArgument(3); 
+                    if (docString != null && docString != "" && docString.length() > 100) 
+                        docString = docString.substring(0,100) + "...\"";                    
+                    pw.println("<td class=\"description\">" + docString);
+                }
+                else
+                    pw.println("<td>");
+                pw.println("</td></tr>\n");
+            }
+            pw.println("</table>\n");
+            pw.println(DocGen.footer);
+        }
+        catch (java.io.IOException e) {
+            System.out.println(e.getMessage());
+        }
+        finally {
+            if (pw != null) {
+                pw.close();
+            }
+            if (fw != null) {
+                fw.close();
+            }
         }
     }      
 
@@ -467,6 +585,6 @@ public class DocGen {
             System.out.println(ioe.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        DocGen.generateHTML(kb);
+        // DocGen.generateHTML(kb,"EnglishLanguage");
     }
 }
