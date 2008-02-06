@@ -833,15 +833,33 @@ public class KB {
                             if (reln.endsWith("Fn")) {
                                 className = "UnaryFunction";
                             }
+                            else {
+                                className = "UnaryRelation";
+                            }
                             break;
                         case 2 : 
-                            className = "BinaryRelation";
+                            if (reln.endsWith("Fn")) {
+                                className = "BinaryFunction";
+                            }
+                            else {
+                                className = "BinaryRelation";
+                            }
                             break;
                         case 3 : 
-                            className = "TernaryRelation";
+                            if (reln.endsWith("Fn")) {
+                                className = "TernaryFunction";
+                            }
+                            else {
+                                className = "TernaryRelation";
+                            }
                             break;
                         case 4 : 
-                            className = "QuaternaryRelation";
+                            if (reln.endsWith("Fn")) {
+                                className = "QuaternaryFunction";
+                            }
+                            else {
+                                className = "QuaternaryRelation";
+                            }
                             break;
                         case 5 : 
                             className = "QuintaryRelation";
