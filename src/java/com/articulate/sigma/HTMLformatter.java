@@ -459,6 +459,26 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
+     *  change reserved characters from '&' tags
+     */
+    public static String encodeForHTML(String s) {
+
+        s = s.replaceAll("&lt;","<");
+        s = s.replaceAll("&gt;",">");
+        return s;
+    }
+
+    /** *************************************************************
+     *  change reserved characters to '&' tags
+     */
+    public static String decodeFromHTML(String s) {
+
+        s = s.replaceAll("<","&lt;");
+        s = s.replaceAll(">","&gt;");
+        return s;
+    }
+
+    /** *************************************************************
      *  Create an HTML menu, given an ArrayList of Strings where the
      *  value(s) are String representations of int(s) but the displayed
      *  menu items are String(s).
