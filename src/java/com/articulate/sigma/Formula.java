@@ -3383,7 +3383,10 @@ public class Formula implements Comparable {
         return result.toString();
     }
 
-    private static final String _termMentionSuffix = "_M";
+    public static final String termMentionSuffix  = "__m";
+    public static final String termSymbolPrefix   = "s__";
+    public static final String termVariablePrefix = "V__";
+  
     private static List renameExceptions = Arrays.asList("en");
 
     /** ***************************************************************
@@ -3484,7 +3487,9 @@ public class Formula implements Comparable {
         // to other relations.
         KBmanager mgr = null;
         boolean holdsPrefixInUse = false;
-        String mentionSuffix = _termMentionSuffix;
+        String mentionSuffix = Formula.termMentionSuffix;
+        String symbolPrefix = Formula.termSymbolPrefix;
+        String variablePrefix = Formula.termVariablePrefix;
         try {
             mgr = KBmanager.getMgr();
             holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
@@ -3503,7 +3508,7 @@ public class Formula implements Comparable {
         }
         //----Fix variables to have leading V_
         if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
-            return("V_" + st.sval.substring(1).replace('-','_'));
+            return(termVariablePrefix + st.sval.substring(1).replace('-','_'));
         }
         //----Translate special predicates
         translateIndex = 0;
@@ -3557,7 +3562,8 @@ public class Formula implements Comparable {
                 }
             }
         }
-        return("s_" + term.replace('-','_'));
+        //return("s_" + term.replace('-','_'));
+        return(termSymbolPrefix + term.replace('-','_'));
     }
 
     /** ***************************************************************
