@@ -5,15 +5,15 @@ import java.util.*;
 import tptp_parser.*;
 
 public class TPTP2SUMO {
-  public static class Formula {
+  public static class TPTPFormula {
     int id;
     SimpleTptpParserOutput.TopLevelItem item;
     SimpleTptpParserOutput.Annotations annotations = null;
     SimpleTptpParserOutput.Source source = null;
     String type = "";
-    ArrayList<Formula> parent;
-    ArrayList<Formula> child;
-    Formula (SimpleTptpParserOutput.TopLevelItem item, int id) {
+    ArrayList<TPTPFormula> parent;
+    ArrayList<TPTPFormula> child;
+    TPTPFormula (SimpleTptpParserOutput.TopLevelItem item, int id) {
       this.item = item;
       this.id = id;
       type = getType(item);
@@ -31,7 +31,7 @@ public class TPTP2SUMO {
         source = annotations.getSource();
       }
     }
-    void addParent (Formula that) {
+    void addParent (TPTPFormula that) {
       this.parent.add(that);
       that.child.add(this);
     }
@@ -77,7 +77,7 @@ public class TPTP2SUMO {
     TptpLexer lexer = new TptpLexer(reader);
     TptpParser parser = new TptpParser(lexer);
     SimpleTptpParserOutput outputManager = new SimpleTptpParserOutput();
-    Hashtable<String,TPTP2SUMO.Formula> ftable = new Hashtable();
+    Hashtable<String,TPTPFormula> ftable = new Hashtable();
     Vector<SimpleTptpParserOutput.TopLevelItem> Items = new Vector();
     
     //----Start SUMO output
@@ -94,7 +94,7 @@ public class TPTP2SUMO {
       String name = getName(item);
       //      System.out.println("new form: " + name);
       System.out.println(item.toString());      
-      TPTP2SUMO.Formula formula = new TPTP2SUMO.Formula(item, i);
+      TPTPFormula formula = new TPTPFormula(item, i);
       i++;
       ftable.put(name, formula);
       Items.add(item);
@@ -104,7 +104,7 @@ public class TPTP2SUMO {
     proof.append("    <proof>\n");
     for (SimpleTptpParserOutput.TopLevelItem item : Items) {
       String name = getName(item);
-      TPTP2SUMO.Formula fthis = ftable.get(name);
+      TPTPFormula fthis = ftable.get(name);
       proof.append(convertTPTPFormula(item, fthis, ftable));
     }
     //----End proof output
@@ -162,7 +162,7 @@ public class TPTP2SUMO {
     }
   }
 
-  private static StringBuffer convertFormula (String formula, Hashtable<String,TPTP2SUMO.Formula> ftable, int indent, int indented) {
+  private static StringBuffer convertFormula (String formula, Hashtable<String,TPTPFormula> ftable, int indent, int indented) {
     StringBuffer result = new StringBuffer();
     result.append("          <premise>\n");
     int id = (ftable.get(formula)).id;
@@ -194,7 +194,7 @@ public class TPTP2SUMO {
     return result;
   }
 
-  private static StringBuffer convertTPTPFormula (SimpleTptpParserOutput.TopLevelItem item, TPTP2SUMO.Formula fthis, Hashtable<String,TPTP2SUMO.Formula> ftable) {
+  private static StringBuffer convertTPTPFormula (SimpleTptpParserOutput.TopLevelItem item, TPTPFormula fthis, Hashtable<String,TPTPFormula> ftable) {
     StringBuffer result = new StringBuffer();
     int indent = 12;
     int indented = 0;
@@ -223,12 +223,12 @@ public class TPTP2SUMO {
       if (source.getKind() == SimpleTptpParserOutput.Source.Kind.Inference) {
         gatherParents(source, parents);
         for (String parent : parents) {
-          fthis.addParent((TPTP2SUMO.Formula)ftable.get(parent));
+          fthis.addParent((TPTPFormula)ftable.get(parent));
           result.append(convertFormula(parent, ftable, indent+2, indented));
         }
       } else {
         if (!sourceInfo.contains("(") && !sourceInfo.contains(")")) {
-          fthis.addParent((TPTP2SUMO.Formula)ftable.get(sourceInfo));
+          fthis.addParent((TPTPFormula)ftable.get(sourceInfo));
           result.append(convertFormula(sourceInfo, ftable, indent+2, indented));
         }       
       }
@@ -333,6 +333,18 @@ public class TPTP2SUMO {
     }
     return "";
   }
+  
+  // remove termVariablePrefix
+  private static String transformVariable (String variable) {
+    return variable.replace(Formula.termVariablePrefix, "");
+  } 
+
+  // remove termSymbolPrefix and termMentionSuffix
+  private static String transformTerm (String term) {
+    term = term.replace(Formula.termSymbolPrefix, "");
+    term = term.replace(Formula.termMentionSuffix, "");
+    return term;
+  }
 
   private static String convertTerm (SimpleTptpParserOutput.Formula.Atomic atom) {
     String res = "";
@@ -340,13 +352,13 @@ public class TPTP2SUMO {
     if (arguments != null) {
       res += "(";
     }
-    res += removeDollarSign(atom.getPredicate());
+    res += transformTerm(removeDollarSign(atom.getPredicate()));
     if (arguments != null) {
       for (int n = 0; n < arguments.size();  n++) {
         if (((SimpleTptpParserOutput.Term)arguments.get(n)).getTopSymbol().isVariable()) {
-          res += " " + "?" + arguments.get(n).toString();
+          res += " " + "?" + transformVariable(arguments.get(n).toString());
         } else {
-          res += " " + removeDollarSign(arguments.get(n).toString());
+          res += " " + transformTerm(removeDollarSign(arguments.get(n).toString()));
         }
       }
     }
@@ -490,13 +502,13 @@ public class TPTP2SUMO {
     }
 
     // find the unique conjecture/negated_conjecture leaf
-    private static TPTP2SUMO.Formula extractVine (Hashtable<String,TPTP2SUMO.Formula> ftable) {
+    private static TPTPFormula extractVine (Hashtable<String,TPTPFormula> ftable) {
       //      System.out.println("extract vine");
       Set<String> set = ftable.keySet();
       Iterator<String> itr = set.iterator();
       while (itr.hasNext()) {
         String str = itr.next();
-        TPTP2SUMO.Formula formula = ftable.get(str);
+        TPTPFormula formula = ftable.get(str);
         String type = formula.type; 
         // if not conjecture of negated conjecture, skip
         String name = getName(formula.item);
@@ -546,7 +558,7 @@ public class TPTP2SUMO {
         //        System.out.println("atom: " + atom.toString());
         //        System.out.println("term: " + term.toString());
         if (term.getTopSymbol().isVariable()) {          
-          String variable = term.getTopSymbol().toString();
+          String variable = transformVariable(term.getTopSymbol().toString());
           boolean unique = true;
           for (Binding oldbind : bind) {
             if (oldbind.variable.equals(variable)) {
@@ -575,7 +587,7 @@ public class TPTP2SUMO {
     }
 
     // identify variables in the formula, store as Bindings
-    public static ArrayList<Binding> identifyVariables (TPTP2SUMO.Formula formula) {
+    public static ArrayList<Binding> identifyVariables (TPTPFormula formula) {
       ArrayList<Binding> bind = new ArrayList();
       SimpleTptpParserOutput.TopLevelItem item = formula.item;
       if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
@@ -589,7 +601,7 @@ public class TPTP2SUMO {
     }
 
     // given a single formula, extract all variable bindings from formula source
-    public static ArrayList<Binding> extractBinding (TPTP2SUMO.Formula formula) {
+    public static ArrayList<Binding> extractBinding (TPTPFormula formula) {
       //      System.out.println("extract binding from a formula");
       // look at formula, see if there are variable bindings
       ArrayList<Binding> bind = new ArrayList();
@@ -617,8 +629,8 @@ public class TPTP2SUMO {
         // List : [ Variable, Term ]
         Iterable<SimpleTptpParserOutput.GeneralTerm> list = term.getListElements();
         Iterator<SimpleTptpParserOutput.GeneralTerm> itr = list.iterator();
-        String variable = (itr.next()).toString();
-        String binding  = (itr.next()).getTerm().toString();
+        String variable = transformVariable((itr.next()).toString());
+        String binding  = transformTerm((itr.next()).getTerm().toString());
         //        System.out.println("variable: " + variable);
         //        System.out.println("binding: " + binding);
         bind.add(new Binding(variable, binding));
@@ -629,7 +641,7 @@ public class TPTP2SUMO {
 
     // recursive method: extract variables from current,
     // compare to unsolved list, remove from list each time a binding is solved
-    public static ArrayList<Binding> extractBinding (TPTP2SUMO.Formula formula, 
+    public static ArrayList<Binding> extractBinding (TPTPFormula formula, 
                                                      ArrayList<Binding> unsolvedBindings) {
       //      System.out.println("extract binding: recursive method ");
       // for each variable substitute in the formula, check against bindings
@@ -667,14 +679,14 @@ public class TPTP2SUMO {
         return unsolvedBindings;
       }      
       // recurse on each child, updating the unsolved list each iteration
-      for (TPTP2SUMO.Formula child : formula.child) {       
+      for (TPTPFormula child : formula.child) {       
         unsolvedBindings = extractBinding(child, unsolvedBindings);
       }
       // returned any unsolved bindings
       return unsolvedBindings;
     }
 
-    public static StringBuffer extractAnswers (Hashtable<String,TPTP2SUMO.Formula> ftable) {
+    public static StringBuffer extractAnswers (Hashtable<String,TPTPFormula> ftable) {
       StringBuffer binding = new StringBuffer();
       //      System.out.println("extracting answers");
     /*
@@ -687,7 +699,7 @@ public class TPTP2SUMO {
 
       
       // vine extraction
-      TPTP2SUMO.Formula conjecture = extractVine(ftable);
+      TPTPFormula conjecture = extractVine(ftable);
       if (conjecture == null) {
         System.out.println("conjecture is null!: ");
         return binding;
@@ -721,7 +733,7 @@ public class TPTP2SUMO {
       // from conjecture to false clause: identify bindings
       // stop when all variables are binded
       assert conjecture != null;
-      for (TPTP2SUMO.Formula child : conjecture.child) {        
+      for (TPTPFormula child : conjecture.child) {        
         //        System.out.println("working on child: " + getName(child.item));
         unsolvedBindings = extractBinding(child, unsolvedBindings);
       }
