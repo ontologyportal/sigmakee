@@ -347,8 +347,6 @@ August 9, Acapulco, Mexico.
   String command;
   Process proc;
 
-  out.println("..............");
-  out.flush();
 //----If there has been a request, do it and report result
   if (req != null && !syntaxError) {
     try {
@@ -414,12 +412,6 @@ August 9, Acapulco, Mexico.
                 result += responseLine + "\n";
               }           
               if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
-            }
-            if (quietFlag.equals("hyperlinkedKIF")) {
-              out.println("<hr>");
-              out.println("(HyperlinkedKIF debug output.  Phase 1: return output from remoteSoT)\n");
-              out.println(result);
-              out.println("(debug output phase 1 completed)-----------------");
             }
             out.println("</PRE>");
             reader.close();
@@ -491,11 +483,6 @@ August 9, Acapulco, Mexico.
                 result += responseLine + "\n";
               }
               if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
-            }
-            if (quietFlag.equals("hyperlinkedKIF")) {
-              out.println("(HyperlinkedKIF debug output.  Phase 1: return output from localSoT)\n");
-              out.println(result);
-              out.println("(debug output phase 1 completed)-----------------");
             }
             out.println("</PRE>");
             reader.close();
@@ -570,58 +557,49 @@ August 9, Acapulco, Mexico.
           out.println("INTERNAL ERROR: chosen option not valid: " + location + ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.");
         }
       }
-      if (quietFlag.equals("IDV")) {
-%>
- <APPLET CODE="IDVApplet" archive="http://selma.cs.miami.edu:8080/sigma/lib/IDV.jar,http://selma.cs.miami.edu:8080/sigma/lib/TptpParser.jar,http://selma.cs.miami.edu:8080/sigma/lib/antlr-2.7.5.jar" WIDTH=800 HEIGHT=100 MAYSCRIPT=true>
-   <PARAM NAME="TPTP" VALUE="<%out.println(result);%>">
-   Hey, you cant see my applet!!!
- </APPLET>
-<%
+      if (quietFlag.equals("IDV") && !location.equals("remote")) {
+        String port = KBmanager.getMgr().getPref("port");
+        if ((port == null) || port.equals(""))
+          port = "8080";
+        String idvHref = "http://" + hostname + ":" + port + "/sigma/lib";
+        out.println("<APPLET CODE=\"IDVApplet\" archive=\"" + idvHref + "/IDV.jar," + idvHref + "/TptpParser.jar," + idvHref + "/antlr-2.7.5.jar\"");
+        out.println("WIDTH=800 HEIGHT=100 MAYSCRIPT=true>");
+        out.println("  <PARAM NAME=\"TPTP\" VALUE=\"" + result + "\">");
+        out.println("  Hey, you cant see my applet!!!");
+        out.println("</APPLET>");
       } else if (quietFlag.equals("hyperlinkedKIF")) {
-  try {
-      out.println("result: " + result);
-      out.flush();
-      newResult = TPTP2SUMO.convert(result);
-      out.println("<hr><PRE>");      
-      out.println("(HyperlinkedKIF debug output.  Phase 2: return output from TPTP2SUMO)");
-      out.println(newResult);
-      out.println("(debug output phase 2 completed)-----------------<PRE><br>");
-      out.println("(HyperlinkedKIF debug output.  Phase 3: return output from HTMLformatter.formatProofResult)<br>");
-      out.flush();
-      out.println(HTMLformatter.formatProofResult(newResult,
-                                                  stmt,
-                                                  stmt,
-                                                  lineHtml,
-                                                  kbName,
-                                                  language));       
-      out.println("(debug output phase 3 completed)-----------------");
-      out.flush();
-  } catch (Exception e) {}      
-
-
-
-          /*
-          command = tptp4X    + " " + 
-                    "-f sumo" + " " +
-                    "--";
-          proc = Runtime.getRuntime().exec(command);
-          writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
-          reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-          writer.write(result);
-          writer.flush();
-          writer.close();
-          result = "";
-          while ((responseLine = reader.readLine()) != null) {
-            result += responseLine + "\n";
-          }
-          reader.close();
-          out.println(HTMLformatter.formatProofResult(result,
+        try {
+          newResult = TPTP2SUMO.convert(result);
+          out.println(HTMLformatter.formatProofResult(newResult,
                                                       stmt,
                                                       stmt,
                                                       lineHtml,
                                                       kbName,
                                                       language));       
-          */
+        } catch (Exception e) {}      
+
+        /*
+        command = tptp4X    + " " + 
+                  "-f sumo" + " " +
+                  "--";
+        proc = Runtime.getRuntime().exec(command);
+        writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
+        reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        writer.write(result);
+        writer.flush();
+        writer.close();
+        result = "";
+        while ((responseLine = reader.readLine()) != null) {
+          result += responseLine + "\n";
+        }
+        reader.close();
+        out.println(HTMLformatter.formatProofResult(result,
+                                                    stmt,
+                                                    stmt,
+                                                    lineHtml,
+                                                    kbName,
+                                                    language));       
+        */
       }
 //----Delete the kbFile
 //      (new File(kbFileName)).delete();
