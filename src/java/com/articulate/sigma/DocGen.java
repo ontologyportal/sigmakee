@@ -17,9 +17,8 @@ import java.io.*;
 
 public class DocGen {     
 
-    public static String header = "SUMO v. 75, June 2007";
-    public static String footer = "<table width='100%'><tr class='title'><td>" +
-        "(c) IEEE free release, see www.ontologyportal.org</td></tr></table>\n";
+    public static String header = "";
+    public static String footer = "www.articulatesoftware.com";
 
     /** ***************************************************************
      */
@@ -34,7 +33,14 @@ public class DocGen {
     }
 
     /** ***************************************************************
-     *  Collect relations in the knowledge base 
+     */
+    public static boolean isComposite(KB kb, String term) {
+
+        return Diagnostics.findParent(kb,term,"Ddex_Composite");
+    }
+
+    /** ***************************************************************
+     *  Collect relations in the knowledge base
      *
      *  @return The set of relations in the knowledge base.
      */
@@ -51,6 +57,9 @@ public class DocGen {
     }      
 
     /** ***************************************************************
+     *  Generate an alphabetic HTML list that points to the
+     *  individual index pages (which collect all terms starting
+     *  with a particular letter.
      */
     private static String generateTOCHeader(TreeMap alphaList, TreeMap pageList) {
 
@@ -69,20 +78,14 @@ public class DocGen {
             else                 
                 result.append("<td>" + cString + "</td>\n");
         }
-        for (char c = 97; c < 122; c++) {
-            String cString = Character.toString(c);
-            if (alphaList.keySet().contains(cString)) {
-                String filelink = "letter-" + cString + ".html";      
-                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
-            }
-            else                 
-                result.append("<td>" + cString + "</td>\n");
-        }
-        result.append("</td></tr></table>");
+        result.append("</tr></table>");
         return result.toString();
     }
 
     /** ***************************************************************
+     *  Generate an HTML page that lists term name and its
+     *  documentation
+     *  @param terms is the list of KB terms to show
      */
     private static String generateTOCPage(KB kb, String filename, String header, TreeSet terms) {
 
@@ -264,6 +267,241 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     */
+    public static String indentChars(String c, int indent) {
+
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < indent; i++) {
+            result.append(c);
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    private static String showCardinalityCell(KB kb, String kbHref, String term) {
+
+        String minCard = "0";
+        String maxCard = "n";
+        StringBuffer result = new StringBuffer();
+        ArrayList cardForms = kb.askWithRestriction(0,"minCardinality",2,term);
+        if (cardForms != null && cardForms.size() > 0) {
+            Formula f = (Formula) cardForms.get(0);
+            minCard = f.getArgument(3);
+        }
+        cardForms = kb.askWithRestriction(0,"maxCardinality",2,term);
+        if (cardForms != null && cardForms.size() > 0) {
+            Formula f = (Formula) cardForms.get(0);
+            maxCard = f.getArgument(3);
+        }
+        return minCard + "-" + maxCard;
+    }
+
+    /** ***************************************************************
+     */
+    private static String createCompositeComponentLine(KB kb, String kbHref, String term, int indent, String language) {
+
+        StringBuffer result = new StringBuffer();
+        result.append("<tr><td></td><td>");
+        ArrayList instanceForms = kb.askWithRestriction(0,"instance",1,term);
+        if (instanceForms != null && instanceForms.size() > 0) {
+            result.append(indentChars("&nbsp;&nbsp;",indent));
+            Formula f = (Formula) instanceForms.get(0);
+            result.append("<a href=\"" + kbHref + "&term=" + f.getArgument(2) + "\">" + f.getArgument(2) + "</a>");        
+        }
+        result.append("</td><td>");
+        ArrayList docForms = kb.askWithRestriction(0,"documentation",1,term);
+        if (docForms != null && docForms.size() > 0) {
+            Formula f = (Formula) docForms.get(0);
+            result.append(f.getArgument(3));
+        }
+        result.append("</td><td>");
+        if (indent > 0)        
+            result.append(showCardinalityCell(kb,kbHref,term));
+        result.append("</td><td>");
+        ArrayList forms = kb.askWithRestriction(0,"dataType",1,term);
+        if (forms != null && forms.size() > 0) {
+            Formula f = (Formula) forms.get(0);
+            result.append("<a href=\"" + kbHref + "&term=" + f.getArgument(2) + "\">" + f.getArgument(2) + "</a>");        
+        }
+        result.append("</td></tr>\n");
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    private static String createContainingCompositeComponentLine(KB kb, String kbHref, String term, int indent, String language) {
+
+        StringBuffer result = new StringBuffer();
+        result.append("<tr><td></td><td>");
+        result.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");        
+        result.append("</td><td>");
+        ArrayList docForms = kb.askWithRestriction(0,"documentation",1,term);
+        if (docForms != null && docForms.size() > 0) {
+            Formula f = (Formula) docForms.get(0);
+            result.append(f.getArgument(3));
+        }
+        result.append("</td><td>");
+        result.append("</td><td>");
+        result.append("</td></tr>\n");
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    private static String formatCompositeHierarchy(KB kb, String kbHref, ArrayList hier, String language) {
+
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < hier.size(); i++) {
+            AVPair avp = (AVPair) hier.get(i);
+            result.append(createCompositeComponentLine(kb,kbHref,avp.attribute,Integer.parseInt(avp.value),language));
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     *  Don't display XmlChoice(s) or XmlSequence(s)
+     */
+    private static ArrayList createCompositeRecurse(KB kb, String term, int indent) {
+
+        ArrayList result = new ArrayList();
+        AVPair avp = new AVPair();
+        avp.attribute = term;
+        avp.value = Integer.toString(indent);
+        result.add(avp);
+        ArrayList forms = kb.askWithRestriction(0,"hasXmlElement",1,term);
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                String t = form.getArgument(2);
+                result.addAll(createCompositeRecurse(kb,t,indent+1));
+            }
+        }
+        forms = kb.askWithRestriction(0,"hasXmlAttribute",1,term);
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                String t = form.getArgument(2);
+                result.addAll(createCompositeRecurse(kb,t,indent+1));  // This should return without children since
+                                                                      // attributes don't have child elements
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     *  Travel up the hasXmlElement relation hierarchy to collect
+     *  all parents.
+     */
+    private static ArrayList containingComposites(KB kb, String term) {
+
+        ArrayList result = new ArrayList();
+        ArrayList instances = kb.askWithRestriction(0,"hasXmlElement",2,term);
+        if (instances != null) {
+            for (int i = 0; i < instances.size(); i++) {
+                Formula form = (Formula) instances.get(i);
+                String t = form.getArgument(1);
+                if (isComposite(kb,t)) {
+                    result.add(t);
+                }
+                result.addAll(containingComposites(kb,t));
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     */
+    private static String formatContainingComposites(KB kb, String kbHref, ArrayList hier, String language) {
+
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < hier.size(); i++) {
+            String term = (String) hier.get(i);
+            result.append(createContainingCompositeComponentLine(kb,kbHref,term,0,language));
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     *  Iterate through all the &%dataType relations for the
+     *  composite to collect the instances of this composite.  Then
+     *  call containingComposite() travel up the hasXmlElement
+     *  relations for those instances to find their containing
+     *  composites (if any).
+     */
+    private static ArrayList findContainingComposites(KB kb, String term) {
+
+        ArrayList result = new ArrayList();
+        ArrayList dataTypes = kb.askWithRestriction(0,"dataType",2,term);
+        if (dataTypes != null) {
+            for (int i = 0; i < dataTypes.size(); i++) {
+                Formula form = (Formula) dataTypes.get(i);
+                String t = form.getArgument(1);
+                ArrayList comps = containingComposites(kb,t);
+                if (comps != null) {
+                    for (int j = 0; j < comps.size(); j++) {
+                        String comp = (String) comps.get(j);
+                        if (!result.contains(comp)) {
+                            result.add(comp);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Create an HTML page that lists information about a particular
+     * composite term, which is a representation of an XML
+     * structure.
+     */
+    public static String createCompositePage(KB kb, String kbHref, String term, int limit, String language) {
+
+        StringBuffer result = new StringBuffer();
+
+        result.append("<table width=\"100%\">");
+        result.append("<tr id=\"" + term + "\">");
+        result.append("<td class=\"headword\">" + term);
+        HashMap synonyms = kb.getTermFormatMap(language);
+        String syn = (String) synonyms.get(term);
+        if (!DB.emptyString(syn)) 
+            result.append("&nbsp;<small>(" + syn + ")</small>");
+        result.append("</td></tr>\n<tr>");
+        result.append(DocGen.createDocs(kb,kbHref,term));
+        result.append(DocGen.createSynonyms(kb,kbHref,term));
+        result.append("</table><P>\n");
+
+        result.append(HTMLformatter.htmlDivider);
+
+        result.append("<table><tr bgcolor=#DDDDDD><td>Member of Composites</td><td>Composite Name</td>");
+        result.append("<td>Description of Element Role</td><td>Cardinality</td><td>Data Type</td></tr>\n");
+        ArrayList superComposites = findContainingComposites(kb,term); 
+        result.append(formatContainingComposites(kb,kbHref,superComposites,language));
+
+        result.append("<tr bgcolor=#DDDDDD><td>Components</td><td>Name</td>");
+        result.append("<td>Description of Element Role</td><td>Cardinality</td><td>Data Type</td></tr>\n");
+        ArrayList hier = createCompositeRecurse(kb, term, 0);
+        result.append(formatCompositeHierarchy(kb,kbHref,hier,language));
+
+        result.append("<tr bgcolor=#DDDDDD><td>Relationships</td><td></td><td></td><td></td><td></td></tr>\n");
+        ArrayList forms = kb.askWithRestriction(0,"instance",1,term);
+        if (forms != null) {
+            result.append("<tr><td halign='right'>Belongs to class</td><td>\n");
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                String cl = form.getArgument(2);
+                if (i > 0) 
+                    result.append("<br>");
+                result.append("<a href=\"" + kbHref + "&term=" + cl + "\">" + cl + "</a>");        
+            }
+            result.append("</td><td></td><td></td><td></td></tr>\n");
+        }
+        result.append("</table>\n");
+        return result.toString();
+    }
+
+    /** ***************************************************************
      * Create an HTML page that lists information about a particular term,
      * with a limit on how many statements of each type should be
      * displayed.
@@ -273,7 +511,12 @@ public class DocGen {
         StringBuffer result = new StringBuffer();
         result.append("<table width=\"100%\">");
         result.append("<tr id=\"" + term + "\">");
-        result.append("<td class=\"headword\">" + term + "</td></tr>\n<tr>");
+        result.append("<td class=\"headword\">" + term);
+        HashMap synonyms = kb.getTermFormatMap(language);
+        String syn = (String) synonyms.get(term);
+        if (!DB.emptyString(syn)) 
+            result.append("&nbsp;<small>(" + syn + ")</small>");
+        result.append("</td></tr>\n<tr>");
 
         result.append(DocGen.createDocs(kb,kbHref,term));
         result.append(DocGen.createSynonyms(kb,kbHref,term));
@@ -502,6 +745,7 @@ public class DocGen {
                 String term = (String) it.next();
                 String firstChar = term.substring(0,1);
                 if (Character.isLetter(firstChar.charAt(0))) {
+                    firstChar = Character.toString(Character.toUpperCase(firstChar.charAt(0)));
                     firstCharSet.add(firstChar);
                     TreeSet list = new TreeSet();
                     if (alphaList.get(firstChar) != null) 
@@ -509,7 +753,10 @@ public class DocGen {
                     else
                         alphaList.put(firstChar,list);
                     list.add(term);
-                    pageList.put(term,createPage(kb,"",term,200,language));
+                    if (isComposite(kb,term)) 
+                        pageList.put(term,createCompositePage(kb,"",term,200,language));
+                    else
+                        pageList.put(term,createPage(kb,"",term,200,language));
                 }
             }
             String dir = generateDir();
