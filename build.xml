@@ -20,7 +20,7 @@
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" classpath="src/java/JARs/antlr-2.7.5.jar:src/java/JARs/TptpParser.jar:lib/servlet.jar:.">
+    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" classpath="lib/antlr-2.7.5.jar:lib/TptpParser.jar:lib/TPTPWorld.jar:lib/servlet.jar:.">
         <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
@@ -51,13 +51,12 @@
     </copy>
 
     <copy todir="${deploy.home}/lib">
-        <fileset dir="${basedir}/src/java/JARs" />
+        <fileset file="${basedir}/lib/IDV.jar" />
+        <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
+        <fileset file="${basedir}/lib/TptpParser.jar" />
+        <fileset file="${basedir}/lib/ClientHttpRequest.jar" />
     </copy>
 
-    <!-- Copy systemsinfo.xml to sigma.home directory -->
-    <copy todir="${sigma.home}/KBs">
-         <fileset file="systemsInfo.xml"/>
-    </copy>
 
     <!-- Create WEB-INF/classes/ and copy all the loose classes to it. -->
 	<mkdir dir="${deploy.classes}"/>
@@ -69,8 +68,6 @@
 	<mkdir dir="${deploy.lib}"/>
 	<copy todir="${deploy.lib}">
           <fileset dir="${basedir}/lib" />
-          <fileset file="${basedir}/src/java/JARs/antlr-2.7.5.jar" />
-          <fileset file="${basedir}/src/java/JARs/TptpParser.jar" />
         </copy>
 
 </target>
@@ -108,7 +105,6 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
-    <pathelement path="src/java/ClientHttpRequest"/>
 </path>
 
 <path id="compile.classpath">
