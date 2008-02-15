@@ -68,7 +68,7 @@ August 9, Acapulco, Mexico.
 //    out.println("SystemsDir: " + SystemOnTPTP.getSystemsDir());
 //    out.println("SystemsInfo: " + SystemOnTPTP.getSystemsInfo());
 
-    systemListBuiltIn = SystemOnTPTP.listSystems();
+    systemListBuiltIn = SystemOnTPTP.listSystems(systemsDir);
     defaultSystemBuiltIn = "EP---0.999";
   }        
 
@@ -535,11 +535,13 @@ August 9, Acapulco, Mexico.
               qq = quietFlag;
               format = tstpFormat;
             }
-            out.println("chosen system: " + systemChosen);
-            result = SystemOnTPTP.SystemOnTPTP(systemChosen, timeout, qq, format, kbFileName);
+            //out.println("chosen system: " + systemChosen);
+            result = SystemOnTPTP.SystemOnTPTP(systemChosen, systemsDir, timeout, qq, format, kbFileName);
             out.println("(Built-In SystemOnTPTP call)");
             out.println("<PRE>");
-            out.println(result);
+            if (!quietFlag.equals("hyperlinkedKIF")) {
+              out.println(result);
+            } 
             if (quietFlag.equals("IDV")) {
               StringTokenizer st = new StringTokenizer(result,"\n");
               String temp = "";
@@ -551,7 +553,7 @@ August 9, Acapulco, Mexico.
               }
               result = temp;
             }
-            out.println("</PRE><br><hr>");
+            out.println("</PRE>");
           }            
         } else {
           out.println("INTERNAL ERROR: chosen option not valid: " + location + ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.");
@@ -561,14 +563,21 @@ August 9, Acapulco, Mexico.
         String port = KBmanager.getMgr().getPref("port");
         if ((port == null) || port.equals(""))
           port = "8080";
-        String idvHref = "http://" + hostname + ":" + port + "/sigma/lib";
-        out.println("<APPLET CODE=\"IDVApplet\" archive=\"" + idvHref + "/IDV.jar," + idvHref + "/TptpParser.jar," + idvHref + "/antlr-2.7.5.jar\"");
+        String libHref = "http://" + hostname + ":" + port + "/sigma/lib";
+        out.println("<APPLET CODE=\"IDVApplet\" archive=\"" + libHref + "/IDV.jar," + libHref + "/TptpParser.jar," + libHref + "/antlr-2.7.5.jar," + libHref + "/ClientHttpRequest.jar\"");
         out.println("WIDTH=800 HEIGHT=100 MAYSCRIPT=true>");
         out.println("  <PARAM NAME=\"TPTP\" VALUE=\"" + result + "\">");
         out.println("  Hey, you cant see my applet!!!");
         out.println("</APPLET>");
       } else if (quietFlag.equals("hyperlinkedKIF")) {
         try {
+//----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis---2.1)
+          if (!systemChosen.startsWith("Metis---")) {
+            String answerResult = AnswerFinder.findProofWithAnswers(result, systemsDir);
+            if (!answerResult.equals("")) {
+              result = answerResult;
+            }
+          } 
           newResult = TPTP2SUMO.convert(result);
           out.println(HTMLformatter.formatProofResult(newResult,
                                                       stmt,
