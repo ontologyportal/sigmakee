@@ -150,7 +150,10 @@ public class KB {
 
         ArrayList al = new ArrayList();
         ArrayList col = ask("arg", 0, "format");
+        ArrayList col2 = ask("arg", 0, "termFormat");
         if (col != null) {
+            if (col2 != null)
+                col.addAll(col2);
             for (int i = 0; i < col.size(); i++) {
                 String lang = ((Formula) col.get(i)).theFormula;
                 int langStart = lang.indexOf(" ");
@@ -1941,22 +1944,14 @@ public class KB {
      */
     private void reloadFormatMaps(String lang) {
 
-        // System.out.println("ENTER reloadFormatMaps(" + this.name + ", " + lang + ")");
-
         try {
-
             String lingua;
-
-            if (formatMap == null) {
-                formatMap = new HashMap();
-            }
+            if (formatMap == null) 
+                formatMap = new HashMap();            
             formatMap.clear();
-            if (termFormatMap == null) {
-                termFormatMap = new HashMap();
-            }
+            if (termFormatMap == null) 
+                termFormatMap = new HashMap();            
             termFormatMap.clear();
-
-            // System.out.println("INFO in KB.reloadFormatMaps(): Reading the format maps for " + lang);
             if (lang == null)
                 lingua = language;
             else 
@@ -1964,10 +1959,9 @@ public class KB {
             long t1 = System.currentTimeMillis();
             ArrayList col = this.ask("arg",0,"format");
             if ((col == null) || col.isEmpty()) {
-                // System.out.println("Error in KB.reloadFormatMaps(): No relation formatting file loaded for language " + lang);
+                System.out.println("Error in KB.reloadFormatMaps(): No relation formatting file loaded for language " + lang);
                 return;
             }
-            //System.out.println("Number of format statements: " + (new Integer(col.size())).toString());
             Iterator ite = col.iterator();
             Formula f = null;
             String arg1 = null;
@@ -1979,15 +1973,12 @@ public class KB {
                 if (arg1.equalsIgnoreCase(lingua)) {
                     key = f.getArgument(2);
                     format = f.getArgument(3);
-                    if (format.startsWith("\"")) {
-                        format = format.substring(1);
-                    }
-                    if (format.endsWith("\"")) {
-                        format = format.substring(0, format.length() - 1);
-                    }
-                    if (format.indexOf("$") < 0) {
-                        format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");
-                    }
+                    if (format.startsWith("\""))
+                        format = format.substring(1);                   
+                    if (format.endsWith("\"")) 
+                        format = format.substring(0, format.length() - 1);                   
+                    if (format.indexOf("$") < 0) 
+                        format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");                   
                     formatMap.put(key.intern(), format);
                 }
             }
@@ -1998,7 +1989,7 @@ public class KB {
             t1 = System.currentTimeMillis();
             col = this.ask("arg",0,"termFormat");
             if ((col == null) || col.isEmpty()) {
-                // System.out.println("Error in KB.reloadFormatMaps(): No term formatting file loaded for language: " + lang);
+                System.out.println("Error in KB.reloadFormatMaps(): No term formatting file loaded for language: " + lang);
                 return;
             }
             //System.out.println("Number of format statements: " + (new Integer(col.size())).toString());
@@ -2009,12 +2000,10 @@ public class KB {
                 if (arg1.equalsIgnoreCase(lingua)) {
                     key = f.getArgument(2);
                     format = f.getArgument(3);
-                    if (format.startsWith("\"")) {
-                        format = format.substring(1);
-                    }
-                    if (format.endsWith("\"")) {
-                        format = format.substring(0, format.length() - 1);
-                    }
+                    if (format.startsWith("\""))
+                        format = format.substring(1);                   
+                    if (format.endsWith("\""))
+                        format = format.substring(0, format.length() - 1);                   
                     //if (format.indexOf("$") < 0)
                     //    format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");
                     termFormatMap.put(key.intern(),format);
@@ -2028,8 +2017,6 @@ public class KB {
             ex.printStackTrace();
         }
         language = lang;
-        // System.out.println("EXIT reloadFormatMaps(" + this.name + ", " + lang + ")");
-        // System.out.println("  language == " + language);
     }
 
     /** ***************************************************************
@@ -2043,13 +2030,12 @@ public class KB {
      *  and the values are format strings.
      */
     public HashMap getFormatMap(String lang) {
-        // System.out.println("ENTER getFormatMap(" + this.name + ", " + lang + ")");
-        if ((formatMap == null) || formatMap.isEmpty() || (!lang.equalsIgnoreCase(language))) {
 
+        //System.out.println("ENTER getFormatMap(" + this.name + ", " + lang + ")");
+        if ((formatMap == null) || formatMap.isEmpty() || (!lang.equalsIgnoreCase(language))) {
             // This is here to make sure LanguageFormatter.keywordMap
             // is initialized.
             LanguageFormatter.readKeywordMap(KBmanager.getMgr().getPref("kbDir"));
-
             reloadFormatMaps(lang);
         }
         // System.out.println("EXIT getFormatMap(" + this.name + ", " + lang + ")");
