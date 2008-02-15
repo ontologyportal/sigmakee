@@ -498,9 +498,9 @@ public class HTMLformatter {
             String menuItemProcessed = encodeForURL(menuItem);
             result.append(Integer.toString(i));
             if (selectedOption != null && selectedOption.equalsIgnoreCase(Integer.toString(i))) 
-                result.append("' selected='yes'>");
+                result.append("' selected='yes'>\n");
             else
-                result.append("'>");
+                result.append("'>\n");
             result.append(menuItem);
             result.append("</option>");
         }
@@ -542,6 +542,37 @@ public class HTMLformatter {
         }
         return result.toString();
     }
+
+    /** *************************************************************
+     *  Create an HTML menu with an ID, given an ArrayList of
+     *  Strings, and possibly multiple selections.
+     */
+    public static String createMultiMenu(String menuName, TreeMap options) {
+
+        StringBuffer result = new StringBuffer();
+
+        String menuNameProcessed = encodeForURL(menuName);
+        result.append("<select name=" + menuNameProcessed);
+        result.append(" MULTIPLE size=");
+        result.append(Integer.toString(options.keySet().size()) + ">\n  ");
+        Iterator it = options.keySet().iterator();
+        while (it.hasNext()) {
+            result.append("<option value='");
+            String menuItem = (String) it.next();
+            String selected = (String) options.get(menuItem);
+            String menuItemProcessed = encodeForURL(menuItem);
+            result.append(menuItemProcessed);
+            if (selected != null && selected.equals("yes")) 
+                result.append("' selected='yes'>");
+            else
+                result.append("'>");
+            result.append(menuItem);
+            result.append("</option>");
+        }
+        result.append("\n</select>\n");
+        return result.toString();
+    }
+
 
     /** *************************************************************
      *  Create an HTML menu with an ID, given an ArrayList of Strings.
