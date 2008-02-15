@@ -899,7 +899,7 @@ public class Formula implements Comparable {
 
         form.theFormula = normalizeVariables(theFormula);
         f = form.toString().trim().intern();
-        // System.out.println("INFO in Formula.equals(): Comparing " + s + " to " + f);
+        //System.out.println("INFO in Formula.equals(): Comparing " + s + " to " + f);
         return (f == s);
     }
     
@@ -3165,6 +3165,19 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
         return pass;
+    }
+
+    /** ***************************************************************
+     * Compare the given formula to the query and return whether
+     * they are the same.
+     */
+    public static boolean isQuery(String query, String formula) {
+        boolean result = false;
+
+        Formula f = new Formula();
+        f.read(formula);
+        result = f.equals(query);
+        return result;
     }
 
     /** ***************************************************************

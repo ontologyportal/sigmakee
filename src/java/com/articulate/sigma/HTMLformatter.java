@@ -59,6 +59,8 @@ public class HTMLformatter {
         if (step.premises.size() == 0) {
             if (Formula.isNegatedQuery(query,f.theFormula)) 
                 result.append("[Negated Query]");
+            else if (Formula.isQuery(query,f.theFormula))
+                result.append("[Query]");
             else  
                 result.append("[KB]");
         }
