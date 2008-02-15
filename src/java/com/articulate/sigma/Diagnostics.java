@@ -411,8 +411,37 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * Return whether the given term has the given parent.
+     */
+    public static boolean findParent(KB kb, String term, String parent) {
+
+        boolean found = false;
+        ArrayList forms = kb.ask("arg",1,term);     // Get every formula with the term as arg 1
+        if (forms == null || forms.size() < 1) 
+            return false;            
+        else {
+            boolean isClassOrInstance = false;
+            for (int i = 0; i < forms.size(); i++) {
+                Formula formula = (Formula) forms.get(i);
+                String predicate = formula.getArgument(0);
+                if (Formula.isNonEmptyString(formula.theFormula) &&  // look at every instance, subclass etc relation with this term
+                    (formula.theFormula.indexOf(")") == formula.theFormula.length()-1) &&
+                    (predicate.equals("instance") || predicate.equals("subAttribute") ||
+                     predicate.equals("subrelation") || predicate.equals("subclass"))) {
+                    isClassOrInstance = true;
+                    String p = formula.getArgument(2);
+                    HashSet parentList = (HashSet) kb.parents.get(p.intern());
+                    if ((parentList != null && parentList.contains(parent)) || p.equals(parent)) 
+                        found = true;                                                                                             
+                }
+            }
+        }
+        return found;
+    }
+
+    /** *****************************************************************
      * Return a list of terms that do not ultimately subclass from Entity.
-     * This needs to be modified to allow subAttribute(s) and subrelation(s)
+     * Need to figure out how to merge this with findParent() above.
      */
     public static ArrayList unrootedTerms(KB kb) {
 
@@ -422,44 +451,28 @@ public class Diagnostics {
         while (it.hasNext()) {                          // Check every term in the KB
             String term = (String) it.next();
             ArrayList forms = kb.ask("arg",1,term);     // Get every formula with the term as arg 1
-            if (forms == null || forms.size() < 1) {
-                result.add(term);
-            }
+            if (forms == null || forms.size() < 1) 
+                result.add(term);            
             else {
                 boolean found = false;
                 boolean isClassOrInstance = false;
                 for (int i = 0; i < forms.size(); i++) {
                     Formula formula = (Formula) forms.get(i);
-
-                    // System.out.println("INFO in Diagnostics.unrootedTerms(): Formula: " + formula.theFormula);
-
-                    if ((formula.theFormula.length() > 13) &&
+                    String predicate = formula.getArgument(0);
+                    if (Formula.isNonEmptyString(formula.theFormula) &&  // look at every instance, subclass etc relation with this term
                         (formula.theFormula.indexOf(")") == formula.theFormula.length()-1) &&
-                        (formula.theFormula.substring(1,9).equalsIgnoreCase("instance") ||
-                         formula.theFormula.substring(1,13).equalsIgnoreCase("subAttribute") ||
-                         formula.theFormula.substring(1,12).equalsIgnoreCase("subrelation") ||
-                         formula.theFormula.substring(1,9).equalsIgnoreCase("subclass"))) {
+                        (predicate.equals("instance") || predicate.equals("subAttribute") ||
+                         predicate.equals("subrelation") || predicate.equals("subclass"))) {
                         isClassOrInstance = true;
-
-                        // System.out.println("INFO in Diagnostics.unrootedTerms(): found a candidate ");
-
-                        int firstSpace = formula.theFormula.indexOf(" ");
-                        int secondSpace = formula.theFormula.indexOf(" ",firstSpace+1);
-                        String parent = formula.theFormula.substring(secondSpace+1,formula.theFormula.length()-1);
-
-                        // System.out.println("INFO in Diagnostics.unrootedTerms(): parent: " + parent);
-
+                        String parent = formula.getArgument(2);
                         HashSet parentList = (HashSet) kb.parents.get(parent.intern());
-                        if ((parentList != null && parentList.contains("Entity")) || parent.equalsIgnoreCase("Entity")) {
-                            found = true;                                                                     
-                        }
+                        if ((parentList != null && parentList.contains("Entity")) || parent.equalsIgnoreCase("Entity")) 
+                            found = true;                                                                                             
                     }
                 }
-                if (found == false && isClassOrInstance) {
-                    result.add(term);
-                }
+                if (found == false && isClassOrInstance) 
+                    result.add(term);                
             }
-
             if (result.size() > 99) {
                 result.add("limited to 100 results");
                 return result;
