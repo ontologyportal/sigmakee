@@ -899,7 +899,7 @@ public class Formula implements Comparable {
 
         form.theFormula = normalizeVariables(theFormula);
         f = form.toString().trim().intern();
-        //System.out.println("INFO in Formula.equals(): Comparing " + s + " to " + f);
+        // System.out.println("INFO in Formula.equals(): Comparing " + s + " to " + f);
         return (f == s);
     }
     
@@ -1760,14 +1760,10 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     *
      * A static utility method.
-     *
      * @param obj Any object, but should be a String.
-     *
      * @return true if obj is a SUO-KIF commutative logical operator,
      * else false.
-     *
      */
     public static boolean isCommutative(String obj) {
 
@@ -1791,22 +1787,17 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     *
      * @param obj Any object
-     *
      * @return true if obj is a non-empty String, else false.
-     *
      */
     public static boolean isNonEmptyString(Object obj) {
         return ((obj instanceof String) && !obj.equals(""));
     }
 
     /** ***************************************************************
-     *
      * @return An ArrayList (ordered tuple) representation of the
      * Formula, in which each top-level element of the Formula is
      * either an atom (String) or another list (ArrayList).
-     *
      */
     public ArrayList literalToArrayList() {
         ArrayList tuple = new ArrayList();
