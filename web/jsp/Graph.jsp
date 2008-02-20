@@ -20,6 +20,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+  Graph g = new Graph();
   String kbName = request.getParameter("kb");
   KB kb = null;
   if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) 
@@ -49,7 +50,16 @@ August 9, Acapulco, Mexico.
   } catch (NumberFormatException nfe) {
       limit = "";
   }
-
+  String[] items = request.getParameterValues("columns");
+  if (items != null) {
+      Iterator it = g.columnList.keySet().iterator();
+      while (it.hasNext()) {
+          String key = (String) it.next();
+          g.columnList.put(key,"no");
+      }
+      for (int i = 0; i < items.length; i++)
+          g.columnList.put(items[i],"yes");
+  }
 %>
 
 <form action="Graph.jsp">
@@ -90,14 +100,15 @@ August 9, Acapulco, Mexico.
           if (view.equals("text")) {
               ArrayList result = null;
               if (limit != null && limit != "")
-                  result = Graph.createBoundedSizeGraph(kb,term,relation,Integer.parseInt(limit),"&nbsp;&nbsp;&nbsp;&nbsp;");              
+                  result = g.createBoundedSizeGraph(kb,term,relation,Integer.parseInt(limit),"&nbsp;&nbsp;&nbsp;&nbsp;");              
               else
-                  result = Graph.createGraph(kb,term,relation,Integer.parseInt(up),Integer.parseInt(down),"&nbsp;&nbsp;&nbsp;&nbsp;");
+                  result = g.createGraph(kb,term,relation,Integer.parseInt(up),Integer.parseInt(down),"&nbsp;&nbsp;&nbsp;&nbsp;");
+              out.println("<table>\n");
               for (int i = 0; i < result.size(); i++) {
                   String element = (String) result.get(i);
-                  out.println(element+"<BR>");
+                  out.println(element);
               }
-              out.println("<P>");
+              out.println("</table><P>\n");
           }
           else { // it is a graph
               int width = 200;
@@ -131,7 +142,8 @@ August 9, Acapulco, Mexico.
   Term: <input type="text" size="30" name="term" value="<%=term %>"><p>
   Levels &quot;above&quot;:<input type="text" size="2" name="up" value="<%=up %>">
   Levels &quot;below&quot;:<input type="text" size="2" name="down" value="<%=down %>">
-  Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>">
+  Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>"><br>
+  Columns to display:<%=HTMLformatter.createMultiMenu("columns",g.columnList) %>
   <p>
   <table border="0">
   <tr>
@@ -144,7 +156,6 @@ August 9, Acapulco, Mexico.
   <input type="submit" name="submit" value="submit">
 </form>
 <p>
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%@ include file="Postlude.jsp" %>
 </body>
