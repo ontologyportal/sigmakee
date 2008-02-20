@@ -279,22 +279,33 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private static String showCardinalityCell(KB kb, String kbHref, String term) {
+    private static String showCardinalityCell(KB kb, String kbHref, String term, String context) {
 
-        String minCard = "0";
-        String maxCard = "n";
-        StringBuffer result = new StringBuffer();
-        ArrayList cardForms = kb.askWithRestriction(0,"minCardinality",2,term);
+        ArrayList cardForms = kb.askWithRestriction(0,"exactCardinality",2,term);
         if (cardForms != null && cardForms.size() > 0) {
             Formula f = (Formula) cardForms.get(0);
-            minCard = f.getArgument(3);
+            if (context == "" || context.equals(f.getArgument(1)))             
+                return f.getArgument(3);
         }
-        cardForms = kb.askWithRestriction(0,"maxCardinality",2,term);
-        if (cardForms != null && cardForms.size() > 0) {
-            Formula f = (Formula) cardForms.get(0);
-            maxCard = f.getArgument(3);
+        else {
+            String minCard = "0";
+            String maxCard = "n";
+            StringBuffer result = new StringBuffer();
+            cardForms = kb.askWithRestriction(0,"minCardinality",2,term);
+            if (cardForms != null && cardForms.size() > 0) {
+                Formula f = (Formula) cardForms.get(0);
+                if (context == "" || context.equals(f.getArgument(1)))             
+                    minCard = f.getArgument(3);
+            }
+            cardForms = kb.askWithRestriction(0,"maxCardinality",2,term);
+            if (cardForms != null && cardForms.size() > 0) {
+                Formula f = (Formula) cardForms.get(0);
+                if (context == "" || context.equals(f.getArgument(1)))             
+                    maxCard = f.getArgument(3);
+            }
+            return minCard + "-" + maxCard;
         }
-        return minCard + "-" + maxCard;
+        return "";
     }
 
     /** ***************************************************************
@@ -317,32 +328,13 @@ public class DocGen {
         }
         result.append("</td><td>");
         if (indent > 0)        
-            result.append(showCardinalityCell(kb,kbHref,term));
+            result.append(showCardinalityCell(kb,kbHref,term,""));
         result.append("</td><td>");
         ArrayList forms = kb.askWithRestriction(0,"dataType",1,term);
         if (forms != null && forms.size() > 0) {
             Formula f = (Formula) forms.get(0);
             result.append("<a href=\"" + kbHref + "&term=" + f.getArgument(2) + "\">" + f.getArgument(2) + "</a>");        
         }
-        result.append("</td></tr>\n");
-        return result.toString();
-    }
-
-    /** ***************************************************************
-     */
-    private static String createContainingCompositeComponentLine(KB kb, String kbHref, String term, int indent, String language) {
-
-        StringBuffer result = new StringBuffer();
-        result.append("<tr><td></td><td>");
-        result.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");        
-        result.append("</td><td>");
-        ArrayList docForms = kb.askWithRestriction(0,"documentation",1,term);
-        if (docForms != null && docForms.size() > 0) {
-            Formula f = (Formula) docForms.get(0);
-            result.append(f.getArgument(3));
-        }
-        result.append("</td><td>");
-        result.append("</td><td>");
         result.append("</td></tr>\n");
         return result.toString();
     }
@@ -390,6 +382,63 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     */
+    private static String createContainingCompositeComponentLine(KB kb, String kbHref, String containingComp,
+                                                                 String instance, int indent, String language) {
+
+        StringBuffer result = new StringBuffer();
+        ArrayList docForms = kb.askWithRestriction(0,"documentation",1,instance);
+        if (docForms != null && docForms.size() > 0) {
+            for (int i = 0; i < docForms.size(); i++) {
+                Formula f = (Formula) docForms.get(i);
+                String context = f.getArgument(2);
+                if (context.equals(containingComp)) {
+                    result.append("<tr><td></td><td>");
+                    result.append("<a href=\"" + kbHref + "&term=" + containingComp + "\">" + containingComp + "</a>");        
+                    result.append("</td><td>");
+                    result.append(f.getArgument(3));                
+                    result.append("</td><td>");
+                    result.append(showCardinalityCell(kb,kbHref,instance,context));
+                    result.append("</td><td>");
+                    result.append("</td></tr>\n");
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     *  Given the SUO-KIF statements:
+     * 
+     * (hasXmlElement DdexC_PartyDescriptor DDEX_LocalInstance2_459)
+     * (dataType DDEX_LocalInstanceLeaf2_459 DdexC_PartyId)
+     * (documentation DDEX_LocalInstanceLeaf2_459
+     * DdexC_PartyDescriptor "A Composite containing details...")
+     * 
+     * show DdexC_PartyDescriptor as one of the "containing
+     * composites" of DdexC_PartyID, and show the documentation for
+     * the instance node next to the parent composite.
+     */
+    private static String formatContainingComposites(KB kb, String kbHref, 
+                                                     ArrayList containing, String composite, String language) {
+
+        StringBuffer result = new StringBuffer();
+        ArrayList dataTypes = kb.askWithRestriction(0,"dataType",2,composite);
+        if (dataTypes != null) {
+            for (int j = 0; j < dataTypes.size(); j++) {
+                Formula f = (Formula) dataTypes.get(j);
+                String instance = f.getArgument(1);
+                for (int i = 0; i < containing.size(); i++) {
+                    String containingComp = (String) containing.get(i);
+                    result.append(createContainingCompositeComponentLine(kb,kbHref,containingComp,
+                                                                         instance,0,language));
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
      *  Travel up the hasXmlElement relation hierarchy to collect
      *  all parents.
      */
@@ -408,18 +457,6 @@ public class DocGen {
             }
         }
         return result;
-    }
-
-    /** ***************************************************************
-     */
-    private static String formatContainingComposites(KB kb, String kbHref, ArrayList hier, String language) {
-
-        StringBuffer result = new StringBuffer();
-        for (int i = 0; i < hier.size(); i++) {
-            String term = (String) hier.get(i);
-            result.append(createContainingCompositeComponentLine(kb,kbHref,term,0,language));
-        }
-        return result.toString();
     }
 
     /** ***************************************************************
@@ -475,9 +512,9 @@ public class DocGen {
         result.append(HTMLformatter.htmlDivider);
 
         result.append("<table><tr bgcolor=#DDDDDD><td>Member of Composites</td><td>Composite Name</td>");
-        result.append("<td>Description of Element Role</td><td>Cardinality</td><td>Data Type</td></tr>\n");
+        result.append("<td>Description of Element Role</td><td>Cardinality</td><td></td></tr>\n");
         ArrayList superComposites = findContainingComposites(kb,term); 
-        result.append(formatContainingComposites(kb,kbHref,superComposites,language));
+        result.append(formatContainingComposites(kb,kbHref,superComposites,term,language));
 
         result.append("<tr bgcolor=#DDDDDD><td>Components</td><td>Name</td>");
         result.append("<td>Description of Element Role</td><td>Cardinality</td><td>Data Type</td></tr>\n");
