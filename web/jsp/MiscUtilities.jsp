@@ -24,8 +24,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 String kbName = "";
 String namespace = "";
 String language = "";
+String term = "";
+String relation = "";
 String header = DocGen.header;
 String footer = DocGen.footer;
+String filename = "";
 KB kb = null;
 
   if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
@@ -36,13 +39,23 @@ KB kb = null;
       namespace = request.getParameter("namespace");
       if (namespace == null) 
           namespace = "";
-      if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) 
+      if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) {
           System.out.println(" no such knowledge base " + kbName);
+          Set names = KBmanager.getMgr().getKBnames();
+          if (names != null && names.size() > 0) {
+              Iterator it = names.iterator();
+              if (it.hasNext()) 
+                  kbName = (String) it.next();
+          }
+      }
       else
           kb = KBmanager.getMgr().getKB(kbName);
       language = request.getParameter("lang");
       header = request.getParameter("header");
       footer = request.getParameter("footer");
+      term = request.getParameter("term");
+      relation = request.getParameter("relation");
+      filename = request.getParameter("filename");
       if (!DB.emptyString(header)) 
           DocGen.header = header;
       if (!DB.emptyString(footer)) 
@@ -52,7 +65,11 @@ KB kb = null;
       if (action != null && action != "" && action.equals("generateDocs")) 
           DocGen.generateHTML(kb,language);      
       if (action != null && action != "" && action.equals("generateSingle")) 
-          DocGen.generateSingleHTML(kb,language);      
+          DocGen.generateSingleHTML(kb,language);  
+      if (action != null && action != "" && action.equals("dotGraph")) {
+          Graph g = new Graph();
+          g.createDotGraph(kb, term, relation, filename);
+      }
   }
 
 %>
@@ -89,10 +106,21 @@ KB kb = null;
     <b>Generate HTML</b><P>
     <table>
         <tr><td>Document header:&nbsp;</td><td><input type="text" name="header" size=100 value="<%=DocGen.header%>"></td></tr>
-        <tr><td>Document footer&nbsp;</td><td><input type="text" name="footer" size=100 value="<%=DocGen.footer%>"></td></tr>
+        <tr><td>Document footer:&nbsp;</td><td><input type="text" name="footer" size=100 value="<%=DocGen.footer%>"></td></tr>
         <tr><td><input type="submit" name="action" value="generateDocs">&nbsp;&nbsp;</td><td>Generate all HTML pages for the KB</td></tr>
         <tr><td><input type="submit" name="action" value="generateSingle">&nbsp;&nbsp;</td><td>Generate a single HTML page for the KB</td></tr>
+    </table><p>
+
+    <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
+        <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><p>
+    <b>Create dotted graph format (for <a href="www.graphviz.org">GraphViz</a>)</b><P>
+    <table>
+        <tr><td>Term:&nbsp;</td><td><input type="text" name="term" size=20 value=""></td></tr>
+        <tr><td>Relation:&nbsp;</td><td><input type="text" name="relation" size=20 value=""></td></tr>
+        <tr><td>Filename:&nbsp;</td><td><input type="text" name="filename" size=20 value="<%=kbName + "-graph.dot"%>">(saved in $SIGMA_HOME)</td></tr>
+        <tr><td><input type="submit" name="action" value="dotGraph">&nbsp;&nbsp;</td><td>Generate graph file</td></tr>
     </table>
+
 </form><p>
 
 
