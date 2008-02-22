@@ -23,7 +23,7 @@ August 9, Acapulco, Mexico.
   String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
 //  String systemsInfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
-  String systemsInfo = systemsDir + "/systemsInfo.xml";
+  String systemsInfo = systemsDir + "/SystemInfo";
   String SoTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
   String tptp4X = TPTPWorld + "/ServiceTools/tptp4X";
   boolean tptpWorldExists = (new File(SoTPTP)).exists();
@@ -68,7 +68,7 @@ August 9, Acapulco, Mexico.
 //    out.println("SystemsDir: " + SystemOnTPTP.getSystemsDir());
 //    out.println("SystemsInfo: " + SystemOnTPTP.getSystemsInfo());
 
-    systemListBuiltIn = SystemOnTPTP.listSystems(systemsDir);
+    systemListBuiltIn = SystemOnTPTP.listSystems(systemsDir, "SoTPTP");
     defaultSystemBuiltIn = "EP---0.999";
   }        
 
@@ -134,7 +134,7 @@ August 9, Acapulco, Mexico.
     timeout = Integer.parseInt(request.getParameter("timeout"));
   }
   if (quietFlag == null) {
-    quietFlag = "-q2";
+    quietFlag = "-q4";
   }
   if (systemChosenLocal == null) {
     systemChosenLocal = defaultSystemLocal;
@@ -146,18 +146,21 @@ August 9, Acapulco, Mexico.
     systemChosenBuiltIn = defaultSystemBuiltIn;
   }
   if (location == null) {
-    if (tptpWorldExists) {
+    if (tptpWorldExists) { 
       location = "local";
     } else if (builtInExists) {
-      location = "builtin";
+      location = "local";
     } else {
       location = "remote";
     }
   }
+
   if (location.equals("local")) {
-    systemChosen = systemChosenLocal;
-  } else if (location.equals("builtin")) {
-    systemChosen = systemChosenBuiltIn;
+    if (tptpWorldExists) { 
+      systemChosen = systemChosenLocal;
+    } else {
+      systemChosen = systemChosenBuiltIn;
+    }
   } else {
     systemChosen = systemChosenRemote;
   }
@@ -189,7 +192,7 @@ August 9, Acapulco, Mexico.
     }
 <% if (tptpWorldExists && location.equals("local")) { %>
     var current_location = "Local";
-<% } else if (builtInExists && location.equals("builtin")) { %>
+<% } else if (builtInExists && location.equals("local")) { %>
     var current_location = "BuiltIn";
 <% } else { %>
     var current_location = "Remote";
@@ -238,8 +241,10 @@ August 9, Acapulco, Mexico.
 
   <IMG SRC='pixmaps/1pixel.gif' WIDTH=1 HEIGHT=1 BORDER=0><BR>
   <TEXTAREA ROWS=5 COLS=70" NAME="stmt"><%=stmt%></TEXTAREA><BR>
-  Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
   Query time limit:<INPUT TYPE=TEXT SIZE=3 NAME="timeout" VALUE="<%=timeout%>">
+<!--  
+Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
+-->
   <BR>
   System:
 <%
@@ -255,8 +260,8 @@ August 9, Acapulco, Mexico.
                                          systemListLocal, params)); 
   }
   //----Create atp drop down list for builtin
-  if (builtInExists) {
-    if (location.equals("builtin")) {
+  if (builtInExists && !tptpWorldExists) {
+    if (location.equals("local")) {
       params = "ID=systemListBuiltIn style='display:inline'";
     } else {
       params = "ID=systemListBuiltIn style='display:none'";
@@ -274,55 +279,39 @@ August 9, Acapulco, Mexico.
                                        systemListRemote, params));
 %>
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
-<% if (!tptpWorldExists) { out.print(" DISABLED"); } %>
+<% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
 <% if (location.equals("local")) { out.print(" CHECKED"); } %>
-  onClick="javascript:toggleList('Local');">Local SystemOnTPTP
-  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="builtin"
-<% if (!builtInExists) { out.print(" DISABLED"); } %>
-<% if (location.equals("builtin")) { out.print(" CHECKED"); } %>
-  onClick="javascript:toggleList('BuiltIn');">Built-In SystemOnTPTP
+<% if (tptpWorldExists) {
+     out.println("onClick=\"javascript:toggleList('Local');\"");
+   } else {
+     out.println("onClick=\"javascript:toggleList('BuiltIn');\"");     
+   }
+%>
+  >Local SystemOnTPTP
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
 <% if (location.equals("remote")) { out.print(" CHECKED"); } %>
   onClick="javascript:toggleList('Remote');">Remote SystemOnTPTP
   <BR>
-  <INPUT TYPE="CHECKBOX" NAME="sanitize" VALUE="yes"
+  <INPUT TYPE="hidden" NAME="sanitize" VALUE="yes"
 <% if (sanitize.equalsIgnoreCase("yes")) { out.print(" CHECKED"); } %>
-  >Sanitize
-  <INPUT TYPE="CHECKBOX" NAME="tstpFormat" VALUE="-S"
+  >
+  <INPUT TYPE="hidden" NAME="tstpFormat" VALUE="-S"
 <% if (tstpFormat.equals("-S")) { out.print(" CHECKED"); } %>
-  >TPTP&nbsp;format
-  <BR>
+  >
   <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q4"
 <% if (quietFlag.equals("-q4")) { out.print(" CHECKED"); } %>
-  >Only TPTP format
-  <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q3"
-<% if (quietFlag.equals("-q3")) { out.print(" CHECKED"); } %>
-  >Result
-  <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q2"
-<% if (quietFlag.equals("-q2")) { out.print(" CHECKED"); } %>
-  >Progress
-  <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q01"
-<% if (quietFlag.equals("-q01")) { out.print(" CHECKED"); } %>
-  >System
-  <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q0"
-<% if (quietFlag.equals("-q0")) { out.print(" CHECKED"); } %>
-  >Everything
+  >TPTP Proof
   <INPUT TYPE=RADIO NAME="quietFlag" VALUE="IDV"
 <% if (quietFlag.equals("IDV")) { out.print(" CHECKED"); } %>
   >IDV-Proof tree
   <INPUT TYPE=RADIO NAME="quietFlag" ID="hyperlinkedKIF" VALUE="hyperlinkedKIF"
 <% if (quietFlag.equals("hyperlinkedKIF")) { out.print(" CHECKED"); } %>
   >Hyperlinked KIF
-  <INPUT TYPE=SUBMIT NAME="request" value="SystemOnTPTP">
-<% if ( kb.inferenceEngine == null ) { %>
-    <INPUT type="submit" name="request" value="Ask" disabled>
-<% } else { %>
-    <INPUT type="submit" name="request" value="Ask">
-<% } %>
+  <BR>
+  <INPUT TYPE=SUBMIT NAME="request" value="Ask">
 <% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
     <INPUT type="submit" name="request" value="Tell"><BR>
 <% } %>
-    <INPUT type="submit" name="request" value="Test"><BR>
   </FORM>
   <hr>
 
@@ -336,6 +325,8 @@ August 9, Acapulco, Mexico.
 <%
 //-----------------------------------------------------------------------------
 //----Code for doing the query
+  String TPTP_QUESTION_SYSTEM = "SNARK---";
+  String TPTP_ANSWER_SYSTEM = "Metis---";
   String req = request.getParameter("request");
   boolean syntaxError = false;
   StringBuffer sbStatus = new StringBuffer();
@@ -344,8 +335,12 @@ August 9, Acapulco, Mexico.
 //----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)
   String result = "";
   String newResult = "";
+  String idvResult = "";
+  String originalResult = "";
   String command;
   Process proc;
+  boolean isQuestion = systemChosen.startsWith(TPTP_QUESTION_SYSTEM);
+  String conjectureTPTPFormula = "";
 
 //----If there has been a request, do it and report result
   if (req != null && !syntaxError) {
@@ -363,7 +358,7 @@ August 9, Acapulco, Mexico.
         out.println("<PRE>");
         out.println(InferenceTestSuite.test(kb, systemChosen, out));
         out.println("</PRE>");
-      } else if (req.equalsIgnoreCase("SystemOnTPTP")) {
+      } else if (req.equalsIgnoreCase("Ask")) {
 //-----------------------------------------------------------------------------
 //----Call RemoteSoT
         //----Add KB contents here
@@ -372,11 +367,15 @@ August 9, Acapulco, Mexico.
         conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
         //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.theFormula);
         conjectureFormula.tptpParse(true,kb);
+        Iterator it = conjectureFormula.getTheTptpFormulas().iterator();
+        String theTPTPFormula = (String) it.next();
+        conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
         //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.getTheTptpFormulas());
         kbFileName = kb.writeTPTPFile(null,
                                       conjectureFormula,
                                       sanitize.equalsIgnoreCase("yes"),
-                                      systemChosen);
+                                      systemChosen,
+                                      isQuestion);
         if (location.equals("remote")) {
           if (systemChosen.equals("Choose%20system")) {
             out.println("No system chosen");
@@ -407,11 +406,19 @@ August 9, Acapulco, Mexico.
                          ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
             out.println("(Remote SystemOnTPTP call)");
             out.println("<PRE>");
+            boolean tptpEnd = false;
             while ((responseLine = reader.readLine()) != null) {
-              if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
+              if (responseLine.startsWith("Loading IDV")) {
+                tptpEnd = true;
+              }
+              if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%") && !tptpEnd) {
                 result += responseLine + "\n";
               }           
-              if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
+              if (tptpEnd && quietFlag.equals("IDV")) {
+                idvResult += responseLine + "\n";
+              }
+              originalResult += responseLine + "\n";
+              if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { out.println(responseLine); }
             }
             out.println("</PRE>");
             reader.close();
@@ -446,7 +453,7 @@ August 9, Acapulco, Mexico.
             }
             */
           }
-        } else if (location.equals("local")) {
+        } else if (location.equals("local") && tptpWorldExists) {
 //-----------------------------------------------------------------------------
 //----Call local copy of TPTPWorld instead of using RemoteSoT
           if (systemChosen.equals("Choose%20system")) {
@@ -482,7 +489,8 @@ August 9, Acapulco, Mexico.
               if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
                 result += responseLine + "\n";
               }
-              if (!quietFlag.equals("hyperlinkedKIF")) { out.println(responseLine); }
+              originalResult += responseLine + "\n";
+              if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { out.println(responseLine); }
             }
             out.println("</PRE>");
             reader.close();
@@ -516,7 +524,7 @@ August 9, Acapulco, Mexico.
             }
             */
           }
-        } else if (location.equals("builtin")) {
+        } else if (location.equals("local") && builtInExists && !tptpWorldExists) {
 //-----------------------------------------------------------------------------
 //----Call built in SystemOnTPTP instead of using RemoteSoT or local
           if (systemChosen.equals("Choose%20system")) {
@@ -537,9 +545,10 @@ August 9, Acapulco, Mexico.
             }
             //out.println("chosen system: " + systemChosen);
             result = SystemOnTPTP.SystemOnTPTP(systemChosen, systemsDir, timeout, qq, format, kbFileName);
+            originalResult += result;
             out.println("(Built-In SystemOnTPTP call)");
             out.println("<PRE>");
-            if (!quietFlag.equals("hyperlinkedKIF")) {
+            if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
               out.println(result);
             } 
             if (quietFlag.equals("IDV")) {
@@ -558,35 +567,70 @@ August 9, Acapulco, Mexico.
         } else {
           out.println("INTERNAL ERROR: chosen option not valid: " + location + ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.");
         }
-      }
-      if (quietFlag.equals("IDV") && !location.equals("remote")) {
-        String port = KBmanager.getMgr().getPref("port");
-        if ((port == null) || port.equals(""))
-          port = "8080";
-        String libHref = "http://" + hostname + ":" + port + "/sigma/lib";
-        out.println("<APPLET CODE=\"IDVApplet\" archive=\"" + libHref + "/IDV.jar," + libHref + "/TptpParser.jar," + libHref + "/antlr-2.7.5.jar," + libHref + "/ClientHttpRequest.jar\"");
-        out.println("WIDTH=800 HEIGHT=100 MAYSCRIPT=true>");
-        out.println("  <PARAM NAME=\"TPTP\" VALUE=\"" + result + "\">");
-        out.println("  Hey, you cant see my applet!!!");
-        out.println("</APPLET>");
+      if (quietFlag.equals("IDV") && location.equals("remote")) {
+        if (SystemOnTPTP.isTheorem(originalResult)) {
+          int size = SystemOnTPTP.getTPTPFormulaSize(result);
+          if (size == 0) {
+            out.println("No solution output by system.  IDV tree unavaiable.");
+          } else {
+            out.println(idvResult);
+          }
+        } else {
+          out.println("Not a theorem.  IDV tree unavailable.");
+        }
+      } else if (quietFlag.equals("IDV") && !location.equals("remote")) {
+        if (SystemOnTPTP.isTheorem(originalResult)) {
+          int size = SystemOnTPTP.getTPTPFormulaSize(result);
+          if (size > 0) {
+            String port = KBmanager.getMgr().getPref("port");
+            if ((port == null) || port.equals(""))
+              port = "8080";
+            String libHref = "http://" + hostname + ":" + port + "/sigma/lib";
+            out.println("<APPLET CODE=\"IDVApplet\" archive=\"" + libHref + "/IDV.jar," + libHref + "/TptpParser.jar," + libHref + "/antlr-2.7.5.jar," + libHref + "/ClientHttpRequest.jar\"");
+            out.println("WIDTH=800 HEIGHT=100 MAYSCRIPT=true>");
+            out.println("  <PARAM NAME=\"TPTP\" VALUE=\"" + result + "\">");
+            out.println("  Hey, you cant see my applet!!!");
+            out.println("</APPLET>");
+          } else {
+            out.println("No solution output by system.  IDV tree unavaiable.");
+          }
+        } else {
+          out.println("Not a theorem.  IDV tree unavailable.");
+        }
       } else if (quietFlag.equals("hyperlinkedKIF")) {
-        try {
-//----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis---2.1)
-          if (!systemChosen.startsWith("Metis---")) {
-            String answerResult = AnswerFinder.findProofWithAnswers(result, systemsDir);
-            if (!answerResult.equals("")) {
-              result = answerResult;
+        boolean isTheorem = SystemOnTPTP.isTheorem(originalResult);
+          try {
+//----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
+            if (!systemChosen.startsWith(TPTP_ANSWER_SYSTEM)) {
+              String answerResult = AnswerFinder.findProofWithAnswers(result, systemsDir);
+//----If answer is blank, ERROR, or WARNING, do not place in result
+              if (!answerResult.equals("") && 
+                  !answerResult.startsWith("% ERROR:") &&
+                  !answerResult.startsWith("% WARNING:")) {
+                result = answerResult;
+              } 
+//----If ERROR is answer result, report to user
+              if (answerResult.startsWith("% ERROR:")) {
+                out.println("==" + answerResult);
+              } 
+            }  
+            if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
+              ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, originalResult);
+              newResult = TPTP2SUMO.convert(result, answer);
+            } else {
+              newResult = TPTP2SUMO.convert(result);
             }
-          } 
-          newResult = TPTP2SUMO.convert(result);
-          out.println(HTMLformatter.formatProofResult(newResult,
-                                                      stmt,
-                                                      stmt,
-                                                      lineHtml,
-                                                      kbName,
-                                                      language));       
-        } catch (Exception e) {}      
-
+            if (!isTheorem) {
+//----Not a theorem, print no
+              newResult = "<queryResponse>\n <answer result='no'> \n  </answer> \n <summary proofs='0'/> \n </queryResponse>";
+            } 
+            out.println(HTMLformatter.formatProofResult(newResult,
+                                                        stmt,
+                                                        stmt,
+                                                        lineHtml,
+                                                        kbName,
+                                                        language));       
+           } catch (Exception e) {}      
         /*
         command = tptp4X    + " " + 
                   "-f sumo" + " " +
@@ -610,6 +654,7 @@ August 9, Acapulco, Mexico.
                                                     language));       
         */
       }
+     }
 //----Delete the kbFile
 //      (new File(kbFileName)).delete();
     } catch (IOException ioe) {
