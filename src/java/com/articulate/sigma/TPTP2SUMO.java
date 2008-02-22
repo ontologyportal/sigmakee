@@ -32,16 +32,23 @@ public class TPTP2SUMO {
     System.out.println("END-----");
   }
 
-  public static String convert (String tptp) throws Exception {
-    //    System.out.println("convert String");
-    return convert(new BufferedReader(new StringReader(tptp)));
+  public static String convert (String tptp) throws Exception {    
+    return convert(new BufferedReader(new StringReader(tptp)), null);
   }
 
   public static String convert (Reader in) throws Exception {
-    return convert(new BufferedReader(in));
+    return convert(new BufferedReader(in), null);
   }
 
-  public static String convert (BufferedReader reader) throws Exception {
+  public static String convert (String tptp, ArrayList<Binding> answer) throws Exception {
+    return convert(new BufferedReader(new StringReader(tptp)), answer);
+  }
+
+  public static String convert (Reader in, ArrayList<Binding> answer) throws Exception {
+    return convert(new BufferedReader(in), answer);
+  }
+
+  public static String convert (BufferedReader reader, ArrayList<Binding> answer) throws Exception {
     StringBuffer result = new StringBuffer();
     TPTPParser parser = TPTPParser.parse(reader);
     Hashtable<String,TPTPFormula> ftable = parser.ftable;
@@ -67,7 +74,12 @@ public class TPTP2SUMO {
     // print out answer (if exists)
     // (CURRENTLY: only metis proof prints variable bindings)
     StringBuffer binding = new StringBuffer();
-    ArrayList<Binding> binds = AnswerExtractor.extractAnswers(ftable);
+    ArrayList<Binding> binds;
+    if (answer != null && !answer.isEmpty()) {
+      binds = answer;
+    } else {
+      binds = AnswerExtractor.extractAnswers(ftable);
+    }
     if (!binds.isEmpty()) {
       binding.append("  <bindingSet type='definite'>\n");
       binding.append("    <binding>\n");
