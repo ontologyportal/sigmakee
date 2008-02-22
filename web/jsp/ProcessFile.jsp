@@ -105,7 +105,7 @@ KB kb = null;
                           else {
                               String outputFilename = file.getCanonicalPath().substring(0,file.getCanonicalPath().lastIndexOf(".")) + ".kif";
                               System.out.println("INFO in ProcessFile.jsp: Writing file: " + outputFilename);
-                              ArrayList al = DB.readSpreadsheet(file.getCanonicalPath());
+                              ArrayList al = DB.readSpreadsheet(file.getCanonicalPath(),true);
                               try {                              
                                   DB.processSpreadsheet(al,namespace,outputFilename);
                               } catch (java.io.IOException e) {
