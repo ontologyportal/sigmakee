@@ -20,7 +20,7 @@
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" classpath="lib/antlr-2.7.5.jar:lib/TptpParser.jar:lib/TPTPWorld.jar:lib/servlet.jar:.">
+    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" classpath="lib/antlr-2.7.5.jar:lib/servlet.jar:.">
         <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
@@ -56,7 +56,6 @@
         <fileset file="${basedir}/lib/TptpParser.jar" />
         <fileset file="${basedir}/lib/ClientHttpRequest.jar" />
     </copy>
-
 
     <!-- Create WEB-INF/classes/ and copy all the loose classes to it. -->
 	<mkdir dir="${deploy.classes}"/>
@@ -105,6 +104,8 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
+    <pathelement path="src/java/TPTPWorld"/>
+    <pathelement path="src/java/tptp_parser"/>
 </path>
 
 <path id="compile.classpath">
