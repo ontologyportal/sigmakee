@@ -1197,14 +1197,14 @@ public class Formula implements Comparable {
         boolean ans = false;
         try {
             Set relns = kb.getCachedRelationValues("instance", "VariableArityRelation", 2, 1);
-            if (relns != null) {
-                String r = null;
-                Iterator it = relns.iterator();
-                while (it.hasNext()) {
-                    r = (String) it.next();
-                    ans = (this.theFormula.indexOf(r) != -1);
-                    if (ans) { break; }
-                }
+            if (relns == null) { relns = new HashSet(); }
+            relns.addAll(KB.VA_RELNS);
+            String r = null;
+            Iterator it = relns.iterator();
+            while (it.hasNext()) {
+                r = (String) it.next();
+                ans = (this.theFormula.indexOf(r) != -1);
+                if (ans) { break; }
             }
         }
         catch (Exception ex) {
@@ -1217,8 +1217,10 @@ public class Formula implements Comparable {
      *
      * @param kb - The KB used to compute variable arity relations.
      *
-     * @return Returns true if this Formula contains any variable
-     * arity relations, else returns false.
+     * @return A new version of the Formula in which every
+     * VariableArityRelation has been renamed to include a numeric
+     * suffix corresponding to the actual number of arguments in the
+     * Formula.
      */
     protected Formula renameVariableArityRelations(KB kb) {
         Formula result = this;
@@ -3136,8 +3138,12 @@ public class Formula implements Comparable {
         // syntactic.  But it probably will be used in the future.
         try {
             pass = !(// (equal ?X ?Y ?Z ...) - equal is strictly binary. 
-                     this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*") ||
-                     this.theFormula.matches(".*[\\x7F-\\xFF].*")
+                     this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*") 
+
+                     // The formula contains non-ASCII characters.
+                     // was: this.theFormula.matches(".*[\\x7F-\\xFF].*")
+                     || this.theFormula.matches(".*[^\\p{ASCII}].*")
+
                      // (<relation> ?X ...) - no free variables in an
                      // atomic formula that doesn't contain a string
                      // unless the formula is a query.
@@ -3387,9 +3393,9 @@ public class Formula implements Comparable {
         return result.toString();
     }
 
-    public static final String termMentionSuffix  = "__m";
-    public static final String termSymbolPrefix   = "s__";
-    public static final String termVariablePrefix = "V__";
+    public static final String termMentionSuffix  = "__m";   // was: _M
+    public static final String termSymbolPrefix   = "s__";   // was: s_
+    public static final String termVariablePrefix = "V__";   // was: V_
   
     private static List renameExceptions = Arrays.asList("en");
 
