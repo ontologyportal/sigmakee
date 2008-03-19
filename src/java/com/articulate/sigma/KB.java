@@ -912,10 +912,42 @@ public class KB {
         return className;
     }
 
+
+    /** *************************************************************
+     * This list contains the names of SUMO Relations known to be
+     * instances of VariableArityRelation in at least some domain.  It
+     * is used only for TPTP generation, and should
+     * <strong>not</strong> be relied upon for any other purpose,
+     * since it is not automatically generated and might be out of
+     * date.
+     */
+    public static final List VA_RELNS = Arrays.asList("AssignmentFn",
+                                                      "GreatestCommonDivisorFn",
+                                                      "LatitudeFn",
+                                                      "LeastCommonMultipleFn",
+                                                      "ListFn",
+                                                      "LongitudeFn",
+                                                      "contraryAttribute",
+                                                      "disjointDecomposition",
+                                                      "exhaustiveAttribute",
+                                                      "exhaustiveDecomposition",
+                                                      "partition",
+                                                      "processList");
+
+
+    /** *************************************************************
+     * Returns true if relnName is the name of a relation that is
+     * known to be, or computed to be, a variable arity relation.
+     *
+     * @param relnName A String that names a SUMO Relation (Predicate
+     * or Function).
+     *
+     * @return boolean
+     */
     public boolean isVariableArityRelation(String relnName) {
         boolean ans = false;
         try {
-            ans = (getValence(relnName) == 0);
+            ans = VA_RELNS.contains(relnName) || (getValence(relnName) == 0);
         }
         catch (Exception ex) {
             ex.printStackTrace();
