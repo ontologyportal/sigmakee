@@ -80,11 +80,14 @@ public class Graph {
         if (docStmts.size() > 0) {
             Formula doc = (Formula) docStmts.get(0);
             docString = doc.getArgument(3);
-            if (docString.length() > 100) 
-                docString = docString.substring(1,100) + "...";
-            else
-                docString = docString.substring(1,docString.length()-1);
-            return kb.formatDocumentation(href,docString);
+            // System.out.println("  docString == " + docString);
+            if (!docString.equals("")) {
+                if (docString.length() > 100) 
+                    docString = docString.substring(1,100) + "...";
+                else
+                    docString = docString.substring(1,docString.length()-1);
+                return kb.formatDocumentation(href,docString);
+            }
         }
         return "";
     }
