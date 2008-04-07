@@ -293,14 +293,16 @@ public class HTMLformatter {
         show.append("<tr><td><i><A href=\""+ kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</A>" + "</i></TD></tr>\n");
         for (int i = 0; i < 30; i++) {
             String relation = (String) relations.get(i);
+            String relationName = DocGen.showTermName(kb,relation,language);
             String nonRelation = (String) nonRelations.get(i);
+            String nonRelationName = DocGen.showTermName(kb,nonRelation,language);
             if (relation != "" || nonRelation != "") {
                 if (i == 14) {
                     show.append("<TR>\n");
                     show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   relation + "\">" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
+                    show.append(   relation + "\">" + relationName + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
                     show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   nonRelation + "\">" + nonRelation + "</A>" + "</TD>\n");
+                    show.append(   nonRelation + "\">" + nonRelationName + "</A>" + "</TD>\n");
                     show.append("</TR>\n");
                     show.append("<TR><TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD><TD>&nbsp;&nbsp;</TD>\n");
                     show.append("<TD><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></TD></TR>\n");
@@ -308,9 +310,9 @@ public class HTMLformatter {
                 else {
                     show.append("<TR>\n");
                     show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   relation + "\">" + relation + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
+                    show.append(   relation + "\">" + relationName + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
                     show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   nonRelation + "\">" + nonRelation + "</A>" + "</TD>\n");
+                    show.append(   nonRelation + "\">" + nonRelationName + "</A>" + "</TD>\n");
                     show.append("</TR>\n");
                 }
             }
@@ -405,9 +407,9 @@ public class HTMLformatter {
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
                     show.append("<TR><TD width=50%% valign=top>");
                     String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
-                    if ((f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0) ||
-                        (f.theFormula.length() > 8 && f.theFormula.substring(1,8).compareTo("comment") == 0))
-                        show.append(kb.formatDocumentation(kbHref,formattedFormula));
+                    if ((f.getArgument(0).equals("documentation")) ||
+                        (f.getArgument(0).equals("comment")))
+                        show.append(kb.formatDocumentation(kbHref,formattedFormula,language));
                     else
                         show.append(formattedFormula);
                     String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
@@ -417,9 +419,10 @@ public class HTMLformatter {
                     show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
                     show.append("</A>");
                     show.append("</TD>\n<TD width='40%' valign=top>");
-        	    pph = LanguageFormatter.htmlParaphrase(kbHref,
-            		 f.theFormula,kb.getFormatMap(language), 
-                         kb.getTermFormatMap(language), kb, language);
+                    if (!f.getArgument(0).equals("documentation"))
+                        pph = LanguageFormatter.htmlParaphrase(kbHref,
+                                                           f.theFormula,kb.getFormatMap(language), 
+                                                           kb.getTermFormatMap(language), kb, language);
         	    if (pph == null) 
                         pph = ""; 
                     if (Formula.isNonEmptyString(pph)) {
@@ -580,6 +583,8 @@ public class HTMLformatter {
     public static String createMenu(String menuName, String selectedOption, ArrayList options, String params) {
 
         StringBuffer result = new StringBuffer();
+        TreeSet menuOptions = new TreeSet();
+        menuOptions.addAll(options);
 
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=" + menuNameProcessed);
@@ -587,9 +592,11 @@ public class HTMLformatter {
             result.append(" " + params + " ");
         }
         result.append(">\n  ");
-        for (int i = 0; i < options.size(); i++) {
+
+        Iterator it = menuOptions.iterator();
+        while (it.hasNext()) {
+            String menuItem = (String) it.next();
             result.append("<option value='");
-            String menuItem = (String) options.get(i);
             String menuItemProcessed = encodeForURL(menuItem);
             result.append(menuItemProcessed);
             if (selectedOption != null && selectedOption.equalsIgnoreCase(menuItem)) 
