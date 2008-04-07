@@ -530,11 +530,11 @@ public class KIF {
         return null;
     }
 
+
     /** ***************************************************************
-     * Test method for this class.  Currently, it writes the TPTP output
-     * to a file.
+     * Writes the TPTP output to a file.
      */
-    public static void main(String[] args) throws IOException {
+    public static void tptpOutputTest(String filename) throws IOException {
 
         Iterator it;
         KIF kifp = new KIF();
@@ -547,8 +547,8 @@ public class KIF {
         PrintWriter pw;
 
         try {
-            System.out.println("Loading from " + args[0]);
-            kifp.readFile(args[0]);
+            System.out.println("Loading from " + filename);
+            kifp.readFile(filename);
         }
         catch (Exception e1) {
             String msg = e1.getMessage();
@@ -565,11 +565,11 @@ public class KIF {
           System.out.println (form);
           }
         */
-        System.out.println("");
+        System.out.println();
 
         fw = null;
         pw = null;
-        File outfile = new File(args[0] + ".tptp");
+        File outfile = new File(filename + ".tptp");
 
         try {
             fw = new FileWriter(outfile);
@@ -586,21 +586,31 @@ public class KIF {
             }
         }
         catch (Exception ex) {
-            System.out.println( "Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage() );
+            System.out.println("Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
             try {
-                if (pw != null) {
-                    pw.close();
-                }
-                if (fw != null) {
-                    fw.close();
-                }
+                if (pw != null) 
+                    pw.close();                
+                if (fw != null) 
+                    fw.close();                
             }
-            catch ( Exception e3 ) {
+            catch (Exception e3) {
             }
         }
+    }
+
+    /** ***************************************************************
+     * Test method for this class.  
+     */
+    public static void main(String[] args) throws IOException {
+        // tptpOutputTest(args[0]);
+        String exp = "(documentation foo \"blah blah is so \\\"blah\\\" yeah\")";
+        KIF kif = new KIF();
+        Reader r = new StringReader(exp);
+        kif.parse(r);
+        System.out.println(kif.formulaSet);
     }
 }
 
