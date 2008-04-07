@@ -13,7 +13,7 @@ public class AnswerFinder {
   } 
 
   public static String findProofWithAnswers (BufferedReader reader, String systemsDir) throws Exception {
-    String proof = "";
+   String proof = "";
     TPTPParser parser = TPTPParser.parse(reader);    
     TPTPFormula conjecture = AnswerExtractor.extractVine(parser.ftable);    
     // no conjecture = no answers
@@ -63,6 +63,7 @@ public class AnswerFinder {
     return result;
   } 
 
+      
   // given a proof, find answers using one-answer system
   public static void main (String args[]) throws Exception {
     TPTPParser.checkArguments(args);

@@ -6,6 +6,26 @@ import tptp_parser.*;
 
 public class TPTPParser {
 
+  public static class Symbol {
+    String text;
+    int arity;
+    Symbol (String text, int arity) {
+      this.text = text;
+      this.arity = arity;
+    }
+    public String toString () {
+      return "[" + text + " |  " + arity + "]";
+    }
+  }
+  public static class SymbolComparator implements Comparator {
+    public int compare(Object obj1, Object obj2) {
+      String s1 = ((Symbol)obj1).text;
+      String s2 = ((Symbol)obj2).text;
+      //      System.out.println("comparing s1: " + s1 + " to s2: " + s2);
+      return s1.compareTo(s2);
+    }
+  }
+
   public Hashtable<String,TPTPFormula> ftable;
   public Vector<SimpleTptpParserOutput.TopLevelItem> Items;
 
@@ -215,5 +235,131 @@ public class TPTPParser {
     } 
     return variables;     
   }
+
+  private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Term term, TreeSet set) {
+    //    System.out.println("Looking at term: " + term.toString());
+    LinkedList<SimpleTptpParserOutput.Term> arguments = (LinkedList)term.getArguments();
+    if (arguments == null) {
+      //      System.out.println("Term has no more arguments");
+      return set;
+    }
+    for (int i = 0; i < arguments.size(); i++) {
+      if (!((SimpleTptpParserOutput.Term)arguments.get(i)).getTopSymbol().isVariable()) {
+        SimpleTptpParserOutput.Term newTerm = (SimpleTptpParserOutput.Term)arguments.get(i);
+        int arity = (newTerm.getArguments() != null) ? ((LinkedList)newTerm.getArguments()).size() : 0;
+        Symbol symbol = new Symbol(newTerm.getTopSymbol().toString(), arity);
+        set.add(symbol);
+        set = getSymbolList(newTerm, set);
+      }
+    }
+    return set;
+  }
+  private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Formula.Atomic atom, TreeSet set) {
+    //        System.out.println("Looking at atom: " + atom.toString());
+    LinkedList<SimpleTptpParserOutput.Term> arguments = (LinkedList)atom.getArguments();
+    if (arguments == null) {
+      //      System.out.println("Atom has no more arguments");
+      return set; 
+    }
+    for (int i = 0; i < arguments.size(); i++) {
+      //      System.out.println("looking at: " + arguments.get(i).toString());
+      if (!((SimpleTptpParserOutput.Term)arguments.get(i)).getTopSymbol().isVariable()) {
+        //        System.out.println("This is a not a variable: " + ((SimpleTptpParserOutput.Term)arguments.get(i)).getTopSymbol().toString());
+        SimpleTptpParserOutput.Term newTerm = (SimpleTptpParserOutput.Term)arguments.get(i);
+        int arity = (newTerm.getArguments() != null) ? ((LinkedList)newTerm.getArguments()).size() : 0;
+        Symbol symbol = new Symbol(newTerm.getTopSymbol().toString(), arity);
+        set.add(symbol);
+        set = getSymbolList(newTerm, set);
+      } else {
+        //        System.out.println("This is a variable: " + ((SimpleTptpParserOutput.Term)arguments.get(i)).getTopSymbol().toString());
+      }
+    }
+    return set;
+  }
+  private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Formula formula, TreeSet set) {
+    //    System.out.println("Looking at formula: " + formula.toString());
+    switch(formula.getKind()) {
+    case Atomic:
+      set = getSymbolList((SimpleTptpParserOutput.Formula.Atomic)formula, set);
+      break;
+    case Negation:
+      set = getSymbolList(((SimpleTptpParserOutput.Formula.Negation)formula).getArgument(), set);
+      break;
+    case Binary:
+      set = getSymbolList(((SimpleTptpParserOutput.Formula.Binary)formula).getLhs(), set);
+      set = getSymbolList(((SimpleTptpParserOutput.Formula.Binary)formula).getRhs(), set);
+      break;
+    case Quantified:
+      set = getSymbolList(((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix(), set);
+      break;
+    default:
+      break;
+    }
+    return set;
+  }
+  private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Literal literal, TreeSet set) {
+    set = getSymbolList((SimpleTptpParserOutput.Formula.Atomic)literal.getAtom(), set);
+    return set;
+  }
+  private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Clause clause, TreeSet set) {
+    //    System.out.println("Looking at clause: " + clause.toString());
+    LinkedList<SimpleTptpParserOutput.Literal> literals = (LinkedList)clause.getLiterals();
+    if (literals == null) {
+      return set;
+    }
+    assert !literals.isEmpty();
+    for (int i = 0; i < literals.size(); i++) {
+      set = getSymbolList(literals.get(i), set);
+    }
+    return set;
+  }
+  public static TreeSet<Symbol> getSymbolList (BufferedReader reader) throws Exception {
+    TreeSet<Symbol> set = new TreeSet(new TPTPParser.SymbolComparator());
+    TPTPParser parser = TPTPParser.parse(reader);
+    for (int i = 0; i < parser.Items.size(); i++) {
+      SimpleTptpParserOutput.TopLevelItem item = parser.Items.get(i);
+      if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
+        SimpleTptpParserOutput.AnnotatedFormula AF = ((SimpleTptpParserOutput.AnnotatedFormula)item);
+        set = getSymbolList(AF.getFormula(),set);
+      } else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
+        SimpleTptpParserOutput.AnnotatedClause AC = ((SimpleTptpParserOutput.AnnotatedClause)item);
+        set = getSymbolList(AC.getClause(),set);
+      }
+    }
+    return set;
+  }
+
+  public static TreeSet<Symbol> getSymbolList (String filename) throws Exception {
+    BufferedReader reader = TPTPParser.createReader(filename);
+    return TPTPParser.getSymbolList(reader);
+  }
+
+
+  // given a list of bindings, get list of symbols
+  public static TreeSet<Symbol> getSymbolList (ArrayList<Binding> bindings) throws Exception {
+    String temp = "";
+    int count = 0;
+    for (Binding bind : bindings) {
+      temp += "fof(dummy__formula_" + count + ", axiom, dummy_predicate(" + bind.binding +  ")).\n"; 
+    }
+    BufferedReader reader = new BufferedReader(new StringReader(temp));
+    return getSymbolList(reader);
+  }
+
+  public static void main (String args[]) throws Exception {
+    TPTPParser.checkArguments(args);
+    // assumption: filename is args[0] or "--" for stdin
+    BufferedReader reader = TPTPParser.createReader(args[0]);
+
+    TreeSet<Symbol> set = TPTPParser.getSymbolList(reader);
+    Iterator it = set.iterator();
+    int count = 0;
+    while (it.hasNext()) {
+      System.out.println("[" + count + "]: " + it.next());
+      count++;
+    }
+
+  }
+
 
 }

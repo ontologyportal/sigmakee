@@ -209,7 +209,7 @@ public class AnswerExtractor {
         res += "," + Binding.getBinding(variables.get(i), binds);
       }
       res += "]]";
-      System.out.println(res);
+      System.out.println(res);      
       return true;
     } else {
       return false;
@@ -227,5 +227,15 @@ public class AnswerExtractor {
     if (!AnswerExtractor.extractAnswers(parser)) {
       System.out.println("% No answers found in AnswerExtractor");
     }
+
+    ArrayList<Binding> bindings = AnswerExtractor.extractAnswers(parser.ftable);
+    TreeSet<TPTPParser.Symbol> symbols = TPTPParser.getSymbolList(bindings);
+    Iterator it = symbols.iterator();
+    int count = 0;
+    while (it.hasNext()) {
+      System.out.println("[" + count + "]: " + it.next());
+      count++;
+    }
+
   }
 }

@@ -365,7 +365,7 @@ public class SystemOnTPTP {
     }
 
     if (atpSystem == null) {
-      return "% SystemOnTPTP.java ERROR: could not find system";
+      return "% SystemOnTPTP.java ERROR: Could not find system";
     }
 
     // make sure prover exists
@@ -491,6 +491,18 @@ public class SystemOnTPTP {
     return getSZSBindings(item, tptp);
   }
 
+  public static ArrayList<Binding> getSZSBindings (String conjecture, ArrayList<Binding> answers) throws Exception {
+    ArrayList<Binding> bind = new ArrayList();
+    BufferedReader reader = new BufferedReader(new StringReader(conjecture));
+    TPTPParser parser = TPTPParser.parse(reader);
+    // should only have conjecture in there, not dealing with anything else
+    if (parser.Items.size() != 1) {
+      return bind;
+    }
+    SimpleTptpParserOutput.TopLevelItem item = parser.Items.elementAt(0);
+    return getSZSBindings(item, answers);
+  }
+
   public static ArrayList<Binding> getSZSBindings (SimpleTptpParserOutput.TopLevelItem item, String tptp) throws Exception {
     ArrayList<Binding> bind = new ArrayList();
     if (item.getKind() != SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
@@ -502,9 +514,8 @@ public class SystemOnTPTP {
     if (variables.isEmpty()) {
       return bind;
     }
-
-    ArrayList<String> answers = getSZSAnswers(tptp);
     // uneven number of variables to answers, weirdness
+    ArrayList<String> answers = getSZSAnswers(tptp);
     if (variables.size() != answers.size()) {
       return bind;
     }
@@ -516,6 +527,28 @@ public class SystemOnTPTP {
     return bind;
   }
 
+  public static ArrayList<Binding> getSZSBindings (SimpleTptpParserOutput.TopLevelItem item, ArrayList<Binding> answers) throws Exception {
+    ArrayList<Binding> bind = new ArrayList();
+    if (item.getKind() != SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
+      return bind;
+    }
+    SimpleTptpParserOutput.AnnotatedFormula AF = ((SimpleTptpParserOutput.AnnotatedFormula)item);
+    ArrayList<String> variables = new ArrayList();
+    variables = TPTPParser.identifyQuantifiedVariables(AF.getFormula(), variables);
+    if (variables.isEmpty()) {
+      return bind;
+    }
+    // uneven number of variables to answers, weirdness
+    if (variables.size() != answers.size()) {
+      return bind;
+    }
+    for (int i = 0; i < variables.size(); i++) {
+      String variable = variables.get(i);
+      String answer = answers.get(i).binding;
+      bind.add(new Binding(variable, answer));
+    }
+    return bind;
+  }
 
   public static void main (String[] args) throws Exception {
     if (args.length > 0) {
