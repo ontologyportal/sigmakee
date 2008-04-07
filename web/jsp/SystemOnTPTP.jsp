@@ -242,9 +242,7 @@ August 9, Acapulco, Mexico.
   <IMG SRC='pixmaps/1pixel.gif' WIDTH=1 HEIGHT=1 BORDER=0><BR>
   <TEXTAREA ROWS=5 COLS=70" NAME="stmt"><%=stmt%></TEXTAREA><BR>
   Query time limit:<INPUT TYPE=TEXT SIZE=3 NAME="timeout" VALUE="<%=timeout%>">
-<!--  
-Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
--->
+  Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
   <BR>
   System:
 <%
@@ -330,7 +328,8 @@ Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%
   String req = request.getParameter("request");
   boolean syntaxError = false;
   StringBuffer sbStatus = new StringBuffer();
-  String kbFileName;
+  String kbFileName = null;
+  String originalKBFileName = null;
   Formula conjectureFormula;
 //----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)
   String result = "";
@@ -360,7 +359,6 @@ Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%
         out.println("</PRE>");
       } else if (req.equalsIgnoreCase("Ask")) {
 //-----------------------------------------------------------------------------
-//----Call RemoteSoT
         //----Add KB contents here
         conjectureFormula = new Formula();
         conjectureFormula.theFormula = stmt;
@@ -369,16 +367,75 @@ Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%
         conjectureFormula.tptpParse(true,kb);
         Iterator it = conjectureFormula.getTheTptpFormulas().iterator();
         String theTPTPFormula = (String) it.next();
-        conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
+        if (isQuestion) {
+          conjectureTPTPFormula =  "fof(1" + ",question,(" + theTPTPFormula + ")).";
+        } else {
+          conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
+        }
         //System.out.println("INFO in SystemOnTPTP.jsp: " + conjectureFormula.getTheTptpFormulas());
-        kbFileName = kb.writeTPTPFile(null,
-                                      conjectureFormula,
+        originalKBFileName = kb.writeTPTPFile(null,
+                                      null,
                                       sanitize.equalsIgnoreCase("yes"),
                                       systemChosen,
                                       isQuestion);
+//----Add while loop to check for more answers
+//----If # of answers == maximum answers, exit loop
+//----If last check for an answer failed (no answer found or empty answer list), exit loop
+//----Each loop around, add ld axioms
+      ArrayList<Binding> lastAnswer = null;
+      int numAnswers = 0;
+      TreeSet<TPTPParser.Symbol> symbolsSoFar = new TreeSet();
+      ArrayList<String> ldAxiomsSoFar = new ArrayList();
+      ldAxiomsSoFar.addAll(LooksDifferent.getUniqueAxioms());
+//----Create symbol list from entire kbFile
+      TreeSet<TPTPParser.Symbol> symbolList = TPTPParser.getSymbolList(originalKBFileName);
+      do {
+//        out.println("Number of answers found so far: " + numAnswers);
+//----If we found a new set of answers, update query and axiom list
+        if (lastAnswer != null) {
+        out.println("<hr>");
+//----Get symbols from lastAnswer
+        TreeSet<TPTPParser.Symbol> newSymbols = TPTPParser.getSymbolList(lastAnswer);
+//----Find uniqueSymbols from lastAnswer not in symbolsSoFar
+        TreeSet<TPTPParser.Symbol> uniqueSymbols = LooksDifferent.getUniqueSymbols(symbolsSoFar, newSymbols);
+//----symbolsSOFar = uniqueSymbols U symbolsSoFar
+        symbolsSoFar.addAll(uniqueSymbols);
+//----Get new set of ld axioms from the unique symbols
+        ArrayList<String> ldAxiomsNew = LooksDifferent.addAxioms(uniqueSymbols, symbolList);
+//----Add ld axioms for those uniqueSymbols to ldAxiomsSoFar
+        ldAxiomsSoFar.addAll(ldAxiomsNew);
+//----Add last answer to conjecture
+        theTPTPFormula = LooksDifferent.addToConjecture(theTPTPFormula, lastAnswer);
+//----Create new conjectureTPTPFormula
+        if (isQuestion) {
+          conjectureTPTPFormula = "fof(1" + ",question,(" + theTPTPFormula + ")).";
+        } else {
+          conjectureTPTPFormula = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
+        }
+//----keep originalKBFile intact so that we do not have to keep recreating it, just copy and append to copy then delete copy, only delete original at the end of run
+//----delete last kbFileName
+      if (kbFileName != null) {
+//        (new File(kbFileName)).delete();
+      }
+//----kbFileName = originalKBFileName + all ld axioms + conjectureTPTPFormula;
+//----Copy original kb file
+        kbFileName = kb.copyFile(originalKBFileName);
+//----Append ld axioms and conjecture to the end
+        kb.addToFile(kbFileName, ldAxiomsSoFar, conjectureTPTPFormula);
+//----Reset last answer
+        lastAnswer = null;
+      } else {
+//----kbFileName = originalKBFileName + conjectureTPTPFormula
+//----Copy original kb file
+        kbFileName = kb.copyFile(originalKBFileName);
+//----Append conjecture to the end
+        kb.addToFile(kbFileName, null, conjectureTPTPFormula);
+      }
+
+//----Call RemoteSoT
         if (location.equals("remote")) {
           if (systemChosen.equals("Choose%20system")) {
-            out.println("No system chosen");
+            out.println("No system chosen");            
           } else {
 //----Need to check the name exists
             URLParameters.clear();
@@ -567,6 +624,32 @@ Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%
         } else {
           out.println("INTERNAL ERROR: chosen option not valid: " + location + ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.");
         }
+//----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
+            if (!systemChosen.startsWith(TPTP_ANSWER_SYSTEM)) {
+              String answerResult = AnswerFinder.findProofWithAnswers(result, systemsDir);
+//----If answer is blank, ERROR, or WARNING, do not place in result
+              if (!answerResult.equals("") && 
+                  !answerResult.startsWith("% ERROR:") &&
+                  !answerResult.startsWith("% WARNING:")) {
+                result = answerResult;
+              } 
+//----If ERROR is answer result, report to user
+              if (answerResult.startsWith("% ERROR:")) {
+                out.println("==" + answerResult);
+              } 
+            }  
+            if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
+              ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, originalResult);
+              lastAnswer = answer;
+              newResult = TPTP2SUMO.convert(result, answer);
+            } else {
+              TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(result)));
+              lastAnswer = AnswerExtractor.extractAnswers(parser.ftable);
+//----Get original variable names
+              lastAnswer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, lastAnswer);
+              newResult = TPTP2SUMO.convert(result);
+            }
+
       if (quietFlag.equals("IDV") && location.equals("remote")) {
         if (SystemOnTPTP.isTheorem(originalResult)) {
           int size = SystemOnTPTP.getTPTPFormulaSize(result);
@@ -600,26 +683,6 @@ Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%
       } else if (quietFlag.equals("hyperlinkedKIF")) {
         boolean isTheorem = SystemOnTPTP.isTheorem(originalResult);
           try {
-//----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
-            if (!systemChosen.startsWith(TPTP_ANSWER_SYSTEM)) {
-              String answerResult = AnswerFinder.findProofWithAnswers(result, systemsDir);
-//----If answer is blank, ERROR, or WARNING, do not place in result
-              if (!answerResult.equals("") && 
-                  !answerResult.startsWith("% ERROR:") &&
-                  !answerResult.startsWith("% WARNING:")) {
-                result = answerResult;
-              } 
-//----If ERROR is answer result, report to user
-              if (answerResult.startsWith("% ERROR:")) {
-                out.println("==" + answerResult);
-              } 
-            }  
-            if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
-              ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, originalResult);
-              newResult = TPTP2SUMO.convert(result, answer);
-            } else {
-              newResult = TPTP2SUMO.convert(result);
-            }
             if (!isTheorem) {
 //----Not a theorem, print no
               newResult = "<queryResponse>\n <answer result='no'> \n  </answer> \n <summary proofs='0'/> \n </queryResponse>";
@@ -630,7 +693,8 @@ Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%
                                                         lineHtml,
                                                         kbName,
                                                         language));       
-           } catch (Exception e) {}      
+           } catch (Exception e) {
+        }      
         /*
         command = tptp4X    + " " + 
                   "-f sumo" + " " +
@@ -653,10 +717,22 @@ Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%
                                                     kbName,
                                                     language));       
         */
-      }
+        }
+
+//----If lastAnswer != null (we found an answer) && there is an answer (lastAnswer.size() > 0)
+       if (lastAnswer != null && lastAnswer.size() > 0) {
+//         out.println("Found new answer!");
+         numAnswers++;
+       } else {
+//         out.println("No luck finding new answer");
+       } 
+//----Add query time limit to while loop break
+      } while (numAnswers < maxAnswers && lastAnswer != null && lastAnswer.size() > 0);
      }
 //----Delete the kbFile
-//      (new File(kbFileName)).delete();
+      if (originalKBFileName != null) {
+//        (new File(originalKBFileName)).delete();
+      }
     } catch (IOException ioe) {
     out.println(ioe.getMessage());
     }
