@@ -63,9 +63,9 @@ KB kb = null;
       String action = request.getParameter("action");
       language = HTMLformatter.processLanguage(language,kb);
       if (action != null && action != "" && action.equals("generateDocs")) 
-          DocGen.generateHTML(kb,language);      
+          DocGen.generateHTML(kb,language,true);      
       if (action != null && action != "" && action.equals("generateSingle")) 
-          DocGen.generateSingleHTML(kb,language);  
+          DocGen.generateSingleHTML(kb,language,true);  
       if (action != null && action != "" && action.equals("dotGraph")) {
           Graph g = new Graph();
           g.createDotGraph(kb, term, relation, filename);

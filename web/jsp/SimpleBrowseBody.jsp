@@ -52,21 +52,20 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
     ArrayList forms;
     show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
+    HashMap tfm = kb.getTermFormatMap(language);
     if (term != null) {
         term = term.intern();
         //show.append(term);
         show.append("</b></FONT>");
     	if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-    	    Map fm = kb.getFormatMap(language);
     	    String fmValue = null;
-    	    if (fm != null) 
-                fmValue = (String) fm.get(term);
+    	    if (tfm != null) 
+                fmValue = (String) tfm.get(term);
     	    if (fmValue == null) 
                 System.out.println("INFO in SimpleBrowseBody.jsp: No format map entry for \"" +
                                    term + "\" in language " + language);    	    
     	}
     	else {
-    	    Map tfm = kb.getTermFormatMap(language);
     	    String tfmValue = null;
     	    if (tfm != null) 
                 tfmValue = (String) tfm.get(term); 
@@ -86,10 +85,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
 
-    if (DocGen.isComposite(kb,term)) 
-        show.append(DocGen.createCompositePage(kb,HTMLformatter.kbHref,term,limit,language));
+    TreeMap alphaList = DocGen.createAlphaList(kb,tfm);
+    if (DocGen.isCompositeInstance(kb,term)) 
+        show.append(DocGen.createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
     else
-        show.append(DocGen.createPage(kb,HTMLformatter.kbHref,term,limit,language));
+        show.append(DocGen.createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");
