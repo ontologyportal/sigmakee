@@ -73,20 +73,19 @@ public class Graph {
 
     /** *************************************************************
      */
-    private String generateDocumentationColumn(KB kb, String term, String href) {
+    private String generateDocumentationColumn(KB kb, String term, String href, String language) {
 
         String docString = "";
         ArrayList docStmts = kb.askWithRestriction(0,"documentation",1,term);
         if (docStmts.size() > 0) {
             Formula doc = (Formula) docStmts.get(0);
             docString = doc.getArgument(3);
-            // System.out.println("  docString == " + docString);
-            if (!docString.equals("")) {
+            if (!DB.emptyString(docString)) {
                 if (docString.length() > 100) 
                     docString = docString.substring(1,100) + "...";
                 else
                     docString = docString.substring(1,docString.length()-1);
-                return kb.formatDocumentation(href,docString);
+                return kb.formatDocumentation(href,docString,language);
             }
         }
         return "";
@@ -133,7 +132,7 @@ public class Graph {
      * Create a <table> header that shows each of the columns to be
      * displayed in the HTML-based graph.
      */
-    private String createGraphEntry(KB kb, String prefix, String kbHref, String term) {
+    private String createGraphEntry(KB kb, String prefix, String kbHref, String term, String language) {
 
         StringBuffer result = new StringBuffer();
         result.append("<tr>");
@@ -145,7 +144,7 @@ public class Graph {
             String val = (String) columnList.get(col);
             if (val.equals("yes")) {
                 if (col.equals("documentation")) 
-                    result.append("<td><small>" + generateDocumentationColumn(kb,term,kbHref) + "</small></td>");
+                    result.append("<td><small>" + generateDocumentationColumn(kb,term,kbHref,language) + "</small></td>");
                 if (col.equals("direct-children")) 
                     result.append("<td>" + generateChildrenColumn(kb,term) + "</td>");
                 if (col.equals("graph")) 
@@ -164,7 +163,7 @@ public class Graph {
      * relation.
      */
     public ArrayList createBoundedSizeGraph(KB kb, String term, String relation, 
-                                        int size, String indentChars) {
+                                        int size, String indentChars, String language) {
 
         ArrayList result = new ArrayList();
         ArrayList oldresult = new ArrayList();
@@ -179,8 +178,8 @@ public class Graph {
             oldresult = result;
             HashSet checkAbove = new HashSet();
             HashSet checkBelow = new HashSet();
-            result = createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true);
-            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false));
+            result = createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true,language);
+            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false,language));
             above++;
             below++;
         }
@@ -201,15 +200,15 @@ public class Graph {
      * @param indentChars a String of characters to be used for indenting the terms
      */
     public ArrayList createGraph(KB kb, String term, String relation, 
-                                        int above, int below, String indentChars) {
+                                 int above, int below, String indentChars, String language) {
 
         graphsize = 0;
         ArrayList result = new ArrayList();  // a list of Strings
 	HashSet checkAbove = new HashSet();
 	HashSet checkBelow = new HashSet();
         result.add(createColumnHeader());
-        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true));
-        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false));
+        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true,language));
+        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false,language));
         if (graphsize == 100)
             result.add("<P>Graph size limited to 100 terms.<P>\n");
         return result;
@@ -222,7 +221,8 @@ public class Graph {
      *              far, which is used to prevent cycles
      */
     private ArrayList createGraphBody(KB kb, Set check, String term, String relation, 
-					     int above, int below, String indentChars,int level, boolean show) {
+                                      int above, int below, String indentChars,int level, 
+                                      boolean show, String language) {
 
         System.out.println("ENTER Graph.createGraphBody(" + kb.name + ", " + check + ", "
                            + term + ", " + relation + ", " + above + ", " + below + ", "
@@ -244,7 +244,7 @@ public class Graph {
 		    Formula f = (Formula) stmtAbove.get(i);
 		    String newTerm = f.getArgument(2);
 		    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-			result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true));		    
+			result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true,language));		    
 		    check.add(term);
 		}
 	    }
@@ -264,7 +264,7 @@ public class Graph {
 	    if (show) {
                 graphsize++;
                 if (graphsize < 100)                 
-                    result.add(createGraphEntry(kb,prefix.toString(),kbHref,term));
+                    result.add(createGraphEntry(kb,prefix.toString(),kbHref,term,language));
             }
         
 	    if (below > 0) {
@@ -273,7 +273,7 @@ public class Graph {
 		    Formula f = (Formula) stmtBelow.get(i);
 		    String newTerm = f.getArgument(1);
 		    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-			result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true));		    
+			result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true,language));		    
 		    check.add(term);
 		}
 	    }
@@ -388,7 +388,7 @@ public class Graph {
         KB kb = KBmanager.getMgr().getKB("SUMO");
 
         Graph g = new Graph();
-        g.createBoundedSizeGraph(kb, "Process", "subclass", 50, "  ");
+        g.createBoundedSizeGraph(kb, "Process", "subclass", 50, "  ", "EnglishLanguage");
         /*
         Graph g = new Graph();
         HashSet result = g.createDotGraph(kb,"Entity","subclass");
