@@ -3452,6 +3452,43 @@ public class KB {
         return goodCount;
     }
 
+  public String copyFile (String fileName) throws Exception {
+    String sanitizedKBName = name.replaceAll("\\W","_");
+    File inputFile = new File(fileName);
+    File outputFile = File.createTempFile(sanitizedKBName, ".p",null);
+
+    FileReader in = new FileReader(inputFile);
+    FileWriter out = new FileWriter(outputFile);
+    int c;
+
+    while ((c = in.read()) != -1)
+      out.write(c);
+
+    in.close();
+    out.close();
+    return outputFile.getCanonicalPath();
+  }
+
+  public void addToFile (String fileName, ArrayList<String> axioms, String conjecture) throws Exception {
+    boolean append = true;
+    FileOutputStream file = new FileOutputStream(fileName, append);
+    DataOutputStream out = new DataOutputStream(file);
+    // add axioms
+    if (axioms != null) {
+      for (int i = 0; i < axioms.size(); i++) {
+        String axiom = axioms.get(i);
+        out.writeBytes(axiom);
+      }
+      out.flush();        
+    }
+    // add conjecture
+    if (conjecture != null) {
+      out.writeBytes(conjecture);
+      out.flush();
+    }
+    out.close();
+  }
+
     /** *************************************************************
      */
     public String writeTPTPFile(String fileName,
