@@ -100,9 +100,9 @@ August 9, Acapulco, Mexico.
           if (view.equals("text")) {
               ArrayList result = null;
               if (limit != null && limit != "")
-                  result = g.createBoundedSizeGraph(kb,term,relation,Integer.parseInt(limit),"&nbsp;&nbsp;&nbsp;&nbsp;");              
+                  result = g.createBoundedSizeGraph(kb,term,relation,Integer.parseInt(limit),"&nbsp;&nbsp;&nbsp;&nbsp;",language);              
               else
-                  result = g.createGraph(kb,term,relation,Integer.parseInt(up),Integer.parseInt(down),"&nbsp;&nbsp;&nbsp;&nbsp;");
+                  result = g.createGraph(kb,term,relation,Integer.parseInt(up),Integer.parseInt(down),"&nbsp;&nbsp;&nbsp;&nbsp;",language);
               out.println("<table>\n");
               for (int i = 0; i < result.size(); i++) {
                   String element = (String) result.get(i);
