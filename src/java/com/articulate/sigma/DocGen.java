@@ -18,7 +18,10 @@ import java.io.*;
 public class DocGen {     
 
     public static String header = "";
-    public static String footer = "www.articulatesoftware.com";
+    public static String TOCheader = "";
+    public static String footer = "www.rightscom.com";
+    public static boolean simplified = false;   // false = do not display termFormat 
+                                                // expressions in place of term names
 
     /** ***************************************************************
      */
@@ -33,10 +36,30 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     *  If the given term is an instance, and is an instance of the
+     *  term with the headword "Composite".
      */
-    public static boolean isComposite(KB kb, String term) {
+    public static boolean isCompositeInstance(KB kb, String term) {
 
-        return Diagnostics.findParent(kb,term,"Ddex_Composite");
+        //System.out.println("INFO in DocGen.isCompositeInstance(): term: " + term);
+        //ArrayList headwords = kb.askWithRestriction(0,"hasHeadword",2,"\"Composite\"");
+        //System.out.println("headwords " + headwords);
+        //if (headwords != null && headwords.size() > 0) {
+            //Formula f = (Formula) headwords.get(0);
+            //String composite = f.getArgument(1);
+            // 
+            // Note that we could try to find the composite by doing an ask on
+            // hasHeadword and then searching for "Composite" but KIF.parse doesn't
+            // index on Strings so we can't use kb.askWithRestrictions()
+            String composite = "Ddex_Composite";
+            //System.out.println("INFO in DocGen.isCompositeInstance(): composite: " + composite);
+            ArrayList instances = kb.askWithRestriction(0,"instance",1,term);
+            if (instances != null) 
+                return (Diagnostics.findParent(kb,term,composite) &&
+                    instances.size() > 0);
+            //return false;
+        //}
+        return false;
     }
 
     /** ***************************************************************
@@ -61,66 +84,50 @@ public class DocGen {
      *  individual index pages (which collect all terms starting
      *  with a particular letter.
      */
-    private static String generateTOCHeader(TreeMap alphaList, TreeMap pageList) {
+    private static String generateDynamicTOCHeader(String kbHref) {
 
         StringBuffer result = new StringBuffer();
-        result.append("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
-                   "<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\"></head><body>\n");
-        result.append("<table width=\"100%\"><tr><td colspan=\"35\" class=\"title\">\n");
-        result.append(header + "</td></tr><tr class=\"letter\">\n");
-
-        for (char c = 65; c < 90; c++) {
-            String cString = Character.toString(c);
-            if (alphaList.keySet().contains(cString)) {
-                String filelink = "letter-" + cString + ".html";      
-                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
-            }
-            else                 
-                result.append("<td>" + cString + "</td>\n");
+        result.append("<table width=\"100%\"><tr>");
+        for (char c = 65; c < 91; c++) {
+            String cString = Character.toString(c);   
+            result.append("<td valign=top><a href=\"" + kbHref + "&term=" + cString + "*\">" + cString + "</a></td>\n");            
         }
         result.append("</tr></table>");
         return result.toString();
     }
 
     /** ***************************************************************
-     *  Generate an HTML page that lists term name and its
-     *  documentation
-     *  @param terms is the list of KB terms to show
      */
-    private static String generateTOCPage(KB kb, String filename, String header, TreeSet terms) {
-
-        StringBuffer result = new StringBuffer();
-        result.append("<table width=\"100%\">");
-        Iterator it = terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            result.append("<tr><td><a href=\"" + term + ".html\">" + term + "</a></td>\n");
-            ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
-            if (docs != null && docs.size() > 0) {
-                Formula f = (Formula) docs.get(0);
-                String docString = f.getArgument(3);  
-                docString = kb.formatDocumentation("",docString);
-                if (docString.length() > 1)                 
-                    result.append("<td>" + docString.substring(1,docString.length()) + "</td>\n");
-            }
-            result.append("</tr>\n");
-        }
-        result.append("</tr>\n");
-        result.append("</table>\n");
-        return result.toString();
-    }
-
-    /** ***************************************************************
-     */
-    private static String createDocs(KB kb, String kbHref, String term) {
+    private static String createDocs(KB kb, String kbHref, String term, String language) {
 
         StringBuffer result = new StringBuffer();
         ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
         if (docs != null && docs.size() > 0) {
             Formula f = (Formula) docs.get(0);
             String docString = f.getArgument(3);  
-            docString = kb.formatDocumentation(kbHref,docString);
+            docString = kb.formatDocumentation(kbHref,docString,language);
+            docString = removeEnclosingQuotes(docString);   
             result.append("<td class=\"description\">" + docString + "</td></tr>\n");
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    private static String createComments(KB kb, String kbHref, String term, String language) {
+
+        StringBuffer result = new StringBuffer();
+        ArrayList docs = kb.askWithRestriction(0,"comment",1,term);
+        if (docs != null && docs.size() > 0) {
+            result.append("<tr><td class=\"label\">Comments</td>");
+            for (int i = 0; i < docs.size(); i++) {
+                Formula f = (Formula) docs.get(i);
+                String docString = f.getArgument(3);  
+                docString = kb.formatDocumentation(kbHref,docString,language);
+                docString = removeEnclosingQuotes(docString);   
+                if (i > 0) result.append("<tr><td>&nbsp;</td>");
+                result.append("<td colspan=2 class=\"cell\">" + docString + "</td></tr>\n");
+            }
         }
         return result.toString();
     }
@@ -132,10 +139,11 @@ public class DocGen {
         StringBuffer result = new StringBuffer();
         ArrayList syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
         if (syn != null && syn.size() > 0) {
-            result.append("<tr><td><b>Synonym(s)</b>");
+            result.append("<tr><td class=\"label\"><b>Synonym(s)</b> ");
             for (int i = 0; i < syn.size(); i++) {
                 Formula f = (Formula) syn.get(i);
                 String s = f.getArgument(1); 
+                s = removeEnclosingQuotes(s);
                 if (i >0) result.append(", ");                
                 result.append("<i>" + s + "</i>");
             }
@@ -146,8 +154,55 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private static String createParents(KB kb, String kbHref, String term) {
+    private static String createHasSameComponents(KB kb, String kbHref, String term, String language) {
 
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
+        StringBuffer result = new StringBuffer();
+        ArrayList syn = kb.askWithRestriction(0,"isXmlExtensionOf",1,term);
+        if (syn != null && syn.size() > 0) {
+            result.append("<tr><td class=\"label\">Has Same Components As</td>");
+            for (int i = 0; i < syn.size(); i++) {
+                Formula f = (Formula) syn.get(i);
+                String s = f.getArgument(2); 
+                String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + showTermName(kb,s,language) + "</a>";
+                if (i > 0) result.append("<tr><td>&nbsp;</td>");
+                result.append("<td class=\"cell\">" + termHref + "</td></tr>\n");
+            }
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    private static String createUsingSameComponents(KB kb, String kbHref, String term, String language) {
+
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
+        StringBuffer result = new StringBuffer();
+        ArrayList syn = kb.askWithRestriction(0,"isXmlExtensionOf",2,term);
+        if (syn != null && syn.size() > 0) {
+            result.append("<tr><td class=\"label\">Composites Using Same Components</td>");
+            for (int i = 0; i < syn.size(); i++) {
+                Formula f = (Formula) syn.get(i);
+                String s = f.getArgument(1); 
+                String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + showTermName(kb,s,language) + "</a>";
+                if (i > 0) result.append("<tr><td>&nbsp;</td>");
+                result.append("<td class=\"cell\">" + termHref + "</td></tr>\n");
+            }
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    private static String createParents(KB kb, String kbHref, String term, String language) {
+
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
         StringBuffer result = new StringBuffer();
         ArrayList forms = kb.askWithRestriction(0,"subclass",1,term);
         if (forms != null && forms.size() > 0) {
@@ -156,14 +211,15 @@ public class DocGen {
                 Formula f = (Formula) forms.get(i);
                 if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(2); 
-                    String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
+                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + showTermName(kb,s,language) + "</a>";
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td class=\"cell\">" + termHref + "</td>");
                     ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
                         String docString = f.getArgument(3);  
-                        docString = kb.formatDocumentation(kbHref,docString);
+                        docString = kb.formatDocumentation(kbHref,docString,language);
+                        docString = removeEnclosingQuotes(docString);   
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
                     result.append("</tr>\n");
@@ -175,8 +231,11 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private static String createChildren(KB kb, String kbHref, String term) {
+    private static String createChildren(KB kb, String kbHref, String term, String language) {
 
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
         StringBuffer result = new StringBuffer();
         ArrayList forms = kb.askWithRestriction(0,"subclass",2,term);
         if (forms != null && forms.size() > 0) {
@@ -185,14 +244,15 @@ public class DocGen {
                 Formula f = (Formula) forms.get(i);
                 if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(1); 
-                    String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
+                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + showTermName(kb,s,language) + "</a>";
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td class=\"cell\">" + termHref + "</td>");
                     ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
                         String docString = f.getArgument(3);  
-                        docString = kb.formatDocumentation(kbHref,docString);
+                        docString = kb.formatDocumentation(kbHref,docString,language);
+                        docString = removeEnclosingQuotes(docString);   
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
                     result.append("</tr>\n");
@@ -204,24 +264,34 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private static String createInstances(KB kb, String kbHref, String term) {
+    private static String createInstances(KB kb, String kbHref, String term, String language) {
 
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
         StringBuffer result = new StringBuffer();
         ArrayList forms = kb.askWithRestriction(0,"instance",2,term);
         if (forms != null && forms.size() > 0) {
-            result.append("<tr><td class=\"label\">Child instances</td>");
+            result.append("<tr><td class=\"label\">Instances</td>");
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
                 if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(1); 
-                    String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
+                    String displayName = showTermName(kb,s,language);
+                    String xmlName = "";
+                    if (displayName.equals(s)) 
+                        xmlName = showTermName(kb,s,"XMLLabel");
+                    if (!DB.emptyString(xmlName)) 
+                        displayName = xmlName;
+                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + displayName + "</a>";
                     if (i > 0) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td class=\"cell\">" + termHref + "</td>");
                     ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
                     if (docs != null && docs.size() > 0) {
                         f = (Formula) docs.get(0);
                         String docString = f.getArgument(3);  
-                        docString = kb.formatDocumentation(kbHref,docString);
+                        docString = kb.formatDocumentation(kbHref,docString,language);
+                        docString = removeEnclosingQuotes(docString);   
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
                     result.append("</tr>\n");
@@ -233,8 +303,11 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private static String createRelations(KB kb, String kbHref, String term) {
+    private static String createRelations(KB kb, String kbHref, String term, String language) {
 
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
         StringBuffer result = new StringBuffer();
         ArrayList relations = getRelations(kb);
         boolean firstLine = true;
@@ -243,13 +316,13 @@ public class DocGen {
             // System.out.println("INFO in DocGen.createRElations(): relation: " + relation);
             if (!relation.equals("subclass") && !relation.equals("instance") &&
                 !relation.equals("documentation")) {
-                String relnHref = "<a href=\"" + kbHref + "&term=" + relation + "\">" + relation + "</a>";
+                String relnHref = "<a href=\"" + kbHref + relation + suffix + "\">" + showTermName(kb,relation,language) + "</a>";
                 ArrayList statements = kb.askWithRestriction(0,relation,1,term);
                 for (int j = 0; j < statements.size(); j++) {
                     Formula f = (Formula) statements.get(j);
                     if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                         String s = f.getArgument(2); 
-                        String termHref = "<a href=\"" + kbHref + "&term=" + s + "\">" + s + "</a>";
+                        String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + showTermName(kb,s,language) + "</a>";
                         if (firstLine) {
                             result.append("<tr><td class=\"label\">Relations</td>");                
                             firstLine = false;
@@ -312,31 +385,86 @@ public class DocGen {
      */
     private static String createCompositeComponentLine(KB kb, String kbHref, String term, int indent, String language) {
 
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
         StringBuffer result = new StringBuffer();
-        result.append("<tr><td></td><td>");
+        result.append("<tr><td></td><td class=\"cell\">");
+        String parentClass = "";;
         ArrayList instanceForms = kb.askWithRestriction(0,"instance",1,term);
         if (instanceForms != null && instanceForms.size() > 0) {
-            result.append(indentChars("&nbsp;&nbsp;",indent));
             Formula f = (Formula) instanceForms.get(0);
-            result.append("<a href=\"" + kbHref + "&term=" + f.getArgument(2) + "\">" + f.getArgument(2) + "</a>");        
+            parentClass = f.getArgument(2);
         }
-        result.append("</td><td>");
+        ArrayList termForms = kb.askWithTwoRestrictions(0,"termFormat",1,"XMLLabel",2,term);
+        if (termForms != null) {
+            for (int i = 0; i < termForms.size(); i++) {               
+                Formula f = (Formula) termForms.get(i);
+                result.append(indentChars("&nbsp;&nbsp;",indent));
+                String termFormat = f.getArgument(3);
+                termFormat = termFormat.substring(1,termFormat.length()-1);
+                result.append("<a href=\"" + kbHref + parentClass + suffix + "\">" + termFormat + "</a>");                      
+            }
+        }
+        result.append("</td><td class=\"cell\">");
         ArrayList docForms = kb.askWithRestriction(0,"documentation",1,term);
         if (docForms != null && docForms.size() > 0) {
             Formula f = (Formula) docForms.get(0);
-            result.append(f.getArgument(3));
+            String docString = f.getArgument(3);
+            docString = kb.formatDocumentation(kbHref,docString,language);
+            docString = removeEnclosingQuotes(docString);
+            result.append(docString); 
         }
-        result.append("</td><td>");
+        result.append("</td><td class=\"cell\">");
         if (indent > 0)        
             result.append(showCardinalityCell(kb,kbHref,term,""));
-        result.append("</td><td>");
+        result.append("</td><td class=\"cell\">");
         ArrayList forms = kb.askWithRestriction(0,"dataType",1,term);
         if (forms != null && forms.size() > 0) {
             Formula f = (Formula) forms.get(0);
-            result.append("<a href=\"" + kbHref + "&term=" + f.getArgument(2) + "\">" + f.getArgument(2) + "</a>");        
+            String dataTypeName = f.getArgument(2);
+            dataTypeName = showTermName(kb,dataTypeName,language);                
+            result.append("<a href=\"" + kbHref + f.getArgument(2) + suffix + "\">" + dataTypeName + "</a>");        
         }
         result.append("</td></tr>\n");
         return result.toString();
+    }
+
+    /** ***************************************************************
+     *  Remove the quotes in the first and last character of a
+     *  String, if present.
+     */
+    public static String removeEnclosingQuotes(String s) {
+
+        if (!DB.emptyString(s) && s.charAt(0) == '"' && s.charAt(s.length()-1) == '"') 
+            return s.substring(1,s.length()-1);    
+        else
+            return s;
+    }
+
+    /** ***************************************************************
+     *  If a term has a termFormat in the given language, display
+     *  that, otherwise, show its termFormat for English, otherwise
+     *  just display the term name.
+     */
+    public static String showTermName(KB kb, String term, String language) {
+
+        HashMap synonyms = kb.getTermFormatMap(language);
+        String syn = (String) synonyms.get(term);
+        if (DB.emptyString(syn)) {
+            synonyms = kb.getTermFormatMap("EnglishLanguage");
+            syn = (String) synonyms.get(term);
+            if (DB.emptyString(syn)) 
+                return(term);
+            else {
+                syn = removeEnclosingQuotes(syn);
+                return(syn);
+            }
+        }
+        else {
+            syn = removeEnclosingQuotes(syn);
+            return(syn);
+        }
     }
 
     /** ***************************************************************
@@ -361,21 +489,21 @@ public class DocGen {
         avp.attribute = term;
         avp.value = Integer.toString(indent);
         result.add(avp);
-        ArrayList forms = kb.askWithRestriction(0,"hasXmlElement",1,term);
-        if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
-                Formula form = (Formula) forms.get(i);
-                String t = form.getArgument(2);
-                result.addAll(createCompositeRecurse(kb,t,indent+1));
-            }
-        }
-        forms = kb.askWithRestriction(0,"hasXmlAttribute",1,term);
+        ArrayList forms = kb.askWithRestriction(0,"hasXmlAttribute",1,term);
         if (forms != null) {
             for (int i = 0; i < forms.size(); i++) {
                 Formula form = (Formula) forms.get(i);
                 String t = form.getArgument(2);
                 result.addAll(createCompositeRecurse(kb,t,indent+1));  // This should return without children since
                                                                       // attributes don't have child elements
+            }
+        }
+        forms = kb.askWithRestriction(0,"hasXmlElement",1,term);
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                String t = form.getArgument(2);
+                result.addAll(createCompositeRecurse(kb,t,indent+1));
             }
         }
         return result;
@@ -386,6 +514,9 @@ public class DocGen {
     private static String createContainingCompositeComponentLine(KB kb, String kbHref, String containingComp,
                                                                  String instance, int indent, String language) {
 
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
         StringBuffer result = new StringBuffer();
         ArrayList docForms = kb.askWithRestriction(0,"documentation",1,instance);
         if (docForms != null && docForms.size() > 0) {
@@ -393,11 +524,15 @@ public class DocGen {
                 Formula f = (Formula) docForms.get(i);
                 String context = f.getArgument(2);
                 if (context.equals(containingComp)) {
-                    result.append("<tr><td></td><td>");
-                    result.append("<a href=\"" + kbHref + "&term=" + containingComp + "\">" + containingComp + "</a>");        
-                    result.append("</td><td>");
-                    result.append(f.getArgument(3));                
-                    result.append("</td><td>");
+                    result.append("<tr><td></td><td class=\"cell\">");
+                    result.append("<a href=\"" + kbHref  + containingComp + suffix + "\">" + 
+                                  showTermName(kb,containingComp,language) + "</a>");        
+                    result.append("</td><td class=\"cell\">");
+                    String docString = f.getArgument(3);
+                    docString = kb.formatDocumentation(kbHref,docString,language);
+                    docString = removeEnclosingQuotes(docString);
+                    result.append(docString);                
+                    result.append("</td><td class=\"cell\">");
                     result.append(showCardinalityCell(kb,kbHref,instance,context));
                     result.append("</td><td>");
                     result.append("</td></tr>\n");
@@ -450,13 +585,36 @@ public class DocGen {
             for (int i = 0; i < instances.size(); i++) {
                 Formula form = (Formula) instances.get(i);
                 String t = form.getArgument(1);
-                if (isComposite(kb,t)) {
+                if (isCompositeInstance(kb,t)) {
                     result.add(t);
                 }
                 result.addAll(containingComposites(kb,t));
             }
         }
         return result;
+    }
+
+    /** ***************************************************************
+     */
+    private static String createBelongsToClass(KB kb, String kbHref, String term, String language) {
+
+        String suffix = "";
+        if (DB.emptyString(kbHref)) 
+            suffix = ".html";
+        StringBuffer result = new StringBuffer();
+        ArrayList forms = kb.askWithRestriction(0,"instance",1,term);
+        if (forms != null && forms.size() > 0) {
+            result.append("<tr><td class=\"label\">Belongs to class</td><td class=\"cell\">\n");
+            for (int i = 0; i < forms.size(); i++) {
+                Formula form = (Formula) forms.get(i);
+                String cl = form.getArgument(2);
+                if (i > 0) 
+                    result.append("<br>");
+                result.append("<a href=\"" + kbHref + cl + suffix + "\">" + showTermName(kb,cl,language) + "</a>");        
+            }
+            result.append("</td><td></td><td></td><td></td></tr>\n");
+        }
+        return result.toString();
     }
 
     /** ***************************************************************
@@ -489,87 +647,16 @@ public class DocGen {
     }
 
     /** ***************************************************************
-     * Create an HTML page that lists information about a particular
-     * composite term, which is a representation of an XML
-     * structure.
-     */
-    public static String createCompositePage(KB kb, String kbHref, String term, int limit, String language) {
-
-        StringBuffer result = new StringBuffer();
-
-        result.append("<table width=\"100%\">");
-        result.append("<tr id=\"" + term + "\">");
-        result.append("<td class=\"headword\">" + term);
-        HashMap synonyms = kb.getTermFormatMap(language);
-        String syn = (String) synonyms.get(term);
-        if (!DB.emptyString(syn)) 
-            result.append("&nbsp;<small>(" + syn + ")</small>");
-        result.append("</td></tr>\n<tr>");
-        result.append(DocGen.createDocs(kb,kbHref,term));
-        result.append(DocGen.createSynonyms(kb,kbHref,term));
-        result.append("</table><P>\n");
-
-        result.append(HTMLformatter.htmlDivider);
-
-        result.append("<table><tr bgcolor=#DDDDDD><td>Member of Composites</td><td>Composite Name</td>");
-        result.append("<td>Description of Element Role</td><td>Cardinality</td><td></td></tr>\n");
-        ArrayList superComposites = findContainingComposites(kb,term); 
-        result.append(formatContainingComposites(kb,kbHref,superComposites,term,language));
-
-        result.append("<tr bgcolor=#DDDDDD><td>Components</td><td>Name</td>");
-        result.append("<td>Description of Element Role</td><td>Cardinality</td><td>Data Type</td></tr>\n");
-        ArrayList hier = createCompositeRecurse(kb, term, 0);
-        result.append(formatCompositeHierarchy(kb,kbHref,hier,language));
-
-        result.append("<tr bgcolor=#DDDDDD><td>Relationships</td><td></td><td></td><td></td><td></td></tr>\n");
-        ArrayList forms = kb.askWithRestriction(0,"instance",1,term);
-        if (forms != null) {
-            result.append("<tr><td halign='right'>Belongs to class</td><td>\n");
-            for (int i = 0; i < forms.size(); i++) {
-                Formula form = (Formula) forms.get(i);
-                String cl = form.getArgument(2);
-                if (i > 0) 
-                    result.append("<br>");
-                result.append("<a href=\"" + kbHref + "&term=" + cl + "\">" + cl + "</a>");        
-            }
-            result.append("</td><td></td><td></td><td></td></tr>\n");
-        }
-        result.append("</table>\n");
-        return result.toString();
-    }
-
-    /** ***************************************************************
      * Create an HTML page that lists information about a particular term,
      * with a limit on how many statements of each type should be
      * displayed.
      */
-    public static String createPage(KB kb, String kbHref, String term, int limit, String language) {
+    public static String createAllStatements(KB kb, String kbHref, String term, 
+                                    int limit) {
 
         StringBuffer result = new StringBuffer();
-        result.append("<table width=\"100%\">");
-        result.append("<tr id=\"" + term + "\">");
-        result.append("<td class=\"headword\">" + term);
-        HashMap synonyms = kb.getTermFormatMap(language);
-        String syn = (String) synonyms.get(term);
-        if (!DB.emptyString(syn)) 
-            result.append("&nbsp;<small>(" + syn + ")</small>");
-        result.append("</td></tr>\n<tr>");
 
-        result.append(DocGen.createDocs(kb,kbHref,term));
-        result.append(DocGen.createSynonyms(kb,kbHref,term));
-        result.append("</table><P>\n");
-        result.append("<table width=\"100%\">");
-        result.append(DocGen.createParents(kb,kbHref,term));
-        result.append(DocGen.createChildren(kb,kbHref,term));
-        result.append(DocGen.createInstances(kb,kbHref,term));
-        result.append(DocGen.createRelations(kb,kbHref,term));
-        result.append("</table>\n");
-
-        result.append(HTMLformatter.htmlDivider);
-        result.append("<P><table><tr><td><b>Other statements</b></td></tr>");
-        result.append("<tr><td class=\"cell\">These statements express (potentially complex) facts about the term, " +
-                      "and are automatically generated.</td></tr>\n<tr><td class=\"cell\">");
-
+        String language = "EnglishLanguage";
         int localLimit = limit;
         String limitString = "";
         for (int argnum = 2; argnum < 6; argnum++) {
@@ -653,39 +740,234 @@ public class DocGen {
             }
         }
         result.append(limitString);
-        result.append("</td></tr></table><P>");
+        if (result.length() > 0) {                  // note that the following 3 lines are inserted in reverse order
+            result.insert(0,"</td></tr></table><P>");
+            result.insert(0,"<tr><td class=\"cell\">These statements express (potentially complex) facts about the term, " +
+                          "and are automatically generated.</td></tr>\n<tr><td class=\"cell\">");
+            result.insert(0,"<P><table><tr><td class=\"label\"><b>Other statements</b></td></tr>");
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     * Create an HTML page that lists information about a particular
+     * composite term, which is a representation of an XML
+     * structure.
+     * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
+     *                   createAlphaList()
+     */
+    public static String createCompositePage(KB kb, String kbHref, String term, TreeMap alphaList, 
+                                             int limit, String language) {
+
+        StringBuffer result = new StringBuffer();
+
+        if (!DB.emptyString(kbHref)) 
+            result.append(generateDynamicTOCHeader(kbHref));
+        else
+            result.append(generateTOCHeader(alphaList,kb.name + "-AllTerms.html"));
+        result.append("<table width=\"100%\">");
+        result.append("<tr bgcolor=#DDDDDD>");
+        result.append("<td class=\"cell\"><font size=+2>");
+
+        result.append(showTermName(kb,term,language));
+        result.append("</font></td></tr>\n<tr>");
+        result.append(DocGen.createDocs(kb,kbHref,term,language));
+        result.append(DocGen.createSynonyms(kb,kbHref,term));
+        result.append("</table><P>\n");
+
+        result.append(HTMLformatter.htmlDivider);
+        result.append("<table>");
+        result.append("<tr class=\"title_cell\"><td class=\"label\">Component Structure</td><td colspan=4></td></tr>");
+        result.append(createHasSameComponents(kb,kbHref,term,language));
+        result.append("<tr><td class=\"label\">Member of Composites</td><td class=\"title_cell\">Composite Name</td>");
+        result.append("<td class=\"title_cell\">Description of Element Role</td><td class=\"title_cell\">Cardinality</td><td></td></tr>\n");
+        ArrayList superComposites = findContainingComposites(kb,term); 
+        result.append(formatContainingComposites(kb,kbHref,superComposites,term,language));
+
+        result.append("<tr><td class=\"label\">Components</td>" +
+                      "<td class=\"title_cell\">Name</td>" +
+                      "<td class=\"title_cell\">Description of Element Role</td>" +
+                      "<td class=\"title_cell\">Cardinality</td>" +
+                      "<td class=\"title_cell\">Data Type</td></tr>\n");
+        ArrayList hier = createCompositeRecurse(kb, term, 0);
+        hier.remove(hier.get(0));                                           // no need to show the composite itself
+        result.append(formatCompositeHierarchy(kb,kbHref,hier,language));
+
+        result.append("<tr class=\"title_cell\"><td class=\"label\">Relationships</td><td></td><td></td><td></td><td></td></tr>\n");
+        result.append(createBelongsToClass(kb,kbHref,term,language));
+        result.append(createUsingSameComponents(kb,kbHref,term,language));
+        result.append("</table>\n");
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     * Create an HTML page that lists information about a particular term,
+     * with a limit on how many statements of each type should be
+     * displayed.
+     * 
+     * @param alphaList a TreeMap of TreeMaps of ArrayLists.
+     *                   @see createAlphaList()
+     */
+    public static String createPage(KB kb, String kbHref, String term, TreeMap alphaList,
+                                    int limit, String language) {
+
+        StringBuffer result = new StringBuffer();
+        if (!DB.emptyString(kbHref)) {
+            kbHref = kbHref + "&term=";
+            result.append(generateDynamicTOCHeader(kbHref));
+        }
+        else
+            result.append(generateTOCHeader(alphaList,kb.name + "-AllTerms.html"));
+
+        result.append("<table width=\"100%\">");
+        result.append("<tr bgcolor=#DDDDDD>");
+        result.append("<td class=\"cell\"><font size=+2>");
+
+        result.append(showTermName(kb,term,language));
+        result.append("</font></td></tr>\n<tr>");
+
+        result.append(createDocs(kb,kbHref,term,language));
+        result.append(createSynonyms(kb,kbHref,term));
+        result.append("</table><P>\n");
+        result.append("<table width=\"100%\">");
+        result.append(createComments(kb,kbHref,term,language));
+        result.append("<tr class=\"title_cell\"><td class=\"label\">Relationships</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+        result.append(createParents(kb,kbHref,term,language));
+        result.append(createChildren(kb,kbHref,term,language));
+        result.append(createInstances(kb,kbHref,term,language));
+        result.append(createRelations(kb,kbHref,term,language));
+        result.append(createUsingSameComponents(kb,kbHref,term,language));
+        result.append(createBelongsToClass(kb,kbHref,term,language));
+        result.append("</table>\n");
+
+        result.append(HTMLformatter.htmlDivider);
+
+        // result.append(createAllStatements(kb,kbHref,term,limit));
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     *  Generate an alphabetic HTML list that points to the
+     *  individual index pages (which collect all terms or term
+     *  formats) starting with a particular letter.
+     * 
+     * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
+     *                   createAlphaList()
+     */
+    private static String generateTOCHeader(TreeMap alphaList, String allname) {
+
+        if (!DB.emptyString(TOCheader)) 
+            return TOCheader;
+        StringBuffer result = new StringBuffer();
+        result.append("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
+                   "<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\"></head><body>\n");
+
+        result.append(DocGen.header);
+        result.append("<table width=\"100%\"><tr><td colspan=\"35\" class=\"title\">\n");
+        result.append(header + "</td></tr><tr class=\"letter\">\n");
+        result.append("<td><a href=\"" + allname + "\">All</a></td>\n");
+
+        for (char c = 48; c < 58; c++) {                // numbers
+            String cString = Character.toString(c);
+            if (alphaList.keySet().contains(cString)) {
+                String filelink = "number-" + cString + ".html";      
+                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
+            }
+            else                 
+                result.append("<td>" + cString + "</td>\n");
+        }
+
+        for (char c = 65; c < 91; c++) {                // letters
+            String cString = Character.toString(c);
+            if (alphaList.keySet().contains(cString)) {
+                String filelink = "letter-" + cString + ".html";      
+                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
+            }
+            else                 
+                result.append("<td>" + cString + "</td>\n");
+        }
+        result.append("</tr></table>");
+        TOCheader = result.toString();
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     *  Generate an HTML page that lists term name and its
+     *  documentation
+     * 
+     * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
+     *                   createAlphaList()
+     */
+    private static String generateTOCPage(KB kb, String firstLetter, TreeMap alphaList, String language) {
+
+        //System.out.println("INFO in generateTOCPage()");
+        int count = 0;
+        StringBuffer result = new StringBuffer();
+        result.append("<table width=\"100%\">");
+        TreeMap map = (TreeMap) alphaList.get(firstLetter);
+        Iterator it = map.keySet().iterator();
+        while (it.hasNext()) {
+            String formattedTerm = (String) it.next();
+            ArrayList al = (ArrayList) map.get(formattedTerm);
+            for (int i = 0; i < al.size(); i++) {
+                String realTermName = (String) al.get(i);
+                result.append("<tr><td><a href=\"" + realTermName + ".html\">" + 
+                              showTermName(kb,realTermName,language) + "</a></td>\n");
+                ArrayList docs = kb.askWithRestriction(0,"documentation",1,realTermName);
+                if (docs != null && docs.size() > 0) {
+                    Formula f = (Formula) docs.get(0);
+                    String docString = f.getArgument(3);  
+                    docString = kb.formatDocumentation("",docString,language);
+                    if (docString.length() > 1)                 
+                        result.append("<td class=\"cell\">" + removeEnclosingQuotes(docString) + "</td>\n");
+                }
+                result.append("</tr>\n");
+            }
+            //if ((count++ % 100) == 1) { System.out.print("."); }
+        }
+        //System.out.println();
+        result.append("</tr>\n");
+        result.append("</table>\n");
         return result.toString();
     }
 
     /** ***************************************************************
      *  Generate and save all the index pages that link to the
      *  individual term pages.
-     *  @param alphaList is a map of all the terms keyed by their
-     *                   first letter
-     *  @pageList is a map of all term pages keyed by term name
-     *  @dir is the directory in which to save the pages
+     *  @param pageList is a map of all term pages keyed by term
+     *                  name
+     *  @param dir is the directory in which to save the pages
+     * 
+     * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
+     *                   createAlphaList()
      */
-    private static String saveIndexes(KB kb, TreeMap alphaList, TreeMap pageList, String dir) throws IOException {
+    private static String saveIndexPages(KB kb, TreeMap alphaList, String dir, String language) throws IOException {
 
-        String tocheader = generateTOCHeader(alphaList,pageList);
+        System.out.println("INFO in DocGen.saveIndexPages()");
+        String tocheader = generateTOCHeader(alphaList,kb.name + "-AllTerms.html");
         FileWriter fw = null;
         PrintWriter pw = null; 
         String filename = "";
+        int count = 0;
         try {
-            Iterator it = alphaList.keySet().iterator();
+            Iterator it = alphaList.keySet().iterator();  // iterate through single letters
             while (it.hasNext()) {
                 String letter = (String) it.next();
-                TreeSet terms = (TreeSet) alphaList.get(letter);
-                filename = dir + File.separator + "letter-" + letter + ".html";
+                if (letter.compareTo("A") < 0) 
+                    filename = dir + File.separator + "number-" + letter + ".html";
+                else
+                    filename = dir + File.separator + "letter-" + letter + ".html";
                 fw = new FileWriter(filename);
                 pw = new PrintWriter(fw);
-                String page = generateTOCPage(kb,filename,header,terms);
+                String page = generateTOCPage(kb,letter,alphaList,language);
                 pw.println(tocheader);
                 pw.println(page);
                 pw.println(footer); 
                 pw.close();
                 fw.close();
+                if ((count++ % 100) == 1) { System.out.print("."); }
             }   
+            System.out.println();
             fw = new FileWriter(dir + File.separator + "index.html");
             pw = new PrintWriter(fw);
             pw.println(tocheader);
@@ -712,7 +994,7 @@ public class DocGen {
      *  Save pages below the KBs directory in a directory called
      *  HTML.  If that already exists, use HTML1, HTML2 etc.
      */
-    private static void printPages(TreeMap pageList, String tocheader, String dir) throws IOException {
+    private static void printHTMLPages(TreeMap pageList, String dir) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
@@ -721,11 +1003,10 @@ public class DocGen {
             String term = (String) it.next();
             String page = (String) pageList.get(term);
             String filename = dir + File.separator + term + ".html";
-            System.out.println("Info in DocGen.printPages(): filename : " + filename);
+            //System.out.println("Info in DocGen.printPages(): filename : " + filename);
             try {
                 fw = new FileWriter(filename);
                 pw = new PrintWriter(fw);
-                pw.println(tocheader);
                 pw.println(page);
                 pw.println(footer);
             }
@@ -764,41 +1045,179 @@ public class DocGen {
     }
 
     /** ***************************************************************
-     * Generate simplified HTML pages for all terms.
-     * alphaList is a TreeMap of TreeSets.  The map key is single letters.
-     * Each TreeSet is a set of all the terms that have that initial letter.
-     * pageList is a TreeMap of Strings where the key is the term name and
-     * the String is the body of the page describing the term.  It is 
-     * combined with a table of contents header created in saveIndexes().
+     *  @return a HashMap where the keys are the term names and the
+     *  values are the "headwords" (with quotes removed).
      */
-    public static void generateHTML(KB kb, String language) {
+    public static HashMap createHeadwordMap(KB kb) {
+
+        HashMap result = new HashMap();
+        ArrayList headwordForms = kb.ask("arg",0,"hasHeadword");
+        if (headwordForms != null && headwordForms.size() > 0) {
+            for (int i = 0; i < headwordForms.size(); i++) {
+                Formula f = (Formula) headwordForms.get(i);
+                String term = f.getArgument(1);
+                String headword = removeEnclosingQuotes(f.getArgument(2));
+                result.put(term,headword);
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     *  @return a HashMap where the keys are the headwords and the
+     *  values are ArrayLists of term names (since headwords are not
+     *  unique identifiers for terms). Don't put automatically
+     *  creased instances in the map. If there's no headword, use
+     *  the term name. This map is the inverse of headwordMap. @see
+     *  DB.StringToKIFid()
+     */
+    public static HashMap createInverseHeadwordMap(KB kb, HashMap headwordMap) {
+
+        HashMap result = new HashMap();
+
+        Iterator it = kb.terms.iterator();  
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (term.indexOf("LocalInstance") > -1) // Don't display automatically created instances
+                continue;                          
+            String headword = term;
+            if (simplified && headwordMap.get(term) != null) 
+                headword = (String) headwordMap.get(term);
+            ArrayList al;
+            if (result.containsKey(headword)) 
+                al = (ArrayList) result.get(headword);
+            else {
+                al = new ArrayList();
+                result.put(headword,al);
+            }
+            al.add(term);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
+     *                   createAlphaList()
+     * 
+     * @param inverseHeadwordMap is a HashMap where the keys are the
+     *          headwords and the values are ArrayLists of term
+     *          names (since headwords are not unique identifiers
+     *          for terms). If there's no headword, the term name is
+     *          used.
+     */
+    private static TreeMap generateHTMLPages(KB kb, TreeMap alphaList,
+                                             HashMap inverseHeadwordMap, String language) {
+
+        TreeMap pageList = new TreeMap();
+        Iterator it;
+        it = inverseHeadwordMap.keySet().iterator();
+        int count = 0;
+        while (it.hasNext()) {
+            String formattedTerm = (String) it.next();
+            ArrayList termNames = (ArrayList) inverseHeadwordMap.get(formattedTerm);
+            for (int i = 0; i < termNames.size(); i++) {
+                String realTermName = (String) termNames.get(i);
+                if (isCompositeInstance(kb,realTermName)) 
+                    pageList.put(realTermName,createCompositePage(kb,"",realTermName,alphaList,200,language));
+                else
+                    pageList.put(realTermName,createPage(kb,"",realTermName,alphaList,200,language));     
+                if ((count++ % 100) == 1) { System.out.print("."); }
+            }
+        }
+        System.out.println();
+        return pageList;
+    }
+
+    /** ***************************************************************
+     *  @param stringMap is a map of String keys and values
+     *  @return a TreeMap of TreeMaps of ArrayLists where the keys
+     *          are uppercase single characters (of term formats or
+     *          headwords) and the values are TreeMaps with a key of
+     *          the term formats or headwords and ArrayList values
+     *          of the actual term names.  Note that if "simplified"
+     *          is false actual term names will be used instead of
+     *          term formats or headwords and the interior map will
+     *          have keys that are the same as their values.
+     * 
+     *          Pictorially:
+     *      letter->    formattedTerm1->term11,term12...term1N
+     *                  formattedTerm2->term21,term22...term2N
+     */
+    public static TreeMap createAlphaList(KB kb, HashMap stringMap) {
+
+        TreeMap alphaList = new TreeMap();  
+
+        System.out.println("INFO in DocGen.createAlphaList()");
+        Iterator it = kb.terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (term.indexOf("LocalInstance") > -1) 
+                continue;
+            String formattedTerm = term;
+            if (simplified && stringMap.get(term) != null) 
+                formattedTerm = (String) stringMap.get(term);
+            String firstLetter = Character.toString(Character.toUpperCase(formattedTerm.charAt(0)));
+
+            if (alphaList.keySet() != null && alphaList.keySet().contains(firstLetter)) {
+                TreeMap map = (TreeMap) alphaList.get(firstLetter);
+                ArrayList al = (ArrayList) map.get(formattedTerm);
+                if (al == null) {
+                    al = new ArrayList();                    
+                    map.put(formattedTerm,al);
+                }
+                al.add(term);
+                //System.out.println(firstLetter + " " + formattedTerm + " " + term);
+            }
+            else {
+                TreeMap map = new TreeMap();
+                ArrayList al = new ArrayList();
+                al.add(term);
+                map.put(formattedTerm,al);
+                alphaList.put(firstLetter,map);
+                //System.out.println(firstLetter + " " + formattedTerm + " " + term);
+            }
+        }
+        return alphaList;
+    }
+
+    /** ***************************************************************
+     * Generate simplified HTML pages for all terms.  Output is a
+     * set of HTML files sent to the directory specified in
+     * generateDir()
+     * 
+     * @param s indicates whether to present "simplified" views of
+     *          terms, meaning using a termFormat or headword,
+     *          rather than the term name itself
+     */
+    public static void generateHTML(KB kb, String language, boolean s) {
+
+        TreeMap pageList = new TreeMap();   // Keys are formatted term names, values are HTML pages
+        TreeMap termMap = new TreeMap();    // Keys are headwords, values are terms        
+
+        HashMap headwordMap = createHeadwordMap(kb); // A HashMap where the keys are the term names and the
+                                                     // values are "headwords" (with quotes removed).
+                                                     
+        TreeMap alphaList = new TreeMap();       // a TreeMap of TreeMaps of ArrayLists.  @see createAlphaList()
 
         try {
-            TreeSet firstCharSet = new TreeSet();
-            TreeMap alphaList = new TreeMap();
-            TreeMap pageList = new TreeMap();
-            Iterator it = kb.terms.iterator();
-            while (it.hasNext()) {
-                String term = (String) it.next();
-                String firstChar = term.substring(0,1);
-                if (Character.isLetter(firstChar.charAt(0))) {
-                    firstChar = Character.toString(Character.toUpperCase(firstChar.charAt(0)));
-                    firstCharSet.add(firstChar);
-                    TreeSet list = new TreeSet();
-                    if (alphaList.get(firstChar) != null) 
-                        list = (TreeSet) alphaList.get(firstChar); 
-                    else
-                        alphaList.put(firstChar,list);
-                    list.add(term);
-                    if (isComposite(kb,term)) 
-                        pageList.put(term,createCompositePage(kb,"",term,200,language));
-                    else
-                        pageList.put(term,createPage(kb,"",term,200,language));
-                }
-            }
+            simplified = s;                 // Display term format expressions instead of term names
+            alphaList = createAlphaList(kb,headwordMap);
+
+                                            // Headword keys and ArrayList values (since the same headword can
+                                            // be found in more than one term)
+            HashMap inverseHeadwordMap = createInverseHeadwordMap(kb,headwordMap);  
+
+            System.out.println("INFO in DocGen.generateHTML(): generating alpha list");
             String dir = generateDir();
-            String tocheader = saveIndexes(kb,alphaList,pageList,dir);
-            printPages(pageList,tocheader,dir);
+            System.out.println("INFO in DocGen.generateHTML(): saving index pages");
+            saveIndexPages(kb,alphaList,dir,language);
+
+            System.out.println("INFO in DocGen.generateHTML(): generating HTML pages");
+            pageList = generateHTMLPages(kb,alphaList,inverseHeadwordMap,language);
+            printHTMLPages(pageList,dir);
+
+            System.out.println("INFO in DocGen.generateHTML(): creating single index page");
+            generateSingleHTML(kb, dir, alphaList, language, s);
         }
         catch (java.io.IOException e) {
             System.out.println(e.getMessage());
@@ -807,40 +1226,65 @@ public class DocGen {
 
     /** ***************************************************************
      * Generate a single HTML page showing all terms.
+     * @param alphaList a TreeMap of TreeMaps of ArrayLists.
+     *                  @see createAlphaList()
+     * 
+     *      letter->    formattedTerm1->term11,term12...term1N
+     *                  formattedTerm2->term21,term22...term2N
      */
-    public static void generateSingleHTML(KB kb, String language) throws IOException {
+    public static void generateSingleHTML(KB kb, String dir, TreeMap alphaList,
+                                          String language, boolean s) throws IOException {
 
+        simplified = s;                // display term format expressions for term names
         FileWriter fw = null;
         PrintWriter pw = null; 
         try {
-            fw = new FileWriter(KBmanager.getMgr().getPref("baseDir") + File.separator + kb.name+ "-AllTerms.html");
+            fw = new FileWriter(dir + File.separator + kb.name+ "-AllTerms.html");
             pw = new PrintWriter(fw);
             pw.println("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
                        "<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\"></head><body>\n");
             pw.println(DocGen.header);
             pw.println("<table border=0><tr bgcolor=#CCCCCC><td>Name</td><td>Documentation</td></tr>\n");
             boolean even = true;
-            Iterator it = kb.terms.iterator();
+            Iterator it = alphaList.keySet().iterator();
             while (it.hasNext()) {
-                String term = (String) it.next();
-                if (even)
-                    pw.println("<tr><td>");
-                else
-                    pw.println("<tr bgcolor=#CCCCCC><td>");
-                even = !even;
-                pw.println(term);
-                pw.println("</td>");
-                ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
-                if (docs != null && docs.size() > 0) {
-                    Formula f = (Formula) docs.get(0);
-                    String docString = f.getArgument(3); 
-                    if (docString != null && docString != "" && docString.length() > 100) 
-                        docString = docString.substring(0,100) + "...\"";                    
-                    pw.println("<td class=\"description\">" + docString);
+                String letter = (String) it.next();
+                TreeMap values = (TreeMap) alphaList.get(letter);
+                Iterator it2 = values.keySet().iterator();
+                while (it2.hasNext()) {
+                    String formattedTerm = (String) it2.next();
+                    ArrayList terms = (ArrayList) values.get(formattedTerm);
+                    for (int i = 0; i < terms.size(); i++) {
+                        String term = (String) terms.get(i);
+                        if (term.indexOf("LocalInstance") > -1) 
+                            continue;
+                        if (even)
+                            pw.println("<tr><td>");
+                        else
+                            pw.println("<tr bgcolor=#CCCCCC><td>");
+                        even = !even;
+                        String printableTerm;
+                        if (simplified) 
+                            printableTerm = showTermName(kb,term,language);
+                        else
+                            printableTerm = term;
+                        pw.println("<a href=\"" + term + ".html\">" + printableTerm + "</a>");
+                        pw.println("</td>");
+                        ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
+                        if (docs != null && docs.size() > 0) {
+                            Formula f = (Formula) docs.get(0);
+                            String docString = f.getArgument(3);                     
+                            if (docString != null && docString != "" && docString.length() > 100) 
+                                docString = docString.substring(0,100) + "...\"";  
+                            docString = kb.formatDocumentation("",docString,language);
+                            docString = removeEnclosingQuotes(docString); 
+                            pw.println("<td class=\"description\">" + docString);
+                        }
+                        else
+                            pw.println("<td>");
+                        pw.println("</td></tr>\n");
+                    }
                 }
-                else
-                    pw.println("<td>");
-                pw.println("</td></tr>\n");
             }
             pw.println("</table>\n");
             pw.println(DocGen.footer);
@@ -858,6 +1302,16 @@ public class DocGen {
         }
     }      
 
+    /** ***************************************************************
+     */
+    public static void generateSingleHTML(KB kb, String language, boolean s) throws IOException {
+
+        HashMap headwordMap = createHeadwordMap(kb); 
+        String dir = generateDir();
+        TreeMap alphaList = createAlphaList(kb,headwordMap);
+        generateSingleHTML(kb, dir, alphaList, language, s);
+    }
+
     /** *************************************************************
      * A test method.
      */
@@ -868,7 +1322,10 @@ public class DocGen {
         } catch (IOException ioe ) {
             System.out.println(ioe.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
-        // DocGen.generateHTML(kb,"EnglishLanguage");
+        KB kb = KBmanager.getMgr().getKB("DDEX");
+        //System.out.println(kb.ask("arg",0,"hasHeadword"));
+        //System.out.println(kb.ask("arg",2,"Composite"));
+        //System.out.println(kb.ask("arg",2,"\"Composite\""));
+        DocGen.generateHTML(kb,"ddex",true);    // KB, language, simplified
     }
 }
