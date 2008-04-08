@@ -1194,10 +1194,12 @@ public class Formula implements Comparable {
      * arity relations, else returns false.
      */
     protected boolean containsVariableArityRelation(KB kb) {
+
         boolean ans = false;
         try {
             Set relns = kb.getCachedRelationValues("instance", "VariableArityRelation", 2, 1);
-            if (relns == null) { relns = new HashSet(); }
+            if (relns == null)
+                relns = new HashSet();                 
             relns.addAll(KB.VA_RELNS);
             String r = null;
             Iterator it = relns.iterator();
@@ -1205,7 +1207,7 @@ public class Formula implements Comparable {
                 r = (String) it.next();
                 ans = (this.theFormula.indexOf(r) != -1);
                 if (ans) { break; }
-            }
+            }            
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -3133,12 +3135,13 @@ public class Formula implements Comparable {
      * @return boolean
      */
     private boolean isOkForInference(boolean query, KB kb) {
+
         boolean pass = false;
         // kb isn't used yet, because the checks below are purely
         // syntactic.  But it probably will be used in the future.
         try {
             pass = !(// (equal ?X ?Y ?Z ...) - equal is strictly binary. 
-                     this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*") 
+                    this.theFormula.matches(".*\\(\\s*equal\\s+\\?\\w+\\s+\\?\\w+\\s+\\?\\w+.*") 
 
                      // The formula contains non-ASCII characters.
                      // was: this.theFormula.matches(".*[\\x7F-\\xFF].*")
@@ -3169,6 +3172,7 @@ public class Formula implements Comparable {
      * they are the same.
      */
     public static boolean isQuery(String query, String formula) {
+
         boolean result = false;
 
         Formula f = new Formula();
@@ -3393,9 +3397,9 @@ public class Formula implements Comparable {
         return result.toString();
     }
 
-    public static final String termMentionSuffix  = "__m";   // was: _M
-    public static final String termSymbolPrefix   = "s__";   // was: s_
-    public static final String termVariablePrefix = "V__";   // was: V_
+    public static final String termMentionSuffix  = "__m";
+    public static final String termSymbolPrefix   = "s__";
+    public static final String termVariablePrefix = "V__";
   
     private static List renameExceptions = Arrays.asList("en");
 
