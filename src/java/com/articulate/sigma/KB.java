@@ -1454,14 +1454,18 @@ public class KB {
             if (partial2.size() > partial3.size()) {
                 argb = argnum2;
                 termb = term2;
+                partialb = partial1;
                 arga = argnum3;
                 terma = term3;
+                partiala = partial3;
             }
             else {
                 argb = argnum3;
                 termb = term3;
+                partialb = partial3;
                 arga = argnum2;
                 terma = term2;
+                partiala = partial2;
             }
         }
         if (partial2.size() > partial1.size() && partial2.size() > partial3.size()) {
@@ -1471,14 +1475,18 @@ public class KB {
             if (partial1.size() > partial3.size()) {
                 argb = argnum1;
                 termb = term1;
+                partialb = partial1;
                 arga = argnum3;
                 terma = term3;
+                partiala = partial3;
             }
             else {
                 argb = argnum3;
                 termb = term3;
+                partialb = partial3;
                 arga = argnum1;
                 terma = term1;
+                partiala = partial1;
             }
         }
         if (partial3.size() > partial1.size() && partial3.size() > partial2.size()) {
@@ -1488,14 +1496,18 @@ public class KB {
             if (partial1.size() > partial2.size()) {
                 argb = argnum1;
                 termb = term1;
+                partialb = partial1;
                 arga = argnum2;
                 terma = term2;
+                partiala = partial2;
             }
             else {
                 argb = argnum2;
                 termb = term2;
+                partialb = partial2;
                 arga = argnum1;
                 terma = term1;
+                partiala = partial1;
             }
         }
 
@@ -3137,7 +3149,9 @@ public class KB {
         String suffix = "";
         if (DB.emptyString(href)) 
             suffix = ".html";
-        else href = href + "&term=";
+        else if (!href.endsWith("&term=")) {
+            href = href + "&term=";
+        }
         int i;
         int j;
         String term = "";
