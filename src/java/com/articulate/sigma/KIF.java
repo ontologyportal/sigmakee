@@ -288,6 +288,8 @@ public class KIF {
                     totalLinesForComments += countChar(com,(char)0X0A);
                     expression.append(com);
                     expression.append("\"");
+                    if (parenLevel<2)                                 // Don't care if parenLevel > 1
+                        argumentNum = argumentNum + 1;
                 }
                 else if ((st.ttype == StreamTokenizer.TT_NUMBER) || 
                          (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {                  // number
