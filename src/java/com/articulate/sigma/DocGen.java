@@ -139,7 +139,7 @@ public class DocGen {
         StringBuffer result = new StringBuffer();
         ArrayList syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
         if (syn != null && syn.size() > 0) {
-            result.append("<tr><td class=\"label\"><b>Synonym(s)</b> ");
+            result.append("<tr><td class=\"label\"><b>Synonym(s)</b></td><td class=\"cell\">");
             for (int i = 0; i < syn.size(); i++) {
                 Formula f = (Formula) syn.get(i);
                 String s = f.getArgument(1); 
@@ -771,12 +771,12 @@ public class DocGen {
 
         result.append(showTermName(kb,term,language));
         result.append("</font></td></tr>\n<tr>");
-        result.append(DocGen.createDocs(kb,kbHref,term,language));
-        result.append(DocGen.createSynonyms(kb,kbHref,term));
+        result.append(createDocs(kb,kbHref,term,language));
         result.append("</table><P>\n");
 
         result.append(HTMLformatter.htmlDivider);
         result.append("<table>");
+        result.append(createSynonyms(kb,kbHref,term));
         result.append("<tr class=\"title_cell\"><td class=\"label\">Component Structure</td><td colspan=4></td></tr>");
         result.append(createHasSameComponents(kb,kbHref,term,language));
         result.append("<tr><td class=\"label\">Member of Composites</td><td class=\"title_cell\">Composite Name</td>");
@@ -827,9 +827,9 @@ public class DocGen {
         result.append("</font></td></tr>\n<tr>");
 
         result.append(createDocs(kb,kbHref,term,language));
-        result.append(createSynonyms(kb,kbHref,term));
         result.append("</table><P>\n");
         result.append("<table width=\"100%\">");
+        result.append(createSynonyms(kb,kbHref,term));
         result.append(createComments(kb,kbHref,term,language));
         result.append("<tr class=\"title_cell\"><td class=\"label\">Relationships</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
         result.append(createParents(kb,kbHref,term,language));
