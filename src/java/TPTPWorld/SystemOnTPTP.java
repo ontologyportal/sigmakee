@@ -310,9 +310,11 @@ public class SystemOnTPTP {
   }
 
   public static ArrayList<String> listSystems (String systemDir, String status) {
+    /*
     if (atpSystemList == null) {
       loadSystems(systemDir);
     }
+    */
     ArrayList<String> systems = new ArrayList<String>();
     try {
       for (int i = 0; i < atpSystemList.size(); i++) {

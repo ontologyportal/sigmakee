@@ -384,7 +384,7 @@ August 9, Acapulco, Mexico.
 //----Each loop around, add ld axioms
       ArrayList<Binding> lastAnswer = null;
       int numAnswers = 0;
-      TreeSet<TPTPParser.Symbol> symbolsSoFar = new TreeSet();
+      TreeSet<TPTPParser.Symbol> symbolsSoFar = new TreeSet(new TPTPParser.SymbolComparator());
       ArrayList<String> ldAxiomsSoFar = new ArrayList();
       ldAxiomsSoFar.addAll(LooksDifferent.getUniqueAxioms());
 //----Create symbol list from entire kbFile
@@ -687,6 +687,11 @@ August 9, Acapulco, Mexico.
 //----Not a theorem, print no
               newResult = "<queryResponse>\n <answer result='no'> \n  </answer> \n <summary proofs='0'/> \n </queryResponse>";
             } 
+out.println("new result: " + newResult + "<br>");
+out.println("stmt: " + stmt + "<br>");
+out.println("lineHtml: " + lineHtml + "<br>");
+out.println("kbName: " + kbName + "<br>");
+out.println("language: " + language + "<br>");
             out.println(HTMLformatter.formatProofResult(newResult,
                                                         stmt,
                                                         stmt,
