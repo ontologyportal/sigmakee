@@ -27,9 +27,9 @@ August 9, Acapulco, Mexico.
   String formattedFormula = null;
 
   String language = request.getParameter("lang");
-  language = HTMLformatter.processLanguage(language);
   kbName = request.getParameter("kb");
   kb = KBmanager.getMgr().getKB(kbName);
+  language = HTMLformatter.processLanguage(language,kb);
   Map theMap = null;
 
   String hostname = KBmanager.getMgr().getPref("hostname");
@@ -80,6 +80,7 @@ August 9, Acapulco, Mexico.
 <br>
 
 <%
+  out.println(WordNetUtilities.printStatistics());
 
   ArrayList synsetsWithoutTerms = WNdiagnostics.synsetsWithoutTerms();
   ArrayList synsetsWithoutFoundTerms = WNdiagnostics.synsetsWithoutFoundTerms(kb);
