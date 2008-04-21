@@ -730,6 +730,109 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+    */
+    public static String printStatistics() {
+
+        HashSet mappedSUMOterms = new HashSet();
+        int totalInstanceMappings = 0;
+        int totalSubsumingMappings = 0;
+        int totalEquivalenceMappings = 0;
+        int instanceMappings = 0;
+        int subsumingMappings = 0;
+        int equivalenceMappings = 0;
+        StringBuffer result = new StringBuffer();
+        result.append("<table><tr><td></td><td>instance</td><td>equivalence</td><td>subsuming</td><td></td></tr>\n");
+        Iterator it = WordNet.wn.nounSUMOHash.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String value = (String) WordNet.wn.nounSUMOHash.get(key);
+            if (value.endsWith("=")) 
+                equivalenceMappings++;
+            if (value.endsWith("+")) 
+                subsumingMappings++;
+            if (value.endsWith("@")) 
+                instanceMappings++;
+            mappedSUMOterms.add(value.substring(0,value.length()-1));
+        }
+        result.append("<tr><td>noun</td><td>" + instanceMappings + "</td><td>" + 
+                      equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+
+        totalInstanceMappings = totalInstanceMappings + instanceMappings;
+        totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
+        totalEquivalenceMappings = totalEquivalenceMappings + equivalenceMappings;
+        instanceMappings = 0;
+        subsumingMappings = 0;
+        equivalenceMappings = 0;
+        it = WordNet.wn.verbSUMOHash.keySet().iterator();    
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String value = (String) WordNet.wn.verbSUMOHash.get(key);
+            if (value.endsWith("=")) 
+                equivalenceMappings++;
+            if (value.endsWith("+")) 
+                subsumingMappings++;
+            if (value.endsWith("@")) 
+                instanceMappings++;
+            mappedSUMOterms.add(value.substring(0,value.length()-1));
+        }
+        result.append("<tr><td>verb</td><td>" + instanceMappings + "</td><td>" + 
+                      equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+
+        totalInstanceMappings = totalInstanceMappings + instanceMappings;
+        totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
+        totalEquivalenceMappings = totalEquivalenceMappings + equivalenceMappings;
+        instanceMappings = 0;
+        subsumingMappings = 0;
+        equivalenceMappings = 0;
+        it = WordNet.wn.adjectiveSUMOHash.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String value = (String) WordNet.wn.adjectiveSUMOHash.get(key);
+            if (value.endsWith("=")) 
+                equivalenceMappings++;
+            if (value.endsWith("+")) 
+                subsumingMappings++;
+            if (value.endsWith("@")) 
+                instanceMappings++;
+            mappedSUMOterms.add(value.substring(0,value.length()-1));
+        }
+        result.append("<tr><td>adjective</td><td>" + instanceMappings + "</td><td>" + 
+                      equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+
+        totalInstanceMappings = totalInstanceMappings + instanceMappings;
+        totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
+        totalEquivalenceMappings = totalEquivalenceMappings + equivalenceMappings;
+        instanceMappings = 0;
+        subsumingMappings = 0;
+        equivalenceMappings = 0;
+        it = WordNet.wn.adverbSUMOHash.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String value = (String) WordNet.wn.adverbSUMOHash.get(key);
+            if (value.endsWith("=")) 
+                equivalenceMappings++;
+            if (value.endsWith("+")) 
+                subsumingMappings++;
+            if (value.endsWith("@")) 
+                instanceMappings++;
+            mappedSUMOterms.add(value.substring(0,value.length()-1));
+        }
+        result.append("<tr><td>adverb</td><td>" + instanceMappings + "</td><td>" + 
+                      equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+
+        totalInstanceMappings = totalInstanceMappings + instanceMappings;
+        totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
+        totalEquivalenceMappings = totalEquivalenceMappings + equivalenceMappings;
+        int grandTotal =  totalInstanceMappings +  totalSubsumingMappings + totalEquivalenceMappings;
+        result.append("<tr><td><b>total</b></td><td>" + totalInstanceMappings + "</td><td>" + 
+                      totalEquivalenceMappings + "</td><td>" + totalSubsumingMappings + "</td><td><b>" +
+                      grandTotal + "</b></td></tr>\n");
+        result.append("</table><P>\n");
+        result.append("Mapped unique SUMO terms: " + mappedSUMOterms.size() + "<p>\n");
+        return result.toString();
+    }
+
+    /** ***************************************************************
     *  A main method, used only for testing.  It should not be called
     *  during normal operation.
     */
