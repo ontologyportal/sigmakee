@@ -107,6 +107,7 @@ public class DocGen {
             String docString = f.getArgument(3);  
             docString = kb.formatDocumentation(kbHref,docString,language);
             docString = removeEnclosingQuotes(docString);   
+            docString = docString.replace("\\\"","\"");
             result.append("<td class=\"description\">" + docString + "</td></tr>\n");
         }
         return result.toString();
@@ -125,6 +126,7 @@ public class DocGen {
                 String docString = f.getArgument(3);  
                 docString = kb.formatDocumentation(kbHref,docString,language);
                 docString = removeEnclosingQuotes(docString);   
+                docString = docString.replace("\\\"","\"");
                 if (i > 0) result.append("<tr><td>&nbsp;</td>");
                 result.append("<td colspan=2 class=\"cell\">" + docString + "</td></tr>\n");
             }
@@ -220,6 +222,7 @@ public class DocGen {
                         String docString = f.getArgument(3);  
                         docString = kb.formatDocumentation(kbHref,docString,language);
                         docString = removeEnclosingQuotes(docString);   
+                        docString = docString.replace("\\\"","\"");
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
                     result.append("</tr>\n");
@@ -253,6 +256,7 @@ public class DocGen {
                         String docString = f.getArgument(3);  
                         docString = kb.formatDocumentation(kbHref,docString,language);
                         docString = removeEnclosingQuotes(docString);   
+                        docString = docString.replace("\\\"","\"");
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
                     result.append("</tr>\n");
@@ -292,6 +296,7 @@ public class DocGen {
                         String docString = f.getArgument(3);  
                         docString = kb.formatDocumentation(kbHref,docString,language);
                         docString = removeEnclosingQuotes(docString);   
+                        docString = docString.replace("\\\"","\"");
                         result.append("<td class=\"cell\">" + docString + "</td>");
                     }
                     result.append("</tr>\n");
@@ -413,6 +418,7 @@ public class DocGen {
             String docString = f.getArgument(3);
             docString = kb.formatDocumentation(kbHref,docString,language);
             docString = removeEnclosingQuotes(docString);
+            docString = docString.replace("\\\"","\"");
             result.append(docString); 
         }
         result.append("</td><td class=\"cell\">");
@@ -531,6 +537,7 @@ public class DocGen {
                     String docString = f.getArgument(3);
                     docString = kb.formatDocumentation(kbHref,docString,language);
                     docString = removeEnclosingQuotes(docString);
+                    docString = docString.replace("\\\"","\"");
                     result.append(docString);                
                     result.append("</td><td class=\"cell\">");
                     result.append(showCardinalityCell(kb,kbHref,instance,context));
@@ -838,6 +845,11 @@ public class DocGen {
         result.append(createRelations(kb,kbHref,term,language));
         result.append(createUsingSameComponents(kb,kbHref,term,language));
         result.append(createBelongsToClass(kb,kbHref,term,language));
+
+        result.append("<tr><td class=\"label\">Member of Composites</td><td class=\"title_cell\">Composite Name</td>");
+        result.append("<td class=\"title_cell\">Description of Element Role</td><td class=\"title_cell\">Cardinality</td><td></td></tr>\n");
+        ArrayList superComposites = findContainingComposites(kb,term); 
+        result.append(formatContainingComposites(kb,kbHref,superComposites,term,language));
         result.append("</table>\n");
 
         result.append(HTMLformatter.htmlDivider);
@@ -918,6 +930,7 @@ public class DocGen {
                     Formula f = (Formula) docs.get(0);
                     String docString = f.getArgument(3);  
                     docString = kb.formatDocumentation("",docString,language);
+                    docString = docString.replace("\\\"","\"");
                     if (docString.length() > 1)                 
                         result.append("<td class=\"cell\">" + removeEnclosingQuotes(docString) + "</td>\n");
                 }
@@ -1278,6 +1291,7 @@ public class DocGen {
                                 docString = docString.substring(0,100) + "...\"";  
                             docString = kb.formatDocumentation("",docString,language);
                             docString = removeEnclosingQuotes(docString); 
+                            docString = docString.replace("\\\"","\"");
                             pw.println("<td class=\"description\">" + docString);
                         }
                         else
@@ -1317,15 +1331,20 @@ public class DocGen {
      */
     public static void main (String args[]) {
 
-        try {
-            KBmanager.getMgr().initializeOnce();
-        } catch (IOException ioe ) {
-            System.out.println(ioe.getMessage());
-        }
-        KB kb = KBmanager.getMgr().getKB("DDEX");
+       // try {
+        //    KBmanager.getMgr().initializeOnce();
+        //} catch (IOException ioe ) {
+        //    System.out.println(ioe.getMessage());
+        //}
+        //KB kb = KBmanager.getMgr().getKB("DDEX");
+
+        String exp = "(documentation foo \"blah blah is so \\\"blah\\\" yeah\")";
+        System.out.println(exp);
+        exp = exp.replace("\\\"","\"");
+        System.out.println(exp);
         //System.out.println(kb.ask("arg",0,"hasHeadword"));
         //System.out.println(kb.ask("arg",2,"Composite"));
         //System.out.println(kb.ask("arg",2,"\"Composite\""));
-        DocGen.generateHTML(kb,"ddex",true);    // KB, language, simplified
+        //DocGen.generateHTML(kb,"ddex",true);    // KB, language, simplified
     }
 }
