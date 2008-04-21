@@ -281,6 +281,10 @@ public class KIF {
                     }
                 }
                 else if (st.ttype==34) {                                      // " - it's a string
+                    //System.out.println("INFO in KIF.parse()");
+                    //System.out.println(st.sval);
+                    st.sval = st.sval.replace("\"","\\\"");
+                    //System.out.println(st.sval);
                     if (lastVal != 40)                                        // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
@@ -608,11 +612,19 @@ public class KIF {
      */
     public static void main(String[] args) throws IOException {
         // tptpOutputTest(args[0]);
-        String exp = "(documentation foo \"blah blah is so \\\"blah\\\" yeah\")";
+        String exp = "(documentation foo \"(written by Claude François).\")";
+        System.out.println(exp);
         KIF kif = new KIF();
         Reader r = new StringReader(exp);
         kif.parse(r);
         System.out.println(kif.formulaSet);
+        ArrayList al = (ArrayList) kif.formulas.get("arg-0-documentation");
+        Formula f = (Formula) al.get(0);
+        System.out.println(f);
+        f.read(f.cdr());
+        f.read(f.cdr());
+        System.out.println(f);
+        System.out.println(f.car());
     }
 }
 
