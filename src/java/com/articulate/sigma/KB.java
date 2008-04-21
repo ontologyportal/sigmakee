@@ -159,10 +159,8 @@ public class KB {
             if (col2 != null)
                 col.addAll(col2);
             for (int i = 0; i < col.size(); i++) {
-                String lang = ((Formula) col.get(i)).theFormula;
-                int langStart = lang.indexOf(" ");
-                int langEnd = lang.indexOf(" ",langStart+1);
-                lang = lang.substring(langStart+1, langEnd);
+                Formula f = (Formula) col.get(i);
+                String lang = f.getArgument(1);
                 if (!al.contains(lang.intern())) 
                     al.add(lang.intern());
             }
