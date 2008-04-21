@@ -308,8 +308,9 @@ public class Formula implements Comparable {
 
 
     /** ***************************************************************
-     * Return the LISP 'car' of the formula - the first element of the list.
-     * Note that this operation has no side effect on the Formula.
+     * @return the LISP 'car' of the formula as a String - the first
+     * element of the list. Note that this operation has no side
+     * effect on the Formula.
      * 
      * Currently (10/24/2007) this method returns the empty string
      * ("") when invoked on an empty list.  Technically, this is
@@ -2989,7 +2990,9 @@ public class Formula implements Comparable {
             // prefixes.
             Formula f = new Formula();
             f.read(this.theFormula);
-       
+            if (getArgument(0).equals("documentation")) {
+                f.theFormula = f.theFormula.replaceAll("[\\x7F-\\xFF]","");
+            }
             t1 = System.currentTimeMillis();
             ArrayList predVarInstantiations = new ArrayList();
             if (!addHoldsPrefix) {
