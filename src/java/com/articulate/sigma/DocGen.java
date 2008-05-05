@@ -139,15 +139,21 @@ public class DocGen {
     private static String createSynonyms(KB kb, String kbHref, String term) {
 
         StringBuffer result = new StringBuffer();
-        ArrayList syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
+        ArrayList syn = kb.askWithRestriction(0,"termFormat",2,term);
+        boolean found = false;
         if (syn != null && syn.size() > 0) {
-            result.append("<tr><td class=\"label\"><b>Synonym(s)</b></td><td class=\"cell\">");
             for (int i = 0; i < syn.size(); i++) {
                 Formula f = (Formula) syn.get(i);
-                String s = f.getArgument(1); 
-                s = removeEnclosingQuotes(s);
-                if (i >0) result.append(", ");                
-                result.append("<i>" + s + "</i>");
+                String namespace = footer.getArgument(1);
+                if (namespace.endsWith("syn") {
+                    if (!found) 
+                        result.append("<b>Synonym(s)</b></td><td class=\"cell\"><i>");
+                    String s = f.getArgument(3); 
+                    s = removeEnclosingQuotes(s);
+                    if (found) result.append(", ");                
+                    result.append("<i>" + s + "</i>");
+                    found = true;
+                }
             }
             result.append("</td></tr>\n");
         }
@@ -268,7 +274,7 @@ public class DocGen {
 
     /** ***************************************************************
      */
-    private static String createInstances(KB kb, String kbHref, String term, String language) {
+    private static String createInstances(KB kb, String kbHref, String term, String language, ArrayList excluded) {
 
         String suffix = "";
         if (DB.emptyString(kbHref)) 
@@ -276,30 +282,33 @@ public class DocGen {
         StringBuffer result = new StringBuffer();
         ArrayList forms = kb.askWithRestriction(0,"instance",2,term);
         if (forms != null && forms.size() > 0) {
-            result.append("<tr><td class=\"label\">Instances</td>");
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
                 if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
                     String s = f.getArgument(1); 
-                    String displayName = showTermName(kb,s,language);
-                    String xmlName = "";
-                    if (displayName.equals(s)) 
-                        xmlName = showTermName(kb,s,"XMLLabel");
-                    if (!DB.emptyString(xmlName)) 
-                        displayName = xmlName;
-                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + displayName + "</a>";
-                    if (i > 0) result.append("<tr><td>&nbsp;</td>");                
-                    result.append("<td class=\"cell\">" + termHref + "</td>");
-                    ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
-                    if (docs != null && docs.size() > 0) {
-                        f = (Formula) docs.get(0);
-                        String docString = f.getArgument(3);  
-                        docString = kb.formatDocumentation(kbHref,docString,language);
-                        docString = removeEnclosingQuotes(docString);   
-                        docString = docString.replace("\\\"","\"");
-                        result.append("<td class=\"cell\">" + docString + "</td>");
+                    if (!excluded.contains(s)) {
+                        if (i == 0)                         
+                            result.append("<tr><td class=\"label\">Instances</td>");
+                        String displayName = showTermName(kb,s,language);
+                        String xmlName = "";
+                        if (displayName.equals(s)) 
+                            xmlName = showTermName(kb,s,"XMLLabel");
+                        if (!DB.emptyString(xmlName)) 
+                            displayName = xmlName;
+                        String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + displayName + "</a>";
+                        if (i > 0) result.append("<tr><td>&nbsp;</td>");                
+                        result.append("<td class=\"cell\">" + termHref + "</td>");
+                        ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
+                        if (docs != null && docs.size() > 0) {
+                            f = (Formula) docs.get(0);
+                            String docString = f.getArgument(3);  
+                            docString = kb.formatDocumentation(kbHref,docString,language);
+                            docString = removeEnclosingQuotes(docString);   
+                            docString = docString.replace("\\\"","\"");
+                            result.append("<td class=\"cell\">" + docString + "</td>");
+                        }
+                        result.append("</tr>\n");
                     }
-                    result.append("</tr>\n");
                 }
             }
         }
@@ -841,14 +850,18 @@ public class DocGen {
         result.append("<tr class=\"title_cell\"><td class=\"label\">Relationships</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
         result.append(createParents(kb,kbHref,term,language));
         result.append(createChildren(kb,kbHref,term,language));
-        result.append(createInstances(kb,kbHref,term,language));
+
+        ArrayList superComposites = findContainingComposites(kb,term); 
+
+        result.append(createInstances(kb,kbHref,term,language,superComposites));  // superComposites are excluded terms that will appear
+                                                                                  // in the member of composites section
         result.append(createRelations(kb,kbHref,term,language));
         result.append(createUsingSameComponents(kb,kbHref,term,language));
         result.append(createBelongsToClass(kb,kbHref,term,language));
 
         result.append("<tr><td class=\"label\">Member of Composites</td><td class=\"title_cell\">Composite Name</td>");
         result.append("<td class=\"title_cell\">Description of Element Role</td><td class=\"title_cell\">Cardinality</td><td></td></tr>\n");
-        ArrayList superComposites = findContainingComposites(kb,term); 
+ 
         result.append(formatContainingComposites(kb,kbHref,superComposites,term,language));
         result.append("</table>\n");
 
@@ -1326,22 +1339,192 @@ public class DocGen {
         generateSingleHTML(kb, dir, alphaList, language, s);
     }
 
+    /** ***************************************************************
+     */
+    public static TreeSet generateMessageTerms(KB kb) {
+
+        TreeSet result = new TreeSet();
+
+        // (1) Collect all terms which are instances of Composite.
+        ArrayList composites = kb.getAllInstances("Ddex_Composite");
+        result.addAll(composites);
+
+        System.out.println("results from (1)");
+        System.out.println(result);
+
+        // (2) Add all terms that are classes of the second argument of 
+        // hasXMLElement relationships.
+        ArrayList forms = kb.ask("arg",0,"hasXmlElement");
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula f = (Formula) forms.get(i);
+                String elem = f.getArgument(2);
+
+                ArrayList classes = kb.askWithRestriction(0,"instance",1,elem);
+                for (int j = 0; j < classes.size(); j++) {
+                    Formula f2 = (Formula) classes.get(j);
+                    String c = f2.getArgument(2);
+                    result.add(c);
+                }
+            }
+        }
+
+        System.out.println("results plus (2)");
+        System.out.println(result);
+
+        // (3) Add all terms that are classes of the second argument of 
+        // hasXMLAttribute relationships.
+        forms = kb.ask("arg",0,"hasXmlAttribute");
+
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula f = (Formula) forms.get(i);
+                String arg = f.getArgument(2);
+
+                ArrayList classes = kb.askWithRestriction(0,"instance",1,arg);
+                for (int j = 0; j < classes.size(); j++) {
+                    Formula f2 = (Formula) classes.get(j);
+                    String c = f2.getArgument(2);
+                    result.add(c);
+                }
+            }
+        }
+
+        System.out.println("results plus (3)");
+        System.out.println(result);
+
+        ArrayList forStepSeven = new ArrayList();
+        // (4) Add all terms that are linked to the Composites of list (1) by an isXmlExtensionOf relationship.        
+        if (composites != null) {
+            for (int i = 0; i < composites.size(); i++) {
+                Formula f = (Formula) composites.get(i);
+                String arg = f.getArgument(2);
+
+                ArrayList classes = kb.askWithRestriction(0,"isXmlExtensionOf",1,arg);
+                for (int j = 0; j < classes.size(); j++) {
+                    Formula f2 = (Formula) classes.get(j);
+                    String c = f2.getArgument(2);
+                    result.add(c);
+                    forStepSeven.add(c);
+                }
+
+                // (5) Add all terms that are linked to the Composites of list (1) by an IsXmlCompositeFor relationship. 
+                classes = kb.askWithRestriction(0,"IsXmlCompositeFor",1,arg);
+                for (int j = 0; j < classes.size(); j++) {
+                    Formula f2 = (Formula) classes.get(j);
+                    String c = f2.getArgument(2);
+                    result.add(c);
+                }
+            }
+        }
+
+        // (6) Add all terms that are the second argument of dataType relationships.
+        forms = kb.ask("arg",0,"dataType");
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula f = (Formula) forms.get(i);
+                String arg = f.getArgument(2);
+                result.add(arg);
+                forStepSeven.add(arg);
+            }
+        }
+
+
+        // (7) Add all terms that are the first argument of instance/isOneOf relationships 
+        // where the second argument is from list (4) or (6). 
+        
+        if (forStepSeven != null) {
+            for (int i = 0; i < forStepSeven.size(); i++) {
+                Formula f = (Formula) forStepSeven.get(i);
+                String arg = f.getArgument(2);
+                ArrayList classes = kb.askWithRestriction(0,"instance",2,arg);
+                for (int j = 0; j < classes.size(); j++) {
+                    Formula f2 = (Formula) classes.get(j);
+                    String c = f2.getArgument(1);
+                    result.add(c);
+                }
+            }
+        }
+
+        System.out.println("results plus (6) and (7)");
+        System.out.println(result);
+
+        // (8) There are some lists that are more complicated. XML labels are 
+        // picked up using termFormat relationships where the third argument (a 
+        // quoted string) is also the headword of a term in the ontology, i.e. 
+        // where it is the third argument of another termFormat relationship that 
+        // has Ddex_hw as a pseudo-language.        
+        // 
+        // (9) More complicated is also the list of terms that have a third 
+        // argument of a termFormat relationship that has Ddex_hw as a 
+        // pseudo-language, if that string is also a third argument of another 
+        // termFormat relationship that has one of the subnamespaces as a 
+        // pseudo-language (e.g. DdexC_hw).
+        forms = kb.askWithRestriction(0,"termFormat",1,"Ddex_hw");
+        forms = kb.askWithRestriction(0,"termFormat",1,"DdexC_hw");
+        if (forms != null) {
+            for (int i = 0; i < forms.size(); i++) {
+                Formula f = (Formula) forms.get(i);
+                String term = f.getArgument(2);
+                String st = f.getArgument(3);
+                ArrayList forms2 = kb.ask("arg",0,"termFormat");
+                for (int j = 0; j < forms2.size(); j++) {
+                    Formula f2 = (Formula) forms2.get(j);
+                    String namespace = f2.getArgument(1);
+                    String st2 = f2.getArgument(2);
+                    if (st.equals(st2) && !namespace.equals("Ddex_hw") && !namespace.equals("DdexC_hw")) 
+                        result.add(st2);
+                }
+            }
+        }
+
+        System.out.println("results plus (8) and (9)");
+        System.out.println(result);
+
+        // (10) NEW: We need to pick up the Relators IsA, IsSubClassOf etc. (and their reciprocals) 
+        // as FrameworkTerms. I have no idea yet how to do this. 
+        
+        // (11) For all of these (1-7) add all terms that are parent terms (using 
+        // subrelation and subclass relationships)
+
+        TreeSet newResult = new TreeSet();
+        Iterator it = result.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            newResult.add(term);
+            HashSet ps = (HashSet) kb.parents.get(term);
+            if (ps != null)             
+                newResult.addAll(ps);
+        }
+        // (1-3), (5-6) are MessageTerms
+        // (4) are FrameworkTerms
+        // (7-8) are SupportingTerms
+
+        return newResult;
+    }
+
     /** *************************************************************
      * A test method.
      */
     public static void main (String args[]) {
 
-       // try {
-        //    KBmanager.getMgr().initializeOnce();
-        //} catch (IOException ioe ) {
-        //    System.out.println(ioe.getMessage());
-        //}
-        //KB kb = KBmanager.getMgr().getKB("DDEX");
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (IOException ioe ) {
+            System.out.println(ioe.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB("DDEX");
+        TreeSet ts = generateMessageTerms(kb);
+        System.out.println(ts);
+        System.out.println();
+        System.out.println("Negative terms:");
+        kb.terms.removeAll(ts);
+        System.out.println(kb.terms);
 
-        String exp = "(documentation foo \"blah blah is so \\\"blah\\\" yeah\")";
-        System.out.println(exp);
-        exp = exp.replace("\\\"","\"");
-        System.out.println(exp);
+        //String exp = "(documentation foo \"blah blah is so \\\"blah\\\" yeah\")";
+        //System.out.println(exp);
+        //exp = exp.replace("\\\"","\"");
+        //System.out.println(exp);
         //System.out.println(kb.ask("arg",0,"hasHeadword"));
         //System.out.println(kb.ask("arg",2,"Composite"));
         //System.out.println(kb.ask("arg",2,"\"Composite\""));
