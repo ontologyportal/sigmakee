@@ -1032,7 +1032,7 @@ public class KB {
         }
         System.out.println();
     }
-    
+
     /** *************************************************************
      * Determine whether a particular term is an immediate instance,
      * which has a statement of the form (instance term otherTerm).
