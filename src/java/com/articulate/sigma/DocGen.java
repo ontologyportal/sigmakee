@@ -144,8 +144,8 @@ public class DocGen {
         if (syn != null && syn.size() > 0) {
             for (int i = 0; i < syn.size(); i++) {
                 Formula f = (Formula) syn.get(i);
-                String namespace = footer.getArgument(1);
-                if (namespace.endsWith("syn") {
+                String namespace = f.getArgument(1);
+                if (namespace.endsWith("syn")) {
                     if (!found) 
                         result.append("<b>Synonym(s)</b></td><td class=\"cell\"><i>");
                     String s = f.getArgument(3); 
@@ -1346,7 +1346,7 @@ public class DocGen {
         TreeSet result = new TreeSet();
 
         // (1) Collect all terms which are instances of Composite.
-        ArrayList composites = kb.getAllInstances("Ddex_Composite");
+        TreeSet composites = kb.getAllInstances("Ddex_Composite");
         result.addAll(composites);
 
         System.out.println("results from (1)");
@@ -1396,8 +1396,9 @@ public class DocGen {
         ArrayList forStepSeven = new ArrayList();
         // (4) Add all terms that are linked to the Composites of list (1) by an isXmlExtensionOf relationship.        
         if (composites != null) {
-            for (int i = 0; i < composites.size(); i++) {
-                Formula f = (Formula) composites.get(i);
+            Iterator it = composites.iterator();
+            while (it.hasNext()) {           
+                Formula f = (Formula) it.next();
                 String arg = f.getArgument(2);
 
                 ArrayList classes = kb.askWithRestriction(0,"isXmlExtensionOf",1,arg);
