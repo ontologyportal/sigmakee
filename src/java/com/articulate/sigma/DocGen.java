@@ -1339,21 +1339,62 @@ public class DocGen {
         generateSingleHTML(kb, dir, alphaList, language, s);
     }
 
+
     /** ***************************************************************
+     */
+    public static void capitalizationAlternates(TreeSet alts)  {
+
+        TreeSet allCaps = new TreeSet();
+        Iterator it = alts.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            String capTerm = term.toUpperCase();
+            if (allCaps.contains(capTerm)) 
+                System.out.println(term);
+            else
+                allCaps.add(capTerm);
+        }
+    }
+
+    /** ***************************************************************
+     *  @return a TreeSet of all the KB terms that are used in or
+     *          support XML messages
      */
     public static TreeSet generateMessageTerms(KB kb) {
 
         TreeSet result = new TreeSet();
 
         // (1) Collect all terms which are instances of Composite.
+
         TreeSet composites = kb.getAllInstances("Ddex_Composite");
         result.addAll(composites);
-
+        //TreeSet nonComposites = new TreeSet();
+        //nonComposites.addAll(kb.terms);
+        //nonComposites.removeAll(composites);
         System.out.println("results from (1)");
+        System.out.println(result);
+
+        // (1a) Collect all the parent classes of those instances.        
+        if (composites != null) {
+            Iterator it = composites.iterator();
+            while (it.hasNext()) {
+                String term = (String) it.next();
+                ArrayList forms = kb.askWithRestriction(0,"instance",1,term);
+                if (forms != null) {
+                    for (int i = 0; i < forms.size(); i++) {
+                        Formula f = (Formula) forms.get(i);
+                        String elem = f.getArgument(2);
+                        result.add(elem);
+                    }
+                }
+            }
+        }
+        System.out.println("results plus (1a)");
         System.out.println(result);
 
         // (2) Add all terms that are classes of the second argument of 
         // hasXMLElement relationships.
+        TreeSet step2 = new TreeSet();
         ArrayList forms = kb.ask("arg",0,"hasXmlElement");
         if (forms != null) {
             for (int i = 0; i < forms.size(); i++) {
@@ -1365,15 +1406,17 @@ public class DocGen {
                     Formula f2 = (Formula) classes.get(j);
                     String c = f2.getArgument(2);
                     result.add(c);
+                    step2.add(c);
                 }
             }
         }
 
-        System.out.println("results plus (2)");
-        System.out.println(result);
+        System.out.println("step (2)");
+        System.out.println(step2);
 
         // (3) Add all terms that are classes of the second argument of 
         // hasXMLAttribute relationships.
+        TreeSet step3 = new TreeSet();
         forms = kb.ask("arg",0,"hasXmlAttribute");
 
         if (forms != null) {
@@ -1386,20 +1429,22 @@ public class DocGen {
                     Formula f2 = (Formula) classes.get(j);
                     String c = f2.getArgument(2);
                     result.add(c);
+                    step3.add(c);
                 }
             }
         }
 
-        System.out.println("results plus (3)");
-        System.out.println(result);
+        System.out.println("step (3)");
+        System.out.println(step3);
 
+        TreeSet step4 = new TreeSet();
+        TreeSet step5 = new TreeSet();
         ArrayList forStepSeven = new ArrayList();
         // (4) Add all terms that are linked to the Composites of list (1) by an isXmlExtensionOf relationship.        
         if (composites != null) {
             Iterator it = composites.iterator();
-            while (it.hasNext()) {           
-                Formula f = (Formula) it.next();
-                String arg = f.getArgument(2);
+            while (it.hasNext()) {            
+                String arg = (String) it.next();;
 
                 ArrayList classes = kb.askWithRestriction(0,"isXmlExtensionOf",1,arg);
                 for (int j = 0; j < classes.size(); j++) {
@@ -1407,62 +1452,79 @@ public class DocGen {
                     String c = f2.getArgument(2);
                     result.add(c);
                     forStepSeven.add(c);
+                    step4.add(c);
                 }
 
                 // (5) Add all terms that are linked to the Composites of list (1) by an IsXmlCompositeFor relationship. 
-                classes = kb.askWithRestriction(0,"IsXmlCompositeFor",1,arg);
+                classes = kb.askWithRestriction(0,"isXmlCompositeFor",1,arg);
                 for (int j = 0; j < classes.size(); j++) {
                     Formula f2 = (Formula) classes.get(j);
                     String c = f2.getArgument(2);
                     result.add(c);
+                    step5.add(c);
                 }
             }
         }
 
+        System.out.println("step (4)");
+        System.out.println(step4);
+        System.out.println("step (5)");
+        System.out.println(step5);
+
         // (6) Add all terms that are the second argument of dataType relationships.
+        
+        TreeSet step6 = new TreeSet();
         forms = kb.ask("arg",0,"dataType");
         if (forms != null) {
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
                 String arg = f.getArgument(2);
-                result.add(arg);
-                forStepSeven.add(arg);
+                if (!composites.contains(arg)) {
+                    result.add(arg);
+                    forStepSeven.add(arg);
+                    step6.add(arg);
+                }
             }
         }
-
+        System.out.println("step (6)");
+        System.out.println(step6);
 
         // (7) Add all terms that are the first argument of instance/isOneOf relationships 
         // where the second argument is from list (4) or (6). 
-        
+
+        TreeSet step7 = new TreeSet();
         if (forStepSeven != null) {
             for (int i = 0; i < forStepSeven.size(); i++) {
-                Formula f = (Formula) forStepSeven.get(i);
-                String arg = f.getArgument(2);
+                String arg = (String) forStepSeven.get(i);
                 ArrayList classes = kb.askWithRestriction(0,"instance",2,arg);
                 for (int j = 0; j < classes.size(); j++) {
                     Formula f2 = (Formula) classes.get(j);
                     String c = f2.getArgument(1);
-                    result.add(c);
+                    if (!c.contains("_LocalInstanceLeaf")) {
+                        result.add(c);
+                        step7.add(c);
+                    }
                 }
             }
         }
 
-        System.out.println("results plus (6) and (7)");
-        System.out.println(result);
+        System.out.println("step (7)");
+        System.out.println(step7);
 
-        // (8) There are some lists that are more complicated. XML labels are 
-        // picked up using termFormat relationships where the third argument (a 
-        // quoted string) is also the headword of a term in the ontology, i.e. 
-        // where it is the third argument of another termFormat relationship that 
-        // has Ddex_hw as a pseudo-language.        
-        // 
+        // (8) Get all terms where their headword (quoted string) is also the 
+        // third argument in a termFormat expression of another term. For example, 
+        // include Ddex_AudioBitRate in the list, from 
+        // (termFormat Ddex_hw Ddex_AudioBitRate "AudioBitRate")
+        // (termFormat Ern_TechnicalVideoDetails DDEX_LocalInstanceLeaf12_156 "AudioBitRate")         
+
         // (9) More complicated is also the list of terms that have a third 
         // argument of a termFormat relationship that has Ddex_hw as a 
         // pseudo-language, if that string is also a third argument of another 
         // termFormat relationship that has one of the subnamespaces as a 
-        // pseudo-language (e.g. DdexC_hw).
+        // pseudo-language (e.g. DdexC_hw).        
+        TreeSet step89 = new TreeSet();
         forms = kb.askWithRestriction(0,"termFormat",1,"Ddex_hw");
-        forms = kb.askWithRestriction(0,"termFormat",1,"DdexC_hw");
+        forms.addAll(kb.askWithRestriction(0,"termFormat",1,"DdexC_hw"));
         if (forms != null) {
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = (Formula) forms.get(i);
@@ -1472,34 +1534,92 @@ public class DocGen {
                 for (int j = 0; j < forms2.size(); j++) {
                     Formula f2 = (Formula) forms2.get(j);
                     String namespace = f2.getArgument(1);
-                    String st2 = f2.getArgument(2);
-                    if (st.equals(st2) && !namespace.equals("Ddex_hw") && !namespace.equals("DdexC_hw")) 
-                        result.add(st2);
+                    String st2 = f2.getArgument(3);
+                    if (st.equals(st2) && !namespace.equals("Ddex_hw") && !namespace.equals("DdexC_hw")) {
+                        result.add(term);
+                        step89.add(term);
+                    }
                 }
             }
         }
 
-        System.out.println("results plus (8) and (9)");
-        System.out.println(result);
+        System.out.println("steps (8) and (9)");
+        System.out.println(step89);
 
         // (10) NEW: We need to pick up the Relators IsA, IsSubClassOf etc. (and their reciprocals) 
         // as FrameworkTerms. I have no idea yet how to do this. 
-        
+
+        TreeSet step10 = new TreeSet();
+        TreeSet explicitList = new TreeSet();
+        explicitList.add("hasXmlElement"); explicitList.add("hasXmlAttribute"); explicitList.add("isXmlExtensionOf");
+        explicitList.add("isXmlCompositeFor"); explicitList.add("dataType"); explicitList.add("instance");
+        explicitList.add("hasSubClass"); explicitList.add("hasSubRelator"); explicitList.add("hasPart");
+        explicitList.add("isReciprocalOf"); explicitList.add("isXmlUnionOf"); explicitList.add("isXmlAttributeOf");
+        explicitList.add("isSubClassOf"); explicitList.add("isSubRelatorOf");
+
+        explicitList.add("ddex_HasXmlElement"); explicitList.add("ddex_HasXmlAttribute"); explicitList.add("ddex_IsXmlExtensionOf");
+        explicitList.add("ddex_IsXmlCompositeFor"); explicitList.add("ddex_DataType"); explicitList.add("ddex_IsA");
+        explicitList.add("ddex_HasSubClass"); explicitList.add("ddex_HasSubRelator"); explicitList.add("ddex_HasPart");
+        explicitList.add("ddex_IsReciprocalOf"); explicitList.add("ddex_IsXmlUnionOf"); explicitList.add("ddex_IsXmlAttributeOf");
+        explicitList.add("ddex_IsSubClassOf"); explicitList.add("ddex_IsSubRelatorOf"); explicitList.add("Ddex_Flag");
+        explicitList.add("Ddex_File");
+
+        if (explicitList != null) {
+            Iterator it = explicitList.iterator();
+            while (it.hasNext()) {
+                String term = (String) it.next();
+                forms = kb.askWithRestriction(0,"inverse",1,term);
+                if (forms != null) {
+                    for (int i = 0; i < forms.size(); i++) {
+                        Formula f = (Formula) forms.get(i);
+                        String elem = f.getArgument(2);
+                        if (!result.contains(elem)) {
+                            result.add(elem);
+                            step10.add(elem);
+                        }
+                    }
+                }
+                forms = kb.askWithRestriction(0,"inverse",2,term);
+                if (forms != null) {
+                    for (int i = 0; i < forms.size(); i++) {
+                        Formula f = (Formula) forms.get(i);
+                        String elem = f.getArgument(1);
+                        if (!result.contains(elem)) {
+                            result.add(elem);
+                            step10.add(elem);
+                        }
+                    }
+                }
+            }
+        }
+        result.addAll(explicitList);
+        System.out.println("step (10)");
+        System.out.println(step10);
+
         // (11) For all of these (1-7) add all terms that are parent terms (using 
         // subrelation and subclass relationships)
 
+        TreeSet step11 = new TreeSet();
         TreeSet newResult = new TreeSet();
         Iterator it = result.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
-            newResult.add(term);
+            newResult.add(term);            
             HashSet ps = (HashSet) kb.parents.get(term);
-            if (ps != null)             
+            if (ps != null) {          
                 newResult.addAll(ps);
+                step11.addAll(ps);
+            }
         }
         // (1-3), (5-6) are MessageTerms
         // (4) are FrameworkTerms
         // (7-8) are SupportingTerms
+
+        System.out.println("step (11)");
+        System.out.println(step11);
+
+        System.out.println("positive terms differing only in capitalization");
+        capitalizationAlternates(newResult);
 
         return newResult;
     }
@@ -1515,6 +1635,10 @@ public class DocGen {
             System.out.println(ioe.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("DDEX");
+
+        System.out.println("terms differing only in capitalization");
+        capitalizationAlternates(kb.terms);
+
         TreeSet ts = generateMessageTerms(kb);
         System.out.println(ts);
         System.out.println();
