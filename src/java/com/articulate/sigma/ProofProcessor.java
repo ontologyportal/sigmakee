@@ -156,6 +156,13 @@ public class ProofProcessor {
                 processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
                 processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
                 processedStep.axiom = removeAnswerClause(processedStep.axiom);
+								//----If there is a conclusion role, record
+								if (conclusion.subelements.size() > 1) {
+									BasicXMLelement conclusionRole = (BasicXMLelement) conclusion.subelements.get(1);
+									if (conclusionRole.attributes.containsKey("type")) {
+										processedStep.formulaRole = (String) conclusionRole.attributes.get("type");
+									}
+								}
                 if (conclusionFormula.attributes.containsKey("number"))
                     processedStep.number = new Integer(Integer.parseInt((String) conclusionFormula.attributes.get("number")));
                 for (int j = 0; j < premises.subelements.size(); j++) {
