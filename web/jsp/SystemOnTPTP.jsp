@@ -727,7 +727,7 @@ August 9, Acapulco, Mexico.
             } catch (Exception e) {}
           } else {
 //----Proof does not exist, but was a theorem
-            out.println("Answer ". Yes [Theorem]<br>");
+            out.println("Answer 1. Yes [Theorem]<br>");
           } 
         } else if (isCounterSatisfiable) {
           out.println("Answer 1. No [CounterSatisfiable]<br>");
