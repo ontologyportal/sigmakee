@@ -6,6 +6,9 @@ import tptp_parser.*;
 
 public class TPTPParser {
 
+  public Hashtable<String,TPTPFormula> ftable;
+  public Vector<SimpleTptpParserOutput.TopLevelItem> Items;
+
   public static class Symbol {
     String text;
     int arity;
@@ -26,13 +29,49 @@ public class TPTPParser {
     }
   }
 
-  public Hashtable<String,TPTPFormula> ftable;
-  public Vector<SimpleTptpParserOutput.TopLevelItem> Items;
+  public TPTPParser (BufferedReader reader) throws Exception {
+    StringBuffer result = new StringBuffer();
+    TptpLexer lexer = new TptpLexer(reader);
+    TptpParser parser = new TptpParser(lexer);
+    SimpleTptpParserOutput outputManager = new SimpleTptpParserOutput();		
+		this.ftable = new Hashtable();
+    this.Items = new Vector();
 
-  public TPTPParser (Hashtable<String,TPTPFormula> ftable, 
-                     Vector<SimpleTptpParserOutput.TopLevelItem> Items) {
-    this.ftable = ftable;
-    this.Items = Items;
+    int i = 0;
+    for (SimpleTptpParserOutput.TopLevelItem item = 
+           (SimpleTptpParserOutput.TopLevelItem)parser.topLevelItem(outputManager);
+         item != null;
+         item = (SimpleTptpParserOutput.TopLevelItem)parser.topLevelItem(outputManager)) {
+      TPTPFormula formula = new TPTPFormula(item, i);
+      String name = getName(formula.item);
+      this.ftable.put(name, formula);
+      this.Items.add(item);
+      i++;
+    }
+
+    // add parents to tptp formula info
+    Set<String> set = this.ftable.keySet();
+    Iterator<String> itr = set.iterator();
+    Vector<String> parents = new Vector();
+    while (itr.hasNext()) {
+      String str = itr.next();
+      TPTPFormula formula = this.ftable.get(str);
+      SimpleTptpParserOutput.Source source = formula.source;
+      if (source != null) {
+        if (source.getKind() == SimpleTptpParserOutput.Source.Kind.Inference) {
+          gatherParents(source, parents);
+          for (String parent : parents) {
+            formula.addParent((TPTPFormula)this.ftable.get(parent));
+          }
+        } else {
+          String sourceInfo = source.toString();
+          if (!sourceInfo.contains("(") && !sourceInfo.contains(")")) {
+            formula.addParent((TPTPFormula)this.ftable.get(sourceInfo));
+          }       
+        }
+      }
+      parents.clear();
+    }
   }
 
   public static void checkArguments (String args[]) {
@@ -62,49 +101,7 @@ public class TPTPParser {
   }
 
   public static TPTPParser parse (BufferedReader reader) throws Exception {
-    StringBuffer result = new StringBuffer();
-    TptpLexer lexer = new TptpLexer(reader);
-    TptpParser parser = new TptpParser(lexer);
-    SimpleTptpParserOutput outputManager = new SimpleTptpParserOutput();
-    Hashtable<String,TPTPFormula> ftable = new Hashtable();
-    Vector<SimpleTptpParserOutput.TopLevelItem> Items = new Vector();
-
-    int i = 0;
-    for (SimpleTptpParserOutput.TopLevelItem item = 
-           (SimpleTptpParserOutput.TopLevelItem)parser.topLevelItem(outputManager);
-         item != null;
-         item = (SimpleTptpParserOutput.TopLevelItem)parser.topLevelItem(outputManager)) {
-      TPTPFormula formula = new TPTPFormula(item, i);
-      String name = getName(formula.item);
-      ftable.put(name, formula);
-      Items.add(item);
-      i++;
-    }
-
-    // add parents to tptp formula info
-    Set<String> set = ftable.keySet();
-    Iterator<String> itr = set.iterator();
-    Vector<String> parents = new Vector();
-    while (itr.hasNext()) {
-      String str = itr.next();
-      TPTPFormula formula = ftable.get(str);
-      SimpleTptpParserOutput.Source source = formula.source;
-      if (source != null) {
-        if (source.getKind() == SimpleTptpParserOutput.Source.Kind.Inference) {
-          gatherParents(source, parents);
-          for (String parent : parents) {
-            formula.addParent((TPTPFormula)ftable.get(parent));
-          }
-        } else {
-          String sourceInfo = source.toString();
-          if (!sourceInfo.contains("(") && !sourceInfo.contains(")")) {
-            formula.addParent((TPTPFormula)ftable.get(sourceInfo));
-          }       
-        }
-      }
-      parents.clear();
-    }
-    return new TPTPParser(ftable, Items);
+		return new TPTPParser(reader);
   }
 
   public static void gatherParents (SimpleTptpParserOutput.Source source, Vector<String> parents) {

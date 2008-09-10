@@ -46,10 +46,10 @@ public class LooksDifferent {
   public static ArrayList<String> addAxioms (TreeSet uniqueSymbols, TreeSet symbolList) {
     ArrayList<String> axioms = new ArrayList();
     Iterator<TPTPParser.Symbol> ita = uniqueSymbols.iterator();
-    Iterator<TPTPParser.Symbol> itb = symbolList.iterator();
     // symmetry
     String formula = "";
     while (ita.hasNext()) {
+			Iterator<TPTPParser.Symbol> itb = symbolList.iterator();
       TPTPParser.Symbol unique = ita.next();
       // ![X1,...,Xn,Y1,...,Yn]: (predicate_ld(X1,Y1) | ... | predicate_ld(Xn,Yn)) => predicate_ld(functor_u(X1,...,Xn), functor_u(Y1,...Yn))
       if (unique.arity > 0) {
@@ -152,6 +152,65 @@ public class LooksDifferent {
     return conjecture;
   }
 
+	// bind the variables of the conjecture
+	// assumption quantified variables on outside only
+	public static String bindConjecture (String conjecture, ArrayList<Binding> original, ArrayList<Binding> bind) {
+		// remove outer most existential (find first ':')
+		int colon = conjecture.indexOf(":");
+		String formula = conjecture.substring(colon+1, conjecture.length());
+		String result = "";
+		// for each old Xi in original, replace with new Yi in bind
+		// careful not to remove Xi from some part of a string
+		// check Xi,  and ,Xi
+		if (original.size() != bind.size()) {
+			return "different size of variable lists in original and binds, orig: " + original.size() + ", while bind size: " + bind.size();
+		}
+		String delimiters = "(),. :?![]~";
+		StringTokenizer st = new StringTokenizer(formula, delimiters, true);
+		while (st.hasMoreTokens()) {
+			String token = st.nextToken();
+			boolean flag = false;
+			String replacement = "";
+  		for (int i = 0; i < original.size(); i++) {
+	  		String orig = (original.get(i)).variable;
+		  	String b = (bind.get(i)).binding;
+				if (token.equals(orig)) {
+					flag = true;
+					replacement = b;
+					break;
+				} 
+			}
+			if (flag) {
+				result += replacement;
+			} else {
+				result += token;
+			}
+		}
+		// add front back in
+		formula = conjecture.substring(0, colon+1) + result;
+		return formula;
+	}
+	
+	public static String filterLooksDifferent (String tptp) throws Exception {
+		// keep only TPTPFormula which are "axioms" and has no ld predicates
+		String axioms = "";
+		TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(tptp)));
+		Hashtable<String,TPTPFormula> ftable = parser.ftable;
+		Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
+		for (SimpleTptpParserOutput.TopLevelItem item : Items) {
+			String name = TPTPParser.getName(item);
+			TPTPFormula formula = ftable.get(name);
+			if (!formula.parent.isEmpty()) {
+				continue;
+			}
+			if (((formula.item).toString()).contains(predicate_ld)) {
+				continue;
+			}
+			axioms += formula.fofify();
+		} 	
+		return axioms;
+	}
+	
   public static void main (String args[]) throws Exception {
     TPTPParser.checkArguments(args);
     // assumption: filename is args[0] or "--" for stdin
