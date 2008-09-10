@@ -18,9 +18,17 @@ import java.io.*;
 
  /** A trivial structure to hold the elements of a proof step. */
 public class ProofStep {
-     
+  
+	public static final String 
+		QUERY = "[Query]",		
+		NEGATED_QUERY = "[Negated Query]",
+		INSTANTIATED_QUERY = "[Instantiated Query]";
+   
      /** A String of the type clause or formula */
     public String formulaType = null;
+
+     /** A String of the role of the formula */
+  	public String formulaRole = null;
 
      /** A String containing a valid KIF expression, that is the axiom 
       *  expressing the conclusion of this proof step. */
