@@ -22,7 +22,7 @@ public class TPTP2SUMO {
     String kif = "";
     try {
       file = new FileReader(inFile);
-      kif = TPTP2SUMO.convert(file);
+      kif = TPTP2SUMO.convert(file, false);
     } catch (Exception e) { 
       System.out.println("e: " + e);
     }
@@ -32,23 +32,23 @@ public class TPTP2SUMO {
     System.out.println("END-----");
   }
 
-  public static String convert (String tptp) throws Exception {    
-    return convert(new BufferedReader(new StringReader(tptp)), null);
+  public static String convert (String tptp, boolean instantiated) throws Exception {    
+    return convert(new BufferedReader(new StringReader(tptp)), null, instantiated);
   }
 
-  public static String convert (Reader in) throws Exception {
-    return convert(new BufferedReader(in), null);
+  public static String convert (Reader in, boolean instantiated) throws Exception {
+    return convert(new BufferedReader(in), null, instantiated);
   }
 
-  public static String convert (String tptp, ArrayList<Binding> answer) throws Exception {
-    return convert(new BufferedReader(new StringReader(tptp)), answer);
+  public static String convert (String tptp, ArrayList<Binding> answer, boolean instantiated) throws Exception {
+    return convert(new BufferedReader(new StringReader(tptp)), answer, instantiated);
   }
 
-  public static String convert (Reader in, ArrayList<Binding> answer) throws Exception {
-    return convert(new BufferedReader(in), answer);
+  public static String convert (Reader in, ArrayList<Binding> answer, boolean instantiated) throws Exception {
+    return convert(new BufferedReader(in), answer, instantiated);
   }
 
-  public static String convert (BufferedReader reader, ArrayList<Binding> answer) throws Exception {
+  public static String convert (BufferedReader reader, ArrayList<Binding> answer, boolean instantiated) throws Exception {
     StringBuffer result = new StringBuffer();
     TPTPParser parser = TPTPParser.parse(reader);
     Hashtable<String,TPTPFormula> ftable = parser.ftable;
@@ -66,7 +66,7 @@ public class TPTP2SUMO {
     for (SimpleTptpParserOutput.TopLevelItem item : Items) {
       String name = TPTPParser.getName(item);
       TPTPFormula formula = ftable.get(name);
-      proof.append(convertTPTPFormula(formula, ftable));
+      proof.append(convertTPTPFormula(formula, ftable, instantiated));
     }
     //----End proof output
     proof.append("    </proof>\n");
@@ -103,7 +103,7 @@ public class TPTP2SUMO {
     return result.toString();
   }
 
-  private static StringBuffer convertTPTPFormula (TPTPFormula formula, Hashtable<String,TPTPFormula> ftable) {
+  private static StringBuffer convertTPTPFormula (TPTPFormula formula, Hashtable<String,TPTPFormula> ftable, boolean instantiated) {
     StringBuffer result = new StringBuffer();
     int indent = 12;
     int indented = 0;
@@ -124,6 +124,17 @@ public class TPTP2SUMO {
     result.append("        </premises>\n");
     result.append("        <conclusion>\n");
     result.append(convertType(formula, indent, indented));
+		if (formula.parent.isEmpty()) {
+			if (formula.type.equals("conjecture")) {
+				if (!instantiated) {
+					result.append("          <query type='" + ProofStep.QUERY + "'/>\n");
+				} else {
+					result.append("          <query type='" + ProofStep.INSTANTIATED_QUERY + "'/>\n");
+				}
+			} else if (formula.type.equals("negated_conjecture")) {
+				result.append("          <query type='" + ProofStep.NEGATED_QUERY + "'/>\n");
+			}
+		}
     result.append("        </conclusion>\n");
     result.append("      </proofStep>\n");
     return result;
@@ -309,7 +320,7 @@ public class TPTP2SUMO {
              ((SimpleTptpParserOutput.Formula.Quantified)formula).getQuantifier() == 
                ((SimpleTptpParserOutput.Formula.Quantified)((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix()).getQuantifier()) {
         formula = ((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix();
-        result.append(" ?" + ((SimpleTptpParserOutput.Formula.Quantified)formula).getVariable());
+        result.append(" ?" + transformVariable(((SimpleTptpParserOutput.Formula.Quantified)formula).getVariable()));
       }
       result.append(") ");
       if (((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix().getKind() == SimpleTptpParserOutput.Formula.Kind.Negation ||
