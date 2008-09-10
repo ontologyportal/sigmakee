@@ -134,7 +134,7 @@ August 9, Acapulco, Mexico.
     timeout = Integer.parseInt(request.getParameter("timeout"));
   }
   if (quietFlag == null) {
-    quietFlag = "-q4";
+    quietFlag = "hyperlinkedKIF";
   }
   if (systemChosenLocal == null) {
     systemChosenLocal = defaultSystemLocal;
@@ -241,9 +241,20 @@ August 9, Acapulco, Mexico.
 
   <IMG SRC='pixmaps/1pixel.gif' WIDTH=1 HEIGHT=1 BORDER=0><BR>
   <TEXTAREA ROWS=5 COLS=70" NAME="stmt"><%=stmt%></TEXTAREA><BR>
-  Query time limit:<INPUT TYPE=TEXT SIZE=3 NAME="timeout" VALUE="<%=timeout%>">
-  Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
-  <BR>
+  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
+<% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
+<% if (location.equals("local")) { out.print(" CHECKED"); } %>
+<% if (tptpWorldExists) {
+     out.println("onClick=\"javascript:toggleList('Local');\"");
+   } else {
+     out.println("onClick=\"javascript:toggleList('BuiltIn');\"");     
+   }
+%>
+  >Local SystemOnTPTP
+  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
+<% if (location.equals("remote")) { out.print(" CHECKED"); } %>
+  onClick="javascript:toggleList('Remote');">Remote SystemOnTPTP
+&nbsp;
   System:
 <%
   String params;
@@ -276,19 +287,9 @@ August 9, Acapulco, Mexico.
   out.println(HTMLformatter.createMenu("systemChosenRemote",systemChosenRemote,
                                        systemListRemote, params));
 %>
-  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
-<% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
-<% if (location.equals("local")) { out.print(" CHECKED"); } %>
-<% if (tptpWorldExists) {
-     out.println("onClick=\"javascript:toggleList('Local');\"");
-   } else {
-     out.println("onClick=\"javascript:toggleList('BuiltIn');\"");     
-   }
-%>
-  >Local SystemOnTPTP
-  <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
-<% if (location.equals("remote")) { out.print(" CHECKED"); } %>
-  onClick="javascript:toggleList('Remote');">Remote SystemOnTPTP
+  <BR>
+  Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
+  Query time limit:<INPUT TYPE=TEXT SIZE=3 NAME="timeout" VALUE="<%=timeout%>">
   <BR>
   <INPUT TYPE="hidden" NAME="sanitize" VALUE="yes"
 <% if (sanitize.equalsIgnoreCase("yes")) { out.print(" CHECKED"); } %>
@@ -367,6 +368,7 @@ August 9, Acapulco, Mexico.
         conjectureFormula.tptpParse(true,kb);
         Iterator it = conjectureFormula.getTheTptpFormulas().iterator();
         String theTPTPFormula = (String) it.next();
+				String originalConjecture = theTPTPFormula;
         if (isQuestion) {
           conjectureTPTPFormula =  "fof(1" + ",question,(" + theTPTPFormula + ")).";
         } else {
@@ -383,6 +385,7 @@ August 9, Acapulco, Mexico.
 //----If last check for an answer failed (no answer found or empty answer list), exit loop
 //----Each loop around, add ld axioms
       ArrayList<Binding> lastAnswer = null;
+			ArrayList<Binding> originalAnswer = null;
       int numAnswers = 0;
       TreeSet<TPTPParser.Symbol> symbolsSoFar = new TreeSet(new TPTPParser.SymbolComparator());
       ArrayList<String> ldAxiomsSoFar = new ArrayList();
@@ -390,6 +393,8 @@ August 9, Acapulco, Mexico.
 //----Create symbol list from entire kbFile
       TreeSet<TPTPParser.Symbol> symbolList = TPTPParser.getSymbolList(originalKBFileName);
       do {
+			  originalResult = "";
+			  result = "";
 //        out.println("Number of answers found so far: " + numAnswers);
 //----If we found a new set of answers, update query and axiom list
         if (lastAnswer != null) {
@@ -461,7 +466,9 @@ August 9, Acapulco, Mexico.
   
             reader = new BufferedReader(new InputStreamReader(
                          ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
-            out.println("(Remote SystemOnTPTP call)");
+					  if (numAnswers == 0) {
+              out.println("(Remote SystemOnTPTP call)");
+            }
             out.println("<PRE>");
             boolean tptpEnd = false;
             while ((responseLine = reader.readLine()) != null) {
@@ -538,7 +545,9 @@ August 9, Acapulco, Mexico.
                         tstpFormat   + " " +
                         kbFileName;
             }
-            out.println("(Local SystemOnTPTP call)");
+            if (numAnswers == 0) {
+              out.println("(Local SystemOnTPTP call)");
+            }
             proc = Runtime.getRuntime().exec(command);
             reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             out.println("<PRE>");
@@ -603,7 +612,9 @@ August 9, Acapulco, Mexico.
             //out.println("chosen system: " + systemChosen);
             result = SystemOnTPTP.SystemOnTPTP(systemChosen, systemsDir, timeout, qq, format, kbFileName);
             originalResult += result;
-            out.println("(Built-In SystemOnTPTP call)");
+						if (numAnswers == 0) {
+              out.println("(Built-In SystemOnTPTP call)");
+            }
             out.println("<PRE>");
             if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
               out.println(result);
@@ -639,17 +650,19 @@ August 9, Acapulco, Mexico.
               } 
             }  
             if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
-              ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, originalResult);
+//----Procedure if SNARK was chosen
+						  String conj = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
+              ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conj, originalResult, out);
               lastAnswer = answer;
-              newResult = TPTP2SUMO.convert(result, answer);
+              newResult = TPTP2SUMO.convert(result, answer, false);
             } else {
+//----Procedure if not SNARK (call one answer system: Metis)
               TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(result)));
               lastAnswer = AnswerExtractor.extractAnswers(parser.ftable);
 //----Get original variable names
               lastAnswer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, lastAnswer);
-              newResult = TPTP2SUMO.convert(result);
+              newResult = TPTP2SUMO.convert(result, false);
             }
-
       if (quietFlag.equals("IDV") && location.equals("remote")) {
         if (SystemOnTPTP.isTheorem(originalResult)) {
           int size = SystemOnTPTP.getTPTPFormulaSize(result);
@@ -681,26 +694,50 @@ August 9, Acapulco, Mexico.
           out.println("Not a theorem.  IDV tree unavailable.");
         }
       } else if (quietFlag.equals("hyperlinkedKIF")) {
+		  	if (originalAnswer == null) {
+  		  	originalAnswer = lastAnswer;
+        } else {
+//----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
+		 	    if (!lastAnswer.equals("")) {
+            String bindConjecture = "fof(bindConj" + ", conjecture,(" + LooksDifferent.bindConjecture(originalConjecture, originalAnswer, lastAnswer) + ")).";
+//----With new bindConjecture, take last result, filter out anything with LDs in it, put in prover
+			      String axioms = LooksDifferent.filterLooksDifferent(originalResult);
+//----Redo proof using OneAnswerSystem again
+			      String bindProblem = axioms + " " + bindConjecture;
+			      String bindResult = AnswerFinder.findProof(bindProblem, systemsDir);
+						newResult = TPTP2SUMO.convert(bindResult, lastAnswer, true);
+          }
+        }
         boolean isTheorem = SystemOnTPTP.isTheorem(originalResult);
-          try {
-            if (!isTheorem) {
-//----Not a theorem, print no
-              newResult = "<queryResponse>\n <answer result='no'> \n  </answer> \n <summary proofs='0'/> \n </queryResponse>";
-            } 
-out.println("new result: " + newResult + "<br>");
-out.println("stmt: " + stmt + "<br>");
-out.println("lineHtml: " + lineHtml + "<br>");
-out.println("kbName: " + kbName + "<br>");
-out.println("language: " + language + "<br>");
-            out.println(HTMLformatter.formatProofResult(newResult,
-                                                        stmt,
-                                                        stmt,
-                                                        lineHtml,
-                                                        kbName,
-                                                        language));       
-           } catch (Exception e) {
-        }      
+        boolean isCounterSatisfiable = SystemOnTPTP.isCounterSatisfiable(originalResult); 
+				boolean proofExists = SystemOnTPTP.proofExists(originalResult);
+				int timeUsed = SystemOnTPTP.timeUsed(originalResult);
+//				out.println("time used: " + timeUsed);
+
+        if (isTheorem) { 
+          if (proofExists) {
+            try {
+//----If a proof exists, print out as hyperlinked kif
+              out.println(HTMLformatter.formatProofResult(newResult,
+                                                          stmt,
+                                                          stmt,
+                                                          lineHtml,
+                                                          kbName,
+                                                          language));
+            } catch (Exception e) {}
+          } else {
+//----Proof does not exist, but was a theorem
+            out.println("Answer ". Yes [Theorem]<br>");
+          } 
+        } else if (isCounterSatisfiable) {
+          out.println("Answer 1. No [CounterSatisfiable]<br>");
+        } else {
+          if (numAnswers == 0) 
+            out.println("Answer 1. No<br>");
+        }
+				out.flush();
         /*
+//----Call tptp4x
         command = tptp4X    + " " + 
                   "-f sumo" + " " +
                   "--";
@@ -722,7 +759,7 @@ out.println("language: " + language + "<br>");
                                                     kbName,
                                                     language));       
         */
-        }
+      }
 
 //----If lastAnswer != null (we found an answer) && there is an answer (lastAnswer.size() > 0)
        if (lastAnswer != null && lastAnswer.size() > 0) {
