@@ -30,58 +30,59 @@ public class HTMLformatter {
      */
     public static String proofTableFormat(String query, ProofStep step, String kbName, String language) {
 
-        StringBuffer result = new StringBuffer();
-        Formula f = new Formula();
-        KB kb = KBmanager.getMgr().getKB(kbName);
-        f.read(step.axiom);
-        String axiom = new String(f.theFormula);
-        f.theFormula = Formula.postProcess(f.theFormula);
-
-        String hostname = KBmanager.getMgr().getPref("hostname");
-        if (hostname == null)
-            hostname = "localhost";
-        String port = KBmanager.getMgr().getPref("port");
-        if (port == null)
-            port = "8080";
-        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
-
-        if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.        
-            f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
-            result.append("<td valign=top width=50%>" + "True" + "</td>");
+			StringBuffer result = new StringBuffer();
+			Formula f = new Formula();
+			KB kb = KBmanager.getMgr().getKB(kbName);
+			f.read(step.axiom);
+			String axiom = new String(f.theFormula);
+			f.theFormula = Formula.postProcess(f.theFormula);
+			
+			String hostname = KBmanager.getMgr().getPref("hostname");
+			if (hostname == null)
+				hostname = "localhost";
+			String port = KBmanager.getMgr().getPref("port");
+			if (port == null)
+				port = "8080";
+			String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+			
+			if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.        
+				f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
+				result.append("<td valign=top width=50%>" + "True" + "</td>");
+			}
+			else
+				result.append("<td valign=top width=50%>" + f.htmlFormat(kbHref) + "</td>");
+			result.append("<td valign=top width=10%>");
+			for (int i = 0; i < step.premises.size(); i++) {
+				Integer stepNum = (Integer) step.premises.get(i);
+				result.append(stepNum.toString() + " ");            
+			}
+			if (step.premises.size() == 0) {
+				if (step.formulaRole != null) {
+					result.append(step.formulaRole);
+        } else if (Formula.isNegatedQuery(query,f.theFormula)) {
+					result.append("[Negated Query]");
+				} else {
+					result.append("[KB]");
         }
-        else
-            result.append("<td valign=top width=50%>" + f.htmlFormat(kbHref) + "</td>");
-        result.append("<td valign=top width=10%>");
-        for (int i = 0; i < step.premises.size(); i++) {
-            Integer stepNum = (Integer) step.premises.get(i);
-            result.append(stepNum.toString() + " ");            
-        }
-        if (step.premises.size() == 0) {
-            if (Formula.isNegatedQuery(query,f.theFormula)) 
-                result.append("[Negated Query]");
-            else if (Formula.isQuery(query,f.theFormula))
-                result.append("[Query]");
-            else  
-                result.append("[KB]");
-        }
-        result.append("</td><td width=40% valign=top>");
-        if (language != null && language.length() > 0) {
-	    String pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, 
-                            KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
-                            KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), kb,
-                            language);
+			}
+			result.append("</td><td width=40% valign=top>");
+			if (language != null && language.length() > 0) {
+				String pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, 
+																											KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
+																											KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), kb,
+																											language);
 	    if (pph == null)
-                pph = "";
-            if (Formula.isNonEmptyString(pph)) {
-                if (language.equalsIgnoreCase("ar")) {
-                    pph = ("<span dir=\"rtl\">" + pph + "</span>");
-                    // pph = ("&#x202b;" + pph + "&#x202c;");
-                }
-            }
-            result.append(pph);        
-	}
-        result.append("</td>");
-        return result.toString();
+				pph = "";
+			if (Formula.isNonEmptyString(pph)) {
+				if (language.equalsIgnoreCase("ar")) {
+					pph = ("<span dir=\"rtl\">" + pph + "</span>");
+					// pph = ("&#x202b;" + pph + "&#x202c;");
+				}
+			}
+			result.append(pph);        
+			}
+			result.append("</td>");
+			return result.toString();
     }
 
 
