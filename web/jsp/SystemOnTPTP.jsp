@@ -774,4 +774,3 @@ else if (location.equals("local") && builtInExists && !tptpWorldExists) {
 <%@ include file="Postlude.jsp" %>
    </BODY>
    </HTML>
- 
