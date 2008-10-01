@@ -124,19 +124,21 @@ for %%X in ( "sigma*.war" ) do (
 )
 
 for %%I in ( "KBs\*.kif" "KBs\*.txt" "KBs\*.exc" "KBs\index.*" ) do (
-  if exist "%SIGMA_KBS_DIR%\%%~nxI" (
-    copy /B "%SIGMA_KBS_DIR%\%%~nxI" "%SIGMA_KBS_DIR%\%%~nxI.old"
-    echo Wrote %%~nxI.old
-    del "%SIGMA_KBS_DIR%\%%~nxI"
+  if %CD%\%%I NEQ %SIGMA_KBS_DIR%\%%~nxI (
+    if exist "%SIGMA_KBS_DIR%\%%~nxI" (
+      copy /B "%SIGMA_KBS_DIR%\%%~nxI" "%SIGMA_KBS_DIR%\%%~nxI.old"
+      echo Wrote %%~nxI.old
+      del "%SIGMA_KBS_DIR%\%%~nxI"
+    )
+    copy /B "%%I" "%SIGMA_KBS_DIR%\%%~nxI"
+    if not exist "%SIGMA_KBS_DIR%\%%~nxI" (
+      echo.
+      echo %%~nxI could not be copied.
+      pause
+      goto quit
+    )
+    echo Wrote %%~nxI.
   )
-  copy /B "%%I" "%SIGMA_KBS_DIR%\%%~nxI"
-  if not exist "%SIGMA_KBS_DIR%\%%~nxI" (
-    echo.
-    echo %%~nxI could not be copied.
-    pause
-    goto quit
-  )
-  echo Wrote %%~nxI.
 )
 
 if not exist "%SIGMA_KBS_DIR%\tests" (
@@ -150,17 +152,21 @@ if not exist "%SIGMA_KBS_DIR%\tests" (
   echo The inference test files will not be copied.
 ) else (
   for %%I in ( "KBs\tests\*" ) do (
-    if exist "%SIGMA_KBS_DIR%\tests\%%~nxI" (
-      copy /B "%SIGMA_KBS_DIR%\tests\%%~nxI" "%SIGMA_KBS_DIR%\tests\%%~nxI.old"
-      echo Wrote %%~nxI.old
-      del "%SIGMA_KBS_DIR%\tests\%%~nxI"
+  if %CD%\%%I NEQ %SIGMA_KBS_DIR%\tests\%%~nxI (
+      if exist "%SIGMA_KBS_DIR%\tests\%%~nxI" (
+        copy /B "%SIGMA_KBS_DIR%\tests\%%~nxI" "%SIGMA_KBS_DIR%\tests\%%~nxI.old"
+        echo Wrote %%~nxI.old
+        del "%SIGMA_KBS_DIR%\tests\%%~nxI"
+      )
+      copy /B "%%I" "%SIGMA_KBS_DIR%\tests\%%~nxI"
+      if not exist "%SIGMA_KBS_DIR%\tests\%%~nxI" (
+        echo.
+        echo %%~nxI could not be copied.
+        pause
+        goto quit
+      )
+      echo Wrote %%~nxI.
     )
-    copy /B "%%I" "%SIGMA_KBS_DIR%\tests\%%~nxI"
-    if not exist "%SIGMA_KBS_DIR%\tests\%%~nxI" (
-      echo.
-      echo %%~nxI could not be copied.
-    )
-    echo Wrote %%~nxI.
   )
 )
 

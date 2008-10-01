@@ -106,6 +106,7 @@
     <pathelement path="src/java/com/articulate/sigma"/>
     <pathelement path="src/java/TPTPWorld"/>
     <pathelement path="src/java/tptp_parser"/>
+    <pathelement path="src/java/ClientHttpRequest"/>
 </path>
 
 <path id="compile.classpath">

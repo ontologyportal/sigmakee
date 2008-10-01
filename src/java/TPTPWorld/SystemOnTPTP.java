@@ -278,8 +278,8 @@ public class SystemOnTPTP {
 
       // return SHORT RESULT/OUTPUT if q3
       if (quietFlag.equals("-q3")) {
-        res += problemFile + " - " + getSolvedType() + " - Total time: " + getSolvedTime() + "\n";
-        res += problemFile + " - " + getSolutionType() + " - Total time: " + getSolutionTime();
+        res += "% " + problemFile + " - " + getSolvedType() + " - Total time: " + getSolvedTime() + "\n";
+        res += "% " + problemFile + " - " + getSolutionType() + " - Total time: " + getSolutionTime();
       }
 
       return res;
@@ -511,7 +511,8 @@ public class SystemOnTPTP {
 		return time;
 	}
 
-  public static ArrayList<String> getSZSAnswers (String tptp, JspWriter out) throws Exception {
+//  public static ArrayList<String> getSZSAnswers (String tptp, JspWriter out) throws Exception {
+  public static ArrayList<String> getSZSAnswers (String tptp) throws Exception {
     String SZS_ANSWERS_SHORT = "% SZS answers short";
     String line;
     BufferedReader bin =  new BufferedReader(new StringReader(tptp));
@@ -532,7 +533,8 @@ public class SystemOnTPTP {
     return answers;
   }
 
-  public static ArrayList<Binding> getSZSBindings (String conjecture, String tptp, JspWriter out) throws Exception {
+//  public static ArrayList<Binding> getSZSBindings (String conjecture, String tptp, JspWriter out) throws Exception {
+  public static ArrayList<Binding> getSZSBindings (String conjecture, String tptp) throws Exception {
     ArrayList<Binding> bind = new ArrayList();
     BufferedReader reader = new BufferedReader(new StringReader(conjecture));
     TPTPParser parser = TPTPParser.parse(reader);
@@ -541,7 +543,8 @@ public class SystemOnTPTP {
       return bind;
     }
     SimpleTptpParserOutput.TopLevelItem item = parser.Items.elementAt(0);
-    return getSZSBindings(item, tptp, out);
+//    return getSZSBindings(item, tptp, out);
+    return getSZSBindings(item, tptp);
   }
 
   public static ArrayList<Binding> getSZSBindings (String conjecture, ArrayList<Binding> answers) throws Exception {
@@ -556,7 +559,8 @@ public class SystemOnTPTP {
     return getSZSBindings(item, answers);
   }
 
-  public static ArrayList<Binding> getSZSBindings (SimpleTptpParserOutput.TopLevelItem item, String tptp, JspWriter out) throws Exception {
+//  public static ArrayList<Binding> getSZSBindings (SimpleTptpParserOutput.TopLevelItem item, String tptp, JspWriter out) throws Exception {
+  public static ArrayList<Binding> getSZSBindings (SimpleTptpParserOutput.TopLevelItem item, String tptp) throws Exception {
     ArrayList<Binding> bind = new ArrayList();
     if (item.getKind() != SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
       return bind;
@@ -568,7 +572,7 @@ public class SystemOnTPTP {
       return bind;
     }
     // uneven number of variables to answers, weirdness
-    ArrayList<String> answers = getSZSAnswers(tptp, out);
+    ArrayList<String> answers = getSZSAnswers(tptp);
     if (variables.size() != answers.size()) {
       return bind;
     }

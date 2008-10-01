@@ -3,6 +3,8 @@ package com.articulate.sigma;
 import java.util.*;
 import java.io.*;
 import javax.servlet.jsp.*;
+import TPTPWorld.SystemOnTPTP;
+import TPTPWorld.InterfaceTPTP;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -66,7 +68,7 @@ public class InferenceTestSuite {
      * Note that this procedure deletes any prior user assertions.
      */
     public static String test(KB kb) throws IOException  {
-      return test(kb, null, null);
+      return test(kb, null, null, "");
     }
 
     /** ***************************************************************
@@ -74,10 +76,12 @@ public class InferenceTestSuite {
      * the result as an HTML page showing test results and links to proofs.
      * Note that this procedure deletes any prior user assertions.
      */
-    public static String test(KB kb, String systemChosen, JspWriter out) throws IOException  {
+    public static String test(KB kb, String systemChosen, JspWriter out, String location) throws IOException  {
+/*
       if (out != null) {
         out.print("Starting test suite");
       }
+*/
         System.out.println("INFO in InferenceTestSuite.test(): Note that any prior user assertions will be deleted.");
         StringBuffer result = new StringBuffer();
         FileWriter fw = null;
@@ -180,6 +184,14 @@ public class InferenceTestSuite {
                 Iterator it = test.formulaSet.iterator();
                 String note = files[i].getName();
                 String query = null;
+
+
+
+
+                String tptpresult ="";
+
+
+
                 ArrayList answerList = new ArrayList();
                 while (it.hasNext()) {
                     String formula = (String) it.next();
@@ -212,6 +224,12 @@ public class InferenceTestSuite {
                         long start = System.currentTimeMillis();
                         if (systemChosen == null) {
                           proof = kb.ask(processedStmt,timeout,maxAnswers);
+
+
+
+
+
+// SoTPTP:
                         } else {
                           Formula conjectureFormula;
                           conjectureFormula = new Formula();
@@ -223,12 +241,20 @@ public class InferenceTestSuite {
                                                                true,
                                                                systemChosen,
                                                                false);
+
+
+
+
+
+/*
                           String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
                           String SoTPTP =  TPTPWorld + "/SystemExecution/SystemOnTPTP";
                           String command = SoTPTP + " " +
-                                           "-q2"        + " " +  // quietFlag
+//                                           "-q2"        + " " +  // quietFlag
+                                           "-q3"        + " " +  // quietFlag
                                            systemChosen + " " + 
                                            timeout      + " " +
+                                           "-S"         + " " +
                                            kbFileName;
                           Process proc = Runtime.getRuntime().exec(command);
                           BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -238,16 +264,69 @@ public class InferenceTestSuite {
                             
                             res += responseLine + "\n";
                           } 
-                          res += "\n<hr>";
+//                          res += "\n<hr>";
+*/
+/*
+                          Process proc = Runtime.getRuntime().exec("cat "+kbFileName);
+                          BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                          String responseLine;
+                          out.println("<pre>\n");
+                          while ((responseLine = reader.readLine()) != null) {
+                            out.println(responseLine + "\n");
+                          } 
+                          out.println("</pre>\n");
+*/
+
+
+
+			  InterfaceTPTP.init();
+			  String res = InterfaceTPTP.callTPTP(location, systemChosen, kbFileName,
+							      timeout, "-q3", "-S");
+
+
+
+			  StringTokenizer st = new StringTokenizer(res,"\n");
+			  String temp = "";
+			  while (st.hasMoreTokens()) {
+			      String next = st.nextToken();
+			      if (!next.equals("") && !next.substring(0,1).equals("%")) {
+				  temp += next + "\n";
+			      }
+			  }
+			  tptpresult = res;
+			  res = temp;
+
+
+/*
                           if (out != null) {
+                            out.println("<pre>");
                             out.println("filename: " + files[i].getName());
                             out.println("time limit: " + timeout);
-                            out.println(res);
+                            out.println(tptpresult);
                             out.flush();
+                            out.println("</pre>");
+	                    //out.println(TPTP2SUMO.convert(temp,false));
                           }
-                          proof = res;
-                          //proof = TPTP2SUMO.convert(res);
+*/
+                          //proof = res;
+                          if (SystemOnTPTP.isTheorem(tptpresult)) {
+                              proof = TPTP2SUMO.convert(res,false);
+                          } else {
+			      proof="<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n<summary proofs=\"0\"/>\n</queryResponse>\n";
+/*
+                              proof = "<queryResponse>\n" +
+                                      "<answer result='no' number='1'>\n" +
+                                      "</answer>" +
+				  "</queryResponse>\n";
+*/
+                          }
                         }
+// End SoTPTP
+
+
+
+
+
                         duration = System.currentTimeMillis() - start;
                         
                         System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
@@ -256,7 +335,9 @@ public class InferenceTestSuite {
                     }
                 }
                 catch ( Exception ex ) {
-                    return("Error in InferenceTestSuite.test() while executing query: " + ex.getMessage());
+//                    return("Error in InferenceTestSuite.test() while executing query: " + ex.getMessage());
+                    result = result.append("<br>Error in InferenceTestSuite.test() while executing query " +
+					   files[i].getName() + ": " + ex.getMessage() + "<br>");
                 }
                 String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
                 String rfn = files[i].getName();
@@ -265,13 +346,24 @@ public class InferenceTestSuite {
                 try {
                     fw = new FileWriter(resultsFile);
                     pw = new PrintWriter(fw);
-                    if (systemChosen != null) {
-                      pw.println(proof);
-                      apw.println(proof);
-                      apw.flush();
-                    } else {
-                      pw.println(HTMLformatter.formatProofResult(proof,query,processedStmt,lineHtml,kb.name,language));
-                    }
+//                    if (systemChosen != null) {
+//                      pw.println(proof);
+//                      apw.println(proof);
+//                      apw.flush();
+//                    } else {
+//                      pw.println(HTMLformatter.formatProofResult(proof,query,processedStmt,lineHtml,kb.name,language));
+//                    }
+
+                    pw.println(HTMLformatter.formatProofResult(proof,query,processedStmt,lineHtml,kb.name,language));
+/*
+                    pw.println("<pre>\n");
+                    pw.println(proof);
+                    pw.println("---------------------------------------------\n");
+                    pw.println(tptpresult);
+                    pw.println("</pre>\n");
+*/
+
+
                 }
                 catch (java.io.IOException e) {
                     throw new IOException("Error writing file " + resultsFile.getCanonicalPath());
@@ -305,9 +397,9 @@ public class InferenceTestSuite {
                 result = result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
             }
         }
-        if (systemChosen != null) {
-          return "Mission Success: inference test suite completed";
-        }
+//        if (systemChosen != null) {
+//          return "Mission Success: inference test suite completed";
+//        }
 
         System.out.println();
         System.out.println("ALL TEST QUERIES FINISHED");

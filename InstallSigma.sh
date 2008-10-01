@@ -203,12 +203,15 @@ for fn in `ls ${PKG_KBS_DIR%\/}/*.kif \
               ${PKG_KBS_DIR%\/}/*.txt`
 do
   TARGET_FN="${SIGMA_KBS_DIR%\/}/${fn#$PKG_KBS_DIR\/}"
-  if [[ (-e "$TARGET_FN") && (-w "$TARGET_FN") ]]
+  if [[ "$TARGET_FN" != "$fn" ]]
     then
-      mv $TARGET_FN "${TARGET_FN}.old"
+    if [[ (-e "$TARGET_FN") && (-w "$TARGET_FN") ]]
+      then
+        mv $TARGET_FN "${TARGET_FN}.old"
+    fi
+    cp $fn $TARGET_FN
+    chmod a+rw $TARGET_FN
   fi
-  cp $fn $TARGET_FN
-  chmod a+rw $TARGET_FN
   if [[ -r "$TARGET_FN" ]]
     then
       echo "  Wrote ${TARGET_FN}."
@@ -247,12 +250,15 @@ if [[ -d "$PKG_TESTS_DIR" ]]
     for fn in `ls ${PKG_TESTS_DIR%\/}/*.tq`
     do
       TARGET_FN="${TESTS_INPUT_DIR%\/}/${fn#$PKG_TESTS_DIR\/}"
-      if [[ (-e "$TARGET_FN") && (-w "$TARGET_FN") ]]
+      if [[ "$TARGET_FN" != "$fn" ]]
         then
-          mv $TARGET_FN "${TARGET_FN}.old"
+        if [[ (-e "$TARGET_FN") && (-w "$TARGET_FN") ]]
+          then
+            mv $TARGET_FN "${TARGET_FN}.old"
+        fi
+        cp $fn $TARGET_FN
+        chmod a+rw $TARGET_FN
       fi
-      cp $fn $TARGET_FN
-      chmod a+rw $TARGET_FN
       if [[ -r "$TARGET_FN" ]]
         then
           echo "  Wrote ${TARGET_FN}."

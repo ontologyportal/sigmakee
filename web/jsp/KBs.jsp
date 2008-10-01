@@ -117,7 +117,8 @@ August 9, Acapulco, Mexico.
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
               out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=" + language + "\">Consistency Check</A></TD>"); 
           }
-          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+//          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
+          if (KBmanager.getMgr().getPref("userName") != null && 
               KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=" + language + "\">Inference Tests</A></TD>");
           }
