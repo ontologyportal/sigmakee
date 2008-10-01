@@ -5,17 +5,17 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.regex.*;
 import tptp_parser.*;
-import javax.servlet.jsp.*;
+
 
 public class SystemOnTPTP {
-    
+
   public static final String NEW_LINE_TEXT = "%------------------------------------------------------------------------------\n";
   //private static final String SystemDirectory = "../System";
   //private static final String SystemDirectory = KBmanager.getMgr().getPref("systemsDir");
   //private static final String SystemDirectory = "../../../../../systems";
   private static String SystemDirectory = "/home/graph/strac/geoff/TPTPWorld/Systems";
 
-  //private static final String Systeminfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
+    //  private static final String Systeminfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
   private static String SystemInfo = SystemDirectory + "/" + "systemInfo.xml";
 
   private static Vector<ATPSystem> atpSystemList = null;
@@ -23,8 +23,6 @@ public class SystemOnTPTP {
 
   public static String SZS_ANSWERS_SHORT = "% SZS answers short";
   public static String SZS_STATUS_THEOREM = "% Result     : Theorem";
-  public static String SZS_STATUS_COUNTER_SATISFIABLE = "% Result     : CounterSatisfiable";
-  public static String RESULT = "% Result     : ";
 
   private static final String SOLVED_TYPE_TIMEOUT = "Timeout";
   private static final String SOLVED_TYPE_GIVEUP  = "Give Up";
@@ -125,9 +123,6 @@ public class SystemOnTPTP {
       //      System.out.println("---Start thread");
       harness += "SystemOnTPTP.java - Start atp thread: " + atpSystem.name + "---" + atpSystem.version + "\n";
       startTime = System.currentTimeMillis();      
-			long maxTime = (long) (limit * 1000);
-			stopSolvedTime = startTime + maxTime;
-			stopSolutionTime = startTime + maxTime;
       String responseLine = "";
       // Set initial response info (start of system output)
       response += "% START OF SYSTEM OUTPUT\n";
@@ -278,8 +273,8 @@ public class SystemOnTPTP {
 
       // return SHORT RESULT/OUTPUT if q3
       if (quietFlag.equals("-q3")) {
-        res += "% " + problemFile + " - " + getSolvedType() + " - Total time: " + getSolvedTime() + "\n";
-        res += "% " + problemFile + " - " + getSolutionType() + " - Total time: " + getSolutionTime();
+        res += problemFile + " - " + getSolvedType() + " - Total time: " + getSolvedTime() + "\n";
+        res += problemFile + " - " + getSolutionType() + " - Total time: " + getSolutionTime();
       }
 
       return res;
@@ -320,7 +315,6 @@ public class SystemOnTPTP {
       loadSystems(systemDir);
     }
     */
-    loadSystems(systemDir);
     ArrayList<String> systems = new ArrayList<String>();
     try {
       for (int i = 0; i < atpSystemList.size(); i++) {
@@ -353,8 +347,7 @@ public class SystemOnTPTP {
     File problemFile = new File(filename);
 
     if (atpSystemList == null) {
-      //      loadSystems(SystemDirectory);
-      loadSystems(systemDir);
+      loadSystems(SystemDirectory);
     }
     ATPSystem atpSystem = null;
     String problemPath = "";
@@ -454,6 +447,7 @@ public class SystemOnTPTP {
 
   // given a tptp result, return true if status theorem in results, else false
   public static boolean isTheorem (String tptp) throws Exception {
+    String SZS_ANSWERS_SHORT = "% SZS answers short";
     boolean theorem = false;
     String line;
     BufferedReader bin =  new BufferedReader(new StringReader(tptp));
@@ -466,52 +460,6 @@ public class SystemOnTPTP {
     return theorem;
   }
 
-  // given a tptp result, return true if status countersatisfiable in results, else false
-  public static boolean isCounterSatisfiable (String tptp) throws Exception {
-    boolean counter_satisfiable = false;
-    String line;
-    BufferedReader bin =  new BufferedReader(new StringReader(tptp));
-    while ((line = bin.readLine()) != null) {      
-      if (line.startsWith(SZS_STATUS_COUNTER_SATISFIABLE)) {
-        counter_satisfiable = true;
-        break;
-      }
-    }
-    return counter_satisfiable;
-  }
-
-	public static boolean proofExists (String tptp) throws Exception {
-		TPTPParser parser = new TPTPParser(new BufferedReader(new StringReader(tptp)));
-		boolean exists = parser.Items.size() > 0;
-		return exists;
-  }
-
-	public static int timeUsed (String tptp) throws Exception {
-		int time = 0;
-    String line;
-		String result = "";
-    BufferedReader bin =  new BufferedReader(new StringReader(tptp));
-    while ((line = bin.readLine()) != null) {      
-      if (line.startsWith(RESULT)) {
-				result = line;
-        break;
-      }
-    }
-		result = result.substring(result.indexOf(":") + 1, result.length());
-		String num = "";
-		for (int i = 0; i < result.length(); i++) {
-			if (result.charAt(i) == '.') {
-				break;
-			}
-			if (Character.isDigit(result.charAt(i))) {
-				num += result.charAt(i);
-			}
-		}
-		time = Integer.parseInt(num) + 1;
-		return time;
-	}
-
-//  public static ArrayList<String> getSZSAnswers (String tptp, JspWriter out) throws Exception {
   public static ArrayList<String> getSZSAnswers (String tptp) throws Exception {
     String SZS_ANSWERS_SHORT = "% SZS answers short";
     String line;
@@ -521,7 +469,7 @@ public class SystemOnTPTP {
       if (line.startsWith(SZS_ANSWERS_SHORT)) {
         int split = SZS_ANSWERS_SHORT.length();
         String answers_short = line.substring(split+1, line.length());
-        StringTokenizer st = new StringTokenizer(answers_short, "[], ", false);
+        StringTokenizer st = new StringTokenizer(answers_short, " ");
         while (st.hasMoreTokens()) {
           String next = st.nextToken();
           if (!next.equals("")) {
@@ -533,7 +481,6 @@ public class SystemOnTPTP {
     return answers;
   }
 
-//  public static ArrayList<Binding> getSZSBindings (String conjecture, String tptp, JspWriter out) throws Exception {
   public static ArrayList<Binding> getSZSBindings (String conjecture, String tptp) throws Exception {
     ArrayList<Binding> bind = new ArrayList();
     BufferedReader reader = new BufferedReader(new StringReader(conjecture));
@@ -543,7 +490,6 @@ public class SystemOnTPTP {
       return bind;
     }
     SimpleTptpParserOutput.TopLevelItem item = parser.Items.elementAt(0);
-//    return getSZSBindings(item, tptp, out);
     return getSZSBindings(item, tptp);
   }
 
@@ -559,7 +505,6 @@ public class SystemOnTPTP {
     return getSZSBindings(item, answers);
   }
 
-//  public static ArrayList<Binding> getSZSBindings (SimpleTptpParserOutput.TopLevelItem item, String tptp, JspWriter out) throws Exception {
   public static ArrayList<Binding> getSZSBindings (SimpleTptpParserOutput.TopLevelItem item, String tptp) throws Exception {
     ArrayList<Binding> bind = new ArrayList();
     if (item.getKind() != SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
@@ -636,4 +581,3 @@ public class SystemOnTPTP {
 }
 
 
- 
