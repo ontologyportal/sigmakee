@@ -180,7 +180,7 @@ public class InterfaceTPTP {
             }
             atpOut.originalResult += responseLine + "\n";
             if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
-                atpOut.printResult += responseLine;
+                atpOut.printResult += responseLine + "\n";
             }
         }
         atpOut.printResult += "</PRE>";
@@ -298,7 +298,7 @@ public class InterfaceTPTP {
 //----Code for doing the query
         String TPTP_QUESTION_SYSTEM = "SNARK---";
         String TPTP_ANSWER_SYSTEM = "Metis---";
-        StringBuffer sbStatus = new StringBuffer();
+        StringBuffer sbStatu1s = new StringBuffer();
         String kbFileName = null;
         Formula conjectureFormula;
 //----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)
