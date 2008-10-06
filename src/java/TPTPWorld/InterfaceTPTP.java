@@ -232,7 +232,7 @@ public class InterfaceTPTP {
                 atpOut.cleanResult += responseLine + "\n";
               }
               atpOut.originalResult += responseLine + "\n";
-              if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { atpOut.printResult += responseLine; }
+              if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { atpOut.printResult += responseLine + "\n"; }
             }
             atpOut.printResult += "</PRE>";
             reader.close();
