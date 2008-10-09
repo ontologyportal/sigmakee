@@ -251,8 +251,8 @@ public class TPTP2SUMO {
 
   // remove termSymbolPrefix and termMentionSuffix
   private static String transformTerm (String term) {
-    term = term.replace(Formula.termSymbolPrefix, "");
-    term = term.replace(Formula.termMentionSuffix, "");
+	term = term.replaceFirst(Formula.termSymbolPrefix, "");
+	term = term.replace(Formula.termMentionSuffix, "");
     return term;
   }
 
