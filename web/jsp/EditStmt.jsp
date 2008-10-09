@@ -50,7 +50,7 @@ if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))
       </table>
     </td>
     <td valign="bottom"></td>
-    <td><b>[ <A href="home.jsp">Home</A> ]</b></td>
+    <td><b>[ <A href="KBs.jsp">Home</A> ]</b></td>
   </tr>
 </table>
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
