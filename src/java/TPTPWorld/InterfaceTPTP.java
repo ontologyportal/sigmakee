@@ -441,7 +441,7 @@ public class InterfaceTPTP {
                      ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.";
             }
 //----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
-            if (!systemChosen.startsWith(TPTP_ANSWER_SYSTEM)) {
+            if (!(systemChosen.startsWith(TPTP_ANSWER_SYSTEM)&&location.equals("local")&&builtInExists && !tptpWorldExists)) {
                   String answerResult = AnswerFinder.findProofWithAnswers(result, BuiltInDir);
 //----If answer is blank, ERROR, or WARNING, do not place in result
                   if (!answerResult.equals("") && 
@@ -453,7 +453,7 @@ public class InterfaceTPTP {
                   if (answerResult.startsWith("% ERROR:")) {
                       resultAll += "==" + answerResult;
                   } 
-            } 
+            }
             if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
 //----Procedure if SNARK was chosen
 	        String conj = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
@@ -508,6 +508,7 @@ public class InterfaceTPTP {
                 } else {
 //----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
 	            if (!lastAnswer.equals("")) {
+                        //resultAll += "<br>There was an Answer before! <br>";
                         String bindConjecture = "fof(bindConj" + ", conjecture,(" + LooksDifferent.bindConjecture(originalConjecture, originalAnswer, lastAnswer) + ")).";
 //----With new bindConjecture, take last result, filter out anything with LDs in it, put in prover
 	                String axioms = LooksDifferent.filterLooksDifferent(originalResult);
