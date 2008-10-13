@@ -183,6 +183,7 @@ public class InterfaceTPTP {
                 atpOut.printResult += responseLine + "\n";
             }
         }
+        atpOut.idvResult += "</PRE>\n";
         atpOut.printResult += "</PRE>";
         reader.close();
         return atpOut; 
@@ -490,12 +491,21 @@ public class InterfaceTPTP {
                         if (hostname == null) {
                             hostname = "localhost";
                         }
+			StringTokenizer st = new StringTokenizer(result,"\n");
+			String temp = "";
+			while (st.hasMoreTokens()) {
+			    String next = st.nextToken();
+			    if (!next.equals("") && !next.substring(0,1).equals("%")) {
+				temp += next + "\n";
+			    }
+			}
+                        result=temp;
                         String libHref = "http://" + hostname + ":" + port + "/sigma/lib";
-                        resultAll += "<APPLET CODE=\"IDVApplet\" archive=\"" + libHref + "/IDV.jar," + libHref + "/TptpParser.jar," + libHref + "/antlr-2.7.5.jar," + libHref + "/ClientHttpRequest.jar\"";
-                        resultAll += "WIDTH=800 HEIGHT=100 MAYSCRIPT=true>";
-                        resultAll += "  <PARAM NAME=\"TPTP\" VALUE=\"" + result + "\">";
-                        resultAll += "  Hey, you cant see my applet!!!";
-                        resultAll += "</APPLET>";
+                        resultAll += "<APPLET CODE=\"IDVApplet\" archive=\"" + libHref + "/IDV.jar," + libHref + "/TptpParser.jar," + libHref + "/antlr-2.7.5.jar," + libHref + "/ClientHttpRequest.jar\"\n";
+                        resultAll += "WIDTH=800 HEIGHT=100 MAYSCRIPT=true>\n";
+                        resultAll += "  <PARAM NAME=\"TPTP\" VALUE=\"" + result + "\">\n";
+                        resultAll += "  Hey, you cant see my applet!!!\n";
+                        resultAll += "</APPLET>\n";
                     } else {
                         resultAll += "No solution output by system.  IDV tree unavaiable.";
                     }
