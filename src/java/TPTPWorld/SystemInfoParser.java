@@ -60,11 +60,10 @@ public class SystemInfoParser {
 
     while ((line = bin.readLine()) != null) {      
       count++;
-      if (!line.equals("")) {
+      if ((!line.equals("")) && (!line.trim().substring(0,1).equals("#"))) {
         int split = line.indexOf(":");
         if (split == -1) {
-          System.err.println("Unable to parse SystemInfo line: " + count + ".  Please use a colon delimiter.");
-          System.exit(0);
+	    throw new IOException("Unable to parse SystemInfo line: " + count + ".  Please use a colon delimiter.");
         }
         String tag = line.substring(0, split);
         String value = ltrim(line.substring(split+1, line.length()));
@@ -74,8 +73,7 @@ public class SystemInfoParser {
         // System tag
         if (tag.equals(SystemInfoParser.SYSTEM_TAG)) {
           if (!name.equals("")) {
-            System.err.println("Unable to parse SystemInfo line: " + count + ".  Please separate each System in SystemInfo by a blank line");
-            System.exit(0);
+            throw new IOException("Unable to parse SystemInfo line: " + count + ".  Please separate each System in SystemInfo by a blank line");
           }
           name = value;
         }
@@ -99,8 +97,7 @@ public class SystemInfoParser {
         if (tag.equals(SystemInfoParser.SOLVED_TAG)) {
           int sp = value.indexOf("=");
           if (sp == -1) {
-            System.err.println("Unable to parse SystemInfo line: " + count + ".  Please separate solved values with an equal sign: =");
-            System.exit(0);
+            throw new IOException("Unable to parse SystemInfo line: " + count + ".  Please separate solved values with an equal sign: =");
           }
           solved[0].add(rtrim(value.substring(0,sp)));
           solved[1].add(ltrim(value.substring(sp+1,value.length())));
@@ -110,8 +107,7 @@ public class SystemInfoParser {
         if (tag.equals(SystemInfoParser.START_SOLN_TAG)) {
           int sp = value.indexOf("=");
           if (sp == -1) {
-            System.err.println("Unable to parse SystemInfo line: " + count + ".  Please separate startSoln values with an equal sign: =");
-            System.exit(0);
+            throw new IOException("Unable to parse SystemInfo line: " + count + ".  Please separate startSoln values with an equal sign: =");
           }
           startSoln[0].add(rtrim(value.substring(0,sp)));
           startSoln[1].add(ltrim(value.substring(sp+1,value.length())));
@@ -121,8 +117,7 @@ public class SystemInfoParser {
         if (tag.equals(SystemInfoParser.END_SOLN_TAG)) {
           int sp = value.indexOf("=");
           if (sp == -1) {
-            System.err.println("Unable to parse SystemInfo line: " + count + ".  Please separate endSoln values with an equal sign: =");
-            System.exit(0);
+            throw new IOException("Unable to parse SystemInfo line: " + count + ".  Please separate endSoln values with an equal sign: =");
           }
           endSoln[0].add(rtrim(value.substring(0,sp)));
           endSoln[1].add(ltrim(value.substring(sp+1,value.length())));
