@@ -78,7 +78,8 @@ public class TPTPParser {
     // has to have at least one argument (for filename or stdin)
     if (args.length < 1) {
       System.out.println("%ERROR: Please supply filename or -- for stdin");
-      System.exit(0);
+      //Necessary?
+      //System.exit(0);
     }
   }
 
@@ -92,7 +93,8 @@ public class TPTPParser {
       // read from file
       if (!(new File(arg)).exists()) {
         System.out.println("%ERROR: Not a valid file: " + arg);
-        System.exit(0);
+        //Necessary?
+        //System.exit(0);
       }
       FileReader fr = new FileReader(arg);
       reader = new BufferedReader(fr);

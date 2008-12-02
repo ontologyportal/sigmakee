@@ -50,7 +50,7 @@ public class Binding {
       //      System.out.println(bind.variable + " = " + bind.binding);
     }
     System.out.println("\n% ERROR: Variable did not bind properly in AnswerFinder: " + variable);
-    System.exit(0);
+    //System.exit(0);
     return "";
   }
 }

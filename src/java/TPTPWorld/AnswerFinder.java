@@ -79,7 +79,7 @@ public class AnswerFinder {
     String tptpHome = System.getenv("TPTP_HOME");
     if (tptpHome == null || tptpHome.equals("")) {
       System.out.println("% ERROR: Please specify your $TPTP_HOME environment variable");
-      System.exit(0);
+      //System.exit(0);
     }
 
     // set Systems directory
