@@ -60,7 +60,7 @@ public class SystemInfoParser {
 
     while ((line = bin.readLine()) != null) {      
       count++;
-      if ((!line.equals("")) && (!line.trim().substring(0,1).equals("#"))) {
+      if ((!line.equals("")) && (!line.trim().substring(0,1).equals("#")) && (!line.trim().substring(0,1).equals("%"))) {
         int split = line.indexOf(":");
         if (split == -1) {
 	    throw new IOException("Unable to parse SystemInfo line: " + count + ".  Please use a colon delimiter.");
