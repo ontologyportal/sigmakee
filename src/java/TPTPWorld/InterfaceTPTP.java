@@ -535,6 +535,7 @@ public class InterfaceTPTP {
                 if (isTheorem) { 
                     if (proofExists) {
                         try {
+                            // System.out.println(newResult);
 //----If a proof exists, print out as hyperlinked kif
                             resultAll += HTMLformatter.formatProofResult(newResult,
                                                                          stmt,

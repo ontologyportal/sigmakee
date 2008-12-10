@@ -112,8 +112,18 @@ public class TPTPParser {
       if (psource.getKind() == SimpleTptpParserOutput.Source.Kind.Inference) {
         gatherParents(psource, parents);
       } else if (!(p.toString()).contains("(") && !(p.toString()).contains(")")){
+
+// System.out.println("##### Adding Parent: "+ p.toString());
+
         parents.add(p.toString());
-      }
+      } else if (p.toString().contains(":")) {
+          String[] ps;
+	  ps = p.toString().split(":");
+	  if (!ps[0].contains("(")) {
+	      parents.add(ps[0]);
+	      // System.out.println("##### Also adding Parent: "+ p.toString());
+	  }
+      } // else System.out.println("##### Not Adding Parent: "+ p.toString());
     }
   }
 

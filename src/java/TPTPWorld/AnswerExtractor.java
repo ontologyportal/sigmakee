@@ -31,6 +31,9 @@ public class AnswerExtractor {
     
   // given a single formula, extract all variable bindings from formula source
   private static ArrayList<Binding> extractBinding (TPTPFormula formula) {
+
+
+
     // look at formula, see if there are variable bindings
     ArrayList<Binding> bind = new ArrayList();
     SimpleTptpParserOutput.Source source = formula.source;      
@@ -44,10 +47,47 @@ public class AnswerExtractor {
     if (!type.equals("subst")) {
       return bind;
     }
+
+
+    Iterable<SimpleTptpParserOutput.ParentInfo> parents = ((SimpleTptpParserOutput.Source.Inference)source).getParentInfoList();
+    // System.out.println("#######ParentInfo#######");
+    // System.out.println(source.toString());
+    SimpleTptpParserOutput.GeneralTerm details;
+    if (!(parents == null)) for (SimpleTptpParserOutput.ParentInfo parent : parents) {
+	try {
+	    // System.out.println(parent.getParentDetails().toString());
+            details = parent.getParentDetails();
+            if (details.isList()) {
+		for (SimpleTptpParserOutput.GeneralTerm detail : details.getListElements()) {
+		    // System.out.println(detail.toString());
+                    //if (detail.isFunction()) System.out.println(detail.getFunction());
+		    if (detail.isFunction() && (detail.getFunction().equals("bind"))) {
+			//System.out.println("Bind!");
+			Iterator<SimpleTptpParserOutput.GeneralTerm> itr = detail.getArguments().iterator();
+			String variable = (itr.next()).toString();
+			String binding  = (itr.next()).getTerm().toString();
+      //      System.out.println("variable: " + variable);
+      //      System.out.println("binding: " + binding);
+			bind.add(new Binding(variable, binding));
+		    } // else System.out.println("No bind!");
+		}
+	    }
+	} catch (Exception e) {}
+    }
+    // System.out.println("#######End ParentInfo#######");
+
+
     Iterable<SimpleTptpParserOutput.InfoItem> infoList = ((SimpleTptpParserOutput.Source.Inference)source).getUsefulInfo();
     if (infoList == null) {
       return bind;
     }
+
+
+
+
+
+
+
     for (SimpleTptpParserOutput.InfoItem info : infoList) {
       if (info.getKind() != SimpleTptpParserOutput.InfoItem.Kind.GeneralFunction) {
         continue;
@@ -75,6 +115,9 @@ public class AnswerExtractor {
     if (unsolvedBindings.isEmpty()) {
       return unsolvedBindings;
     }
+
+    // System.out.println("##### Extracting: "+formula.toString());
+
     ArrayList<Binding> newBindings = extractBinding(formula);
     ArrayList<Binding> removeBindings = new ArrayList();
     ArrayList<Binding> addBindings = new ArrayList();
@@ -125,6 +168,9 @@ public class AnswerExtractor {
    
     // vine extraction
     TPTPFormula conjecture = extractVine(ftable);
+
+    // try { System.out.println("##### Conjecture: "+conjecture.toString());} catch (Exception e) {}
+
     if (conjecture == null) {      
       System.out.println("% ERROR: No fof conjecture in proof -> extract answers failed");
       return binds;
@@ -156,7 +202,10 @@ public class AnswerExtractor {
     // from conjecture to false clause: identify bindings
     // stop when all variables are binded
     assert conjecture != null;
-    for (TPTPFormula child : conjecture.child) {        
+    for (TPTPFormula child : conjecture.child) {
+      
+	// try {System.out.println("##### Checking child: " + child.toString());} catch (Exception e) {}
+       
       unsolvedBindings = extractBinding(child, unsolvedBindings);
     }
     
