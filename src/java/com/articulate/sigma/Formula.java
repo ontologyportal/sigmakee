@@ -26,6 +26,18 @@ public class Formula implements Comparable {
 
     private static boolean DEBUG = false;
 
+    /** The SUO-KIF logical operators. */
+    private static final String[] LOGICAL_OPERATORS = 
+    {"and", "or", "not", "=>", "<=>", "forall", "exists"};
+
+    /** SUO-KIF mathematical comparison predicates. */
+    private static final String[] COMPARISON_OPERATORS = 
+    {"equal", "greaterThan", "greaterThanOrEqualTo", "lessThan", "lessThanOrEqualTo"};
+
+    /** The SUO-KIF mathematical functions are implemented in Vampire. */
+    private static final String[] MATH_FUNCTIONS = 
+    {"AdditionFn", "SubtractionFn", "MultiplicationFn", "DivisionFn"};
+
     /** The source file in which the formula appears. */
     public String sourceFile;   
     /** The line in the file on which the formula starts. */
@@ -1717,11 +1729,12 @@ public class Formula implements Comparable {
      * Test whether a Formula is a functional term
      */
     private boolean isFunctionalTerm() {
-
-        if (!listP()) 
-            return false;
-        String pred = car();
-        return (pred.length() >= 2 && pred.endsWith("Fn"));
+        boolean ans = false;
+        if (this.listP()) {
+            String pred = this.car();
+            ans = (pred.length() >= 2 && pred.endsWith("Fn"));
+        }
+        return ans;
     }
 
     /** ***************************************************************
@@ -1730,7 +1743,8 @@ public class Formula implements Comparable {
     public static boolean isVariable(Object term) {
 
         return (isNonEmptyString(term)
-                && (((String)term).startsWith("?") || ((String)term).startsWith("@")));
+                && (((String)term).startsWith("?") 
+                    || ((String)term).startsWith("@")));
     }
 
     /** ***************************************************************
@@ -1778,17 +1792,63 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Test whether a predicate is a logical operator
+     * Returns true if term is a standard FOL logical operator, else
+     * returns false.
+     *
+     * @param term A String, assumed to be an atomic SUO-KIF term.
      */
-    public static boolean isLogicalOperator(String pred) {
+    public static boolean isLogicalOperator(String term) {
 
-        String[] logOps = {"and", "or", "not", "=>", "<=>", "forall", "exists", "holds"};
-        for (int i = 0 ; i < logOps.length ; i++) {
-            if (logOps[i].equals(pred)) {
-                return true;
+        boolean ans = false;
+        if (isNonEmptyString(term)) {
+            for (int i = 0 ; i < LOGICAL_OPERATORS.length ; i++) {
+                if (LOGICAL_OPERATORS[i].equals(term)) {
+                    ans = true;
+                    break;
+                }
             }
         }
-        return false;
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Returns true if term is a SUO-KIF predicate for comparing two
+     * (typically numeric) terms, else returns false.
+     *
+     * @param term A String.
+     */
+    public static boolean isComparisonOperator(String term) {
+
+        boolean ans = false;
+        if (isNonEmptyString(term)) {
+            for (int i = 0 ; i < COMPARISON_OPERATORS.length ; i++) {
+                if (COMPARISON_OPERATORS[i].equals(term)) {
+                    ans = true;
+                    break;
+                }
+            }
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Returns true if term is a SUO-KIF mathematical function, else
+     * returns false.
+     *
+     * @param term A String.
+     */
+    public static boolean isMathFunction(String term) {
+
+        boolean ans = false;
+        if (isNonEmptyString(term)) {
+            for (int i = 0 ; i < MATH_FUNCTIONS.length ; i++) {
+                if (MATH_FUNCTIONS[i].equals(term)) {
+                    ans = true;
+                    break;
+                }
+            }
+        }
+        return ans;
     }
 
     /** ***************************************************************
@@ -1796,7 +1856,7 @@ public class Formula implements Comparable {
      * @return true if obj is a non-empty String, else false.
      */
     public static boolean isNonEmptyString(Object obj) {
-        return ((obj instanceof String) && !obj.equals(""));
+        return StringUtil.isNonEmptyString(obj);
     }
 
     /** ***************************************************************
@@ -2852,88 +2912,94 @@ public class Formula implements Comparable {
 
         // System.out.println("INFO in Formula.preProcessRecurse(" + this + ")");
 
-        String[] logOps = {"and", "or", "not", "=>", "<=>", "forall", "exists"};
-        String[] matOps = {"equal", "AdditionFn", "SubtractionFn", "MultiplicationFn", "DivisionFn"};
-        String[] compOps = {"greaterThan", "greaterThanOrEqualTo", "lessThan", "lessThanOrEqualTo"};
-        ArrayList logicalOperators = new ArrayList(Arrays.asList(logOps));
-        ArrayList mathOperators = new ArrayList(Arrays.asList(matOps));
-        ArrayList comparisonOperators = new ArrayList(Arrays.asList(compOps));
-
         StringBuffer result = new StringBuffer();
-        if (f.theFormula == "" || !f.listP() || f.atom() || f.empty()) return "";
+        try {
+            if (f.listP() && !f.empty()) {
 
-        String prefix = "";
-        String pred = f.car();
-        Formula predF = new Formula();
-        predF.read(pred);
+                String prefix = "";
+                String pred = f.car();
+                // Formula predF = new Formula();
+                // predF.read(pred);
 
-        if (isQuantifier(pred)) {
+                if (isQuantifier(pred)) {
 
-            // The list of quantified variables.
-            result.append(" ");
-            result.append(f.cadr());
-
-            // The formula following the list of variables.
-            String next = f.caddr();
-            Formula nextF = new Formula();
-            nextF.read(next);
-            result.append(" ");
-            result.append(preProcessRecurse(nextF,
-                                            "",
-                                            ignoreStrings,
-                                            translateIneq,
-                                            translateMath));
-        }
-        else {
-            Formula restF = f.cdrAsFormula();
-            int argCount = 1;
-            while (!restF.empty()) {
-                argCount++;
-                String arg = restF.car();
-
-                //System.out.println("INFO in preProcessRecurse(): arg: " + arg);
-                Formula argF = new Formula();
-                argF.read(arg);
-                if (argF.listP()) {
-                    String res = preProcessRecurse(argF,pred,ignoreStrings,translateIneq,translateMath);
+                    // The list of quantified variables.
                     result.append(" ");
-                    if (!logicalOperators.contains(pred) &&
-                        !comparisonOperators.contains(pred) &&
-                        !mathOperators.contains(pred) &&
-                        !argF.isFunctionalTerm()) {
-                        result.append("`");     
-                    }
-                    result.append(res);
-                }
-                else
-                    result.append(" " + arg);
-                restF.theFormula = restF.cdr();
-            }
+                    result.append(f.cadr());
 
-            if (KBmanager.getMgr().getPref("holdsPrefix").equals("yes")) {
-                if (!logicalOperators.contains(pred) && !isQuantifierList(pred,previousPred)) {
-                    prefix = "holds_";    
-                }    
-                if (f.isFunctionalTerm()) {
-                    prefix = "apply_";  
+                    // The formula following the list of variables.
+                    String next = f.caddr();
+                    Formula nextF = new Formula();
+                    nextF.read(next);
+                    result.append(" ");
+                    result.append(preProcessRecurse(nextF,
+                                                    "",
+                                                    ignoreStrings,
+                                                    translateIneq,
+                                                    translateMath));
                 }
-                if (pred.equals("holds")) {
-                    pred = "";
-                    argCount--;
-                    prefix = prefix + argCount + "__ ";
+                else {
+                    Formula restF = f.cdrAsFormula();
+                    int argCount = 1;
+                    while (!restF.empty()) {
+                        argCount++;
+                        String arg = restF.car();
+
+                        //System.out.println("INFO in preProcessRecurse(): arg: " + arg);
+                        Formula argF = new Formula();
+                        argF.read(arg);
+                        if (argF.listP()) {
+                            String res = preProcessRecurse(argF,pred,ignoreStrings,translateIneq,translateMath);
+                            result.append(" ");
+                            if (!isLogicalOperator(pred) &&
+                                !isComparisonOperator(pred) &&
+                                !isMathFunction(pred) &&
+                                !argF.isFunctionalTerm()) {
+                                result.append("`");     
+                            }
+                            result.append(res);
+                        }
+                        else {
+                            result.append(" " + arg);
+                        }
+                        restF.theFormula = restF.cdr();
+                    }
+
+                    if (KBmanager.getMgr().getPref("holdsPrefix").equals("yes")) {
+                        if (!isLogicalOperator(pred) && !isQuantifierList(pred,previousPred)) {
+                            prefix = "holds_";    
+                        }    
+                        if (f.isFunctionalTerm()) {
+                            prefix = "apply_";  
+                        }
+                        if (pred.equals("holds")) {
+                            pred = "";
+                            argCount--;
+                            prefix = prefix + argCount + "__ ";
+                        }
+                        else {
+                            if (!isLogicalOperator(pred) && 
+                                !isQuantifierList(pred,previousPred) && 
+                                !isMathFunction(pred) && 
+                                !isComparisonOperator(pred)) {
+                                prefix = prefix + argCount + "__ ";
+                            }
+                            else {
+                                prefix = "";
+                            }
+                        }
+                    }
                 }
-                else
-                    if (!logicalOperators.contains(pred) && 
-                        !isQuantifierList(pred,previousPred) && 
-                        !mathOperators.contains(pred) && 
-                        !comparisonOperators.contains(pred)) 
-                        prefix = prefix + argCount + "__ ";
-                    else 
-                        prefix = "";
+                result.insert(0, pred);
+                result.insert(0, prefix);
+                result.insert(0, "(");
+                result.append(")");
             }
         }
-    
-        return "(" + prefix + pred + result + ")";
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result.toString();
     }
 
     /** ***************************************************************
@@ -2954,159 +3020,164 @@ public class Formula implements Comparable {
         ArrayList results = new ArrayList();
         try {
 
-            if (!isNonEmptyString(this.theFormula)) {
-                return results;
-            }
+            if (isNonEmptyString(this.theFormula)) {
 
-            if (!this.isBalancedList()) {
-                String errStr = "Unbalanced parentheses or quotes";
-                System.out.println("Error in Formula.preProcess(" 
-                                   + this.theFormula
-                                   + ", "
-                                   + query 
-                                   + ", " 
-                                   + kb.name + ")");
-                System.out.println("  " + errStr);
-                KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                            + ("\n<br/>" 
-                                               + errStr 
-                                               + " in "
-                                               + this.theFormula
-                                               + "\n<br/>"));
-                return results;
-            }
-
-            boolean ignoreStrings = false;
-            boolean translateIneq = true;
-            boolean translateMath = true;
-            ArrayList accumulator = new ArrayList();
-
-            boolean addHoldsPrefix = KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes");
-
-            long t1 = -1L;
-            long tnaplwriVal = KB.ppTimers[4];
-
-            // Do pred var instantiations if we are not adding holds
-            // prefixes.
-            Formula f = new Formula();
-            f.read(this.theFormula);
-            if (getArgument(0).equals("documentation")) {
-                f.theFormula = f.theFormula.replaceAll("[\\x7F-\\xFF]","");
-            }
-            t1 = System.currentTimeMillis();
-            ArrayList predVarInstantiations = new ArrayList();
-            if (!addHoldsPrefix) {
-                predVarInstantiations.addAll(f.instantiatePredVars(kb));
-            }
-
-            // If the list of pred var instatiations is empty, add the
-            // original formula to the list for further processing below.  
-            if (predVarInstantiations.isEmpty()) {
-                predVarInstantiations.add(f);
-            }
-            else {
-                // If the formula contains a pred var that can't be
-                // instantiated and so has been marked "reject", don't add
-                // anything.
-                Object obj0 = predVarInstantiations.get(0);
-                if (isNonEmptyString(obj0) && ((String) obj0).equalsIgnoreCase("reject")) {
-                    predVarInstantiations.clear();
-                    System.out.println("WARNING in Formula.preProcess(): No predicate instantiations for\n" + this);
-                    String errStr = "No predicate instantiations for <br/>" + this.htmlFormat(kb);
+                if (!this.isBalancedList()) {
+                    String errStr = "Unbalanced parentheses or quotes";
+                    System.out.println("Error in Formula.preProcess(" 
+                                       + this.theFormula
+                                       + ", "
+                                       + query 
+                                       + ", " 
+                                       + kb.name + ")");
+                    System.out.println("  " + errStr);
                     KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                + ("\n<br/>" + errStr + "\n<br/>"));
+                                                + "\n<br/>" 
+                                                + errStr 
+                                                + " in "
+                                                + this.theFormula
+                                                + "\n<br/>");
+                    return results;
                 }
-            }
-            // Increment the timer for pred var instantiation.
-            KB.ppTimers[1] += (System.currentTimeMillis() - t1);
 
-            if (DEBUG) {
-                System.out.println("  predVarInstantiations == " + predVarInstantiations);
-            }
+                boolean ignoreStrings = false;
+                boolean translateIneq = true;
+                boolean translateMath = true;
+                ArrayList accumulator = new ArrayList();
 
-            // We do this to avoid adding up time spent in
-            // Formula.toNegAndPosLitsWtihRenameInfo() while doing pred
-            // var instantiation.  What we really want to know is how much
-            // time this method contributes to the total time for row var
-            // expansion.
-            KB.ppTimers[4] = tnaplwriVal;
+                boolean addHoldsPrefix = KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes");
 
-            // Iterate over the instantiated predicate formulas, doing row
-            // var expansion on each.  If no predicate instantiations can
-            // be generated, the ArrayList predVarInstantiations will
-            // contain just the original input formula.
-            t1 = System.currentTimeMillis();
-            int pviN = predVarInstantiations.size();
-            Iterator it = null;
-            if ((pviN > 0) && (pviN < AXIOM_EXPANSION_LIMIT)) {
-                it = predVarInstantiations.iterator();
-                ArrayList rowVarExpansions = null;
-                while (it.hasNext()) {
-                    f = (Formula) it.next();
-                    // System.out.println("f == " + f);
-                    rowVarExpansions = f.expandRowVars(kb);
-                    if (rowVarExpansions != null) {
-                        accumulator.addAll(rowVarExpansions);
+                Formula f = new Formula();
+                f.read(this.theFormula);
+                if (getArgument(0).equals("documentation")) {
+                    f.theFormula = f.theFormula.replaceAll("[\\x7F-\\xFF]","");
+                }
 
-                        // System.out.println("  accumulator == " + accumulator);
+                long t1 = -1L;
+                long tnaplwriVal = KB.ppTimers[4];
 
-                        if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
-                            break;
+                ArrayList predVarInstantiations = new ArrayList();
+                if (addHoldsPrefix) {
+                    predVarInstantiations.add(f);
+                }
+                else {
+                    // Do pred var instantiations if we are not adding holds
+                    // prefixes.
+                    t1 = System.currentTimeMillis();
+
+                    predVarInstantiations.addAll(f.instantiatePredVars(kb));
+
+                    // If the list of pred var instatiations is empty, add the
+                    // original formula to the list for further processing below.  
+                    if (predVarInstantiations.isEmpty()) {
+                        predVarInstantiations.add(f);
+                    }
+                    else {
+                        // If the formula contains a pred var that can't be
+                        // instantiated and so has been marked "reject", don't add
+                        // anything.
+                        Object obj0 = predVarInstantiations.get(0);
+                        if (isNonEmptyString(obj0) && ((String) obj0).equalsIgnoreCase("reject")) {
+                            predVarInstantiations.clear();
+                            System.out.println("WARNING in Formula.preProcess(): No predicate instantiations for\n" + this);
+                            String errStr = "No predicate instantiations for <br/>" + this.htmlFormat(kb);
+                            KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+                                                        + ("\n<br/>" + errStr + "\n<br/>"));
+                        }
+                    }
+                    // Increment the timer for pred var instantiation.
+                    KB.ppTimers[1] += (System.currentTimeMillis() - t1);
+
+                    if (DEBUG) {
+                        System.out.println("  predVarInstantiations == " + predVarInstantiations);
+                    }
+                }
+
+                // We do this to avoid adding up time spent in
+                // Formula.toNegAndPosLitsWtihRenameInfo() while doing pred
+                // var instantiation.  What we really want to know is how much
+                // time this method contributes to the total time for row var
+                // expansion.
+                KB.ppTimers[4] = tnaplwriVal;
+
+                // Iterate over the instantiated predicate formulas, doing row
+                // var expansion on each.  If no predicate instantiations can
+                // be generated, the ArrayList predVarInstantiations will
+                // contain just the original input formula.
+                t1 = System.currentTimeMillis();
+                int pviN = predVarInstantiations.size();
+                Iterator it = null;
+                if ((pviN > 0) && (pviN < AXIOM_EXPANSION_LIMIT)) {
+                    it = predVarInstantiations.iterator();
+                    ArrayList rowVarExpansions = null;
+                    while (it.hasNext()) {
+                        f = (Formula) it.next();
+                        // System.out.println("f == " + f);
+                        rowVarExpansions = f.expandRowVars(kb);
+                        if (rowVarExpansions != null) {
+                            accumulator.addAll(rowVarExpansions);
+
+                            // System.out.println("  accumulator == " + accumulator);
+
+                            if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
-            if (DEBUG) {
-                System.out.println("  accumulator == " + accumulator);
-            }
+                if (DEBUG) {
+                    System.out.println("  accumulator == " + accumulator);
+                }
 
-            // Increment the timer for row var expansion.
-            KB.ppTimers[2] += (System.currentTimeMillis() - t1);
+                // Increment the timer for row var expansion.
+                KB.ppTimers[2] += (System.currentTimeMillis() - t1);
 
-            // Iterate over the formulas resulting from row var expansion,
-            // passing each to preProcessRecurse for further processing.
+                // Iterate over the formulas resulting from row var
+                // expansion, passing each to preProcessRecurse for
+                // further processing.
+                if (!accumulator.isEmpty()) {
+                    it = accumulator.iterator();
+                    boolean addSortals = 
+                        KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes");
+                    Formula fnew = null;
+                    String theNewFormula = null;
+                    while (it.hasNext()) {
+                        fnew = (Formula) it.next();
 
-            if (!accumulator.isEmpty()) {
-                it = accumulator.iterator();
-                boolean addSortals = KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes");
-                Formula fnew = null;
-                String theNewFormula = null;
-                while (it.hasNext()) {
-                    fnew = (Formula) it.next();
+                        t1 = System.currentTimeMillis();
+                        String arg0 = this.getArgument(0);
+                        if (addSortals
+                            && !query 
+                            // isLogicalOperator(arg0) ||
+                            && fnew.theFormula.contains("?")) {
+                            fnew.read(fnew.addTypeRestrictions(kb));
+                        }
+                        // Increment the timer for adding type restrictions.
+                        KB.ppTimers[0] += (System.currentTimeMillis() - t1);
 
-                    t1 = System.currentTimeMillis();
-                    String arg0 = this.getArgument(0);
-                    if (addSortals
-                        && !query 
-                        // isLogicalOperator(arg0) ||
-                        && (fnew.theFormula.indexOf('?') != -1)) {
-                        fnew.read(fnew.addTypeRestrictions(kb));
-                    }
-                    // Increment the timer for adding type restrictions.
-                    KB.ppTimers[0] += (System.currentTimeMillis() - t1);
+                        t1 = System.currentTimeMillis();
+                        theNewFormula = fnew.preProcessRecurse(fnew,
+                                                               "",
+                                                               ignoreStrings,
+                                                               translateIneq,
+                                                               translateMath);
+                        fnew.read(theNewFormula);
+                        // Increment the timer for preProcessRecurse().
+                        KB.ppTimers[6] += (System.currentTimeMillis() - t1);
 
-                    t1 = System.currentTimeMillis();
-                    theNewFormula = fnew.preProcessRecurse(fnew,
-                                                           "",
-                                                           ignoreStrings,
-                                                           translateIneq,
-                                                           translateMath);
-                    fnew.read(theNewFormula);
-                    // Increment the timer for preProcessRecurse().
-                    KB.ppTimers[6] += (System.currentTimeMillis() - t1);
-
-                    if (fnew.isOkForInference(query, kb)) {
-                        fnew.sourceFile = this.sourceFile;
-                        results.add(fnew);
-                    }
-                    else {
-                        System.out.println("WARNING in Formula.preProcess()");
-                        System.out.println("  REJECTING " + theNewFormula);
-                        KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                    + "\n<br/>Formula rejected for inference:<br/>"
-                                                    + fnew.htmlFormat(kb)
-                                                    + "<br/>\n");
+                        if (fnew.isOkForInference(query, kb)) {
+                            fnew.sourceFile = this.sourceFile;
+                            results.add(fnew);
+                        }
+                        else {
+                            System.out.println("WARNING in Formula.preProcess()");
+                            System.out.println("  REJECTING " + theNewFormula);
+                            KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+                                                        + "\n<br/>Formula rejected for inference:<br/>"
+                                                        + fnew.htmlFormat(kb)
+                                                        + "<br/>\n");
+                        }
                     }
                 }
             }
@@ -6176,7 +6247,7 @@ public class Formula implements Comparable {
      */
     public static void main(String[] args) {
 
-        FileWriter fw = null;
+        BufferedWriter bw = null;
         try {
             long t1 = System.currentTimeMillis();
             int count = 0;
@@ -6191,7 +6262,7 @@ public class Formula implements Comparable {
                     if (! kif.formulas.isEmpty()) {
                         File outfile = new File(outpath);
                         if (outfile.exists()) { outfile.delete(); }
-                        fw = new FileWriter(outfile, true);
+                        bw = new BufferedWriter(new FileWriter(outfile, true));
                         Iterator it = kif.formulas.values().iterator();
                         Iterator it2 = null;
                         Formula f = null;
@@ -6202,14 +6273,20 @@ public class Formula implements Comparable {
                                 f = (Formula) it2.next();
                                 clausalForm = f.clausify();
                                 if (clausalForm != null) {
-                                    fw.write(clausalForm.theFormula);
-                                    fw.write("\n");
+                                    bw.write(clausalForm.theFormula);
+                                    bw.newLine();
                                     count++;
                                 }
                             }
                         }
-                        fw.close();
-                        fw = null;
+                        try {
+                            bw.flush();
+                            bw.close();
+                            bw = null;
+                        }
+                        catch (Exception bwe) {
+                            bwe.printStackTrace();
+                        }
                     }
                 }
             }
@@ -6223,16 +6300,16 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
         finally {
-            if (fw != null) {
+            if (bw != null) {
                 try {
-                    fw.close();
+                    bw.close();
                 }
                 catch (Exception e2) {
                     e2.printStackTrace();
                 }
             }
-            return;
         }
+        return;
     }
 
 }  // Formula.java
