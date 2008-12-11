@@ -26,8 +26,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
      term = "";
 %>
 <html>
-<HEAD><TITLE>Knowledge base Browser - <%=term%></TITLE></HEAD>
-<BODY BGCOLOR="#FFFFFF">
+<head><title>Knowledge base Browser - <%=term%></title></head>
+<body bgcolor="#FFFFFF">
 
 <%
  String parentPage = "Browse.jsp";
@@ -49,5 +49,5 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  <%=show.toString() %><BR>
 
 <%@ include file="Postlude.jsp" %>
-</BODY>
-</HTML>
+</body>
+</html>

@@ -85,11 +85,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
 
-    TreeMap alphaList = DocGen.createAlphaList(kb,tfm);
-    if (DocGen.isCompositeInstance(kb,term)) 
-        show.append(DocGen.createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
+    TreeMap alphaList = DocGen.getInstance().createAlphaList(kb,tfm);
+    if (DocGen.getInstance().isCompositeInstance(kb,term)) 
+        show.append(DocGen.getInstance().createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
     else
-        show.append(DocGen.createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
+        show.append(DocGen.getInstance().createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");

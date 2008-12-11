@@ -24,11 +24,24 @@
   //System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
   if (KBmanager.getMgr().getPref("userName") != null && 
       !KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin") && !userPages.contains(pageString)) { 
-      out.println("<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0; URL=login.html\">");
+      out.println("<meta http-equiv=\"Refresh\" content=\"0;URL=login.html\">");
+      out.println("</html>");
+      return;
   }
   if (!Formula.isNonEmptyString(KBmanager.getMgr().getPref("userName"))
       && !Formula.isNonEmptyString(request.getParameter("userName"))) { 
-      out.println("<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0; URL=login.html\">");
+      out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=login.html\">");
+      out.println("</html>");
+      return;
+  }
+  if (!pageString.startsWith("KBs.jsp") &&
+      !pageString.startsWith("Properties.jsp") && 
+      !pageString.startsWith("AddConstituent.jsp") && 
+      !pageString.startsWith("AllPictures.jsp") && 
+      !Formula.isNonEmptyString(request.getParameter("kb"))) { 
+      out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=KBs.jsp\">");
+      out.println("</html>");
+      return;
   }
 %>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />

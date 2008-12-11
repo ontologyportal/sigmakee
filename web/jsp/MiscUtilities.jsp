@@ -1,4 +1,3 @@
-
 <%@ include	file="Prelude.jsp" %>
 
 <html>
@@ -26,8 +25,8 @@ String namespace = "";
 String language = "";
 String term = "";
 String relation = "";
-String header = DocGen.header;
-String footer = DocGen.footer;
+String header = DocGen.getInstance().header;
+String footer = DocGen.getInstance().footer;
 String filename = "";
 KB kb = null;
 
@@ -57,15 +56,15 @@ KB kb = null;
       relation = request.getParameter("relation");
       filename = request.getParameter("filename");
       if (!DB.emptyString(header)) 
-          DocGen.header = header;
+          DocGen.getInstance().header = header;
       if (!DB.emptyString(footer)) 
-          DocGen.footer = footer;
+          DocGen.getInstance().footer = footer;
       String action = request.getParameter("action");
       language = HTMLformatter.processLanguage(language,kb);
       if (action != null && action != "" && action.equals("generateDocs")) 
-          DocGen.generateHTML(kb,language,true);      
+          DocGen.getInstance().generateHTML(kb,language,true);      
       if (action != null && action != "" && action.equals("generateSingle")) 
-          DocGen.generateSingleHTML(kb,language,true);  
+          DocGen.getInstance().generateSingleHTML(kb,language,true);  
       if (action != null && action != "" && action.equals("dotGraph")) {
           Graph g = new Graph();
           g.createDotGraph(kb, term, relation, filename);
@@ -105,8 +104,8 @@ KB kb = null;
         <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><p>
     <b>Generate HTML</b><P>
     <table>
-        <tr><td>Document header:&nbsp;</td><td><input type="text" name="header" size=100 value="<%=DocGen.header%>"></td></tr>
-        <tr><td>Document footer:&nbsp;</td><td><input type="text" name="footer" size=100 value="<%=DocGen.footer%>"></td></tr>
+        <tr><td>Document header:&nbsp;</td><td><input type="text" name="header" size=100 value="<%=DocGen.getInstance().header%>"></td></tr>
+        <tr><td>Document footer:&nbsp;</td><td><input type="text" name="footer" size=100 value="<%=DocGen.getInstance().footer%>"></td></tr>
         <tr><td><input type="submit" name="action" value="generateDocs">&nbsp;&nbsp;</td><td>Generate all HTML pages for the KB</td></tr>
         <tr><td><input type="submit" name="action" value="generateSingle">&nbsp;&nbsp;</td><td>Generate a single HTML page for the KB</td></tr>
     </table><p>
@@ -128,7 +127,7 @@ KB kb = null;
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><br><P>
 <b>Generate KIF from CSV</b><p>
 
-<form action="ProcessFile.jsp"  ID=misc method="POST" enctype="multipart/form-data">
+<form action="ProcessFile.jsp"  ID="misc" method="POST" enctype="multipart/form-data">
     <table>
         <tr><td>Namespace: </td><td><input type="text" size="30" name="namespace" value="<%=namespace %>"></td></tr>
         <tr><td>CSV file</td><td><INPUT type=file name=csvFile></td></tr>

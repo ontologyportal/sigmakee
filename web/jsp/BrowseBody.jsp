@@ -47,20 +47,22 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     WordNet.initOnce();
     TreeMap tm = WordNet.wn.getSensesFromWord(term);
     if (tm != null) {
-        show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
-        show.append("<td width='40%' valign=top><small>");
+        show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
+        show.append("<td width=\"40%\" valign=\"top\"><small>");
         show.append(WordNetUtilities.formatWordsList(tm,kbName));
         show.append("</small></td>");
     }
-    show.append("</td></TABLE>");
+    show.append("</td></table>");
  }
  else if ((kb != null) && (term != null) && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in                                                         
      show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
-     show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
+     show.append("<table width=\"95%\"><tr><td width=\"50%\"><font face=\"Arial,helvetica\" size=\"+3\"><b>");
 
      term = term.intern();
      show.append(term);
-     show.append("</b></FONT>");
+     show.append("</b></font>");
+     boolean isArabic = (language.matches(".*(?i)arabic.*") 
+                         || language.equalsIgnoreCase("ar"));
      if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
          Map fm = kb.getFormatMap(language);
          String fmValue = null;
@@ -76,7 +78,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          if (tfm != null)
              tfmValue = (String) tfm.get(term);
          if (tfmValue != null) {
-             if (language.equalsIgnoreCase("ar")) {
+             if (isArabic) {
                  tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
              }
              show.append("(" + tfmValue + ")");
@@ -90,8 +92,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          WordNet.initOnce();
          TreeMap tm = WordNet.wn.getWordsFromTerm(term);
          if (tm != null) {
-             show.append("<td width='10%'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></td>");
-             show.append("<td width='40%'><small>");
+             show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
+             show.append("<td width=\"40%\"><small>");
              show.append(WordNetUtilities.formatWords(tm,kbName));
              show.append("</small></td>");
          }
@@ -100,7 +102,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          }
          show.append("</tr></table>\n");
      }
-     show.append ("</b></FONT></td></tr></table>\n");
+     show.append ("</b></font></td></tr></table>\n");
 
      int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
      if (KBmanager.getMgr().getPref("userName") != null && 
@@ -110,7 +112,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
      // show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
 
      for (int arg = 1; arg < 6; arg++) {
-         String argHeader = "<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>";
+         String argHeader = "<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</b>";
          show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,0,limit,arg,"arg"));
      }
      //forms = kb.ask("ant",0,term);
@@ -125,9 +127,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
      //forms = kb.ask("arg",0,term);
      show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,0,limit,0,"arg"));
 
-     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
-                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
-                 "</table><BR>\n");
+     show.append("<p><table align=\"left\" width=\"50%\"><tr><td bgcolor=\"#A8BACF\">" +
+                 "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr>" +
+                 "</table><br>\n");
      if (!parentPage.equals("TreeView.jsp")) 
          show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
                      "?lang=" + language + "&kb=" + kbName + 
