@@ -1,7 +1,5 @@
-package com.articulate.sigma;
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
+copyright Teknowledge (c) 2003 and reused under the termsof the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
 and Teknowledge in any writings, briefings, publications, presentations, or 
@@ -13,6 +11,8 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+/*************************************************************************************************/
+package com.articulate.sigma;
 import java.util.*;
 import java.util.regex.*;
 import java.io.*;
@@ -33,7 +33,9 @@ public class KB {
     /** The name of the knowledge base. */
     public String name;                       
 
-    /** An ArrayList of Strings which are the full path file names of the files which comprise the KB. */
+    /** An ArrayList of Strings which are the full path file names of
+     * the files which comprise the KB. 
+     */
     public ArrayList constituents = new ArrayList();
 
     /** The natural language in which axiom paraphrases should be presented. */
@@ -468,8 +470,11 @@ public class KB {
                     while (it1.hasNext()) {
                         keyTerm = (String) it1.next();
                         if ((keyTerm == null) || keyTerm.equals("")) {
-                            System.out.println("Error in KB.computeTransitiveCacheClosure(" + relationName + ")");
-                            System.out.println("  keyTerm == " + ((keyTerm == null) ? null : "\"" + keyTerm + "\""));
+                            System.out.println("Error in KB.computeTransitiveCacheClosure(" 
+                                               + relationName + ")");
+                            System.out.println("  keyTerm == " 
+                                               + ((keyTerm == null) ? null : "\"" 
+                                                  + keyTerm + "\""));
                         }
                         else {
                             valSet = (Set) c1.get(keyTerm);
@@ -509,7 +514,8 @@ public class KB {
                             if (keyTerm.endsWith("Fn")) {
                                 valTerm = "Function";
                             }
-                            else if (Character.isLowerCase(keyTerm.charAt(0)) && (keyTerm.indexOf("(") == -1)) {
+                            else if (Character.isLowerCase(keyTerm.charAt(0)) 
+                                     && (keyTerm.indexOf("(") == -1)) {
                                 valTerm = "Predicate";
                             }
                             addRelationCacheEntry(inst1, keyTerm, valTerm);
@@ -1053,6 +1059,19 @@ public class KB {
     }
 
     /** *************************************************************
+     * Returns true if i is an instance of c, else returns false.
+     *
+     * @param i A String denoting an instance.
+     * @param c A String denoting a Class.
+     * @return true or false.
+     */
+    public boolean isInstanceOf(String i, String c) {
+
+        Set instances = getAllInstancesWithPredicateSubsumption(c);
+        return instances.contains(i);
+    }
+
+    /** *************************************************************
      * Determine whether a particular class or instance "child" is a
      * child of the given "parent".
      *
@@ -1364,21 +1383,21 @@ public class KB {
      * argument positions, return an empty ArrayList.
      *
      * @return ArrayList
-    public ArrayList askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
+     public ArrayList askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
 
-        ArrayList partial = ask("arg",argnum1,term1);
-        ArrayList result = new ArrayList();
-        if (partial != null) {
-            for (int i = 0; i < partial.size(); i++) {
-                Formula f = (Formula) partial.get(i);
-                if (f.getArgument(argnum2).equals(term2)) {
-                    result.add(f);
-                }
-            }
-        }
-        return result;
-    }
-*/
+     ArrayList partial = ask("arg",argnum1,term1);
+     ArrayList result = new ArrayList();
+     if (partial != null) {
+     for (int i = 0; i < partial.size(); i++) {
+     Formula f = (Formula) partial.get(i);
+     if (f.getArgument(argnum2).equals(term2)) {
+     result.add(f);
+     }
+     }
+     }
+     return result;
+     }
+    */
     /** *************************************************************
      * Returns an ArrayList of Formulas in which the two terms
      * provided appear in the indicated argument positions.  If there
@@ -1427,7 +1446,8 @@ public class KB {
      *
      * @return ArrayList
      */
-    public ArrayList askWithTwoRestrictions(int argnum1, String term1, int argnum2, String term2,
+    public ArrayList askWithTwoRestrictions(int argnum1, String term1, 
+                                            int argnum2, String term2,
                                             int argnum3, String term3) {
 
         ArrayList result = new ArrayList();
@@ -1538,7 +1558,19 @@ public class KB {
     public ArrayList ask(String kind, int argnum, String term) {
 
         if (DB.emptyString(term)) {
-            System.out.println("Error in KB.ask(): search term is an empty string");
+            String msg = ("Error in KB.ask(\""
+                          + kind + "\", "
+                          + argnum + ", \""
+                          + term + "\"): "
+                          + "search term is an empty string");
+            System.out.println(msg);
+            /*            */
+            try {
+                throw new Exception(msg);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
             return null;
         }
         if (term.length() > 1 && term.charAt(0) == '"' && term.charAt(term.length()-1) == '"') {
@@ -1549,6 +1581,93 @@ public class KB {
             return (ArrayList) formulas.get(kind + "-" + (new Integer(argnum)).toString() + "-" + term);        
         else 
             return (ArrayList) formulas.get(kind + "-" + term);        
+    }
+
+    /** *************************************************************
+     * Returns an ArrayList containing the Formulas retrieved,
+     * possibly via multiple asks that recursively use relation and
+     * all of its subrelations.
+     *
+     * @param relation The name of a predicate, which is assumed to be
+     * the 0th argument of one or more atomic formulae.
+     *
+     * @param argnum The argument position occupied by term in each query formula.
+     *
+     * @param term A that will be used in each query expression.
+     *
+     * @return an ArrayList of Formulas that satisfy the query, or an
+     * empy ArrayList if no Formulae are retrieved.  Note that the
+     * Formulas might be formed with different predicates, but all of
+     * the predicates will be subrelations of relation, and will be
+     * related to each other in a subsumption hierarchy.
+     */
+    public ArrayList askWithPredicateSubsumption(String relation, int argnum, String term) {
+        /*
+          System.out.println("ENTER KB.askWithPredicateSubsumption("
+          + relation + ", "
+          + argnum + ", "
+          + term + ")");
+        */
+        ArrayList ans = new ArrayList();
+        try {
+            if (StringUtil.isNonEmptyString(relation) 
+                && StringUtil.isNonEmptyString(term)
+                && (argnum >= 0)
+                // && (argnum < 7) 
+                ) {
+                Set done = new HashSet();
+                HashSet accumulator = new HashSet();
+                ArrayList relns = new ArrayList();
+                relns.add(relation);
+                Iterator it = null;
+                String reln = null;
+                List formulae = null;
+                Formula f = null;
+                String arg = null;
+                while (!relns.isEmpty()) {
+                    it = relns.iterator();
+                    while (it.hasNext()) {
+                        reln = (String) it.next();
+                        formulae = (List) this.askWithRestriction(0, reln, argnum, term);
+                        if (formulae != null) {
+                            ans.addAll(formulae);
+                        }
+                        formulae = (List) this.askWithRestriction(0, "subrelation", 2, reln);
+                        if (formulae != null) {
+                            for (int i = 0; i < formulae.size(); i++) {
+                                f = (Formula) formulae.get(i);
+                                if (!done.contains(f.theFormula)) {
+                                    arg = f.getArgument(1);
+                                    if (!reln.equals(arg)) {
+                                        accumulator.add(arg);
+                                        done.add(f.theFormula);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    relns.clear();
+                    relns.addAll(accumulator);
+                    accumulator.clear();
+                }
+                // Remove duplicates; perhaps not necessary.
+                accumulator.clear();
+                accumulator.addAll(ans);
+                ans.clear();
+                ans.addAll(accumulator);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        /*
+          System.out.println("EXIT KB.askWithPredicateSubsumption("
+          + relation + ", "
+          + argnum + ", "
+          + term + ") == " 
+          + (ans.size() > 10 ? (ans.subList(0, 10) + " ...") : ans));
+        */
+        return ans;
     }
 
     /** *************************************************************
@@ -2027,7 +2146,7 @@ public class KB {
         if (headwordForms != null & headwordForms.size() > 0) {
             for (int i = 0; i < headwordForms.size(); i++) {
                 Formula f = (Formula) headwordForms.get(i);
-                result.add(DocGen.removeEnclosingQuotes(f.getArgument(2)));
+                result.add(StringUtil.removeEnclosingQuotes(f.getArgument(2)));
             }
             return result;
         }
@@ -2054,7 +2173,7 @@ public class KB {
         //if (headwords != null & headwords.size() > 0) 
         //    t = headwords.toArray();
         //else
-            t = terms.toArray();
+        t = terms.toArray();
         int i = 0;
         while (i < t.length-1 && ((String) t[i]).compareTo(term) < 0) 
             i++;
@@ -2150,6 +2269,18 @@ public class KB {
     }
 
     /** ***************************************************************
+     * This List is used to limit the number of warning messages
+     * logged by loadFormatMaps(lang).  If an attempt to load format
+     * or termFormat values for lang is unsuccessful, the list is
+     * checked for the presence of lang.  If lang is not in the list,
+     * a warning message is logged and lang is added to the list.  The
+     * list is cleared whenever a constituent file is added or removed
+     * for KB, since the latter might affect the availability of
+     * format or termFormat values.
+     */
+    protected List loadFormatMapsAttempted = new ArrayList();
+
+    /** ***************************************************************
      * Populates the format maps for language lang.
      * 
      * @see termFormatMap is a HashMap of language keys and HashMap
@@ -2157,67 +2288,98 @@ public class KB {
      * string values.  @see formatMap is the same but for relation
      * format strings.
      */
-    private void loadFormatMaps(String lang) {
-
-        HashMap newFormatMap = new HashMap();
-        HashMap newTermFormatMap = new HashMap();
-
+    protected void loadFormatMaps(String lang) {
         try {
             if (formatMap == null) 
                 formatMap = new HashMap();            
             if (termFormatMap == null) 
                 termFormatMap = new HashMap();            
             if (formatMap.get(lang) == null) 
-                formatMap.put(lang,newFormatMap);            
+                formatMap.put(lang, new HashMap());
             if (termFormatMap.get(lang) == null) 
-                termFormatMap.put(lang,newTermFormatMap);            
-                
-            long t1 = System.currentTimeMillis();
-            ArrayList col = askWithRestriction(0,"format",1,lang);
-            if ((col == null) || col.isEmpty()) 
-                System.out.println("Error in KB.loadFormatMaps(): No relation formatting file loaded for language " + lang);
-            else {
-                Iterator ite = col.iterator();
-                while (ite.hasNext()) {
-                    Formula f = (Formula) ite.next();
-                    String key = f.getArgument(2);
-                    String format = f.getArgument(3);
-                    format = DocGen.removeEnclosingQuotes(format);                   
-                    if (format.indexOf("$") < 0) 
-                        format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");                   
-                    newFormatMap.put(key, format);
-                }
-                formatMap.put(lang,newFormatMap);
-                System.out.println("INFO in KB.loadFormatMaps(" + this.name + ", " + lang + "): "
-                                   + ((System.currentTimeMillis() - t1) / 1000.0)
-                                   + " seconds to build KB.formatMap");
-            }
+                termFormatMap.put(lang, new HashMap());
 
-            t1 = System.currentTimeMillis();
-            col = askWithRestriction(0,"termFormat",1,lang);
-            if ((col == null) || col.isEmpty())
-                System.out.println("Error in KB.loadFormatMaps(): No term formatting file loaded for language: " + lang);                
-            else {
-                Iterator ite = col.iterator();
-                while (ite.hasNext()) {
-                    Formula f = (Formula) ite.next();
-                    String key = f.getArgument(2);
-                    String format = f.getArgument(3);
-                    format = DocGen.removeEnclosingQuotes(format);                   
-                    //if (format.indexOf("$") < 0)
-                    //    format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");
-                    newTermFormatMap.put(key,format);                
+            if (!loadFormatMapsAttempted.contains(lang)) {
+                long t1 = System.currentTimeMillis();
+                ArrayList col = askWithRestriction(0,"format",1,lang);
+                if ((col == null) || col.isEmpty()) {
+                    System.out.println("WARNING in KB.loadFormatMaps(): "
+                                       + "No relation format file loaded for language " 
+                                       + lang);
                 }
-                termFormatMap.put(lang,newTermFormatMap);
-                System.out.println("INFO in KB.loadFormatMaps(" + this.name + ", " + lang + "): "
-                                   + ((System.currentTimeMillis() - t1) / 1000.0)
-                                   + " seconds to build KB.termFormatMap");
+                else {
+                    Map langFormatMap = (Map) formatMap.get(lang);
+                    Iterator ite = col.iterator();
+                    while (ite.hasNext()) {
+                        Formula f = (Formula) ite.next();
+                        String key = f.getArgument(2);
+                        String format = f.getArgument(3);
+                        format = StringUtil.removeEnclosingQuotes(format);                   
+                        if (format.indexOf("$") < 0) 
+                            format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");                   
+                        langFormatMap.put(key, format);
+                    }
+                    // formatMap.put(lang,newFormatMap);
+                    System.out.println("INFO in KB.loadFormatMaps(" + this.name + ", " + lang + "): "
+                                       + ((System.currentTimeMillis() - t1) / 1000.0)
+                                       + " seconds to build KB.formatMap");
+                }
+
+                t1 = System.currentTimeMillis();
+                col = askWithRestriction(0,"termFormat",1,lang);
+                if ((col == null) || col.isEmpty()) {
+                    System.out.println("WARNING in KB.loadFormatMaps(): "
+                                       + "No term format file loaded for language: " 
+                                       + lang);
+                }
+                else {
+                    Map langTermFormatMap = (Map) termFormatMap.get(lang);
+                    Iterator ite = col.iterator();
+                    while (ite.hasNext()) {
+                        Formula f = (Formula) ite.next();
+                        String key = f.getArgument(2);
+                        String format = f.getArgument(3);
+                        format = StringUtil.removeEnclosingQuotes(format);                   
+                        //if (format.indexOf("$") < 0)
+                        //    format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");
+                        langTermFormatMap.put(key,format);
+                    }
+                    // termFormatMap.put(lang,newTermFormatMap);
+                    System.out.println("INFO in KB.loadFormatMaps(" + this.name + ", " + lang + "): "
+                                       + ((System.currentTimeMillis() - t1) / 1000.0)
+                                       + " seconds to build KB.termFormatMap");
+                }
+                loadFormatMapsAttempted.add(lang);
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
         language = lang;
+    }
+
+    /** ***************************************************************
+     *  This method creates an association list (Map) of the natural
+     *  language string and the term for which that format string
+     *  applies.  If the map has already been built and the language
+     *  hasn't changed, just return the existing map.  This is a case
+     *  of "lazy evaluation".
+     *
+     *  @return An instance of Map where the keys are terms and the
+     *  values are format strings.
+     */
+    public HashMap getTermFormatMap(String lang) {
+        if (!StringUtil.isNonEmptyString(lang)) {
+            lang = "EnglishLanguage";
+        }
+        if ((termFormatMap == null) || termFormatMap.isEmpty()) {
+            loadFormatMaps(lang);
+        }
+        HashMap langTermFormatMap = (HashMap) termFormatMap.get(lang);
+        if ((langTermFormatMap == null) || langTermFormatMap.isEmpty()) {
+            loadFormatMaps(lang);
+        }
+        return (HashMap) termFormatMap.get(lang);
     }
 
     /** ***************************************************************
@@ -2231,12 +2393,15 @@ public class KB {
      *  and the values are format strings.
      */
     public HashMap getFormatMap(String lang) {
-
         //System.out.println("ENTER getFormatMap(" + this.name + ", " + lang + ")");
-        if ((formatMap.get(lang) == null)) {
-            // This is here to make sure LanguageFormatter.keywordMap
-            // is initialized. does not seem to be needed since it's called in KBmanager.initOnce()
-            // LanguageFormatter.readKeywordMap(KBmanager.getMgr().getPref("kbDir"));
+        if (!StringUtil.isNonEmptyString(lang)) {
+            lang = "EnglishLanguage";
+        }
+        if ((formatMap == null) || formatMap.isEmpty()) {
+            loadFormatMaps(lang);
+        }
+        HashMap langFormatMap = (HashMap) formatMap.get(lang);
+        if ((langFormatMap == null) || langFormatMap.isEmpty()) {
             loadFormatMaps(lang);
         }
         // System.out.println("EXIT getFormatMap(" + this.name + ", " + lang + ")");
@@ -2263,30 +2428,6 @@ public class KB {
             }
         }
         return;
-    }
-
-    /** ***************************************************************
-     *  This method creates an association list (Map) of the natural
-     *  language string and the term for which that format string
-     *  applies.  If the map has already been built and the language
-     *  hasn't changed, just return the existing map.  This is a case
-     *  of "lazy evaluation".
-     *
-     *  @return An instance of Map where the keys are terms and the
-     *  values are format strings.
-     */
-    public HashMap getTermFormatMap(String lang) {
-
-        //System.out.println("INFO in KB.getTermFormatMap(): Reading the format map for " + lang + " with language=" + language);
-        if ((termFormatMap.get(lang) == null)) {
-
-            // This is here to make sure LanguageFormatter.keywordMap
-            // is initialized.  Does not seem to be needed.
-            // LanguageFormatter.readKeywordMap(KBmanager.getMgr().getPref("kbDir"));
-
-            loadFormatMaps(lang);
-        }
-        return (HashMap) termFormatMap.get(lang);
     }
 
     /** *************************************************************
@@ -2393,13 +2534,19 @@ public class KB {
 
             this.terms.addAll(file.terms);
 
-            if (! constituents.contains(canonicalPath)) {
+            if (!constituents.contains(canonicalPath)) {
                 constituents.add(canonicalPath);
             }
 
             System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
             System.out.println("  File " + canonicalPath + " loaded in "
                                + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+
+            // Clear the formatMap and termFormatMap for this KB.
+            loadFormatMapsAttempted.clear();
+            if (formatMap != null) { formatMap.clear(); }
+            if (termFormatMap != null) { termFormatMap.clear(); }
+
             if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) 
                 buildRelationCaches();            
 
@@ -2742,8 +2889,8 @@ public class KB {
                 String term = null;
                 for (int i = 1 ; i < qlLen ; i++) {
                     term = (String) queryLit.get(i);
-                    if (Formula.isNonEmptyString(term)
-                        && !(isVariable(term))) {
+                    if (StringUtil.isNonEmptyString(term)
+                        && !isVariable(term)) {
                         constant = term;
                         cidx = i;
                         break;
@@ -2824,7 +2971,198 @@ public class KB {
             ex.printStackTrace();
         }
         return ans;
-    }            
+    }
+
+    /** ***************************************************************
+     * This method retrieves all subclasses of className, using both
+     * class and predicate (subrelation) subsumption.
+     *
+     * @param className The name of a Class.
+     *
+     * @return A Set of terms (string constants), which could be
+     * empty.
+     */
+    public Set getAllSubClassesWithPredicateSubsumption(String className) {
+        Set ans = new TreeSet();
+        try {
+            if (Formula.isNonEmptyString(className)) {
+                Set done = new HashSet();
+                Set accumulator = new HashSet();
+                List working = new ArrayList();
+                working.add(className);
+                String name = null;
+                List tmp = null;
+                Iterator it = null;
+                Formula f = null;
+                while (!working.isEmpty()) {
+                    it = working.iterator();
+                    while (it.hasNext()) {
+                        name = (String) it.next();
+                        tmp = (List) askWithPredicateSubsumption("subclass", 2, name);
+                        for (int j = 0; j < tmp.size(); j++) {
+                            f = (Formula) tmp.get(j);
+                            if (!done.contains(f.theFormula)) {
+                                accumulator.add(f.getArgument(1));
+                                done.add(f.theFormula);
+                            }
+                        }
+                    }
+                    working.clear();
+                    ans.addAll(accumulator);
+                    working.addAll(accumulator);
+                    accumulator.clear();
+                }
+            }   
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * This method retrieves all superclasses of className, using both
+     * class and predicate (subrelation) subsumption.
+     *
+     * @param className The name of a Class.
+     *
+     * @return A Set of terms (string constants), which could be
+     * empty.
+     */
+    public Set getAllSuperClassesWithPredicateSubsumption(String className) {
+        /*
+          System.out.println("ENTER KB.getAllSuperClassesWithPredicateSubsumption(" 
+          + className
+          + ")");
+        */
+        Set ans = new TreeSet();
+        try {
+            if (Formula.isNonEmptyString(className)) {
+                Set done = new HashSet();
+                Set accumulator = new HashSet();
+                List working = new ArrayList();
+                working.add(className);
+                String name = null;
+                List tmp = null;
+                Iterator it = null;
+                Formula f = null;
+                while (!working.isEmpty()) {
+                    it = working.iterator();
+                    while (it.hasNext()) {
+                        name = (String) it.next();
+                        tmp = (List) askWithPredicateSubsumption("subclass", 1, name);
+                        for (int j = 0; j < tmp.size(); j++) {
+                            f = (Formula) tmp.get(j);
+                            if (!done.contains(f.theFormula)) {
+                                accumulator.add(f.getArgument(2));
+                                done.add(f.theFormula);
+                            }
+                        }
+                    }
+                    working.clear();
+                    ans.addAll(accumulator);
+                    working.addAll(accumulator);
+                    accumulator.clear();
+                }
+            }   
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        /*
+          System.out.println("EXIT KB.getAllSuperClassesWithPredicateSubsumption(" 
+          + className
+          + ") == "
+          + ans);
+        */
+        return ans;
+    }
+
+    /** ***************************************************************
+     * This method retrieves all instances of className, using both
+     * class and predicate (subrelation) subsumption.
+     *
+     * @param className The name of a Class.
+     *
+     * @return A Set of terms (string constants), which could be
+     * empty.
+     */
+    public Set getAllInstancesWithPredicateSubsumption(String className) {
+        Set ans = new TreeSet();
+        try {
+            if (Formula.isNonEmptyString(className)) {
+                List working = 
+                    new ArrayList(getAllSubClassesWithPredicateSubsumption(className));
+                working.add(className);
+                String name = null;
+                List tmp = null;
+                Formula f = null;
+                for (int i = 0; i < working.size(); i++) {
+                    name = (String) working.get(i);
+                    tmp = (List) askWithPredicateSubsumption("instance", 2, name);
+                    for (int j = 0; j < tmp.size(); j++) {
+                        f = (Formula) tmp.get(j);
+                        ans.add(f.getArgument(1));
+                    }
+                }
+            }   
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * This method retrieves all classes of which term is an instance,
+     * using both class and predicate (subrelation) subsumption.
+     *
+     * @param term The name of a SUO-KIF term.
+     *
+     * @return A Set of terms (class names), which could be
+     * empty.
+     */
+    public Set getAllInstanceOfsWithPredicateSubsumption(String term) {
+        /*
+          System.out.println("ENTER KB.getAllInstanceOfsWithPredicateSubsumption(" 
+          + term
+          + ")");
+        */
+        Set ans = new TreeSet();
+        try {
+            if (Formula.isNonEmptyString(term)) {
+                List tmp = (List) askWithPredicateSubsumption("instance", 1, term);
+                if ((tmp != null) && !tmp.isEmpty()) {
+                    List working = new ArrayList();
+                    Formula f = null;
+
+                    // Initialize working
+                    for (int i = 0; i < tmp.size(); i++) {
+                        f = (Formula) tmp.get(i);
+                        working.add(f.getArgument(2));
+                    }
+                    if (!working.isEmpty()) {
+                        ans.addAll(working);
+                        String className = null;
+                        for (int j = 0; j < working.size(); j++) {
+                            className = (String) working.get(j);
+                            ans.addAll(getAllSuperClassesWithPredicateSubsumption(className));
+                        }
+                    }
+                }
+            }   
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        /*
+          System.out.println("EXIT KB.getAllInstanceOfsWithPredicateSubsumption(" 
+          + term
+          + ") == "
+          + ans);
+        */
+        return ans;
+    }
 
     /** ***************************************************************
      * This method retrieves the downward transitive closure of all Class
@@ -3174,25 +3512,31 @@ public class KB {
             while (!containsTerm(newFormula.substring(i+2,j)) && j > i + 2) 
                 j--;
             term = newFormula.substring(i+2,j);
-            String termPrint = term;
+            String termPrint = DocGen.getInstance().showTermName(this, term, language);
+
+            /*
             //if (namespace) {
-            ArrayList al = askWithRestriction(0,"termFormat",2,term);
-            if (al.size() > 0) {
-                for (int k = 0; k < al.size(); k++) {
-                    Formula f = (Formula) al.get(k);
-                    String lang = f.getArgument(1);
-                    if (termPrint.equals(term) && lang.equals("EnglishLanguage")) {
-                        termPrint = f.getArgument(3);
-                        termPrint = DocGen.removeEnclosingQuotes(termPrint);
-                    }
-                    if (language.equals(lang)) {
-                        termPrint = f.getArgument(3);
-                        termPrint = DocGen.removeEnclosingQuotes(termPrint);
-                    }
-                }
-                // termPrint = termPrint.replaceAll("\"","");
+            ArrayList al = null;
+            if (Formula.isNonEmptyString(term)) {
+            al = askWithRestriction(0,"termFormat",2,term);
+            }
+            if (al != null && al.size() > 0) {
+            for (int k = 0; k < al.size(); k++) {
+            Formula f = (Formula) al.get(k);
+            String lang = f.getArgument(1);
+            if (termPrint.equals(term) && lang.equals("EnglishLanguage")) {
+            termPrint = f.getArgument(3);
+            termPrint = StringUtil.removeEnclosingQuotes(termPrint);
+            }
+            if (language.equals(lang)) {
+            termPrint = f.getArgument(3);
+            termPrint = StringUtil.removeEnclosingQuotes(termPrint);
+            }
+            }
+            // termPrint = termPrint.replaceAll("\"","");
             }
             //}
+            */
             if (term != "" && containsTerm(newFormula.substring(i+2,j))) {
                 newFormula = newFormula.substring(0,i) +
                     "<a href=\"" + href + term + suffix + "\">" + termPrint + "</a>" +
@@ -3650,7 +3994,7 @@ public class KB {
         int c;
     
         while ((c = in.read()) != -1)
-          out.write(c);
+            out.write(c);
     
         in.close();
         out.close();
@@ -3666,16 +4010,16 @@ public class KB {
         DataOutputStream out = new DataOutputStream(file);
         // add axioms
         if (axioms != null) {
-          for (int i = 0; i < axioms.size(); i++) {
-            String axiom = axioms.get(i);
-            out.writeBytes(axiom);
-          }
-          out.flush();        
+            for (int i = 0; i < axioms.size(); i++) {
+                String axiom = axioms.get(i);
+                out.writeBytes(axiom);
+            }
+            out.flush();        
         }
         // add conjecture
         if (conjecture != null) {
-          out.writeBytes(conjecture);
-          out.flush();
+            out.writeBytes(conjecture);
+            out.flush();
         }
         out.close();
     }
@@ -3686,12 +4030,12 @@ public class KB {
                                 Formula conjecture, 
                                 boolean onlyPlainFOL, 
                                 String reasoner) throws IOException {
-      final boolean isQuestion = false;
-      return writeTPTPFile(fileName,
-                           conjecture,
-                           onlyPlainFOL,
-                           reasoner,
-                           isQuestion);
+        final boolean isQuestion = false;
+        return writeTPTPFile(fileName,
+                             conjecture,
+                             onlyPlainFOL,
+                             reasoner,
+                             isQuestion);
     }
 
     /** *************************************************************
@@ -3855,9 +4199,9 @@ public class KB {
                 // multiple conjectures.
                 String type = "";
                 if (isQuestion) {
-                  type = "question";
+                    type = "question";
                 } else {
-                  type = "conjecture";
+                    type = "conjecture";
                 }
                 while (tptpIt.hasNext()) {
                     theTPTPFormula = (String) tptpIt.next();
@@ -3978,10 +4322,10 @@ public class KB {
     private String functionFormat(String term, int i) {
 
         switch (i) {
-          case 1: return "the &%" + prettyPrint(term) + " of %1"; 
-          case 2: return "the &%" + prettyPrint(term) + " of %1 and %2"; 
-          case 3: return "the &%" + prettyPrint(term) + " of %1, %2 and %3";
-          case 4: return "the &%" + prettyPrint(term) + " of %1, %2, %3 and %4";
+        case 1: return "the &%" + prettyPrint(term) + " of %1"; 
+        case 2: return "the &%" + prettyPrint(term) + " of %1 and %2"; 
+        case 3: return "the &%" + prettyPrint(term) + " of %1, %2 and %3";
+        case 4: return "the &%" + prettyPrint(term) + " of %1, %2, %3 and %4";
         }       
         return "";
     }
@@ -3992,10 +4336,10 @@ public class KB {
 
         String parent = "";
         switch (i) {
-          case 1: parent = "UnaryFunction"; break;
-          case 2: parent = "BinaryFunction"; break;
-          case 3: parent = "TernaryFunction"; break;
-          case 4: parent = "QuaternaryFunction"; break;
+        case 1: parent = "UnaryFunction"; break;
+        case 2: parent = "BinaryFunction"; break;
+        case 3: parent = "TernaryFunction"; break;
+        case 4: parent = "QuaternaryFunction"; break;
         }
         if (parent == "") 
             return "";
@@ -4014,14 +4358,14 @@ public class KB {
     private String relationFormat(String term, int i) {
 
         switch (i) {
-          case 2: return ("%2 is %n " 
-                          + LanguageFormatter.getArticle(term,1,1,"EnglishLanguage") 
-                          + "&%" 
-                          + prettyPrint(term) 
-                          + " of %1"); 
-          case 3: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3"; 
-          case 4: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4";
-          case 5: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4 and %5";
+        case 2: return ("%2 is %n " 
+                        + LanguageFormatter.getArticle(term,1,1,"EnglishLanguage") 
+                        + "&%" 
+                        + prettyPrint(term) 
+                        + " of %1"); 
+        case 3: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3"; 
+        case 4: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4";
+        case 5: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4 and %5";
         }       
         return "";
     }
@@ -4032,10 +4376,10 @@ public class KB {
 
         String parent = "";
         switch (i) {
-          case 2: parent = "BinaryPredicate"; break;
-          case 3: parent = "TernaryPredicate"; break;
-          case 4: parent = "QuaternaryPredicate"; break;
-          case 5: parent = "QuintaryPredicate"; break;
+        case 2: parent = "BinaryPredicate"; break;
+        case 3: parent = "TernaryPredicate"; break;
+        case 4: parent = "QuaternaryPredicate"; break;
+        case 5: parent = "QuintaryPredicate"; break;
         }
         if (parent == "") 
             return "";
@@ -4131,13 +4475,13 @@ public class KB {
 
         // testTPTP(args);
         /*
-        try {
-            KBmanager.getMgr().initializeOnce();
-        } catch (IOException ioe ) {
-            System.out.println(ioe.getMessage());
-        }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
-        kb.termsWithNoPictureLinks();
+          try {
+          KBmanager.getMgr().initializeOnce();
+          } catch (IOException ioe ) {
+          System.out.println(ioe.getMessage());
+          }
+          KB kb = KBmanager.getMgr().getKB("SUMO");
+          kb.termsWithNoPictureLinks();
         */
         String foo = "(rel bar \"test\")";
         Formula f = new Formula();
@@ -4146,11 +4490,12 @@ public class KB {
 
         //System.out.println("-------------- Terms ---------------");
         //System.out.println(kb.allTerms());
-        /** for (int i = 1; i < 5; i++) {
-            System.out.println("-------------- Arity " + i + " Functions ---------------");
-            System.out.println(kb.allFunctionsOfArity(i));
-            System.out.println("-------------- Arity " + i + " Relations ---------------");
-            System.out.println(kb.allRelationsOfArity(i+1));
-        } **/
+        /* for (int i = 1; i < 5; i++) {
+           System.out.println("-------------- Arity " + i + " Functions ---------------");
+           System.out.println(kb.allFunctionsOfArity(i));
+           System.out.println("-------------- Arity " + i + " Relations ---------------");
+           System.out.println(kb.allRelationsOfArity(i+1));
+           } 
+        */
     }
 }

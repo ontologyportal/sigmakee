@@ -143,7 +143,9 @@ public class KIF {
         System.out.println("INFO in KIF.parse()");
         System.out.println("  filename == " + this.getFilename());
         System.out.println("  parseMode == "
-                           + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));
+                           + ((mode == RELAXED_PARSE_MODE) 
+                              ? "RELAXED_PARSE_MODE" 
+                              : "NORMAL_PARSE_MODE"));
         String key = null;
         ArrayList keySet;
         StringBuffer expression = new StringBuffer(40);
@@ -227,6 +229,10 @@ public class KIF {
                     if (parenLevel == 0) {                                    // The end of the statement...
                         f.theFormula = expression.toString().intern();
                         //if (KBmanager.getMgr().getPref("TPTP").equals("yes"))                       
+                        // if (f.theFormula.startsWith("(contentRegex")) {
+                        //     System.out.println("  formula == " + f.theFormula);
+                        // }
+
                         //f.tptpParse(false,null);   // not a query
                         if (formulaSet.contains(f.theFormula)) {
                             String warning = "Duplicate formula at line " + f.startLine + " of " + f.sourceFile + ": " + expression;
@@ -283,12 +289,22 @@ public class KIF {
                 else if (st.ttype==34) {                                      // " - it's a string
                     //System.out.println("INFO in KIF.parse()");
                     //System.out.println(st.sval);
+                    
+                    // if (st.sval.contains("S[")) {
+                    //  System.out.println("  st.sval == " + st.sval);
+                    //  }
+                    
                     st.sval = st.sval.replace("\"","\\\"");
                     //System.out.println(st.sval);
                     if (lastVal != 40)                                        // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
                     com = st.sval;
+
+                    // if (com.contains("[")) {
+                    //     System.out.println("  com == \"" + com + "\"");
+                    // }
+
                     totalLinesForComments += countChar(com,(char)0X0A);
                     expression.append(com);
                     expression.append("\"");

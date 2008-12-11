@@ -28,61 +28,66 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
-    public static String proofTableFormat(String query, ProofStep step, String kbName, String language) {
+    public static String proofTableFormat(String query, 
+                                          ProofStep step, 
+                                          String kbName, 
+                                          String language) {
 
-			StringBuffer result = new StringBuffer();
-			Formula f = new Formula();
-			KB kb = KBmanager.getMgr().getKB(kbName);
-			f.read(step.axiom);
-			String axiom = new String(f.theFormula);
-			f.theFormula = Formula.postProcess(f.theFormula);
+        StringBuffer result = new StringBuffer();
+        Formula f = new Formula();
+        KB kb = KBmanager.getMgr().getKB(kbName);
+        f.read(step.axiom);
+        String axiom = new String(f.theFormula);
+        f.theFormula = Formula.postProcess(f.theFormula);
 			
-			String hostname = KBmanager.getMgr().getPref("hostname");
-			if (hostname == null)
-				hostname = "localhost";
-			String port = KBmanager.getMgr().getPref("port");
-			if (port == null)
-				port = "8080";
-			String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+        String hostname = KBmanager.getMgr().getPref("hostname");
+        if (hostname == null)
+            hostname = "localhost";
+        String port = KBmanager.getMgr().getPref("port");
+        if (port == null)
+            port = "8080";
+        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
 			
-			if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.        
-				f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
-				result.append("<td valign=top width=50%>" + "True" + "</td>");
-			}
-			else
-				result.append("<td valign=top width=50%>" + f.htmlFormat(kbHref) + "</td>");
-			result.append("<td valign=top width=10%>");
-			for (int i = 0; i < step.premises.size(); i++) {
-				Integer stepNum = (Integer) step.premises.get(i);
-				result.append(stepNum.toString() + " ");            
-			}
-			if (step.premises.size() == 0) {
-				if (step.formulaRole != null) {
-					result.append(step.formulaRole);
-        } else if (Formula.isNegatedQuery(query,f.theFormula)) {
-					result.append("[Negated Query]");
-				} else {
-					result.append("[KB]");
+        if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.        
+            f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
+            result.append("<td valign=top width=50%>" + "True" + "</td>");
         }
-			}
-			result.append("</td><td width=40% valign=top>");
-			if (language != null && language.length() > 0) {
-				String pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, 
-																											KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
-																											KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), kb,
-																											language);
+        else
+            result.append("<td valign=top width=50%>" + f.htmlFormat(kbHref) + "</td>");
+        result.append("<td valign=top width=10%>");
+        for (int i = 0; i < step.premises.size(); i++) {
+            Integer stepNum = (Integer) step.premises.get(i);
+            result.append(stepNum.toString() + " ");            
+        }
+        if (step.premises.size() == 0) {
+            if (step.formulaRole != null) {
+                result.append(step.formulaRole);
+            } else if (Formula.isNegatedQuery(query,f.theFormula)) {
+                result.append("[Negated Query]");
+            } else {
+                result.append("[KB]");
+            }
+        }
+        result.append("</td><td width=40% valign=top>");
+        if (StringUtil.isNonEmptyString(language)) {
+            String pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, 
+                                                          KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
+                                                          KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), kb,
+                                                          language);
 	    if (pph == null)
-				pph = "";
-			if (Formula.isNonEmptyString(pph)) {
-				if (language.equalsIgnoreCase("ar")) {
-					pph = ("<span dir=\"rtl\">" + pph + "</span>");
-					// pph = ("&#x202b;" + pph + "&#x202c;");
-				}
-			}
-			result.append(pph);        
-			}
-			result.append("</td>");
-			return result.toString();
+                pph = "";
+            if (StringUtil.isNonEmptyString(pph)) {
+                boolean isArabic = (language.matches(".*(?i)arabic.*")
+                                    || language.equalsIgnoreCase("ar"));
+                if (isArabic) {
+                    pph = ("<span dir=\"rtl\">" + pph + "</span>");
+                    // pph = ("&#x202b;" + pph + "&#x202c;");
+                }
+            }
+            result.append(pph);        
+        }
+        result.append("</td>");
+        return result.toString();
     }
 
 
@@ -92,12 +97,12 @@ public class HTMLformatter {
 
         if (kb == null || !kb.availableLanguages().contains(lang)) 
             lang = "EnglishLanguage";        
-        if (Formula.isNonEmptyString(lang)) {
+        if (StringUtil.isNonEmptyString(lang)) {
             HTMLformatter.language = lang;  
             return lang;
         }
         else {
-            if (Formula.isNonEmptyString(HTMLformatter.language)) 
+            if (StringUtil.isNonEmptyString(HTMLformatter.language)) 
                 return HTMLformatter.language;     
             else {
                 HTMLformatter.language = lang;
@@ -199,7 +204,7 @@ public class HTMLformatter {
                         pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,kb.getFormatMap(language),kb.getTermFormatMap(language),kb,language);
                     if (pph == null)
                         pph = "";
-                    if (Formula.isNonEmptyString(pph)) {
+                    if (StringUtil.isNonEmptyString(pph)) {
                         if (language.equalsIgnoreCase("ar")) {
                             pph = ("<span dir=\"rtl\">" + pph + "</span>");
                             // pph = ("&#x202b;" + pph + "&#x202c;");
@@ -294,9 +299,9 @@ public class HTMLformatter {
         show.append("<tr><td><i><A href=\""+ kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</A>" + "</i></TD></tr>\n");
         for (int i = 0; i < 30; i++) {
             String relation = (String) relations.get(i);
-            String relationName = DocGen.showTermName(kb,relation,language);
+            String relationName = DocGen.getInstance().showTermName(kb,relation,language);
             String nonRelation = (String) nonRelations.get(i);
-            String nonRelationName = DocGen.showTermName(kb,nonRelation,language);
+            String nonRelationName = DocGen.getInstance().showTermName(kb,nonRelation,language);
             if (relation != "" || nonRelation != "") {
                 if (i == 14) {
                     show.append("<TR>\n");
@@ -374,8 +379,14 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormatLimit(String term, String header, 
-                                              KB kb, String language, int start, int limit, int arg, String type) {
+    public static String browserSectionFormatLimit(String term, 
+                                                   String header, 
+                                                   KB kb, 
+                                                   String language, 
+                                                   int start, 
+                                                   int limit, 
+                                                   int arg, 
+                                                   String type) {
 
         ArrayList forms = kb.ask(type,arg,term);
         StringBuffer show = new StringBuffer();
@@ -401,7 +412,9 @@ public class HTMLformatter {
                         "&start=" + (new Integer(start+limit)).toString() + "&arg=" + (new Integer(arg)).toString() +
                         "&type=" + type + "\">Show next " + (new Integer(limit)).toString() + "</a></td></tr>\n";
             }
-            
+
+            boolean isArabic = (language.matches(".*(?i)arabic.*")
+                                || language.equalsIgnoreCase("ar"));
             for (int i = start; i < localLimit; i++) {
                 Formula f = (Formula) forms.get(i);
                 if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
@@ -426,9 +439,11 @@ public class HTMLformatter {
                                                            kb.getTermFormatMap(language), kb, language);
         	    if (pph == null) 
                         pph = ""; 
-                    if (Formula.isNonEmptyString(pph)) {
-                        if (language.equalsIgnoreCase("ar")) 
-                            pph = ("&#x202b;" + pph + "&#x202c;");                        
+                    if (StringUtil.isNonEmptyString(pph)) {
+                        if (isArabic) {
+                            pph = ("<span dir=\"rtl\">" + pph + "</span>");
+                            // pph = ("&#x202b;" + pph + "&#x202c;"); 
+                        }
                     }
                     show.append(pph + "</TD></TR>\n"); 
                 }
