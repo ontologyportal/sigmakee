@@ -205,11 +205,14 @@ public class LanguageFormatter {
      *
      *  @param stmt The statement to be paraphrased.
      *  @param isNegMode Whether the statement is negated.
+     *  @param kb The KB from which phraseMap and termMap are computed for language.
      *  @param phraseMap An association list of relations and their natural language format statements.
      *  @param termMap An association list of terms and their natural language format statements.
+     *  @param language A String denoting a natural language, such as EnglishLanguage.
+     *  @param depth An in indicating the level of nesting, for control of indentation.
      *  @return A String, which is the paraphrased statement.
      */
-    public static String nlStmtPara(String stmt, boolean isNegMode, Map phraseMap, 
+    public static String nlStmtPara(String stmt, boolean isNegMode, KB kb, Map phraseMap, 
     				    Map termMap, String language, int depth) {
 
 	/*
@@ -227,8 +230,10 @@ public class LanguageFormatter {
 	    */
 	    return "";
 	}
-	if ( (phraseMap == null) || phraseMap.isEmpty() ) {
-	    System.out.println("Error in LanguageFormatter.nlStmtPara(): phraseMap is empty");
+        boolean alreadyTried = kb.loadFormatMapsAttempted.contains(language);
+	if ((phraseMap == null) || phraseMap.isEmpty()) {
+            if (!alreadyTried) { kb.loadFormatMaps(language); }
+	    // System.out.println("Error in LanguageFormatter.nlStmtPara(): phraseMap is empty");
 	    /*
 	    System.out.println( "INFO in LanguageFormatter.nlStmtPara( " + depth + " ):" );
 	    printSpaces( depth );
@@ -236,8 +241,9 @@ public class LanguageFormatter {
 	    */
 	    return "";
 	}
-	if ( (termMap == null) || termMap.isEmpty() ) {
-	    System.out.println("Error in LanguageFormatter.nlStmtPara(): termMap is empty");
+	if ((termMap == null) || termMap.isEmpty() ) {
+            if (!alreadyTried) { kb.loadFormatMaps(language); }
+	    // System.out.println("Error in LanguageFormatter.nlStmtPara(): termMap is empty");
 	    /*
 	    System.out.println( "INFO in LanguageFormatter.nlStmtPara( " + depth + " ):" );
 	    printSpaces( depth );
@@ -287,7 +293,7 @@ public class LanguageFormatter {
 	    return stmt;
 	}
 	if (logicalOperator(pred)) {
-	    ans = paraphraseLogicalOperator(stmt,isNegMode,phraseMap,termMap,language,depth+1);
+	    ans = paraphraseLogicalOperator(stmt,isNegMode,kb,phraseMap,termMap,language,depth+1);
 	    /*
 	    System.out.println( "INFO in LanguageFormatter.nlStmtPara( " + depth + " ):" );
 	    printSpaces( depth );
@@ -296,7 +302,7 @@ public class LanguageFormatter {
 	    return ans;
 	}
 	if (phraseMap.containsKey(pred)) {
-	    ans = paraphraseWithFormat(stmt,isNegMode,phraseMap,termMap,language);
+	    ans = paraphraseWithFormat(stmt,isNegMode,kb,phraseMap,termMap,language);
 	    /*
 	    System.out.println( "INFO in LanguageFormatter.nlStmtPara( " + depth + " ):" );
 	    printSpaces( depth );
@@ -322,7 +328,7 @@ public class LanguageFormatter {
 		String arg = f.car();
 		f.read(f.cdr());
 		if (!Formula.atom(arg)) {
-		    result.append(" " + nlStmtPara(arg,isNegMode,phraseMap,termMap,language,depth+1));
+		    result.append(" " + nlStmtPara(arg,isNegMode,kb,phraseMap,termMap,language,depth+1));
 		}
 		else {
 		    result.append(" " + processAtom(arg,termMap,language));
@@ -349,11 +355,14 @@ public class LanguageFormatter {
                 ans = ((String) termMap.get(word));
             else if (word.charAt(0) == '?') 
 		return word;
-//             if (language.equalsIgnoreCase("ar") && !ans.startsWith("?") &&
-//                 ans.indexOf("&#x6") == -1) {
-//                     // left-to-right embedding
-//                     ans = ("&#x202a;" + ans + "&#x202c;");
-//             }
+            /*
+            boolean isArabic = (language.matches(".*(?i)arabic.*") 
+                                || language.equalsIgnoreCase("ar"));
+            if (isArabic && !ans.startsWith("?") && !ans.contains("&#x6")) {
+                // left-to-right embedding
+                ans = ("&#x202a;" + ans + "&#x202c;");
+            }
+            */
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -364,258 +373,273 @@ public class LanguageFormatter {
     /** ***************************************************************
      * Create a natural language paraphrase for statements involving the logical operators.
      *
-     * @param pred the logical predicate in the expression
-     * @param isNegMode is the expression negated?
-     * @param words  the expression as an ArrayList of tokens
-     * @return the natural language paraphrase as a String, or null if the predicate was not a logical operator.
+     * @param stmt The logical statement for which we want to paraphrase the operator, arg 0.
+     * @param isNegMode Is the expression negated?
+     * @param kb The KB from which phraseMap and termMap are computed for language.
+     * @param phraseMap A Map in which the keys are SUO-KIF constants and the values are format phrases.
+     * @param termMap A Map in which the keys are SUO-KIF constants and the values are termFormat strings.
+     * @param language A String denoting a natural language, such as EnglishLanguage.
+     * @param depth The nested operator depth, for controlling indentation.
+     * @return The natural language paraphrase as a String, or null if the predicate was not a logical operator.
      */
-    private static String paraphraseLogicalOperator(String stmt, boolean isNegMode, Map phraseMap, 
-                                                    Map termMap, String language, int depth ) {
+    private static String paraphraseLogicalOperator(String stmt, 
+                                                    boolean isNegMode, 
+                                                    KB kb, 
+                                                    Map phraseMap, 
+                                                    Map termMap, 
+                                                    String language, 
+                                                    int depth) {
+        try {
+            //System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator(): stmt == " + stmt);
+            /*
+              System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+              printSpaces( depth );
+              System.out.println( "stmt == " + stmt);
+            */
 
-	//System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator(): stmt == " + stmt);
+            if (keywordMap == null) {
+                System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): keywordMap is null");
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "a:return == null" );
+                */
+                return null;
+            }
+            ArrayList args = new ArrayList();
+            Formula f = new Formula();
+            f.read(stmt);
+            String pred = f.getArgument(0);
+            f.read(f.cdr());
+
+            String ans = null;
+            if (pred.equals("not")) {
+                ans = nlStmtPara(f.car(),true,kb,phraseMap,termMap,language,depth+1);
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "b:return == " + ans );
+                */
+                return ans;
+            }
+
+            while (!f.empty()) {
+                String arg = f.car();
+                String result = nlStmtPara(arg,false,kb,phraseMap,termMap,language,depth+1);
+
+                if (result != null && result != "" && result.length() > 0) {
+                    args.add(result);
+                }
+                else {
+                    System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): bad result for: " + arg);
+                    arg = " ";
+                }
+
+                // System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): adding argument: " + ((String) args.get(args.size()-1)));
+                f.read(f.cdr());
+            }
+            String COMMA = getKeyword(",",language);
+            String QUESTION = getKeyword("?",language);
+            String IF = getKeyword("if",language);
+            String THEN = getKeyword("then",language);
+            String AND = getKeyword("and",language);
+            String OR = getKeyword("or",language);
+            String IFANDONLYIF = getKeyword("if and only if",language);
+            String NOT = getKeyword("not",language);
+            String FORALL = getKeyword("for all",language);
+            String EXISTS = getKeyword("there exists",language);
+            String EXIST = getKeyword("there exist",language); 
+            String NOTEXIST = getKeyword("there don't exist",language);
+            String NOTEXISTS = getKeyword("there doesn't exist",language);
+            String HOLDS = getKeyword("holds",language);
+            String SOTHAT = getKeyword("so that",language);
+            String SUCHTHAT = getKeyword("such that",language);
+            if (!StringUtil.isNonEmptyString(SUCHTHAT)) { SUCHTHAT = SOTHAT; }
+
+            StringBuffer sb = new StringBuffer();
+
+            if (pred.equalsIgnoreCase("=>")) {
+                if (isNegMode) {
+                    sb.append(args.get(1)).append(" "+AND+" ").append("~{").append(args.get(0)).append("}");
+                }
+                else {
+                    // Special handling for Arabic.
+                    boolean isArabic = (language.matches(".*(?i)arabic.*") 
+                                        || language.equalsIgnoreCase("ar"));
+                    sb.append("<ul><li>"
+                              + (isArabic ? "<span dir=\"rtl\">" : "")
+                              + IF
+                              + " ").append(args.get(0)).append(COMMA
+                                                                + (isArabic ? "</span>" : "")
+                                                                + "</li><li>"
+                                                                + (isArabic ? "<span dir=\"rtl\">" : "")
+                                                                + THEN
+                                                                + " ").append(args.get(1)).append((isArabic ? "</span>" : "") + "</li></ul>");
+                }
+                ans = sb.toString();
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "c:return == " + ans );
+                */
+                return ans;
+            }
+            if (pred.equalsIgnoreCase("and")) {
+                if (isNegMode) {
+                    for (int i = 0; i < args.size(); i++) {
+                        if (i != 0) { sb.append(" "+OR+" "); }
+                        sb.append("~{ ");
+                        sb.append(translateWord(termMap,(String) args.get(i),language));
+                        sb.append(" }");
+                    }
+                }
+                else {
+                    for (int i = 0; i < args.size(); i++) {
+                        if (i != 0) { sb.append(" "+AND+" "); }
+                        sb.append(translateWord(termMap,(String) args.get(i),language));
+                    }
+                }
+                ans = sb.toString();
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "d:return == " + ans );
+                */
+                return ans;
+            }
+            if (pred.equalsIgnoreCase("holds")) {
+
+                for (int i = 0; i < args.size(); i++) {
+                    if (i != 0) {
+                        if ( isNegMode ) { sb.append(" "+NOT); }
+                        sb.append(" "+HOLDS+" ");
+                    }
+                    sb.append(translateWord(termMap,(String) args.get(i),language));
+                }
+
+                ans = sb.toString();
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "e:return == " + ans );
+                */
+                return ans;
+            }
+            if (pred.equalsIgnoreCase("or")) {
+                for (int i = 0; i < args.size(); i++) {
+                    if (i != 0) { 
+                        if ( isNegMode ) { sb.append(" "+AND+" "); }
+                        else { sb.append(" "+OR+" "); }
+                    }
+                    sb.append(translateWord(termMap,(String) args.get(i),language));
+                }
+                ans = sb.toString();
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "f:return == " + ans );
+                */
+                return ans;
+            }
+            if (pred.equalsIgnoreCase("<=>")) {
+                if ( isNegMode ) {
+                    sb.append(translateWord(termMap,(String) args.get(1),language));
+                    sb.append(" "+OR+" ");
+                    sb.append("~{ ");
+                    sb.append(translateWord(termMap,(String) args.get(0),language));
+                    sb.append(" }");
+                    sb.append(" "+OR+" ");
+                    sb.append(translateWord(termMap,(String) args.get(0),language));
+                    sb.append(" "+OR+" ");
+                    sb.append("~{ ");
+                    sb.append(translateWord(termMap,(String) args.get(1),language));
+                    sb.append(" }");
+                }
+                else {
+                    sb.append(translateWord(termMap,(String) args.get(0),language));
+                    sb.append(" "+IFANDONLYIF+" ");
+                    sb.append(translateWord(termMap,(String) args.get(1),language));
+                }
+                ans = sb.toString();
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "g:return == " + ans );
+                */
+                return ans;
+            }
+            if (pred.equalsIgnoreCase("forall")) {
+                if ( isNegMode ) { sb.append(" "+NOT+" "); }
+                sb.append(FORALL+" ");
+                if (((String) args.get(0)).indexOf(" ") == -1) {
+                    // If just one variable ...
+                    sb.append(translateWord(termMap,(String) args.get(0),language));
+                }
+                else {
+                    // If more than one variable ...
+                    sb.append(translateWord(termMap,formatList((String) args.get(0),language),language));
+                }
+                sb.append( " " );
+                // sb.append(" "+HOLDS+": ");
+                sb.append(translateWord(termMap,(String) args.get(1),language));
+                ans = sb.toString();
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "h:return == " + ans );
+                */
+                return ans;
+            }
+            if (pred.equalsIgnoreCase("exists")) {
+                if (((String) args.get(0)).indexOf(" ") == -1) {
+
+                    // If just one variable ...
+
+                    // NS: The section immediately below seems to be just
+                    // wrong, so I've commented it out.
+                    /*
+                      if (args.size() != 3) {
+                      for (int i = args.size()-1; i >= 0; i--) {
+                      sb.append(translateWord(termMap,(String) args.get(i),language));
+                      sb.append(" ");
+                      }
+                      ans = sb.toString();
+                      System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                      printSpaces( depth );
+                      System.out.println( "i:return == " + ans );
+                      return ans;  // not the right english format
+                      }
+                    */
+                    if (isNegMode) { sb.append(NOTEXISTS+" "); }
+                    else { sb.append(EXISTS+" "); }                 
+                    sb.append(translateWord(termMap,(String) args.get(0),language));
+                }
+                else {
+
+                    // If more than one variable ...
+
+                    if (isNegMode) { sb.append(NOTEXIST+" "); }
+                    else { sb.append(EXIST+" "); }
+                    sb.append(translateWord(termMap,formatList((String) args.get(0),language),language));
+                }
+                sb.append(" "+SUCHTHAT+" ");
+                sb.append(translateWord(termMap,(String) args.get(1),language));
+                ans = sb.toString();
+                /*
+                  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+                  printSpaces( depth );
+                  System.out.println( "j:return == " + ans );
+                */
+                return ans;
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
 	/*
-	System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	printSpaces( depth );
-	System.out.println( "stmt == " + stmt);
-	*/
-
-	if (keywordMap == null) {
-	    System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): keywordMap is null");
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "a:return == null" );
-	    */
-	    return null;
-	}
-	ArrayList args = new ArrayList();
-	Formula f = new Formula();
-	f.read(stmt);
-	String pred = f.getArgument(0);
-	f.read(f.cdr());
-
-	String ans = null;
-	if (pred.equals("not")) {
-	    ans = nlStmtPara(f.car(),true,phraseMap,termMap,language,depth+1);
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "b:return == " + ans );
-	    */
-	    return ans;
-	}
-
-	while (!f.empty()) {
-	    String arg = f.car();
-	    String result = nlStmtPara(arg,false,phraseMap,termMap,language,depth+1);
-
-	    if (result != null && result != "" && result.length() > 0) {
-		args.add(result);
-	    }
-	    else {
-		System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): bad result for: " + arg);
-		arg = " ";
-	    }
-
-	    // System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): adding argument: " + ((String) args.get(args.size()-1)));
-	    f.read(f.cdr());
-	}
-        String COMMA = getKeyword(",",language);
-        String QUESTION = getKeyword("?",language);
-	String IF = getKeyword("if",language);
-	String THEN = getKeyword("then",language);
-	String AND = getKeyword("and",language);
-	String OR = getKeyword("or",language);
-	String IFANDONLYIF = getKeyword("if and only if",language);
-	String NOT = getKeyword("not",language);
-	String FORALL = getKeyword("for all",language);
-	String EXISTS = getKeyword("there exists",language);
-	String EXIST = getKeyword("there exist",language); 
-	String NOTEXIST = getKeyword("there don't exist",language);
-	String NOTEXISTS = getKeyword("there doesn't exist",language);
-	String HOLDS = getKeyword("holds",language);
-	String SOTHAT = getKeyword("so that",language);
-	String SUCHTHAT = getKeyword("such that",language);
-	if ( ! Formula.isNonEmptyString(SUCHTHAT) ) { SUCHTHAT = SOTHAT; }
-
-	StringBuffer sb = new StringBuffer();
-
-	if (pred.equalsIgnoreCase("=>")) {
-	    if ( isNegMode ) {
-		sb.append(args.get(1)).append(" "+AND+" ").append("~{").append(args.get(0)).append("}");
-	    }
-	    else {
-                // Special handling for Arabic.
-		sb.append("<ul><li>"
-                           + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
-                           + IF
-                           + " ").append(args.get(0)).append(COMMA
-                                                             + (language.equalsIgnoreCase("ar") ? "</span>" : "")
-                                                             + "</li><li>"
-                                                             + (language.equalsIgnoreCase("ar") ? "<span dir=\"rtl\">" : "")
-                                                             + THEN
-                                                             + " ").append(args.get(1)).append((language.equalsIgnoreCase("ar") ? "</span>" : "")
-                                                                                               + "</li></ul>");	    }
-	    ans = sb.toString();
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "c:return == " + ans );
-	    */
-	    return ans;
-	}
-	if (pred.equalsIgnoreCase("and")) {
-	    if ( isNegMode ) {
-		for (int i = 0; i < args.size(); i++) {
-		    if (i != 0) { sb.append(" "+OR+" "); }
-		    sb.append("~{ ");
-		    sb.append(translateWord(termMap,(String) args.get(i),language));
-		    sb.append(" }");
-		}
-	    }
-	    else {
-		for (int i = 0; i < args.size(); i++) {
-		    if (i != 0) { sb.append(" "+AND+" "); }
-		    sb.append(translateWord(termMap,(String) args.get(i),language));
-		}
-	    }
-	    ans = sb.toString();
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "d:return == " + ans );
-	    */
-	    return ans;
-	}
-	if (pred.equalsIgnoreCase("holds")) {
-
-	    for (int i = 0; i < args.size(); i++) {
-		if (i != 0) {
-		    if ( isNegMode ) { sb.append(" "+NOT); }
-		    sb.append(" "+HOLDS+" ");
-		}
-		sb.append(translateWord(termMap,(String) args.get(i),language));
-	    }
-
-	    ans = sb.toString();
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "e:return == " + ans );
-	    */
-	    return ans;
-	}
-	if (pred.equalsIgnoreCase("or")) {
-	    for (int i = 0; i < args.size(); i++) {
-		if (i != 0) { 
-		    if ( isNegMode ) { sb.append(" "+AND+" "); }
-		    else { sb.append(" "+OR+" "); }
-		}
-		sb.append(translateWord(termMap,(String) args.get(i),language));
-	    }
-	    ans = sb.toString();
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "f:return == " + ans );
-	    */
-	    return ans;
-	}
-	if (pred.equalsIgnoreCase("<=>")) {
-	    if ( isNegMode ) {
-		sb.append(translateWord(termMap,(String) args.get(1),language));
-		sb.append(" "+OR+" ");
-		sb.append("~{ ");
-		sb.append(translateWord(termMap,(String) args.get(0),language));
-		sb.append(" }");
-		sb.append(" "+OR+" ");
-		sb.append(translateWord(termMap,(String) args.get(0),language));
-		sb.append(" "+OR+" ");
-		sb.append("~{ ");
-		sb.append(translateWord(termMap,(String) args.get(1),language));
-		sb.append(" }");
-	    }
-	    else {
-		sb.append(translateWord(termMap,(String) args.get(0),language));
-		sb.append(" "+IFANDONLYIF+" ");
-		sb.append(translateWord(termMap,(String) args.get(1),language));
-	    }
-	    ans = sb.toString();
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "g:return == " + ans );
-	    */
-	    return ans;
-	}
-	if (pred.equalsIgnoreCase("forall")) {
-	    if ( isNegMode ) { sb.append(" "+NOT+" "); }
-	    sb.append(FORALL+" ");
-	    if (((String) args.get(0)).indexOf(" ") == -1) {
-		// If just one variable ...
-		sb.append(translateWord(termMap,(String) args.get(0),language));
-	    }
-	    else {
-		// If more than one variable ...
-		sb.append(translateWord(termMap,formatList((String) args.get(0),language),language));
-	    }
-	    sb.append( " " );
-	    // sb.append(" "+HOLDS+": ");
-	    sb.append(translateWord(termMap,(String) args.get(1),language));
-	    ans = sb.toString();
-	    /*
-	    System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	    printSpaces( depth );
-	    System.out.println( "h:return == " + ans );
-	    */
-	    return ans;
-	}
-	if (pred.equalsIgnoreCase("exists")) {
-	    if (((String) args.get(0)).indexOf(" ") == -1) {
-
-		// If just one variable ...
-
-		// NS: The section immediately below seems to be just
-		// wrong, so I've commented it out.
-		/*
-		  if (args.size() != 3) {
-                  for (int i = args.size()-1; i >= 0; i--) {
-		  sb.append(translateWord(termMap,(String) args.get(i),language));
-		  sb.append(" ");
-                  }
-		  ans = sb.toString();
-		  System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-		  printSpaces( depth );
-		  System.out.println( "i:return == " + ans );
-		  return ans;  // not the right english format
-		  }
-		*/
-		if ( isNegMode ) { sb.append(NOTEXISTS+" "); }
-		else { sb.append(EXISTS+" "); }                 
-		sb.append(translateWord(termMap,(String) args.get(0),language));
-	    }
-	    else {
-
-		// If more than one variable ...
-
-		if ( isNegMode ) { sb.append(NOTEXIST+" "); }
-		else { sb.append(EXIST+" "); }
-		sb.append(translateWord(termMap,formatList((String) args.get(0),language),language));
-	    }
-	    sb.append(" "+SUCHTHAT+" ");
-	    sb.append(translateWord(termMap,(String) args.get(1),language));
-	    ans = sb.toString();
-	    /*
-	      System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	      printSpaces( depth );
-	      System.out.println( "j:return == " + ans );
-	    */
-	    return ans;
-	}       
-	/*
-	System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
-	printSpaces( depth );
-	System.out.println( "l:return == \"\"" );
+          System.out.println( "INFO in LanguageFormatter.paraphraseLogicalOperator( " + depth + " ):" );
+          printSpaces( depth );
+          System.out.println( "l:return == \"\"" );
 	*/
 	return "";
     }
@@ -629,8 +653,8 @@ public class LanguageFormatter {
      * @param isNegMode whether the statement is negated, and therefore requiring special formatting.
      * @return the paraphrased statement.
      */
-    private static String paraphraseWithFormat(String stmt, boolean isNegMode, Map phraseMap, 
-					       Map termMap, String language) {
+    private static String paraphraseWithFormat(String stmt, boolean isNegMode, KB kb, 
+                                               Map phraseMap, Map termMap, String language) {
 
 	// System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
 	// System.out.println("neg mode: " + isNegMode);
@@ -697,7 +721,7 @@ public class LanguageFormatter {
 	    // System.out.println("num: " + num);
 	    // System.out.println("str: " + strFormat);            
             arg = f.getArgument(num);
-            para = (Formula.isVariable(arg) ? arg : nlStmtPara(arg,isNegMode,phraseMap,termMap,language,1));
+            para = (Formula.isVariable(arg) ? arg : nlStmtPara(arg,isNegMode,kb,phraseMap,termMap,language,1));
             if (Formula.atom(arg)) {                    // Add the hyperlink placeholder for arg.                
                 strFormat = (Formula.isVariable(arg)
                              ? strFormat.replace(argPointer, para)
@@ -903,7 +927,7 @@ public class LanguageFormatter {
         f.read(stmt);
         //System.out.println("Formula: " + f.theFormula);
         HashMap varMap = f.computeVariableTypes(kb);
-	String nlFormat = nlStmtPara(stmt,false,phraseMap,termMap,language,1);
+	String nlFormat = nlStmtPara(stmt,false,kb,phraseMap,termMap,language,1);
         String charsAllowed = "&#;";
 	if (nlFormat != null) {
 	    while (nlFormat.indexOf("&%") > -1) {
@@ -952,11 +976,13 @@ public class LanguageFormatter {
           case 11: ordinal = getKeyword("eleventh",language); break;
           case 12: ordinal = getKeyword("twelfth",language); break;
         }
+        boolean isArabic = (language.matches(".*(?i)arabic.*") 
+                            || language.equalsIgnoreCase("ar"));
         if (count == 1 && occurrence == 2)
             return getKeyword("another",language);        
         if (count > 1) {
             if (occurrence == 1 || occurrence > 2) {
-                if (language.equalsIgnoreCase("ar")) {
+                if (isArabic) {
                     return ordinal;
                 }
                 else {
@@ -964,7 +990,7 @@ public class LanguageFormatter {
                 }
             }
             else {
-                if (language.equalsIgnoreCase("ar")) {
+                if (isArabic) {
                     return (getKeyword("the",language) + getKeyword("other",language));
                 }
                 else {
@@ -980,7 +1006,7 @@ public class LanguageFormatter {
             else
                 return "a " + ordinal;
         }
-        else if (language.equalsIgnoreCase("ar")) {
+        else if (isArabic) {
             String defArt = getKeyword("the",language);
             if (ordinal.startsWith(defArt)) {
                 // remove the definite article
@@ -1007,6 +1033,8 @@ public class LanguageFormatter {
                                                 boolean isClass, HashMap typeMap) {
 
         String result = new String(form);
+        boolean isArabic = (language.matches(".*(?i)arabic.*") 
+                            || language.equalsIgnoreCase("ar"));
         if (!Formula.isNonEmptyString(varPretty)) {
             varPretty = varType;
         }
@@ -1028,14 +1056,14 @@ public class LanguageFormatter {
                     article = getArticle("kind",count,occurrenceCounter,language);
                     replacement = (article + " " + getKeyword("kind of",language)
                                    + " " + varPretty);
-                    if (language.equalsIgnoreCase("ar")) 
+                    if (isArabic) 
                         replacement = (getKeyword("kind of",language) + " " + varPretty);                    
                     result = result.replaceFirst("\\?" + varString.substring(1), replacement);
                 }
                 else {
                     article = getArticle(varPretty,count,occurrenceCounter,language);
                     replacement = (article + " " + varPretty);
-                    if (language.equalsIgnoreCase("ar")) {
+                    if (isArabic) {
                         String defArt = getKeyword("the",language);
                         if (article.startsWith(defArt) && !varPretty.startsWith(defArt)) {
                             // This has to be refined to insert shadda for sun letters.
