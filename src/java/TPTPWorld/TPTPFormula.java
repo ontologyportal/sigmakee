@@ -33,8 +33,12 @@ public class TPTPFormula {
   }
 
   public void addParent (TPTPFormula that) {
-    this.parent.add(that);
-    that.child.add(this);
+      if (that != null) {
+	  this.parent.add(that);
+	  that.child.add(this);
+      } else {
+	  System.out.println("%WARNING: Trying to add parent null to "+this.toString());
+      }
   }
 
   // given a cnf formula, turn it into an fof formula (universally quantify all variables)  
