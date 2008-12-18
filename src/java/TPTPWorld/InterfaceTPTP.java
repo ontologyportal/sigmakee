@@ -542,17 +542,18 @@ public class InterfaceTPTP {
                                                                          stmt,
                                                                          lineHtml,
                                                                          kbName,
-                                                                         language);
+                                                                         language,
+                                                                         numAnswers+1);
                         } catch (Exception e) {}
                     } else {
 //----Proof does not exist, but was a theorem
-                        resultAll += "Answer 1. Yes [Theorem]<br>";
+                        resultAll += "Answer "+(numAnswers+1)+". Yes [Theorem]<br>";
                     } 
                 } else if (isCounterSatisfiable) {
-                    resultAll += "Answer 1. No [CounterSatisfiable]<br>";
+                    resultAll += "Answer "+(numAnswers+1)+". No [CounterSatisfiable]<br>";
                 } else {
                     if (numAnswers == 0) 
-                        resultAll += "Answer 1. No<br>";
+                        resultAll += "Answer "+(numAnswers+1)+". No<br>";
                 }
 	    }
 //----If lastAnswer != null (we found an answer) && there is an answer (lastAnswer.size() > 0)

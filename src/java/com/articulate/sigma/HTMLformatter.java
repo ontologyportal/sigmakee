@@ -631,6 +631,11 @@ public class HTMLformatter {
      */
     public static String formatProofResult(String result, String stmt, String processedStmt, 
                                            String lineHtml, String kbName, String language) {
+	return formatProofResult(result, stmt, processedStmt, lineHtml, kbName, language, 1);
+    }
+
+    public static String formatProofResult(String result, String stmt, String processedStmt, 
+                                           String lineHtml, String kbName, String language, int answerOffset) {
 
 	// System.out.println( "INFO in HTMLformatter.formatProofResult(): " + result );
 
@@ -652,7 +657,7 @@ public class HTMLformatter {
                 if (i != 0) 
                     html = html.append(lineHtml + "\n");
                 html = html.append("Answer " + "\n");
-                html = html.append(i+1);
+                html = html.append(i+answerOffset);
                 html = html.append(". " + pp.returnAnswer(i) + "\n");
                 if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
                     html = html.append("<P><TABLE width=95%%>" + "\n");
