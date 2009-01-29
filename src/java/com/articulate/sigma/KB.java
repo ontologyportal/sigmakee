@@ -4082,7 +4082,7 @@ public class KB {
             System.out.println("INFO in KB.writeTPTPFile(): Writing " + canonicalPath);
 
             pr = new PrintWriter(new FileWriter(outputFile));
-            pr.println("% Copyright 2007 Articulate Software Incorporated");
+            pr.println("% Copyright 2009 Articulate Software Incorporated");
             pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
             pr.println("% This is a translation to TPTP of KB " + 
                        sanitizedKBName + "\n");
@@ -4112,7 +4112,8 @@ public class KB {
             f = null;
             while (ite.hasNext()) {
                 f = (Formula) ite.next();
-
+                String sourceFile = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator)+1,
+                                                           f.sourceFile.lastIndexOf("."));
                 // System.out.println("  f == " + f);
 
                 tptpFormulas = f.getTheTptpFormulas();
@@ -4124,10 +4125,10 @@ public class KB {
                 //----relation name has a numeric suffix corresponding to the
                 //----number of the relation's arguments.  This is required
                 //----for some provers, such as E and EP.
-                if (onlyPlainFOL 
-                    && !tptpFormulas.isEmpty() 
-                    && !KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes")
-                    && f.containsVariableArityRelation(this)) {
+                if (onlyPlainFOL && !tptpFormulas.isEmpty() && 
+                    !KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes") && 
+                    f.containsVariableArityRelation(this)) {
+
                     Formula tmpF = new Formula();
                     tmpF.read(f.theFormula);
                     List processed = tmpF.preProcess(false, this);
@@ -4176,7 +4177,9 @@ public class KB {
                             }
                         }
                     }
-                    pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                    //pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                    //           ",axiom,(" + theTPTPFormula + ")).");
+                    pr.println("fof(kb_" + sourceFile + "_" + axiomIndex++ +
                                ",axiom,(" + theTPTPFormula + ")).");
                     // if (commentedFormula) {
                     pr.println();
