@@ -32,43 +32,44 @@ August 9, Acapulco, Mexico.
     String result = "";
     KB kb = KBmanager.getMgr().getKB(kbName);
     if (kb == null || kbName == null)
-        response.sendRedirect("KBs.jsp");  // That KB does not exist    
+        response.sendRedirect("KBs.jsp");  // That KB does not exist  
+
     if (saveAs != null && saveAs.equals("prolog")) {
         String prologFile = kb.writePrologFile(kb.name + ".pl");
         String statusStr = ( "\n<br/>Wrote file " + prologFile + "\n<br/>" );
-        if ( ! Formula.isNonEmptyString(prologFile) ) {
+        if (!Formula.isNonEmptyString(prologFile))
             statusStr = "\n<br/>Could not write a Prolog file\n<br/>";
-        }
-        KBmanager.getMgr().setError( KBmanager.getMgr().getError() + statusStr );
-    }
-    if (saveAs != null && (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL"))) {
-    // Force translation of the KB to TPTP, even if the user has not
-    // requested this on the Preferences page.
-	if ( ! KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes") ) {
-	    System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas" );
-	    kb.tptpParse();
-	}
-	boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
-        String tptpFile = kb.writeTPTPFile(kb.name + ".tptp",null,onlyPlainFOL,"");
-	String statusStr = ( "\n<br/>Wrote file " + tptpFile + "\n<br/>" );
-	if ( ! Formula.isNonEmptyString(tptpFile) ) {
-	    statusStr = "\n<br/>Could not write a TPTP file\n<br/>";
-	}
         KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
     }
+
+    if (saveAs != null && (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL"))) {
+        // Force translation of the KB to TPTP, even if the user has not
+        // requested this on the Preferences page.
+    	if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
+    	    System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas");
+    	    kb.tptpParse();
+    	}
+    	boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
+        String tptpFile = kb.writeTPTPFile(saveFile + ".tptp",null,onlyPlainFOL,"");
+    	String statusStr = ( "\n<br/>Wrote file " + tptpFile + "\n<br/>" );
+    	if (!Formula.isNonEmptyString(tptpFile)) 
+    	    statusStr = "\n<br/>Could not write a TPTP file\n<br/>";
+        KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
+    }
+
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
         owt.kb = kb;
         owt.write(saveFile);
     }
-    if (saveAs != null && saveAs.equals("KIF")) {
+
+    if (saveAs != null && saveAs.equals("KIF"))
         kb.writeFile(kbName + "kif");
-    }
+
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
-        if (i == -1) {
-            System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
-        }
+        if (i == -1)
+            System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());       
         else {
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
@@ -76,19 +77,19 @@ August 9, Acapulco, Mexico.
         System.out.println("INFO in Manifest.jsp");
         System.out.println("  constituent == " + constituent);
         System.out.println("  call: kb.reload()");
-	result = kb.reload();
+	    result = kb.reload();
     }
     else if (constituent != null) {
         kb.addConstituent(constituent, true, false);
         //System.out.println("INFO in Manifest.jsp (top): The error string is : " + KBmanager.getMgr().getError());
         KBmanager.getMgr().writeConfiguration();
-	if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
+	    if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
             System.out.println("INFO in Manifest.jsp");
             System.out.println("  constituent == " + constituent);
             System.out.println("  call: kb.cache()");
-	    kb.cache();
-	}
-	kb.loadVampire();
+	        kb.cache();
+	    }
+	    kb.loadVampire();
     }
 %>
 <HTML>
