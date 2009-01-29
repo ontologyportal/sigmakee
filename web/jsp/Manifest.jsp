@@ -25,6 +25,8 @@ August 9, Acapulco, Mexico.
 */
 
     String kbName = request.getParameter("kb");
+
+    String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
     String saveAs = request.getParameter("saveAs");
     String constituent = request.getParameter("constituent");
     String saveFile = request.getParameter("saveFile");
@@ -35,7 +37,7 @@ August 9, Acapulco, Mexico.
         response.sendRedirect("KBs.jsp");  // That KB does not exist  
 
     if (saveAs != null && saveAs.equals("prolog")) {
-        String prologFile = kb.writePrologFile(kb.name + ".pl");
+        String prologFile = kb.writePrologFile(kbDir + kb.name + ".pl");
         String statusStr = ( "\n<br/>Wrote file " + prologFile + "\n<br/>" );
         if (!Formula.isNonEmptyString(prologFile))
             statusStr = "\n<br/>Could not write a Prolog file\n<br/>";
@@ -50,7 +52,7 @@ August 9, Acapulco, Mexico.
     	    kb.tptpParse();
     	}
     	boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
-        String tptpFile = kb.writeTPTPFile(saveFile + ".tptp",null,onlyPlainFOL,"");
+        String tptpFile = kb.writeTPTPFile(kbDir + saveFile + ".tptp",null,onlyPlainFOL,"");
     	String statusStr = ( "\n<br/>Wrote file " + tptpFile + "\n<br/>" );
     	if (!Formula.isNonEmptyString(tptpFile)) 
     	    statusStr = "\n<br/>Could not write a TPTP file\n<br/>";
@@ -60,11 +62,11 @@ August 9, Acapulco, Mexico.
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
         owt.kb = kb;
-        owt.write(saveFile);
+        owt.write(kbDir + saveFile);
     }
 
     if (saveAs != null && saveAs.equals("KIF"))
-        kb.writeFile(kbName + "kif");
+        kb.writeFile(kbDir + kbName + ".kif");
 
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
