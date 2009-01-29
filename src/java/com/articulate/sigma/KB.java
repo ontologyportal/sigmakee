@@ -3862,6 +3862,7 @@ public class KB {
     }
 
     /** *************************************************************
+     * @param fname - the name of the file to write, including full path.
      */
     public String writePrologFile(String fname) {
 
@@ -4025,6 +4026,7 @@ public class KB {
     }
 
     /** *************************************************************
+     *  Sets isQuestion and calls writeTPTPFile() below
      */
     public String writeTPTPFile(String fileName,
                                 Formula conjecture, 
@@ -4039,6 +4041,8 @@ public class KB {
     }
 
     /** *************************************************************
+     *  Write all axioms in the KB to TPTP format.
+     * @param fname - the name of the file to write, including full path.
      */
     public String writeTPTPFile(String fileName,
                                 Formula conjecture, 
@@ -4050,7 +4054,7 @@ public class KB {
         String sanitizedKBName;
         File outputFile;
         PrintWriter pr = null;
-        int axiomIndex = 1;
+        int axiomIndex = 1;         // a count appended to axiom names to make a unique ID
         TreeSet orderedFormulae;
         Formula f = null;
         String theTPTPFormula;
@@ -4060,15 +4064,9 @@ public class KB {
         sanitizedKBName = name.replaceAll("\\W","_");
         try {
 
-            System.out.println("INFO in KB.writeTPTPFile(\"" 
-                               + fileName 
-                               + "\", " 
-                               + conjecture 
-                               + ", " 
-                               + onlyPlainFOL
-                               + ", \""
-                               + reasoner
-                               + "\")");
+            System.out.println("INFO in KB.writeTPTPFile(\"" + fileName + "\", " +
+                               conjecture + ", " + onlyPlainFOL + ", \"" +
+                               reasoner + "\")");
 
             //----If file name is a directory, create filename therein
             if (fileName == null) {
@@ -4110,10 +4108,14 @@ public class KB {
             List tptpFormulas = null;
             Iterator tptpIt = null;
             f = null;
+            String oldSourceFile = "";
             while (ite.hasNext()) {
                 f = (Formula) ite.next();
                 String sourceFile = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator)+1,
                                                            f.sourceFile.lastIndexOf("."));
+                if (!sourceFile.equals(oldSourceFile)) 
+                    axiomIndex = 1;
+                oldSourceFile = sourceFile;
                 // System.out.println("  f == " + f);
 
                 tptpFormulas = f.getTheTptpFormulas();
