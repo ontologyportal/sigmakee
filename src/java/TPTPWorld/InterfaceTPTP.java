@@ -317,7 +317,13 @@ public class InterfaceTPTP {
         //----Add KB contents here
         conjectureFormula = new Formula();
         conjectureFormula.theFormula = stmt;
+
+
+        String oldConjecture = conjectureFormula.theFormula;
         conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
+        boolean suppressAnswerExtraction = (oldConjecture == conjectureFormula.theFormula);
+        //if (suppressAnswerExtraction) resultAll += "suppress definite answers<br/>";
+
         conjectureFormula.tptpParse(true,kb);
         Iterator it = conjectureFormula.getTheTptpFormulas().iterator();
         String theTPTPFormula = (String) it.next();
@@ -469,6 +475,13 @@ public class InterfaceTPTP {
                 lastAnswer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, lastAnswer);
                 newResult = TPTP2SUMO.convert(result, false);
             }
+
+
+
+
+
+
+
             if (quietFlag.equals("IDV") && location.equals("remote")) {
                 if (SystemOnTPTP.isTheorem(originalResult)) {
                     int size = SystemOnTPTP.getTPTPFormulaSize(result);
@@ -515,7 +528,14 @@ public class InterfaceTPTP {
             } else if (quietFlag.equals("hyperlinkedKIF")) {
 	        if (originalAnswer == null) {
   		    originalAnswer = lastAnswer;
-                } else {
+
+
+
+                } //else {
+
+
+
+
 //----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
 	            if (!lastAnswer.equals("")) {
                         //resultAll += "<br>There was an Answer before! <br>";
@@ -526,8 +546,12 @@ public class InterfaceTPTP {
                         String bindProblem = axioms + " " + bindConjecture;
                         String bindResult = AnswerFinder.findProof(bindProblem, BuiltInDir);
                         newResult = TPTP2SUMO.convert(bindResult, lastAnswer, true);
-                    }
-                }
+			}
+
+
+		    //}
+
+
                 boolean isTheorem = SystemOnTPTP.isTheorem(originalResult);
                 boolean isCounterSatisfiable = SystemOnTPTP.isCounterSatisfiable(originalResult); 
 	        boolean proofExists = SystemOnTPTP.proofExists(originalResult);
@@ -535,6 +559,12 @@ public class InterfaceTPTP {
                 if (isTheorem) { 
                     if (proofExists) {
                         try {
+//----Remove bindings, if no existential quantifiers have been made explicit, i.e., the query is closed
+			    if (suppressAnswerExtraction) {
+				newResult = newResult.substring(0,newResult.indexOf("  <bindingSet"))+
+				    newResult.substring(newResult.indexOf("</bindingSet>")+14);
+				lastAnswer = null;
+			    }
                             // System.out.println(newResult);
 //----If a proof exists, print out as hyperlinked kif
                             resultAll += HTMLformatter.formatProofResult(newResult,

@@ -80,8 +80,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     else 
         show.append ("</b></FONT></td></tr></table>\n");  
     int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
-    if (KBmanager.getMgr().getPref("userName") != null && 
-        KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+    if (KBmanager.getMgr().getPref("userRole") != null && 
+        KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
 

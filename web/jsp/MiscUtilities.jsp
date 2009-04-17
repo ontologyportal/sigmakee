@@ -30,7 +30,7 @@ String footer = DocGen.getInstance().footer;
 String filename = "";
 KB kb = null;
 
-  if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+  if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
        response.sendRedirect("KBs.jsp");     
   }
   else {

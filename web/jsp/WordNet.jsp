@@ -65,8 +65,8 @@
 </form>
 
 <%
-          if (KBmanager.getMgr().getPref("userName") != null && 
-              KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+          if (KBmanager.getMgr().getPref("userRole") != null && 
+              KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
 %>
 
 <FORM name=writeProlog ID=writeProlog action="WordNet.jsp" method="GET">

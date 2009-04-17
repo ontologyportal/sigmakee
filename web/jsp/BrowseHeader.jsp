@@ -24,15 +24,15 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
           <td valign="bottom"></td>
           <td><b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|&nbsp;
 <%
-              if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
-                  KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userRole") != null && 
+                  KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
                   out.println("<A href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language+ "\"><b>Ask/Tell</b></A>&nbsp;|&nbsp;");
               }
 %>
               <a href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>&term=<%=term %>"><b>Graph</b></a>&nbsp;|&nbsp;
 <%
-              if (KBmanager.getMgr().getPref("userName") != null && 
-                  KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+              if (KBmanager.getMgr().getPref("userRole") != null && 
+                  KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
                   out.println("<a href=\"Properties.jsp\"><b>Prefs</b></a>");
               }
 %>

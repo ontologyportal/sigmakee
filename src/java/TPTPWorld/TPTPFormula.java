@@ -78,5 +78,15 @@ public class TPTPFormula {
     return res;
   }
 
+    public String getRole () {
+	if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
+	    return ((SimpleTptpParserOutput.AnnotatedFormula)item).getRole().toString();
+	} else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
+	    return ((SimpleTptpParserOutput.AnnotatedClause)item).getRole().toString();
+	}
+	return "plain";
+    }
+      
+
 }
 

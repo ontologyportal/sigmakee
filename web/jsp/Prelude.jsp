@@ -22,14 +22,15 @@
   String URLString = request.getRequestURL().toString();
   String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
   //System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
-  if (KBmanager.getMgr().getPref("userName") != null && 
-      !KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin") && !userPages.contains(pageString)) { 
+  if (KBmanager.getMgr().getPref("userRole") != null && 
+      !KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator") && !userPages.contains(pageString)) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0;URL=login.html\">");
       out.println("</html>");
       return;
   }
   if (!Formula.isNonEmptyString(KBmanager.getMgr().getPref("userName"))
-      && !Formula.isNonEmptyString(request.getParameter("userName"))) { 
+      && !Formula.isNonEmptyString(request.getParameter("userName"))
+      && !Formula.isNonEmptyString(request.getParameter("newuser"))) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=login.html\">");
       out.println("</html>");
       return;

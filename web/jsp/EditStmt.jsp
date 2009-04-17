@@ -18,7 +18,7 @@ August 9, Acapulco, Mexico.
   // @param file: the file name.
   // @param line: the line number in the file the cursor should point to at start.
 
-if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))         
+if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))         
        response.sendRedirect("KBs.jsp");     
 
   String formID = request.getParameter("formID");

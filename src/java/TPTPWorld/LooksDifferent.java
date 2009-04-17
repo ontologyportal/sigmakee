@@ -206,6 +206,9 @@ public class LooksDifferent {
 			if (((formula.item).toString()).contains(predicate_ld)) {
 				continue;
 			}
+                        if ((formula.getRole()).contains("conjecture")) {
+				continue;
+			}
 			axioms += formula.fofify();
 		} 	
 		return axioms;

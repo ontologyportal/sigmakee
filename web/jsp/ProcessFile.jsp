@@ -19,7 +19,7 @@ String namespace = "";
 String language = "";
 KB kb = null;
 
-  if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) {
+  if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
        response.sendRedirect("KBs.jsp");     
   }
   else {      

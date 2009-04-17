@@ -138,7 +138,7 @@ August 9, Acapulco, Mexico.
           <TD><%=aConstituent%>&nbsp;</TD>
           <TD>
 
-          <% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
+          <% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
                 <A href="Manifest.jsp?delete=true&constituent=<%=aConstituent%>&kb=<%=kbName%>">Remove</A>            
           <%     } %>
           </TD>
@@ -153,7 +153,7 @@ August 9, Acapulco, Mexico.
 %>
 <P>
 
-<% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
+<% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
     <hr><B>Add a new constituent</B>
     <FORM name=kbUploader ID=kbUploader action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
         <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 

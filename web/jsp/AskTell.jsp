@@ -398,7 +398,7 @@ August 9, Acapulco, Mexico.
 
     <INPUT type="submit" name="request" value="Ask">
 
-<% if (KBmanager.getMgr().getPref("userName") != null && KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin")) { %>
+<% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
     <INPUT type="submit" name="request" value="Tell"><BR>
 <% } %>
 </FORM>

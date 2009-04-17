@@ -29,7 +29,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
-  if (!KBmanager.getMgr().getPref("userName").equalsIgnoreCase("admin"))         
+  if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))         
        response.sendRedirect("KBs.jsp");     
 
     String skbName = request.getParameter("skb");

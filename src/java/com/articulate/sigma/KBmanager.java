@@ -207,6 +207,25 @@ public class KBmanager {
      * called "configuration".  It also creates the KBs directory and an empty
      * configuration file if none exists.
      */
+
+    private static void copyFile(File in, File out)  
+    throws IOException {  
+        FileInputStream fis     = new FileInputStream(in);  
+        FileOutputStream fos    = new FileOutputStream(out);  
+         
+        try {  
+            byte[] buf = new byte[1024];  
+            int i = 0;  
+            while ((i = fis.read(buf)) != -1) {  
+                fos.write(buf, 0, i);  
+            }  
+        }  
+        finally {  
+            if (fis != null) fis.close();  
+            if (fos != null) fos.close();  
+        }  
+    }     
+
     private SimpleElement readConfiguration() throws IOException {
 
         SimpleElement configuration = null;
@@ -222,9 +241,17 @@ public class KBmanager {
             kbDir.mkdir();
             preferences.put("kbDir", kbDir.getCanonicalPath());
         }
-        File configFile = new File(kbDir, CONFIG_FILE);
+        String username = (String) preferences.get("userName");
+        String userrole = (String) preferences.get("userRole");
+        String config_file = ((username != null && 
+                               userrole.equalsIgnoreCase("administrator") && 
+                               !username.equalsIgnoreCase("admin"))?username+ "_":"") + CONFIG_FILE;
+        File configFile = new File(kbDir, config_file);
+        File global_config = new File(kbDir, CONFIG_FILE);
+        //File configFile = new File(kbDir, CONFIG_FILE);
         if (!configFile.exists()) {
-            writeConfiguration();
+            if (global_config.exists()) copyFile(global_config,configFile);
+            else writeConfiguration();
         }
 
         BufferedReader br = null;
@@ -265,7 +292,7 @@ public class KBmanager {
                 }
                 System.out.println("INFO in KBmanager.initializeOnce()");
                 System.out.println("  kbDir == " + preferences.get("kbDir"));
-                LanguageFormatter.readKeywordMap((String) preferences.get("kbDir"));
+                PasswordService.getInstance();
             }
             catch (IOException ioe) {
                 System.out.println("Error in KBmanager.initializeOnce(): Configuration file not read.");
@@ -275,6 +302,7 @@ public class KBmanager {
             // System.out.println( "inferenceEngine == " + KBmanager.getMgr().getPref("inferenceEngine") );
         }
     }
+
 
     /** ***************************************************************
      * Double the backslash in a filename so that it can be saved to a text
@@ -350,7 +378,12 @@ public class KBmanager {
         Iterator it; 
         String dir = (String) preferences.get("kbDir");
         File fDir = new File(dir);
-        File file = new File(fDir, CONFIG_FILE);
+        String username = (String) preferences.get("userName");
+        String userrole = (String) preferences.get("userRole");
+        String config_file = ((username != null && userrole.equalsIgnoreCase("administrator") && !username.equalsIgnoreCase("admin"))?username + "_" :"") + CONFIG_FILE;
+        File file = new File(fDir, config_file);
+        // File file = new File(fDir, CONFIG_FILE);
+        System.out.println("wrote "+fDir+"/"+"CONFIG_FILE");
         String key;
         String value;
         KB kb = null;
@@ -365,7 +398,7 @@ public class KBmanager {
             if (key.compareTo("kbDir") == 0 || key.compareTo("celtdir") == 0 || 
                 key.compareTo("inferenceEngine") == 0 || key.compareTo("inferenceTestDir") == 0)
                 value = escapeFilename(value);
-            if (key.compareTo("userName") != 0) {
+            if ((key.compareTo("userName") != 0) && (key.compareTo("userRole") != 0)) {
                 SimpleElement preference = new SimpleElement("preference");
                 preference.setAttribute("name",key);
                 preference.setAttribute("value",value);
@@ -432,6 +465,18 @@ public class KBmanager {
         if (manager == null) {
             manager = new KBmanager();
         }
+        return manager;
+    }
+
+    /** ***************************************************************
+     * Reset the one instance of KBmanager from its class variable.
+     */
+    public static KBmanager newMgr(String username) {
+
+        manager = new KBmanager();
+        manager.initialized = false;
+        manager.setPref("userName",username);
+        manager.setPref("userRole",PasswordService.getInstance().getUser(username).getRole());
         return manager;
     }
     
