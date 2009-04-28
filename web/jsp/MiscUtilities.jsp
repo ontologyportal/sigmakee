@@ -25,8 +25,8 @@ String namespace = "";
 String language = "";
 String term = "";
 String relation = "";
-String header = DocGen.getInstance().header;
-String footer = DocGen.getInstance().footer;
+String header = DocGen.getInstance().getTitleText();
+String footer = DocGen.getInstance().getFooterText();
 String filename = "";
 KB kb = null;
 
@@ -55,10 +55,10 @@ KB kb = null;
       term = request.getParameter("term");
       relation = request.getParameter("relation");
       filename = request.getParameter("filename");
-      if (!DB.emptyString(header)) 
-          DocGen.getInstance().header = header;
-      if (!DB.emptyString(footer)) 
-          DocGen.getInstance().footer = footer;
+      if (!StringUtil.emptyString(header)) 
+          DocGen.getInstance().setTitleText(header);
+      if (!StringUtil.emptyString(footer)) 
+          DocGen.getInstance().setFooterText(footer);
       String action = request.getParameter("action");
       language = HTMLformatter.processLanguage(language,kb);
       if (action != null && action != "" && action.equals("generateDocs")) 
@@ -104,8 +104,8 @@ KB kb = null;
         <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><p>
     <b>Generate HTML</b><P>
     <table>
-        <tr><td>Document header:&nbsp;</td><td><input type="text" name="header" size=100 value="<%=DocGen.getInstance().header%>"></td></tr>
-        <tr><td>Document footer:&nbsp;</td><td><input type="text" name="footer" size=100 value="<%=DocGen.getInstance().footer%>"></td></tr>
+        <tr><td>Document header:&nbsp;</td><td><input type="text" name="header" size=100 value="<%=DocGen.getInstance().getTitleText()%>"></td></tr>
+        <tr><td>Document footer:&nbsp;</td><td><input type="text" name="footer" size=100 value="<%=DocGen.getInstance().getFooterText()%>"></td></tr>
         <tr><td><input type="submit" name="action" value="generateDocs">&nbsp;&nbsp;</td><td>Generate all HTML pages for the KB</td></tr>
         <tr><td><input type="submit" name="action" value="generateSingle">&nbsp;&nbsp;</td><td>Generate a single HTML page for the KB</td></tr>
     </table><p>

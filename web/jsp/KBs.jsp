@@ -32,57 +32,55 @@ August 9, Acapulco, Mexico.
 */
 
 /* new Password Validation */
+
+    String prefUserName = KBmanager.getMgr().getPref("userName");
+    String greeting = ("Welcome " + (StringUtil.isNonEmptyString(prefUserName)
+                                     ? prefUserName
+                                     : ""));
     
-    if (request.getParameter("userName") != null &&
-        request.getParameter("password") != null &&
-        PasswordService.getInstance().authenticate(request.getParameter("userName"),request.getParameter("password")))
-        {
-          KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
-          out.println("Welcome " + KBmanager.getMgr().getPref("userRole") + 
-                      " " + KBmanager.getMgr().getPref("userName") + ".");
+    if (StringUtil.isNonEmptyString(request.getParameter("userName"))) {
+        if (StringUtil.isNonEmptyString(request.getParameter("password")) &&
+            PasswordService.getInstance().authenticate(request.getParameter("userName"),
+                                                       request.getParameter("password")))
+            {
+                KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
+                greeting = ("Welcome " + KBmanager.getMgr().getPref("userRole") + 
+                            " " + KBmanager.getMgr().getPref("userName"));
+            }
+        else if (!request.getParameter("userName").equalsIgnoreCase("guest") &&
+                 StringUtil.isNonEmptyString(request.getParameter("password1")) &&
+                 StringUtil.isNonEmptyString(request.getParameter("password2")) &&
+                 request.getParameter("password2").equals(request.getParameter("password1"))) {
+
+            if (!PasswordService.getInstance().userExists(request.getParameter("userName"))) {
+                User newuser = new User();
+                newuser.username = request.getParameter("userName");
+                newuser.setRole("user");
+                newuser.password = PasswordService.getInstance().encrypt(request.getParameter("password1"));
+                PasswordService.getInstance().addUser(newuser);
+                KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
+            }
+            else if (PasswordService.getInstance().authenticate(request.getParameter("userName"),
+                                                                request.getParameter("oldpassword"))) {
+                User updateuser = PasswordService.getInstance().getUser(request.getParameter("userName"));
+                updateuser.password = PasswordService.getInstance().encrypt(request.getParameter("password1"));
+                PasswordService.getInstance().updateUser(updateuser);
+                KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
+            }
         }
-    else if (request.getParameter("userName") != null &&
-             request.getParameter("userName") != "guest" &&
-             request.getParameter("password1") != null &&
-             request.getParameter("password2") != null &&
-             request.getParameter("password2") == request.getParameter("password2") &&
-             !PasswordService.getInstance().userExists(request.getParameter("userName")))
-       {
-       User newuser = new User();
-       newuser.username = request.getParameter("userName");
-       newuser.setRole("user");
-       newuser.password = PasswordService.getInstance().encrypt(request.getParameter("password1"));
-       PasswordService.getInstance().addUser(newuser);
-       KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
-       }
-    else if (request.getParameter("userName") != null &&
-             request.getParameter("userName") != "guest" &&
-             request.getParameter("oldpassword") != null &&
-             request.getParameter("password1") != null &&
-             request.getParameter("password2") != null &&
-             request.getParameter("password2") == request.getParameter("password2") &&
-             PasswordService.getInstance().authenticate(request.getParameter("userName"),request.getParameter("oldpassword")))
-       {
-       User updateuser = PasswordService.getInstance().getUser(request.getParameter("userName"));
-       updateuser.password = PasswordService.getInstance().encrypt(request.getParameter("password1"));
-       PasswordService.getInstance().updateUser(updateuser);
-       KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
-       }
-    else if (request.getParameter("userName") != null)
-       {
-       KBmanager.getMgr().setPref("userName","guest");
-         //out.println("Could not verify user " + request.getParameter("userName") +
-         out.println("You are logged in as guest.");
-       }
-
-
+        else {
+            KBmanager.getMgr().setPref("userName","guest");
+            //out.println("Could not verify user " + request.getParameter("userName") +
+            greeting = "You are logged in as guest";
+        }
+    }
 
     String hostname = KBmanager.getMgr().getPref("hostname");
-    if (hostname == null)
-       hostname = "localhost";
+    if (StringUtil.emptyString(hostname))
+        hostname = "localhost";
     String port = KBmanager.getMgr().getPref("port");
-    if (port == null)
-       port = "8080";
+    if (StringUtil.emptyString(port))
+        port = "8080";
 %>
 
 			
@@ -94,7 +92,7 @@ August 9, Acapulco, Mexico.
                     <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
                     <td>&nbsp;&nbsp;</td>
                     <td align="left" valign="top"><img src="pixmaps/logoText.gif"><BR>
-                        <B>Welcome <%=KBmanager.getMgr().getPref("userName")%></B></td>
+                        <b><%=greeting%></b></td>
                 </tr>
                 
             </table>
@@ -111,17 +109,22 @@ August 9, Acapulco, Mexico.
   Iterator kbNames = null;
   String kbName = request.getParameter("kb");
   String remove = request.getParameter("remove");  // Delete the given KB
-  if (remove != null && remove.equalsIgnoreCase("true")) 
+  if (StringUtil.isNonEmptyString(remove) && remove.equalsIgnoreCase("true")) 
       KBmanager.getMgr().removeKB(kbName);
 
 
-  if (KBmanager.getMgr().getKBnames() != null && KBmanager.getMgr().getKBnames().size() > 0) {
+  if (KBmanager.getMgr().getKBnames() != null && !KBmanager.getMgr().getKBnames().isEmpty()) {
       System.out.println(KBmanager.getMgr().getKBnames().size());
       kbNames = KBmanager.getMgr().getKBnames().iterator();
       System.out.println("INFO in KB.jsp: Got KB names.");
   }
+
+  boolean isAdministrator = 
+      (StringUtil.isNonEmptyString(KBmanager.getMgr().getPref("userRole"))
+       && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"));
+
   String defaultKB = null;
-  if (KBmanager.getMgr().getKBnames() == null || KBmanager.getMgr().getKBnames().size() == 0)
+  if (KBmanager.getMgr().getKBnames() == null || KBmanager.getMgr().getKBnames().isEmpty())
       out.println("<H2>No Knowledge Bases loaded.</H2>");
   else {
 %>
@@ -149,7 +152,7 @@ August 9, Acapulco, Mexico.
 <%
           out.println("<TD>");
           if (odd) odd = false;
-          if (kb.constituents == null || kb.constituents.size() == 0)
+          if (kb.constituents == null || kb.constituents.isEmpty())
               out.println("No <A href=\"Manifest.jsp?kb=" + kbName + "\">constituents</A>");
           else {
               out.print("(" + kb.constituents.size() + ")&nbsp;");
@@ -157,36 +160,26 @@ August 9, Acapulco, Mexico.
           }
           out.println("</TD>");          
           out.println("<TD><A href=\"Browse.jsp?kb=" + kbName + "&lang=" + language + "\">Browse</A></TD>");                                                      
-          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=" + language + "\">Graph</A></TD>");                                                      
-          if (KBmanager.getMgr().getPref("userRole") != null && 
-              KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=" + language + "\">Graph</A></TD>");    
+
+          if (isAdministrator) {
+
               out.println("<TD><A href=\"Diag.jsp?kb=" + kbName + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
-          }
-          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userRole") != null && 
-              KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
-              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=" + language + "\">Consistency Check</A></TD>"); 
-          }
-//          if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userName") != null && 
-          if (KBmanager.getMgr().getPref("userRole") != null && 
-              KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+
+              if (kb.inferenceEngine != null) {
+                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=" + language + "\">Consistency Check</A></TD>"); 
+              }
+
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=" + language + "\">Inference Tests</A></TD>");
-          }
-          if (kb.celt != null && KBmanager.getMgr().getPref("userRole") != null && 
-              KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+
+              if (kb.celt != null) {
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName + "&lang=" + language + "\">CELT Tests</A></TD>");
-          }
-          if (KBmanager.getMgr().getPref("userRole") != null && 
-              KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
-              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=" + language + "\">WordNet Check</A></TD>");                                                           
-          }
+              }
 
-          if (KBmanager.getMgr().getPref("userRole") != null && 
-              KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=" + language + "\">WordNet Check</A></TD>");
+
               out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName + "\">Ask/Tell</A>&nbsp;</TD>");
-          }
 
-          if (KBmanager.getMgr().getPref("userRole") != null 
-              && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
               out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName + "\">Remove</A></TD></TR>");
           }
       }
@@ -198,7 +191,8 @@ August 9, Acapulco, Mexico.
 <P>
 <P>
 
-<% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
+<% 
+    if (isAdministrator) { %>
     <B>Add a new knowledge base</B>
     <FORM name=kbUploader ID=kbUploader action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
         <B>KB Name</B><INPUT type="TEXT" name=kb><br> 
@@ -207,13 +201,9 @@ August 9, Acapulco, Mexico.
     </FORM><P>
 <%  } 
 
-  if (KBmanager.getMgr().getPref("userRole") != null && 
-      KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+  if (isAdministrator) {
       out.println("<A href=\"MiscUtilities.jsp?kb=" + kbName + "\">Other Utilities</A><P>");
-  }
 
-  if (KBmanager.getMgr().getPref("userRole") != null && 
-      KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
       kbNames = KBmanager.getMgr().getKBnames().iterator();
     
       while (kbNames.hasNext()) {
