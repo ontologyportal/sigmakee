@@ -134,18 +134,21 @@ public class KIF {
 
     /** ***************************************************************
      */
-    private void parse(Reader r) {
+    private Set parse(Reader r) {
 
-        System.out.println("ENTER KIF.parse(" + r + ")");
+        // System.out.println("ENTER KIF.parse(" + r + ")");
 
         int mode = this.getParseMode();
         
-        System.out.println("INFO in KIF.parse()");
-        System.out.println("  filename == " + this.getFilename());
-        System.out.println("  parseMode == "
-                           + ((mode == RELAXED_PARSE_MODE) 
-                              ? "RELAXED_PARSE_MODE" 
-                              : "NORMAL_PARSE_MODE"));
+        /*
+          System.out.println("INFO in KIF.parse()");
+          System.out.println("  filename == " + this.getFilename());
+          System.out.println("  parseMode == "
+          + ((mode == RELAXED_PARSE_MODE) 
+          ? "RELAXED_PARSE_MODE" 
+          : "NORMAL_PARSE_MODE"));
+        */
+
         String key = null;
         ArrayList keySet;
         StringBuffer expression = new StringBuffer(40);
@@ -163,9 +166,11 @@ public class KIF {
         ArrayList list;
       
         if (r == null) {
-            System.err.println("No Input Reader Specified");
+            String errStr = "No Input Reader Specified";
+            warningSet.add(errStr);
+            System.err.println(errStr);
             System.out.println("EXIT KIF.parse(" + r + ")");
-            return;
+            return warningSet;
         }
         try {
             st = new StreamTokenizer_s(r);
@@ -190,7 +195,7 @@ public class KIF {
                             //System.out.print("INFO in KIF.parse(): Parsing Error:");
                             //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
                             throw new ParseException("Parsing error in " + filename + 
-                                                     ": possible missing close parenthesis near line "  
+                                                     ": possible missed closing parenthesis near line "  
                                                      + f.startLine, f.startLine);
                         }
                         continue;
@@ -252,8 +257,7 @@ public class KIF {
                                                          f.startLine);  
                         }
                         // formulaList.add(expression.intern());
-                        if (formulaSet.size() % 100 == 0) 
-                            System.out.print('.');
+                        // if (formulaSet.size() % 100 == 0) System.out.print('.');
                         keySet.add(f.theFormula);           // Make the formula itself a key
                         keySet.add(f.createID());  
                         f.endLine = st.lineno() + totalLinesForComments;
@@ -365,14 +369,14 @@ public class KIF {
             } while (st.ttype != StreamTokenizer.TT_EOF);
             if (keySet.size() != 0 || expression.length() > 0)
                 throw new ParseException("Parsing error in " + filename 
-                                         + ": Missing closing paranthesis near line " + f.startLine,f.startLine);            
+                                         + ": Missed closing parenthesis near line " + f.startLine,f.startLine);            
         }
         catch (Exception ex) {
             warningSet.add("Error in KIF.parse(): " + ex.getMessage());
             System.out.println("Error in KIF.parse(): " + ex.getMessage());
             ex.printStackTrace();
         }
-        System.out.println( "x" );
+        // System.out.println( "x" );
 
         if (warningSet.size() > 0) {
             Iterator it = warningSet.iterator();
@@ -382,8 +386,8 @@ public class KIF {
                 System.out.println((w.startsWith("Error") ? w : "Warning in KIF.parse(): " + w));
             }
         }
-        System.out.println("EXIT KIF.parse(" + r + ")");
-        return;
+        // System.out.println("EXIT KIF.parse(" + r + ")");
+        return warningSet;
     }
 
     /** ***************************************************************
@@ -543,10 +547,17 @@ public class KIF {
     public String parseStatement(String formula) {
 
         StringReader r = new StringReader(formula);
+        boolean isError = false;
         try {
-            parse(r);
+            isError = !parse(r).isEmpty();
+            if (isError) {
+                String msg = "Error parsing " + formula;
+                System.out.println(msg);
+                return msg;
+            }
         }
         catch (Exception e) {
+            System.out.println("Error parsing " + formula);
             return e.getMessage();
         }
         return null;

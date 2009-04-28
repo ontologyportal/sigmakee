@@ -50,7 +50,7 @@ public class KBmanager {
     public static final int USE_TPTP         = 8;
 
     private static KBmanager manager = new KBmanager();
-    private static final String CONFIG_FILE = "config.xml";
+    protected static final String CONFIG_FILE = "config.xml";
 
     private HashMap preferences = new HashMap();
     protected HashMap kbs = new HashMap();
@@ -226,83 +226,154 @@ public class KBmanager {
         }  
     }     
 
-    private SimpleElement readConfiguration() throws IOException {
-
+    /** ***************************************************************
+     * Reads an XML configuration file from the directory
+     * configDirPath, and tries to find a configuration file elsewhere
+     * if configDirPath is null.  The method initializeOnce() sets the
+     * preferences based on the contents of the configuration file.
+     * This routine has the side effect of setting the variable called
+     * "configuration".  It also creates the KBs directory and an
+     * empty configuration file if none exists.
+     */
+    private SimpleElement readConfiguration(String configDirPath) {
         SimpleElement configuration = null;
-        System.out.println("INFO in KBmanager.readConfiguration()"); 
-        StringBuffer xml = new StringBuffer();
-        String kbDirStr = (String) preferences.get("kbDir");
-        File kbDir = null;
-        if ((kbDirStr == null) || kbDirStr.equals("")) {
-            kbDirStr = System.getProperty("user.dir");
-        }
-        kbDir = new File(kbDirStr);
-        if (!kbDir.exists()) {
-            kbDir.mkdir();
-            preferences.put("kbDir", kbDir.getCanonicalPath());
-        }
-        String username = (String) preferences.get("userName");
-        String userrole = (String) preferences.get("userRole");
-        String config_file = ((username != null && 
-                               userrole.equalsIgnoreCase("administrator") && 
-                               !username.equalsIgnoreCase("admin"))?username+ "_":"") + CONFIG_FILE;
-        File configFile = new File(kbDir, config_file);
-        File global_config = new File(kbDir, CONFIG_FILE);
-        //File configFile = new File(kbDir, CONFIG_FILE);
-        if (!configFile.exists()) {
-            if (global_config.exists()) copyFile(global_config,configFile);
-            else writeConfiguration();
-        }
-
         BufferedReader br = null;
         try {
+            System.out.println("ENTER KBmanager.readConfiguration(" 
+                               + configDirPath
+                               + ")"); 
+            String kbDirStr = configDirPath;
+            if (StringUtil.emptyString(kbDirStr)) {
+                kbDirStr = (String) preferences.get("kbDir");
+                if (StringUtil.emptyString(kbDirStr)) {
+                    kbDirStr = System.getProperty("user.dir");
+                }
+            }
+            File kbDir = new File(kbDirStr);
+            if (!kbDir.exists()) {
+                kbDir.mkdir();
+                preferences.put("kbDir", kbDir.getCanonicalPath());
+            }
+            String username = (String) preferences.get("userName");
+            String userrole = (String) preferences.get("userRole");
+            String config_file = ((StringUtil.isNonEmptyString(username)
+                                   && StringUtil.isNonEmptyString(userrole)
+                                   && userrole.equalsIgnoreCase("administrator") 
+                                   && !username.equalsIgnoreCase("admin"))
+                                  ? (username + "_")
+                                  : "") + CONFIG_FILE;
+            File configFile = new File(kbDir, config_file);
+            File global_config = new File(kbDir, CONFIG_FILE);
+            //File configFile = new File(kbDir, CONFIG_FILE);
+            if (!configFile.exists()) {
+                if (global_config.exists()) {
+                    copyFile(global_config, configFile);
+                    configFile = global_config;
+                }
+                else writeConfiguration();
+            }
+
+            System.out.println("  username == " + username);
+            System.out.println("  userrole == " + userrole);
+            System.out.println("  configFile == " + configFile.getCanonicalPath());
+
             br = new BufferedReader(new FileReader(configFile));
             SimpleDOMParser sdp = new SimpleDOMParser();
             configuration = sdp.parse(br);
         }
-        catch (java.io.IOException e) {
-            System.out.println("Error in KBmanager.readConfiguration(): IO exception parsing file " + 
-                               configFile.getCanonicalPath() + "\n" + e.getMessage());
+        catch (Exception ex) {
+            System.out.println("ERROR in KBmanager.readConfiguration("
+                               + configDirPath
+                               + "):\n"
+                               + "  Exception parsing configuration file \n" 
+                               + ex.getMessage());
+            ex.printStackTrace();
         }
         finally {
-            if (br != null) {
-                try {
+            try {
+                if (br != null) {
                     br.close();
                 }
-                catch (Exception ex) {
-                }
+                System.out.println("EXIT KBmanager.readConfiguration(" 
+                                   + configDirPath
+                                   + ")");
+                System.out.println("  => " + configuration); 
+            }
+            catch (Exception ex2) {
+                ex2.printStackTrace();
             }
         }
         return configuration;
     }
 
     /** ***************************************************************
-     * Read in any KBs defined in the configuration.
+     * Reads an XML configuration file from the most likely locations,
+     * trying the value of the System property "user.dir" as a last
+     * resort.  The method initializeOnce() sets the preferences based
+     * on the contents of the configuration file.  This routine has
+     * the side effect of setting the variable called "configuration".
+     * It also creates the KBs directory and an empty configuration
+     * file if none exists.
      */
-    public void initializeOnce() throws IOException {
-        if (!initialized) {
-            System.out.println("INFO in KBmanager.initializeOnce() ");
-            setDefaultAttributes();
-            try {
-                SimpleElement configuration = readConfiguration();
-                // System.out.println( "configuration == " + configuration );
-                String result = fromXML(configuration);
-                if (Formula.isNonEmptyString(result)) {
-                    error = result;
-                }
-                System.out.println("INFO in KBmanager.initializeOnce()");
-                System.out.println("  kbDir == " + preferences.get("kbDir"));
-                PasswordService.getInstance();
-            }
-            catch (IOException ioe) {
-                System.out.println("Error in KBmanager.initializeOnce(): Configuration file not read.");
-                System.out.println(ioe.getMessage());
-            }
-            initialized = true;
-            // System.out.println( "inferenceEngine == " + KBmanager.getMgr().getPref("inferenceEngine") );
-        }
+    private SimpleElement readConfiguration() {
+        return readConfiguration(null);
     }
 
+    /** ***************************************************************
+     * Reads in the KBs and other parameters defined in the XML
+     * configuration file, or uses the default parameters.  
+     */
+    public void initializeOnce() {
+        initializeOnce(null);
+        return;
+    }
+
+    /** ***************************************************************
+     * Reads in the KBs and other parameters defined in the XML
+     * configuration file, or uses the default parameters.  If
+     * configFileDir is not null and a configuration file can be read
+     * from the directory, reinitialization is forced.
+     */
+    public void initializeOnce(String configFileDir) {
+        try {
+            System.out.println("ENTER KBmanager.initializeOnce("
+                               + configFileDir
+                               + ")");
+            System.out.println("  initialized == " + initialized);
+            if (!initialized || StringUtil.isNonEmptyString(configFileDir)) {
+                setDefaultAttributes();
+                SimpleElement configuration = readConfiguration(configFileDir);
+                if (configuration == null) {
+                    throw new Exception("Error reading configuration file");
+                }
+                // System.out.println( "configuration == " + configuration );
+                String result = fromXML(configuration);
+                if (StringUtil.isNonEmptyString(result)) {
+                    error = result;
+                }
+
+                String kbDir = (String) preferences.get("kbDir");
+                System.out.println("  kbDir == " + kbDir);
+
+                PasswordService.getInstance();
+
+                LanguageFormatter.readKeywordMap(kbDir);
+            }
+        }
+        catch (Exception ex) {
+                System.out.println("ERROR in KBmanager.initializeOnce("
+                                   + configFileDir
+                                   + ")");
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+        }
+        initialized = true;
+        System.out.println("  initialized == " + initialized);
+        System.out.println("EXIT KBmanager.initializeOnce("
+                           + configFileDir
+                           + ")");
+        return;
+    }
 
     /** ***************************************************************
      * Double the backslash in a filename so that it can be saved to a text
@@ -473,10 +544,21 @@ public class KBmanager {
      */
     public static KBmanager newMgr(String username) {
 
+        System.out.println("ENTER KBmanager.newMgr(" + username + ")");
+        System.out.println("  old manager == " + manager);
+
         manager = new KBmanager();
         manager.initialized = false;
+
+        System.out.println("  new manager == " + manager);
+        String userRole = PasswordService.getInstance().getUser(username).getRole();
+
         manager.setPref("userName",username);
-        manager.setPref("userRole",PasswordService.getInstance().getUser(username).getRole());
+        manager.setPref("userRole", userRole);
+
+        System.out.println("  userRole == " + userRole);
+        System.out.println("EXIT KBmanager.newMgr(" + username + ")");
+
         return manager;
     }
     
@@ -572,8 +654,8 @@ public class KBmanager {
         try {
 
             KBmanager.getMgr().initializeOnce();
-        } catch (IOException ioe ) {
-            System.out.println(ioe.getMessage());
+        } catch (Exception e ) {
+            System.out.println(e.getMessage());
         }
 
         KB kb = KBmanager.getMgr().getKB("SUMO");

@@ -382,8 +382,8 @@ public class Graph {
 
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (IOException ioe ) {
-            System.out.println(ioe.getMessage());
+        } catch (Exception ex ) {
+            System.out.println(ex.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
 

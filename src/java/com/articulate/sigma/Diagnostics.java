@@ -626,8 +626,8 @@ public class Diagnostics {
             KB kb = KBmanager.getMgr().getKB("SUMO");
             System.out.println(Diagnostics.unrootedTerms(kb));
         }
-        catch (IOException ioe) {
-            System.out.println("Error in Diagnostics.main(): IOException: " + ioe.getMessage());
+        catch (Exception ex) {
+            System.out.println("Error in Diagnostics.main(): " + ex.getMessage());
         }      
     }
 }

@@ -20,8 +20,8 @@ import java.io.*;
  /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
-    public static String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" + 
-        "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
+    public static String htmlDivider = "<table align=\"left\" width=\"50%\"><tr><td bgcolor=\"#A8BACF\">" + 
+        "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>\n";
     public static String kbHref = ""; // set by BrowseBody.jsp or SimpleBrowseBody.jsp
     public static String language = "EnglishLanguage"; // set by BrowseBody.jsp or SimpleBrowseBody.jsp
 
@@ -33,13 +33,12 @@ public class HTMLformatter {
                                           String kbName, 
                                           String language) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         Formula f = new Formula();
         KB kb = KBmanager.getMgr().getKB(kbName);
         f.read(step.axiom);
         String axiom = new String(f.theFormula);
         f.theFormula = Formula.postProcess(f.theFormula);
-			
         String hostname = KBmanager.getMgr().getPref("hostname");
         if (hostname == null)
             hostname = "localhost";
@@ -50,11 +49,11 @@ public class HTMLformatter {
 			
         if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.        
             f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
-            result.append("<td valign=top width=50%>" + "True" + "</td>");
+            result.append("<td valign=\"top\" width=\"50%\">" + "True" + "</td>");
         }
         else
-            result.append("<td valign=top width=50%>" + f.htmlFormat(kbHref) + "</td>");
-        result.append("<td valign=top width=10%>");
+            result.append("<td valign=\"top\" width=\"50%\">" + f.htmlFormat(kbHref) + "</td>");
+        result.append("<td valign=\"top\" width=\"10%\">");
         for (int i = 0; i < step.premises.size(); i++) {
             Integer stepNum = (Integer) step.premises.get(i);
             result.append(stepNum.toString() + " ");            
@@ -68,15 +67,19 @@ public class HTMLformatter {
                 result.append("[KB]");
             }
         }
-        result.append("</td><td width=40% valign=top>");
+        result.append("</td><td width=\"40%\" valign=\"top\">");
         if (StringUtil.isNonEmptyString(language)) {
-            String pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula, 
+            String pph = LanguageFormatter.htmlParaphrase(kbHref,
+                                                          f.theFormula, 
                                                           KBmanager.getMgr().getKB(kbName).getFormatMap(language), 
-                                                          KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), kb,
+                                                          KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), 
+                                                          kb,
                                                           language);
-	    if (pph == null)
+	    if (StringUtil.emptyString(pph)) {
                 pph = "";
-            if (StringUtil.isNonEmptyString(pph)) {
+            }
+            else {
+                pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
                 boolean isArabic = (language.matches(".*(?i)arabic.*")
                                     || language.equalsIgnoreCase("ar"));
                 if (isArabic) {
@@ -116,7 +119,7 @@ public class HTMLformatter {
      */
     public static String termList(ArrayList terms, String kbHref) {
 
-        StringBuffer show = new StringBuffer();
+        StringBuilder show = new StringBuilder();
         for (int i = 0; i < terms.size(); i++) {
             String term = (String) terms.get(i);
             show.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
@@ -131,22 +134,22 @@ public class HTMLformatter {
      */
     public static String showStatistics(KB kb) {
 
-        StringBuffer show = new StringBuffer();
+        StringBuilder show = new StringBuilder();
         show.append("<b>Knowledge base statistics: </b><br><table>");
         show.append("<tr bgcolor=#eeeeee><td>Total Terms</td><td>Total Axioms</td><td>Total Rules</td><tr><tr align='center'>\n");
         show.append("<td>  " + kb.getCountTerms());
         show.append("</td><td> " + kb.getCountAxioms());
         show.append("</td><td> " + kb.getCountRules());
-        show.append("</td><tr> </table><P>\n");
+        show.append("</td><tr> </table><p>\n");
         show.append("Relations: " + kb.getCountRelations());
-        show.append("<P>\n");
+        show.append("<p>\n");
         return show.toString();
     }
 
     /** *************************************************************
      *  Show knowledge base statements containing the given term at
      * different argument positions.
-     
+
     public static String showFormulas(KB kb, String term) {
 
         return showFormulasLimit(kb,term,0,25);
@@ -155,10 +158,10 @@ public class HTMLformatter {
     ** *************************************************************
      *  Show knowledge base statements containing the given term at
      * different argument positions.
-     
+
     public static String showFormulasLimitArg(KB kb, String term, int start, int limit, int arg, String type) {
 
-        StringBuffer show = new StringBuffer();
+        StringBuilder show = new StringBuilder();
        
         int localLimit = start + limit;
         String limitString = "";
@@ -168,7 +171,7 @@ public class HTMLformatter {
         if (forms != null && forms.size() > 0) {
             Collections.sort(forms);
             show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
-            show.append(htmlDivider + "<TABLE width='95%'>");
+            show.append(htmlDivider + "<table width=\"95%\">");
 
             if (forms.size() < localLimit) 
                 localLimit = forms.size();
@@ -183,23 +186,23 @@ public class HTMLformatter {
                 Formula f = (Formula) forms.get(i);
                 if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
-                    show.append("<TR><TD WIDTH='50%' valign=top>");
-                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
+                    show.append("<tr><td width=\"50%\" valign=\"top\">");
+                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" BGCOLOR=#B8CADF>";
                     if ((f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0) ||
                         (f.theFormula.length() > 8 && f.theFormula.substring(1,8).compareTo("comment") == 0))
                         show.append(kb.formatDocumentation(kbHref,formattedFormula));
                     else
                         show.append(formattedFormula);
                     String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
-                    show.append("<A href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
+                    show.append("<a href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
                     if (!DB.emptyString(sourceFilename)) 
                         show.append(sourceFilename);
                     show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
-                    show.append("</A>");
-                    show.append("</TD>\n<TD width='40%' valign=top>");
+                    show.append("</a>");
+                    show.append("</td>\n<td width=\"40%\" valign=\"top\">");
                     String pph = "";
                     if (f.theFormula.substring(1,14).compareTo("documentation") == 0 || f.theFormula.substring(1,7).compareTo("format") == 0) 
-                        show.append("</TD></TR>\n");		    
+                        show.append("</td></tr>\n");		    
                     else 
                         pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,kb.getFormatMap(language),kb.getTermFormatMap(language),kb,language);
                     if (pph == null)
@@ -210,11 +213,11 @@ public class HTMLformatter {
                             // pph = ("&#x202b;" + pph + "&#x202c;");
                         }
                     }
-                    show.append(pph + "<br></TD></TR>\n");
+                    show.append(pph + "<br></td></tr>\n");
                 }                
             }
             show.append(limitString);
-            show.append("</TABLE>\n");
+            show.append("</table>\n");
         }        
         return show.toString();
     }
@@ -225,7 +228,7 @@ public class HTMLformatter {
      *
     public static String showFormulasLimit(KB kb, String term, int start, int limit) {
 
-        StringBuffer show = new StringBuffer();
+        StringBuilder show = new StringBuilder();
        
         for (int arg = 1; arg < 6; arg++)
             show.append(showFormulasLimitArg(kb,term,start,limit,arg,"arg"));       
@@ -245,7 +248,7 @@ public class HTMLformatter {
      */
     public static String showNumberPictures(KB kb, String term, int count) {
 
-        StringBuffer show = new StringBuffer();
+        StringBuilder show = new StringBuilder();
         ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);   // Handle picture diplay
         if (pictures != null && pictures.size() > 0) {
             show.append("<br>");
@@ -268,10 +271,10 @@ public class HTMLformatter {
                     if (url.indexOf("/commons/") > -1) 
                         domain = "http://commons.wikimedia.org/";
                     show.append("<a href=\"" + domain + "wiki/Image:" +
-                                imageFile + "\"><img width=100 src=" + url + "></a>\n" );
+                                imageFile + "\"><img width=\"100\" src=" + url + "></a>\n" );
                 }
                 else 
-                    show.append("<a href=" + url + "><img width=100 src=" + url + "></a>\n");                
+                    show.append("<a href=" + url + "><img width=\"100\" src=" + url + "></a>\n");                
             }
             if (more) 
                 show.append("<a href=\"AllPictures.jsp?term=" + term + "&kb=" + kb.name + "\">more pictures...</a>");            
@@ -283,49 +286,57 @@ public class HTMLformatter {
      *  Show alphabetic list of neighbor terms
      */
     public static String showNeighborTerms(KB kb, String term) {
+        String markup = "";
+        try {
+            StringBuilder show = new StringBuilder();
 
-        StringBuffer show = new StringBuffer();
-        ArrayList relations = kb.getNearestRelations(term);     // that is not present in the KB.
-        ArrayList nonRelations = kb.getNearestNonRelations(term);
-        String termAbove = kb.getAlphaBefore(term,15);
-        String termBelow = kb.getAlphaAfter(term,15);
-        String lowcaseTerm = Character.toLowerCase(term.charAt(0)) + term.substring(1);
-        show.append(" <FONT face='Arial,helvetica' size=+3> <b> ");
-        if (term != null)
-            show.append(term);
-        show.append("</b></FONT><br><br>");
-        show.append("<TABLE><tr><td>");
-        show.append("<TABLE>");
-        show.append("<tr><td><i><A href=\""+ kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</A>" + "</i></TD></tr>\n");
-        for (int i = 0; i < 30; i++) {
-            String relation = (String) relations.get(i);
-            String relationName = DocGen.getInstance().showTermName(kb,relation,language);
-            String nonRelation = (String) nonRelations.get(i);
-            String nonRelationName = DocGen.getInstance().showTermName(kb,nonRelation,language);
-            if (relation != "" || nonRelation != "") {
-                if (i == 14) {
-                    show.append("<TR>\n");
-                    show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   relation + "\">" + relationName + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                    show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   nonRelation + "\">" + nonRelationName + "</A>" + "</TD>\n");
-                    show.append("</TR>\n");
-                    show.append("<TR><TD><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></TD><TD>&nbsp;&nbsp;</TD>\n");
-                    show.append("<TD><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></TD></TR>\n");
-                }
-                else {
-                    show.append("<TR>\n");
-                    show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   relation + "\">" + relationName + "</A>" + "</TD><TD>&nbsp;&nbsp;</TD>\n");
-                    show.append("  <TD><A href=\""+ kbHref +"&term=");
-                    show.append(   nonRelation + "\">" + nonRelationName + "</A>" + "</TD>\n");
-                    show.append("</TR>\n");
+            // For a term that is not present in the KB.
+            ArrayList relations = kb.getNearestRelations(term); 
+            ArrayList nonRelations = kb.getNearestNonRelations(term);
+            String termAbove = kb.getAlphaBefore(term,15);
+            String termBelow = kb.getAlphaAfter(term,15);
+            String lowcaseTerm = Character.toLowerCase(term.charAt(0)) + term.substring(1);
+            show.append(" <FONT face='Arial,helvetica' size=+3> <b> ");
+            if (term != null)
+                show.append(term);
+            show.append("</b></FONT><br><br>");
+            show.append("<table><tr><td>");
+            show.append("<table>");
+            show.append("<tr><td><i><a href=\""+ kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</a>" + "</i></td></tr>\n");
+            for (int i = 0; i < 30; i++) {
+                String relation = (String) relations.get(i);
+                String relationName = DocGen.getInstance().showTermName(kb,relation,language);
+                String nonRelation = (String) nonRelations.get(i);
+                String nonRelationName = DocGen.getInstance().showTermName(kb,nonRelation,language);
+                if (relation != "" || nonRelation != "") {
+                    if (i == 14) {
+                        show.append("<tr>\n");
+                        show.append("  <td><a href=\""+ kbHref +"&term=");
+                        show.append(   relation + "\">" + relationName + "</a>" + "</td><td>&nbsp;&nbsp;</td>\n");
+                        show.append("  <td><a href=\""+ kbHref +"&term=");
+                        show.append(   nonRelation + "\">" + nonRelationName + "</a>" + "</td>\n");
+                        show.append("</tr>\n");
+                        show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></td><td>&nbsp;&nbsp;</td>\n");
+                        show.append("<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>\n");
+                    }
+                    else {
+                        show.append("<tr>\n");
+                        show.append("  <td><a href=\""+ kbHref +"&term=");
+                        show.append(   relation + "\">" + relationName + "</a>" + "</td><td>&nbsp;&nbsp;</td>\n");
+                        show.append("  <td><a href=\""+ kbHref +"&term=");
+                        show.append(   nonRelation + "\">" + nonRelationName + "</a>" + "</td>\n");
+                        show.append("</tr>\n");
+                    }
                 }
             }
+            show.append("<tr><td><i><a href=\""+ kbHref +"&term=" + termBelow + "*\">next " + 25 + "</a>" + "</i></td></tr>\n");
+            show.append("</table></td>");
+            markup = show.toString();
         }
-        show.append("<tr><td><i><A href=\""+ kbHref +"&term=" + termBelow + "*\">next " + 25 + "</A>" + "</i></TD></tr>\n");
-        show.append("</TABLE></td>");
-        return show.toString();
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return markup;
     }
 
     /** *************************************************************
@@ -333,9 +344,9 @@ public class HTMLformatter {
      */
     public static String termMappingsList(String terms, String kbHref) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         String[] sumoList = terms.split("\\s+");
-        result.append("<P><ul><li>\tSUMO Mappings:  ");
+        result.append("<p><ul><li>\tSUMO Mappings:  ");
         for (int j=0; j<sumoList.length; j++) {
             String sumoEquivalent = sumoList[j];
             sumoEquivalent.trim();
@@ -361,7 +372,7 @@ public class HTMLformatter {
      */
     public static String synsetList(ArrayList synsets, String kbHref) {
 
-        StringBuffer show = new StringBuffer();
+        StringBuilder show = new StringBuilder();
         for (int i = 0; i < synsets.size(); i++) {
             String synset = (String) synsets.get(i);
             if (Character.isDigit(synset.charAt(0))) 
@@ -389,67 +400,77 @@ public class HTMLformatter {
                                                    String type) {
 
         ArrayList forms = kb.ask(type,arg,term);
-        StringBuffer show = new StringBuffer();
+        StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
 
-        if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
+        if (forms != null && !KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes")) 
             forms = TaxoModel.removeCached(forms);
         if (forms != null && forms.size() > 0) {
             Collections.sort(forms);
             if (header != null) 
-                show.append("<br><b>&nbsp;" + header + "</B>");
+                show.append("<br><b>&nbsp;" + header + "</b>");
             if (htmlDivider != null) 
                 show.append(htmlDivider);
-            show.append("<TABLE width=95%%>");
-	    String pph = null;
+            show.append("<table width=\"95%\">");
             if (forms.size() < localLimit) 
                 localLimit = forms.size();
             else {
-                limitString = "<tr><td><br></td></tr><tr><td>Display limited to " + 
-                        (new Integer(limit)).toString() + " items. " +
-                        "<a href=\"BrowseExtra.jsp?term=" + term + "&kb=" + kb.name + 
-                        "&start=" + (new Integer(start+limit)).toString() + "&arg=" + (new Integer(arg)).toString() +
-                        "&type=" + type + "\">Show next " + (new Integer(limit)).toString() + "</a></td></tr>\n";
+                limitString = ("<tr><td><br></td></tr><tr><td>Display limited to " 
+                               + limit
+                               + " items. " 
+                               + "<a href=\"BrowseExtra.jsp?term=" + term 
+                               + "&kb=" + kb.name 
+                               + "&start=" + (start+limit)
+                               + "&arg=" + arg
+                               + "&type=" + type + "\">Show next " 
+                               + limit
+                               + "</a></td></tr>\n");
             }
 
             boolean isArabic = (language.matches(".*(?i)arabic.*")
                                 || language.equalsIgnoreCase("ar"));
             for (int i = start; i < localLimit; i++) {
                 Formula f = (Formula) forms.get(i);
+
                 if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
-                    show.append("<TR><TD width=50%% valign=top>");
-                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<TD width='10%' valign=top BGCOLOR=#B8CADF>";
+                    show.append("<tr><td width=\"50%\" valign=\"top\">");
+                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                     if ((f.getArgument(0).equals("documentation")) ||
                         (f.getArgument(0).equals("comment")))
                         show.append(kb.formatDocumentation(kbHref,formattedFormula,language));
                     else
                         show.append(formattedFormula);
                     String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
-                    show.append("<A href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
-                    if (!DB.emptyString(sourceFilename)) 
+                    show.append("<a href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
+                    if (StringUtil.isNonEmptyString(sourceFilename)) 
                         show.append(sourceFilename);
-                    show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
-                    show.append("</A>");
-                    show.append("</TD>\n<TD width='40%' valign=top>");
+                    show.append(" " + f.startLine + "-" + f.endLine);
+                    show.append("</a>");
+                    show.append("</td>\n<td width=\"40%\" valign=\"top\">");
+                    String pph = null;
                     if (!f.getArgument(0).equals("documentation"))
                         pph = LanguageFormatter.htmlParaphrase(kbHref,
-                                                           f.theFormula,kb.getFormatMap(language), 
-                                                           kb.getTermFormatMap(language), kb, language);
-        	    if (pph == null) 
+                                                               f.theFormula,
+                                                               kb.getFormatMap(language), 
+                                                               kb.getTermFormatMap(language), 
+                                                               kb, 
+                                                               language);
+        	    if (StringUtil.emptyString(pph)) {
                         pph = ""; 
-                    if (StringUtil.isNonEmptyString(pph)) {
+                    }
+                    else {
+                        pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
                         if (isArabic) {
                             pph = ("<span dir=\"rtl\">" + pph + "</span>");
-                            // pph = ("&#x202b;" + pph + "&#x202c;"); 
                         }
                     }
-                    show.append(pph + "</TD></TR>\n"); 
+                    show.append(pph + "</td></tr>\n"); 
                 }
             }
             show.append(limitString);
-            show.append("</TABLE>\n");
+            show.append("</table>\n");
         }     
         return show.toString();
     }
@@ -506,7 +527,7 @@ public class HTMLformatter {
      */
     public static String createNumberedMenu(String menuName, String selectedOption, ArrayList options) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=" + menuNameProcessed);
@@ -540,7 +561,7 @@ public class HTMLformatter {
      */
     public static String formatErrors(KB kb, String kbHref) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         Iterator it = kb.errors.iterator();
         while (it.hasNext()) {
             String err = (String) it.next();
@@ -568,7 +589,7 @@ public class HTMLformatter {
      */
     public static String createMultiMenu(String menuName, TreeMap options) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=" + menuNameProcessed);
@@ -598,7 +619,7 @@ public class HTMLformatter {
      */
     public static String createMenu(String menuName, String selectedOption, ArrayList options, String params) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         TreeSet menuOptions = new TreeSet();
         menuOptions.addAll(options);
 
@@ -639,7 +660,7 @@ public class HTMLformatter {
 
 	// System.out.println( "INFO in HTMLformatter.formatProofResult(): " + result );
 
-        StringBuffer html = new StringBuffer();
+        StringBuilder html = new StringBuilder();
         if (result != null && result.toString().length() > 0) {
             BasicXMLparser res = new BasicXMLparser(result.toString());
 
@@ -660,22 +681,22 @@ public class HTMLformatter {
                 html = html.append(i+answerOffset);
                 html = html.append(". " + pp.returnAnswer(i) + "\n");
                 if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
-                    html = html.append("<P><TABLE width=95%%>" + "\n");
+                    html = html.append("<p><table width=\"95%\">" + "\n");
                     for (int j = 0; j < proofSteps.size(); j++) {
 
                         // System.out.print("Printing proof step: ");
 
                         // System.out.println(j);
-                        html = html.append("<TR>" + "\n");
-                        html = html.append("<TD valign=top>" + "\n");
+                        html = html.append("<tr>" + "\n");
+                        html = html.append("<td valign=\"top\">" + "\n");
                         html = html.append(j+1);
-                        html = html.append(". </TD>" + "\n");
+                        html = html.append(". </td>" + "\n");
                         html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language) + "\n");                       
                         // System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       
 			
-                        html = html.append("</TR>\n" + "\n");
+                        html = html.append("</tr>\n" + "\n");
                     }
-                    html = html.append("</TABLE>" + "\n");
+                    html = html.append("</table>" + "\n");
                 }
             }
         }
