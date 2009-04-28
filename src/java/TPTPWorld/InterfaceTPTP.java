@@ -38,7 +38,7 @@ public class InterfaceTPTP {
     public static ArrayList<String> systemListRemote = new ArrayList<String>();
 
     public static String SystemOnTPTPFormReplyURL =
-            "http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTPTPFormReply";
+        "http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTPTPFormReply";
 
     private static class ATPResult {
 
@@ -82,10 +82,10 @@ public class InterfaceTPTP {
                 Process proc = Runtime.getRuntime().exec(command);
                 systemListLocal.add("Choose system");
                 reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-        //----Read List of Local Systems
+                //----Read List of Local Systems
                 while ((responseLine = reader.readLine()) != null) {
                     systemListLocal.add(responseLine);
-        //----Try use EP as the default system
+                    //----Try use EP as the default system
                     if (responseLine.startsWith("EP---")) {
                         defaultSystemLocal = responseLine;
                     }
@@ -108,11 +108,11 @@ public class InterfaceTPTP {
 
         try {
             reader = new BufferedReader(new InputStreamReader(
-            ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
-        //----Read List of Remote Systems
+                                                              ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
+            //----Read List of Remote Systems
             while ((responseLine = reader.readLine()) != null) {
                 systemListRemote.add(responseLine);
-        //----Try use EP as the default system
+                //----Try use EP as the default system
                 if (responseLine.startsWith("EP---")) {
                     defaultSystemRemote = responseLine;
                 }
@@ -124,104 +124,195 @@ public class InterfaceTPTP {
     }
 
 
-    public static String callTPTP(String location, String systemChosen, String problemFile,
-                                     int timeout, String quietFlag, String tstpFormat)
-	throws Exception {
-	if (location.equalsIgnoreCase("builtin"))
-	    return callBuiltInTPTP(systemChosen, problemFile, timeout, quietFlag, tstpFormat).originalResult;
-	else if (location.equalsIgnoreCase("local"))
-	    return callLocalTPTP(systemChosen, problemFile, timeout, quietFlag, tstpFormat).originalResult;
-	else if (location.equalsIgnoreCase("remote"))
-	    return callRemoteTPTP(systemChosen, problemFile, timeout, quietFlag, tstpFormat).originalResult;
-	else
-	    throw new Exception("There's no SystemOnTPTP location \""+location+"\".");
+    public static String callTPTP(String location, 
+                                  String systemChosen, 
+                                  String problemFile,
+                                  int timeout, 
+                                  String quietFlag, 
+                                  String tstpFormat) throws Exception {
+        String result = "";
+        if (location.equalsIgnoreCase("builtin"))
+            result = callBuiltInTPTP(systemChosen, 
+                                     problemFile, 
+                                     timeout, 
+                                     quietFlag, 
+                                     tstpFormat).originalResult;
+        else if (location.equalsIgnoreCase("local"))
+            result = callLocalTPTP(systemChosen, 
+                                   problemFile, 
+                                   timeout, 
+                                   quietFlag, 
+                                   tstpFormat).originalResult;
+        else if (location.equalsIgnoreCase("remote"))
+            result = callRemoteTPTP(systemChosen, 
+                                    problemFile, 
+                                    timeout, 
+                                    quietFlag, 
+                                    tstpFormat).originalResult;
+        else
+            throw new Exception("There's no SystemOnTPTP location \""+location+"\".");
+        return trimUnexpectedTokens(result);
     }
 
+    /** ***************************************************************
+     * This method attempts to remove from the String input any
+     * unexpected and spurious leading tokens, such as those resulting
+     * from error or status messages.
+     *
+     * @param input The entire multi-line response returned by a call
+     * to built-in or remote SystemOnTPTP
+     *
+     * @return A String with any unexpected leading text removed
+     */
+    private static String trimUnexpectedTokens(String input) {
+        String output = input;
+        String trimmed = null;
+        try {
+            if ((output instanceof String) && !output.equals("")) {
+                output = output.trim();
+                List<String> highLevelForms = Arrays.asList("%",
+                                                            "fof(",
+                                                            "cnf(",
+                                                            "include",
+                                                            "input_formula",
+                                                            "input_clause");
+                int idx = -1;
+                int nextIdx = -1;
+                for (String token : highLevelForms) {
+                    nextIdx = output.indexOf(token);
+                    if ((nextIdx > -1) && ((idx == -1) || (nextIdx < idx))) {
+                        idx = nextIdx;
+                    }
+                }
+                if (idx == -1) {
+                    trimmed = output;
+                    output = "";
+                }
+                else if (idx > 0) {
+                    trimmed = output.substring(0, idx);
+                    output = output.substring(idx);
+                }
+            }
+            if (trimmed != null) {
+                System.out.println("INFO in InterfaceTPTP.trimUnexpectedTokens("
+                                   + (((input instanceof String) && (input.length() > 20))
+                                      ? (input.substring(0, 20) + " ...")
+                                      : input) + ")");
+                System.out.println("  trimmed == \"" + trimmed + "\"");
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("ERROR in InterfaceTPTP.trimUnexpectedTokens("
+                               + (((input instanceof String) && (input.length() > 20))
+                                  ? (input.substring(0, 20) + " ...")
+                                  : input) + ")");
+            System.out.println("  trimmed == \"" + trimmed + "\"");
+            System.out.println("  output == \"" + output + "\"");
+            ex.printStackTrace();
+        }
+        return output;
+    }
 
-    public static ATPResult callRemoteTPTP (String systemChosen, String problemFile, int timeout,
-                                            String quietFlag, String tstpFormat) 
-                                           throws Exception {
-	ATPResult atpOut = new ATPResult ();
-        String responseLine = "";
-        BufferedReader reader; 
-        boolean tptpEnd = false;
-//----Need to check the name exists
-        Hashtable URLParameters = new Hashtable();
-        URLParameters.put("NoHTML","1");
-        if (quietFlag.equals("IDV")) {
-            URLParameters.put("IDV","-T");
-            URLParameters.put("QuietFlag","-q4");
-            URLParameters.put("X2TPTP",tstpFormat);
-        } else if (quietFlag.equals("hyperlinkedKIF")) {
-            URLParameters.put("QuietFlag","-q3");
-            URLParameters.put("X2TPTP","-S");
-        }else {
-            URLParameters.put("QuietFlag",quietFlag);
-            URLParameters.put("X2TPTP",tstpFormat);
+    public static ATPResult callRemoteTPTP (String systemChosen, 
+                                            String problemFile, 
+                                            int timeout,
+                                            String quietFlag, 
+                                            String tstpFormat) {
+        ATPResult atpOut = new ATPResult ();
+        BufferedReader reader = null;
+        try {
+            String responseLine = "";
+            boolean tptpEnd = false;
+            //----Need to check the name exists
+            Hashtable URLParameters = new Hashtable();
+            URLParameters.put("NoHTML","1");
+            if (quietFlag.equals("IDV")) {
+                URLParameters.put("IDV","-T");
+                URLParameters.put("QuietFlag","-q4");
+                URLParameters.put("X2TPTP",tstpFormat);
+            } else if (quietFlag.equals("hyperlinkedKIF")) {
+                URLParameters.put("QuietFlag","-q3");
+                URLParameters.put("X2TPTP","-S");
+            } else {
+                URLParameters.put("QuietFlag",quietFlag);
+                URLParameters.put("X2TPTP",tstpFormat);
+            }
+            //----Need to offer automode
+            URLParameters.put("System___System",systemChosen);
+            URLParameters.put("TimeLimit___TimeLimit", new Integer(timeout));
+            URLParameters.put("ProblemSource","UPLOAD");
+            URLParameters.put("UPLOADProblem",new File(problemFile));
+            URLParameters.put("SubmitButton","RunSelectedSystems");
+            reader = new BufferedReader(new InputStreamReader(
+                                                              ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
+            atpOut.printResult += "<PRE>";
+            while ((responseLine = reader.readLine()) != null) {
+                if (responseLine.startsWith("Loading IDV")) {
+                    tptpEnd = true;
+                }
+                if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%") && !tptpEnd) {
+                    atpOut.cleanResult += responseLine + "\n";
+                }           
+                if (tptpEnd && quietFlag.equals("IDV")) {
+                    atpOut.idvResult += responseLine + "\n";
+                }
+                atpOut.originalResult += responseLine + "\n";
+                if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
+                    atpOut.printResult += responseLine + "\n";
+                }
+            }
+            atpOut.originalResult = trimUnexpectedTokens(atpOut.originalResult);
+            atpOut.cleanResult = trimUnexpectedTokens(atpOut.cleanResult);
+            atpOut.idvResult = trimUnexpectedTokens(atpOut.idvResult);
+            atpOut.idvResult += "</PRE>\n";
+            atpOut.printResult += "</PRE>";
         }
-//----Need to offer automode
-        URLParameters.put("System___System",systemChosen);
-        URLParameters.put("TimeLimit___TimeLimit", new Integer(timeout));
-        URLParameters.put("ProblemSource","UPLOAD");
-        URLParameters.put("UPLOADProblem",new File(problemFile));
-        URLParameters.put("SubmitButton","RunSelectedSystems");
-        reader = new BufferedReader(new InputStreamReader(
-                ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
-        atpOut.printResult += "<PRE>";
-        while ((responseLine = reader.readLine()) != null) {
-            if (responseLine.startsWith("Loading IDV")) {
-                tptpEnd = true;
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (reader != null) reader.close();
             }
-            if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%") && !tptpEnd) {
-                atpOut.cleanResult += responseLine + "\n";
-            }           
-            if (tptpEnd && quietFlag.equals("IDV")) {
-                atpOut.idvResult += responseLine + "\n";
-            }
-            atpOut.originalResult += responseLine + "\n";
-            if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
-                atpOut.printResult += responseLine + "\n";
+            catch (Exception ioe) {
+                ioe.printStackTrace();
             }
         }
-        atpOut.idvResult += "</PRE>\n";
-        atpOut.printResult += "</PRE>";
-        reader.close();
         return atpOut; 
     }
 
-
-
-
-
-    public static ATPResult callLocalTPTP (String systemChosen, String problemFile, int timeout,
-                                           String quietFlag, String tstpFormat)
-	throws Exception { 
-	    ATPResult atpOut = new ATPResult ();
+    public static ATPResult callLocalTPTP (String systemChosen, 
+                                           String problemFile, 
+                                           int timeout,
+                                           String quietFlag, 
+                                           String tstpFormat) { 
+        ATPResult atpOut = new ATPResult ();
+        BufferedReader reader = null;
+        try {
             String responseLine = "";
-            BufferedReader reader; 
             Process proc;
             String command;
             if (quietFlag.equals("hyperlinkedKIF")) {
-              command = SoTPTP + " " +
-                        "-q3"        + " " +  // quietFlag
-                        systemChosen + " " + 
-                        timeout      + " " +
-                        "-S"         + " " +  //tstpFormat
-                        problemFile;
+                command = SoTPTP + " " +
+                    "-q3"        + " " +  // quietFlag
+                    systemChosen + " " + 
+                    timeout      + " " +
+                    "-S"         + " " +  //tstpFormat
+                    problemFile;
             } else if (quietFlag.equals("IDV")) {
-              command = SoTPTP + " " +
-                        "-q4"        + " " +  // quietFlag
-                        systemChosen + " " + 
-                        timeout      + " " +
-                        "-S"           + " " +  //tstpFormat
-                        problemFile;            
+                command = SoTPTP + " " +
+                    "-q4"        + " " +  // quietFlag
+                    systemChosen + " " + 
+                    timeout      + " " +
+                    "-S"           + " " +  //tstpFormat
+                    problemFile;            
             } else {
-              command = SoTPTP + " " + 
-                        quietFlag    + " " + 
-                        systemChosen + " " + 
-                        timeout      + " " + 
-                        tstpFormat   + " " +
-                        problemFile;
+                command = SoTPTP + " " + 
+                    quietFlag    + " " + 
+                    systemChosen + " " + 
+                    timeout      + " " + 
+                    tstpFormat   + " " +
+                    problemFile;
             }
             proc = Runtime.getRuntime().exec(command);
             reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -229,65 +320,114 @@ public class InterfaceTPTP {
 
             atpOut.printResult += "<PRE>";
             while ((responseLine = reader.readLine()) != null) {
-              if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
-                atpOut.cleanResult += responseLine + "\n";
-              }
-              atpOut.originalResult += responseLine + "\n";
-              if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { atpOut.printResult += responseLine + "\n"; }
+                if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
+                    atpOut.cleanResult += responseLine + "\n";
+                }
+                atpOut.originalResult += responseLine + "\n";
+                if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { atpOut.printResult += responseLine + "\n"; }
             }
+            atpOut.originalResult = trimUnexpectedTokens(atpOut.originalResult);
+            atpOut.cleanResult = trimUnexpectedTokens(atpOut.cleanResult);
             atpOut.printResult += "</PRE>";
-            reader.close();
-            return atpOut;
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (reader != null) reader.close();
+            }
+            catch (Exception ioe) {
+                ioe.printStackTrace();
+            }
+        }
+        return atpOut;
     }
 
-
-    public static ATPResult callBuiltInTPTP (String systemChosen, String problemFile, int timeout,
-                                             String quietFlag, String tstpFormat)
-	throws Exception { 
-	    ATPResult atpOut = new ATPResult ();
+    public static ATPResult callBuiltInTPTP (String systemChosen, 
+                                             String problemFile, 
+                                             int timeout,
+                                             String quietFlag, 
+                                             String tstpFormat) { 
+        ATPResult atpOut = new ATPResult ();
+        try {
             String qq;
             String format = "";
             String result = "";
             if (quietFlag.equals("IDV")) {
-              qq = "-q4";
-              format = "-S";
+                qq = "-q4";
+                format = "-S";
             } else if (quietFlag.equals("hyperlinkedKIF")) {
-              qq = "-q4";
-              format = "-S";
+                qq = "-q4";
+                format = "-S";
             } else {
-              qq = quietFlag;
-              format = tstpFormat;
+                qq = quietFlag;
+                format = tstpFormat;
             }
-            result = SystemOnTPTP.SystemOnTPTP(systemChosen, BuiltInDir, timeout, qq, format, problemFile);
+            result = SystemOnTPTP.SystemOnTPTP(systemChosen, 
+                                               BuiltInDir, 
+                                               timeout, 
+                                               qq, 
+                                               format, 
+                                               problemFile);
+
+            result = trimUnexpectedTokens(result);
+
             atpOut.originalResult = result;
             atpOut.printResult += "<PRE>";
             if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
-              atpOut.printResult += result;
+                atpOut.printResult += result;
             } 
             if (quietFlag.equals("IDV")) {
-// IDV can't handle comments?
-              StringTokenizer st = new StringTokenizer(result,"\n");
-              String temp = "";
-              while (st.hasMoreTokens()) {
-                String next = st.nextToken(); 
-                if (!next.equals("") && !next.substring(0,1).equals("%")) {
-                  temp += next + "\n";   
+                // IDV can't handle comments?
+                StringTokenizer st = new StringTokenizer(result,"\n");
+                String temp = "";
+                while (st.hasMoreTokens()) {
+                    String next = st.nextToken(); 
+                    if (!next.equals("") && !next.substring(0,1).equals("%")) {
+                        temp += next + "\n";   
+                    }
                 }
-              }
-              atpOut.cleanResult = temp;
+                atpOut.cleanResult = temp;
             } else {
-		atpOut.cleanResult = result;
+                atpOut.cleanResult = result;
             }
             atpOut.printResult += "</PRE>";
-            return atpOut;
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return atpOut;
     }
 
 
-    public static String queryTPTP (String stmt, int timeout, int maxAnswers, String lineHtml, 
-                                     String systemChosen, String location,
-                                     String quietFlag, String kbName, String language, JspWriter out) 
-                         throws Exception {
-//----Setup
+    public static String queryTPTP (String stmt, 
+                                    int timeout, 
+                                    int maxAnswers, 
+                                    String lineHtml, 
+                                    String systemChosen, 
+                                    String location,
+                                    String quietFlag, 
+                                    String kbName, 
+                                    String language, 
+                                    JspWriter out) 
+        throws Exception {
+
+        /*
+          System.out.println("ENTER InterfaceTPTP.queryTPTP(");
+          System.out.println("  " + stmt + ",");
+          System.out.println("  " + timeout + ",");
+          System.out.println("  " + maxAnswers + ",");
+          System.out.println("  " + lineHtml + ",");
+          System.out.println("  " + systemChosen + ",");
+          System.out.println("  " + location + ",");
+          System.out.println("  " + quietFlag + ",");
+          System.out.println("  " + kbName + ",");
+          System.out.println("  " + language + ",");
+          System.out.println("  " + out + ")");
+        */
+
+        //----Setup
         String resultAll = "";
         String tstpFormat = "-S";
         KB kb = KBmanager.getMgr().getKB(kbName);
@@ -295,14 +435,14 @@ public class InterfaceTPTP {
         String responseLine;
         BufferedReader reader;
 
-//-----------------------------------------------------------------------------
-//----Code for doing the query
+        //-----------------------------------------------------------------------------
+        //----Code for doing the query
         String TPTP_QUESTION_SYSTEM = "SNARK---";
         String TPTP_ANSWER_SYSTEM = "Metis---";
         StringBuffer sbStatu1s = new StringBuffer();
         String kbFileName = null;
         Formula conjectureFormula;
-//----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)
+        //----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)
         String result = "";
         String newResult = "";
         String idvResult = "";
@@ -312,8 +452,8 @@ public class InterfaceTPTP {
         boolean isQuestion = systemChosen.startsWith(TPTP_QUESTION_SYSTEM);
         String conjectureTPTPFormula = "";
 
-// Build query:
-//-----------------------------------------------------------------------------
+        // Build query:
+        //-----------------------------------------------------------------------------
         //----Add KB contents here
         conjectureFormula = new Formula();
         conjectureFormula.theFormula = stmt;
@@ -329,73 +469,73 @@ public class InterfaceTPTP {
         String theTPTPFormula = (String) it.next();
 	String originalConjecture = theTPTPFormula;
         if (isQuestion) {
-          conjectureTPTPFormula =  "fof(1" + ",question,(" + theTPTPFormula + ")).";
+            conjectureTPTPFormula =  "fof(1" + ",question,(" + theTPTPFormula + ")).";
         } else {
-          conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
+            conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
         }
         originalKBFileName = kb.writeTPTPFile(null,
-                                      null,
-                                      true,
-                                      systemChosen,
-                                      isQuestion);
+                                              null,
+                                              true,
+                                              systemChosen,
+                                              isQuestion);
         ArrayList<Binding> lastAnswer = null;
         ArrayList<Binding> originalAnswer = null;
         int numAnswers = 0;
         TreeSet<TPTPParser.Symbol> symbolsSoFar = new TreeSet(new TPTPParser.SymbolComparator());
         ArrayList<String> ldAxiomsSoFar = new ArrayList();
         ldAxiomsSoFar.addAll(LooksDifferent.getUniqueAxioms());
-//----Create symbol list from entire kbFile
+        //----Create symbol list from entire kbFile
         TreeSet<TPTPParser.Symbol> symbolList = TPTPParser.getSymbolList(originalKBFileName);
         ATPResult atpOut;
-//----Add while loop to check for more answers
-//----If # of answers == maximum answers, exit loop
-//----If last check for an answer failed (no answer found or empty answer list), exit loop
-//----Each loop around, add ld axioms
+        //----Add while loop to check for more answers
+        //----If # of answers == maximum answers, exit loop
+        //----If last check for an answer failed (no answer found or empty answer list), exit loop
+        //----Each loop around, add ld axioms
 
-//----While loop start:
+        //----While loop start:
         do {
 	    originalResult = "";
 	    result = "";
-//----If we found a new set of answers, update query and axiom list
+            //----If we found a new set of answers, update query and axiom list
             if (lastAnswer != null) {
 	        resultAll += "<hr>";
-//----Get symbols from lastAnswer
+                //----Get symbols from lastAnswer
                 TreeSet<TPTPParser.Symbol> newSymbols = TPTPParser.getSymbolList(lastAnswer);
-//----Find uniqueSymbols from lastAnswer not in symbolsSoFar
+                //----Find uniqueSymbols from lastAnswer not in symbolsSoFar
                 TreeSet<TPTPParser.Symbol> uniqueSymbols = LooksDifferent.getUniqueSymbols(symbolsSoFar, newSymbols);
-//----symbolsSOFar = uniqueSymbols U symbolsSoFar
+                //----symbolsSOFar = uniqueSymbols U symbolsSoFar
                 symbolsSoFar.addAll(uniqueSymbols);
-//----Get new set of ld axioms from the unique symbols
+                //----Get new set of ld axioms from the unique symbols
                 ArrayList<String> ldAxiomsNew = LooksDifferent.addAxioms(uniqueSymbols, symbolList);
-//----Add ld axioms for those uniqueSymbols to ldAxiomsSoFar
+                //----Add ld axioms for those uniqueSymbols to ldAxiomsSoFar
                 ldAxiomsSoFar.addAll(ldAxiomsNew);
-//----Add last answer to conjecture
+                //----Add last answer to conjecture
                 theTPTPFormula = LooksDifferent.addToConjecture(theTPTPFormula, lastAnswer);
-//----Create new conjectureTPTPFormula
+                //----Create new conjectureTPTPFormula
                 if (isQuestion) {
                     conjectureTPTPFormula = "fof(1" + ",question,(" + theTPTPFormula + ")).";
                 } else {
                     conjectureTPTPFormula = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
                 }
-//----keep originalKBFile intact so that we do not have to keep recreating it, just copy and append to copy then delete copy, only delete original at the end of run
-//----delete last kbFileName
+                //----keep originalKBFile intact so that we do not have to keep recreating it, just copy and append to copy then delete copy, only delete original at the end of run
+                //----delete last kbFileName
                 if (kbFileName != null) {
                     (new File(kbFileName)).delete();
                 }
-//----kbFileName = originalKBFileName + all ld axioms + conjectureTPTPFormula;
-//----Copy original kb file
+                //----kbFileName = originalKBFileName + all ld axioms + conjectureTPTPFormula;
+                //----Copy original kb file
                 kbFileName = kb.copyFile(originalKBFileName);
-//----Append ld axioms and conjecture to the end
+                //----Append ld axioms and conjecture to the end
                 kb.addToFile(kbFileName, ldAxiomsSoFar, conjectureTPTPFormula);
-//----Reset last answer
+                //----Reset last answer
                 lastAnswer = null;
             } else {
-//----kbFileName = originalKBFileName + conjectureTPTPFormula
-//----Copy original kb file and append conjecture to the end
+                //----kbFileName = originalKBFileName + conjectureTPTPFormula
+                //----Copy original kb file and append conjecture to the end
                 kbFileName = kb.copyFile(originalKBFileName);
                 kb.addToFile(kbFileName, null, conjectureTPTPFormula);
             }
-//----Call RemoteSoT
+            //----Call RemoteSoT
             if (location.equals("remote")) {
                 if (systemChosen.equals("Choose%20system")) {
                     resultAll += "No system chosen";            
@@ -412,7 +552,7 @@ public class InterfaceTPTP {
                 }
             } 
             else if (location.equals("local") && tptpWorldExists) {
-//----Call local copy of TPTPWorld instead of using RemoteSoT
+                //----Call local copy of TPTPWorld instead of using RemoteSoT
                 if (systemChosen.equals("Choose%20system")) {
                     resultAll += "No system chosen";
                 } else {
@@ -428,7 +568,7 @@ public class InterfaceTPTP {
                 }
             } 
             else if (location.equals("local") && builtInExists && !tptpWorldExists) {
-//----Call built in SystemOnTPTP instead of using RemoteSoT or local
+                //----Call built in SystemOnTPTP instead of using RemoteSoT or local
                 if (systemChosen.equals("Choose%20system")) {
                     resultAll += "No system chosen";
                 } else {
@@ -445,42 +585,36 @@ public class InterfaceTPTP {
             }
             else {
                 resultAll += "INTERNAL ERROR: chosen option not valid: " + location +
-                     ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.";
+                    ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.";
             }
-//----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
+            //----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
             if (!(systemChosen.startsWith(TPTP_ANSWER_SYSTEM)&&location.equals("local")&&builtInExists && !tptpWorldExists)) {
-                  String answerResult = AnswerFinder.findProofWithAnswers(result, BuiltInDir);
-//----If answer is blank, ERROR, or WARNING, do not place in result
-                  if (!answerResult.equals("") && 
-                      !answerResult.startsWith("% ERROR:") &&
-                      !answerResult.startsWith("% WARNING:")) {
-                      result = answerResult;
-                  } 
-//----If ERROR is answer result, report to user
-                  if (answerResult.startsWith("% ERROR:")) {
-                      resultAll += "==" + answerResult;
-                  } 
+                String answerResult = AnswerFinder.findProofWithAnswers(result, BuiltInDir);
+                //----If answer is blank, ERROR, or WARNING, do not place in result
+                if (!answerResult.equals("") && 
+                    !answerResult.startsWith("% ERROR:") &&
+                    !answerResult.startsWith("% WARNING:")) {
+                    result = answerResult;
+                } 
+                //----If ERROR is answer result, report to user
+                if (answerResult.startsWith("% ERROR:")) {
+                    resultAll += "==" + answerResult;
+                } 
             }
             if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
-//----Procedure if SNARK was chosen
+                //----Procedure if SNARK was chosen
 	        String conj = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
                 ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conj, originalResult);
                 lastAnswer = answer;
                 newResult = TPTP2SUMO.convert(result, answer, false);
             } else {
-//----Procedure if not SNARK (call one answer system: Metis)
+                //----Procedure if not SNARK (call one answer system: Metis)
                 TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(result)));
                 lastAnswer = AnswerExtractor.extractAnswers(parser.ftable);
-//----Get original variable names
+                //----Get original variable names
                 lastAnswer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, lastAnswer);
                 newResult = TPTP2SUMO.convert(result, false);
             }
-
-
-
-
-
-
 
             if (quietFlag.equals("IDV") && location.equals("remote")) {
                 if (SystemOnTPTP.isTheorem(originalResult)) {
@@ -528,29 +662,21 @@ public class InterfaceTPTP {
             } else if (quietFlag.equals("hyperlinkedKIF")) {
 	        if (originalAnswer == null) {
   		    originalAnswer = lastAnswer;
-
-
-
                 } //else {
 
+                //----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
+                if (!lastAnswer.equals("")) {
+                    //resultAll += "<br>There was an Answer before! <br>";
+                    String bindConjecture = "fof(bindConj" + ", conjecture,(" + LooksDifferent.bindConjecture(originalConjecture, originalAnswer, lastAnswer) + ")).";
+                    //----With new bindConjecture, take last result, filter out anything with LDs in it, put in prover
+                    String axioms = LooksDifferent.filterLooksDifferent(originalResult);
+                    //----Redo proof using OneAnswerSystem again
+                    String bindProblem = axioms + " " + bindConjecture;
+                    String bindResult = AnswerFinder.findProof(bindProblem, BuiltInDir);
+                    newResult = TPTP2SUMO.convert(bindResult, lastAnswer, true);
+                }
 
-
-
-//----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
-	            if (!lastAnswer.equals("")) {
-                        //resultAll += "<br>There was an Answer before! <br>";
-                        String bindConjecture = "fof(bindConj" + ", conjecture,(" + LooksDifferent.bindConjecture(originalConjecture, originalAnswer, lastAnswer) + ")).";
-//----With new bindConjecture, take last result, filter out anything with LDs in it, put in prover
-	                String axioms = LooksDifferent.filterLooksDifferent(originalResult);
-//----Redo proof using OneAnswerSystem again
-                        String bindProblem = axioms + " " + bindConjecture;
-                        String bindResult = AnswerFinder.findProof(bindProblem, BuiltInDir);
-                        newResult = TPTP2SUMO.convert(bindResult, lastAnswer, true);
-			}
-
-
-		    //}
-
+                //}
 
                 boolean isTheorem = SystemOnTPTP.isTheorem(originalResult);
                 boolean isCounterSatisfiable = SystemOnTPTP.isCounterSatisfiable(originalResult); 
@@ -559,14 +685,26 @@ public class InterfaceTPTP {
                 if (isTheorem) { 
                     if (proofExists) {
                         try {
-//----Remove bindings, if no existential quantifiers have been made explicit, i.e., the query is closed
-			    if (suppressAnswerExtraction) {
-				newResult = newResult.substring(0,newResult.indexOf("  <bindingSet"))+
-				    newResult.substring(newResult.indexOf("</bindingSet>")+14);
-				lastAnswer = null;
-			    }
+
+                            //----Remove bindings, if no existential quantifiers have been 
+                            //----made explicit, i.e., the query is closed
+                            if (suppressAnswerExtraction) {
+                                int opnTagIdx = newResult.indexOf("  <bindingSet");
+                                int clsTagIdx = newResult.indexOf("</bindingSet>");
+                                int idx3 = (clsTagIdx + 14);
+                                if ((opnTagIdx > -1) 
+                                    && (clsTagIdx > opnTagIdx)
+                                    && (idx3 < newResult.length())) {
+                                    newResult =
+                                        newResult
+                                        .substring(0,newResult.indexOf("  <bindingSet"))
+                                        + newResult
+                                        .substring(newResult.indexOf("</bindingSet>") + 14);
+                                    lastAnswer = null;
+                                }
+                            }
                             // System.out.println(newResult);
-//----If a proof exists, print out as hyperlinked kif
+                            //----If a proof exists, print out as hyperlinked kif
                             resultAll += HTMLformatter.formatProofResult(newResult,
                                                                          stmt,
                                                                          stmt,
@@ -576,7 +714,7 @@ public class InterfaceTPTP {
                                                                          numAnswers+1);
                         } catch (Exception e) {}
                     } else {
-//----Proof does not exist, but was a theorem
+                        //----Proof does not exist, but was a theorem
                         resultAll += "Answer "+(numAnswers+1)+". Yes [Theorem]<br>";
                     } 
                 } else if (isCounterSatisfiable) {
@@ -586,21 +724,36 @@ public class InterfaceTPTP {
                         resultAll += "Answer "+(numAnswers+1)+". No<br>";
                 }
 	    }
-//----If lastAnswer != null (we found an answer) && there is an answer (lastAnswer.size() > 0)
+            //----If lastAnswer != null (we found an answer) && there is an answer (lastAnswer.size() > 0)
             if (lastAnswer != null && lastAnswer.size() > 0) {
                 numAnswers++;
             } else {
-//         out.println("No luck finding new answer");
+                //         out.println("No luck finding new answer");
             } 
-//----Add query time limit to while loop break
+            //----Add query time limit to while loop break
         } while (numAnswers < maxAnswers && lastAnswer != null && lastAnswer.size() > 0);
-//----Delete the kbFile
+        //----Delete the kbFile
         if (originalKBFileName != null) {
             (new File(originalKBFileName)).delete();
         }
+
+        /*
+          System.out.println("EXIT InterfaceTPTP.queryTPTP(");
+          System.out.println("  " + stmt + ",");
+          System.out.println("  " + timeout + ",");
+          System.out.println("  " + maxAnswers + ",");
+          System.out.println("  " + lineHtml + ",");
+          System.out.println("  " + systemChosen + ",");
+          System.out.println("  " + location + ",");
+          System.out.println("  " + quietFlag + ",");
+          System.out.println("  " + kbName + ",");
+          System.out.println("  " + language + ",");
+          System.out.println("  " + out + ")");
+          System.out.println("  ==> " + resultAll);
+        */
+
         return resultAll;
     }
-
 
     public static void main () {
     }
