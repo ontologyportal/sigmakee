@@ -22,146 +22,569 @@ import org.w3c.dom.*;
 /** A class to generate simplified HTML-based documentation for SUO-KIF terms. */
 public class DocGen {
 
+    /** ***************************************************************
+     * The default DocGen object.
+     *
+     * @see getInstance()
+     */
     private static DocGen DEFAULT_INSTANCE = null;
 
+    /** ***************************************************************
+     * The default base plus file suffix name for the main index file
+     * for a set of HTML output files.
+     */
+    private static String INDEX_FILE_NAME = "index.html";
+
+    /** ***************************************************************
+     * To obtain an instance of DocGen, use the static factory method
+     * getInstance().
+     */
     private DocGen() {
     }
 
     /** ***************************************************************
+     * The default lineSeparator for the current runtime platform.
+     */
+    private String lineSeparator = "\n";
+
+    /** ***************************************************************
+     * Ths static factory method to be used to obtain a DocGen
+     * instance.
      */
     public static DocGen getInstance() {
         if (DEFAULT_INSTANCE == null) {
             DEFAULT_INSTANCE = new DocGen();
+            DEFAULT_INSTANCE.lineSeparator = System.getProperty("line.separator");
         }
         return DEFAULT_INSTANCE;
     }
 
-    public String header = "";
-    public String TOCheader = "";
-    public String footer = "<a href=http://www.rightscom.com>www.rightscom.com</a>";
-    
-    // false = do not display termFormat 
-    // expressions in place of term names
-    public boolean simplified = false;
-
-    private HashMap relationsByKB = new HashMap();
-    private List namespaces = null;
-    private List namespacePrefixes = null;
-    private Set isoCodes = null;
-
-    private Map compositesBT = new TreeMap(); // one level "broader than"
-    private Map compositesNT = new TreeMap(); // one level "narrower than"
-    private List ntGraphs = new ArrayList();  // complete list of "narrow than" sequences
-    private Map compositesUC = new TreeMap(); // BT upward closure for each term
-
-    private String ddexHeader = 
-        ("<html xmlns:fo=\"http://www.w3.org/1999/XSL/Format\">" 
-         + System.getProperty("line.separator")
-         + "  <head>" 
-         + System.getProperty("line.separator")
-         + "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
-         + System.getProperty("line.separator")
-         + "    <link rel=\"stylesheet\" type=\"text/css\" href=\"ddex.css\">"
-         + System.getProperty("line.separator")
-         + "    <title>DDEX Data Dictionary</title>"
-         + "  </head>");
-
+    /** ***************************************************************
+     * The keys of this Map are SUO-KIF terms.  The values are Sets of
+     * SUO-KIF terms.  Each key term is "contained" by, or somehow
+     * central to the definition of, the terms in the corresponding
+     * Set.
+     */
+    protected HashMap coreTerms = new HashMap();
 
     /** ***************************************************************
+     * The keys of this Map are SUO-KIF terms.  The values are Sets of
+     * SUO-KIF terms.  Each key term is part of the general vocabulary
+     * framework that defines other terms considered more central or
+     * "core" to the definitions of the terms in the corresponding
+     * Set.  In other words, each key is only indirectly and
+     * syntactically relevant to the definition of the terms in the
+     * corresponding Set.
      */
-    public static String indentChars(String c, int indent) {
+    private HashMap frameworkTerms = new HashMap();
 
-        StringBuffer result = new StringBuffer();
+    /** ***************************************************************
+     * The keys of this Map are SUO-KIF terms.  The values are Sets of
+     * SUO-KIF terms.  Each key term is part of the supporting
+     * vocabulary that defines other terms considered more central or
+     * "core" to the definitions of the terms in the corresponding
+     * Set.  In other words, each key is only indirectly semantically
+     * relevant to the definition of the terms in the corresponding
+     * Set.
+     */
+    private HashMap supportingTerms = new HashMap();
+
+    /** ***************************************************************
+     * Each key in this Map is a top-level focalTerm in this KB and
+     * ontology.  The corresponding value is a String representation
+     * of the int value that indicates the computed maximum "depth",
+     * or number of nodes in the longest path, along
+     * syntacticSubordinate from the focalTerm.
+     */
+    private HashMap maxDepthFromFocalTerm = new HashMap();
+
+    /** The default KB to use for document generation */
+    private KB defaultKB = null;
+
+    /** ***************************************************************
+     * Sets the default KB for this DocGen instance.
+     */
+    public void setDefaultKB(KB kb) {
+        this.defaultKB = kb;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the default KB for this DocGen instance, or null if no
+     * default KB value has been set.
+     */
+    public KB getDefaultKB() {
+        return defaultKB;
+    }
+
+    /** The default namespace to use for document generation */
+    private String defaultNamespace = "";
+
+    /** ***************************************************************
+     * Sets the default namespace for this DocGen instance.
+     *
+     * @param suoKifTerm A SUO-KIF term name denoting a namespace.
+     */
+    public void setDefaultNamespace(String suoKifTerm) {
+        defaultNamespace = suoKifTerm;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns a SUO-KIF term denoting the default namespace for this
+     * DocGen instance, else returns an empty String if no default
+     * namespace value has been set.
+     */
+    public String getDefaultNamespace() {
+        return defaultNamespace;
+    }
+
+    /** The document title text to be used for HTML generation */
+    private String titleText = "";
+
+    /** ***************************************************************
+     * Sets the title text to be used during HTML document generation.
+     *
+     * @param titlestr A String that will be used as the HTML document
+     * title
+     */
+    public void setTitleText(String titlestr) {
+        titleText = titlestr;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the String that will be used as the title text for HTML
+     * document generation, else returns an empty String if no title
+     * text value has been set.
+     */
+    public String getTitleText() {
+        return titleText;
+    }
+
+    /** The document footer text to be used for HTML generation */
+    private String footerText = "";
+
+    // ("Produced by <a href=\"http://www.articulatesoftware.com\"> "
+    //                          + "Articulate Software</a> and its partners");
+
+    /** ***************************************************************
+     * Sets the footer text String to be used during HTML document
+     * generation.
+     *
+     * @param str A String that will be used as the HTML document
+     * footer text
+     */
+    public void setFooterText(String str) {
+        footerText = str;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the String that will be used as the footer text for
+     * HTML document generation, else returns an empty String if no
+     * footer text value has been set.
+     */
+    public String getFooterText() {
+        return footerText;
+    }
+
+    /** The style sheet (CSS filename) to be referenced in HTML generation */
+    private String styleSheet = "simple.css";
+
+    /** ***************************************************************
+     * Sets the base name plus suffix filename of the Cascading Style
+     * Sheet file to be referenced during HTML document generation.
+     *
+     * @param filename A String that is a base filename plus a
+     * filename suffix
+     * 
+     */
+    public void setStyleSheet(String filename) {
+        styleSheet = filename;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the base filename plus filename suffix form of the
+     * Cascading Style Sheet file to be referenced during HTML
+     * document generation, else returns an empty String if no value
+     * has been set.
+     */
+    public String getStyleSheet() {
+        return styleSheet;
+    }
+
+    /** The default image file (such as an organization's logo) to be
+     * used in HTML generation
+     */
+    private String defaultImageFile = "articulate_logo.gif";
+
+    /** ***************************************************************
+     * Sets the base name plus suffix filename of the logo image file
+     * to be referenced during HTML document generation.
+     *
+     * @param filename A String that is a base filename plus a
+     * filename suffix
+     * 
+     */
+    public void setDefaultImageFile(String filename) {
+        defaultImageFile = filename;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the base filename plus filename suffix form of the logo
+     * image file to be referenced during HTML document generation,
+     * else returns an empty String if no value has been set.
+     */
+    public String getDefaultImageFile() {
+        return defaultImageFile;
+    }
+
+    /** The default image file (such as an organization's logo) to be
+     * used in HTML generation, wrapped in any necessary additional
+     * markup required for proper display.
+     */
+    private String defaultImageFileMarkup = "articulate_logo.gif";
+
+    /** ***************************************************************
+     * Sets the base name plus suffix filename of the logo image file
+     * to be referenced during HTML document generation.
+     *
+     * @param markup A String that includes the image file pathname
+     * plus any additional markup required for proper display of the
+     * image
+     * 
+     */
+    public void setDefaultImageFileMarkup(String markup) {
+        defaultImageFileMarkup = markup;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the base filename plus filename suffix form of the logo
+     * image file, wrapped in any additional markup required for the
+     * intended rendering of the image.
+     */
+    public String getDefaultImageFileMarkup() {
+        return defaultImageFileMarkup;
+    }
+
+    /** The canonical pathname of the directory in which HTML output
+     * files should be saved.
+     */
+    private String htmlOutputDirectoryPath = "";
+
+    /** ***************************************************************
+     * Sets the canonical pathname String of the directory in which
+     * HTML output files should be saved.
+     *
+     * @param pathname A canonical pathname String
+     * 
+     */
+    public void setHtmlOutputDirectoryPath(String pathname) {
+        htmlOutputDirectoryPath = pathname;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the canonical pathname String of the directory in which
+     * HTML output files should be saved.
+     */
+    public String getHtmlOutputDirectoryPath() {
+        try {
+            if (StringUtil.emptyString(htmlOutputDirectoryPath)) {
+                File dir = makeOutputDir("dd", StringUtil.getDateTime("yyyyMMdd"));
+                if (dir.isDirectory() && dir.canWrite()) {
+                    setHtmlOutputDirectoryPath(dir.getCanonicalPath());
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return htmlOutputDirectoryPath;
+    }
+
+    /** ***************************************************************
+     * A Map in which the keys are SUO-KIF terms and the values are
+     * Lists.  Each element in a List is a "top level" term in a
+     * subsumption graph formed by syntacticSubordinate or its
+     * subrelations.  The keys are the focal terms for this DocGen
+     * instance (e.g., MessageTypes or namespaces) .
+     *
+     */
+    private Map topLevelTerms = null;
+
+    /** ***************************************************************
+     * Sets the Map containing the List of top-level terms (values)
+     * for each focal term (keys) in the ontology associated with this
+     * DocGen instance.
+     *
+     * @param tops A Map in which each key is a focal term and each
+     * value is a list of the top-level terms for the focal term
+     */
+    public void setTopLevelTerms(Map tops) {
+        this.topLevelTerms = tops;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns a Map in which the keys are SUO-KIF terms and the
+     * values are Lists.  Each element in a List is a "top level" term
+     * in a subsumption graph formed by syntacticSubordinate or its
+     * subrelations.  The keys are the focal terms for the ontology
+     * associated with this DocGen instance (e.g., MessageTypes or
+     * namespaces).  Returns null if no Map for topLevelTerms has been
+     * set.
+     */
+    public Map getTopLevelTerms() {
+        return this.topLevelTerms;
+    }
+
+    /** 
+     * A Map containing String replacement pairs.  This is to provide
+     * adequate ASCII translations for HTML character entities, in
+     * circumstances where occurrences of the entities might cause
+     * parsing or rendering problems (e.g., apparently, in XSD files).
+     *
+     */
+    private Map stringReplacementMap = null;
+
+    /** ***************************************************************
+     * Sets the Map to be used for HTML character entity to ASCII 
+     * replacements.
+     */
+    public void setStringReplacementMap(Map keyValPairs) {
+        this.stringReplacementMap = keyValPairs;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the Map to be used for HTML character entity to ASCII
+     * replacements, attempting to build it from
+     * docGenCodeMapTranslation statements found in the KB if the Map
+     * does not already exist.
+     */
+    public Map getStringReplacementMap() {
+        try {
+            if (stringReplacementMap == null) {
+                Map srMap = new HashMap();
+                KB kb = getDefaultKB();
+                if (kb instanceof KB) {
+                    List formulae = kb.ask("arg", 0, "docGenCodeMapTranslation");
+                    if (formulae != null) {
+                        Formula f = null;
+                        for (Iterator it = formulae.iterator(); it.hasNext();) {
+                            f = (Formula) it.next();
+                            srMap.put(StringUtil.removeEnclosingQuotes(f.getArgument(2)),
+                                      StringUtil.removeEnclosingQuotes(f.getArgument(4)));
+                        }
+                    }
+                }
+                else {
+                    System.out.println("WARNING in DocGen.getStringReplacementMap()");
+                    System.out.println("  DocGen.defaultKB is not set");
+                }
+                if (srMap.isEmpty()) {
+                    System.out.println("WARNING in DocGen.getStringReplacementMap()");
+                    System.out.println("  DocGen.stringReplacementMap is empty");
+                }
+                setStringReplacementMap(srMap);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return this.stringReplacementMap;
+    }
+
+    /** ***************************************************************
+     * Returns the String replacement for fromString, if one can be
+     * located, else just returns fromString.
+     *
+     * @param fromString A String for which a replacement is sought
+     *
+     * @return A replacement String
+     */
+    public String getStringReplacement(String fromString) {
+        String toString = fromString;
+        try {
+            Map replacements = getStringReplacementMap();
+            if (replacements != null) {
+                String rep = (String) replacements.get(fromString);
+                if (rep != null) {
+                    toString = rep;
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return toString;
+    }
+
+    /** A set of the predicates that should not be displayed to the user. */
+    private Set inhibitDisplayRelations = null;
+
+    /** ***************************************************************
+     * Sets the predicates for which diplay should be suppressed to
+     * those contained in relations.
+     *
+     * @param relations A Set of predicate names
+     *
+     */
+    public void setInhibitDisplayRelations(Set relations) {
+        this.inhibitDisplayRelations = relations;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns a Set containing the names of those predicates for
+     * which diplay should be suppressed, and tries to create the Set
+     * from docGenInhibitDisplayRelations statements found in the
+     * current KB if the Set does not already exist.
+     *
+     * @return a Set of predicate names
+     *
+     */
+    public Set getInhibitDisplayRelations() {
+        try {
+            if (inhibitDisplayRelations == null) {
+                KB kb = getDefaultKB();
+                String onto = getOntology();
+                Set idr = new TreeSet();
+                if ((kb != null) && StringUtil.isNonEmptyString(onto)) {
+                    String arg2 = 
+                        kb.getFirstTermViaAskWithRestriction(0,
+                                                             "docGenInhibitDisplayRelations",
+                                                             1,
+                                                             onto,
+                                                             2);
+                    if (StringUtil.isNonEmptyString(arg2)) {
+                        List relnList = StringUtil.kifListToArrayList(arg2);
+                        if (!relnList.isEmpty()) {
+                            if (((String) relnList.get(0)).equals("ListFn")) {
+                                relnList.remove(0);
+                            }
+                        }
+                        idr.addAll(relnList);
+                    }
+                }
+                setInhibitDisplayRelations(idr);
+                if (inhibitDisplayRelations.isEmpty()) {
+                    System.out.println("WARNING in DocGen.getInhibitDisplayRelations()");
+                    System.out.println("  DocGen.inihibitDisplayRelations is empty");
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return inhibitDisplayRelations;
+    }
+
+    /** ***************************************************************
+     * The header to be used for the the table of contents (or index
+     * list) section during HTML generation.
+     */
+    private String tocHeader = "";
+
+    /** ***************************************************************
+     * Sets the String header to be used in generated HTML files to
+     * header.
+     */
+    public void setTocHeader(String header) {
+        this.tocHeader = header;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the String header to be used in generated HTML files.
+     */
+    public String getTocHeader() {
+        return this.tocHeader;
+    }
+
+    /** ***************************************************************
+     * If true, a termFormat value obtained for term will be displayed
+     * rather than the term name itself.
+     */
+    public boolean simplified = false;
+
+    /** ***************************************************************
+     * A Map in which each key is a KB name and the corresponding
+     * value is a List of the Predicates defined in the KB.
+     */
+    private HashMap relationsByKB = new HashMap();
+
+    /** ***************************************************************
+     * A List of currently known namespaces.
+     */
+    private ArrayList<String> namespaces = null;
+
+    /** ***************************************************************
+     * A List of currently known namespace prefixes.
+     */
+    private ArrayList<String> namespacePrefixes = new ArrayList<String>();
+
+    /** ***************************************************************
+     * A Set of Strings.
+     */
+    private Set codedIdentifiers = null;
+
+    /** ***************************************************************
+     * Returns a String consisting of str concatenated indent times.
+     *
+     * @param str The String to be concatentated with itself
+     *
+     * @param indent An int indicating the number of times str should
+     * be concatenated
+     *
+     * @return A String
+     */
+    public static String indentChars(String str, int indent) {
+
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < indent; i++) {
-            result.append(c);
+            result.append(str);
         }
         return result.toString();
     }
 
     /** ***************************************************************
+     * The parent directory for target subdirectories of HTML, XSD,
+     * and other types of files generated by this DocGen object.
      */
-    public void setHeader(String h) {
-        header = h;
-    }
+    private File outputParentDir = new File(KBmanager.getMgr().getPref("baseDir"));
 
     /** ***************************************************************
-     */
-    public void setFooter(String f) {
-        footer = f;
-    }
-
-    /** ***************************************************************
-     *  If the given term is an instance, and is an instance of the
-     *  term with the headword "Composite".
-     */
-    public boolean isCompositeInstance(KB kb, String term) {
-        /*
-        //System.out.println("INFO in DocGen.isCompositeInstance(): term: " + term);
-        //ArrayList headwords = kb.askWithRestriction(0,"headword",2,"\"Composite\"");
-        //System.out.println("headwords " + headwords);
-        //if (headwords != null && headwords.size() > 0) {
-        //Formula f = (Formula) headwords.get(0);
-        //String composite = f.getArgument(1);
-        // 
-        // Note that we could try to find the composite by doing an ask on
-        // headword and then searching for "Composite" but KIF.parse doesn't
-        // index on Strings so we can't use kb.askWithRestrictions()
-
-        // String composite = "ddex_Composite";
-        //System.out.println("INFO in DocGen.isCompositeInstance(): composite: " + composite);
-        // ArrayList instances = null;
-        if (StringUtil.isNonEmptyString(term)) {
-        instances = kb.askWithPredicateSubsumption("instance",1,term);
-        }
-
-        // System.out.println("2. instances == " + instances);
-
-        if (instances != null) 
-        return (Diagnostics.findParent(kb,term,composite) &&
-        instances.size() > 0);
-        //return false;
-        //}
-        */
-        return kb.isInstanceOf(term, "ddex_Composite");
-    }
-
-
-    /** **************************************************************
-     * Returns true if term is supposed to be displayed (at all, in
-     * any form), else returns false.
+     * Sets the parent directory in which subdirectories for different
+     * types of output files will be created to the File obj, and
+     * tries to create the directory pathname if it does not already
+     * exist.
      *
-     * @return true or false
+     * @param obj A File object representing a directory
      */
-    private boolean isLegalForDisplay(KB kb, String term) {
-        
-        return (StringUtil.isNonEmptyString(term)
-                && term.matches("^\\w+_.+")
-                && !getNamespaces(kb).contains(term)
-                && !term.matches(".*(?i)localinstance.*")
-                // && !term.matches(".*(?i)xml.*")
-                && !term.startsWith("coa_")
-                && !term.startsWith("ns_")
-                && !term.startsWith("x_")
-                && !term.matches(".+_hw_.+")
-                && !term.matches(".+_syn_.+")
-                && !term.matches(".+_en_.+"));
-    }
-
-    /** **************************************************************
-     * Filters the list, remove all items that match pattern.
-     *
-     */
-    private void filterByPattern(List seq, String regex) {
+    public void setOutputParentDir(File obj) {
         try {
-            if ((seq instanceof List) && StringUtil.isNonEmptyString(regex)) {
-                int len = seq.size();
-                Object obj = null;
-                for (int i = 0; i < len; i++) {
-                    obj = (Object) seq.remove(0);
-                    if ((obj instanceof String) && ((String) obj).matches(regex)) {
-                        continue;
+            if (obj instanceof File) {
+                if (!obj.isDirectory() || !obj.canWrite()) {
+                    System.out.println("WARNING in DocGen.setOutputParentDir(" + obj + "):");
+                    System.out.println("  " + obj + " is not an accessible directory");
+                    String pathname = obj.getCanonicalPath();
+                    if (StringUtil.isNonEmptyString(pathname)) {
+                        System.out.println("  Will try to create " + pathname);
+                        obj.mkdirs();
                     }
-                    seq.add(obj);
+                }
+                if (obj.isDirectory() && obj.canWrite()) {
+                    this.outputParentDir = obj;
+                }
+                else {
+                    System.out.println("WARNING in DocGen.setOutputParentDir(" + obj + "):");
+                    System.out.println("  Could not set outputParentDir");
                 }
             }
         }
@@ -170,77 +593,503 @@ public class DocGen {
         }
         return;
     }
+
+    /** ***************************************************************
+     * Sets the parent directory in which subdirectories for different
+     * types of output files will be created to the File obj, and
+     * tries to create the directory pathname if it does not already
+     * exist.
+     *
+     * @param pathname A String representing a directory pathname
+     */
+    public void setOutputParentDir(String pathname) {
+        try {
+            if (StringUtil.isNonEmptyString(pathname)) {
+                setOutputParentDir(new File(pathname));
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** ***************************************************************
+     * Sets the parent directory in which subdirectories for different
+     * types of output files will be created to the File obj, and
+     * tries to create the directory pathname if it does not already
+     * exist.
+     *
+     * @param pathname A String representing a directory pathname
+     */
+    public void setOutputParentDir(List pathnameComponents) {
+        try {
+            String fs = System.getProperty("file.separator");
+            StringBuilder sb = new StringBuilder();
+            String comp = null;
+            boolean isFirst = true;
+            for (Iterator it = pathnameComponents.iterator(); it.hasNext();) {
+                comp = (String) it.next();
+                if (isFirst) {
+                    if ((comp instanceof String) && comp.equals("")) {
+                        comp = fs;
+                    }
+                }
+                else {
+                    sb.append(fs);
+                }
+                sb.append(comp);
+                isFirst = false;
+            }
+            String pathname = sb.toString();
+            if (StringUtil.isNonEmptyString(pathname)) {
+                setOutputParentDir(new File(pathname));
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** ***************************************************************
+     * Sets the parent directory in which subdirectories for different
+     * types of output files will be created to the abstract pathname
+     * represented by a statement in kb formed with the predicate
+     * docGenOutputParentDirectory and the argument ontology.  Tries
+     * to create the directory pathname if it does not already exist.
+     *
+     * @param kb The KB containing a statement formed with the
+     * predicate docGenOutputParentDirectory and ontology
+     *
+     * @param ontology The ontology referred to in a statement formed
+     * with the predicate docGenOutputParentDirectory in kb
+     *
+     */
+    public void setOutputParentDir(KB kb, String ontology) {
+        try {
+            String flist = kb.getFirstTermViaAskWithRestriction(0,
+                                                                "docGenOutputParentDirectory",
+                                                                1,
+                                                                ontology,
+                                                                2);
+            if (StringUtil.isNonEmptyString(flist)) {
+                Formula f = new Formula();
+                f.read(flist);
+                if (f.listP()) {
+                    ArrayList pathnameComponents = new ArrayList();
+                    String comp = null;
+                    for (int i = 0; f.listP() && !f.empty(); i++) {
+                        comp = StringUtil.removeEnclosingQuotes(f.car());
+                        if (!((i == 0) && comp.equals("ListFn"))) {
+                            pathnameComponents.add(comp);
+                        }
+                        f.read(f.cdr());
+                    }
+                    setOutputParentDir(pathnameComponents);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns a File object representing the directory in which the
+     * subdirectories for the various types of output files will be
+     * located.
+     */
+    public File getOutputParentDir() {
+        return this.outputParentDir;
+    }
+
+    /** ***************************************************************
+     * The ontology for which this DocGen object is being used to
+     * generate files.
+     */
+    private String ontology = null;
+
+    /** ***************************************************************
+     * Sets the ontology associated with this DocGen object to term.
+     *
+     * @param term A SUO-KIF term denoting an ontology
+     */
+    public void setOntology(String term) {
+        this.ontology = term;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns a SUO-KIF term (String) denoting the ontology
+     * associated with this DocGen object.
+     */
+    public String getOntology() {
+        return this.ontology;
+    }
+
+    /** ***************************************************************
+     * The DisplayFilter which, if present, determines if a given
+     * SUO-KIF object may be displayed or output by this DocGen
+     * object.
+     */
+    private DisplayFilter displayFilter = null;
+
+    /** ***************************************************************
+     * Sets the DisplayFilter associated with this DocGen object to
+     * filterObj.
+     *
+     * @param filterObj An instance of DisplayFilter
+     */
+    public void setDisplayFilter(DisplayFilter filterObj) {
+        this.displayFilter = filterObj;
+        return;
+    }
+
+    /** ***************************************************************
+     * Returns the DisplayFilter object associated with this DocGen
+     * object, or null if no DisplayFilter has been set.
+     */
+    public DisplayFilter getDisplayFilter() {
+        return this.displayFilter;
+    }
+
+    /** ***************************************************************
+     * Returns a String of HTML markup for the start of a document, using title as
+     * the document title String.
+     *
+     * @param title A String to be used as the document title
+     *
+     * @return A String of HTML markup encoding the start of an HTML
+     * document
+     */
+    public String generateHtmlDocStart(String title) {
+
+        String result = "";
+
+        try {
+
+            String cssf = getStyleSheet();
+            cssf = StringUtil.removeEnclosingQuotes(cssf);
+
+            String docTitle = title;
+            if (!StringUtil.isNonEmptyString(docTitle)) {
+                docTitle = getTitleText();
+            }
+            docTitle = StringUtil.removeEnclosingQuotes(docTitle);
+            docTitle = StringUtil.removeQuoteEscapes(docTitle);
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("<html>");
+            sb.append(lineSeparator);
+            sb.append("  <head>");
+            sb.append(lineSeparator);
+            sb.append("    <meta http-equiv=\"Content-Type\" ");
+            sb.append("content=\"text/html; charset=utf-8\">");
+            sb.append(lineSeparator);
+            if (StringUtil.isNonEmptyString(cssf)) {
+                sb.append("    <link rel=\"stylesheet\" type=\"text/css\" href=\"");
+                sb.append(cssf);
+                sb.append("\">");
+                sb.append(lineSeparator);
+            }
+            if (StringUtil.isNonEmptyString(docTitle)) {
+                sb.append("    <title>");
+                sb.append(docTitle);
+                sb.append("</title>");
+                sb.append(lineSeparator);
+            }
+            sb.append("  </head>");
+            sb.append(lineSeparator);
+            sb.append("  <body>");
+            sb.append(lineSeparator);
+            result = sb.toString();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Returns a String of HTML markup encoding the footer section of
+     * an HTML document, and using footerText as the text to be
+     * displayed at the bottom of the page.
+     *
+     * @param footerText The text String to be diplayed at the bottom
+     * of an HTML document
+     *
+     * @return A String of HTML markup
+     */
+    private String generateHtmlFooter(String footerText) {
+        String result = "";
+        try {
+            String text = footerText;
+            if (!StringUtil.isNonEmptyString(text)) {
+                text = getFooterText();
+            }
+            text = StringUtil.removeEnclosingQuotes(text);
+            text = StringUtil.removeQuoteEscapes(text);
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("<table width=\"100%\">" );
+            sb.append(lineSeparator);
+            sb.append("  <tr class=\"title\">");
+            sb.append(lineSeparator);
+            sb.append("    <td>");
+            // sb.append(lineSeparator);
+            sb.append(text);
+            // sb.append(lineSeparator);
+            sb.append("    </td>");
+            sb.append(lineSeparator);
+            sb.append("  </tr>");
+            sb.append(lineSeparator);
+            sb.append("</table>");
+            sb.append(lineSeparator);
+            result = sb.toString();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** **************************************************************
+     * Returns true if term is an instance or subclass of
+     * CompositeContentBearingObject in kb, else returns false.
+     *
+     * @param kb The KB in which to check the definition of term
+     *
+     * @param term A String that names a SUO-KIF term
+     *
+     * @return true or false
+     */
+    public boolean isComposite(KB kb, String term) {
+        boolean ans = false;
+        try {
+            ans = (kb.isInstanceOf(term, "CompositeContentBearingObject")
+                   || kb.isSubclass(term, "CompositeContentBearingObject")
+                   || kb.isInstanceOf(term, "CompositeContentBearingObjectType"));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+
+    /** **************************************************************
+     * Returns true if statements that include term and occur in the
+     * kb and ontology associated with this DocGen object may be
+     * displayed or output (at all, in any form).
+     *
+     * @return true or false
+     */
+    private boolean isLegalForDisplay(String term) {
+        boolean ans = StringUtil.isNonEmptyString(term);
+        try {
+            DisplayFilter df = getDisplayFilter();
+            if (ans && (df != null)) {
+                ans = df.isLegalForDisplay(this, term);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** **************************************************************
+     * Filters the List of Strings seq, removing all items that match
+     * the regular expression pattern regex.
+     *
+     * @param seq A List of Strings
+     *
+     * @param regex A regular expression pattern String that will be
+     * matched against the Strings in seq
+     *
+     */
+    private void removeByPattern(List seq, String regex) {
+        try {
+            if ((seq instanceof List) && StringUtil.isNonEmptyString(regex)) {
+                Object obj = null;
+                for (ListIterator it = seq.listIterator(); it.hasNext();) {
+                    obj = (Object) it.next();
+                    if (obj.toString().matches(regex)) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** **************************************************************
+     * Filters the List of Strings seq, retaining only items that match
+     * the regular expression pattern regex.
+     *
+     * @param seq A List of Strings
+     *
+     * @param regex A regular expression pattern String that will be
+     * matched against the Strings in seq
+     *
+     */
+    private void retainByPattern(List seq, String regex) {
+        try {
+            if ((seq instanceof List) && StringUtil.isNonEmptyString(regex)) {
+                Object obj = null;
+                for (ListIterator it = seq.listIterator(); it.hasNext();) {
+                    obj = (Object) it.next();
+                    if (!obj.toString().matches(regex)) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** **************************************************************
+     * Returns a List of all SUO-KIF terms denoting those namespaces
+     * defined in, or especially pertinent to, ontology, as specified
+     * by statements formed with the SUO-KIF predicate
+     * ontologyNamespace that occur in kb.
+     *
+     * @param kb The KB in which statements will be checked
+     *
+     * @param ontology The name of the ontology that will be checked
+     *
+     * @return A List of the SUO-KIF terms that denote namespaces and
+     * occur in statements formed with ontologyNamespace in kb
+     */
+    protected ArrayList<String> getOntologyNamespaces(KB kb, String ontology) {
+        ArrayList<String> ans = new ArrayList<String>();
+        try {
+            ans.addAll(new HashSet<String>(kb.getTermsViaAskWithRestriction(0, 
+                                                                            "ontologyNamespace", 
+                                                                            1, 
+                                                                            ontology,
+                                                                            2)));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
                 
     /** **************************************************************
-     * Collect all namespaces asserted to be such in the knowledge base.
+     * Returns a List of all SUO-KIF terms denoting namespaces in kb
+     * or in ontology, using the predicates inNamespace and
+     * ontologyNamespace.
      *
-     *  @return A list of all the terms that denote namespaces.
+     * @param kb The KB in which statements will be checked
+     *
+     * @param ontology The name of the ontology that will be checked
+     *
+     * @param force If true, this parameter will force the List of
+     * namespaces to be recomputed
+     *
+     * @return A List of all the SUO-KIF terms that denote namespaces
+     * and occur in statements formed with inNamespace or
+     * ontologyNamespace
      */
-    private List getNamespaces(KB kb) {
-
-        if (namespaces != null) {
-            return namespaces;
-        }
-        ArrayList formulas = kb.ask("arg", 0, "inNamespace");
-        if (formulas != null) {
-            ArrayList nss = new ArrayList();
-            Iterator it = formulas.iterator();
-            Formula f = null;
-            String term = null;
-            while (it.hasNext()) {
-                f = (Formula) it.next();
-                term = f.getArgument(2);
-                if (!nss.contains(term)) {
-                    nss.add(term);
+    protected ArrayList<String> getNamespaces(KB kb, String ontology, boolean force) {
+        try {
+            if ((namespaces == null) || namespaces.isEmpty() || force) {
+                if (namespaces == null) {
+                    namespaces = new ArrayList<String>();
                 }
-            }
-            Comparator comp = new Comparator() {
-                    public int compare(Object o1, Object o2) {
-                        int l1 = o1.toString().length();
-                        int l2 = o2.toString().length();
-                        int ans = 0;
-                        if (l1 > l2) {
-                            ans = -1;
-                        }
-                        else if (l1 < l2) {
-                            ans = 1;
-                        }
-                        return ans;
+                namespaces.clear();
+                List<String> terms = kb.getTermsViaAsk(0, "inNamespace", 2);
+                List<String> terms2 = new ArrayList<String>();
+                if (StringUtil.emptyString(ontology)) {
+                    ontology = getOntology();
+                }
+                if (StringUtil.isNonEmptyString(ontology)) {
+                    terms2.addAll(getOntologyNamespaces(kb, ontology));
+                }
+                HashSet<String> hs = new HashSet<String>();
+                hs.addAll(terms);
+                hs.addAll(terms2);
+                namespaces.addAll(hs);
+                if (!namespaces.isEmpty()) {
+                    Comparator comp = new Comparator() {
+                            public int compare(Object o1, Object o2) {
+                                int l1 = o1.toString().length();
+                                int l2 = o2.toString().length();
+                                int ans = 0;
+                                if (l1 > l2) {
+                                    ans = -1;
+                                }
+                                else if (l1 < l2) {
+                                    ans = 1;
+                                }
+                                return ans;
+                            }
+                        };
+                    Collections.sort(namespaces, comp);
+                    if (namespacePrefixes == null) {
+                        namespacePrefixes = new ArrayList<String>();
                     }
-                };
-            Collections.sort(nss, comp);
-            namespacePrefixes = new ArrayList();
-            for (int i = 0; i < nss.size(); i++) {
-                term = (String) nss.get(i);
-                if (term.endsWith(DB.KIF_NS_DELIMITER) || term.endsWith(DB.W3C_NS_DELIMITER)) {
-                    term = term.substring(0, term.length() - 1);
+                    namespacePrefixes.clear();
+                    List<String> delims = Arrays.asList(DB.getKifNamespaceDelimiter(), 
+                                                        DB.getW3cNamespaceDelimiter());
+                    List<String> nsPrefs = Arrays.asList("ns" + DB.getKifNamespaceDelimiter(),
+                                                         "ns" + DB.getW3cNamespaceDelimiter());
+                    String prefix = null;
+                    for (String term : namespaces) {
+                        prefix = term;
+                        for (String delim : delims) {
+                            if (prefix.endsWith(delim)) {
+                                prefix = prefix.substring(0, prefix.length() - delim.length());
+                                break;
+                            }
+                        }
+                        for (String nsPref : nsPrefs) {
+                            if (prefix.startsWith(nsPref)) {
+                                prefix = prefix.substring(nsPref.length());
+                                break;
+                            }
+                        }
+                        namespacePrefixes.add(prefix + DB.getKifNamespaceDelimiter());
+                        namespacePrefixes.add(prefix + DB.getW3cNamespaceDelimiter());
+                    }
+                    Collections.sort(namespacePrefixes, comp);
                 }
-                if (term.startsWith("ns_") || term.startsWith("ns:")) {
-                    term = term.substring(3);
-                }
-                namespacePrefixes.add(term + DB.KIF_NS_DELIMITER);
-                namespacePrefixes.add(term + DB.W3C_NS_DELIMITER);
+                System.out.println("");
+                System.out.println("namespaces == " + namespaces);
+                System.out.println("namespacePrefixes == " + namespacePrefixes);
             }
-            Collections.sort(namespacePrefixes, comp);
-            namespaces = nss;
-            System.out.println("namespaces == " + namespaces);
-            System.out.println("namespacePrefixes == " + namespacePrefixes);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return namespaces;
     }
 
     /** **************************************************************
+     * Returns the namespace prefix of term based on the namespaces
+     * known in kb, else returns the empty String if term appears to
+     * have no namespace prefix.
      */
     private String getNamespacePrefix(KB kb, String term) {
         String ans = "";
         if (StringUtil.isNonEmptyString(term)) {
             if (namespacePrefixes == null) {
-                getNamespaces(kb);
+                getNamespaces(kb, getOntology(), true);
             }
-            int len = namespacePrefixes.size();
             String prefix = null;
-            for (int i = 0; i < len; i++) {
-                prefix = (String) namespacePrefixes.get(i);
+            for (Iterator it = namespacePrefixes.iterator(); it.hasNext();) {
+                prefix = (String) it.next();
                 if (term.startsWith(prefix)) {
                     ans = prefix;
                     break;
@@ -251,6 +1100,8 @@ public class DocGen {
     }
 
     /** **************************************************************
+     * Returns term without its namespace prefix if it appears to have
+     * one in kb, else just returns term.
      */
     private String stripNamespacePrefix(KB kb, String term) {
         String ans = term;
@@ -262,45 +1113,68 @@ public class DocGen {
     }
 
     /** **************************************************************
+     * Returns a SUO-KIF term denoting a namespace.
+     *
+     * @param kb The KB in which to determine if term is an namespace
+     *
+     * @param term A String denoting a namespace, perhaps in W3C format
+     *
+     * @return String A term denoting a namespace in SUO-KIF format,
+     * else just returns the input term if no syntactic transformation
+     * is warranted
      */
     private String toKifNamespace(KB kb, String term) {
         String ans = term;
-        List namespaces = getNamespaces(kb);
-        String kifTerm = DB.w3cToKif(term);
-        String prefix = "ns" + DB.KIF_NS_DELIMITER;
-        if (!kifTerm.equals("ns") && !kifTerm.startsWith(prefix)) {
-            kifTerm = prefix + kifTerm;
-        }
-        String ns = null;
-        if ((namespaces != null) && !namespaces.isEmpty()) {
-            for (int i = 0; i < namespaces.size(); i++) {
-                ns = (String) namespaces.get(i);
-                if (ns.equalsIgnoreCase(kifTerm)) {
-                    ans = ns;
-                    break;
+        try {
+            String kifTerm = DB.w3cToKif(term);
+            String prefix = ("ns" + DB.getKifNamespaceDelimiter());
+            if (!kifTerm.equals("ns") && !kifTerm.startsWith(prefix)) {
+                kifTerm = prefix + kifTerm;
+            }
+            List namespaces = getNamespaces(kb, getOntology(), false);
+            if ((namespaces != null) && !namespaces.isEmpty()) {
+                String ns = null;
+                for (Iterator it = namespaces.iterator(); it.hasNext();) {
+                    ns = (String) it.next();
+                    if (ns.equalsIgnoreCase(kifTerm)) {
+                        ans = ns;
+                        break;
+                    }
                 }
             }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return ans;
     }
 
     /** **************************************************************
+     * Removes namespace prefixes from all SUO-KIF terms to be
+     * hyperlinked in text.
+     *
+     * @param kb The KB is use when checking for valid namespace prefixes
+     *
+     * @param text The String in which all linkable SUO-KIF terms are
+     * to be transformed
+     * 
+     * @return A String with all linkable SUO-KIF terms have had their
+     * namespace prefixes removed
      */
     private String removeLinkableNamespacePrefixes(KB kb, String text) {
         String ans = text;
         try {
             if (StringUtil.isNonEmptyString(text)) {
-                List nss = getNamespaces(kb);
-                int len = nss.size();
-                String prefixPattern = null;
-                for (int i = 0; i < len; i++) {
-                    prefixPattern = (String) nss.get(i);
-                    if (prefixPattern.startsWith("ns_")) { 
-                        prefixPattern = prefixPattern.substring(3); 
+                if (namespacePrefixes == null) {
+                    getNamespaces(kb, getOntology(), true);
+                }
+                String prefix = null;
+                for (Iterator it = namespacePrefixes.iterator(); it.hasNext();) {
+                    prefix = (String) it.next();
+                    if (prefix.endsWith(DB.getKifNamespaceDelimiter())) {
+                        prefix = "\\&\\%" + prefix;
+                        ans = ans.replaceAll(prefix, "");
                     }
-                    prefixPattern = "\\&\\%" + prefixPattern;
-                    prefixPattern += "_";
-                    ans = ans.replaceAll(prefixPattern, "");
                 }
             }
         }
@@ -311,360 +1185,156 @@ public class DocGen {
     }
 
     /** **************************************************************
-     * Collect all ISO code values asserted to be such in the
-     * knowledge base.
+     * Collects and returns the Set containing all known coded
+     * identifiers in kb, including ISO code values stated to be such.
+     * 
+     * @param kb The KB in which to gather terms defined as coded
+     * identifiers
      *
-     *  @return A list of all the terms that denote ISO code values.
+     *  @return A Set of all the terms that denote ISO code values and
+     *  other coded identifiers
      */
-    private Set getIsoCodes(KB kb) {
-        if (isoCodes != null) {
-            return isoCodes;
-        }
-        Set codes = kb.getAllInstancesWithPredicateSubsumption("ddex_IsoCode");
-        Set classNames = kb.getAllSubClassesWithPredicateSubsumption("ddex_IsoCode");
-        classNames.add("ddex_IsoCode");
-        Object[] namesArr = classNames.toArray();
-        if (namesArr != null) {
-            String[] relns = {"ddex_IsOneOf", "ddex_IsA"};
-            String className = null;
-            List formulae = new ArrayList();
-            for (int i = 0; i < namesArr.length; i++) {
-                className = (String) namesArr[i];
-                for (int r = 0; r < relns.length; r++) {
-                    formulae.addAll(kb.askWithRestriction(0, relns[r], 2, className));
+    private Set getCodedIdentifiers(KB kb) {
+        try {
+            if (codedIdentifiers == null) {
+                codedIdentifiers = new TreeSet();
+            }
+            if (codedIdentifiers.isEmpty()) {
+                Set codes = kb.getAllInstancesWithPredicateSubsumption("CodedIdentifier");
+                Set classNames = kb.getAllSubClassesWithPredicateSubsumption("CodedIdentifier");
+                classNames.add("CodedIdentifier");
+                Object[] namesArr = classNames.toArray();
+                if (namesArr != null) {
+                    String className = null;
+                    List formulae = new ArrayList();
+                    for (int i = 0; i < namesArr.length; i++) {
+                        className = (String) namesArr[i];
+                        codes.addAll(kb.getTermsViaPredicateSubsumption("instance",
+                                                                        2,
+                                                                        className,
+                                                                        1,
+                                                                        false));
+                    }
                 }
-            }
-            Formula f = null;
-            for (int j = 0; j < formulae.size(); j++) {
-                f = (Formula) formulae.get(j);
-                codes.add(f.getArgument(1));
+                codedIdentifiers.addAll(codes);
             }
         }
-        isoCodes = codes;
-        return isoCodes;
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return codedIdentifiers;
     }
 
     /** ***************************************************************
-     *  Collect relations in the knowledge base
+     *  Collects and returns a List of all Predicates in kb.
      *
-     *  @return The set of relations in the knowledge base.
+     * @param kb The KB from which to gather all terms that are
+     * instances of BinaryPredicate
+     *
+     * @return A List of BinaryPredicates (Strings)
      */
-    private ArrayList getRelations(KB kb) {
-
-        ArrayList cached = (ArrayList) relationsByKB.get(kb);
-        if (cached != null) {
-            return cached;
-        }
-
-        TreeSet relations = new TreeSet();
-        String[] classes = {"ddex_Relator", "BinaryPredicate"};
-        ArrayList instances = null;
-        Iterator it = null;
-        Formula f = null;
-        String reln = null;
-        for (int i = 0; i < classes.length; i++) {
-            instances = kb.askWithPredicateSubsumption("instance",2,classes[i]);
-
-            // System.out.println("3. instances == " + instances);
-
-            if (instances != null) {
-                it = instances.iterator();
+    private ArrayList getPredicates(KB kb) {
+        ArrayList cached = null;
+        try {
+            cached = (ArrayList) relationsByKB.get(kb);
+            if (cached == null) {
+                TreeSet predSet = new TreeSet();
+                Set classNames = kb.getAllSubClassesWithPredicateSubsumption("Predicate");
+                classNames.add("Predicate");
+                Iterator it = classNames.iterator();
+                String cn = null;
+                String p0 = null;
+                String p1 = null;
+                String p2 = null;
+                String namespace = null;
+                Iterator it2 = null;
+                List predList = null;
                 while (it.hasNext()) {
-                    f = (Formula) it.next();
-                    reln = f.getArgument(1).intern();
-                    if (reln.contains(DB.KIF_NS_DELIMITER)) {
-                        relations.add(reln);
+                    cn = (String) it.next();
+                    predList = kb.getTermsViaPredicateSubsumption("instance",
+                                                                  2,
+                                                                  cn,
+                                                                  1,
+                                                                  true);
+
+                    // System.out.println("3. instances == " + instances);
+
+                    for (it2 = predList.iterator(); it2.hasNext();) {
+                        p1 = (String) it2.next();
+                        namespace = getTermNamespace(kb, p1);
+                        if (StringUtil.isNonEmptyString(namespace)
+                            && getOntologyNamespaces(kb, getOntology()).contains(namespace)) {
+                            // pred.contains(DB.getKifNamespaceDelimiter())) {
+                            predSet.add(p1);
+                        }
                     }
                 }
+                List p0List = new ArrayList();
+                List working = new ArrayList();
+                Set accumulator = new HashSet(Arrays.asList("subrelation", "inverse"));
+                while (!accumulator.isEmpty()) {
+                    working.clear();
+                    working.addAll(accumulator);
+                    accumulator.clear();
+                    for (it = working.iterator(); it.hasNext();) {
+                        p0 = (String) it.next();
+                        namespace = getTermNamespace(kb, p0);
+                        if (StringUtil.isNonEmptyString(namespace)
+                            && getOntologyNamespaces(kb, getOntology()).contains(namespace)) {
+                            predSet.add(p0);
+                        }
+                        if (!p0List.contains(p0)) {
+                            p0List.add(p0);
+                        }
+                        accumulator.addAll(kb.getTermsViaPredicateSubsumption("subrelation",
+                                                                              2,
+                                                                              p0,
+                                                                              1,
+                                                                              true));
+                    }
+                }
+                List formulae = null;
+                Formula f = null;
+                for (it = p0List.iterator(); it.hasNext();) {
+                    p0 = (String) it.next();
+                    formulae = kb.ask("arg", 0, p0);
+                    if (formulae != null) {
+                        for (it2 = formulae.iterator(); it2.hasNext();) {
+                            f = (Formula) it2.next();
+                            p1 = f.getArgument(1);
+                            namespace = getTermNamespace(kb, p1);
+                            if (StringUtil.isNonEmptyString(namespace)
+                                && getOntologyNamespaces(kb, getOntology()).contains(namespace)) {
+                                predSet.add(p1);
+                            }
+                            p2 = f.getArgument(2);
+                            namespace = getTermNamespace(kb, p2);
+                            if (StringUtil.isNonEmptyString(namespace)
+                                && getOntologyNamespaces(kb, getOntology()).contains(namespace)) {
+                                predSet.add(p2);
+                            }
+                        }
+                    }
+                }
+                cached = new ArrayList(predSet);
+                relationsByKB.put(kb, cached);
             }
         }
-        cached = new ArrayList(relations);
-        relationsByKB.put(kb, cached);
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return cached;
     }
 
     /** ***************************************************************
+     * Returns true if term has syntactic subcomponents such as XML
+     * elements or XML attributes in kb, else returns false.
      *
-     */
-    private void buildCompositeCaches(KB kb) {
-        buildCompositeMaps(kb);
-        buildCompositeUpwardClosureGraph(kb);
-        return;
-    }
-
-    /** ***************************************************************
+     * @param kb The KB in which term is defined
      *
-     */
-    private void buildCompositeMaps(KB kb) {
-        try {
-            System.out.println("Building composite maps");
-            compositesBT.clear();
-            compositesNT.clear();
-            String[] relns = {"ddex_HasXmlElement", "ddex_HasXmlAttribute"};
-            // Set accumulator = kb.getAllInstancesWithPredicateSubsumption("ddex_Composite");
-            List working = new ArrayList();
-            List tmp = null;
-            for (int r = 0; r < relns.length; r++) {
-                tmp = kb.ask("arg", 0, relns[r]);
-                if (tmp != null) {
-                    working.addAll(tmp);
-                }
-            }
-
-            System.out.println(working.size() + " statements in working");
-            String arg0 = null;
-            String arg1 = null;
-            String arg2 = null;
-            Formula f = null;
-            List upward = null;
-            List downward = null;
-            for (int i = 0; i < working.size(); i++) {
-                f = (Formula) working.get(i);
-                arg1 = f.getArgument(1);
-                arg2 = f.getArgument(2);
-                downward = (List) compositesNT.get(arg1);
-                if (downward == null) {
-                    downward = new ArrayList();
-                    compositesNT.put(arg1, downward);
-                }
-                if (!downward.contains(arg2)) {
-                    downward.add(arg2);
-                }
-                upward = (List) compositesBT.get(arg2);
-                if (upward == null) {
-                    upward = new ArrayList();
-                    compositesBT.put(arg2, upward);
-                }
-                if (!upward.contains(arg1)) {
-                    upward.add(arg1);
-                }
-            }
-
-            List tops = new ArrayList();
-            List leaves = new ArrayList();
-            List keys = new ArrayList(compositesNT.keySet());
-            String key = null;
-            List val = null;
-            for (int i = 0; i < keys.size(); i++) {
-                key = (String) keys.get(i);
-                val = (List) compositesNT.get(key);
-                // System.out.println(key + " => " + val);
-                if (compositesBT.get(key) == null) {
-                    tops.add(key);
-                }
-            }
-            // System.out.println("compositesBT: ");
-            keys = new ArrayList(compositesBT.keySet());
-            key = null;
-            val = null;
-            for (int i = 0; i < keys.size(); i++) {
-                key = (String) keys.get(i);
-                val = (List) compositesBT.get(key);
-                // System.out.println(key + " => " + val);
-                if (compositesNT.get(key) == null) {
-                    leaves.add(key);
-                }
-            }
-
-            System.out.println("Computed " + tops.size() + " tops");
-            System.out.println("Computed " + leaves.size() + " leaves");
-
-            List accumulator = new ArrayList();
-            working.clear();
-            for (int i = 0; i < tops.size(); i++) {
-                String top = (String) tops.get(i);
-                List topL = new ArrayList();
-                topL.add(top);
-                accumulator.add(topL);
-            };
-            List graphs = new ArrayList();
-            String key2 = null;
-            List val2 = null;
-            working.addAll(accumulator);
-            while (!working.isEmpty()) {
-
-                // System.out.println("working.size() == " + working.size());
-
-                graphs.addAll(working);
-
-                // System.out.println("graphs.size() == " + graphs.size());
-
-                accumulator.clear();
-                for (int i = 0; i < working.size(); i++) {
-                    val = (List) working.get(i);
-                    key = (String) val.get(val.size() - 1);
-                    val2 = (List) compositesNT.get(key);
-                    if (val2 != null) {
-                        for (int j = 0; j < val2.size(); j++) {
-                            key2 = (String) val2.get(j);
-                            List seq = new ArrayList();
-                            seq.addAll(val);
-                            if (seq.contains(key2)) { 
-                                System.out.println("CYCLE DETECTED!");
-                                System.out.println(seq + "<=" + key2);
-                                // System.exit(1);
-                            }
-                            else {
-                                seq.add(key2);
-                                if (accumulator.contains(seq)) {
-                                    System.out.println("CYCLE DETECTED!");
-                                    System.out.println(seq + " is already in accumulator");
-                                    // System.exit(1);
-                                }
-                                else {
-                                    accumulator.add(seq);
-                                }
-                            }
-                        }
-                    }
-                }
-                working.clear();
-                working.addAll(accumulator);
-            }
-            ntGraphs.addAll(graphs);
-
-            /*
-              for (int i = 0; i < graphs.size(); i++) {
-              val = (List) graphs.get(i);
-              System.out.println(i + ": " + val);
-              }
-              System.exit(1);
-            */
-
-            System.out.println(compositesBT.size() + " keys added to compositesBT");
-            System.out.println(compositesNT.size() + " keys added to compositesNT");
-            System.out.println(ntGraphs.size() + " lists added to ntGraphs");
-
-            // System.out.println("compositesBT == " + compositesBT);
-            // System.out.println("compositesNT == " + compositesNT);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** ***************************************************************
-     *
-     */
-    private void buildCompositeUpwardClosureGraph(KB kb) {
-        try {
-            System.out.println("Building compositesUC");
-            compositesUC.clear();
-            Iterator it = ntGraphs.iterator();
-            List graph = null;
-            List pairs = null;
-            List val = null;
-            String key = null;
-
-            // 1. Build the basic graph structure.
-            while (it.hasNext()) {
-                val = (List) it.next();
-                for (int i = 0; i < val.size(); i++) {
-                    if (i > 0) {
-                        key = (String) val.get(i);
-                        graph = (List) compositesUC.get(key);
-                        if (graph == null) {
-                            graph = new ArrayList();
-                            compositesUC.put(key, graph);
-                        }
-                        // pairs = new ArrayList();
-                        for (int j = 0; j < i; j++) {
-                            List pair = new ArrayList();
-                            pair.add(val.get(j));
-                            // pairs.add(pair);
-                            if (!graph.contains(pair)) {
-                                graph.add(pair);
-                            }
-                        }
-                        /*
-                          if (!graph.contains(pairs)) {
-                          graph.add(pairs);
-                          }
-                        */
-                    }
-                }
-            }
-
-            // 2. Add display names and documentation strings for
-            // each term, using the structure of each composite as
-            // a guide.
-
-            /*             */
-            System.out.println("Adding context-specific display names, documentation");
-            String key2 = null;
-            it = compositesUC.keySet().iterator();
-            while (it.hasNext()) {
-                key = (String) it.next();
-                graph = (List) compositesUC.get(key);
-                if ((graph != null) && !graph.isEmpty()) {
-                    List contexts = new ArrayList();
-                    contexts.add(0, "XMLLabel");
-                    contexts.add("EnglishLanguage");
-                    for (int i = 0; i < graph.size(); i++) {
-                        val = (List) graph.get(i);
-                        key2 = (String) val.get(0);
-
-                        // Add the print name for key2.
-                        String printName = getFirstTermFormat(kb, key2, contexts);
-                        val.add(printName);
-
-                        // Add the documentation string, which
-                        // should describe the role that the
-                        // element key plays in the composite
-                        // key2.
-                        String doc = "";
-                        ArrayList docForms = kb.askWithRestriction(0,"documentation",1,key);
-                        if (docForms != null && docForms.size() > 0) {
-                            for (int j = 0; j < docForms.size(); j++) {
-                                Formula f = (Formula) docForms.get(j);
-                                String context = f.getArgument(2);
-                                if (context.equals(key2)) {
-                                    doc = f.getArgument(3);
-                                }
-                            }
-                        }
-                        if (!StringUtil.isNonEmptyString(doc)) {
-                            doc = getCompositeDocumentation(kb, key, contexts);
-                        }
-                        val.add(doc);
-
-                    }
-
-                    // System.out.println(key + " => " + graph);
-
-                }
-            }
-            System.out.println(compositesUC.size() + " keys added to compositesUC");
-            // System.exit(1);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** ***************************************************************
-     *
-     */
-    private List getCompositeUpwardClosure(KB kb, String term) {
-        List ans = null;
-        try {
-            if (StringUtil.isNonEmptyString(term)) {
-                if (compositesUC.isEmpty()) {
-                    buildCompositeCaches(kb);
-                }
-                ans = (List) compositesUC.get(term);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
-    }
-
-    /** ***************************************************************
-     *
+     * @param term A String denoting a SUO-KIF constant name
+     * 
+     * @return true or false
      */
     private boolean hasSubComponents(KB kb, String term) {
         boolean ans = false;
@@ -680,16 +1350,25 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Returns a List containing those terms that are immediate
+     * syntactic subordinates of term in kb.
      *
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that is a SUO-KIF constant
+     * 
+     * @return A List of Strings that denote SUO-KIF constants, or an
+     * empty List
      */
-    private List getSubComponents(KB kb, String term) {
-        List ans = null;
+    private ArrayList getSubComponents(KB kb, String term) {
+        ArrayList ans = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(term)) {
-                if (compositesNT.isEmpty()) {
-                    buildCompositeCaches(kb);
-                }
-                ans = (List) compositesNT.get(term);
+                ans.addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
+                                                              2,
+                                                              term,
+                                                              1,
+                                                              true));
             }
         }
         catch (Exception ex) {
@@ -697,9 +1376,49 @@ public class DocGen {
         }
         return ans;
     }
-
+ 
     /** ***************************************************************
+     * Returns a List containing those terms that are immediate
+     * syntactic superiors or "containers" of term in kb.
      *
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String, a SUO-KIF constant
+     * 
+     * @return A List of Strings that denote SUO-KIF constants, or an
+     * empty List
+     */
+    private ArrayList getSuperComponents(KB kb, String term) {
+        ArrayList ans = new ArrayList();
+        try {
+            if (StringUtil.isNonEmptyString(term)) {
+                ans.addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
+                                                              1,
+                                                              term,
+                                                              2,
+                                                              true));
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+ 
+    /** ***************************************************************
+     * Returns a String that is the first termFormat value obtained
+     * for term in kb, else returns null if no termFormat value
+     * exists.
+     *
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that is a SUO-KIF constant
+     * 
+     * @param contexts A List of namespaces or other terms that index
+     * context-specific termFormat statements
+     * 
+     * @return A List of Strings that denote SUO-KIF constants, or an
+     * empty List
      */
     private String getFirstTermFormat(KB kb, String term, List contexts) {
         String ans = null;
@@ -720,7 +1439,7 @@ public class DocGen {
                         }
                         if (ans != null) { break; }
                     }
-                    if ((ans == null) && term.matches(".*(?i)LocalInstance.*")) {
+                    if ((ans == null) && DB.isLocalTermReference(term)) {
                         String moreGeneralTerm = getFirstGeneralTerm(kb, term);
                         if (StringUtil.isNonEmptyString(moreGeneralTerm)) {
                             ans = getFirstTermFormat(kb, moreGeneralTerm, contexts);
@@ -738,45 +1457,59 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Returns the first documentation String obtained for term in kb,
+     * using the List of namespaces or other contextualizing terms in
+     * contexts.
+     * 
+     * @param kb The KB in which term is defined
      *
+     * @param term A String that is a SUO-KIF constant
+     * 
+     * @param contexts A List of namespaces or other terms that index
+     * context-specific documentation or comment statements
+     * 
+     * @return A documentation String, or an empty String if no
+     * documentation String can be found
      */
-    private String getCompositeDocumentation(KB kb, String term, List contexts) {
-        String ans = null;
+    private String getContextualDocumentation(KB kb, String term, List contexts) {
+        String ans = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 List forms = kb.askWithRestriction(1, term, 0, "documentation");
-                Formula f = null;
                 if ((forms != null) && !forms.isEmpty()) {
+
                     if (!(contexts instanceof List)) {
                         contexts = new ArrayList();
                     }
-                    if (!contexts.contains("XMLLabel")) {
-                        contexts.add(0, "XMLLabel");
-                    }
+                    List supers = getSuperComponents(kb, term);
+                    contexts.addAll(supers);
+                    contexts.add(0, term);
+                    contexts.add(getDefaultNamespace());
                     if (!contexts.contains("EnglishLanguage")) {
                         contexts.add("EnglishLanguage");
                     }
-                    // contexts.addAll(Arrays.asList("XMLLabel", "EnglishLanguage"));
+
                     String ctx = null;
-                    for (int i = 0; i < contexts.size(); i++) {
-                        ctx = (String) contexts.get(i);
-                        for (int j = 0; j < forms.size(); j++) {
-                            f = (Formula) forms.get(j);
+                    Iterator itf = null;
+                    Formula f = null;
+                    for (Iterator itc = contexts.iterator(); itc.hasNext();) {
+                        ctx = (String) itc.next();
+                        for (itf = forms.iterator(); itf.hasNext();) {
+                            f = (Formula) itf.next();
                             if (f.getArgument(2).equals(ctx)) {
                                 ans = f.getArgument(3);
                                 break;
                             }
                         }
-                        if (ans != null) { break; }
+                        if (StringUtil.isNonEmptyString(ans)) break;
+                    }
+                    if (StringUtil.emptyString(ans)) {
+                        String classOfTerm = getFirstGeneralTerm(kb, term);
+                        if (StringUtil.isNonEmptyString(classOfTerm)) {
+                            ans = getContextualDocumentation(kb, classOfTerm, null);
+                        }
                     }
                 }
-                if (ans == null) {
-                    String classOfTerm = getFirstGeneralTerm(kb, term);
-                    if (StringUtil.isNonEmptyString(classOfTerm)) {
-                        ans = getCompositeDocumentation(kb, classOfTerm, contexts);
-                    }
-                }
-                if (!StringUtil.isNonEmptyString(ans)) { ans = term; }
             }
         }
         catch (Exception ex) {
@@ -785,23 +1518,101 @@ public class DocGen {
         return ans;
     }
 
-    /** **************************************************************
+    /** ***************************************************************
+     * Returns the first containing Class that can be found for term
+     * in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that is a SUO-KIF constant
+     * 
+     * @return A SUO-KIF term denoting a Class, or null if no Class
+     * can be found
      */
-    private String getFirstGeneralTerm(KB kb, String term) {
+    private String getNearestContainingClass(KB kb, String term) {
         String ans = null;
         try {
-            String[] preds = {"instance", 
-                              "ddex_IsOneOf", 
-                              "ddex_IsA", 
-                              "ddex_HasDataType",
-                              "ddex_IsXmlExtensionOf",
-                              "ddex_IsXmlCompositeFor"};
-            List forms = null;
-            for (int i = 0; i < preds.length; i++) {
-                forms = kb.askWithRestriction(1, term, 0, preds[i]);
-                if ((forms != null) && !forms.isEmpty()) {
-                    Formula f = (Formula) forms.get(0);
-                    ans = f.getArgument(2);
+            List<String> predicates = new LinkedList<String>();
+            Set<String> accumulator = new HashSet<String>();
+            List<String> working = new LinkedList<String>();
+            accumulator.add("instance");
+            while (!accumulator.isEmpty()) {
+                for (String p1 : accumulator) {
+                    if (!predicates.contains(p1)) {
+                        predicates.add(0, p1);
+                    }
+                }
+                working.clear();
+                working.addAll(accumulator);
+                accumulator.clear();
+                for (String p2 : working) {
+                    accumulator.addAll(kb.getTermsViaPredicateSubsumption("subrelation",
+                                                                          2,
+                                                                          p2,
+                                                                          1,
+                                                                          false));
+                }
+            }
+            for (String p3 : predicates) {
+                ans = kb.getFirstTermViaAskWithRestriction(0,
+                                                           p3,
+                                                           1,
+                                                           term,
+                                                           2);
+                if (ans != null) break;
+                accumulator.addAll(kb.getTermsViaPredicateSubsumption("inverse",
+                                                                      2,
+                                                                      p3,
+                                                                      1,
+                                                                      false));
+                accumulator.addAll(kb.getTermsViaPredicateSubsumption("inverse",
+                                                                      1,
+                                                                      p3,
+                                                                      2,
+                                                                      false));
+                for (String p4 : accumulator) {
+                    ans = kb.getFirstTermViaAskWithRestriction(0,
+                                                               p4,
+                                                               2,
+                                                               term,
+                                                               1);
+                    if (ans != null) break;
+                }
+                if (ans != null) break;
+                accumulator.clear();
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Returns the first purely "subsuming" entity that can be found
+     * for term in kb, assuming that term denotes a Class or a
+     * Relation.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF Class or Relation
+     * 
+     * @return A SUO-KIF term, or null if no subsuming term can be
+     * found
+     */
+    private String getFirstSubsumingTerm(KB kb, String term) {
+        String ans = null;
+        try {
+            List<String> preds = Arrays.asList("subclass", "subrelation");
+            List<String> terms = null;
+            for (String p : preds) {
+                terms = kb.getTermsViaPredicateSubsumption(p,
+                                                           1,
+                                                           term,
+                                                           2,
+                                                           true);
+                if (!terms.isEmpty()) {
+                    ans = terms.get(0);
                     break;
                 }
             }
@@ -813,31 +1624,36 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Returns the first containing, subsuming, or superordinate
+     * entity that can be found for term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that is a SUO-KIF constant
+     * 
+     * @return A SUO-KIF term, or null if no more general term can be
+     * found
      */
-    private ArrayList getFirstSpecificTerms(KB kb, String term) {
-        ArrayList ans = new ArrayList();
-        /*          */
+    private String getFirstGeneralTerm(KB kb, String term) {
+        String ans = null;
         try {
-            if (StringUtil.isNonEmptyString(term)) {
-                String[] relns = {"instance", 
-                                  "ddex_IsOneOf", 
-                                  "ddex_IsA", 
-                                  // "ddex_HasDataType",
-                                  "ddex_IsXmlExtensionOf",
-                                  "ddex_IsXmlCompositeFor"};
-                Formula f = null;
-                String term2 = null;
-                for (int j = 0; j < relns.length; j++) {
-                    List forms = kb.askWithRestriction(0, relns[j], 2, term);
-                    if (forms != null) {
-                        for (int k = 0; k < forms.size(); k++) {
-                            f = (Formula) forms.get(k);
-                            term2 = f.getArgument(1);
-                            if (!ans.contains(term2)) {
-                                ans.add(term2);
-                            }
-                        }
-                    }
+            List<String> preds = Arrays.asList("instance", 
+                                               // "subclass",
+                                               "datatype",
+                                               "syntacticExtension",
+                                               "syntacticComposite",
+                                               "subclass"
+                                               );
+            List<String> terms = null;
+            for (String p : preds) {
+                terms = kb.getTermsViaPredicateSubsumption(p,
+                                                           1,
+                                                           term,
+                                                           2,
+                                                           false);
+                if (!terms.isEmpty()) {
+                    ans = terms.get(0);
+                    break;
                 }
             }
         }
@@ -848,28 +1664,146 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Returns a List of the first containing, subsuming, or
+     * superordinate entities found for term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @return A List of SUO-KIF terms, or an empty List if no
+     * generalizations of term can be found
+     */
+    private ArrayList<String> getFirstGeneralTerms(KB kb, String term) {
+        ArrayList<String> ans = new ArrayList<String>();
+        try {
+            List<String> preds = Arrays.asList("instance", 
+                                               // "subclass",
+                                               "datatype",
+                                               "syntacticExtension",
+                                               "syntacticComposite",
+                                               "subclass"
+                                               );
+            Set<String> terms = new HashSet<String>();
+            for (String p : preds) {
+                terms.addAll(kb.getTermsViaPredicateSubsumption(p,
+                                                                1,
+                                                                term,
+                                                                2,
+                                                                true));
+            }
+            ans.addAll(terms);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Returns a List of the first instances or syntactic subordinate
+     * entities that can be found for term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @return A List of SUO-KIF terms, or an empty List
+     * 
+     */
+    private ArrayList<String> getFirstSpecificTerms(KB kb, String term) {
+        ArrayList<String> ans = new ArrayList<String>();
+        /*          */
+        try {
+            if (StringUtil.isNonEmptyString(term)) {
+                List<String> preds = Arrays.asList("instance", 
+                                                   // "datatype",
+                                                   "syntacticExtension",
+                                                   "syntacticComposite"
+                                                   // "subclass"
+                                                   );
+                for (String p : preds) {
+                    ans.addAll(kb.getTermsViaPredicateSubsumption(p,
+                                                                  2,
+                                                                  term,
+                                                                  1,
+                                                                  true));
+                    if (!ans.isEmpty()) break;
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Returns a List of the entities that are immediate syntactic
+     * subordinates of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @return A List of SUO-KIF terms, or an empty List
+     * 
+     */
+    private ArrayList<String> getSyntacticSubordinateTerms(KB kb, String term) {
+        ArrayList<String> ans = new ArrayList<String>();
+        /*          */
+        try {
+            if (StringUtil.isNonEmptyString(term)) {
+                List<String> preds = Arrays.asList("syntacticSubordinate", 
+                                                   // "subclass",
+                                                   "datatype",
+                                                   "syntacticExtension",
+                                                   "syntacticComposite");
+                Set<String> terms = new HashSet<String>();
+                for (String p : preds) {
+                    terms.addAll(kb.getTermsViaPredicateSubsumption(p,
+                                                                    2,
+                                                                    term,
+                                                                    1,
+                                                                    true));
+                }
+                terms.addAll(kb.getTermsViaPredicateSubsumption("syntacticUnion",
+                                                                1,
+                                                                term,
+                                                                2,
+                                                                true));
+                ans.addAll(terms);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Returns a List of the entities that are immediate instances of
+     * term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF Class
+     * 
+     * @return A List of SUO-KIF terms, or an empty List
+     * 
      */
     private ArrayList getFirstInstances(KB kb, String term) {
         ArrayList ans = new ArrayList();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
-                String[] relns = {"instance", 
-                                  "ddex_IsOneOf", 
-                                  "ddex_IsA"};
-                Formula f = null;
-                String term2 = null;
-                for (int j = 0; j < relns.length; j++) {
-                    List forms = kb.askWithRestriction(0, relns[j], 2, term);
-                    if (forms != null) {
-                        for (int k = 0; k < forms.size(); k++) {
-                            f = (Formula) forms.get(k);
-                            term2 = f.getArgument(1);
-                            if (!ans.contains(term2)) {
-                                ans.add(term2);
-                            }
-                        }
-                    }
+                List terms = kb.getTermsViaPredicateSubsumption("instance",
+                                                                2,
+                                                                term,
+                                                                1,
+                                                                true);
+                if (!terms.isEmpty()) {
+                    ans.addAll(terms);
                 }
             }
         }
@@ -880,23 +1814,47 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Returns a SUO-KIF constant that denotes the first containing
+     * Class of term obtained in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @return A String that denotes a SUO-KIF Class, or null
+     * 
+     */
+    private String getFirstContainingClass(KB kb, String term) {
+        return kb.getFirstTermViaPredicateSubsumption("instance",
+                                                      1,
+                                                      term,
+                                                      2,
+                                                      true);
+    }
+
+    /** ***************************************************************
+     * Returns a List containing the immediate SUO-KIF subclasses of
+     * term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @return A List of SUO-KIF Classes, or an empty List
+     * 
      */
     private ArrayList getFirstSubClasses(KB kb, String term) {
         ArrayList ans = new ArrayList();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
-                List forms = kb.askWithPredicateSubsumption("subclass", 2, term);
-                Formula f = null;
-                String arg1 = null;
-                if (forms != null) {
-                    for (int k = 0; k < forms.size(); k++) {
-                        f = (Formula) forms.get(k);
-                        arg1 = f.getArgument(1);
-                        if (!ans.contains(arg1)) {
-                            ans.add(arg1);
-                        }
-                    }
+                List terms = kb.getTermsViaPredicateSubsumption("subclass",
+                                                                2,
+                                                                term,
+                                                                1,
+                                                                false);
+                if (!terms.isEmpty()) {
+                    ans.addAll(terms);
                 }
             }
         }
@@ -907,45 +1865,111 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Returns a String consisting of HTML markup for a documentation
+     * String for term obtained from kb and indexed by language.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * documentation Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createDocs(KB kb, String kbHref, String term, String language) {
-
-        StringBuffer result = new StringBuffer();
-        if (isLegalForDisplay(kb, term)) {
-            ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
-            if (docs != null && !docs.isEmpty()) {
-                Formula f = (Formula) docs.get(0);
-                String docString = f.getArgument(3);  
-                docString = kb.formatDocumentation(kbHref,docString,language);
-                docString = StringUtil.removeEnclosingQuotes(docString);
-                // docString = StringUtil.escapeQuoteChars(docString);
-                // docString = docString.replace("\\\"","\"");
-                result.append("<td valign=\"top\" class=\"description\">" 
-                              + docString + "</td></tr>\n");
+        String markup = "";
+        try {
+            if (isLegalForDisplay(term)) {
+                StringBuilder result = new StringBuilder();
+                ArrayList context = new ArrayList();
+                context.add(language);
+                String docString = getContextualDocumentation(kb, term, context);
+                docString = processDocString(kb, kbHref, language, docString, false, true);
+                result.append("<tr>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"description\">");
+                result.append(lineSeparator);
+                result.append("    ");
+                result.append(docString);
+                result.append(lineSeparator);
+                result.append("  </td>"); 
+                result.append(lineSeparator);
+                result.append("</tr>");
+                
+                markup = result.toString();
             }
         }
-        return result.toString();
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return markup;
     }
 
     /** ***************************************************************
+     * Returns a String containing the HTML markup for the Comment
+     * field in a page displaying the definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * comment Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createComments(KB kb, String kbHref, String term, String language) {
 
-        StringBuffer result = new StringBuffer();
-        if (isLegalForDisplay(kb, term)) {
-            ArrayList docs = kb.askWithRestriction(0,"comment",1,term);
-            if (docs != null && !docs.isEmpty()) {
-                result.append("<tr><td valign=\"top\" class=\"label\">Comments</td>");
+        StringBuilder result = new StringBuilder();
+        if (isLegalForDisplay(term)) {
+            List formulae = kb.askWithRestriction(0,"comment",1,term);
+            if (formulae != null && !formulae.isEmpty()) {
+                Formula f = null;
+                List docs = new ArrayList();
+                for (int c = 0; c < formulae.size(); c++) {
+                    f = (Formula) formulae.get(c);
+                    docs.add(f.getArgument(3));
+                }
+
+                Collections.sort(docs);
+
+                result.append("<tr>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"label\">Comments</td>");
+
+                String docString = null;
                 for (int i = 0; i < docs.size(); i++) {
-                    Formula f = (Formula) docs.get(i);
-                    String docString = f.getArgument(3);  
-                    docString = kb.formatDocumentation(kbHref,docString,language);
-                    docString = StringUtil.removeEnclosingQuotes(docString);
-                    // docString = StringUtil.escapeQuoteChars(docString);
-                    // docString = docString.replace("\\\"","\"");
-                    if (i > 0) result.append("<tr><td>&nbsp;</td>");
-                    result.append("<td valign=\"top\" colspan=2 class=\"cell\">" 
-                                  + docString + "</td></tr>\n");
+                    docString = (String) docs.get(i);
+                    docString = processDocString(kb, kbHref, language, docString, false, true);
+                    if (i > 0) {
+                        result.append("<tr>");
+                        result.append(lineSeparator);
+                        result.append("  <td>&nbsp;</td>");
+                        result.append(lineSeparator);
+                    }
+                    result.append("  <td valign=\"top\" colspan=\"2\" class=\"cell\">");
+                    result.append(lineSeparator);
+                    result.append("      ");
+                    result.append(docString);
+                    result.append("<br/>");
+                    result.append(lineSeparator);
+                    result.append("  </td>");
+                    result.append(lineSeparator);
+                    result.append("</tr>");
+                    result.append(lineSeparator);
                 }
             }
         }
@@ -953,163 +1977,368 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for the synonym field
+     * of an HTML page displaying the definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createSynonyms(KB kb, String kbHref, String term) {
 
-        StringBuffer result = new StringBuffer();
-        if (isLegalForDisplay(kb, term)) {
-            ArrayList syn = null;
-            if (StringUtil.isNonEmptyString(term)) {
-                syn = kb.askWithRestriction(0,"termFormat",2,term);
-            }
-            boolean found = false;
-            if (syn != null && syn.size() > 0) {
-                for (int i = 0; i < syn.size(); i++) {
-                    Formula f = (Formula) syn.get(i);
-                    String namespace = f.getArgument(1);
-                    if (namespace.endsWith("syn")) {
-                        if (!found) 
-                            result.append("Synonym(s)</td><td valign=\"top\" class=\"cell\"><i>");
-                        String s = f.getArgument(3); 
-                        s = StringUtil.removeEnclosingQuotes(s);
-                        if (found) result.append(", ");                
-                        result.append("<i>" + s + "</i>");
-                        found = true;
+        StringBuilder result = new StringBuilder();
+        try {
+            if (isLegalForDisplay(term)) {
+                ArrayList alternates = new ArrayList();
+                if (StringUtil.isNonEmptyString(term)) {
+                    alternates.addAll(kb.askWithRestriction(0, "synonym", 2, term));
+                }
+                if (!alternates.isEmpty()) {
+                    String namespace = null;
+                    boolean found = false;
+                    Formula f = null;
+                    ArrayList<String> synonyms = new ArrayList<String>();
+                    for (Iterator it = alternates.iterator(); it.hasNext();) {
+                        f = (Formula) it.next();
+                        // namespace = f.getArgument(1);
+                        // if (namespace.endsWith("syn")) {
+                        synonyms.add(StringUtil.removeEnclosingQuotes(f.getArgument(3)));
+                        // }
+                    }
+                    if (!synonyms.isEmpty()) {
+                        result.append("<tr>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"cell\">");
+                        result.append("<strong>Synonyms(s)</strong>");
+                        boolean isFirst = true;
+                        for (String syn : synonyms) {
+                            result.append(isFirst ? " " : ", ");
+                            isFirst = false;
+                            result.append("<i>");
+                            result.append(syn);
+                            result.append("</i>");
+                        }
+                        result.append("</td>");
+                        result.append(lineSeparator);
+                        result.append("</tr>");
+                        result.append(lineSeparator);
                     }
                 }
-                result.append("</td></tr>\n");
             }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return result.toString();
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for the Has Same
+     * Components As field of an HTML page displaying the definition
+     * of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createHasSameComponents(KB kb, 
                                            String kbHref, 
                                            String term, 
                                            String language) {
 
-        StringBuffer result = new StringBuffer();
-        if (isLegalForDisplay(kb, term)) {
+        StringBuilder result = new StringBuilder();
+        if (isLegalForDisplay(term)) {
             String suffix = "";
             if (StringUtil.emptyString(kbHref)) 
                 suffix = ".html";
-            ArrayList syn = kb.askWithRestriction(0,"ddex_IsXmlExtensionOf",1,term);
-            if (syn != null && !syn.isEmpty()) {
-                result.append("<tr><td valign=\"top\" class=\"label\">Has Same Components As</td>");
-                for (int i = 0; i < syn.size(); i++) {
-                    Formula f = (Formula) syn.get(i);
-                    String s = f.getArgument(2); 
-                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" + showTermName(kb,s,language) + "</a>";
-                    if (i > 0) result.append("<tr><td>&nbsp;</td>");
-                    result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td></tr>\n");
+            ArrayList<String> extensionOfs = getSyntacticExtensionTerms(kb, term, 2, true);
+            if (!extensionOfs.isEmpty()) {
+                result.append("<tr>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"label\">");
+                result.append(lineSeparator);
+                result.append("    Has Same Components As");
+                result.append(lineSeparator);
+                result.append("  </td>");
+                result.append(lineSeparator);
+                boolean isFirst = true;
+                StringBuilder hrefSB = new StringBuilder();
+                for (String extended : extensionOfs) {
+                    hrefSB.setLength(0);
+                    hrefSB.append("<a href=\"");
+                    hrefSB.append(kbHref);
+                    hrefSB.append(extended);
+                    hrefSB.append(suffix);
+                    hrefSB.append("\">");
+                    hrefSB.append(showTermName(kb, extended, language, true));
+                    hrefSB.append("</a>");
+                    if (isFirst) {
+                        result.append("  <td valign=\"top\" class=\"cell\">");
+                        result.append(lineSeparator);
+                        isFirst = false;
+                    }
+                    result.append("    ");
+                    result.append(hrefSB.toString());
+                    result.append("<br/>");
+                    result.append(lineSeparator);
                 }
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("</tr>");
+                result.append(lineSeparator);
             }
         }
         return result.toString();
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for the Composites
+     * Using Same Components field of an HTML page displaying the
+     * definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createUsingSameComponents(KB kb, 
                                              String kbHref, 
                                              String term, 
                                              String language) {
 
-        StringBuffer result = new StringBuffer();
-        if (isLegalForDisplay(kb, term)) {
+        StringBuilder result = new StringBuilder();
+        try {
+            if (StringUtil.isNonEmptyString(term)) {
+                if (isLegalForDisplay(term)) {
+                    String suffix = "";
+                    if (StringUtil.emptyString(kbHref)) 
+                        suffix = ".html";
+                    ArrayList extensions = getSyntacticExtensionTerms(kb, term, 1, true);
+                    /*
+                      kb.getTransitiveClosureViaPredicateSubsumption("syntacticExtension",
+                      2,
+                      term,
+                      1,
+                      true);
+                    */
+                    if (!extensions.isEmpty()) {
+                        result.append("<tr>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"label\">");
+                        result.append(lineSeparator);
+                        result.append("    ");
+                        result.append("Composites Using Same Components");
+                        result.append(lineSeparator);
+                        result.append("  </td>");
+                        result.append(lineSeparator);
+                        String extension = null;
+                        boolean isFirst = true;
+                        StringBuilder hrefSB = new StringBuilder();
+                        for (Iterator it = extensions.iterator(); it.hasNext();) {
+                            extension = (String) it.next();
+                            hrefSB.setLength(0);
+                            hrefSB.append("<a href=\"");
+                            hrefSB.append(kbHref);
+                            hrefSB.append(extension);
+                            hrefSB.append(suffix);
+                            hrefSB.append("\">");
+                            hrefSB.append(showTermName(kb, extension, language, true));
+                            hrefSB.append("</a>");
+                            if (isFirst) {
+                                result.append("  <td valign=\"top\" class=\"cell\">");
+                                result.append(lineSeparator);
+                                isFirst = false;
+                            }
+                            result.append("    ");
+                            result.append(hrefSB.toString());
+                            result.append("<br/>");
+                            result.append(lineSeparator);
+                        }
+                        result.append("  </td>");
+                        result.append(lineSeparator);
+                        result.append("</tr>");
+                        result.append(lineSeparator);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     * Returns a String containing HTML markup for the Parents field
+     * of an HTML page displaying the definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @param parentsSet A Set for accumulating the parent terms of
+     * term
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
+     */
+    private String createParents(KB kb, 
+                                 String kbHref, 
+                                 String term, 
+                                 String language, 
+                                 Set parentsSet) {
+        String result = "";
+        try {
             String suffix = "";
             if (StringUtil.emptyString(kbHref)) 
                 suffix = ".html";
-            ArrayList syn = null;
+
+            // System.out.println("4. forms == " + forms);
+            ArrayList forms = new ArrayList();
+            Set<String> parents = new HashSet<String>();
+            List<String> relations = Arrays.asList("subclass", 
+                                                   "subrelation", 
+                                                   "subAttribute", 
+                                                   "subentity");
             if (StringUtil.isNonEmptyString(term)) {
-                syn = kb.askWithRestriction(0,"ddex_IsXmlExtensionOf",2,term);
-            }
-            if ((syn != null) && !syn.isEmpty()) {
-                result.append("<tr><td valign=\"top\" class=\"label\">Composites Using Same Components</td>");
-                for (int i = 0; i < syn.size(); i++) {
-                    Formula f = (Formula) syn.get(i);
-                    String s = f.getArgument(1); 
-                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" 
-                        + showTermName(kb,s,language) + "</a>";
-                    if (i > 0) result.append("<tr><td>&nbsp;</td>");
-                    result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td></tr>\n");
+                for (String pred : relations) {
+                    forms.addAll(kb.askWithPredicateSubsumption(pred, 1, term));
+                }
+                String s = null;
+                Formula f = null;
+                for (Iterator it = forms.iterator(); it.hasNext();) {
+                    f = (Formula) it.next();
+                    if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                        s = f.getArgument(2);
+                        if (isLegalForDisplay(s)) {
+                            parents.add(s);
+                        }
+                    }
+                }
+                if (!parents.isEmpty()) {
+                    parentsSet.addAll(parents);
+                    StringBuilder sb = new StringBuilder();
+                    List<String> sorted = new ArrayList<String>(parents);
+                    Collections.sort(sorted, String.CASE_INSENSITIVE_ORDER);
+                    sb.append("<tr>");
+                    sb.append(lineSeparator);
+                    sb.append("  <td valign=\"top\" class=\"label\">Parents</td>");
+                    sb.append(lineSeparator);
+                    StringBuilder hrefSB = new StringBuilder();
+                    boolean isFirst = true;
+                    for (String parent : sorted) {
+                        hrefSB.setLength(0);
+                        hrefSB.append("<a href=\"");
+                        hrefSB.append(kbHref);
+                        hrefSB.append(parent);
+                        hrefSB.append(suffix);
+                        hrefSB.append("\">");
+                        hrefSB.append(showTermName(kb, parent, language, true));
+                        hrefSB.append("</a>");
+                        if (!isFirst) {
+                            sb.append("<tr>");
+                            sb.append(lineSeparator);
+                            sb.append("  <td>&nbsp;</td>");                
+                            sb.append(lineSeparator);
+                        }
+                        isFirst = false;
+                        sb.append("  <td valign=\"top\" class=\"cell\">");
+                        sb.append(hrefSB.toString());
+                        sb.append("</td>");
+                        sb.append(lineSeparator);
+                        String docStr = getContextualDocumentation(kb, parent, null);
+                        sb.append("  <td valign=\"top\" class=\"cell\">");
+                        sb.append(lineSeparator);
+                        sb.append("    ");
+                        sb.append(processDocString(kb, 
+                                                   kbHref, 
+                                                   language, 
+                                                   docStr,
+                                                   false,
+                                                   true));
+                        sb.append(lineSeparator);
+                        sb.append("  </td>");
+                        sb.append(lineSeparator);
+                    }
+                    sb.append("</tr>");
+                    sb.append(lineSeparator);
+                    result = sb.toString();
                 }
             }
         }
-        return result.toString();
-    }
-
-    /** ***************************************************************
-     */
-    private String createParents(KB kb, String kbHref, String term, String language) {
-
-        String suffix = "";
-        if (StringUtil.emptyString(kbHref)) 
-            suffix = ".html";
-        StringBuffer result = new StringBuffer();
-
-        // System.out.println("4. forms == " + forms);
-        ArrayList forms = new ArrayList();
-        ArrayList parents = new ArrayList();
-        String[] relns = {"subclass", "subrelation", "subAttribute", "subentity"};
-        if (StringUtil.isNonEmptyString(term)) {
-            for (int j = 0; j < relns.length; j++) {
-                List tmp = kb.askWithPredicateSubsumption(relns[j], 1, term);
-                if (tmp != null) {
-                    forms.addAll(tmp);
-                }
-            }
-            Formula f = null;
-            for (int i = 0; i < forms.size(); i++) {
-                f = (Formula) forms.get(i);
-                if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
-                    String s = f.getArgument(2);
-                    if (isLegalForDisplay(kb, s) && !parents.contains(s)) {
-                        parents.add(s);
-                    }
-                }
-            }
-            if (!parents.isEmpty()) {
-                Collections.sort(parents, String.CASE_INSENSITIVE_ORDER);
-                result.append("<tr><td valign=\"top\" class=\"label\">Parents</td>");
-                for (int j = 0; j < parents.size(); j++) {
-                    String s = (String) parents.get(j);
-                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" 
-                        + showTermName(kb,s,language) + "</a>";
-                    if (j > 0) result.append("<tr><td>&nbsp;</td>");                
-                    result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td>");
-                    ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
-                    if (docs != null && !docs.isEmpty()) {
-                        Formula docf = (Formula) docs.get(0);
-                        String docString = docf.getArgument(3);  
-                        docString = kb.formatDocumentation(kbHref,docString,language);
-                        docString = StringUtil.removeEnclosingQuotes(docString);
-                        // docString = StringUtil.escapeQuoteChars(docString);
-                        // docString = docString.replace("\\\"","\"");
-                        result.append("<td valign=\"top\" class=\"cell\">" + docString + "</td>");
-                    }
-                }
-                result.append("</tr>\n");
-            }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return result.toString();
+        return result;
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for the Children field
+     * of an HTML page displaying the definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createChildren(KB kb, String kbHref, String term, String language) {
 
         String suffix = "";
         if (StringUtil.emptyString(kbHref)) 
             suffix = ".html";
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         String[] relns = {"subclass", "subrelation", "subAttribute", "subentity"};
         ArrayList forms = new ArrayList();
         if (StringUtil.isNonEmptyString(term)) {
+            List tmp = null;
             for (int i = 0; i < relns.length; i++) {
-                List tmp = kb.askWithPredicateSubsumption(relns[i], 2, term);
+                tmp = kb.askWithPredicateSubsumption(relns[i], 2, term);
                 if ((tmp != null) && !tmp.isEmpty()) {
                     forms.addAll(tmp);
                 }
@@ -1119,280 +2348,635 @@ public class DocGen {
 
         if (forms != null && !forms.isEmpty()) {
             ArrayList kids = new ArrayList();
-            for (int i = 0; i < forms.size(); i++) {
-                Formula f = (Formula) forms.get(i);
+            Formula f = null;
+            String s = null;
+            for (Iterator it = forms.iterator(); it.hasNext();) {
+                f = (Formula) it.next();
                 if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
-                    String s = f.getArgument(1);
-                    if (isLegalForDisplay(kb, s) && !kids.contains(s)) {
+                    s = f.getArgument(1);
+                    if (isLegalForDisplay(s) && !kids.contains(s)) {
                         kids.add(s);
                     }
                 }
             }
             if (!kids.isEmpty()) {
                 Collections.sort(kids, String.CASE_INSENSITIVE_ORDER);
-                result.append("<tr><td valign=\"top\" class=\"label\">Children</td>");
-                for (int j = 0; j < kids.size(); j++) {
-                    String s = (String) kids.get(j);
-                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" 
-                        + showTermName(kb,s,language) + "</a>";
-                    if (j > 0) result.append("<tr><td>&nbsp;</td>");                
+                result.append("<tr>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"label\">Children</td>");
+                result.append(lineSeparator);
+                boolean isFirst = true;
+                for (Iterator ik = kids.iterator(); ik.hasNext();) {
+                    s = (String) ik.next();
+                    String termHref = ("<a href=\"" + kbHref + s + suffix + "\">" 
+                                       + showTermName(kb,s,language,true) 
+                                       + "</a>");
+                    if (!isFirst) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td>");
-                    ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
-                    if (docs != null && docs.size() > 0) {
-                        Formula f = (Formula) docs.get(0);
-                        String docString = f.getArgument(3);  
-                        docString = kb.formatDocumentation(kbHref,docString,language);
-                        docString = StringUtil.removeEnclosingQuotes(docString);
-                        // docString = StringUtil.escapeQuoteChars(docString);
-                        // docString = docString.replace("\\\"","\"");
-                        result.append("<td valign=\"top\" class=\"cell\">" + docString + "</td>");
-                    }
+                    String docString = getContextualDocumentation(kb, s, null);
+                    docString = processDocString(kb, kbHref, language, docString, false, true);
+                    result.append("<td valign=\"top\" class=\"cell\">" + docString + "</td>");
+                    isFirst = false;
                 }
-                result.append("</tr>\n");
+                result.append("</tr>" + lineSeparator);
             }
         }
         return result.toString();
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for the Instances
+     * section of an HTML page displaying the definition of term in
+     * kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @param excluded A List of terms to be excluded from the display
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createInstances(KB kb, 
                                    String kbHref, 
                                    String term, 
                                    String language, 
-                                   ArrayList excluded) {
+                                   List excluded) {
 
-        String suffix = "";
-        if (StringUtil.emptyString(kbHref)) 
-            suffix = ".html";
-        StringBuffer result = new StringBuffer();
-        ArrayList forms = null;
-        if (StringUtil.isNonEmptyString(term)) {
-            forms = kb.askWithPredicateSubsumption("instance", 2, term);
-        }
-
-        // System.out.println("6. forms == " + forms);
-
-        if (forms != null && !forms.isEmpty()) {
-            ArrayList instances = new ArrayList();
-            for (int i = 0; i < forms.size(); i++) {
-                Formula f = (Formula) forms.get(i);
-                if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
-                    String s = f.getArgument(1); 
-                    if (!excluded.contains(s) && isLegalForDisplay(kb, s)) {
-                        instances.add(s);
+        String markup = "";
+        try {
+            if (StringUtil.isNonEmptyString(term)) {
+                String suffix = "";
+                if (StringUtil.emptyString(kbHref)) 
+                    suffix = ".html";
+                StringBuilder result = new StringBuilder();
+                List working = new ArrayList();
+                working.add(term);
+                String[] extRelns = {"syntacticUnion", "syntacticExtension"};
+                List extendeds = null;
+                String subent = null;
+                for (int g = 0; g < extRelns.length; g++) {
+                    extendeds = kb.getTermsViaPredicateSubsumption(extRelns[g],
+                                                                   1,
+                                                                   term,
+                                                                   2,
+                                                                   false);
+                    for (int h = 0; h < extendeds.size(); h++) {
+                        subent = (String) extendeds.get(h);
+                        if (!working.contains(subent)) {
+                            working.add(subent);
+                        }
                     }
                 }
-            }
-            if (!instances.isEmpty()) {
-                Collections.sort(instances, String.CASE_INSENSITIVE_ORDER);
-                result.append("<tr><td valign=\"top\" class=\"label\">Instances</td>");
-                for (int j = 0; j < instances.size(); j++) {
-                    String s = (String) instances.get(j);
-                    String displayName = showTermName(kb,s,language);
-                    String xmlName = "";
-                    if (displayName.equals(s)) 
-                        xmlName = showTermName(kb,s,"XMLLabel");
-                    if (!StringUtil.emptyString(xmlName)) 
-                        displayName = xmlName;
-                    String termHref = "<a href=\"" + kbHref + s + suffix + "\">" 
-                        + displayName + "</a>";
-                    if (j > 0) result.append("<tr><td>&nbsp;</td>");                
-                    result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td>");
-                    ArrayList docs = kb.askWithRestriction(0,"documentation",1,s);
-                    if (docs != null && docs.size() > 0) {
-                        Formula f = (Formula) docs.get(0);
-                        String docString = f.getArgument(3);  
-                        docString = kb.formatDocumentation(kbHref,docString,language);
-                        docString = StringUtil.removeEnclosingQuotes(docString);
-                        // docString = StringUtil.escapeQuoteChars(docString);
-                        // docString = docString.replace("\\\"","\"");
-                        result.append("<td valign=\"top\" class=\"cell\">" + docString + "</td>");
+
+                ArrayList instances = new ArrayList();
+                String inst = null;
+                Formula f = null;
+                List forms = null;
+                for (int w = 0; w < working.size(); w++) {
+                    subent = (String) working.get(w);
+                    forms = kb.askWithPredicateSubsumption("instance", 2, subent);
+                    for (Iterator itf = forms.iterator(); itf.hasNext();) {
+                        f = (Formula) itf.next();
+                        if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                            inst = f.getArgument(1); 
+                            if (!excluded.contains(inst) 
+                                && isLegalForDisplay(inst)) {
+                                instances.add(inst);
+                            }
+                        }
                     }
                 }
-                result.append("</tr>\n");
+
+                Set instSet = kb.getAllInstancesWithPredicateSubsumption(term);
+                for (Iterator its = instSet.iterator(); its.hasNext();) {
+                    inst = (String) its.next();
+                    if (!excluded.contains(inst) 
+                        && isLegalForDisplay(inst)) {
+                        instSet.add(inst);
+                    }
+                }
+
+                // Remove duplicate strings, if any.
+                instSet.addAll(instances);
+                instances.clear();
+                instances.addAll(instSet);
+                
+
+                if (!instances.isEmpty()) {
+                    sortByPresentationName(kb, getDefaultNamespace(), instances);
+                    String displayName = null;
+                    String xmlName = null;
+                    String termHref = null;
+                    for (int j = 0; j < instances.size(); j++) {
+                        if (j == 0) {
+                            result.append("<tr><td valign=\"top\" class=\"label\">Instances</td>");
+                        }
+                        else {
+                            result.append("<tr><td>&nbsp;</td>");
+                        }
+                        inst = (String) instances.get(j);
+                        displayName = showTermName(kb, inst, language, true);
+                        if (displayName.contains(inst)) {
+                            xmlName = showTermName(kb, inst, "XMLLabel", true);
+                            if (!StringUtil.emptyString(xmlName)) 
+                                displayName = xmlName;
+                        }
+                        termHref = ("<a href=\"" + kbHref + inst + suffix + "\">" 
+                                    + displayName 
+                                    + "</a>");
+                        result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td>");
+                        ArrayList clist = new ArrayList();
+                        clist.add(language);
+                        String docString = getContextualDocumentation(kb, inst, clist);
+                        docString = processDocString(kb, 
+                                                     kbHref, 
+                                                     language, 
+                                                     docString, 
+                                                     false, 
+                                                     true);
+                        result.append("<td valign=\"top\" class=\"cell\">");
+                        result.append(docString);
+                        result.append("</td>");
+                        result.append("</tr>");
+                        result.append(lineSeparator);
+                    }
+                }
+                markup = result.toString();
             }
         }
-        return result.toString();
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return markup;
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for a SUO-KIF Formula.
+     * 
+     * @param kb The KB in which formula occurs
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for the constants in formula, or an empty String
+     *
+     * @param indentSeq A character sequence that will be used as the
+     * indentation quantum for formula
+     *
+     * @param level The current indentation level
+     *
+     * @param previousTerm A String, the term that occurs sequentially
+     * before currentTerm in the same level of nesting.  The value of
+     * previousTerm aids in determining how a given Formula should be
+     * formatted, and could be null.
+     * 
+     * @param currentTerm A String denoting a SUO-KIF Formula or part
+     * of a Formula
+     * 
+     * @param context A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * formula cannot be processed
+     * 
      */
-    private String createRelations(KB kb, String kbHref, String term, String language) {
-
-        StringBuffer result = new StringBuffer();
-        if (isLegalForDisplay(kb, term)) {
+    private String createFormula(KB kb, 
+                                 String kbHref, 
+                                 String indentSeq, 
+                                 int level,
+                                 String previousTerm,
+                                 String currentTerm, 
+                                 String context) {
+        String result = "";
+        try {
+            StringBuilder sb = new StringBuilder();
             String suffix = "";
             if (StringUtil.emptyString(kbHref)) 
                 suffix = ".html";
-            ArrayList relations = getRelations(kb);
-            if ((relations != null) && !relations.isEmpty()) {
-                ArrayList avoid = new ArrayList();
-                avoid.add("subclass");
-                avoid.add("instance");
-                avoid.add("documentation");
-                TreeMap map = new TreeMap();
-                String relation = null;
-                for (int i = 0; i < relations.size(); i++) {
-                    relation = (String) relations.get(i);
-                    // System.out.println("INFO in DocGen.createRElations(): relation: " + relation);
-                    if (!avoid.contains(relation)) {
-                        ArrayList statements = kb.askWithPredicateSubsumption(relation, 1, term);
+            if (StringUtil.isNonEmptyString(previousTerm)) {
+                previousTerm = previousTerm.trim();
+            }
+            currentTerm = currentTerm.trim();
+            if (Formula.listP(currentTerm)) {
+                if (Formula.empty(currentTerm)) {
+                    sb.append(currentTerm);
+                }
+                else {
+                    Formula f = new Formula();
+                    f.read(currentTerm);
+                    List tuple = f.literalToArrayList();
+                    boolean isQuantifiedVarlist = Formula.isQuantifier(previousTerm);
+                    Iterator it = tuple.iterator();
+                    while (isQuantifiedVarlist && it.hasNext()) {
+                        isQuantifiedVarlist = Formula.isVariable((String) it.next());
+                    }
+                    if (!isQuantifiedVarlist && (level > 0)) {
+                        sb.append("<br>");
+                        sb.append(lineSeparator);
+                        for (int i = 0; i < level; i++) {
+                            sb.append(indentSeq);
+                        }
+                    }
+                    sb.append("(");
+                    int i = 0;
+                    String prevterm = null;
+                    String nextterm = null;
+                    for (it = tuple.iterator(); it.hasNext(); i++) {
+                        nextterm = (String) it.next();
+                        if (i > 0) sb.append(" ");
+                        sb.append(createFormula(kb,
+                                                kbHref,
+                                                indentSeq,
+                                                (level + 1),
+                                                prevterm,
+                                                nextterm,
+                                                context));
+                        prevterm = nextterm;
+                    }
+                    sb.append(")");
+                }
+            }
+            else if (Formula.isVariable(currentTerm)
+                     || Formula.isLogicalOperator(currentTerm)
+                     || Formula.isFunction(currentTerm)
+                     || StringUtil.isQuotedString(currentTerm)
+                     || StringUtil.isDigitString(currentTerm)) {
+                sb.append(currentTerm);
+            }
+            else {
+                sb.append("<a href=\"");
+                sb.append(kbHref);
+                sb.append(currentTerm);
+                sb.append(suffix);
+                sb.append("\">");
+                sb.append(showTermName(kb, currentTerm, context, true));
+                sb.append("</a>");
+            }
+            result = sb.toString();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
 
-                        // System.out.println("7. statements == " + statements);
+    /** ***************************************************************
+     * Returns a String containing HTML markup for the Relations
+     * section of an HTML page displaying the definition of term in
+     * kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
+     */
+    private String createRelations(KB kb, String kbHref, String term, String language) {
+        String result = "";
+        try {
+            StringBuilder sb = new StringBuilder();
+            if (isLegalForDisplay(term)) {
+                String suffix = "";
+                if (StringUtil.emptyString(kbHref)) 
+                    suffix = ".html";
+                ArrayList relations = getPredicates(kb);
 
-                        if ((statements != null) && !statements.isEmpty()) {
-                            ArrayList vals = new ArrayList();
-                            for (int j = 0; j < statements.size(); j++) {
-                                Formula f = (Formula) statements.get(j);
-                                if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
-                                    vals.add(f.getArgument(2));
+                // System.out.println(lineSeparator + "relations == " + relations + lineSeparator);
+
+                if (!relations.isEmpty()) {
+                    Set avoid = getInhibitDisplayRelations();
+                    TreeMap map = new TreeMap();
+                    String relation = null;
+                    Iterator itr = null;
+                    for (itr = relations.iterator(); itr.hasNext();) {
+                        relation = (String) itr.next();
+
+                        // boolean isFormula = relation.matches(".*(?i)kif.*");
+
+                        if (!avoid.contains(relation)) {
+                            ArrayList statements = kb.askWithPredicateSubsumption(relation, 
+                                                                                  1, 
+                                                                                  term);
+
+                            // if (isFormula) {
+                            //     System.out.println("\n" + "statements == " + statements + "\n");
+                            // }
+
+                            if (!statements.isEmpty()) {
+                                ArrayList vals = new ArrayList();
+                                for (Iterator its = statements.iterator(); its.hasNext();) {
+                                    Formula f = (Formula) its.next();
+                                    if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                                        vals.add(f.getArgument(2));
+                                    }
                                 }
-                            }
-                            if (!vals.isEmpty()) {
-                                map.put(relation, vals);
+                                if (!vals.isEmpty()) {
+                                    map.put(relation, vals);
+                                }
                             }
                         }
                     }
-                }
-                if (!map.isEmpty()) {
-                    ArrayList vals = null;
-                    String s = null;
-                    boolean firstLine = true;
-                    for (int k = 0; k < relations.size(); k++) {
-                        relation = (String) relations.get(k);
-                        vals = (ArrayList) map.get(relation);
-                        if ((vals != null) && !vals.isEmpty()) {
-                            String relnHref = "<a href=\"" + kbHref + relation + suffix + "\">" 
-                                + showTermName(kb,relation,language) + "</a>";
-                            for (int m = 0; m < vals.size(); m++) {
-                                s = (String) vals.get(m);
-                                String termHref = "<a href=\"" + kbHref + s + suffix + "\">" 
-                                    + showTermName(kb,s,language) + "</a>";
-                                if (firstLine) {
-                                    result.append("<tr><td valign=\"top\" class=\"label\">Relations</td>");
-                                    firstLine = false;
+                    if (!map.isEmpty()) {
+                        ArrayList vals = null;
+                        String s = null;
+                        boolean firstLine = true;
+                        for (itr = relations.iterator(); itr.hasNext();) {
+                            relation = (String) itr.next();
+                            vals = (ArrayList) map.get(relation);
+                            if ((vals != null) && !vals.isEmpty()) {
+                                String relnHref = ("<a href=\"" + kbHref + relation + suffix + "\">" 
+                                                   + showTermName(kb,relation,language,true) 
+                                                   + "</a>");
+                                int m = 0;
+                                for (Iterator itv = vals.iterator(); itv.hasNext(); m++) {
+                                    s = (String) itv.next();
+                                    String termHref = createFormula(kb, 
+                                                                    kbHref, 
+                                                                    "&nbsp;&nbsp;&nbsp;&nbsp;",
+                                                                    0,
+                                                                    null,
+                                                                    s, 
+                                                                    language);
+
+                                    if (firstLine) {
+                                        sb.append("<tr><td valign=\"top\" class=\"label\">"
+                                                  + "Relations"
+                                                  + "</td>");
+                                        firstLine = false;
+                                    }
+                                    else {
+                                        sb.append("<tr><td>&nbsp;</td>");
+                                    }
+                                    // System.out.println( relnHref );
+                                    // System.out.println( termHref );
+                                    if (m == 0) {
+                                        sb.append("<td valign=\"top\" class=\"cell\">" 
+                                                  + relnHref 
+                                                  + "</td>");
+                                    }
+                                    else {
+                                        sb.append("<td valign=\"top\" class=\"cell\">&nbsp;</td>");
+                                    }
+                                    sb.append("<td valign=\"top\" class=\"cell\">" 
+                                              + termHref
+                                              + "</td></tr>"
+                                              + lineSeparator);
                                 }
-                                else {
-                                    result.append("<tr><td>&nbsp;</td>");                
-                                }
-                                // System.out.println( relnHref );
-                                // System.out.println( termHref );
-                                result.append("<td valign=\"top\" class=\"cell\">" + relnHref + "</td>");
-                                result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td></tr>\n");
                             }
-                        }
-                    }                
-                }            
+                        }                
+                    }            
+                }
             }
+            result = sb.toString();
         }
-        return result.toString();
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for the Cardinality
+     * field of an HTML page displaying the definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param context A String denoting a SUO-KIF namespace, a natural
+     * language, or other type of entity that indexes termFormat
+     * Strings in kb -- this parameter is currently ignored, since
+     * LocalInstance terms are already highly specific
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * no markup can be generated
+     * 
      */
     private String showCardinalityCell(KB kb, String kbHref, String term, String context) {
-
-        ArrayList cardForms = kb.askWithRestriction(0,"exactCardinality",2,term);
-        if (cardForms != null && cardForms.size() > 0) {
-            Formula f = (Formula) cardForms.get(0);
-            if (context == "" || context.equals(f.getArgument(1)))             
-                return f.getArgument(3);
-        }
-        else {
-            String minCard = "0";
-            String maxCard = "n";
-            StringBuffer result = new StringBuffer();
-            cardForms = kb.askWithRestriction(0,"minCardinality",2,term);
-            if (cardForms != null && cardForms.size() > 0) {
+        /*
+          System.out.println("ENTER DocGen.showCardinalityCell("
+          + kb.name + ", "
+          + kbHref + ", "
+          + term + ", "
+          + context + ")");
+        */
+        String cardVal = "";
+        try {
+            ArrayList cardForms = kb.askWithPredicateSubsumption("hasExactCardinality", 1, term);
+            // kb.askWithRestriction(0,"exactCardinality",2,term);
+            if (cardForms != null && !cardForms.isEmpty()) {
                 Formula f = (Formula) cardForms.get(0);
-                if (context == "" || context.equals(f.getArgument(1)))             
-                    minCard = f.getArgument(3);
+                // if (context.equals("") || context.equals(f.getArgument(1)))             
+                //     return f.getArgument(3);
+                cardVal = f.getArgument(2);
             }
-            cardForms = kb.askWithRestriction(0,"maxCardinality",2,term);
-            if (cardForms != null && cardForms.size() > 0) {
-                Formula f = (Formula) cardForms.get(0);
-                if (context == "" || context.equals(f.getArgument(1)))             
-                    maxCard = f.getArgument(3);
+            else {
+                String minCard = "0";
+                String maxCard = "n";
+                StringBuilder result = new StringBuilder();
+                cardForms = kb.askWithPredicateSubsumption("hasMinCardinality", 1, term);
+                // kb.askWithRestriction(0,"minCardinality",2,term);
+                if (cardForms != null && cardForms.size() > 0) {
+                    Formula f = (Formula) cardForms.get(0);
+                    // if (context == "" || context.equals(f.getArgument(1)))             
+                    //     minCard = f.getArgument(3);
+                    minCard = f.getArgument(2);
+                }
+                cardForms = kb.askWithPredicateSubsumption("hasMaxCardinality", 1, term);
+                // kb.askWithRestriction(0,"maxCardinality",2,term);
+                if (cardForms != null && cardForms.size() > 0) {
+                    Formula f = (Formula) cardForms.get(0);
+                    // if (context.equals("") || context.equals(f.getArgument(1)))             
+                    //     maxCard = f.getArgument(3);
+                    maxCard = f.getArgument(2);
+                }
+                cardVal = (minCard + "-" + maxCard);
             }
-            return minCard + "-" + maxCard;
         }
-        return "";
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        /*
+          System.out.println("EXIT DocGen.showCardinalityCell("
+          + kb.name + ", "
+          + kbHref + ", "
+          + term + ", "
+          + context + ")");
+          System.out.println("  ==> " + cardVal);
+        */
+        return cardVal;
     }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for a single table row
+     * in the Composite Component section of an HTML page displaying
+     * the partial definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param ident A int value that determines the depth to which
+     * term will be indented when displayed
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * term is supposed to be suppressed for display
+     * 
      */
     private String createCompositeComponentLine(KB kb, 
                                                 String kbHref, 
                                                 String term, 
                                                 int indent, 
                                                 String language) {
+        String result = "";
+        try {
+            StringBuilder sb = new StringBuilder();
+            String suffix = "";
+            if (StringUtil.emptyString(kbHref)) 
+                suffix = ".html";
+            sb.append("<tr>");
+            sb.append(lineSeparator);
+            sb.append("  <td></td>");
+            sb.append(lineSeparator);
 
-        StringBuffer result = new StringBuffer();
-        // if (isLegalForDisplay(kb, term)) {
-        String suffix = "";
-        if (StringUtil.emptyString(kbHref)) 
-            suffix = ".html";
-        result.append("<tr><td></td><td valign=\"top\" class=\"cell\">");
-        String parentClass = "";;
-        ArrayList instanceForms = kb.askWithPredicateSubsumption("instance", 1, term);
+            sb.append("  <td valign=\"top\" class=\"cell\">");
+            sb.append(lineSeparator);
 
-        // System.out.println("1. instanceForms == " + instanceForms);
+            String parentClass = "";
+            ArrayList instanceForms = kb.askWithPredicateSubsumption("instance", 1, term);
 
-        if (instanceForms != null && instanceForms.size() > 0) {
-            Formula f = (Formula) instanceForms.get(0);
-            parentClass = f.getArgument(2);
-        }
-        ArrayList termForms = null;
-        if (StringUtil.isNonEmptyString(term)) {
-            termForms = kb.askWithTwoRestrictions(0,"termFormat",1,"XMLLabel",2,term);
-        }
-        if (termForms != null) {
-            for (int i = 0; i < termForms.size(); i++) {               
-                Formula f = (Formula) termForms.get(i);
-                result.append(indentChars("&nbsp;&nbsp;",indent));
-                String termFormat = f.getArgument(3);
-                termFormat = termFormat.substring(1,termFormat.length()-1);
-                result.append("<a href=\"" + kbHref + parentClass + suffix + "\">" 
-                              + termFormat 
-                              + "</a>");                      
+            // System.out.println("1. instanceForms == " + instanceForms);
+
+            if (instanceForms != null && instanceForms.size() > 0) {
+                Formula f = (Formula) instanceForms.get(0);
+                parentClass = f.getArgument(2);
             }
+            ArrayList termForms = null;
+            if (StringUtil.isNonEmptyString(term)) {
+                termForms = kb.askWithTwoRestrictions(0, "termFormat", 1, "XMLLabel", 2, term);
+            }
+            if (termForms != null) {
+                boolean isAttribute = isXmlAttribute(kb, term);
+                if (!isAttribute) isAttribute = isXmlAttribute(kb, parentClass);
+                for (int i = 0; i < termForms.size(); i++) {               
+                    Formula f = (Formula) termForms.get(i);
+                    sb.append(indentChars("&nbsp;&nbsp;",indent));
+                    String termFormat = StringUtil.removeEnclosingQuotes(f.getArgument(3));
+                    sb.append("<a href=\"");
+                    sb.append(kbHref); 
+                    sb.append(parentClass);
+                    sb.append(suffix);
+                    sb.append("\">");
+                    if (isAttribute) sb.append("<span class=\"attribute\">");
+                    sb.append(termFormat);
+                    if (isAttribute) sb.append("</span>");
+                    sb.append("</a>");                      
+                }
+            }
+            sb.append("  </td>");
+            sb.append(lineSeparator);
+
+            sb.append("  <td valign=\"top\" class=\"cell\">");
+            sb.append(lineSeparator);
+            ArrayList clist = new ArrayList();
+            clist.add(language);
+            String docString = getContextualDocumentation(kb, term, clist);
+            docString = processDocString(kb, kbHref, language, docString, false, true);
+            sb.append("    ");
+            sb.append(docString); 
+            sb.append(lineSeparator);
+            sb.append("  </td>");
+            sb.append(lineSeparator);
+
+            sb.append("  <td valign=\"top\" class=\"card\">");
+            if (indent > 0)        
+                sb.append(showCardinalityCell(kb, kbHref, term, ""));
+            sb.append("  </td>");
+            sb.append(lineSeparator);
+
+            sb.append("  <td valign=\"top\" class=\"cell\">");
+            String dataTypeName = getFirstDatatype(kb, term);
+            if (StringUtil.isNonEmptyString(dataTypeName)) {
+                String dtToPrint = showTermName(kb, dataTypeName, language, true);                
+                sb.append("<a href=\"");
+                sb.append(kbHref);
+                sb.append(dataTypeName);
+                sb.append(suffix);
+                sb.append("\">");
+                sb.append(dtToPrint);
+                sb.append("</a>");
+                String xsdType = getClosestXmlDataType(kb, dataTypeName);
+                if (StringUtil.isNonEmptyString(xsdType)) {
+                    sb.append(" (");
+                    sb.append(DB.kifToW3c(xsdType));
+                    sb.append(")");
+                }
+                sb.append(lineSeparator);
+            }
+            sb.append("  </td>");
+            sb.append(lineSeparator);
+
+            sb.append("</tr>");
+            sb.append(lineSeparator);
+
+            result = sb.toString();
         }
-        result.append("</td><td valign=\"top\" class=\"cell\">");
-        ArrayList docForms = kb.askWithRestriction(0,"documentation",1,term);
-        if (docForms != null && docForms.size() > 0) {
-            Formula f = (Formula) docForms.get(0);
-            String docString = f.getArgument(3);
-            docString = kb.formatDocumentation(kbHref,docString,language);
-            docString = StringUtil.removeEnclosingQuotes(docString);
-            // docString = StringUtil.escapeQuoteChars(docString);
-            // docString = docString.replace("\\\"","\"");
-            result.append(docString); 
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-        result.append("</td><td valign=\"top\" class=\"cell\">");
-        if (indent > 0)        
-            result.append(showCardinalityCell(kb,kbHref,term,""));
-        result.append("</td><td valign=\"top\" class=\"cell\">");
-        ArrayList forms = kb.askWithRestriction(0,"ddex_HasDataType",1,term);
-        if (forms != null && forms.size() > 0) {
-            Formula f = (Formula) forms.get(0);
-            String dataTypeName = f.getArgument(2);
-            dataTypeName = showTermName(kb,dataTypeName,language);                
-            result.append("<a href=\"" + kbHref + f.getArgument(2) + suffix + "\">" 
-                          + dataTypeName 
-                          + "</a>");        
-        }
-        result.append("</td></tr>\n");
-        // }
-        return result.toString();
+        return result;
     }
 
     /** ***************************************************************
-     *  If a term has a termFormat in the given language, display
-     *  that, otherwise, show its termFormat for English, otherwise
-     *  just display the term name.
+     * Returns the termFormat entry for term in kb and language,
+     * otherwise returns the termFormat entry for term in English,
+     * otherwise just returns the term name.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @param withSpanTags If true, the returned String is wrapped in
+     * HTML span tags that allow additional formatting for term via a
+     * style sheet
+     * 
+     * @return A String providing a context-specific name for term,
+     * possibly including HTML markup, or just term
+     * 
      */
-    public String showTermName(KB kb, String term, String language) {
+    public String showTermName(KB kb, String term, String language, boolean withSpanTags) {
 
         String ans = term;
         try {
@@ -1406,13 +2990,31 @@ public class DocGen {
             if (StringUtil.isNonEmptyString(termFormat)) {
                 ans = StringUtil.removeEnclosingQuotes(termFormat);
             }
-            if (getIsoCodes(kb).contains(term)) {  //(term, "ddex_IsoCode")) {
-                int idx = ans.indexOf(DB.W3C_NS_DELIMITER);
-                if (idx < 0) {
-                    idx = ans.indexOf(DB.KIF_NS_DELIMITER);
+            else {
+                String namespace = getTermNamespace(kb, term);
+                if (StringUtil.isNonEmptyString(namespace) && namespace.equals(language)) {
+                    ans = stripNamespacePrefix(kb, term);
                 }
-                if (idx >= 0) {
-                    ans = ans.substring(idx + 1);
+                else {
+                    ans = DB.kifToW3c(term);
+                }
+            }
+            if (getCodedIdentifiers(kb).contains(term)) {  //(term, "IsoCode")) {
+                List<String> delims = Arrays.asList(DB.getW3cNamespaceDelimiter(), 
+                                                    DB.getKifNamespaceDelimiter());
+                for (String delim : delims) {
+                    int idx = ans.indexOf(delim);
+                    if (idx > -1) {
+                        ans = ans.substring(idx + delim.length());
+                        break;
+                    }
+                }
+            }
+            if (withSpanTags) {
+                if (StringUtil.isNonEmptyString(ans)) {
+                    if (isXmlAttribute(kb, term)) {
+                        ans = ("<span class=\"attribute\">" + ans + "</span>");
+                    }
                 }
             }
         }
@@ -1422,56 +3024,204 @@ public class DocGen {
         return ans;
     }
 
+    /** ***************************************************************
+     * Returns the termFormat entry for term in kb and language,
+     * otherwise returns the termFormat entry for term in English,
+     * otherwise just returns the term name.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String providing a context-specific name for term,
+     * possibly including HTML markup, or just term
+     * 
+     */
+    public String showTermName(KB kb, String term, String language) {
+        return showTermName(kb, term, language, false);
+    }
 
     /** ***************************************************************
+     * Returns a String containing HTML markup for a hierarchy or tree
+     * display of terms that denote nested composite components.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param hier A List containing term names and representing one
+     * sub-branch in a tree
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * no markup can be generated
+     * 
      */
     private String formatCompositeHierarchy(KB kb, 
                                             String kbHref, 
-                                            ArrayList hier, 
+                                            List hier, 
                                             String language) {
-
-        StringBuffer result = new StringBuffer();
-        for (int i = 0; i < hier.size(); i++) {
-            AVPair avp = (AVPair) hier.get(i);
-            // if (isLegalForDisplay(kb, avp.attribute)) {
-            result.append(createCompositeComponentLine(kb,kbHref,avp.attribute,Integer.parseInt(avp.value),language));
-            // }
+        String markup = "";
+        try {
+            StringBuilder result = new StringBuilder();
+            for (Iterator it = hier.iterator(); it.hasNext();) {
+                AVPair avp = (AVPair) it.next();
+                // if (!kb.isInstanceOf(avp.attribute, "XmlSequenceElement")) {
+                result.append(createCompositeComponentLine(kb,
+                                                           kbHref,
+                                                           avp.attribute,
+                                                           Integer.parseInt(avp.value),
+                                                           language));
+                // }
+            }
+            markup = result.toString();
         }
-        return result.toString();
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return markup;
     }
 
     /** ***************************************************************
-     *  Don't display XmlChoice(s) or XmlSequence(s)
+     * Recursively computes and then returns a List that constitutes
+     * the graph containing those XML elements and attributes
+     * syntactically subordinate to term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param isAttribute If true, this parameter indicates that term
+     * denotes an XML attribute
+     * 
+     * @param int An integer indicating the depth or level to which
+     * term should be indented when displayed
+     * 
+     * @return A List containing two Lists, the first of which is a
+     * List of terms that denote XML attributes, and the second of
+     * which is a list of terms that denote XML elements
+     * 
      */
-    private ArrayList createCompositeRecurse(KB kb, String term, int indent) {
+    private ArrayList createCompositeRecurse(KB kb, String term, boolean isAttribute, int indent) {
+        ArrayList pair = new ArrayList();
+        try {
+            ArrayList attrs = new ArrayList();
+            ArrayList elems = new ArrayList();
+            pair.add(attrs);
+            pair.add(elems);
 
-        ArrayList result = new ArrayList();
-        AVPair avp = new AVPair();
-        avp.attribute = term;
-        avp.value = Integer.toString(indent);
-        result.add(avp);
-        ArrayList forms = kb.askWithRestriction(0,"ddex_HasXmlAttribute",1,term);
-        if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
-                Formula form = (Formula) forms.get(i);
-                String t = form.getArgument(2);
-                // This should return without children since
-                // attributes don't have child elements
-                result.addAll(createCompositeRecurse(kb,t,indent+1));  
+            AVPair avp = new AVPair();
+            avp.attribute = term;
+            avp.value = Integer.toString(indent);
+            if (isAttribute) attrs.add(avp);
+            else elems.add(avp);
+
+            List terms = null;
+            String nextTerm = null;
+            Iterator it = null;
+            List<String> preds = Arrays.asList("subordinateXmlAttribute", "subordinateXmlElement");
+            for (String pred : preds) {
+                terms = kb.getTermsViaPredicateSubsumption(pred, 2, term, 1, true);
+                Collections.sort(terms, String.CASE_INSENSITIVE_ORDER);
+                boolean isAttributeList = pred.equals("subordinateXmlAttribute");
+                for (it = terms.iterator(); it.hasNext();) {
+                    nextTerm = (String) it.next();
+                    // This should return without children for
+                    // subordinateXmlAttribute, since attributes
+                    // don't have child elements.
+                    ArrayList newPair = 
+                        createCompositeRecurse(kb, nextTerm, isAttributeList, (indent + 1));
+                    attrs.addAll((ArrayList) newPair.get(0));
+                    elems.addAll((ArrayList) newPair.get(1));
+                }
             }
         }
-        forms = kb.askWithRestriction(0,"ddex_HasXmlElement",1,term);
-        if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
-                Formula form = (Formula) forms.get(i);
-                String t = form.getArgument(2);
-                result.addAll(createCompositeRecurse(kb,t,indent+1));
-            }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return result;
+        return pair;
     }
 
     /** ***************************************************************
+     * Returns a List that constitutes the graph containing those XML
+     * elements and attributes syntactically subordinate to term in
+     * kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param isAttribute If true, this parameter indicates that term
+     * denotes an XML attribute
+     * 
+     * @param int An integer indicating the depth or level to which
+     * term should be indented when displayed
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * no markup can be generated
+     * 
+     */
+    private boolean isXmlAttribute(KB kb, String term) {
+        boolean ans = false;
+        try {
+            String kif = term;
+            List terms = kb.getTermsViaPredicateSubsumption("subordinateXmlAttribute",
+                                                            1,
+                                                            kif,
+                                                            2,
+                                                            true);
+            ans = !terms.isEmpty();
+            if (!ans) {
+                kif = getFirstGeneralTerm(kb, kif);
+                if (StringUtil.isNonEmptyString(kif)) {
+                    terms = kb.getTermsViaPredicateSubsumption("subordinateXmlAttribute",
+                                                               1,
+                                                               kif,
+                                                               2,
+                                                               true);
+                    ans = !terms.isEmpty();
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Returns a String containing HTML markup for a row displaying a
+     * contained component in an HTML page displaying the partial
+     * definition of instance in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param containingComp A String that denotes the term that
+     * contains, or is syntactically superordinate to, instance
+     * 
+     * @param instance A String that denotes a SUO-KIF term
+     * 
+     * @param ident An int value that determines the depth to which
+     * instance will be indented when displayed
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * no markup can be generated
+     * 
      */
     private String createContainingCompositeComponentLine(KB kb, 
                                                           String kbHref, 
@@ -1480,8 +3230,6 @@ public class DocGen {
                                                           String instance, 
                                                           int indent, 
                                                           String language) {
-        StringBuffer result = new StringBuffer();
-
         /*
           System.out.println("DocGen.createContainingCompositeCompoentLine("
           + kb
@@ -1492,151 +3240,59 @@ public class DocGen {
           + "\", \"" + language + "\")");
         */
 
-        if (StringUtil.isNonEmptyString(instance)) {
+        String result = "";
 
-            String suffix = "";
-            if (StringUtil.emptyString(kbHref)) 
-                suffix = ".html";
-
-            /*              */
-            ArrayList docForms = kb.askWithRestriction(0,"documentation",1,instance);
-            if (docForms != null && docForms.size() > 0) {
-                for (int i = 0; i < docForms.size(); i++) {
-                    Formula f = (Formula) docForms.get(i);
-                    String context = f.getArgument(2);
+        try {
+            if (StringUtil.isNonEmptyString(instance)) {
+                StringBuilder sb = new StringBuilder();
+                String suffix = (StringUtil.emptyString(kbHref) ? ".html" : "");
+                ArrayList docForms = kb.askWithRestriction(0,"documentation",1,instance);
+                Formula f = null;
+                String context = null;
+                for (Iterator it = docForms.iterator(); it.hasNext();) {
+                    f = (Formula) it.next();
+                    context = f.getArgument(2);
                     if (context.equals(containingComp)) {
 
-                        result.append("<tr><td></td><td valign=\"top\" class=\"cell\">");
-                        result.append(indentChars("&nbsp;&nbsp;",indent));
-                        result.append("<a href=\"" 
-                                      + kbHref  
-                                      + containingComp 
-                                      + suffix + "\">"
-                                      + showTermName(kb,containingComp,language) 
-                                      // + "(" + instance + ")"
-                                      + "</a>");        
-                        result.append("</td><td valign=\"top\" class=\"cell\">");
-                        String docString = f.getArgument(3);
-                        docString = kb.formatDocumentation(kbHref,docString,language);
-                        docString = StringUtil.removeEnclosingQuotes(docString);
-                        // docString = StringUtil.escapeQuoteChars(docString);
-                        // docString = docString.replace("\\\"","\"");
-                        result.append(docString);                
-                        result.append("</td><td valign=\"top\" class=\"cell\">");
-                        result.append(showCardinalityCell(kb,kbHref,instance,context));
-                        result.append("</td><td>");
-                        result.append("</td></tr>\n");
+                        sb.append("<tr>");
+                        sb.append(lineSeparator);
+                        sb.append("  <td>&nbsp;</td>");
+                        sb.append(lineSeparator);
+                        sb.append("  <td valign=\"top\" class=\"cell\">");
+                        sb.append(indentChars("&nbsp;&nbsp;", indent));
+                        sb.append("<a href=\"");
+                        sb.append(kbHref);
+                        sb.append(containingComp);
+                        sb.append(suffix);
+                        sb.append("\">");
+                        sb.append(showTermName(kb,containingComp,language,true));
+                        sb.append("</a></td>");
+                        sb.append(lineSeparator);
+                        sb.append("  <td valign=\"top\" class=\"cell\">");
+                        sb.append(lineSeparator);
+                        sb.append("    ");
+                        sb.append(processDocString(kb, 
+                                                   kbHref, 
+                                                   language, 
+                                                   f.getArgument(3), 
+                                                   false, 
+                                                   true));
+                        sb.append(lineSeparator);
+                        sb.append("  </td>");
+                        sb.append(lineSeparator);
+                        sb.append("  <td valign=\"top\" class=\"card\">");
+                        sb.append(showCardinalityCell(kb,kbHref,instance,context));
+                        sb.append("  </td>");
+                        sb.append(lineSeparator);
+                        sb.append("  <td>&nbsp;</td>");
+                        sb.append(lineSeparator);
+                        sb.append("</tr>");
+                        sb.append(lineSeparator);
                     }
                 }
+                result = sb.toString();
             }
-        }
-        String resultStr = result.toString();
-        // System.out.println("  ==> " + resultStr);
-        return resultStr;
-    }
-
-    /** ***************************************************************
-     *  Given the SUO-KIF statements:
-     * 
-     * (hasXmlElement DdexC_PartyDescriptor DDEX_LocalInstance2_459)
-     * (dataType DDEX_LocalInstanceLeaf2_459 DdexC_PartyId)
-     * (documentation DDEX_LocalInstanceLeaf2_459
-     * DdexC_PartyDescriptor "A Composite containing details...")
-     * 
-     * show DdexC_PartyDescriptor as one of the "containing
-     * composites" of DdexC_PartyID, and show the documentation for
-     * the instance node next to the parent composite.
-     */
-    private String formatContainingComposites(KB kb, 
-                                              String kbHref, 
-                                              ArrayList containing, 
-                                              String composite, 
-                                              String language) {
-
-        String resultStr = "";
-        try {
-            StringBuffer result = new StringBuffer();
-            /*        */
-            // ArrayList instances = null;  //dataTypes = null;
-
-            // dataTypes = kb.askWithRestriction(0,"ddex_HasDataType",2,composite);
-            /*
-              ArrayList instances = getFirstSpecificTerms(kb, composite);
-              if ((instances != null) && !instances.isEmpty()) {
-              String inst = null;
-              String compos = null;
-            */
-
-            List instances = getFirstSpecificTerms(kb, composite);
-
-            String ccomp = null;
-            for (int k = 0; k < containing.size(); k++) {
-                ccomp = (String) containing.get(k);
-                // for (int j = 0; j < instances.size(); j++) {
-                // String displayName = (String) containerData.get(1);
-                // String containingComp = (String) containing.get(i);
-
-                // if (!displayName.matches(".*(?i)xmlsequence.*")
-                //   && !displayName.matches(".*(?i)xmlchoice.*")) {
-                String instance = null;
-                for (int i = 0; i < instances.size(); i++) {
-                    instance = (String) instances.get(i);
-                    result.append(createContainingCompositeComponentLine(kb,
-                                                                         kbHref,
-                                                                         ccomp, 
-                                                                         instance,
-                                                                         0,
-                                                                         language));
-                }
-            }
-
-            /*
-              System.out.println("DocGen.formatContainingComposite(" + kb 
-              + ", \"" + kbHref + "\", " + containing + ", \""
-              + composite + "\", \"" + language + "\")");
-              System.out.println(" => \"" + resultStr + "\"");
-            */
-            resultStr = result.toString();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return resultStr;
-    }
-
-    private static boolean isSkipNode(KB kb, String term) {
-        try {
-            /*   */
-            String[] nodes = {"ddex_XmlSequence", "ddex_XmlChoice"};
-            for (int i = 0; i < nodes.length; i++) {
-                if (kb.isInstanceOf(term, nodes[i])) {
-                    return true;
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    }
-
-    /** ***************************************************************
-     * Travel up the HasXmlElement and HasXmlAttribute relation
-     * hierarchies to collect all parents.
-     *
-     */
-    private ArrayList containingComposites(KB kb, String term) {
-        ArrayList result = new ArrayList();
-        try {
-            List bt = (List) compositesBT.get(term);
-            if (bt != null) {
-
-                // System.out.println();
-                // System.out.println("Containing composites for " + term + ": " + bt);
-                // System.out.println();
-
-                result.addAll(bt);
-            }
+            // System.out.println("  ==> " + result);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1645,56 +3301,278 @@ public class DocGen {
     }
 
     /** ***************************************************************
+     *  Given the SUO-KIF statements:
+     * 
+     * (hasXmlElement PartyDescriptor LocalInstance_2_459)
+     * (datatype LocalInstance_2_459 PartyId)
+     * (documentation LocalInstance_2_459
+     * PartyDescriptor "A Composite containing details...")
+     * 
+     * show PartyDescriptor as one of the "containing
+     * composites" of PartyId, and show the documentation for
+     * the instance node next to the parent composite.
      */
-    private String createBelongsToClass(KB kb, String kbHref, String term, String language) {
+    private String formatContainingComposites(KB kb, 
+                                              String kbHref, 
+                                              ArrayList containing, 
+                                              String composite, 
+                                              String language) {
 
-        String suffix = "";
-        if (StringUtil.emptyString(kbHref)) 
-            suffix = ".html";
-        StringBuffer result = new StringBuffer();
+        /*
+          System.out.println("ENTER DocGen.formatContainingComposites("
+          + kb.name + ", "
+          + kbHref + ", "
+          + containing + ", "
+          + composite + ", "
+          + language + ")");
+        */
 
-        String className = getFirstGeneralTerm(kb, term);
-        List classes = new ArrayList();
-        if (StringUtil.isNonEmptyString(className) && isLegalForDisplay(kb, className)) {
-            classes.add(className);
-        }
-
-        if (!classes.isEmpty()) {
-            Collections.sort(classes, String.CASE_INSENSITIVE_ORDER);
-            result.append("<tr><td valign=\"top\" class=\"label\">Belongs to class</td><td valign=\"top\" class=\"cell\">\n");
-            Iterator it = classes.iterator();
-            String cl = null;
-            for (int j = 0; it.hasNext(); j++) {
-                if (j > 0) { result.append("<br>"); }
-                cl = (String) it.next();
-                result.append("<a href=\"" + kbHref + cl + suffix + "\">" 
-                              + showTermName(kb,cl,language) 
-                              + "</a>");        
+        String resultStr = "";
+        try {
+            StringBuilder result = new StringBuilder();
+            List instances = getFirstSpecificTerms(kb, composite);
+            String ccomp = null;
+            String inst = null;
+            Iterator it2 = null;
+            for (Iterator it1 = containing.iterator(); it1.hasNext();) {
+                ccomp = (String) it1.next();
+                for (it2 = instances.iterator(); it2.hasNext();) {
+                    inst = (String) it2.next();
+                    result.append(createContainingCompositeComponentLine(kb,
+                                                                         kbHref,
+                                                                         ccomp, 
+                                                                         inst,
+                                                                         0,
+                                                                         language));
+                }
             }
-            result.append("</td><td></td><td></td><td></td></tr>\n");
+            resultStr = result.toString();
         }
-        return result.toString();
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        /*
+          System.out.println("EXIT DocGen.formatContainingComposites("
+          + kb.name + ", "
+          + kbHref + ", "
+          + containing + ", "
+          + composite + ", "
+          + language + ")");
+          System.out.println("  ==> " + resultStr);
+        */
+
+        return resultStr;
     }
 
     /** ***************************************************************
-     *  Iterate through all the &%ddex_HasDataType relations for the
+     * Returns true if term should be skipped over during printing,
+     * else returns false.
+     *
+     */
+    private static boolean isSkipNode(KB kb, String term) {
+        boolean ans = false;
+        try {
+            ans = (kb.isInstanceOf(term, "XmlSequenceElement")
+                   || kb.isInstanceOf(term, "XmlChoiceElement"));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Travels up the HasXmlElement and HasXmlAttribute relation
+     * hierarchies to collect all parents.
+     *
+     */
+    private ArrayList containingComposites(KB kb, String term) {
+        ArrayList result = new ArrayList();
+        try {
+            result.addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
+                                                             1,
+                                                             term,
+                                                             2,
+                                                             true));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Returns a String containing HTML markup for the Belongs to Class
+     * section of an HTML page displaying the partial
+     * definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @param parents A Set containing the terms displayed in the
+     * Parent field for term, to avoid duplication between the Parents
+     * field and the Belongs to Class field
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * no markup can be generated
+     * 
+     */
+    private String createBelongsToClass(KB kb, 
+                                        String kbHref, 
+                                        String term, 
+                                        String language,
+                                        Set<String> parents) {
+        String markup = "";
+        try {
+            String suffix = "";
+            if (StringUtil.emptyString(kbHref)) 
+                suffix = ".html";
+            String className = getNearestContainingClass(kb, term);
+            if (StringUtil.isNonEmptyString(className) 
+                && isLegalForDisplay(className)
+                && ((parents == null)
+                    || !parents.contains(className))) {
+                StringBuilder result = new StringBuilder();
+                result.append("<tr>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"label\">");
+                result.append(lineSeparator);
+                result.append("    Belongs to Class");
+                result.append(lineSeparator);
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"cell\">");
+                result.append(lineSeparator);
+                result.append("<a href=\""); 
+                result.append(kbHref);
+                result.append(className);
+                result.append(suffix); 
+                result.append("\">");
+                result.append(showTermName(kb, className, language, true));
+                result.append("</a>");        
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("  <td></td><td></td><td></td>");
+                result.append(lineSeparator);
+                result.append("</tr>"); 
+                result.append(lineSeparator);
+
+                markup = result.toString();
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return markup;
+    }
+
+    /** ***************************************************************
+     * Returns a String containing HTML markup for the Belongs to Class
+     * section of an HTML page displaying the partial
+     * definition of term in kb.
+     * 
+     * @param kb The KB in which term is defined
+     *
+     * @param kbHref A String containing the constant parts of the
+     * href link for term, or an empty String
+     *
+     * @param term A String that denotes a SUO-KIF term
+     * 
+     * @param language A String denoting a SUO-KIF namespace, a
+     * natural language, or other type of entity that indexes
+     * termFormat Strings in kb
+     * 
+     * @return A String containing HTML markup, or an empty String if
+     * no markup can be generated
+     * 
+     */
+    private String createBelongsToClass(KB kb, 
+                                        String kbHref, 
+                                        String term, 
+                                        String language) {
+
+        return createBelongsToClass(kb, kbHref, term, language, null);
+    }
+
+    /** ***************************************************************
+     *  Iterate through all the datatype relations for the
      *  composite to collect the instances of this composite.  Then
-     *  call containingComposite() travel up the hasXmlElement
+     *  call containingComposite() travel up the syntacticSubordinate
      *  relations for those instances to find their containing
      *  composites (if any).
      */
+    /*
+      private ArrayList findContainingComposites(KB kb, String term) {
+
+      ArrayList ans = new ArrayList();
+      try {
+      if (StringUtil.isNonEmptyString(term)) {
+      Set accumulator = 
+      new HashSet(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
+      1,
+      term,
+      2,
+      true));
+      // containingComposites(kb, term);
+      if (accumulator.isEmpty()) {
+      List narrowerTerms = getFirstSpecificTerms(kb, term);
+      String nt = null;
+      for (Iterator it = narrowerTerms.iterator(); it.hasNext();) {
+      nt = (String) it.next();
+      accumulator
+      .addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
+      1,
+      nt,
+      2,
+      true));
+      }
+      }
+      List working = new LinkedList();
+      String nextTerm = null;
+      while (!accumulator.isEmpty()) {
+      working.clear();
+      working.addAll(accumulator);
+      accumulator.clear();
+      for (Iterator it2 = working.iterator(); it2.hasNext();) {
+      nextTerm = (String) it2.next();
+      if (isSkipNode(kb, nextTerm)) {
+      accumulator.addAll(findContainingComposites(kb, nextTerm));
+      }
+      else if (!ans.contains(nextTerm)) {
+      ans.add(nextTerm); 
+      }
+      }
+      }
+      }
+      }
+      catch (Exception ex) {
+      ex.printStackTrace();
+      }
+      return ans;
+      }
+    */
+
     private ArrayList findContainingComposites(KB kb, String term) {
 
-        ArrayList ans = new ArrayList();
+	ArrayList ans = new ArrayList();
         /*          */
-        try {
+	try {
             if (StringUtil.isNonEmptyString(term)) {
-                List accumulator = containingComposites(kb, term);
+		List accumulator = containingComposites(kb, term);
                 if (accumulator.isEmpty()) {
                     accumulator.addAll(getFirstSpecificTerms(kb, term));
-                }
+		}
                 List working = new ArrayList();
-                String term2 = null;
+		String term2 = null;
                 String term3 = null;
                 while (!accumulator.isEmpty()) {
                     working.clear();
@@ -1709,7 +3587,7 @@ public class DocGen {
                                 accumulator.add(term3);
                             }
                             if (!ans.contains(term3)) {
-                                ans.add(term3);                            
+                                ans.add(term3);
                             }
                         }
                     }
@@ -1732,132 +3610,286 @@ public class DocGen {
                                       String term, 
                                       int limit) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
-        String language = "EnglishLanguage";
-        int localLimit = limit;
-        String limitString = "";
-        for (int argnum = 2; argnum < 6; argnum++) {
+        if (StringUtil.isNonEmptyString(term)) {
+            String language = "EnglishLanguage";
+            int localLimit = limit;
+            String limitString = "";
+            ArrayList forms = null;
+            for (int argnum = 2; argnum < 6; argnum++) {
+                localLimit = limit;
+                limitString = "";
+                forms = kb.ask("arg",argnum,term);
+                if (forms != null) {
+                    if (forms.size() < localLimit) 
+                        localLimit = forms.size();
+                    else
+                        limitString = ("<br>Display limited to " 
+                                       + localLimit
+                                       + " statements of each type.<p>"
+                                       + lineSeparator);
+                    for (int i = 0; i < localLimit; i++) {
+                        Formula form = (Formula) forms.get(i);
+                        result.append(LanguageFormatter.htmlParaphrase(kbHref,
+                                                                       form.theFormula, 
+                                                                       kb.getFormatMap(language), 
+                                                                       kb.getTermFormatMap(language), 
+                                                                       kb,
+                                                                       language) 
+                                      + "<br>"
+                                      + lineSeparator);
+                    }
+                }
+                result.append(limitString);
+            }
+
             localLimit = limit;
             limitString = "";
-            ArrayList forms = null;
-            if (StringUtil.isNonEmptyString(term)) {
-                forms = kb.ask("arg",argnum,term);
-            }
+            forms = kb.ask("ant",0,term);
             if (forms != null) {
                 if (forms.size() < localLimit) 
                     localLimit = forms.size();
                 else
                     limitString = ("<br>Display limited to " 
-                                   + (new Integer(localLimit)).toString() 
-                                   + " statements of each type.<P>\n");
+                                   + localLimit
+                                   + " statements of each type.<p>"
+                                   + lineSeparator);
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
-                    result.append(LanguageFormatter.htmlParaphrase(kbHref,form.theFormula, 
+                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
+                                                                   form.theFormula, 
                                                                    kb.getFormatMap(language), 
                                                                    kb.getTermFormatMap(language), 
-                                                                   kb,language) 
-                                  + "<br>\n");
+                                                                   kb,
+                                                                   language) 
+                                  + lineSeparator);
                 }
             }
             result.append(limitString);
-        }
 
-        localLimit = limit;
-        limitString = "";
-        ArrayList forms = kb.ask("ant",0,term);
-        if (forms != null) {
-            if (forms.size() < localLimit) 
-                localLimit = forms.size();
-            else
-                limitString = ("<br>Display limited to " 
-                               + (new Integer(localLimit)).toString() 
-                               + " statements of each type.<P>\n");
-            for (int i = 0; i < localLimit; i++) {
-                Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                               form.theFormula, 
-                                                               kb.getFormatMap(language), 
-                                                               kb.getTermFormatMap(language), 
-                                                               kb,
-                                                               language) + "\n");
+            localLimit = limit;
+            limitString = "";
+            forms = kb.ask("cons",0,term);
+            if (forms != null) {
+                if (forms.size() < localLimit) 
+                    localLimit = forms.size();
+                else
+                    limitString = ("<br>Display limited to " 
+                                   + localLimit
+                                   + " statements of each type.<p>"
+                                   + lineSeparator);
+                for (int i = 0; i < localLimit; i++) {
+                    Formula form = (Formula) forms.get(i);
+                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
+                                                                   form.theFormula, 
+                                                                   kb.getFormatMap(language), 
+                                                                   kb.getTermFormatMap(language), 
+                                                                   kb,
+                                                                   language) 
+                                  + lineSeparator);
+                }
             }
-        }
-        result.append(limitString);
+            result.append(limitString);
 
-        localLimit = limit;
-        limitString = "";
-        forms = kb.ask("cons",0,term);
-        if (forms != null) {
-            if (forms.size() < localLimit) 
-                localLimit = forms.size();
-            else
-                limitString = ("<br>Display limited to " 
-                               + (new Integer(localLimit)).toString() 
-                               + " statements of each type.<P>\n");
-            for (int i = 0; i < localLimit; i++) {
-                Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                               form.theFormula, 
-                                                               kb.getFormatMap(language), 
-                                                               kb.getTermFormatMap(language), 
-                                                               kb,
-                                                               language) + "\n");
+            localLimit = limit;
+            limitString = "";
+            forms = kb.ask("stmt",0,term);
+            if (forms != null) {
+                if (forms.size() < localLimit) 
+                    localLimit = forms.size();
+                else
+                    limitString = ("<br>Display limited to " 
+                                   + localLimit
+                                   + " statements of each type.<p>"
+                                   + lineSeparator);
+                for (int i = 0; i < localLimit; i++) {
+                    Formula form = (Formula) forms.get(i);
+                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
+                                                                   form.theFormula, 
+                                                                   kb.getFormatMap(language), 
+                                                                   kb.getTermFormatMap(language), 
+                                                                   kb,
+                                                                   language) 
+                                  + "<br>" 
+                                  + lineSeparator);
+                }
             }
-        }
-        result.append(limitString);
+            result.append(limitString);
 
-        localLimit = limit;
-        limitString = "";
-        forms = kb.ask("stmt",0,term);
-        if (forms != null) {
-            if (forms.size() < localLimit) 
-                localLimit = forms.size();
-            else
-                limitString = ("<br>Display limited to " 
-                               + (new Integer(localLimit)).toString() 
-                               + " statements of each type.<P>\n");
-            for (int i = 0; i < localLimit; i++) {
-                Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                               form.theFormula, 
-                                                               kb.getFormatMap(language), 
-                                                               kb.getTermFormatMap(language), 
-                                                               kb,
-                                                               language) + "<br>\n");
+            localLimit = limit;
+            limitString = "";
+            forms = kb.ask("arg",0,term);
+            if (forms != null) {
+                if (forms.size() < localLimit) 
+                    localLimit = forms.size();
+                else
+                    limitString = ("<br>Display limited to " 
+                                   + localLimit
+                                   + " statements of each type.<p>"
+                                   + lineSeparator);
+                for (int i = 0; i < localLimit; i++) {
+                    Formula form = (Formula) forms.get(i);
+                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
+                                                                   form.theFormula, 
+                                                                   kb.getFormatMap(language), 
+                                                                   kb.getTermFormatMap(language), 
+                                                                   kb,
+                                                                   language) 
+                                  + "<br>"
+                                  + lineSeparator);
+                }
             }
-        }
-        result.append(limitString);
-
-        localLimit = limit;
-        limitString = "";
-        forms = kb.ask("arg",0,term);
-        if (forms != null) {
-            if (forms.size() < localLimit) 
-                localLimit = forms.size();
-            else
-                limitString = ("<br>Display limited to " 
-                               + (new Integer(localLimit)).toString() 
-                               + " statements of each type.<P>\n");
-            for (int i = 0; i < localLimit; i++) {
-                Formula form = (Formula) forms.get(i);
-                result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                               form.theFormula, 
-                                                               kb.getFormatMap(language), 
-                                                               kb.getTermFormatMap(language), 
-                                                               kb,
-                                                               language) + "<br>\n");
+            result.append(limitString);
+            if (result.length() > 0) { 
+                // note that the following 3 lines are inserted in reverse order
+                result.insert(0,"</td></tr></table><P>");
+                result.insert(0, ("<tr><td valign=\"top\" class=\"cell\">"
+                                  + "These statements express (potentially complex) "
+                                  + "facts about the term and are "
+                                  + "automatically generated.</td></tr>"
+                                  + lineSeparator
+                                  + "<tr><td valign=\"top\" class=\"cell\">"));
+                result.insert(0, ("<p><table><tr><td valign=\"top\" class=\"label\">"
+                                  + "<b>Other statements</b>"
+                                  + "</td></tr>"));
             }
-        }
-        result.append(limitString);
-        if (result.length() > 0) { 
-            // note that the following 3 lines are inserted in reverse order
-            result.insert(0,"</td></tr></table><P>");
-            result.insert(0,"<tr><td valign=\"top\" class=\"cell\">These statements express (potentially complex) facts about the term, " +
-                          "and are automatically generated.</td></tr>\n<tr><td valign=\"top\" class=\"cell\">");
-            result.insert(0,"<P><table><tr><td valign=\"top\" class=\"label\"><b>Other statements</b></td></tr>");
         }
         return result.toString();
+    }
+
+    /** ***************************************************************
+     * 
+     * 
+     */
+    private String createTermRelevanceNotice(KB kb, String kbHref, String term, String namespace) {
+        String result = "";
+        try {
+            String suffix = "";
+            if (StringUtil.emptyString(kbHref)) 
+                suffix = ".html";
+            String onto = getOntology();
+            List focalClasses = kb.getTermsViaAskWithRestriction(0, 
+                                                                 "docGenFocalInstanceClass", 
+                                                                 1, 
+                                                                 onto,
+                                                                 2);
+
+            if (!focalClasses.isEmpty()) {
+
+                StringBuilder sb = new StringBuilder();
+
+                // For now, assume just one focalClass.
+                String focalClass = (String) focalClasses.get(0);
+
+                Set ftSet = new HashSet(computeFocalTerms(kb, onto));
+
+                String relevanceType = getTermRelevance(kb, onto, term);
+
+                if (StringUtil.isNonEmptyString(relevanceType)) {
+                    Set relevanceSet = (Set) coreTerms.get(term);
+                    if (relevanceType.equals("supporting")) {
+                        relevanceSet = (Set) supportingTerms.get(term);
+                    }
+                    else if (relevanceType.equals("framework")) {
+                        relevanceSet = (Set) frameworkTerms.get(term);
+                    }
+
+                    if (relevanceSet != null) {
+                        sb.append("<span class=\"relevance\">");
+                        if (relevanceSet.containsAll(ftSet)) {
+                            sb.append("A <span class=\"relevance-type\">");
+                            sb.append(relevanceType);
+                            sb.append("</span> term for every <a href=\"");
+                            sb.append(kbHref);
+                            sb.append(focalClass);
+                            sb.append(suffix);
+                            sb.append("\">");
+                            sb.append(showTermName(kb, focalClass, namespace, false));
+                            sb.append("</a>");
+                        }                
+                        else {
+                            ArrayList sorted = new ArrayList(relevanceSet);
+                            sortByPresentationName(kb, namespace, sorted);
+                            String focalTerm = null;
+                            int slen = sorted.size();
+                            int last = (slen - 1);
+                            int c = 0;
+                            boolean isPair = (sorted.size() == 2);
+                            boolean isFirst = true;
+                            sb.append("A <span class=\"relevance-type\">");
+                            sb.append(relevanceType);
+                            sb.append("</span> term for ");
+                            for (Iterator it = sorted.iterator(); it.hasNext();) {
+                                focalTerm = (String) it.next();
+                                if (!isFirst) {
+                                    if (isPair) sb.append(" ");
+                                    else sb.append(", ");
+                                }
+                                if ((slen > 1) && (c == last)) sb.append("and ");
+                                sb.append("<a href=\"");
+                                sb.append(kbHref);
+                                sb.append(focalTerm);
+                                sb.append(suffix);
+                                sb.append("\">");
+                                sb.append(showTermName(kb, focalTerm, namespace, false));
+                                sb.append("</a>");
+                                isFirst = false;
+                                c++;
+                            }
+                        }
+                        sb.append(".</span>");
+                        result = sb.toString();
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Returns a String denoting term's relative "centrality" or
+     * relevance within ontology, or the empty String if no relevance
+     * for term can be computed.
+     *
+     * @parfam kb The KB to use in computing terms' relevance within
+     *            ontology
+     *
+     * @param ontology A String denoting the ontology within which
+     *                 term has a relative degree of significance or
+     *                 relevance
+     * 
+     * @param term A String denoting a term in ontology
+     * 
+     * @return A String describing term's relevance within ontology,
+     *         or an empty String if term's relevance cannot be
+     *         computed.
+     */
+    private String getTermRelevance(KB kb, String ontology, String term) {
+        String ans = "";
+        try {
+            if (coreTerms.isEmpty()) computeTermRelevance(kb, ontology);
+
+            if (coreTerms.get(term) != null) {
+                ans = "core";
+            }
+            else if (frameworkTerms.get(term) != null) {
+                ans = "framework";
+            }
+            else if (supportingTerms.get(term) != null) {
+                ans = "supporting";
+            }
+
+            if (ans.equals("core"))
+                ans = "message";
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
     }
 
     /** ***************************************************************
@@ -1874,80 +3906,230 @@ public class DocGen {
                                       int limit, 
                                       String language) {
 
-        StringBuffer result = new StringBuffer();
-        StringBuffer sb1 = new StringBuffer();
+        String markup = "";
 
-        if (!StringUtil.emptyString(kbHref)) 
-            result.append(generateDynamicTOCHeader(kbHref));
-        else
-            result.append(generateTOCHeader(alphaList,kb.name + "-AllTerms.html"));
-        result.append("<table width=\"100%\">");
-        result.append("<tr bgcolor=#DDDDDD>");
-        result.append("<td valign=\"top\" class=\"cell\"><font size=+2>");
+        try {
+            if (StringUtil.isNonEmptyString(term)) {
+                StringBuilder result = new StringBuilder();
+                StringBuilder sb1 = new StringBuilder();
 
-        result.append(showTermName(kb,term,language));
-        result.append("</font></td></tr>\n<tr>");
-        result.append(createDocs(kb,kbHref,term,language));
-        result.append("</table><P>\n");
+                if (StringUtil.isNonEmptyString(kbHref)) 
+                    result.append(generateDynamicTOCHeader(kbHref));
+                else
+                    result.append(generateTocHeader(kb, 
+                                                    alphaList, 
+                                                    INDEX_FILE_NAME
+                                                    // showTermName(kb, language, language) 
+                                                    // + "Dictionary.html"
+                                                    ));
+                result.append("<table width=\"100%\">");
+                result.append(lineSeparator);
+                result.append("  <tr bgcolor=\"#DDDDDD\">");
+                result.append(lineSeparator);
+                result.append("    <td valign=\"top\" class=\"cell\"><font size=\"+2\">");
+                result.append(showTermName(kb,term,language,true));
+                result.append("</font>");
+                result.append("    </td>");
+                result.append(lineSeparator);
+                result.append("  </tr>");
+                result.append(lineSeparator);
 
-        result.append(HTMLformatter.htmlDivider);
-        result.append("<table>");
-        result.append(createSynonyms(kb,kbHref,term));
+                String relevance = createTermRelevanceNotice(kb, kbHref, term, language);
+                if (StringUtil.isNonEmptyString(relevance)) {
+                    result.append("  <tr bgcolor=\"#DDDDDD\">");
+                    result.append(lineSeparator);
+                    result.append("    <td valign=\"top\" class=\"cell\">");
+                    result.append(lineSeparator);
+                    result.append(relevance);
+                    result.append(lineSeparator);
+                    result.append("    </td>");
+                    result.append(lineSeparator);
+                    result.append("  </tr>");
+                    result.append(lineSeparator);
+                }
 
-        ArrayList superComposites = findContainingComposites(kb,term); 
-        Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
-        sb1.append(createHasSameComponents(kb,kbHref,term,language));
+                result.append(createDocs(kb,kbHref,term,language));
+                result.append("</table>");
+                result.append(lineSeparator);
+                // result.append("<p>");
+                // result.append(lineSeparator);
 
-        if ((sb1.length() > 0) 
-            || ((superComposites != null) && !superComposites.isEmpty())
-            || hasSubComponents(kb, term)) {
+                // result.append(HTMLformatter.htmlDivider);
 
-            result.append("<tr class=\"title_cell\"><td valign=\"top\" class=\"label\">Component Structure</td><td valign=\"top\" colspan=4></td></tr>");
+                result.append("<table>");
+                result.append(lineSeparator);
+                result.append(createSynonyms(kb, kbHref, term));
 
-            if (sb1.length() > 0) {
-                result.append(sb1);
-                sb1.setLength(0);
-            }
-            // result.append(createHasSameComponents(kb,kbHref,term,language));
-            if ((superComposites != null) && !superComposites.isEmpty()) {
+                ArrayList superComposites = findContainingComposites(kb, term); 
                 Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
-                result.append("<tr><td valign=\"top\" class=\"label\">Member of Composites</td><td valign=\"top\" class=\"title_cell\">Composite Name</td>");
-                result.append("<td valign=\"top\" class=\"title_cell\">Description of Element Role</td><td valign=\"top\" class=\"title_cell\">Cardinality</td><td></td></tr>\n");
-                result.append(formatContainingComposites(kb,kbHref,superComposites,term,language));
-            }
 
-            if (hasSubComponents(kb, term)) {
-                result.append("<tr><td valign=\"top\" class=\"label\">Components</td>" +
-                              "<td valign=\"top\" class=\"title_cell\">Name</td>" +
-                              "<td valign=\"top\" class=\"title_cell\">Description of Element Role</td>" +
-                              "<td valign=\"top\" class=\"title_cell\">Cardinality</td>" +
-                              "<td valign=\"top\" class=\"title_cell\">Data Type</td></tr>\n");
+                sb1.append(createHasSameComponents(kb, kbHref, term, language));
+                if ((sb1.length() > 0) 
+                    || !superComposites.isEmpty()
+                    || hasSubComponents(kb, term)) {
 
-                ArrayList hier = createCompositeRecurse(kb, term, 0);
-                // No need to show the composite itself.
-                hier.remove(0); 
-                /*
-                  int hlen = hier.size();
-                  AVPair avp = null;
-                  for (int i = 0; i < hlen; i++) {
-                  avp = (AVPair) hier.remove(0);
-                  if (!isSkipNode(kb, avp.attribute)) {
-                  hier.add(avp);
-                  }
-                  } 
-                */                   
-                result.append(formatCompositeHierarchy(kb,kbHref,hier,language));
+                    result.append("<tr class=\"title_cell\">");
+                    result.append(lineSeparator);
+                    result.append("  <td valign=\"top\" class=\"label\">Component Structure</td>");
+                    result.append(lineSeparator);
+                    result.append("  <td valign=\"top\" colspan=\"4\"></td>");
+                    result.append(lineSeparator);
+                    result.append("</tr>");
+                    result.append(lineSeparator);
+
+                    if (sb1.length() > 0) {
+                        result.append(sb1);
+                        sb1.setLength(0);
+                    }
+
+                    if (hasSubComponents(kb, term)) {
+                        result.append("<tr>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"label\">Components</td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\">Name</td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\">");
+                        result.append(lineSeparator);
+                        result.append("    Description of Element Role");
+                        result.append(lineSeparator);
+                        result.append("  </td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\">Cardinality</td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\">Data Type</td>");
+                        result.append(lineSeparator);
+                        result.append("</tr>");
+                        result.append(lineSeparator);
+                
+                        ArrayList attrs = new ArrayList();
+                        ArrayList elems = new ArrayList();
+
+                        // If there are shared components, add them first.
+                        ArrayList accumulator = 
+                            new ArrayList(getSyntacticExtensionTerms(kb, term, 2, false));
+                        ArrayList sharesComponentsWith = new ArrayList();
+                    
+                        // System.out.println("  term == " + term);
+                        // System.out.println("  accumulator == " + accumulator);
+
+                        while (!accumulator.isEmpty()) {
+                            sharesComponentsWith.clear();
+                            sharesComponentsWith.addAll(accumulator);
+                            accumulator.clear();
+                            String nextTerm = null;
+                            for (Iterator it = sharesComponentsWith.iterator(); it.hasNext();) {
+                                nextTerm = (String) it.next();
+                                ArrayList nextPair = createCompositeRecurse(kb, nextTerm, false, 0);
+                                ArrayList nextAttrs = ((ArrayList) nextPair.get(0));
+                                ArrayList nextElems = ((ArrayList) nextPair.get(1));
+                                attrs.addAll(0, nextAttrs);
+                                if (!nextElems.isEmpty()) {
+                                    nextElems.remove(0);
+                                    elems.addAll(0, nextElems);
+                                }
+                                accumulator.addAll(getSyntacticExtensionTerms(kb, nextTerm, 2, false));
+
+                                // System.out.println("  nextTerm == " + nextTerm);
+                                // System.out.println("  accumulator == " + accumulator);
+
+                            }
+                        }
+
+                        // Now add the components that pertain to only this
+                        // term.  
+                        ArrayList localPair = createCompositeRecurse(kb, term, false, 0);
+                        // No need to show the composite itself.
+                        ArrayList localAttrs = ((ArrayList) localPair.get(0));
+                        ArrayList localElems = ((ArrayList) localPair.get(1));
+                        attrs.addAll(localAttrs);
+                        if (!localElems.isEmpty()) {
+                            localElems.remove(0);
+                            elems.addAll(localElems);
+                        }
+
+                        ArrayList hier = new ArrayList(attrs);
+                        hier.addAll(elems);
+                        result.append(formatCompositeHierarchy(kb, kbHref, hier, language));
+                    }
+
+                    if (!superComposites.isEmpty()) {
+                        Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
+                        result.append("<tr>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"label\">");
+                        result.append(lineSeparator);
+                        result.append("    Is Member of Composites");
+                        result.append(lineSeparator);
+                        result.append("  </td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\">");
+                        result.append(lineSeparator);
+                        result.append("    Composite Name");
+                        result.append(lineSeparator);
+                        result.append("  </td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\">");
+                        result.append(lineSeparator);
+                        result.append("    Description of Element Role");
+                        result.append(lineSeparator);
+                        result.append("  </td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\">");
+                        result.append(lineSeparator);
+                        result.append("    Cardinality");
+                        result.append("  </td>");
+                        result.append(lineSeparator);
+                        result.append("  <td valign=\"top\" class=\"title_cell\"> &nbsp; </td>");
+                        result.append(lineSeparator);
+                        result.append("</tr>");
+                        result.append(lineSeparator);
+
+                        result.append(formatContainingComposites(kb,
+                                                                 kbHref,
+                                                                 superComposites,
+                                                                 term,
+                                                                 language));
+                    }
+                }
+
+                sb1.append(createBelongsToClass(kb, kbHref, term, language));
+                sb1.append(createUsingSameComponents(kb, kbHref, term, language));
+                if (sb1.length() > 0) {
+                    result.append("<tr class=\"title_cell\">");
+                    result.append(lineSeparator);
+                    result.append("  <td valign=\"top\" class=\"label\">");
+                    result.append(lineSeparator);
+                    result.append("    Relationships");
+                    result.append(lineSeparator);
+                    result.append("  </td>");
+                    result.append(lineSeparator);
+                    result.append("  <td></td><td></td><td></td><td></td>");
+                    result.append(lineSeparator);
+                    result.append("</tr>");
+                    result.append(lineSeparator);
+
+                    result.append(sb1);
+
+                    sb1.setLength(0);
+                }
+                result.append("</table>");
+                result.append(lineSeparator);
+
+                result.append(generateHtmlFooter(""));
+
+                result.append("  </body>");
+                result.append(lineSeparator);
+                result.append("</html>"); 
+                result.append(lineSeparator);
+
+                markup = result.toString();
             }
         }
-        sb1.append(createBelongsToClass(kb,kbHref,term,language));
-        sb1.append(createUsingSameComponents(kb,kbHref,term,language));
-        if (sb1.length() > 0) {
-            result.append("<tr class=\"title_cell\"><td valign=\"top\" class=\"label\">Relationships</td><td></td><td></td><td></td><td></td></tr>\n");
-            result.append(sb1);
-            sb1.setLength(0);
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-        result.append("</table>\n");
-        return result.toString();
+        return markup;
     }
 
     /** ***************************************************************
@@ -1965,69 +4147,190 @@ public class DocGen {
                              int limit, 
                              String language) {
 
-        StringBuffer result = new StringBuffer();
-        StringBuffer sb1 = new StringBuffer();
-        StringBuffer sb2 = new StringBuffer();
+        String output = "";
+        try {
+            StringBuilder result = new StringBuilder();
+            StringBuilder sb1 = new StringBuilder();
+            StringBuilder sb2 = new StringBuilder();
 
-        if (!StringUtil.emptyString(kbHref)) {
-            kbHref = kbHref + "&term=";
-            result.append(generateDynamicTOCHeader(kbHref));
+            if (StringUtil.isNonEmptyString(kbHref)) {
+                if (!kbHref.endsWith("&term=")) {
+                    kbHref += "&term=";
+                }
+                result.append(generateDynamicTOCHeader(kbHref));
+            }
+            else {
+                result.append(generateTocHeader(kb, 
+                                                alphaList, 
+                                                INDEX_FILE_NAME
+                                                // showTermName(kb, language, language)
+                                                // + "Dictionary.html"
+                                                ));
+            }
+            result.append("<table width=\"100%\">");
+            result.append(lineSeparator);
+            result.append("  <tr bgcolor=\"#DDDDDD\">");
+            result.append(lineSeparator);
+            result.append("    <td valign=\"top\" class=\"cell\">");
+            result.append(lineSeparator);
+            result.append("      <font size=\"+2\">");
+            result.append(lineSeparator);
+            result.append("        ");
+            result.append(showTermName(kb,term,language,true));
+            result.append(lineSeparator);
+            result.append("      </font>");
+            result.append(lineSeparator);
+            result.append("    </td>");
+            result.append(lineSeparator);
+            result.append("  </tr>"); 
+            result.append(lineSeparator);
+
+            String relevance = createTermRelevanceNotice(kb, kbHref, term, language);
+            if (StringUtil.isNonEmptyString(relevance)) {
+                result.append("  <tr bgcolor=\"#DDDDDD\">");
+                result.append(lineSeparator);
+                result.append("    <td valign=\"top\" class=\"cell\">");
+                result.append(lineSeparator);
+                result.append(relevance);
+                result.append(lineSeparator);
+                result.append("    </td>");
+                result.append(lineSeparator);
+                result.append("  </tr>");
+                result.append(lineSeparator);
+            }
+
+            result.append(createDocs(kb, kbHref, term, language));
+            result.append(lineSeparator);
+            result.append("</table>");
+            result.append(lineSeparator);
+            // result.append("<p>");
+            // result.append(lineSeparator);
+            result.append("<table width=\"100%\">");
+            result.append(lineSeparator);
+            result.append(createSynonyms(kb, kbHref, term));
+            result.append(lineSeparator);
+            result.append(createComments(kb, kbHref, term, language));
+            result.append(lineSeparator);
+
+            Set<String> parents = new HashSet<String>();
+            sb1.append(createParents(kb, kbHref, term, language, parents));
+            sb1.append(lineSeparator);
+            sb2.append(createChildren(kb, kbHref, term, language));
+            sb2.append(lineSeparator);
+
+            if ((sb1.length() > 0) || (sb2.length() > 0)) {
+                result.append("<tr class=\"title_cell\">");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"label\">");
+                result.append(lineSeparator);
+                result.append("    Relationships");
+                result.append(lineSeparator);
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("  <td>&nbsp;</td>");
+                result.append(lineSeparator);
+                result.append("  <td>&nbsp;</td>");
+                result.append(lineSeparator);
+                result.append("  <td>&nbsp;</td>");
+                result.append(lineSeparator);
+                result.append("</tr>");
+                result.append(lineSeparator);
+
+                // Parents
+                result.append(sb1.toString());
+                sb1.setLength(0);
+
+                // Children
+                result.append(sb2.toString());
+                sb2.setLength(0);
+            }
+
+            ArrayList superComposites = findContainingComposites(kb, term); 
+            Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
+
+            result.append(createInstances(kb, kbHref, term, language, superComposites));
+            result.append(lineSeparator);
+
+            result.append(createRelations(kb, kbHref, term, language));
+            result.append(lineSeparator);
+
+            result.append(createUsingSameComponents(kb, kbHref, term, language));
+            result.append(lineSeparator);
+
+            result.append(createBelongsToClass(kb, kbHref, term, language, parents));
+            result.append(lineSeparator);
+
+            if (!superComposites.isEmpty()) {
+                result.append("<tr>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"label\">");
+                result.append(lineSeparator);
+                result.append("    Is Member of Composites");
+                result.append(lineSeparator);
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"title_cell\">");
+                result.append(lineSeparator);
+                result.append("    Composite Name");
+                result.append(lineSeparator);
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"title_cell\">");
+                result.append(lineSeparator);
+                result.append("    Description of Element Role");
+                result.append(lineSeparator);
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("  <td valign=\"top\" class=\"title_cell\">");
+                result.append(lineSeparator);
+                result.append("    Cardinality");
+                result.append(lineSeparator);
+                result.append("  </td>");
+                result.append(lineSeparator);
+                result.append("  <td> &nbsp; </td>");
+                result.append(lineSeparator);
+                result.append("</tr>");
+                result.append(lineSeparator);
+
+                result.append(formatContainingComposites(kb,
+                                                         kbHref,
+                                                         superComposites,
+                                                         term,
+                                                         language));
+                result.append(lineSeparator);
+            }
+
+            result.append("</table>");
+            result.append(lineSeparator);
+
+            // result.append(HTMLformatter.htmlDivider);
+
+            result.append(generateHtmlFooter(""));
+            result.append(lineSeparator);
+            result.append("  </body>");
+            result.append(lineSeparator);
+            result.append("</html>");
+            result.append(lineSeparator);
+
+            // result.append(createAllStatements(kb,kbHref,term,limit));
+
+            output = result.toString();
+
+            /*
+              System.out.println("INFO createPage(" 
+              + kb.name + ", "
+              + kbHref + ", "
+              + term + ", "
+              + "[" + alphaList.size() + " pairs], "
+              + limit + ", "
+              + language + ")");
+              System.out.println("  ==> " + output);
+            */
         }
-        else
-            result.append(generateTOCHeader(alphaList,kb.name + "-AllTerms.html"));
-
-        result.append("<table width=\"100%\">");
-        result.append("<tr bgcolor=#DDDDDD>");
-        result.append("<td valign=\"top\" class=\"cell\"><font size=+2>");
-
-        result.append(showTermName(kb,term,language));
-        result.append("</font></td></tr>\n<tr>");
-        result.append(createDocs(kb,kbHref,term,language));
-        result.append("</table><P>\n");
-        result.append("<table width=\"100%\">");
-        result.append(createSynonyms(kb,kbHref,term));
-        result.append(createComments(kb,kbHref,term,language));
-        
-        sb1.append(createParents(kb,kbHref,term,language));
-        sb2.append(createChildren(kb,kbHref,term,language));
-
-        if ((sb1.length() > 0) || (sb2.length() > 0)) {            
-            result.append("<tr class=\"title_cell\"><td valign=\"top\" class=\"label\">Relationships</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
-            result.append(sb1);
-            sb1.setLength(0);
-            result.append(sb2);
-            sb2.setLength(0);
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-
-        ArrayList superComposites = findContainingComposites(kb,term); 
-        Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
-
-        // if ((superComposites != null) && !superComposites.isEmpty()) {
-        // superComposites are excluded terms that will appear in the
-        // member of composites section.
-
-        result.append(createInstances(kb,kbHref,term,language,superComposites));
-        // result.append(createInstances(kb,kbHref,term,language,superComposites));  
-        // }
-                                                                   
-        result.append(createRelations(kb,kbHref,term,language));
-        result.append(createUsingSameComponents(kb,kbHref,term,language));
-        result.append(createBelongsToClass(kb,kbHref,term,language));
-
-        if ((superComposites != null) && !superComposites.isEmpty()) {
-
-            result.append("<tr><td valign=\"top\" class=\"label\">Member of Composites</td><td valign=\"top\" class=\"title_cell\">Composite Name</td>");
-            result.append("<td valign=\"top\" class=\"title_cell\">Description of Element Role</td><td valign=\"top\" class=\"title_cell\">Cardinality</td><td></td></tr>\n");
- 
-            result.append(formatContainingComposites(kb,kbHref,superComposites,term,language));
-        }
-
-        result.append("</table>\n");
-
-        result.append(HTMLformatter.htmlDivider);
-
-        // result.append(createAllStatements(kb,kbHref,term,limit));
-        return result.toString();
+        return output;
     }
 
     /** ***************************************************************
@@ -2035,18 +4338,41 @@ public class DocGen {
      *  individual index pages (which collect all terms starting
      *  with a particular letter.
      */
-    private String generateDynamicTOCHeader(String kbHref) {
+    public String generateDynamicTOCHeader(String kbHref) {
 
-        StringBuffer result = new StringBuffer();
-        result.append("<table width=\"100%\"><tr>");
-        for (char c = 65; c < 91; c++) {
-            String cString = Character.toString(c);   
-            result.append("<td valign=top><a href=\"" + kbHref + "&term=" + cString + "*\">" 
-                          + cString 
-                          + "</a></td>\n");            
+        String markup = "";
+        try {
+            StringBuilder result = new StringBuilder();
+            result.append(generateHtmlDocStart(""));
+            result.append(lineSeparator);
+            result.append("<table width=\"100%\">");
+            result.append(lineSeparator);
+            result.append("  <tr>");
+            for (char c = 65; c < 91; c++) {
+                result.append(lineSeparator);
+                String cString = Character.toString(c);   
+                result.append("    <td valign=\"top\"><a href=\"");
+                result.append(kbHref);
+                if (StringUtil.isNonEmptyString(kbHref) 
+                    && !kbHref.endsWith("&term=")) {
+                    result.append("&term=");
+                }
+                result.append(cString);
+                result.append("*\">");
+                result.append(cString);
+                result.append("</a></td>");
+                result.append(lineSeparator);
+            }
+            result.append("  </tr>");
+            result.append(lineSeparator);
+            result.append("</table>");
+            result.append(lineSeparator);
+            markup = result.toString();
         }
-        result.append("</tr></table>");
-        return result.toString();
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return markup;
     }
 
     /** ***************************************************************
@@ -2057,41 +4383,106 @@ public class DocGen {
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    private String generateTOCHeader(TreeMap alphaList, String allname) {
+    private String generateTocHeader(KB kb, TreeMap alphaList, String allname) {
 
-        if (StringUtil.isNonEmptyString(TOCheader)) 
-            return TOCheader;
-        StringBuffer result = new StringBuffer();
-        result.append("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
-                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\"></head><body>\n");
+        if (StringUtil.emptyString(getTocHeader())) {
+            StringBuilder result = new StringBuilder();
+            try {
+                ArrayList keyList = new ArrayList(alphaList.keySet());
+                int klSize = keyList.size();
 
-        result.append(this.header);
-        result.append("<table width=\"100%\"><tr><td valign=\"top\" colspan=\"35\" class=\"title\">\n");
-        result.append(this.header + "</td></tr><tr class=\"letter\">\n");
-        result.append("<td><a href=\"" + allname + "\">All</a></td>\n");
+                sortByPresentationName(kb, getDefaultNamespace(), keyList);
 
-        for (char c = 48; c < 58; c++) {                // numbers
-            String cString = Character.toString(c);
-            if (alphaList.keySet().contains(cString)) {
-                String filelink = "number-" + cString + ".html";      
-                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
+                String title = getTitleText();
+                title = StringUtil.removeEnclosingQuotes(title);
+
+                String imgFile = getDefaultImageFileMarkup();
+                if (StringUtil.isNonEmptyString(imgFile)) {
+                    imgFile = StringUtil.removeEnclosingQuotes(imgFile);
+                }
+
+                // Add the header.
+                result.append(generateHtmlDocStart(""));
+
+                // We assemble the columns first, so as to get the
+                // correct value for the table's colspan attribute.
+                int colNum = 0;
+                StringBuilder sb2 = new StringBuilder();
+
+                // for (char c = 48; c < 58; c++) {                // numbers
+                String cString = null;
+                for (int i = 0; i < klSize; i++) {
+                    cString = (String) keyList.get(i);  //Character.toString(c);
+                    if (Character.isDigit(cString.charAt(0))) {
+                        colNum++;
+                        String filelink = "number-" + cString + ".html";      
+                        sb2.append("    <td><a href=\""); 
+                        sb2.append(filelink); 
+                        sb2.append("\">");
+                        sb2.append(cString);
+                        sb2.append("</a></td>");
+                        sb2.append(lineSeparator);
+                    }
+                }
+
+                // for (char c = 65; c < 91; c++) {                // letters
+                for (int i = 0; i < klSize; i++) {
+                    cString = (String) keyList.get(i);
+                    if (!Character.isDigit(cString.charAt(0))) {
+                        colNum++;
+                        String filelink = "letter-" + cString + ".html";      
+                        sb2.append("    <td><a href=\""); 
+                        sb2.append(filelink); 
+                        sb2.append("\">");
+                        sb2.append(cString);
+                        sb2.append("</a></td>");
+                        sb2.append(lineSeparator);
+                    }
+                }
+
+                // Increment once more for All.
+                colNum++;
+
+                StringBuilder sb1 = new StringBuilder();
+                sb1.append("<table width=\"100%\">");
+                sb1.append(lineSeparator);
+                sb1.append("  <tr>");
+                sb1.append(lineSeparator);
+                sb1.append("    <td valign=\"top\" colspan=\"");
+                sb1.append(colNum);
+                sb1.append("\" class=\"title\">");
+                if (StringUtil.isNonEmptyString(imgFile)) {
+                    sb1.append(imgFile);
+                    sb1.append("&nbsp;&nbsp;");
+                }
+                sb1.append(title);
+                sb1.append("    </td>");
+                sb1.append(lineSeparator);
+                sb1.append("  </tr>");
+                sb1.append(lineSeparator);
+                sb1.append("  <tr class=\"letter\">"); 
+                sb1.append(lineSeparator);
+
+                // Assemble everything in the correct order.
+                result.append(sb1);
+                result.append(sb2);
+
+                result.append("    <td><a href=\""); 
+                result.append(allname); 
+                result.append("\">All</a></td>"); 
+                result.append(lineSeparator);
+                result.append("  </tr>");
+                result.append(lineSeparator);
+                result.append("</table>");
+                result.append(lineSeparator);
+
+                setTocHeader(result.toString());
             }
-            else                 
-                result.append("<td>" + cString + "</td>\n");
-        }
-
-        for (char c = 65; c < 91; c++) {                // letters
-            String cString = Character.toString(c);
-            if (alphaList.keySet().contains(cString)) {
-                String filelink = "letter-" + cString + ".html";      
-                result.append("<td><a href=\"" + filelink + "\">" + cString + "</a></td>\n");
+            catch (Exception ex) {
+                ex.printStackTrace();
             }
-            else                 
-                result.append("<td>" + cString + "</td>\n");
         }
-        result.append("</tr></table>");
-        TOCheader = result.toString();
-        return result.toString();
+        return getTocHeader();
     }
 
     /** ***************************************************************
@@ -2111,154 +4502,260 @@ public class DocGen {
         */
 
         int count = 0;
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append("<table width=\"100%\">");
         TreeMap map = (TreeMap) alphaList.get(firstLetter);
-        Iterator it = map.keySet().iterator();
-        while (it.hasNext()) {
-            String formattedTerm = (String) it.next();
-            ArrayList al = (ArrayList) map.get(formattedTerm);
-            for (int i = 0; i < al.size(); i++) {
-                String realTermName = (String) al.get(i);
-                result.append("<tr><td><a href=\"" + realTermName + ".html\">" + 
-                              showTermName(kb,realTermName,language) + "</a></td>\n");
-                ArrayList docs = kb.askWithRestriction(0,"documentation",1,realTermName);
-                if (docs != null && docs.size() > 0) {
-                    Formula f = (Formula) docs.get(0);
-                    String docString = f.getArgument(3);  
-                    docString = kb.formatDocumentation("",docString,language);
-                    docString = StringUtil.removeEnclosingQuotes(docString);
-                    // docString = StringUtil.escapeQuoteChars(docString);
-                    // docString = docString.replace("\\\"","\"");
-                    if (docString.length() > 1)                 
-                        result.append("<td valign=\"top\" class=\"cell\">" 
-                                      + docString
-                                      + "</td>\n");
+        ArrayList sorted = new ArrayList(map.keySet());
+        sortByPresentationName(kb, language, sorted);
+        String formattedTerm = null;
+        ArrayList al = null;
+        Iterator it2 = null;
+        String realTermName = null;
+        ArrayList docs = null;
+        Iterator it3 = null;
+        Formula f = null;
+        String termToPrint = null;
+        String docString = null;
+        for (Iterator it = sorted.iterator(); it.hasNext();) {
+            formattedTerm = (String) it.next();
+            al = (ArrayList) map.get(formattedTerm);
+            sortByPresentationName(kb, language, al);
+            for (it2 = al.iterator(); it2.hasNext();) {
+
+                realTermName = (String) it2.next();
+                docString = getContextualDocumentation(kb, realTermName, null);
+                if (StringUtil.emptyString(docString)) {
+                    continue;
                 }
-                result.append("</tr>\n");
+                termToPrint = showTermName(kb, realTermName, language, true);
+                result.append("  <tr>");
+                result.append(lineSeparator);
+
+                // Term Name
+                result.append("    <td valign=\"top\" class=\"cell\">");
+                result.append(lineSeparator);
+                result.append("      <a href=\""); 
+                result.append(realTermName); 
+                result.append(".html\">");
+                result.append(lineSeparator);
+                result.append("        ");
+                result.append(termToPrint);
+                result.append(lineSeparator);
+                result.append("      </a>");
+                result.append(lineSeparator);
+                result.append("    </td>");
+                result.append(lineSeparator);
+
+                // Relevance
+                result.append("    <td valign=\"top\" class=\"cell\">");
+                result.append(lineSeparator);
+                result.append("      ");
+                result.append(getTermRelevance(kb, getOntology(), realTermName).equals("message")
+                              ? "&nbsp;&nbsp;&nbsp;&nbsp;MT&nbsp;&nbsp;&nbsp;&nbsp;"
+                              : "");
+                result.append("    </td>");
+                result.append(lineSeparator);
+
+                // Documentation
+                docString = processDocString(kb, "", language, docString, false, true);
+
+                result.append("    <td valign=\"top\" class=\"cell\">");
+                result.append(lineSeparator);
+                result.append("      ");
+                result.append(docString);
+                result.append(lineSeparator);
+                result.append("    </td>");
+                result.append(lineSeparator);
+                result.append("  </tr>"); 
+                result.append(lineSeparator);
             }
             //if ((count++ % 100) == 1) { System.out.print("."); }
         }
         //System.out.println();
-        result.append("</tr>\n");
-        result.append("</table>\n");
+        // result.append("</tr>" + lineSeparator);
+        result.append("</table>");
+        result.append(lineSeparator);
         return result.toString();
     }
 
     /** ***************************************************************
-     *  Generate and save all the index pages that link to the
-     *  individual term pages.
-     *  @param pageList is a map of all term pages keyed by term
+     * Generate and save all the index pages that link to the
+     * individual term pages.
+     *
+     * @param pageList is a map of all term pages keyed by term
      *                  name
-     *  @param dir is the directory in which to save the pages
+     * @param dir is the directory in which to save the pages
      * 
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    private String saveIndexPages(KB kb, 
-                                  TreeMap alphaList, 
-                                  String dir, 
-                                  String language) throws IOException {
-
-        System.out.println("INFO in DocGen.saveIndexPages()");
-        String tocheader = generateTOCHeader(alphaList,kb.name + "-AllTerms.html");
-        FileWriter fw = null;
+    private void saveIndexPages(KB kb, 
+                                TreeMap alphaList, 
+                                String dir, 
+                                String language) {
         PrintWriter pw = null; 
-        String filename = "";
-        int count = 0;
+        File outfile = null;
+        String outpath = null;
         try {
-            Iterator it = alphaList.keySet().iterator();  // iterate through single letters
-            while (it.hasNext()) {
+            String tocheader = generateTocHeader(kb, 
+                                                 alphaList, 
+                                                 INDEX_FILE_NAME);
+            File parentDir = new File(dir);
+            int count = 0;
+            for (Iterator it = alphaList.keySet().iterator(); it.hasNext();) {
                 String letter = (String) it.next();
-                if (letter.compareTo("A") < 0) 
-                    filename = dir + File.separator + "number-" + letter + ".html";
-                else
-                    filename = dir + File.separator + "letter-" + letter + ".html";
-                fw = new FileWriter(filename);
-                pw = new PrintWriter(fw);
-                String page = generateTOCPage(kb,letter,alphaList,language);
+                outfile = new File(parentDir,
+                                   ((letter.compareTo("A") < 0) ? "number-" : "letter-")
+                                   + letter
+                                   + ".html");
+                outpath = outfile.getCanonicalPath();
+                pw = new PrintWriter(new FileWriter(outfile));
+                String page = generateTOCPage(kb, letter, alphaList, language);
                 pw.println(tocheader);
                 pw.println(page);
-                pw.println(footer); 
-                pw.close();
-                fw.close();
-                if ((count++ % 100) == 1) { System.out.print("."); }
+                pw.println(generateHtmlFooter("")); 
+                try {
+                    pw.close();
+                }
+                catch (Exception pwex) {
+                    System.out.println("Error writing \"" 
+                                       + outpath + "\": " 
+                                       + pwex.getMessage());
+                    pwex.printStackTrace();
+                }
+                // if ((count++ % 100) == 1) System.out.print(".");
             }   
             System.out.println();
-            fw = new FileWriter(dir + File.separator + "index.html");
-            pw = new PrintWriter(fw);
-            pw.println(tocheader);
-            pw.println(footer);
-            pw.close();
-            fw.close();
+
+            /*
+              outfile = new File(parentDir, "index.html");
+              outpath = outfile.getCanonicalPath();
+              pw = new PrintWriter(new FileWriter(outfile));
+              pw.println(tocheader);
+              pw.println(generateHtmlFooter(""));
+              try {
+              pw.close();
+              }
+              catch (Exception pwex2) {
+              System.out.println("Error writing \"" 
+              + outpath + "\": " 
+              + pwex2.getMessage());
+              pwex2.printStackTrace();
+              }
+            */
         }
-        catch (java.io.IOException e) {
-            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         finally {
-            if (pw != null) {
-                pw.close();
+            try {
+                if (pw != null) {
+                    pw.close();
+                }
             }
-            if (fw != null) {
-                fw.close();
+            catch (Exception ioe) {
+                ioe.printStackTrace();
             }
         }
-
-        return tocheader;
+        return;
     }
 
     /** ***************************************************************
      *  Save pages below the KBs directory in a directory called
      *  HTML.  If that already exists, use HTML1, HTML2 etc.
      */
-    private void printHTMLPages(TreeMap pageList, String dir) throws IOException {
+    private void printHTMLPages(TreeMap pageList, String dir) {
 
         FileWriter fw = null;
-        PrintWriter pw = null; 
-        Iterator it = pageList.keySet().iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            String page = (String) pageList.get(term);
-            String filename = dir + File.separator + term + ".html";
-            //System.out.println("Info in DocGen.printPages(): filename : " + filename);
-            try {
-                fw = new FileWriter(filename);
-                pw = new PrintWriter(fw);
-                pw.println(page);
-                pw.println(footer);
-            }
-            catch (java.io.IOException e) {
-                throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
-            }
-            finally {
-                if (pw != null) {
-                    pw.close();
+        PrintWriter pw = null;
+        String term = null;
+        String page = null;
+        String filename = null;
+        try {
+            for (Iterator it = pageList.keySet().iterator(); it.hasNext();) {
+                term = (String) it.next();
+                page = (String) pageList.get(term);
+                filename = dir + File.separator + term + ".html";
+                //System.out.println("Info in DocGen.printPages(): filename == " + filename);
+                try {
+                    fw = new FileWriter(filename);
+                    pw = new PrintWriter(fw);
+                    pw.println(page);
                 }
-                if (fw != null) {
-                    fw.close();
+                catch (Exception e) {
+                    System.out.println("ERROR in DocGen.printHTMLPages("
+                                       + "[map with "
+                                       + pageList.keySet().size()
+                                       + " keys], "
+                                       + dir + ")");
+                    System.out.println("Error writing file " 
+                                       + filename
+                                       + lineSeparator
+                                       + e.getMessage());
+                    e.printStackTrace();
+                }
+                finally {
+                    try {
+                        if (pw != null) {
+                            pw.close();
+                        }
+                        if (fw != null) {
+                            fw.close();
+                        }
+                    }
+                    catch (Exception e2) {
+                        e2.printStackTrace();
+                    }
                 }
             }
         }
+        catch (Exception oe) {
+            oe.printStackTrace();
+        }
+        return;
     }
 
-    /** ***************************************************************
-     *  Save pages below the SIGMA_HOME directory in a directory
-     *  called HTML.  If that already exists, use HTML1, HTML2 etc.
+    /** **************************************************************
+     * Create a subdirectory below a specified parent directory, or
+     * use the SIGMA_HOME directory as the parent directory if another
+     * has not been set.  Use key1 and key2 to make a unique
+     * subdirectory name.
      */
-    private String generateDir() throws IOException {
-
-        String dir = KBmanager.getMgr().getPref("baseDir");
-        String subdir = "HTML";
-        int counter = 0;
-        String path = dir + File.separator + subdir;
-        File f = new File(path);
-        while (f.exists()) {
-            counter++;
-            path = dir + File.separator + subdir + Integer.toString(counter);
-            f = new File(path);
+    protected File makeOutputDir(String key1, String key2) {
+        File outdir = null;
+        try {
+            File parentDir = this.getOutputParentDir();
+            if ((parentDir == null) || !parentDir.isDirectory()) {
+                parentDir = new File(KBmanager.getMgr().getPref("baseDir"));
+            }
+            String dirname = (StringUtil.removeEnclosingQuotes(key1) 
+                              + "_" 
+                              + StringUtil.removeEnclosingQuotes(key2));
+            dirname = dirname.replaceAll(" ", "_");
+            String dirbase = dirname;
+            int counter = 0;
+            dirname = (dirbase + "_" + counter);
+            File f = new File(parentDir, dirname);
+            while (f.exists()) {
+                counter++;
+                dirname = (dirbase + "_" + counter);
+                f = new File(parentDir, dirname);
+            }
+            f.mkdirs();
+            if (f.isDirectory() && f.canWrite()) {
+                outdir = f;
+            }
         }
-        f.mkdir();
-        return path;
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+            if (outdir == null) {
+                System.out.println("DocGen.makeOutputDir("
+                                   + key1 + ", "
+                                   + key2 + ") failed");
+            }
+        }
+        return outdir;
     }
 
     /** ***************************************************************
@@ -2293,16 +4790,20 @@ public class DocGen {
      *  values are the "headwords" (with quotes removed).
      */
     public HashMap createHeadwordMap(KB kb) {
-
         HashMap result = new HashMap();
-        ArrayList headwordForms = kb.ask("arg",0,"headword");
-        if (headwordForms != null && headwordForms.size() > 0) {
-            for (int i = 0; i < headwordForms.size(); i++) {
-                Formula f = (Formula) headwordForms.get(i);
-                String term = f.getArgument(2);
-                String headword = StringUtil.removeEnclosingQuotes(f.getArgument(1));
-                result.put(term,headword);
+        try {
+            ArrayList headwordForms = kb.ask("arg", 0, "headword");
+            if (headwordForms != null && !headwordForms.isEmpty()) {
+                for (Iterator it = headwordForms.iterator(); it.hasNext();) {
+                    Formula f = (Formula) it.next();
+                    String term = f.getArgument(2);
+                    String headword = StringUtil.removeEnclosingQuotes(f.getArgument(3));
+                    result.put(term, headword);
+                }
             }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return result;
     }
@@ -2316,26 +4817,37 @@ public class DocGen {
      *  DB.stringToKifId()
      */
     public HashMap createInverseHeadwordMap(KB kb, HashMap headwordMap) {
-
         HashMap result = new HashMap();
-
-        Iterator it = kb.terms.iterator();  
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            // Don't display automatically created instances
-            if (term.indexOf("LocalInstance") > -1) 
-                continue;                          
-            String headword = term;
-            if (simplified && headwordMap.get(term) != null) 
-                headword = (String) headwordMap.get(term);
-            ArrayList al;
-            if (result.containsKey(headword)) 
-                al = (ArrayList) result.get(headword);
-            else {
-                al = new ArrayList();
-                result.put(headword,al);
+        try {
+            String term = null;
+            String headword = null;
+            String h2 = null;
+            List al = null;
+            Iterator it = null;
+            for (it = kb.terms.iterator(); it.hasNext();) {
+                term = (String) it.next();
+                // Don't display automatically created instances
+                if (isLegalForDisplay(term)) {
+                    headword = term;
+                    if (simplified) {
+                        h2 = (String) headwordMap.get(term);
+                        if (h2 != null) headword = h2;
+                    }
+                    al = (List) result.get(headword);
+                    if (al == null) {
+                        al = new ArrayList();
+                        result.put(headword, al);
+                    }
+                    al.add(term);
+                }
             }
-            al.add(term);
+            for (it = result.values().iterator(); it.hasNext();) {
+                al = (List) it.next();
+                sortByPresentationName(kb, getDefaultNamespace(), al);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return result;
     }
@@ -2356,16 +4868,17 @@ public class DocGen {
                                       String language) {
         TreeMap pageList = new TreeMap();
         TreeSet rejectedTerms = new TreeSet();
-        Iterator it;
-        it = inverseHeadwordMap.keySet().iterator();
+        String formattedTerm = null;
+        List termNames = null;
+        String realTermName = null;
         int count = 0;
-        while (it.hasNext()) {
-            String formattedTerm = (String) it.next();
-            ArrayList termNames = (ArrayList) inverseHeadwordMap.get(formattedTerm);
-            for (int i = 0; i < termNames.size(); i++) {
-                String realTermName = (String) termNames.get(i);
-                if (isLegalForDisplay(kb, realTermName)) {
-                    if (isCompositeInstance(kb, realTermName)) {
+        for (Iterator it = inverseHeadwordMap.keySet().iterator(); it.hasNext();) {
+            formattedTerm = (String) it.next();
+            termNames = (List) inverseHeadwordMap.get(formattedTerm);
+            for (Iterator tni = termNames.iterator(); tni.hasNext();) {
+                realTermName = (String) tni.next();
+                if (isLegalForDisplay(realTermName)) {
+                    if (isComposite(kb, realTermName)) {
                         pageList.put(realTermName,
                                      createCompositePage(kb,
                                                          "",
@@ -2382,14 +4895,21 @@ public class DocGen {
                                                              200,
                                                              language));
                     }
-                    if ((count++ % 100) == 1) { System.out.print("."); }
+                    if ((count++ % 100) == 1) System.out.print(".");
                 }
                 else {
                     rejectedTerms.add(realTermName);
                 }
             }
         }
-        System.out.println(rejectedTerms.size() + " terms rejected");
+        System.out.println("INFO in DocGen.generateHTMLPages("
+                           + kb.name + ", "
+                           + "[map with " + 
+                           + alphaList.keySet().size() + " keys], "
+                           + "[map with " + 
+                           + inverseHeadwordMap.keySet().size() + " keys], "
+                           + language + ")");
+        System.out.println("  " + rejectedTerms.size() + " terms rejected");
         return pageList;
     }
 
@@ -2410,40 +4930,54 @@ public class DocGen {
      */
     public TreeMap createAlphaList(KB kb, HashMap stringMap) {
 
-        TreeMap alphaList = new TreeMap();  
-
-        System.out.println("INFO in DocGen.createAlphaList()");
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            if (isLegalForDisplay(kb, term)
-                && !getIsoCodes(kb).contains(term)
-                // && !term.matches("^iso\\d+.*_.+")
-                ) {
-                String formattedTerm = term;
-                if (simplified && stringMap.get(term) != null) 
-                    formattedTerm = (String) stringMap.get(term);
-                String firstLetter = Character.toString(Character.toUpperCase(formattedTerm.charAt(0)));
-
-                if (alphaList.keySet() != null && alphaList.keySet().contains(firstLetter)) {
-                    TreeMap map = (TreeMap) alphaList.get(firstLetter);
-                    ArrayList al = (ArrayList) map.get(formattedTerm);
-                    if (al == null) {
-                        al = new ArrayList();                    
-                        map.put(formattedTerm,al);
+        TreeMap alphaList = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+        try {
+            for (Iterator it = kb.terms.iterator(); it.hasNext();) {
+                String term = (String) it.next();
+                if (isLegalForDisplay(term)
+                    && !getCodedIdentifiers(kb).contains(term)
+                    // && !term.matches("^iso\\d+.*_.+")
+                    ) {
+                    String formattedTerm = stripNamespacePrefix(kb, term);
+                    if (simplified) {
+                        String smterm = (String) stringMap.get(term);
+                        if (smterm != null) {
+                            formattedTerm = stripNamespacePrefix(kb, smterm);
+                        }
                     }
-                    al.add(term);
-                    //System.out.println(firstLetter + " " + formattedTerm + " " + term);
-                }
-                else {
-                    TreeMap map = new TreeMap();
-                    ArrayList al = new ArrayList();
-                    al.add(term);
-                    map.put(formattedTerm,al);
-                    alphaList.put(firstLetter,map);
-                    //System.out.println(firstLetter + " " + formattedTerm + " " + term);
+                
+                    String firstLetter = 
+                        Character.toString(Character.toUpperCase(formattedTerm.charAt(0)));
+
+                    if (alphaList.keySet() != null && alphaList.keySet().contains(firstLetter)) {
+                        TreeMap map = (TreeMap) alphaList.get(firstLetter);
+                        ArrayList al = (ArrayList) map.get(formattedTerm);
+                        if (al == null) {
+                            al = new ArrayList();                    
+                            map.put(formattedTerm,al);
+                        }
+                        al.add(term);
+                        //System.out.println(firstLetter + " " + formattedTerm + " " + term);
+                    }
+                    else {
+                        TreeMap map = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+                        ArrayList al = new ArrayList();
+                        al.add(term);
+                        map.put(formattedTerm,al);
+                        alphaList.put(firstLetter,map);
+                        //System.out.println(firstLetter + " " + formattedTerm + " " + term);
+                    }
                 }
             }
+            /*
+              System.out.println("INFO DocGen.createAlphaList("
+              + kb.name + ", "
+              + stringMap + ")");
+              System.out.println("  ==> " + alphaList);
+            */
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
         return alphaList;
     }
@@ -2451,7 +4985,7 @@ public class DocGen {
     /** ***************************************************************
      * Generate simplified HTML pages for all terms.  Output is a
      * set of HTML files sent to the directory specified in
-     * generateDir()
+     * makeOutputDir()
      * 
      * @param s indicates whether to present "simplified" views of
      *          terms, meaning using a termFormat or headword,
@@ -2459,42 +4993,63 @@ public class DocGen {
      */
     public void generateHTML(KB kb, String language, boolean s) {
 
-        TreeMap pageList = new TreeMap();   // Keys are formatted term names, values are HTML pages
-        TreeMap termMap = new TreeMap();    // Keys are headwords, values are terms        
-
-        HashMap headwordMap = createHeadwordMap(kb); // A HashMap where the keys are the term names and the
-                                                     // values are "headwords" (with quotes removed).
-                                                     
-        TreeMap alphaList = new TreeMap();       // a TreeMap of TreeMaps of ArrayLists.  @see createAlphaList()
-
+        long t1 = System.currentTimeMillis();
         try {
 
+            System.out.println("ENTER DocGen.generateHTML("
+                               + kb.name + ", "
+                               + language + ", "
+                               + s + ")");
+
+            // Keys are formatted term names, values are HTML pages
+            TreeMap pageList = new TreeMap();
+
+            // Keys are headwords, values are terms
+            TreeMap termMap = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+
+            // A HashMap where the keys are the term names and the values
+            // are "headwords" (with quotes removed).
+            HashMap headwordMap = createHeadwordMap(kb); 
+
             String context = toKifNamespace(kb, language);
+            this.defaultNamespace = context;
 
-            buildCompositeCaches(kb);
+            if (coreTerms.isEmpty()) computeTermRelevance(kb, getOntology());
 
-            simplified = s;                 // Display term format expressions instead of term names
-            alphaList = createAlphaList(kb,headwordMap);
+            // Display term format expressions instead of term names
+            simplified = s; 
+
+            // a TreeMap of TreeMaps of ArrayLists.  @see createAlphaList()
+            TreeMap alphaList = createAlphaList(kb, headwordMap);
 
             // Headword keys and ArrayList values (since the same headword can
             // be found in more than one term)
             HashMap inverseHeadwordMap = createInverseHeadwordMap(kb,headwordMap);  
 
-            System.out.println("INFO in DocGen.generateHTML(): generating alpha list");
-            String dir = generateDir();
-            System.out.println("INFO in DocGen.generateHTML(): saving index pages");
-            saveIndexPages(kb,alphaList,dir,context);
+            System.out.println("  INFO in DocGen.generateHTML(): generating alpha list");
+            String dir = getHtmlOutputDirectoryPath();
+            System.out.println("  INFO in DocGen.generateHTML(): saving index pages");
+            saveIndexPages(kb, alphaList, dir, context);
 
-            System.out.println("INFO in DocGen.generateHTML(): generating HTML pages");
-            pageList = generateHTMLPages(kb,alphaList,inverseHeadwordMap,context);
-            printHTMLPages(pageList,dir);
+            System.out.println("  INFO in DocGen.generateHTML(): generating HTML pages");
+            pageList = generateHTMLPages(kb, alphaList, inverseHeadwordMap, context);
+            printHTMLPages(pageList, dir);
 
-            System.out.println("INFO in DocGen.generateHTML(): creating single index page");
+            System.out.println("  INFO in DocGen.generateHTML(): creating single index page");
             generateSingleHTML(kb, dir, alphaList, context, s);
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        System.out.println("EXIT DocGen.generateHTML("
+                           + kb.name + ", "
+                           + language + ", "
+                           + s + ")");
+        System.out.println("  Time: "
+                           + ((System.currentTimeMillis() - t1) / 1000.0)
+                           + " seconds");
+
         return;
     } 
 
@@ -2506,87 +5061,142 @@ public class DocGen {
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
      */
-    public void generateSingleHTML(KB kb, String dir, TreeMap alphaList,
-                                   String language, boolean s) throws IOException {
+    public void generateSingleHTML(KB kb, 
+                                   String dir, 
+                                   TreeMap alphaList,
+                                   String language, 
+                                   boolean s) {
 
         simplified = s;                // display term format expressions for term names
-        FileWriter fw = null;
         PrintWriter pw = null; 
         try {
-            fw = new FileWriter(dir + File.separator + kb.name+ "-AllTerms.html");
-            pw = new PrintWriter(fw);
-            pw.println("<head><META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
-                       "<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\"></head><body>\n");
-            pw.println(this.header);
-            pw.println("<table border=0><tr bgcolor=#CCCCCC><td>Name</td><td>Documentation</td></tr>\n");
+            File filedir = new File(dir);
+            File outfile = new File(filedir, INDEX_FILE_NAME);
+            pw = new PrintWriter(new FileWriter(outfile));
 
-            boolean even = true;
-            Iterator it = alphaList.keySet().iterator();
-            while (it.hasNext()) {
-                String letter = (String) it.next();
-                TreeMap values = (TreeMap) alphaList.get(letter);
-                Iterator it2 = values.keySet().iterator();
-                while (it2.hasNext()) {
-                    String formattedTerm = (String) it2.next();
-                    ArrayList terms = (ArrayList) values.get(formattedTerm);
-                    for (int i = 0; i < terms.size(); i++) {
-                        String term = (String) terms.get(i);
-                        if (term.indexOf("LocalInstance") > -1) 
-                            continue;
-                        if (even)
-                            pw.println("<tr><td>");
-                        else
-                            pw.println("<tr bgcolor=#CCCCCC><td>");
-                        even = !even;
-                        String printableTerm;
-                        if (simplified) 
-                            printableTerm = showTermName(kb,term,language);
-                        else
-                            printableTerm = term;
-                        pw.println("<a href=\"" + term + ".html\">" + printableTerm + "</a>");
-                        pw.println("</td>");
-                        ArrayList docs = kb.askWithRestriction(0,"documentation",1,term);
-                        if (docs != null && docs.size() > 0) {
-                            Formula f = (Formula) docs.get(0);
-                            String docString = f.getArgument(3);                     
-                            if (docString != null && docString != "" && docString.length() > 100) 
-                                docString = docString.substring(0,100) + "...\"";  
-                            docString = kb.formatDocumentation("",docString,language);
-                            docString = StringUtil.removeEnclosingQuotes(docString); 
-                            // docString = StringUtil.escapeQuoteChars(docString);
-                            // docString = docString.replace("\\\"","\"");
-                            pw.println("<td valign=\"top\" class=\"description\">" + docString);
+            /*
+              pw.println("<html>" 
+              + lineSeparator
+              + "  <head><meta http-equiv=\"Content-Type\" "
+              + "content=\"text/html; charset=utf-8\">" 
+              + lineSeparator
+              + "    <link rel=\"stylesheet\" type=\"text/css\" "
+              + "href=\"simple.css\">" 
+              + lineSeparator
+              + "  </head>" 
+              + lineSeparator
+              + "  <body>" 
+              + lineSeparator);
+            */
+
+            // pw.println(this.header);
+
+            pw.println(generateTocHeader(kb, alphaList, INDEX_FILE_NAME));
+
+            pw.println("<table border=\"0\">");
+            // <tr bgcolor=#CCCCCC><td>Name</td><td>Documentation</td></tr>\n");
+
+            // boolean even = true;
+            String letter = null;
+            Map values = null;
+            List sortedKeys = new ArrayList();
+            Iterator it2 = null;
+            Iterator it3 = null;
+            String formattedTerm = null;
+            List terms = null;
+            String term = null;
+            String printableTerm = null;
+            List docs = null;
+            Formula f = null;
+            String docStr = null;
+            for (Iterator it = alphaList.keySet().iterator(); it.hasNext();) {
+                letter = (String) it.next();
+                values = (TreeMap) alphaList.get(letter);
+                sortedKeys.clear();
+                sortedKeys.addAll(values.keySet());
+                sortByPresentationName(kb, language, sortedKeys);
+                for (it2 = sortedKeys.iterator(); it2.hasNext();) {
+                    formattedTerm = (String) it2.next();
+                    terms = (List) values.get(formattedTerm);
+                    for (it3 = terms.iterator(); it3.hasNext();) {
+                        term = (String) it3.next();
+                        docStr = "";
+                        docs = kb.askWithRestriction(0, "documentation", 1, term);
+                        if (docs != null && !docs.isEmpty()) {
+                            f = (Formula) docs.get(0);
+                            docStr = processDocString(kb, 
+                                                      "", 
+                                                      language, 
+                                                      f.getArgument(3), 
+                                                      false, 
+                                                      true);
                         }
-                        else
-                            pw.println("<td>");
-                        pw.println("</td></tr>\n");
+                        if (DB.isLocalTermReference(term) || StringUtil.emptyString(docStr))
+                            continue;
+
+                        pw.println("  <tr>");
+
+                        // Term
+                        pw.println("    <td valign=\"top\" class=\"cell\">");
+                        printableTerm = (simplified
+                                         ? showTermName(kb, term, language, true)
+                                         : term);
+                        pw.print("      <a href=\"");
+                        pw.print(term);
+                        pw.print(".html\">");
+                        pw.print(printableTerm);
+                        pw.println("</a>");
+                        pw.println("    </td>");
+
+                        // Relevance
+                        pw.println("    <td valign=\"top\" class=\"cell\">");
+                        pw.print("      ");
+                        pw.println(getTermRelevance(kb, getOntology(), term).equals("message")
+                                   ? "&nbsp;&nbsp;&nbsp;&nbsp;MT&nbsp;&nbsp;&nbsp;&nbsp;"
+                                   : "");
+                        pw.println("    </td>");
+
+                        // Documentation
+                        pw.println("  <td valign=\"top\" class=\"description\">");
+                        pw.print("    ");
+                        pw.println(docStr);
+                        pw.println("  </td>");
+
+                        pw.println("</tr>");
                     }
                 }
             }
-            pw.println("</table>\n");
-            pw.println(this.footer);
+            pw.println("</table>");
+            pw.println("");
+            pw.println(generateHtmlFooter(""));
+            pw.println("  </body>");
+            pw.println("</html>");
         }
-        catch (java.io.IOException e) {
-            System.out.println(e.getMessage());
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
         }
         finally {
-            if (pw != null) {
-                pw.close();
+            try {
+                if (pw != null) {
+                    pw.close();
+                }
             }
-            if (fw != null) {
-                fw.close();
+            catch (Exception pwe) {
+                pwe.printStackTrace();
             }
         }
-    }      
+        return;
+    }
 
     /** ***************************************************************
      */
     public void generateSingleHTML(KB kb, String language, boolean s) throws IOException {
 
         HashMap headwordMap = createHeadwordMap(kb); 
-        String dir = generateDir();
-        TreeMap alphaList = createAlphaList(kb,headwordMap);
-        generateSingleHTML(kb, dir, alphaList, language, s);
+        String dirpath = getHtmlOutputDirectoryPath();
+        TreeMap alphaList = createAlphaList(kb, headwordMap);
+        generateSingleHTML(kb, dirpath, alphaList, language, s);
     }
 
 
@@ -2606,648 +5216,29 @@ public class DocGen {
         }
     }
 
-    /** ***************************************************************
-     *  @return a TreeSet of all the KB terms that are used in or
-     *          support XML messages
-     */
-    public TreeSet generateMessageTerms(KB kb) {
-
-        TreeSet result = new TreeSet();
-
-        // (1) Collect all terms that are instances of Composite.
-
-        TreeSet composites = kb.getAllInstances("ddex_Composite");
-        result.addAll(composites);
-        //TreeSet nonComposites = new TreeSet();
-        //nonComposites.addAll(kb.terms);
-        //nonComposites.removeAll(composites);
-        System.out.println("results from (1)");
-        System.out.println(result);
-
-        // (1a) Collect all the parent classes of those instances.        
-        if (composites != null) {
-            Iterator it = composites.iterator();
-            while (it.hasNext()) {
-                String term = (String) it.next();
-                ArrayList forms = kb.askWithPredicateSubsumption("instance", 1, term);
-
-                // System.out.println("9. forms == " + forms);
-
-                if (forms != null) {
-                    for (int i = 0; i < forms.size(); i++) {
-                        Formula f = (Formula) forms.get(i);
-                        String elem = f.getArgument(2);
-                        result.add(elem);
-                    }
-                }
-            }
-        }
-        System.out.println("results plus (1a)");
-        System.out.println(result);
-
-        // (2) Add all terms that are classes of the second argument of 
-        // ddex_HasXMLElement relationships.
-        TreeSet step2 = new TreeSet();
-        ArrayList forms = kb.ask("arg",0,"ddex_HasXmlElement");
-        if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
-                Formula f = (Formula) forms.get(i);
-                String elem = f.getArgument(2);
-
-                ArrayList classes = kb.askWithPredicateSubsumption("instance", 1, elem);
-
-                // System.out.println("10. classes == " + classes);
-
-                for (int j = 0; j < classes.size(); j++) {
-                    Formula f2 = (Formula) classes.get(j);
-                    String c = f2.getArgument(2);
-                    result.add(c);
-                    step2.add(c);
-                }
-            }
-        }
-
-        System.out.println("step (2)");
-        System.out.println(step2);
-
-        // (3) Add all terms that are classes of the second argument of 
-        // ddex_HasXMLAttribute relationships.
-        TreeSet step3 = new TreeSet();
-        forms = kb.ask("arg",0,"ddex_HasXmlAttribute");
-
-        if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
-                Formula f = (Formula) forms.get(i);
-                String arg = f.getArgument(2);
-
-                ArrayList classes = kb.askWithPredicateSubsumption("instance", 1, arg);
-
-                // System.out.println("11. classes == " + classes);
-
-                for (int j = 0; j < classes.size(); j++) {
-                    Formula f2 = (Formula) classes.get(j);
-                    String c = f2.getArgument(2);
-                    result.add(c);
-                    step3.add(c);
-                }
-            }
-        }
-
-        System.out.println("step (3)");
-        System.out.println(step3);
-
-        TreeSet step4 = new TreeSet();
-        TreeSet step5 = new TreeSet();
-        ArrayList forStepSeven = new ArrayList();
-        // (4) Add all terms that are linked to the Composites of list
-        // (1) by an ddex_IsXmlExtensionOf relationship.
-        if (composites != null) {
-            Iterator it = composites.iterator();
-            while (it.hasNext()) {            
-                String arg = (String) it.next();;
-
-                ArrayList classes = kb.askWithRestriction(0,"ddex_IsXmlExtensionOf",1,arg);
-                for (int j = 0; j < classes.size(); j++) {
-                    Formula f2 = (Formula) classes.get(j);
-                    String c = f2.getArgument(2);
-                    result.add(c);
-                    forStepSeven.add(c);
-                    step4.add(c);
-                }
-
-                // (5) Add all terms that are linked to the Composites
-                // of list (1) by an IsXmlCompositeFor relationship.
-                classes = kb.askWithRestriction(0,"ddex_IsXmlCompositeFor",1,arg);
-                for (int j = 0; j < classes.size(); j++) {
-                    Formula f2 = (Formula) classes.get(j);
-                    String c = f2.getArgument(2);
-                    result.add(c);
-                    step5.add(c);
-                }
-            }
-        }
-
-        System.out.println("step (4)");
-        System.out.println(step4);
-        System.out.println("step (5)");
-        System.out.println(step5);
-
-        // (6) Add all terms that are the second argument of
-        // ddex_HasDataType relationships.
-        
-        TreeSet step6 = new TreeSet();
-        forms = kb.ask("arg",0,"ddex_HasDataType");
-        if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
-                Formula f = (Formula) forms.get(i);
-                String arg = f.getArgument(2);
-                if (!composites.contains(arg)) {
-                    result.add(arg);
-                    forStepSeven.add(arg);
-                    step6.add(arg);
-                }
-            }
-        }
-        System.out.println("step (6)");
-        System.out.println(step6);
-
-        // (7) Add all terms that are the first argument of
-        // instance/isOneOf relationships where the second argument is
-        // from list (4) or (6).
-
-        TreeSet step7 = new TreeSet();
-        if (forStepSeven != null) {
-            for (int i = 0; i < forStepSeven.size(); i++) {
-                String arg = (String) forStepSeven.get(i);
-                // ArrayList classes = kb.askWithRestriction(0,"instance",2,arg);
-                ArrayList classes = kb.askWithPredicateSubsumption("instance", 2, arg);
-
-                // System.out.println("12. classes == " + classes);
-
-                for (int j = 0; j < classes.size(); j++) {
-                    Formula f2 = (Formula) classes.get(j);
-                    String c = f2.getArgument(1);
-                    if (!c.contains("_LocalInstanceLeaf")) {
-                        result.add(c);
-                        step7.add(c);
-                    }
-                }
-            }
-        }
-
-        System.out.println("step (7)");
-        System.out.println(step7);
-
-        // (8) Get all terms where their headword (quoted string) is also the 
-        // third argument in a termFormat expression of another term. For example, 
-        // include ddex_AudioBitRate in the list, from 
-        // (termFormat ddex_hw ddex_AudioBitRate "AudioBitRate")
-        // (termFormat Ern_TechnicalVideoDetails DDEX_LocalInstanceLeaf12_156 "AudioBitRate")         
-
-        // (9) More complicated is also the list of terms that have a third 
-        // argument of a termFormat relationship that has ddex_hw as a 
-        // pseudo-language, if that string is also a third argument of another 
-        // termFormat relationship that has one of the subnamespaces as a 
-        // pseudo-language (e.g. DdexC_hw).        
-        TreeSet step89 = new TreeSet();
-        forms = kb.askWithRestriction(0,"termFormat",1,"ns_ddex_hw");
-        forms.addAll(kb.askWithRestriction(0,"termFormat",1,"ns_ddexC_hw"));
-        if (forms != null) {
-            for (int i = 0; i < forms.size(); i++) {
-                Formula f = (Formula) forms.get(i);
-                String term = f.getArgument(2);
-                String st = f.getArgument(3);
-                ArrayList forms2 = kb.ask("arg",0,"termFormat");
-                for (int j = 0; j < forms2.size(); j++) {
-                    Formula f2 = (Formula) forms2.get(j);
-                    String namespace = f2.getArgument(1);
-                    String st2 = f2.getArgument(3);
-                    if (st.equals(st2) 
-                        && !namespace.equals("ns_ddex_hw") 
-                        && !namespace.equals("ns_ddexC_hw")) {
-                        result.add(term);
-                        step89.add(term);
-                    }
-                }
-            }
-        }
-
-        System.out.println("steps (8) and (9)");
-        System.out.println(step89);
-
-        // (10) NEW: We need to pick up the Relators IsA, IsSubClassOf
-        // etc. (and their reciprocals) as FrameworkTerms. I have no
-        // idea yet how to do this.
-
-        TreeSet step10 = new TreeSet();
-        TreeSet explicitList = new TreeSet();
-        explicitList.add("instance");
-        explicitList.add("ddex_IsA");
-        explicitList.add("ddex_HasXmlElement"); 
-        explicitList.add("ddex_HasXmlAttribute"); 
-        explicitList.add("ddex_HasDataType"); 
-        explicitList.add("ddex_HasSubClass"); 
-        explicitList.add("ddex_HasSubRelator"); 
-        explicitList.add("ddex_HasPart");
-        explicitList.add("ddex_IsOneOf");
-        explicitList.add("ddex_IsReciprocalOf"); 
-        explicitList.add("ddex_IsXmlExtensionOf");
-        explicitList.add("ddex_IsXmlCompositeFor"); 
-        explicitList.add("ddex_IsXmlUnionOf"); 
-        explicitList.add("ddex_IsXmlAttributeOf");
-        explicitList.add("ddex_IsSubClassOf"); 
-        explicitList.add("ddex_IsSubRelatorOf");
-        explicitList.add("ddex_Flag");
-        explicitList.add("ddex_File");
-
-        if (explicitList != null) {
-            Iterator it = explicitList.iterator();
-            while (it.hasNext()) {
-                String term = (String) it.next();
-                forms = kb.askWithPredicateSubsumption("inverse", 1, term);
-
-                // System.out.println("13. forms == " + forms);
-
-                if (forms != null) {
-                    for (int i = 0; i < forms.size(); i++) {
-                        Formula f = (Formula) forms.get(i);
-                        String elem = f.getArgument(2);
-                        if (!result.contains(elem)) {
-                            result.add(elem);
-                            step10.add(elem);
-                        }
-                    }
-                }
-                forms = kb.askWithPredicateSubsumption("inverse", 2, term);
-
-                // System.out.println("14. forms == " + forms);
-
-                if (forms != null) {
-                    for (int i = 0; i < forms.size(); i++) {
-                        Formula f = (Formula) forms.get(i);
-                        String elem = f.getArgument(1);
-                        if (!result.contains(elem)) {
-                            result.add(elem);
-                            step10.add(elem);
-                        }
-                    }
-                }
-            }
-        }
-        result.addAll(explicitList);
-        System.out.println("step (10)");
-        System.out.println(step10);
-
-        // (11) For all of these (1-7) add all terms that are parent
-        // terms (using subrelation and subclass relationships)
-
-        TreeSet step11 = new TreeSet();
-        TreeSet newResult = new TreeSet();
-        Iterator it = result.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            newResult.add(term);            
-            HashSet ps = (HashSet) kb.parents.get(term);
-            if (ps != null) {          
-                newResult.addAll(ps);
-                step11.addAll(ps);
-            }
-        }
-        // (1-3), (5-6) are MessageTerms
-        // (4) are FrameworkTerms
-        // (7-8) are SupportingTerms
-
-        System.out.println("step (11)");
-        System.out.println(step11);
-
-        System.out.println("positive terms differing only in capitalization");
-        capitalizationAlternates(newResult);
-
-        return newResult;
-    }
 
     /// BEGIN: code for XSD generation.
 
-    private List ddexTermsToExclude = 
-        Arrays.asList("ddex_CategoryType", "ddex_CharacteristicType", "ddex_ContactPersonRole",
-                      "ddex_ContextType", "ddex_CreationType", "ddex_DescriptorType",
-                      "ddex_EventType", "ddex_Genre", "ddex_IdentifierType", 
-                      "ddex_IndirectResourceContributorRole", "ddex_InteractionType",
-                      "ddex_LicenseContractPartyRole", "ddex_LicenseLevel", "ddex_NameType", 
-                      "ddex_Namespace", "ddex_OperatingSystemType", "ddex_OutputType", 
-                      "ddex_PartType", "ddex_Purpose", "ddex_QualityType", "ddex_QuantityType",
-                      "ddex_SubGenre", "ddex_UserDefinedResourceType");
-
-    private List ddexTermsToInclude = 
-        Arrays.asList("ddex_HashSum", "ddex_NonIsoTerritoryCode", "ddex_SICI");
-
-    private String[][][] ddexXsdImports = 
-    { { {"namespace", "http://ddex.net/xml/XXX/iso3166a2"},
-        {"schemaLocation", "iso3166a2.xsd"} },
-      { {"namespace", "http://ddex.net/xml/XXX/iso4217a"},
-        {"schemaLocation", "iso4217a.xsd"} },
-      { {"namespace", "http://ddex.net/xml/XXX/iso639a2"},
-        {"schemaLocation", "iso639a2.xsd"} }
-    };
-
-
     /** *************************************************************
      * 
      */
-    public void writeXsdFileForNamespace(KB kb, String namespace, String targetDirectory) {
-        try {            
-            String nsName = ((namespace.startsWith("ns_") || namespace.startsWith("ns:"))
-                             ? namespace.substring(3)
-                             : namespace); 
-            String nsTerm = ("ns_" + nsName);
-            List termsInNamespace = getTermsInNamespace(kb, nsTerm);
-            List topLevelTerms = getXsdTopLevelTerms(kb, termsInNamespace);
-            HashSet termsToInclude = new HashSet();
-            HashSet termsToExclude = new HashSet();
-
-            if (nsName.equalsIgnoreCase("ddex")) {
-                termsToInclude.addAll(ddexTermsToInclude);
-                termsToExclude.addAll(ddexTermsToExclude);
-            }
-            topLevelTerms.removeAll(termsToExclude);
-            termsToInclude.addAll(topLevelTerms);
-            topLevelTerms.clear();
-            topLevelTerms.addAll(termsToInclude);
-
-            if (!topLevelTerms.isEmpty()) {
-
-                Collections.sort(topLevelTerms, String.CASE_INSENSITIVE_ORDER);
-
-                String fs = System.getProperty("file.separator");
-                File tDir = new File(targetDirectory);
-                File outdir = tDir;
-                if (!outdir.isDirectory()) {
-                    outdir = new File(System.getProperty("user.dir"));
-                }
-                File outfile = new File(outdir, (nsName + ".xsd"));
-                PrintWriter pw = new PrintWriter(new FileWriter(outfile));
-
-                javax.xml.parsers.DocumentBuilderFactory _dbf = 
-                    javax.xml.parsers.DocumentBuilderFactory.newInstance();
-                _dbf.setNamespaceAware(true);
-                javax.xml.parsers.DocumentBuilder _db = _dbf.newDocumentBuilder();
-                DOMImplementation _di = _db.getDOMImplementation();
-                Document _doc = _di.createDocument("http://www.w3.org/2001/XMLSchema", 
-                                                   "xs:schema",
-                                                   null);
-                Element _docelem = _doc.getDocumentElement();
-                String[][][] _imports = null;
-                if (nsName.equalsIgnoreCase("ddex")) {
-                    _imports = ddexXsdImports;
-                }
-                _docelem.setAttribute("targetNamespace", "http://ddex.net/xml/XXX/ddex");
-                _docelem.setAttribute("elementFormDefault", "unqualified");
-                _docelem.setAttribute("attributeFormDefault", "unqualified");
-                _docelem.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                                        "xmlns:xs",
-                                        "http://www.w3.org/2001/XMLSchema");
-                _docelem.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                                        "xmlns:ddex",
-                                        "http://ddex.net/xml/XXX/ddex");
-                _docelem.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                                        "xmlns:iso639a2",
-                                        "http://ddex.net/xml/XXX/iso639a2");
-                _docelem.setAttributeNS("http://www.w3.org/2000/xmlns/",
-                                        "xmlns:iso3166a2",
-                                        "http://ddex.net/xml/XXX/iso3166a2");
-                _docelem.setAttributeNS("http://www.w3.org/2000/xmlns/", 
-                                        "xmlns:iso4217a",
-                                        "http://ddex.net/xml/XXX/iso4217a");
-                
-                for (int i = 0; i < _imports.length; i++) {
-                    Element _el = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                       "xs:import");
-                    String[][] attrPairs = _imports[i];
-                    for (int j = 0; j < attrPairs.length; j++) {
-                        String[] pair = attrPairs[j];
-                        _el.setAttribute(pair[0], pair[1]);
-                    }
-                    _docelem.appendChild(_el);
-                }
-                Element _annotation = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                           "xs:annotation");
-                Element _documentation = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                              "xs:documentation");
-                _documentation.setTextContent("(c) 2006-2008 DDEX, LLC");
-                _annotation.appendChild(_documentation);
-                _docelem.appendChild(_annotation);
-
-                Iterator it = topLevelTerms.iterator();
-                String tlt = null;
-                String tltName = null;
-                String nsPrefix = null;
-                while (it.hasNext()) {
-                    tlt = (String) it.next();
-                    tltName = showTermName(kb, tlt, nsTerm);
-                    nsPrefix = getNamespacePrefix(kb, tltName);
-                    if (StringUtil.isNonEmptyString(nsPrefix)) {
-                        tltName = tltName.substring(nsPrefix.length());
-                    }
-                    ArrayList nsList = new ArrayList();
-                    nsList.add(nsTerm);
-                    String docustr = getCompositeDocumentation(kb, tlt, nsList);
-                    docustr = removeLinkableNamespacePrefixes(kb, docustr);
-                    docustr = StringUtil.removeEnclosingQuotes(docustr);
-                    // docustr = StringUtil.escapeQuoteChars(docustr);
-                    // docustr = docustr.replace("\"\"", "\\\"");
-                    docustr = StringUtil.normalizeSpaceChars(docustr);
-                    docustr = StringUtil.replaceNonAsciiChars(docustr);
-                    List members = getAvsTypeMembers(kb, nsTerm, termsInNamespace, tlt);
-                    Element _annotation2 = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                                "xs:annotation");
-                    Element _documentation2 = 
-                        _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                             "xs:documentation");
-                    Element _simpleType = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                               "xs:simpleType");
-                    _simpleType.setAttribute("name", tltName);
-                    _documentation2.setTextContent(docustr);
-                    _annotation2.appendChild(_documentation2);
-                    _simpleType.appendChild(_annotation2);
-                    Element _restriction = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                                "xs:restriction");
-                    _restriction.setAttribute("base", "xs:string");
-                    if (!members.isEmpty()) {
-                        Iterator mIt = members.iterator();
-                        String m = null;
-                        String mName = null;
-                        while (mIt.hasNext()) {
-                            m = (String) mIt.next();
-                            mName = stripNamespacePrefix(kb, m);  // showTermName(kb, m, nsTerm);
-                            Element _enumeration = 
-                                _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                     "xs:enumeration");
-                            _enumeration.setAttribute("value", mName);
-                            _restriction.appendChild(_enumeration);
-                        }
-                    }
-                    _simpleType.appendChild(_restriction);
-                    _docelem.appendChild(_simpleType);
-                }
-                printXmlNodeTree(_docelem, 0, pw);
-                if (pw != null) {
-                    try {
-                        pw.close();
-                    }
-                    catch (Exception pwex) {
-                        pwex.printStackTrace();
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    public void writeXsdFileForNamespace2(KB kb, String namespace, String targetDirectory) {
-        try {            
-            String nsName = ((namespace.startsWith("ns_") || namespace.startsWith("ns:"))
-                             ? namespace.substring(3)
-                             : namespace); 
-            String nsTerm = ("ns_" + nsName);
-            List termsInNamespace = getTermsInNamespace(kb, nsTerm);
-            List topLevelTerms = getXsdTopLevelTerms(kb, termsInNamespace);
-            HashSet termsToInclude = new HashSet();
-            HashSet termsToExclude = new HashSet();
-
-            if (nsName.equalsIgnoreCase("ddex")) {
-                termsToInclude.addAll(ddexTermsToInclude);
-                termsToExclude.addAll(ddexTermsToExclude);
-            }
-            topLevelTerms.removeAll(termsToExclude);
-            termsToInclude.addAll(topLevelTerms);
-            topLevelTerms.clear();
-            topLevelTerms.addAll(termsToInclude);
-
-            if (!topLevelTerms.isEmpty()) {
-
-                Collections.sort(topLevelTerms, String.CASE_INSENSITIVE_ORDER);
-
-                // String fs = System.getProperty("file.separator");
-                File tDir = new File(targetDirectory);
-                File workdir = tDir;
-                if (!workdir.isDirectory()) {
-                    workdir = new File(System.getProperty("user.dir"));
-                }
-
-                // Give up if we can't load a skeleton document.
-                Document _doc = loadDdexSkeletonFile(kb, nsTerm, workdir);
-                if (_doc == null) {
-                    System.out.println("Giving up.  The skeleton file for \"" 
-                                       + namespace
-                                       + "\" could not be loaded");
-                    return;
-                }
-
-                Element _docelem = _doc.getDocumentElement();
-                System.out.println("Document root element: " + _docelem.getNodeName());
-
-                File outfile = new File(workdir, (nsName + ".xsd"));
-                PrintWriter pw = new PrintWriter(new FileWriter(outfile));
-
-                Iterator it = topLevelTerms.iterator();
-                String tlt = null;
-                String tltName = null;
-                String nsPrefix = null;
-                while (it.hasNext()) {
-                    tlt = (String) it.next();
-                    tltName = showTermName(kb, tlt, nsTerm);
-                    nsPrefix = getNamespacePrefix(kb, tltName);
-                    if (StringUtil.isNonEmptyString(nsPrefix)) {
-                        tltName = tltName.substring(nsPrefix.length());
-                    }
-                    ArrayList nsList = new ArrayList();
-                    nsList.add(nsTerm);
-                    String docustr = getCompositeDocumentation(kb, tlt, nsList);
-                    docustr = removeLinkableNamespacePrefixes(kb, docustr);
-                    docustr = StringUtil.removeEnclosingQuotes(docustr);
-                    // docustr = StringUtil.escapeQuoteChars(docustr);
-                    // docustr = docustr.replace("\"\"", "\\\"");
-                    docustr = StringUtil.normalizeSpaceChars(docustr);
-                    docustr = StringUtil.replaceNonAsciiChars(docustr);
-                    List members = getAvsTypeMembers(kb, nsTerm, termsInNamespace, tlt);
-                    Element _annotation2 = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                                "xs:annotation");
-                    Element _documentation2 = 
-                        _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                             "xs:documentation");
-                    Element _simpleType = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                               "xs:simpleType");
-                    _simpleType.setAttribute("name", tltName);
-                    _documentation2.setTextContent(docustr);
-                    _annotation2.appendChild(_documentation2);
-                    _simpleType.appendChild(_annotation2);
-                    Element _restriction = _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                                "xs:restriction");
-                    _restriction.setAttribute("base", "xs:string");
-                    if (!members.isEmpty()) {
-                        Iterator mIt = members.iterator();
-                        String m = null;
-                        String mName = null;
-                        while (mIt.hasNext()) {
-                            m = (String) mIt.next();
-                            mName = stripNamespacePrefix(kb, m);  // showTermName(kb, m, nsTerm);
-                            Element _enumeration = 
-                                _doc.createElementNS("http://www.w3.org/2001/XMLSchema",
-                                                     "xs:enumeration");
-                            _enumeration.setAttribute("value", mName);
-                            _restriction.appendChild(_enumeration);
-                        }
-                    }
-                    _simpleType.appendChild(_restriction);
-                    _docelem.appendChild(_simpleType);
-                }
-                printXmlNodeTree(_docelem, 0, pw);
-                if (pw != null) {
-                    try {
-                        pw.close();
-                    }
-                    catch (Exception pwex) {
-                        pwex.printStackTrace();
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private TreeSet getDdexMessageTypes(KB kb) {
-        TreeSet result = new TreeSet();
-        try {
-            List formulae = kb.askWithRestriction(0, "ddex_IsOneOf", 2, "ddex_MessageType");
-            if (formulae != null) {
-                Formula f = null;
-                for (int i = 0; i < formulae.size(); i++) {
-                    f = (Formula) formulae.get(i);
-                    result.add(f.getArgument(1));
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private TreeMap getDdexMessageTypesByNamespace(KB kb, Set msgTypes) {
+    private TreeMap mapFocalTermsByNamespace(KB kb, List focalTerms) {
         TreeMap result = new TreeMap();
         try {
-            if ((msgTypes != null) && !msgTypes.isEmpty()) {
-                Iterator it = msgTypes.iterator();
-                String term = null;
-                String ns = null;
-                List terms = null;
-                while (it.hasNext()) {
-                    term = (String) it.next();
-                    ns = getTermNamespace(kb, term);
-                    if (StringUtil.isNonEmptyString(ns)) {
-                        terms = (List) result.get(ns);
-                        if (terms == null) {
-                            terms = new ArrayList();
-                            result.put(ns, terms);
-                        }
-                        if (!terms.contains(term)) {
-                            terms.add(term);
-                        }
+            String term = null;
+            String ns = null;
+            List terms = null;
+            for (Iterator it = focalTerms.iterator(); it.hasNext();) {
+                term = (String) it.next();
+                ns = getTermNamespace(kb, term);
+                if (StringUtil.isNonEmptyString(ns)) {
+                    terms = (List) result.get(ns);
+                    if (terms == null) {
+                        terms = new ArrayList();
+                        result.put(ns, terms);
+                    }
+                    if (!terms.contains(term)) {
+                        terms.add(term);
                     }
                 }
             }
@@ -3261,13 +5252,23 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private String getTermNamespace(KB kb, String term) {
+    protected String getTermNamespace(KB kb, String term) {
         String result = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 String prefix = getNamespacePrefix(kb, term);
                 if (StringUtil.isNonEmptyString(prefix)) {
-                    result = ("ns_" + prefix.substring(0, (prefix.length() - 1)));
+                    List<String> delims = Arrays.asList(DB.getW3cNamespaceDelimiter(), 
+                                                        DB.getKifNamespaceDelimiter());
+                    for (String delim : delims) {
+                        if (prefix.endsWith(delim)) {
+                            prefix = prefix.substring(0, prefix.length() - delim.length());
+                            break;
+                        }
+                    }
+                    result = (prefix.equals("ns")
+                              ? prefix
+                              : ("ns" + DB.getKifNamespaceDelimiter() + prefix));
                 }
             }
         }
@@ -3278,16 +5279,172 @@ public class DocGen {
     }
 
     /** *************************************************************
+     * Returns an org.w3c.dom.Document XML Document object created
+     * from data pertaining to namespace in kb.  If some data cannot
+     * be obtained from kb, the Document object will be incomplete and
+     * probably invalid.
+     *
+     * @param kb The KB from which data about namespace will be
+     * retrieved
+     *
+     * @param namespace A SUO-KIF term denoting a namespace
+     *
+     * @return An XML Document object 
+     */
+    private Document createXsdDocumentFromKb(KB kb, String namespace) {
+        Document doc = null;
+        try {
+            javax.xml.parsers.DocumentBuilderFactory _dbf = 
+                javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            _dbf.setNamespaceAware(true);
+            javax.xml.parsers.DocumentBuilder _db = _dbf.newDocumentBuilder();
+            DOMImplementation _di = _db.getDOMImplementation();
+            doc = _di.createDocument("http://www.w3.org/2001/XMLSchema", 
+                                     "xs:schema",
+                                     null);
+            Element docelem = doc.getDocumentElement();
+
+            String[][] attrs = { {"uri", "targetNamespace"},
+                                 {"xsdElementFormDefault", "elementFormDefault"},
+                                 {"xsdAttributeFormDefault", "attributeFormDefault"}
+            };
+
+            String val = null;
+            String pred = null;
+            String attr = null;
+            int sarg = 1;
+            int varg = 2;
+            for (int i = 0; i < attrs.length; i++) {
+                pred = attrs[i][0];
+                attr = attrs[i][1];
+                if (pred.equals("uri")) { sarg = 2; varg = 1; }
+                val = kb.getFirstTermViaAskWithRestriction(0, 
+                                                           pred, 
+                                                           sarg, 
+                                                           namespace,
+                                                           varg);
+                val = StringUtil.removeEnclosingQuotes(val);
+                if (StringUtil.isNonEmptyString(val)) {
+                    docelem.setAttribute(attr, val);
+                }
+            }
+
+            // xmlns
+            List formulae = kb.askWithRestriction(0, "xmlnsAbbrev", 1, namespace);
+            Formula f = null;
+            String ns2 = null;
+            String abbrev = null;
+            String uri = null;
+            Iterator it = null;
+            for (it = formulae.iterator(); it.hasNext();) {
+                f = (Formula) it.next();
+                ns2 = f.getArgument(2);
+                abbrev = StringUtil.removeEnclosingQuotes(f.getArgument(3));
+                uri = kb.getFirstTermViaAskWithRestriction(0, "uri", 2, ns2, 1);
+                uri = StringUtil.removeEnclosingQuotes(uri);
+                if (StringUtil.isNonEmptyString(abbrev)
+                    && StringUtil.isNonEmptyString(uri)) {
+                    docelem.setAttributeNS("http://www.w3.org/2000/xmlns/",
+                                           ("xmlns:" + abbrev),
+                                           uri);
+                }
+            }
+
+            // imports
+            List imported = kb.getTermsViaAskWithRestriction(0, "xsdImport", 1, namespace, 2);
+            String filename = null;
+            for (it = imported.iterator(); it.hasNext();) {
+                ns2 = (String) it.next();
+                uri = kb.getFirstTermViaAskWithRestriction(0, "uri", 2, ns2, 1);
+                uri = StringUtil.removeEnclosingQuotes(uri);
+                filename = getXsdFileName(kb, ns2);
+                filename = StringUtil.removeEnclosingQuotes(filename);
+                if (StringUtil.isNonEmptyString(uri) 
+                    && StringUtil.isNonEmptyString(filename)) {
+                    Element _el = doc.createElementNS("http://www.w3.org/2001/XMLSchema",
+                                                      "xs:import");
+                    _el.setAttribute("namespace", uri);
+                    _el.setAttribute("schemaLocation", filename);
+                    docelem.appendChild(_el);
+                }
+            }
+
+            // annotation
+            String annostr = kb.getFirstTermViaAskWithRestriction(0, 
+                                                                  "xsdAnnotation", 
+                                                                  1, 
+                                                                  namespace,
+                                                                  3);
+            annostr = StringUtil.removeEnclosingQuotes(annostr);
+            if (StringUtil.isNonEmptyString(annostr)) {
+                Element _annotation = doc.createElementNS("http://www.w3.org/2001/XMLSchema",
+                                                          "xs:annotation");
+                Element _documentation = doc.createElementNS("http://www.w3.org/2001/XMLSchema",
+                                                             "xs:documentation");
+                _documentation.setTextContent(annostr);
+                _annotation.appendChild(_documentation);
+                docelem.appendChild(_annotation);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return doc;
+    }
+
+    /** *************************************************************
+     * Returns an org.w3c.dom.Document XML Document object created
+     * from a skeleton file, or from data in kb.  If a skeleton file
+     * cannot be loaded and data cannot be obtained from kb, the
+     * Document object will be incomplete and probably invalid.
+     *
+     * @param kb The KB from which data about namespace will be
+     * retrieved
+     *
+     * @param namespace A SUO-KIF term denoting a namespace
+     *
+     * @return An XML Document object 
+     */
+    private Document createXsdDocument(KB kb, String namespace) {
+        Document doc = null;
+        try {
+            String indirPath = KBmanager.getMgr().getPref("kbDir");
+            if (StringUtil.emptyString(indirPath)) {
+                System.out.println("WARNING in DocGen.createXsdDocument("
+                                   + kb.name + ", "
+                                   + namespace + ")");
+                System.out.println("  No value is set for kbDir");
+            }
+            File indir = new File(indirPath);
+            if (!indir.isDirectory() || !indir.canRead()) {
+                System.out.println("WARNING in DocGen.createXsdDocument("
+                                   + kb.name + ", "
+                                   + namespace + ")");
+                System.out.println("  Cannot read from " + indir.getCanonicalPath());
+            }
+            else {                
+                doc = loadXsdSkeletonFile(kb, namespace, indir);
+            }
+            if (doc == null) {
+                doc = createXsdDocumentFromKb(kb, namespace);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return doc;
+    }
+
+    /** *************************************************************
      * 
      */
-    private Document loadDdexSkeletonFile(KB kb, String namespaceTerm, File indir) {
+    private Document loadXsdSkeletonFile(KB kb, String namespaceTerm, File indir) {
         Document doc = null;
         File skeleton = null;
         String suffix = ".skeleton";
+        BufferedReader br = null;
         try {
-            String nsName = ((namespaceTerm.startsWith("ns_") || namespaceTerm.startsWith("ns:"))
-                             ? namespaceTerm.substring(3)
-                             : namespaceTerm); 
+            String nsName = stripNamespacePrefix(kb, namespaceTerm);
             String inFileName = nsName + suffix;
             String xsdFileName = getXsdFileName(kb, namespaceTerm);
             if (StringUtil.isNonEmptyString(xsdFileName)) {
@@ -3301,12 +5458,14 @@ public class DocGen {
 
             // Give up if there is no skeleton file.
             if (!skeleton.canRead()) {
-                System.out.println("The file \""
-                                   + skeleton.getCanonicalPath()
-                                   + "\" does not exist or cannot be read");
+                System.out.println("WARNING in DocGen.loadXsdSkeletonFile("
+                                   + kb.name + ", "
+                                   + namespaceTerm + ", "
+                                   + indir.getCanonicalPath() + ")");
+                System.out.println("  Cannot read " + skeleton.getCanonicalPath());
                 return doc;
             }
-            BufferedReader br = new BufferedReader(new FileReader(skeleton));
+            br = new BufferedReader(new FileReader(skeleton));
             javax.xml.parsers.DocumentBuilderFactory _dbf = 
                 javax.xml.parsers.DocumentBuilderFactory.newInstance();
             _dbf.setNamespaceAware(true);
@@ -3323,6 +5482,7 @@ public class DocGen {
             if (br != null) {
                 try {
                     br.close();
+                    br = null;
                 }
                 catch (Exception ioe) {
                     ioe.printStackTrace();
@@ -3331,8 +5491,23 @@ public class DocGen {
         }
         catch (Exception ex) {
             doc = null;
-            System.out.println("The skeleton file for " + namespaceTerm + " could not be loaded");
+            System.out.println("Cannot load a skeleton file for " + namespaceTerm);
             ex.printStackTrace();
+            try {
+                if (br != null) {
+                    br.close();
+                }
+            }
+            catch (Exception ioe2) {
+                ioe2.printStackTrace();
+            }
+        }
+        if (doc != null) {
+            System.out.println("INFO in DocGen.loadXsdSkeletonFile("
+                               + kb.name + ", "
+                               + namespaceTerm + ", "
+                               + indir + ")");
+            System.out.println("  Skeleton file loaded for " + namespaceTerm);
         }
         return doc;
     }
@@ -3340,34 +5515,20 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private ArrayList getIsDataTypeOfTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
+    private ArrayList getDatatypeTerms(KB kb, String term, int targetArgnum) {
+        ArrayList result = null;
         try {
-            String[] inverses = {"ddex_IsDataTypeOf", "ddex_HasDataType"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
+            int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
+            result = kb.getTermsViaPredicateSubsumption("datatype",
+                                                        idxArgnum,
+                                                        term,
+                                                        targetArgnum,
+                                                        true);
+            SetUtil.removeDuplicates(result);
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            result = new ArrayList();
         }
         return result;
     }
@@ -3375,45 +5536,10 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private ArrayList getHasDataTypeTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
-        try {
-            String[] inverses = {"ddex_HasDataType", "ddex_IsDataTypeOf"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private String getFirstHasDataType(KB kb, String term) {
+    private String getFirstDatatype(KB kb, String term) {
         String dtype = null;
         try {
-            List types = getHasDataTypeTerms(kb, term);
+            List types = getDatatypeTerms(kb, term, 2);
             if (!types.isEmpty()) {
                 dtype = (String) types.get(0);
             }
@@ -3430,22 +5556,15 @@ public class DocGen {
     private boolean isDataType(KB kb, String term) {
         boolean ans = false;
         try {
-            // For DDEX, predicate will be "ddex_HasDataType".
-            String[] inverses = {"ddex_HasDataType", "ddex_IsDataTypeOf"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 2 : 1),
-                                                 term);
-                if ((formulae != null) || !formulae.isEmpty()) {
-                    ans = true;
-                    break;
-                }
+            List terms = getDatatypeTerms(kb, term, 1);
+            if (terms.isEmpty()) {
+                terms.addAll(kb.getTermsViaPredicateSubsumption("instance",
+                                                                2,
+                                                                term,
+                                                                1,
+                                                                true));
             }
+            ans = !terms.isEmpty();
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -3459,18 +5578,14 @@ public class DocGen {
     private String getContentRegexPattern(KB kb, String term) {
         String pattern = null;
         try {
-            List formulae = kb.askWithRestriction(0, "contentRegexPattern", 1, term);
-            if ((formulae != null) && !formulae.isEmpty()) {
-                Formula f = null;
-                for (int j = 0; j < formulae.size(); j++) {
-                    f = (Formula) formulae.get(j);
-                    pattern = f.getArgument(2);
-                    break;
-                }
-            }
+            pattern = kb.getFirstTermViaPredicateSubsumption("contentRegexPattern",
+                                                             1,
+                                                             term,
+                                                             2,
+                                                             false);
             if (StringUtil.emptyString(pattern)) {
                 List specs = getFirstSpecificTerms(kb, term);
-                specs.addAll(getIsDataTypeOfTerms(kb, term));
+                specs.addAll(getDatatypeTerms(kb, term, 1));
                 String inst = null;
                 for (int i = 0; i < specs.size(); i++) {
                     inst = (String) specs.get(i);
@@ -3490,29 +5605,14 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private String getHasXmlType(KB kb, String term) {
+    private String getClosestXmlDataType(KB kb, String term) {
         String xmlType = null;
         try {
-            String[] inverses = {"ddex_HasXmlType", "ddex_IsXmlTypeOf"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        xmlType = f.getArgument(argnum);
-                        break;
-                    }
-                }
-                if (xmlType != null) { break; }
-            }
+            xmlType = kb.getFirstTermViaPredicateSubsumption("closestXmlDataType",
+                                                             1,
+                                                             term,
+                                                             2,
+                                                             false);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -3523,621 +5623,326 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private ArrayList getHasXmlElementTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
+    private ArrayList getSubordinateXmlElementTerms(KB kb, String term, int targetArgnum) {
+        ArrayList result = null;
         try {
-            String[] inverses = {"ddex_HasXmlElement", "ddex_IsXmlElementOf"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
+            int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
+            result = kb.getTermsViaPredicateSubsumption("subordinateXmlElement",
+                                                        idxArgnum,
+                                                        term,
+                                                        targetArgnum,
+                                                        true);
+            SetUtil.removeDuplicates(result);
+
+            Collections.sort(result);
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            result = new ArrayList();
         }
+        /*
+          System.out.println("EXIT DocGen.getSubordinateXmlElementTerms("
+          + kb.name + ", "
+          + term + ", "
+          + targetArgnum + ")");
+          System.out.println("  ==> [" + result.size() + " terms]");
+        */
         return result;
     }
 
     /** *************************************************************
      * 
      */
-    private ArrayList getIsXmlElementOfTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
+    private ArrayList getSubordinateXmlAttributeTerms(KB kb, String term, int targetArgnum) {
+        ArrayList result = null;
         try {
-            String[] inverses = {"ddex_IsXmlElementOf", "ddex_HasXmlElement"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
+            int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
+            result = kb.getTermsViaPredicateSubsumption("subordinateXmlAttribute",
+                                                        idxArgnum,
+                                                        term,
+                                                        targetArgnum,
+                                                        true);
+            SetUtil.removeDuplicates(result);
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            result = new ArrayList();
         }
+        /*
+          System.out.println("EXIT DocGen.getSubordinateXmlAttributeTerms("
+          + kb.name + ", "
+          + term + ", "
+          + targetArgnum + ")");
+          System.out.println("  ==> [" + result.size() + " terms]");
+        */
         return result;
     }
 
     /** *************************************************************
      * 
      */
-    private ArrayList getHasXmlAttributeTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
+    private ArrayList getSyntacticExtensionTerms(KB kb, 
+                                                 String term, 
+                                                 int targetArgnum,
+                                                 boolean computeClosure) {
+        ArrayList result = null;
         try {
-            String[] inverses = {"ddex_HasXmlAttribute", "ddex_IsXmlAttributeOf"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
+            int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
+            if (computeClosure) {
+                result = kb.getTransitiveClosureViaPredicateSubsumption("syntacticExtension",
+                                                                        idxArgnum,
+                                                                        term,
+                                                                        targetArgnum,
+                                                                        true);
+            }
+            else {
+                result = kb.getTermsViaPredicateSubsumption("syntacticExtension",
+                                                            idxArgnum,
+                                                            term,
+                                                            targetArgnum,
+                                                            true);
+            }
+            if (result.isEmpty() && DB.isLocalTermReference(term)) {
+                String gt = getFirstGeneralTerm(kb, term);
+                if (StringUtil.isNonEmptyString(gt)) {
+                    if (computeClosure) {
+                        result = 
+                            kb.getTransitiveClosureViaPredicateSubsumption("syntacticExtension",
+                                                                           idxArgnum,
+                                                                           gt,
+                                                                           targetArgnum,
+                                                                           true);
+                    }
+                    else {
+                        result = 
+                            kb.getTermsViaPredicateSubsumption("syntacticExtension",
+                                                               idxArgnum,
+                                                               gt,
+                                                               targetArgnum,
+                                                               true);
                     }
                 }
             }
+            SetUtil.removeDuplicates(result);
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            result = new ArrayList();
         }
+        /*
+          System.out.println("EXIT DocGen.getSyntacticExtensionTerms("
+          + kb.name + ", "
+          + term + ", "
+          + targetArgnum + ")");
+          System.out.println("  ==> [" + result.size() + " terms]");
+        */
         return result;
     }
 
     /** *************************************************************
      * 
      */
-    private ArrayList getIsXmlAttributeOfTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
+    private ArrayList getSyntacticUnionTerms(KB kb, String term, int targetArgnum) {
+        ArrayList result = null;
         try {
-            String[] inverses = {"ddex_IsXmlAttributeOf", "ddex_HasXmlAttribute"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
+            int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
+            result = kb.getTermsViaPredicateSubsumption("syntacticUnion",
+                                                        idxArgnum,
+                                                        term,
+                                                        targetArgnum,
+                                                        true);
+            SetUtil.removeDuplicates(result);
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            result = new ArrayList();
         }
+        /*
+          System.out.println("EXIT DocGen.getSyntacticUnionTerms("
+          + kb.name + ", "
+          + term + ", "
+          + targetArgnum + ")");
+          System.out.println("  ==> [" + result.size() + " terms]");
+        */
         return result;
     }
 
     /** *************************************************************
      * 
      */
-    private ArrayList getHasXmlExtensionTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
+    private ArrayList getSyntacticCompositeTerms(KB kb, String term, int targetArgnum) {
+        ArrayList result = null;
         try {
-            String[] inverses = {"ddex_HasXmlExtension", "ddex_IsXmlExtensionOf"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
+            int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
+            result = kb.getTermsViaPredicateSubsumption("syntacticComposite",
+                                                        idxArgnum,
+                                                        term,
+                                                        targetArgnum,
+                                                        true);
+            SetUtil.removeDuplicates(result);
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            result = new ArrayList();
         }
+        /*
+          System.out.println("EXIT DocGen.getSyntacticCompositeTerms("
+          + kb.name + ", "
+          + term + ", "
+          + targetArgnum + ")");
+          System.out.println("  ==> [" + result.size() + " terms]");
+        */
         return result;
     }
 
     /** *************************************************************
-     * 
+     * Sorts stringList in place by the presentation name of each its
+     * terms, which could be very different from the raw term name.
+     *
+     * @param kb The KB from which to obtain the presentation names
+     *
+     * @param namespaceTerm A KIF term denoting a namespace
+     *
+     * @param stringList The List of Strings to be sorted
+     *
+     * @return void
+     *
      */
-    private ArrayList getIsXmlExtensionOfTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
+    private void sortByPresentationName(KB kb, String namespaceTerm, List stringList) {
         try {
-            String[] inverses = {"ddex_IsXmlExtensionOf", "ddex_HasXmlExtension"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getHasXmlUnionTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
-        try {
-            String[] inverses = {"ddex_HasXmlUnion", "ddex_IsXmlUnionOf"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getIsXmlUnionOfTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
-        try {
-            String[] inverses = {"ddex_IsXmlUnionOf", "ddex_HasXmlUnion"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getHasXmlCompositeTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
-        try {
-            String[] inverses = {"ddex_HasXmlComposite", "ddex_IsXmlCompositeFor"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getIsXmlCompositeForTerms(KB kb, String term) {
-        ArrayList result = new ArrayList();
-        try {
-            String[] inverses = {"ddex_IsXmlCompositeFor", "ddex_HasXmlComposite"};
-            String reln = null;
-            List formulae = null;
-            Formula f = null;
-            String arg = null;
-            for (int j = 0; j < inverses.length; j++) {
-                reln = inverses[j];
-                formulae = kb.askWithRestriction(0, 
-                                                 reln, 
-                                                 (j == 0 ? 1 : 2),
-                                                 term);
-                if (formulae != null) {
-                    int argnum = (j == 0 ? 2 : 1);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        arg = f.getArgument(argnum);
-                        if (!result.contains(arg)) {
-                            result.add(arg);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getIsXmlCompositeForArg2TermsInNamespace(KB kb, String namespace) {
-        ArrayList result = new ArrayList();
-        try {
-            String kifNamespace = toKifNamespace(kb, namespace);
-            if (StringUtil.isNonEmptyString(kifNamespace) && kifNamespace.startsWith("ns_")) {
-                String prefix = (kifNamespace.substring(3) + "_");
-                String[] inverses = {"ddex_IsXmlCompositeFor", "ddex_HasXmlComposite"};
-                String reln = null;
-                List formulae = null;
-                Formula f = null;
-                String arg = null;
-                for (int j = 0; j < inverses.length; j++) {
-                    reln = inverses[j];
-                    formulae = kb.ask("arg", 0, reln);
-                    if (formulae != null) {
-                        int argnum = (j == 0 ? 2 : 1);
-                        for (int i = 0; i < formulae.size(); i++) {
-                            f = (Formula) formulae.get(i);
-                            arg = f.getArgument(argnum);
-                            if (arg.startsWith(prefix) && !result.contains(arg)) {
-                                result.add(arg);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getIsXmlUnionOfArg2TermsInNamespace(KB kb, String namespace) {
-        ArrayList result = new ArrayList();
-        try {
-            String kifNamespace = toKifNamespace(kb, namespace);
-            if (StringUtil.isNonEmptyString(kifNamespace) && kifNamespace.startsWith("ns_")) {
-                String prefix = (kifNamespace.substring(3) + "_");
-                String[] inverses = {"ddex_IsXmlUnionOf", "ddex_HasXmlUnion"};
-                String reln = null;
-                List formulae = null;
-                Formula f = null;
-                String arg = null;
-                for (int j = 0; j < inverses.length; j++) {
-                    reln = inverses[j];
-                    formulae = kb.ask("arg", 0, reln);
-                    if (formulae != null) {
-                        int argnum = (j == 0 ? 2 : 1);
-                        for (int i = 0; i < formulae.size(); i++) {
-                            f = (Formula) formulae.get(i);
-                            arg = f.getArgument(argnum);
-                            if (arg.startsWith(prefix) && !result.contains(arg)) {
-                                result.add(arg);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getIsOneOfArg1Terms(KB kb, String arg2) {
-        ArrayList result = new ArrayList();
-        try {
-            List formulae = kb.askWithRestriction(0, "ddex_IsOneOf", 2, arg2);
-            Formula f = null;
-            if (formulae != null) {
-                List sortable = new ArrayList();
-                String arg1 = null;
-                for (int i = 0; i < formulae.size(); i++) {
-                    f = (Formula) formulae.get(i);
-                    arg1 = f.getArgument(1);
-                    String[] pair = new String[2];
-                    pair[0] = arg1;
-                    pair[1] = getTermPresentationName(kb, "", arg1);
+            if (!SetUtil.isEmpty(stringList)) {
+                List<String[]> sortable = new ArrayList<String[]>();
+                String kifNamespace = toKifNamespace(kb, namespaceTerm);
+                String[] pair = null;
+                for (Iterator it = stringList.iterator(); it.hasNext();) {
+                    pair = new String[2];
+                    pair[0] = (String) it.next();
+                    pair[1] = getTermPresentationName(kb, kifNamespace, pair[0]);
                     sortable.add(pair);
                 }
                 Comparator comp = new Comparator() {
                         public int compare(Object o1, Object o2) {
-                            String name1 = ((String[]) o1)[1];
-                            String name2 = ((String[]) o2)[1];
-                            return String.CASE_INSENSITIVE_ORDER.compare(name1, name2);
+                            String[] sa1 = (String[]) o1;
+                            String[] sa2 = (String[]) o2;
+                            return String.CASE_INSENSITIVE_ORDER.compare(sa1[1], sa2[1]);
                         }
                     };
-                Collections.sort(sortable, comp);
-                String[] strArr = null;
-                for (int j = 0; j < sortable.size(); j++) {
-                    strArr = (String[]) sortable.get(j);
-                    result.add(strArr[0]);
+                String msg = null;
+                try {
+                    Collections.sort(sortable, comp);
+                }
+                catch (Exception ex1) {
+                    msg = ex1.getMessage();
+                    System.out.println(msg);
+                    ex1.printStackTrace();
+                }
+                if ((msg == null) && (sortable.size() == stringList.size())) {
+                    stringList.clear();
+                    for (String[] sa : sortable) {
+                        stringList.add(sa[0]);
+                    }
                 }
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        return result;
+        return;
     }
 
     /** *************************************************************
-     * 
-     */
-    private ArrayList getAllTerms(KB kb, 
-                                  int argx, 
-                                  String argxVal, 
-                                  int argy,
-                                  String argyVal,
-                                  int gatherArg) {
-        ArrayList result = new ArrayList();
-        try {
-            TreeSet accumulator = new TreeSet();
-            List formulae = kb.askWithRestriction(argx, argxVal, argy, argyVal);
-            Formula f = null;
-            if (formulae != null) {
-                for (int i = 0; i < formulae.size(); i++) {
-                    f = (Formula) formulae.get(i);
-                    accumulator.add(f.getArgument(gatherArg));
-                }
-            }
-            if (!accumulator.isEmpty()) {
-                result.addAll(accumulator);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * Sorts stringList by each term's presentation name, which could
-     * be very different from the raw term name.
+     * Sorts stringList in place based on explicit numeric ordinal
+     * values obtained from assertions made with the predicate
+     * arg1SortOrdinal.  Terms lacking such assertions will occur at
+     * the end of the sorted list.  If no term in the list has a
+     * relevant arg1SortOrdinal assertion, the list will not be
+     * sorted.
      *
-     * @param kb The KB from which to obtain the presentation names.
+     * @param kb The KB from which to obtain the presentation names
      *
-     * @param namespaceTerm A KIF term denoting a namespace.
+     * @param namespaceTerm A SUO-KIF term denoting a namespace
      *
-     * @param stringList The List of Strings to be sorted.
-     *
-     * @return A sorted ArrayList.
-     *
-     */
-    private ArrayList sortByPresentationName(KB kb, String namespaceTerm, List stringList) {
-        ArrayList sorted = new ArrayList();
-        try {
-            if (stringList != null) {
-                List sortable = new ArrayList();
-                String term = null;
-                for (int i = 0; i < stringList.size(); i++) {
-                    term = (String) stringList.get(i);
-                    String[] pair = new String[2];
-                    pair[0] = term;
-                    pair[1] = getTermPresentationName(kb, namespaceTerm, term);
-                    sortable.add(pair);
-                }
-                Comparator comp = new Comparator() {
-                        public int compare(Object o1, Object o2) {
-                            String name1 = ((String[]) o1)[1];
-                            String name2 = ((String[]) o2)[1];
-                            return String.CASE_INSENSITIVE_ORDER.compare(name1, name2);
-                        }
-                    };
-                Collections.sort(sortable, comp);
-                String[] strArr = null;
-                for (int j = 0; j < sortable.size(); j++) {
-                    strArr = (String[]) sortable.get(j);
-                    sorted.add(strArr[0]);
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return sorted;
-    }
-
-    /** *************************************************************
-     * Sorts stringList by explicit numeric ordinal values obtained
-     * from assertions made with the predicate arg1SortOrdinal.  Terms
-     * lacking such assertions will occur at the end of the sorted
-     * list.  If no term in the list has a relevant arg1SortOrdinal
-     * assertion, the list will not be sorted.
-     *
-     * @param kb The KB from which to obtain the presentation names.
-     *
-     * @param namespaceTerm A KIF term denoting a namespace.
-     *
-     * @param arg2Term The term to which "belong", or are related by
-     * some predicate, all of the arg1 values to be sorted.
+     * @param arg2Term The term to which all of the arg1 values to be
+     * sorted are related by some predicate, arg0
      *
      * @param arg1OrdFormulae An optional List of arg1SortOrdinal
-     * formulae.  If this list is not passed in, the method will try
-     * to compute it.
+     * formulae, which the method will try to compute if one is not
+     * passed in
      *
      * @param stringList The List of Strings to be sorted.
      *
-     * @return An ArrayList sorted by each element's explicitly stated
-     * ordinal number.
+     * @return void
      *
      */
-    private ArrayList sortByArg1Ordinal(KB kb, 
-                                        String namespaceTerm, 
-                                        String arg2Term, 
-                                        List arg1OrdFormulae,
-                                        List stringList) {
-        ArrayList sorted = new ArrayList();
+    private void sortByArg1Ordinal(KB kb, 
+                                   String namespaceTerm, 
+                                   String arg2Term, 
+                                   List arg1OrdFormulae,
+                                   List stringList) {
         try {
-            if (stringList != null) {
+            if (!SetUtil.isEmpty(stringList)) {
                 List formulae = arg1OrdFormulae;
-                if (formulae == null) {
+                if (SetUtil.isEmpty(formulae)) {
                     formulae = kb.askWithRestriction(0, "arg1SortOrdinal", 3, arg2Term);
                 }
-                if ((formulae == null) || formulae.isEmpty()) {
-                    sorted.addAll(stringList);
-                }
-                else {
-                    List sortable = new ArrayList();
+                if (!SetUtil.isEmpty(formulae)) {
+                    Map fmap = new HashMap();
                     Formula f = null;
+                    for (Iterator it = formulae.iterator(); it.hasNext();) {
+                        f = (Formula) it.next();
+                        fmap.put(f.getArgument(2), f);
+                    }
+                    List<String[]> sortable = new ArrayList<String[]>();
+                    String[] pair = null;
                     String term = null;
+                    String ord = null;
                     boolean sortValueFound = false;
-                    for (int i = 0; i < stringList.size(); i++) {
+                    for (Iterator it2 = stringList.iterator(); it2.hasNext();) {
                         sortValueFound = false;
-                        term = (String) stringList.get(i);
-                        String[] pair = new String[2];
+                        term = (String) it2.next();
+                        pair = new String[2];
                         pair[0] = term;
                         pair[1] = String.valueOf(Integer.MAX_VALUE);
-                        sortable.add(pair);
-                        for (int j = 0; j < formulae.size(); j++) {
-                            f = (Formula) formulae.get(j);
-                            if (term.equals(f.getArgument(2))) {
-                                pair[1] = f.getArgument(4);
+                        f = (Formula) fmap.get(term);
+                        if (f != null) {
+                            ord = f.getArgument(4);
+                            if (!ord.matches(".*\\D.*")) {
+
+                                // If ord contains no non-digit chars
+                                // ...
+                                pair[1] = ord;
                                 sortValueFound = true;
                             }
                         }
+                        sortable.add(pair);
                         if (!sortValueFound) {
-                                System.out.println("Warning: no ordinal sort value found for "
-                                                  + term);
+                            System.out.println("Warning: no ordinal sort value found for the "
+                                               + arg2Term + ", "
+                                               + term);
                         }
                     }
                     Comparator comp = new Comparator() {
                             public int compare(Object o1, Object o2) {
-                                int ord1 = Integer.parseInt(((String[]) o1)[1]);
-                                int ord2 = Integer.parseInt(((String[]) o2)[1]);
-                                return ((ord1 < ord2)
-                                        ? -1
-                                        : ((ord1 == ord2)
-                                           ? 0
-                                           : 1));
+                                Integer ord1 = Integer.decode(((String[]) o1)[1]);
+                                Integer ord2 = Integer.decode(((String[]) o2)[1]);
+                                return ord1.compareTo(ord2);
                             }
                         };
-                    Collections.sort(sortable, comp);
-                    String[] strArr = null;
-                    for (int j = 0; j < sortable.size(); j++) {
-                        strArr = (String[]) sortable.get(j);
-                        sorted.add(strArr[0]);
+                    String msg = null;
+                    try {
+                        Collections.sort(sortable, comp);
+                    }
+                    catch (Exception ex1) {
+                        msg = ex1.getMessage();
+                        System.out.println(msg);
+                        ex1.printStackTrace();
+                    }
+                    if (StringUtil.emptyString(msg) && (sortable.size() == stringList.size())) {
+                        stringList.clear();
+                        for (Iterator it3 = sortable.iterator(); it3.hasNext();) {
+                            pair = (String[]) it3.next();
+                            stringList.add(pair[0]);
+                        }
                     }
                 }
             }
@@ -4145,7 +5950,7 @@ public class DocGen {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        return sorted;
+        return;
     }
 
     /** *************************************************************
@@ -4173,17 +5978,12 @@ public class DocGen {
                 newPath.add(defaultNamespace);
             }
 
-            System.out.println("path == " + newPath);
+            // System.out.println("path == " + newPath);
 
-            String docustr = getCompositeDocumentation(kb, term, newPath);
+            String docustr = getContextualDocumentation(kb, term, newPath);
             if (StringUtil.isNonEmptyString(docustr)) {
                 docustr = removeLinkableNamespacePrefixes(kb, docustr);
-                docustr = StringUtil.removeEnclosingQuotes(docustr);
-                // docustr = StringUtil.escapeQuoteChars(docustr);
-                // docustr = docustr.replace("\"\"", "\\\"");
-                docustr = StringUtil.removeQuoteEscapes(docustr);
-                docustr = StringUtil.normalizeSpaceChars(docustr);
-                // docustr = StringUtil.replaceNonAsciiChars(docustr);
+                docustr = processDocString(kb, "", namespace, docustr, true, true);
                 elem = doc.createElementNS("http://www.w3.org/2001/XMLSchema",
                                            "xs:documentation");
                 elem.setTextContent(docustr);
@@ -4231,13 +6031,23 @@ public class DocGen {
     private String getCardinality(KB kb, String cardtype, String term, String context) {
         String val = "";
         try {
-            String pred = (cardtype + "Cardinality");
-            List cardForms = kb.askWithRestriction(0, pred, 2, term);
-            if (cardForms != null && !cardForms.isEmpty()) {
+            String pred = "hasCardinality";
+            if (cardtype.matches(".*(?i)min.*")) {
+                pred = "hasMinCardinality";
+            }
+            else if (cardtype.matches(".*(?i)max.*")) {
+                pred = "hasMaxCardinality";
+            }
+            else if (cardtype.matches(".*(?i)exact.*")) {
+                pred = "hasExactCardinality";
+            }
+            List cardForms = kb.askWithPredicateSubsumption(pred, 1, term);
+            if (!cardForms.isEmpty()) {
                 Formula f = (Formula) cardForms.get(0);
-                if (context.equals("") || context.equals(f.getArgument(1))) {
-                    val = f.getArgument(3);
-                }
+                // if (context.equals("") || context.equals(f.getArgument(1))) {
+                // val = f.getArgument(3);
+                // }
+                val = f.getArgument(2);
             }
         }
         catch (Exception ex) {
@@ -4249,30 +6059,54 @@ public class DocGen {
     /** ***************************************************************
      */
     private void setElementCardinality(KB kb, Element elem, String term, List context) {
+        /*
+          System.out.println("ENTER DocGen.setElementCardinality("
+          + kb.name + ", "
+          + elem.getNodeName() + ", "
+          + term + ", "
+          + context + ")");
+        */
         try {
             // ignoring context for now, since each LocalInstance term
             // can have only one set of cardinaltiy values.
             String nodeName = elem.getNodeName();
             String exact = getCardinality(kb, "exact", term, "");
+
+            // System.out.println("  exact == " + exact);
+
             boolean isExact = StringUtil.isNonEmptyString(exact);
             String min = (isExact
                           ? exact
                           : getCardinality(kb, "min", term, ""));
+
+            // System.out.println("  min == " + min);
+
             String max = (isExact
                           ? exact
                           : getCardinality(kb, "max", term, ""));
+
+            // System.out.println("  max == " + max);
+
             boolean isMin = StringUtil.isNonEmptyString(min);
             boolean isMax = StringUtil.isNonEmptyString(max);
 
-            if (nodeName.matches(".*element.*") || nodeName.matches(".*choice.*")) {
+            if (nodeName.matches(".*element.*") 
+                || nodeName.matches(".*choice.*")
+                || nodeName.matches(".*sequence.*")) {
                 if (!isMin) { min = "0"; isMin = true; }
                 if (isMin && !min.equals("1")) {
                     elem.setAttribute("minOccurs", min);
                 }
+
+                // System.out.println("  min == " + min);
+
                 if (!isMax) { max = "unbounded"; isMax = true; };
                 if (isMax && !max.equals("1")) {
                     elem.setAttribute("maxOccurs", max);
                 }
+
+                // System.out.println("  max == " + max);
+
             }
             else if (nodeName.matches(".*attribute.*")) {
                 if (isExact || (isMin && !min.equals("0"))) {
@@ -4286,6 +6120,15 @@ public class DocGen {
         catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        /*
+          System.out.println("EXIT DocGen.setElementCardinality("
+          + kb.name + ", "
+          + elem.getNodeName() + ", "
+          + term + ", "
+          + context + ")");
+        */
+
         return;
     }
 
@@ -4326,7 +6169,7 @@ public class DocGen {
             elem.setAttribute("name", getTermPresentationName(kb, namespace, term));
             if (!parentElement.getNodeName().matches(".*schema.*")) {
                 String kifType = null;
-                String dtype = getFirstHasDataType(kb, term);
+                String dtype = getFirstDatatype(kb, term);
                 if (!StringUtil.isNonEmptyString(dtype)) {
                     dtype = getFirstGeneralTerm(kb, term);
                 }
@@ -4337,7 +6180,13 @@ public class DocGen {
                 }
                 setElementCardinality(kb, elem, term, path);
             }
-            addXsdNodeAnnotationChildNode(kb, doc, elem, defaultNamespace, namespace, term, newPath);
+            addXsdNodeAnnotationChildNode(kb, 
+                                          doc, 
+                                          elem, 
+                                          defaultNamespace, 
+                                          namespace, 
+                                          term, 
+                                          newPath);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -4366,7 +6215,13 @@ public class DocGen {
                                        "xs:complexType");
             if (parentElem.getNodeName().matches(".*schema.*")) {
                 elem.setAttribute("name", getTermPresentationName(kb, namespace, term));
-                addXsdNodeAnnotationChildNode(kb, doc, elem, defaultNamespace, namespace, term, newPath);
+                addXsdNodeAnnotationChildNode(kb, 
+                                              doc, 
+                                              elem, 
+                                              defaultNamespace, 
+                                              namespace, 
+                                              term, 
+                                              newPath);
             }
         }
         catch (Exception ex) {
@@ -4396,7 +6251,13 @@ public class DocGen {
                                        "xs:simpleType");
             if (parentElem.getNodeName().matches(".*schema.*")) {
                 elem.setAttribute("name", getTermPresentationName(kb, namespace, term));
-                addXsdNodeAnnotationChildNode(kb, doc, elem, defaultNamespace, namespace, term, newPath);
+                addXsdNodeAnnotationChildNode(kb, 
+                                              doc, 
+                                              elem, 
+                                              defaultNamespace, 
+                                              namespace, 
+                                              term, 
+                                              newPath);
             }
         }
         catch (Exception ex) {
@@ -4425,7 +6286,13 @@ public class DocGen {
             elem = doc.createElementNS("http://www.w3.org/2001/XMLSchema",
                                        "xs:enumeration");
             elem.setAttribute("value", getTermPresentationName(kb, namespace, term));
-            addXsdNodeAnnotationChildNode(kb, doc, elem, defaultNamespace, namespace, term, newPath);
+            addXsdNodeAnnotationChildNode(kb, 
+                                          doc, 
+                                          elem, 
+                                          defaultNamespace, 
+                                          namespace, 
+                                          term, 
+                                          newPath);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -4475,7 +6342,10 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    public String getTermPresentationName(KB kb, String namespace, String term) {
+    public String getTermPresentationName(KB kb, 
+                                          String namespace, 
+                                          String term,
+                                          boolean withSpanTags) {
         String name = term;
         try {
             List context = new ArrayList();
@@ -4505,11 +6375,25 @@ public class DocGen {
                     idx = name.indexOf(delims[i]);
                 }
             }
+            if (withSpanTags) {
+                if (isXmlAttribute(kb, term)) {
+                    name = ("<span class=\"attribute\">" + name + "</span>");
+                }
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
         return name;
+    }
+
+    /** *************************************************************
+     * 
+     */
+    public String getTermPresentationName(KB kb, 
+                                          String namespace, 
+                                          String term) {
+        return getTermPresentationName(kb, namespace, term, false);
     }
 
     /** *************************************************************
@@ -4531,7 +6415,7 @@ public class DocGen {
             elem = doc.createElementNS("http://www.w3.org/2001/XMLSchema",
                                        "xs:attribute");
             elem.setAttribute("name", getTermPresentationName(kb, namespace, term));
-            String dtype = getFirstHasDataType(kb, term);
+            String dtype = getFirstDatatype(kb, term);
             if (!StringUtil.isNonEmptyString(dtype)) {
                 dtype = getFirstGeneralTerm(kb, term);
             }
@@ -4544,7 +6428,13 @@ public class DocGen {
             }
             elem.setAttribute("type", dtype);
             setElementCardinality(kb, elem, term, path);
-            addXsdNodeAnnotationChildNode(kb, doc, elem, defaultNamespace, namespace, term, newPath);
+            addXsdNodeAnnotationChildNode(kb, 
+                                          doc, 
+                                          elem, 
+                                          defaultNamespace, 
+                                          namespace, 
+                                          term, 
+                                          newPath);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -4629,13 +6519,10 @@ public class DocGen {
                                               term,
                                               path);
 
-                Element contentElem = null;
-                if (hasComplexContent(extensionElem)) {
-                    contentElem = makeElement(doc, "xs:complexContent");
-                }
-                else {
-                    contentElem = makeElement(doc, "xs:simpleContent");
-                }
+                String contentElemName = (hasComplexContent(extensionElem)
+                                          ? "xs:complexContent"
+                                          : "xs:simpleContent");
+                Element contentElem = makeElement(doc, contentElemName);
                 contentElem.appendChild(extensionElem);
                 parentElem.appendChild(contentElem);
             }
@@ -4667,7 +6554,7 @@ public class DocGen {
                 newPath.add(0, term);
             }
             if (parentElem.getNodeName().matches(".*simpleType.*")) {
-                List types = getIsXmlUnionOfTerms(kb, term);
+                List types = getSyntacticUnionTerms(kb, term, 2);
                 if (!types.isEmpty()) {
                     String typelist = "";
                     for (int i = 0; i < types.size(); i++) {
@@ -4681,10 +6568,14 @@ public class DocGen {
                 }
             }
             else {
-                List valueSetTerms = getIsOneOfArg1Terms(kb, term);
+                List valueSetTerms = kb.getTermsViaPredicateSubsumption("element",
+                                                                        2,
+                                                                        term,
+                                                                        1,
+                                                                        true);
                 if (!valueSetTerms.isEmpty()) {
                     Element _restrictionElem = makeElement(doc, "xs:restriction");
-                    String dtype = getFirstHasDataType(kb, term);
+                    String dtype = getFirstDatatype(kb, term);
                     if (StringUtil.isNonEmptyString(dtype)) {
                         dtype = substituteXsdDataType(kb, nsContext, dtype);
                         dtype = DB.kifToW3c(dtype);
@@ -4706,15 +6597,15 @@ public class DocGen {
                     }
                     parentElem.appendChild(_restrictionElem);
                 }
-                List subElementTerms = getHasXmlElementTerms(kb, term);
+                List subElementTerms = getSubordinateXmlElementTerms(kb, term, 1);
                 String subTerm = null;
                 for (int i = 0; i < subElementTerms.size(); i++) {
                     subTerm = (String) subElementTerms.get(i);
                     Element newElem = null;
                     if (isSkipNode(kb, subTerm)) {  
 
-                        // ddex_XmlChoice or ddex_XmlSequence
-                        if (kb.isInstanceOf(subTerm, "ddex_XmlChoice")) {
+                        // XmlChoiceElement or XmlSequenceElement
+                        if (kb.isInstanceOf(subTerm, "XmlChoiceElement")) {
                             newElem = makeChoiceElement(kb, doc, subTerm, newPath);
                         }
                         else {
@@ -4765,7 +6656,7 @@ public class DocGen {
             if (!newPath.contains(term)) {
                 newPath.add(0, term);
             }
-            List subAttrTerms = getHasXmlAttributeTerms(kb, term);
+            List subAttrTerms = getSubordinateXmlAttributeTerms(kb, term, 1);
             String subTerm = null;
             for (int i = 0; i < subAttrTerms.size(); i++) {
                 subTerm = (String) subAttrTerms.get(i);
@@ -4853,61 +6744,171 @@ public class DocGen {
     }
 
     /** *************************************************************
+     * The time, represented in milliseconds since Jan 1 1970, at
+     * which the most recent attempt to compute term relevance
+     * occurred.  We use this value to avoid frequent, useless
+     * attempts to compute term relevance.
+     *
+     */
+    private long lastComputeTermRelevanceAttemptTime = 0L;
+
+    /** *************************************************************
+     * The time interval, in milliseconds, to wait before trying to
+     * compute term relevance.  We use this value to avoid frequent,
+     * useless attempts to compute term relevance, but still permit
+     * period retries.
+     *
+     */
+    private long computeTermRelevanceRetryInterval = 600000L;  // 10 minutes
+
+    /** *************************************************************
+     * Assign terms to relevance sets according to whether the term is
+     * core, framework, or supporting.
+     *
+     */
+    protected void computeTermRelevance(KB kb, String ontology) {
+
+        long t1 = System.currentTimeMillis();
+
+        if ((lastComputeTermRelevanceAttemptTime == 0L)
+            || ((lastComputeTermRelevanceAttemptTime + computeTermRelevanceRetryInterval) < t1)) {
+                
+        
+            System.out.println("ENTER DocGen.computeTermRelevance("
+                               + kb.name + ", "
+                               + ontology + ")");
+
+            try {
+
+                // Start with focal terms.
+                List focalTerms = computeFocalTerms(kb, ontology);
+                if (!focalTerms.isEmpty()) {
+                    String ft = null;
+                    for (Iterator it = focalTerms.iterator(); it.hasNext();) {
+                        ft = (String) it.next();
+                        computeCoreTerms(kb, ft);
+                    }
+
+                    computeFrameworkTerms(kb, ontology);
+
+                    computeSupportingTerms(kb);
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            lastComputeTermRelevanceAttemptTime = System.currentTimeMillis();
+
+            System.out.println("EXIT DocGen.computeTermRelevance("
+                               + kb.name + ", "
+                               + ontology + ")");
+            System.out.println("  Time: " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0)
+                               + " seconds");
+        }
+
+        return;
+    }
+
+    /** *************************************************************
+     * Gather the terms that should serve as the starting point for
+     * exploring the graph that constitutes one or more documents.
+     *
+     */
+    private ArrayList computeFocalTerms(KB kb, String ontology) {
+        ArrayList ans = new ArrayList();
+        try {
+            List classes = kb.getTermsViaAskWithRestriction(0, 
+                                                            "docGenFocalInstanceClass", 
+                                                            1, 
+                                                            ontology,
+                                                            2);
+            if (!classes.isEmpty()) {
+                Set reduced = new HashSet();
+                String term = null;
+                String inst = null;
+                Set instances = null;
+                Iterator it2 = null;
+                for (Iterator it = classes.iterator(); it.hasNext();) {
+                    term = (String) it.next();
+                    instances = kb.getAllInstancesWithPredicateSubsumption(term);
+                    for (it2 = instances.iterator(); it2.hasNext();) {
+                        inst = (String) it2.next();
+                        if (!DB.isLocalTermReference(inst)) {
+                            reduced.add(inst);
+                        }
+                    }
+                }
+                ans.addAll(reduced);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** *************************************************************
      * Collects all top-level terms for each namespace-specific XSD
      * file.  Returns a Map in which the keys are KIF namespace terms,
-     * and the values are lists of all top-level XSD terms in the
+     * and the values are Lists of all top-level XSD terms in the
      * indexed namespaces.
      *
      */
-    private Map computeTopLevelTermsByNamespace(KB kb) {
+    protected Map computeTopLevelTermsByNamespace(KB kb, String ontology) {
+
+        System.out.println("ENTER DocGen.computeTopLevelTermsByNamespace("
+                           + kb.name + ", "
+                           + ontology + ")");
+
         Map tops = new HashMap();
         Set done = new HashSet();
         try {
+            List focalTerms = computeFocalTerms(kb, ontology);
+
+            System.out.println("  focalTerms == " + focalTerms);
+
+            List working = new LinkedList(focalTerms);
             Set accumulator = new HashSet();
             String term = null;
-            List termList = new ArrayList();
+            Iterator it = null;
+            for (it = working.iterator(); it.hasNext();) {
+                term = (String) it.next();
+                accumulator.add(term);
+                accumulator.addAll(kb.getAllInstancesWithPredicateSubsumption(term));
+            }
+
+            // System.out.println("  accumulator == " + accumulator);
+
+            System.out.println("");
             // String dtype = null;
             String namespace = null;
-            for (int c = 0; (c == 0) || !accumulator.isEmpty(); c++) {
-                termList.clear();
-                termList.addAll(accumulator);
+            while (!accumulator.isEmpty()) {
+                System.out.print("  " + accumulator.size() + " new terms to process ");
+                working.clear();
+                working.addAll(accumulator);
                 accumulator.clear();
 
-                // Start with the message types and LocalInstance
-                // terms, but don't include them in the tops Map.
-                if (c == 0) {
-                    termList.addAll(getDdexMessageTypes(kb));
-                    /*
-                    Iterator kbit = kb.terms.iterator();
-                    while (kbit.hasNext()) {
-                        term = (String) kbit.next();
-                        namespace = getTermNamespace(kb, term);
-                        if (// StringUtil.isNonEmptyString(namespace)
-                            // || 
-                            term.matches(".*(?i)LocalInstance.*")) {
-                            termList.add(term);
-                        }
-                    }
-                    */
-                }
-
-                // System.out.println("termList == " + termList);
-
-                for (int i = 0; i < termList.size(); i++) {
-                    term = (String) termList.get(i);
+                for (it = working.iterator(); it.hasNext();) {
+                    term = (String) it.next();
                     if (!done.contains(term)) {
 
-                        if (!isSkipNode(kb, term) && (c > 0)) {
+                        if (!isSkipNode(kb, term)) {
 
                             namespace = getTermNamespace(kb, term);
 
-                            if (term.matches(".*(?i)LocalInstance.*")) {
+                            // System.out.println("  term == " + term);
 
-                                String dtype = getFirstHasDataType(kb, term);
+                            if (DB.isLocalTermReference(term)) {
+
+                                String dtype = getFirstDatatype(kb, term);
                                 if (StringUtil.isNonEmptyString(dtype)) {
                                     namespace = getTermNamespace(kb, dtype);
-                                    if (StringUtil.isNonEmptyString(namespace)
-                                        && !accumulator.contains(dtype)) {
+                                    if (StringUtil.isNonEmptyString(namespace)) {
+
+                                        // System.out.println("  dtype == " + dtype);
+
                                         accumulator.add(dtype);
                                     }
                                 }
@@ -4917,75 +6918,70 @@ public class DocGen {
                                     String io = getFirstGeneralTerm(kb, term);
                                     if (StringUtil.isNonEmptyString(io)) {
                                         namespace = getTermNamespace(kb, io);
-                                        if (StringUtil.isNonEmptyString(namespace)
-                                            && !accumulator.contains(io)) {
+                                        if (StringUtil.isNonEmptyString(namespace)) {
+
+                                            // System.out.println("  io == " + io);
+
                                             accumulator.add(io);
                                         }
                                     }
                                 }
                             }
                             else {
-                                addToMapByNS(tops, namespace, term);
+                                addToMapOfLists(tops, namespace, term);
                             }
                         }
-                        accumulator.addAll(getHasXmlElementTerms(kb, term));
-                        accumulator.addAll(getHasXmlAttributeTerms(kb, term));
-                        accumulator.addAll(getIsXmlExtensionOfTerms(kb, term));
-                        accumulator.addAll(getIsXmlUnionOfTerms(kb, term));
-                        accumulator.addAll(getHasXmlCompositeTerms(kb, term));
-                        // accumulator.addAll(getIsXmlCompositeForTerms(kb, term));
+                        accumulator.addAll(getSubordinateXmlElementTerms(kb, term, 1));
+                        accumulator.addAll(getSubordinateXmlAttributeTerms(kb, term, 1));
+                        accumulator.addAll(getSyntacticExtensionTerms(kb, term, 2, false));
+                        accumulator.addAll(getSyntacticUnionTerms(kb, term, 2));
+                        accumulator.addAll(getSyntacticCompositeTerms(kb, term, 1));
                         done.add(term);
-                    }
-                }
-                /*
-                if (c == 0) {
-                    Iterator kbit = kb.terms.iterator();
-                    while (kbit.hasNext()) {
-                        term = (String) kbit.next();
-                        namespace = getTermNamespace(kb, term);
-                        if (// StringUtil.isNonEmptyString(namespace)
-                            // || 
-                            term.matches(".*(?i)LocalInstance.*")) {
-                            accumulator.add(term);
+                        if ((done.size() % 100) == 0) {
+                            System.out.print(".");
                         }
                     }
                 }
-                */
+                System.out.println("x");
             }
-            Iterator it = tops.keySet().iterator();
-            while (it.hasNext()) {
+            System.out.print("  Sorting terms by presentation name ");
+            for (it = tops.keySet().iterator(); it.hasNext();) {
 
                 // A namespace.
                 term = (String) it.next();
 
                 // A list of terms in namespace.
-                termList = (List) tops.get(term);
-                termList = sortByPresentationName(kb, namespace, termList);
-                tops.put(term, termList);
-
-                // Collections.sort(termList, String.CASE_INSENSITIVE_ORDER);
+                working = (List) tops.get(term);
+                sortByPresentationName(kb, namespace, working);
+                System.out.print(".");
             }
+            System.out.println("done");
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        System.out.println("EXIT DocGen.computeTopLevelTermsByNamespace("
+                           + kb.name + ", "
+                           + ontology + ")");
+        System.out.println("  ==> [" + tops.size() + " keys]");
+
         return tops;
     }
 
     /** *************************************************************
-     * Adds term to a List in the Map m.  The List is indexed by the
-     * KIF namespace term nsTerm.
+     * Adds val to the List indexed by key in the Map m.
      *
      */
-    private void addToMapByNS(Map m, String nsTerm, String term) {
+    private void addToMapOfLists(Map m, String key, String val) {
         try {
-            List termList = (List) m.get(nsTerm);
-            if (termList == null) {
-                termList = new ArrayList();
-                m.put(nsTerm, termList);
+            List valList = (List) m.get(key);
+            if (valList == null) {
+                valList = new ArrayList();
+                m.put(key, valList);
             }
-            if (!termList.contains(term)) {
-                termList.add(term);
+            if (!valList.contains(val)) {
+                valList.add(val);
             }
         }
         catch (Exception ex) {
@@ -4997,17 +6993,14 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    public void writeXsdFileForNamespace3(KB kb, 
-                                          String namespace, 
-                                          List topLevelTerms,
-                                          String targetDirectory,
-                                          int version) {
+    public void writeXsdFileForNamespace(KB kb, 
+                                         String namespace, 
+                                         List topLevelTerms,
+                                         String outputDirName) {
         try {            
-            String nsName = ((namespace.startsWith("ns_") || namespace.startsWith("ns:"))
-                             ? namespace.substring(3)
-                             : namespace); 
-            String nsTerm = ("ns_" + nsName);
-            List termsInNamespace = getTermsInNamespace(kb, nsTerm);
+            String nsName = stripNamespacePrefix(kb, namespace);
+            String nsTerm = ("ns" + DB.getKifNamespaceDelimiter() + nsName);
+            List termsInNamespace = getTermsInNamespace(kb, nsTerm, true);
 
             if (!topLevelTerms.isEmpty()) {
 
@@ -5025,34 +7018,27 @@ public class DocGen {
                 }
                 topLevelTerms = filteredTerms;
 
-                // topLevelTerms = sortByPresentationName(kb, nsTerm, topLevelTerms);
-                // Collections.sort(topLevelTerms, String.CASE_INSENSITIVE_ORDER);
+                // sortByPresentationName(kb, nsTerm, topLevelTerms);
 
                 System.out.println("topLevelTerms == " + topLevelTerms);
 
-                // String fs = System.getProperty("file.separator");
-                File tDir = new File(targetDirectory);
-                File workdir = tDir;
-                if (!workdir.isDirectory()) {
-                    workdir = new File(System.getProperty("user.dir"));
-                }
-
-                // Give up if we can't load a skeleton document.
-                Document _doc = loadDdexSkeletonFile(kb, nsTerm, workdir);
-                if (_doc == null) {
-                    System.out.println("Could not load the skeleton file for \"" 
-                                       + namespace
-                                       + "\"");
+                File outputDir = new File(outputDirName);
+                if (!outputDir.isDirectory() || !outputDir.canWrite()) {
+                    System.out.println("Cannot write to " + outputDir.getCanonicalPath());
                     return;
                 }
+                System.out.println("  outputDir == " + outputDir.getCanonicalPath());
+
+                Document _doc = createXsdDocument(kb, nsTerm);
+                if (_doc == null) {
+                    System.out.println("Cannot create a Document for " + namespace);
+                    return;
+                }
+                System.out.println("Document created for " + namespace);
 
                 Element _docelem = _doc.getDocumentElement();
-                System.out.println("Document root element: " + _docelem.getNodeName());
-
-                // reviseDdexSchemaAttributes(_docelem, version);
-
                 String filename = getXsdFileName(kb, nsTerm);
-                File outfile = new File(workdir, filename);
+                File outfile = new File(outputDir, filename);
                 PrintWriter pw = new PrintWriter(new FileWriter(outfile));
 
                 Iterator it = topLevelTerms.iterator();
@@ -5086,7 +7072,7 @@ public class DocGen {
                         boolean specHasDataType = false;
                         for (int i = 0; i < specs.size(); i++) {
                             specVal = (String) specs.get(i);
-                            dtype = getFirstHasDataType(kb, specVal);
+                            dtype = getFirstDatatype(kb, specVal);
                             if (StringUtil.isNonEmptyString(dtype)) {
                                 specHasDataType = true;
                                 xsdType = substituteXsdDataType(kb, nsTerm, dtype);
@@ -5114,26 +7100,16 @@ public class DocGen {
                                                term,
                                                nsList);
 
-                    List members = getAvsTypeMembers(kb, nsTerm, termsInNamespace, term);
-
-                    // if (term.matches(".*(?i)IsoCode.*") 
-                    //     || term.matches(".*(?i)TerritoryCode.*")
-                    //     || term.matches(".*(?i)LanguageCode.*")
-                    //     || term.matches(".*(?i)CurrencyCode.*")) {
-                    // Collections.sort(members, String.CASE_INSENSITIVE_ORDER);
-                    // }
-
-                    // members = sortByPresentationName(kb, "", members);
-
+                    List members = getAvsTypeMembers(kb, term);
                     List arg1OrdFormulae = kb.askWithRestriction(0, "arg1SortOrdinal", 3, term);
                     if ((arg1OrdFormulae == null) || arg1OrdFormulae.isEmpty()) {
-                        members = sortByPresentationName(kb, nsTerm, members);
+                        sortByPresentationName(kb, nsTerm, members);
                     }
                     else {
-                        members = sortByArg1Ordinal(kb, nsTerm, term, arg1OrdFormulae, members);
+                        sortByArg1Ordinal(kb, nsTerm, term, arg1OrdFormulae, members);
                     }
 
-                    System.out.println("members == " + members);
+                    // System.out.println("members == " + members);
 
                     if (!members.isEmpty()) {
                         Iterator mIt = members.iterator();
@@ -5142,10 +7118,10 @@ public class DocGen {
                         while (mIt.hasNext()) {
                             m = (String) mIt.next();
                             mName = getTermPresentationName(kb, nsTerm, m);
-                            mName = stripNamespacePrefix(kb, mName);
+                            // mName = stripNamespacePrefix(kb, mName);
                             Element _enumeration = makeElement(_doc, "xs:enumeration");
-                            if (getIsoCodes(kb).contains(m)) {
-                                mName = stripNamespacePrefix(kb, m);
+                            if (getCodedIdentifiers(kb).contains(m)) {
+                                // mName = stripNamespacePrefix(kb, m);
                                 addXsdNodeAnnotationChildNode(kb, 
                                                               _doc, 
                                                               _enumeration, 
@@ -5161,7 +7137,7 @@ public class DocGen {
                     _simpleType.appendChild(_restriction);
                     _docelem.appendChild(_simpleType);
                 }
-                printXmlNodeTree2(_docelem, 0, pw);
+                printXmlNodeTree(_docelem, 0, pw);
                 if (pw != null) {
                     try {
                         pw.close();
@@ -5185,17 +7161,27 @@ public class DocGen {
         String filename = "";
         String suffix = ".xsd";
         try {
-            String nsName = ((namespaceTerm.startsWith("ns_") || namespaceTerm.startsWith("ns:"))
-                             ? namespaceTerm.substring(3)
-                             : namespaceTerm); 
-            filename = nsName + suffix;
-            List filenames = kb.askWithRestriction(0, "xsdFileName", 2, namespaceTerm);
-            if ((filenames != null) && !filenames.isEmpty()) {
-                Formula f = (Formula) filenames.get(0);
-                filename = StringUtil.removeEnclosingQuotes(f.getArgument(1));
-                if (!filename.endsWith(suffix)) {
-                    filename += suffix;
+            String nsName = namespaceTerm;
+            List<String> nsprefixes = Arrays.asList(("ns" + DB.getKifNamespaceDelimiter()),
+                                                    ("ns" + DB.getW3cNamespaceDelimiter()));
+            for (String pref : nsprefixes) {
+                if (namespaceTerm.startsWith(pref)) {
+                    nsName = namespaceTerm.substring(pref.length());
+                    break;
                 }
+            }
+            filename = nsName + suffix;
+            String fn1 = kb.getFirstTermViaAskWithRestriction(0, 
+                                                              "xsdFileName", 
+                                                              2, 
+                                                              namespaceTerm,
+                                                              1);
+            fn1 = StringUtil.removeEnclosingQuotes(fn1);
+            if (StringUtil.isNonEmptyString(fn1)) {
+                if (!fn1.endsWith(suffix)) {
+                    fn1 += suffix;
+                }
+                filename = fn1;
             }
         }
         catch (Exception ex) {
@@ -5207,146 +7193,124 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private void reviseDdexSchemaAttributes(Element docElem, int version) {
+    public void writeXsdFiles(KB kb, 
+                              String ontology, 
+                              String namespace,
+                              String outputDirName) {
+
+        System.out.println("ENTER DocGen.writeXsdFiles("
+                           + kb.name + ", "
+                           + ontology + ", "
+                           + namespace + ", "
+                           + outputDirName + ")");
+
         try {
-            SimpleDateFormat _sdf = new SimpleDateFormat("yyyyMMdd");
-            _sdf.setTimeZone(new SimpleTimeZone(0, "Greenwich"));
-            NamedNodeMap nmap = docElem.getAttributes();
-            Node attr = null;
-            String nodeValue = null;
-            String yyyyMMdd = _sdf.format(new Date());
-            String vstr = String.valueOf(version);
-            int maplen = -1;
-            if (nmap != null) {
-                maplen = nmap.getLength();
-                for (int i = 0; i < maplen; i++) {
-                    attr = nmap.item(i);
-                    nodeValue = attr.getNodeValue();
-                    if (nodeValue.endsWith("YYY")) {
-                        nodeValue = nodeValue.replace("XXX", yyyyMMdd.substring(0, 4));
-                        nodeValue = nodeValue.replace("YYY", vstr);
-                    }
-                    else {
-                        nodeValue = nodeValue.replace("XXX", yyyyMMdd);
-                    }
-                    attr.setNodeValue(nodeValue);
+            String defaultNamespace = namespace;
+            if (StringUtil.emptyString(defaultNamespace)) {
+                defaultNamespace = kb.getFirstTermViaAskWithRestriction(0,
+                                                                        "docGenDefaultNamespace",
+                                                                        1,
+                                                                        ontology,
+                                                                        2);
+                if (StringUtil.emptyString(defaultNamespace)) {
+                    throw new Exception("Cannot find the default namespace for " + ontology);
                 }
             }
-            NodeList nlist = docElem.getChildNodes();
-            int nlen = nlist.getLength();
-            Node elem = null;
-            String nodeName = null;
-            for (int j = 0; j < nlen; j++) {
-                elem = nlist.item(j);
-                nodeName = elem.getNodeName();
-                if (nodeName.matches(".*import.*")) {
-                    nmap = elem.getAttributes();
-                    maplen = nmap.getLength();
-                    for (int i = 0; i < maplen; i++) {
-                        attr = nmap.item(i);
-                        nodeValue = attr.getNodeValue();
-                        if (nodeValue.endsWith("YYY")) {
-                            nodeValue = nodeValue.replace("XXX", yyyyMMdd.substring(0, 4));
-                            nodeValue = nodeValue.replace("YYY", vstr);
-                        }
-                        else {
-                            nodeValue = nodeValue.replace("XXX", yyyyMMdd);
-                        }
-                        attr.setNodeValue(nodeValue);
-                    }
-                }
-            }                        
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return;
-    }
+            defaultNamespace = toKifNamespace(kb, namespace);
+            System.out.println("  defaultNamespace == " + defaultNamespace);
 
-    /** *************************************************************
-     * 
-     */
-    public void writeDdexXsdFiles(KB kb, String targetDirectory, int version) {
-        try {
-
-            String defaultNamespace = "ns_ddex";
-            File tDir = new File(targetDirectory);
-            File workdir = tDir;
-            if (!workdir.isDirectory()) {
-                workdir = new File(System.getProperty("user.dir"));
+            String outdirStr = outputDirName;
+            File outdir = new File(outdirStr);
+            if (!outdir.isDirectory() || !outdir.canWrite()) {
+                throw new Exception("Cannot write to " + outdir.getCanonicalPath());
             }
+            System.out.println("  outdir == " + outdir.getCanonicalPath());
 
-            List namespaces = getNamespaces(kb);
-            Collections.sort(namespaces, String.CASE_INSENSITIVE_ORDER);
-            Set msgTypes = getDdexMessageTypes(kb);
-            Map nsMsgTypes = getDdexMessageTypesByNamespace(kb, msgTypes);
-            Map tops = computeTopLevelTermsByNamespace(kb);
+            List namespaces = getNamespaces(kb, ontology, true);
 
-            Iterator it = namespaces.iterator();
+            List focalTerms = (List) computeFocalTerms(kb, ontology);
+            Map refTermsNsMap = mapFocalTermsByNamespace(kb, focalTerms);
+            Map tops = getTopLevelTerms();
+            if (tops == null) {
+                tops = computeTopLevelTermsByNamespace(kb, ontology);
+            }
+            // if (coreTerms.isEmpty()) computeTermRelevance(kb, ontology);
+
+            List refTermsForNS = null;
+            String nsStr = null;
             String nsTerm = null;
             String nsName = null;
-            while (it.hasNext()) {
-                nsTerm = (String) it.next();
-                nsName = ((nsTerm.startsWith("ns_") || nsTerm.startsWith("ns:"))
-                          ? nsTerm.substring(3)
-                          : nsTerm); 
-                nsTerm = (nsName.equals("ns") ? nsName : "ns_" + nsName);
+            for (Iterator it = namespaces.iterator(); it.hasNext();) {
+                nsStr = (String) it.next();
+                nsTerm = toKifNamespace(kb, nsStr);
 
-                System.out.println("Processing terms for \"" + nsName + "\"");
+                System.out.println("Processing terms for " + nsTerm);
 
-                List topsForNS = new ArrayList();
+                Set reducedTops = new HashSet();
                 List cachedTops = (List) tops.get(nsTerm);
-                if ((cachedTops != null) && !cachedTops.isEmpty()) {
-                    topsForNS.addAll(cachedTops);
+                if (cachedTops != null) {
+                    reducedTops.addAll(cachedTops);
                 }
-                topsForNS = sortByPresentationName(kb, nsTerm, topsForNS);
+                List topsForNS = new ArrayList(reducedTops);
+                sortByPresentationName(kb, nsTerm, topsForNS);
+
+                // System.out.println("  tops == " + topsForNS);
+
                 // Collections.sort(topsForNS, String.CASE_INSENSITIVE_ORDER);
-                List cachedMsgTypes = (List) nsMsgTypes.get(nsTerm);
-                if ((cachedMsgTypes != null) && !cachedMsgTypes.isEmpty()) {
-                    cachedMsgTypes = sortByPresentationName(kb, nsTerm, cachedMsgTypes);
+                refTermsForNS = (List) refTermsNsMap.get(nsTerm);
+                if ((refTermsForNS != null) && !refTermsForNS.isEmpty()) {
+                    sortByPresentationName(kb, nsTerm, refTermsForNS);
                     // Collections.sort(cachedMsgTypes, String.CASE_INSENSITIVE_ORDER);
-                    topsForNS.addAll(cachedMsgTypes);
+                    
+                    int origTopsLen = topsForNS.size();
+                    String topTerm = null;
+                    for (int i = 0; i < origTopsLen; i++) {
+                        topTerm = (String) topsForNS.remove(0);
+                        if (!refTermsForNS.contains(topTerm)) {
+                            topsForNS.add(topTerm);
+                        }
+                    }
+                    topsForNS.addAll(refTermsForNS);
                 }
 
-                if (nsTerm.equals("ns_ddex") || nsTerm.matches(".*iso.*")) {
+                if (nsTerm.equals(getDefaultNamespace()) || nsTerm.matches(".*iso.*")) {
 
-                    writeXsdFileForNamespace3(kb, nsTerm, topsForNS, targetDirectory, version);
+                    writeXsdFileForNamespace(kb, nsTerm, topsForNS, outputDirName);
                 }
-                else {
-                    Document _doc = loadDdexSkeletonFile(kb, nsTerm, workdir);
+                else if (!topsForNS.isEmpty()) {
+                    Document _doc = createXsdDocument(kb, nsTerm);
                     if (_doc == null) {
-                        System.out.println("Cannot load a skeleton file for \"" + nsName + "\"");
+                        System.out.println("Cannot create a Document for " + nsTerm);
                         continue;
                     }
-                    System.out.println("Loaded skeleton for \"" + nsName + "\"");
+                    System.out.println("Document created for " + nsTerm);
 
                     Element _docelem = _doc.getDocumentElement();
-                    System.out.println("Document root element: " + _docelem.getNodeName());
-
-                    // reviseDdexSchemaAttributes(_docelem, version);
-
                     String filename = getXsdFileName(kb, nsTerm);
-                    File outfile = new File(workdir, filename);
+                    File outfile = new File(outdir, filename);
 
                     PrintWriter pw = null;
 
                     try {
 
-                        for (int i = 0; i < topsForNS.size(); i++) {
-                            String term = (String) topsForNS.get(i);
+                        for (Iterator topIt = topsForNS.iterator(); topIt.hasNext();) {
+                            String term = (String) topIt.next();
                             List path = new ArrayList();
                             path.add(0, term);
 
                             // System.out.println("term == " + term);
 
                             Element _elem = null;
-                            String firstIo = getFirstGeneralTerm(kb, term);
-                            if (!StringUtil.isNonEmptyString(firstIo)) {
-                                firstIo = "";
-                            }
 
                             if (isXsdComplexType(kb, term)) {
-                                if (firstIo.equals("ddex_MessageType")) {
+                                String focalInstanceClass = 
+                                    kb.getFirstTermViaAskWithRestriction(0,
+                                                                         "docGenFocalInstanceClass",
+                                                                         1,
+                                                                         ontology,
+                                                                         2);
+                                if (kb.isInstanceOf(term, focalInstanceClass)) {
+
                                     Element _msgElem = makeElementElement(kb, 
                                                                           _doc, 
                                                                           _docelem,
@@ -5354,6 +7318,7 @@ public class DocGen {
                                                                           nsTerm, 
                                                                           term, 
                                                                           path);
+
                                     _elem = makeComplexTypeElement(kb, 
                                                                    _doc,
                                                                    _msgElem, 
@@ -5390,7 +7355,7 @@ public class DocGen {
                                                                    term,         
                                                                    path);
 
-                                    List extended = getIsXmlExtensionOfTerms(kb, term);
+                                    List extended = getSyntacticExtensionTerms(kb, term, 2, false);
                                     String baseTerm = null;
                                     if (!extended.isEmpty()) {
                                         baseTerm = (String) extended.get(0);
@@ -5434,7 +7399,7 @@ public class DocGen {
                                                               nsTerm, 
                                                               term,
                                                               path);
-                                List extended = getIsXmlExtensionOfTerms(kb, term);
+                                List extended = getSyntacticExtensionTerms(kb, term, 2, false);
                                 String baseTerm = null;
                                 if (!extended.isEmpty()) {
                                     baseTerm = (String) extended.get(0);
@@ -5498,7 +7463,7 @@ public class DocGen {
                             }
                         }
                         pw = new PrintWriter(new FileWriter(outfile));
-                        printXmlNodeTree2(_docelem, 0, pw);
+                        printXmlNodeTree(_docelem, 0, pw);
                     }
                     catch (Exception ex3) {
                         ex3.printStackTrace();
@@ -5517,58 +7482,60 @@ public class DocGen {
         catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        System.out.println("EXIT DocGen.writeXsdFiles("
+                           + kb.name + ", "
+                           + ontology + ", "
+                           + namespace + ", "
+                           + outputDirName + ")");
+
         return;
     }
 
     /** *************************************************************
-     * 
+     * Computes and returns a list of all terms in namespace, based
+     * either on syntactic matching of each term in KB against
+     * namespace, or on each term's occurrence in a statement formed
+     * with the SUO-KIF predicate inNamespace.
+     *
+     * @param kb The KB from which terms and inNamespace statements
+     * will be gathered
+     *
+     * @param namespace The SUO-KIF name of a namespace in kb
+     *
+     * @param useSemantics If true, only terms in inNamespace
+     * statements will be gathered.  If false, only terms with a
+     * prefix derived from namespace will be gathered.
+     *
+     * @return A List of SUO-KIF terms sorted in case-insensitive
+     * alphanumeric order
      */
-    private ArrayList getXsdTopLevelTerms(KB kb, List termsInNamespace) {
+    private ArrayList getTermsInNamespace(KB kb, String namespace, boolean useSemantics) {
         ArrayList result = new ArrayList();
         try {
-            List accumulator = new ArrayList();
-            accumulator.addAll(getAvssInNamespace(kb, termsInNamespace));
-            accumulator.addAll(getCompositesInNamespace(kb, termsInNamespace));
-            accumulator.addAll(getSubClassesInNamespace(kb, termsInNamespace, "ddex_Type"));
-            accumulator.addAll(getSubClassesInNamespace(kb, termsInNamespace, "ddex_IsoCode"));
-            accumulator.addAll(getSubClassesInNamespace(kb, termsInNamespace, "ddex_LanguageCode"));
-            accumulator.addAll(getSubClassesInNamespace(kb, termsInNamespace, "ddex_TerritoryCode"));
-            accumulator.addAll(getSubClassesInNamespace(kb, termsInNamespace, "ddex_CurrencyCode"));
-            String term = null;
-            for (int i = 0; i < accumulator.size(); i++) {
-                term = (String) accumulator.get(i);
-                if (!result.contains(term)) {
-                    result.add(term);
+            String kifNs = toKifNamespace(kb, namespace);
+            if (useSemantics) {
+                List formulae = kb.askWithRestriction(0, "inNamespace", 2, kifNs);
+                if (formulae != null) {
+                    Set reduced = new HashSet();
+                    Formula f = null;
+                    for (Iterator it = formulae.iterator(); it.hasNext();) {
+                        f = (Formula) it.next();
+                        reduced.add(f.getArgument(1));
+                    }
+                    result.addAll(reduced);
                 }
             }
-            Collections.sort(result, String.CASE_INSENSITIVE_ORDER);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     * 
-     */
-    private ArrayList getTermsInNamespace(KB kb, String namespace) {
-        ArrayList result = new ArrayList();
-        try {
-            String prefixedNs = (namespace.startsWith("ns_") || namespace.equals("ns")
-                                 ? namespace
-                                 : ("ns_" + namespace));
-            List formulae = kb.askWithRestriction(0, "inNamespace", 2, prefixedNs);
-            String term = null;
-            if (formulae != null) {
-                Formula f = null;
-                for (int i = 0; i < formulae.size(); i++) {
-                    f = (Formula) formulae.get(i);
-                    term = f.getArgument(1);
-                    if (!result.contains(term)) {
+            else {
+                String term = null;
+                for (Iterator it = kb.terms.iterator(); it.hasNext();) {
+                    term = (String) it.next();
+                    if (getTermNamespace(kb, term).equals(kifNs)) {
                         result.add(term);
                     }
                 }
+            }
+            if (!result.isEmpty()) {
                 Collections.sort(result, String.CASE_INSENSITIVE_ORDER);
             }
         }
@@ -5579,29 +7546,63 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     * Computes and returns a list of all terms in one of the
+     * namespaces explicitly identified for ontology via an
+     * ontologyNamespace statement.
+     *
+     * @param kb The KB from which terms and ontologyNamespace
+     * statements will be gathered
+     *
+     * @param ontology The ontology from which terms and namespaces
+     * will be gathered
+     *
+     * @return A List of SUO-KIF terms sorted in case-insensitive
+     * alphanumeric order
      */
-    private ArrayList getAvsTypeMembers(KB kb, 
-                                        String nsTerm, 
-                                        List termsInNamespace, 
-                                        String avsType) {
-        ArrayList result = new ArrayList();
+    private ArrayList<String> getTermsInOntologyNamespaces(KB kb, String ontology) {
+        ArrayList<String> result = new ArrayList<String>();
         try {
-            List formulae = new ArrayList();
-            formulae.addAll(kb.askWithRestriction(0, "ddex_IsOneOf", 2, avsType));
-            formulae.addAll(kb.askWithRestriction(0, "ddex_IsA", 2, avsType));
-            if (formulae != null) {
-                Formula f = null;
-                String arg1 = null;
-                for (int i = 0; i < formulae.size(); i++) {
-                    f = (Formula) formulae.get(i);
-                    arg1 = f.getArgument(1);
-                    if (!result.contains(arg1)) {
-                        result.add(arg1);
+            List<String> namespaces = getOntologyNamespaces(kb, ontology);
+            if (!namespaces.isEmpty()) {
+                String term = null;
+                for (Iterator it = kb.terms.iterator(); it.hasNext();) {
+                    term = (String) it.next();
+                    if (namespaces.contains(getTermNamespace(kb, term))) {
+                        result.add(term);
                     }
                 }
-                result = sortByPresentationName(kb, "", result);
+                if (!result.isEmpty()) {
+                    Collections.sort(result, String.CASE_INSENSITIVE_ORDER);
+                }
             }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     * 
+     */
+    private ArrayList<String> getAvsTypeMembers(KB kb, String avsType) {
+        ArrayList<String> result = new ArrayList<String>();
+        try {
+            List<String> members = kb.getTermsViaPredicateSubsumption("element",
+                                                                      2,
+                                                                      avsType,
+                                                                      1,
+                                                                      false);
+            if (members.isEmpty() && kb.isSubclass(avsType, "CodedIdentifier")) {
+                members = kb.getTermsViaPredicateSubsumption("instance",
+                                                             2,
+                                                             avsType,
+                                                             1,
+                                                             false);
+            }
+            SetUtil.removeDuplicates(members);
+            sortByPresentationName(kb, "", members);
+            result.addAll(members);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -5615,15 +7616,24 @@ public class DocGen {
     private TreeSet getAvssInNamespace(KB kb, List termsInNamespace) {
         TreeSet avss = new TreeSet();
         try {
-            List formulae = kb.ask("arg", 0, "ddex_IsOneOf");
-            if (formulae != null) {
-                Formula f = null;
-                String arg2 = null;
+            List predicates = kb.getTermsViaPredicateSubsumption("subrelation",
+                                                                 2,
+                                                                 "element",
+                                                                 1,
+                                                                 false);
+            if (!predicates.contains("element")) { predicates.add("element"); }
+            String pred = null;
+            String avs = null;
+            Formula f = null;
+            List formulae = null;
+            for (int j = 0; j < predicates.size(); j++) {
+                pred = (String) predicates.get(j);
+                formulae = kb.ask("arg", 0, pred);
                 for (int i = 0; i < formulae.size(); i++) {
                     f = (Formula) formulae.get(i);
-                    arg2 = f.getArgument(2);
-                    if (termsInNamespace.contains(arg2)) {
-                        avss.add(arg2);
+                    avs = f.getArgument(2);
+                    if (termsInNamespace.contains(avs)) {
+                        avss.add(avs);
                     }
                 }
             }
@@ -5640,7 +7650,8 @@ public class DocGen {
     private TreeSet getCompositesInNamespace(KB kb, List termsInNamespace) {
         TreeSet composites = new TreeSet();
         try {
-            Set terms = kb.getAllInstancesWithPredicateSubsumption("ddex_Composite");
+            Set terms = 
+                kb.getAllInstancesWithPredicateSubsumption("CompositeContentBearingObjectType");
             if (terms != null) {
                 String term = null;
                 Iterator it = terms.iterator();
@@ -5685,83 +7696,14 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private void printXmlNodeTree(org.w3c.dom.Node rootNode, int indent, PrintWriter pw) {
-        try {
-            String nodeName = rootNode.getNodeName();
-            List childNodes = new ArrayList();
-            if (rootNode.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
-                if (nodeName.matches(".*(?i)documentation.*")) {
-                    String txt = rootNode.getTextContent();
-                    pw.println(DocGen.indentChars("    ", indent) 
-                               + "<" + nodeName + ">"
-                               + txt
-                               + "</" + nodeName + ">");
-                }
-                else {
-                    pw.print(DocGen.indentChars("    ", indent) + "<" + nodeName);
-                    if (rootNode.hasAttributes()) {
-                        NamedNodeMap attributes = rootNode.getAttributes();
-                        int alen = attributes.getLength();
-                        int alast = (alen - 1);
-                        for (int i = 0; i < alen; i++) {
-                            Node attr = attributes.item(i);
-                            String attrName = attr.getNodeName();
-                            String attrVal = attr.getNodeValue();
-                            String spacer = " ";
-                            if (i > 0) {
-                                spacer = (DocGen.indentChars("    ", indent) 
-                                          + DocGen.indentChars(" ", nodeName.length())
-                                          + "  ");
-                            }
-                            pw.print(spacer + attrName
-                                     + "=\"" + attrVal + "\""
-                                     + ((i < alast) 
-                                        ? System.getProperty("line.separator")
-                                        : ""));
-                        }
-                    }
-                    if (rootNode.hasChildNodes()) {
-                        NodeList children = rootNode.getChildNodes();
-                        int clen = children.getLength();
-                        for (int i = 0; i < clen; i++) {
-                            Node child = children.item(i);
-                            if (child.getNodeType() != org.w3c.dom.Node.ATTRIBUTE_NODE) {
-                                childNodes.add(child);
-                            }
-                        }
-                    }
-                    if (childNodes.isEmpty()) {
-                        pw.println(" />");
-                    }
-                    else {
-                        pw.println(">");
-                        Node kid = null;
-                        for (int i = 0; i < childNodes.size(); i++) {
-                            kid = (Node) childNodes.get(i);
-                            printXmlNodeTree(kid, (indent + 1), pw);
-                        }
-                        pw.println(DocGen.indentChars("    ", indent)
-                                   + "</" + nodeName + ">");
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * 
-     */
     private boolean isXsdComplexType(KB kb, String term) {
         boolean ans = false;
         try {
-            if (isDataType(kb, term)) {
-                List attrs = getHasXmlAttributeTerms(kb, term);
-                List elems = getHasXmlElementTerms(kb, term);
-                ans = !(attrs.isEmpty() && elems.isEmpty());
+
+            if (isComposite(kb, term) || isDataType(kb, term)) {
+                List elems = getSubordinateXmlElementTerms(kb, term, 1);
+                List attrs = getSubordinateXmlAttributeTerms(kb, term, 1);
+                ans = (!attrs.isEmpty() || !elems.isEmpty());
             }
         }
         catch (Exception ex) {
@@ -5777,7 +7719,7 @@ public class DocGen {
         boolean ans = false;
         try {
             if (isDataType(kb, term)) {
-                List terms = getIsXmlUnionOfTerms(kb, term);
+                List terms = getSyntacticUnionTerms(kb, term, 2);
                 ans = !terms.isEmpty();
             }
         }
@@ -5803,8 +7745,8 @@ public class DocGen {
                 working.clear();
                 working.addAll(accumulator);
                 accumulator.clear();
-                for (int i = 0; i < working.size(); i++) {
-                    node_i = (Node) working.get(i);
+                for (Iterator it = working.iterator(); it.hasNext();) {
+                    node_i = (Node) it.next();
                     if ((c > 0) && (node_i.getNodeType() == Node.ELEMENT_NODE)) { 
                         nodeNames.add(node_i.getNodeName()); 
                     }
@@ -5836,7 +7778,7 @@ public class DocGen {
     /** *************************************************************
      * 
      */
-    private void printXmlNodeTree2(org.w3c.dom.Node rootNode, int indent, PrintWriter pw) {
+    private void printXmlNodeTree(org.w3c.dom.Node rootNode, int indent, PrintWriter pw) {
         try {
             String nodeName = rootNode.getNodeName();
             if (rootNode.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
@@ -5898,7 +7840,8 @@ public class DocGen {
                         children = rootNode.getChildNodes();
                         int clen = children.getLength();
                         for (int i = 0; i < clen; i++) {
-                            if (children.item(i).getNodeType() != org.w3c.dom.Node.ATTRIBUTE_NODE) {
+                            if (children.item(i).getNodeType() 
+                                != org.w3c.dom.Node.ATTRIBUTE_NODE) {
                                 descend = true;
                                 break;
                             }
@@ -5915,7 +7858,7 @@ public class DocGen {
                         for (int i = 0; i < clen; i++) {
                             kid = children.item(i);
                             if (kid.getNodeType() != org.w3c.dom.Node.ATTRIBUTE_NODE) {
-                                printXmlNodeTree2(kid, (indent + 1), pw);
+                                printXmlNodeTree(kid, (indent + 1), pw);
                             }
                         }
                         pw.println(DocGen.indentChars("    ", indent)
@@ -5931,18 +7874,81 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * A test method.
+     * 
+     * 
+     * @param isXmlDoc If true, HTML character entities will be
+     *                 replaced with their ASCII equivalents, when
+     *                 possible
+     *
+     * @param addHrefs If true, HTML anchor markup will be added
+     *                 for recognized SUO-KIF terms
+     *
+     */
+    private String processDocString(KB kb, 
+                                    String kbHref, 
+                                    String namespace, 
+                                    String docString,
+                                    boolean isXmlDoc,
+                                    boolean addHrefs) {
+        String ans = docString;
+        try {
+            if (StringUtil.isNonEmptyString(docString)) {
+                String nsTerm = toKifNamespace(kb, namespace);
+                String tmpstr = StringUtil.normalizeSpaceChars(docString);
+                if (isXmlDoc) {
+                    Map srmap = getStringReplacementMap();
+                    if (srmap != null) {
+                        String fromString = null;
+                        String toString = null;
+                        for (Iterator it = srmap.keySet().iterator(); it.hasNext();) {
+                            fromString = (String) it.next();
+                            toString = (String) srmap.get(fromString);
+                            if (toString != null) {
+                                tmpstr = tmpstr.replace(fromString, toString);
+                            }
+                        }
+                    }
+                }
+                tmpstr = StringUtil.removeEnclosingQuotes(tmpstr);
+                tmpstr = StringUtil.removeQuoteEscapes(tmpstr);
+                if (StringUtil.isNonEmptyString(tmpstr)) {
+                    String commentToken = " //";
+                    int headPos = tmpstr.indexOf(commentToken);
+                    if ((headPos > -1) && ((headPos + 4) < tmpstr.length())) {
+                        String head = tmpstr.substring(0, headPos);
+                        String tail = tmpstr.substring(headPos + commentToken.length());
+                        tmpstr = ("<span class=\"commentHead\">"
+                                  + head
+                                  + "</span><br/>"
+                                  + tail);
+                    }
+                    if (addHrefs) {
+                        tmpstr = kb.formatDocumentation(kbHref, tmpstr, nsTerm);
+                    }
+                }
+                ans = tmpstr;
+            }
+            else {
+                ans = "";
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** *************************************************************
+     * 
      */
     private String substituteXsdDataType(KB kb, String nsTerm, String term) {
-        // System.out.println("ENTER DocGen.substituteXsdDataType( " + kb + ", \"" + nsTerm + "\", \""
-        //                + term + "\")");
         String xmlType = term;
         try {
-            String newType = getHasXmlType(kb, term);
+            String newType = getClosestXmlDataType(kb, term);
             if (StringUtil.isNonEmptyString(newType)) {
-                if (nsTerm.equals("ns_ddex")
-                    || (!newType.equals("xs_IDREF")
-                        && !newType.equals("xs_ID"))) {
+                if (nsTerm.equals(getDefaultNamespace())
+                    || (!newType.equals(DB.w3cToKif("xs:IDREF"))
+                        && !newType.equals(DB.w3cToKif("xs:ID")))) {
                     xmlType = newType;
                 }
             }
@@ -5951,12 +7957,1359 @@ public class DocGen {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        // System.out.println("EXIT DocGen.substituteXsdDataType( " + kb + ", \"" + nsTerm + "\", \""
-        //                + term + "\") -> " + "\"" + xmlType + "\"");
         return xmlType;
     }
 
     /// END: code for XSD generation.
+
+    /** *************************************************************
+     * 
+     */
+    private void generateDocuments(String kbName, 
+                                   String ontologyName,
+                                   String inputDirectory,
+                                   String outputDirectory) {
+        try {
+
+            System.out.println("ENTER DocGen.generateDocuments(\n"
+                               + "  " + kbName + ",\n"
+                               + "  " + ontologyName + ",\n"
+                               + "  " + inputDirectory + ",\n"
+                               + "  " + outputDirectory + ")");
+
+            KBmanager mgr = KBmanager.getMgr();
+            if (StringUtil.isNonEmptyString(inputDirectory)) {
+                mgr.initializeOnce(inputDirectory);
+            }
+            kbName = kbName.intern();
+            KB kb = mgr.getKB(kbName);
+            if (kb == null) {
+                File configFile = new File(mgr.getPref("kbDir"), 
+                                           KBmanager.CONFIG_FILE);
+                throw new Exception("The KB \"" + kbName + "\" does not exist."
+                                    + "  Check " + configFile.getCanonicalPath() + ".");
+            }
+            File outdir = new File(mgr.getPref("baseDir"));
+            if (StringUtil.isNonEmptyString(outputDirectory)) {
+                outdir = new File(outputDirectory);
+                if (!outdir.isDirectory()) {
+                    try {
+                        outdir.mkdirs();
+                    }
+                    catch (Exception oe) {
+                        System.out.println(oe.getMessage());
+                        oe.printStackTrace();
+                    }
+                    if (!outdir.isDirectory()) {
+                        System.out.println("Cannot find or create "
+                                           + outdir.getCanonicalPath());
+                        outdir = new File(System.getProperty("user.dir"));
+                    }
+                }
+            }
+            this.setOutputParentDir(outdir);
+            String ontoTerm = null;
+            if (kb.isInstanceOf(ontologyName, "Ontology")) {
+                ontoTerm = ontologyName;
+            }
+            else {
+                List formulae = kb.ask("arg", 0, "termFormat");
+                Formula f = null;
+                String term = null;
+                if (formulae != null) {
+                    for (Iterator it = formulae.iterator(); it.hasNext();) {
+                        f = (Formula) it.next();
+                        if (f.getArgument(3).matches(".*" + ontologyName + ".*")) {
+                            term = f.getArgument(2);
+                            if (kb.isInstanceOf(term, "Ontology")) {
+                                ontoTerm = term;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (StringUtil.emptyString(ontoTerm)) {
+                System.out.println(ontologyName + " may not be an Ontology.  Trying anyway.");
+                ontoTerm = ontologyName;
+            }
+            this.setOntology(ontoTerm);
+            String fileInst = kb.getFirstTermViaAskWithRestriction(0, "containsInformation",
+                                                                   2, ontoTerm,
+                                                                   1);
+            if (StringUtil.emptyString(fileInst)) {
+                throw new Exception("Cannot find a File instance for " 
+                                    + ontoTerm
+                                    + ".  Giving up.");
+            }
+            String csvFileName = kb.getFirstTermViaAskWithRestriction(0, "filename",
+                                                                      2, fileInst,
+                                                                      1);
+            csvFileName = StringUtil.removeEnclosingQuotes(csvFileName);
+            if (StringUtil.emptyString(csvFileName)) {
+                throw new Exception("Cannot find a file name string for "
+                                    + fileInst
+                                    + ".  Giving up.");
+            }
+            File indir = new File(mgr.getPref("kbDir"));
+            File csvFile = new File(indir, csvFileName);
+            if (!csvFile.canRead()) {
+                throw new Exception("Cannot read " 
+                                    + csvFile.getCanonicalPath() 
+                                    + ".  Giving up.");
+            }
+            long t1 = System.currentTimeMillis();
+            DB db = DB.getInstance(ontoTerm);
+            String csvFileCanonPath = csvFile.getCanonicalPath();
+            List rows = db.readSpreadsheet(csvFileCanonPath, true);
+            String kifFileName = csvFileCanonPath;
+            int endIdx = kifFileName.lastIndexOf(".");
+            kifFileName = (kifFileName.substring(0, endIdx) + ".kif");
+            String defaultNamespace = 
+                kb.getFirstTermViaAskWithRestriction(0, 
+                                                     "translationDefaultNamespace",
+                                                     1, 
+                                                     ontoTerm,
+                                                     2);
+            if (StringUtil.emptyString(defaultNamespace)) {
+                throw new Exception("Cannot find the default namespace for " 
+                                    + ontoTerm
+                                    + ".  Giving up.");
+            }
+            db.processSpreadsheet(rows, defaultNamespace, kifFileName);
+            System.out.println("  Time: " 
+                               + ((System.currentTimeMillis() - t1) / 1000.0) 
+                               + " seconds to process "
+                               + csvFileName);
+
+            kb.addConstituent(kifFileName);
+            generateHTML(kb, defaultNamespace, true);
+        }
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        System.out.println("EXIT DocGen.generateDocuments(\n"
+                           + "  " + kbName + ",\n"
+                           + "  " + ontologyName + ",\n"
+                           + "  " + inputDirectory + ",\n"
+                           + "  " + outputDirectory + ")");
+
+        return;
+    }
+
+    /** *************************************************************
+     * Generates HTML files in a tabular format.
+     */
+    public void generateTabularFocalTermFiles(KB kb, String ontology, String outdirPath) {
+
+        System.out.println("ENTER DocGen.generateTabularFocalTermFiles("
+                           + kb.name + ", "
+                           + ontology + ", "
+                           + outdirPath + ")");
+
+        try {
+            setOntology(ontology);
+            List focalTerms = computeFocalTerms(kb, ontology);
+            if (coreTerms.isEmpty()) computeTermRelevance(kb, ontology);
+            List accumulator = new LinkedList();
+            List working = new LinkedList();
+            String refterm = null;
+            String description = null;
+            String namespace = null;
+            Iterator rti = null;
+            for (rti = focalTerms.iterator(); rti.hasNext();) {
+
+                refterm = (String) rti.next();
+                writeTabularFocalTermFile(kb, refterm, outdirPath);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        System.out.println("EXIT DocGen.generateTabularFocalTermFiles("
+                           + kb.name + ", "
+                           + ontology + ", "
+                           + outdirPath + ")");
+
+        return;
+    }
+
+    /** *************************************************************
+     * Create a PrintWrite for the focal term kifTerm.
+     */
+    private PrintWriter createFocalTermPrintWriter(String kifTerm, String outdirPath) {
+        PrintWriter pw = null;
+        try {
+            File outdir = new File(outdirPath);
+            String filename = (DB.kifToW3c(kifTerm).replace(":", "-") + ".html");
+            File outfile = new File(outdir, filename);
+            pw = new PrintWriter(new FileWriter(outfile));
+        }
+        catch (Exception ex) {
+            if (pw == null) {
+                System.out.println("ERROR in DocGen.createFocalTermPrintWriter("
+                                   + kifTerm + ", "
+                                   + outdirPath + ")");
+                System.out.println("Could not create PrintWriter for " + kifTerm);
+            }
+            ex.printStackTrace();
+        }
+        return pw;
+    }
+
+    /** *************************************************************
+     * Compute core terms.
+     */
+    private void computeCoreTerms(int n, 
+                                  KB kb, 
+                                  String focalTerm, 
+                                  Set termSet, 
+                                  List path,
+                                  Map marked) {
+        try {
+            String nextTerm = null;
+            Set reachable = (Set) marked.get(focalTerm);
+            if (reachable == null) {
+                reachable = new HashSet();
+                marked.put(focalTerm, reachable);
+            }
+            for (Iterator it = termSet.iterator(); it.hasNext();) {
+
+                nextTerm = (String) it.next();
+                reachable.add(nextTerm);
+
+                String ioClass = null;
+                if (DB.isLocalTermReference(nextTerm)) {
+                    if (!isSkipNode(kb, nextTerm)) {
+                        ioClass = getFirstContainingClass(kb, nextTerm);
+                        if (StringUtil.isNonEmptyString(ioClass)) {
+                            reachable.add(ioClass);
+                        }
+                    }
+                }
+
+                // reachable.add(nextTerm);
+
+                Set nextTerms = new HashSet();
+                nextTerms.addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
+                                                                    2,
+                                                                    nextTerm,
+                                                                    1,
+                                                                    true));
+                if (nextTerms.isEmpty() && (ioClass != null)) {
+                    nextTerms
+                        .addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
+                                                                   2,
+                                                                   ioClass,
+                                                                   1,
+                                                                   true));
+                }
+
+                // 4.
+                List more = getSyntacticExtensionTerms(kb, nextTerm, 2, false);
+                if (more.isEmpty() && (ioClass != null)) {
+                    more = getSyntacticExtensionTerms(kb, ioClass, 2, false);
+                }
+                nextTerms.addAll(more);
+                        
+                more.clear();
+                more = getSyntacticUnionTerms(kb, nextTerm, 2);
+                if (more.isEmpty() && (ioClass != null)) {
+                    more = getSyntacticUnionTerms(kb, ioClass, 2);
+                }
+                nextTerms.addAll(more);
+
+                // 7.
+                List<String> subpreds = Arrays.asList("instance" //, "subclass"
+                                                      );
+                List children = null;
+                String child = null;
+                for (String pred : subpreds) {
+                    nextTerms.addAll(kb.getTermsViaPredicateSubsumption(pred,
+                                                                        2,
+                                                                        nextTerm,
+                                                                        1,
+                                                                        true));
+                }
+
+                List nextPath = new LinkedList(path);
+                nextPath.add(nextTerm);
+                nextTerms.removeAll(reachable);
+                nextTerms.removeAll(nextPath);
+                if (!nextTerms.isEmpty()) {
+                    computeCoreTerms((n + 1), 
+                                     kb, 
+                                     focalTerm, 
+                                     nextTerms, 
+                                     nextPath, 
+                                     marked);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** *************************************************************
+     * Compute the core terms that can "belong" to focalTerm, along
+     * with framework terms and supporting terms.
+     */
+    private void computeCoreTerms(KB kb, String focalTerm) {
+        long t1 = System.currentTimeMillis();
+
+        /*            */
+        System.out.println("ENTER DocGen.computeCoreTerms("
+                           + kb.name + ", "
+                           + focalTerm + ")");
+
+        Set coreTermSet = new HashSet();
+        getMaxDepthFromFocalTerm(kb, focalTerm, coreTermSet);
+
+        String key = null;
+        Set cts = null;
+        for (Iterator it = coreTermSet.iterator(); it.hasNext();) {
+            key = (String) it.next();
+            if (!DB.isLocalTermReference(key)) {
+                cts = (Set) coreTerms.get(key);
+                if (cts == null) {
+                    cts = new HashSet();
+                    coreTerms.put(key, cts);
+                }
+                cts.add(focalTerm);
+            }
+            List instances = kb.getTermsViaPredicateSubsumption("instance",
+                                                                2,
+                                                                key,
+                                                                1,
+                                                                true);
+            String inst = null;
+            for (Iterator it2 = instances.iterator(); it2.hasNext();) {
+                inst = (String) it2.next();
+                if (!DB.isLocalTermReference(inst)) {
+                    cts = (Set) coreTerms.get(inst);
+                    if (cts == null) {
+                        cts = new HashSet();
+                        coreTerms.put(inst, cts);
+                    }
+                    cts.add(focalTerm);
+                }
+            }
+        }
+
+        /*        */
+        System.out.println("EXIT DocGen.computeCoreTerms("
+                           + kb.name + ", "
+                           + focalTerm + ")");
+        System.out.println("  Time: " 
+                           + ((System.currentTimeMillis() - t1) / 1000.0)
+                           + " seconds");
+
+        return;
+    }
+
+    /** *************************************************************
+     * Compute framework terms in general.  Note that this method does
+     * not compute the framework terms actually used in a given focal
+     * term type.  Instead, it computes all of the framework terms
+     * that could be used.
+     */
+    private void computeFrameworkTerms(KB kb, String ontology) {
+
+        long t1 = System.currentTimeMillis();
+        System.out.println("ENTER DocGen.computeFrameworkTerms("
+                           + kb.name + ", "
+                           + ontology + ")");
+
+        try {
+            TreeSet focalTerms = new TreeSet(computeFocalTerms(kb, ontology));
+            Set terms = new HashSet();
+            List<String> initialTerms = Arrays.asList("instance",
+                                                      "subclass",
+                                                      "syntacticSubordinate",
+                                                      "syntacticComposite",
+                                                      "syntacticExtension",
+                                                      "syntacticUnion",
+                                                      "datatype",
+                                                      "hasCardinality",
+                                                      "part",
+                                                      "subrelation",
+                                                      "inverse",
+
+                                                      "XmlNode");
+            Set done = new HashSet();
+            Set accumulator = new HashSet(initialTerms);
+            List working = new ArrayList();
+            String namespace = null;
+            List subsumed = null;
+            String term = null;
+            String wt = null;
+            Iterator it = null;
+            Iterator it2 = null;
+
+            while (!accumulator.isEmpty()) {
+                working.clear();
+                working.addAll(accumulator);
+                accumulator.clear();
+
+                for (it = working.iterator(); it.hasNext();) {
+                    wt = (String) it.next();
+                    if (!done.contains(wt)) {
+                        if (!DB.isLocalTermReference(wt)) {
+                            namespace = getTermNamespace(kb, wt);
+                            if (StringUtil.isNonEmptyString(namespace)) {
+                                Set ftset = (Set) frameworkTerms.get(wt);
+                                if (ftset == null) {
+                                    ftset = focalTerms;
+                                    frameworkTerms.put(wt, ftset);
+                                }
+                                else {
+                                    ftset.addAll(focalTerms);
+                                }
+                            }
+                        }
+
+                        accumulator.addAll(kb.getTermsViaPredicateSubsumption("subrelation",
+                                                                              2,
+                                                                              wt,
+                                                                              1,
+                                                                              true));
+
+                        accumulator.addAll(kb.getTermsViaPredicateSubsumption("inverse",
+                                                                              2,
+                                                                              wt,
+                                                                              1,
+                                                                              true));
+
+                        accumulator.addAll(kb.getTermsViaPredicateSubsumption("inverse",
+                                                                              1,
+                                                                              wt,
+                                                                              2,
+                                                                              true));
+                    
+                        accumulator.addAll(kb.getTermsViaPredicateSubsumption("subclass",
+                                                                              2,
+                                                                              wt,
+                                                                              1,
+                                                                              true));
+
+                        done.add(wt);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        System.out.println("EXIT DocGen.computeFrameworkTerms("
+                           + kb.name + ", "
+                           + ontology + ")");
+        System.out.println("  Time: "
+                           + ((System.currentTimeMillis() - t1) / 1000.0)
+                           + " seconds");
+
+        return;
+    }
+
+    /** *************************************************************
+     * Compute supporting terms for the core terms in KB.
+     */
+    private void computeSupportingTerms(KB kb) {
+
+        long t1 = System.currentTimeMillis();
+        System.out.println("ENTER DocGen.computeSupportingTerms("
+                           + kb.name + ")");
+
+        try {
+            String key = null;
+            String parent = null;
+            String namespace = null;
+            for (Iterator it = coreTerms.keySet().iterator(); it.hasNext();) {
+                key = (String) it.next();
+                parent = getFirstSubsumingTerm(kb, key);
+                if (StringUtil.isNonEmptyString(parent)) {
+                    namespace = getTermNamespace(kb, parent);
+                    if (StringUtil.isNonEmptyString(namespace)) {
+                        if ((coreTerms.get(parent) == null) 
+                            && (frameworkTerms.get(parent) == null)) {
+                            supportingTerms.put(parent, coreTerms.get(key));
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        System.out.println("EXIT DocGen.computeSupportingTerms("
+                           + kb.name + ")");
+        System.out.println("  Time: "
+                           + ((System.currentTimeMillis() - t1) / 1000.0)
+                           + " seconds");
+
+        return;
+    }
+
+    /** *************************************************************
+     * Computes the maximum depth of the graph reachable along
+     * syntacticSubordinate from the terms in focalTermSet.
+     *
+     * @param kb The KB in which the graph is to be computed
+     *
+     * @param focalTerm A top-level focal term from which maximum
+     * reachable depth along syntacticSubordinate and its subrelations
+     * is to be computed
+     *
+     * @param focalTermSet A Set containing the current "layer" of
+     * nodes (terms) in the graph
+     *
+     * @param pathTerms A Set containing all of the unique
+     * syntactically subordinate terms that can be reached from
+     * focalTerm along a specific path of arcs (relations) and nodes
+     * (terms)
+     *
+     * @param coreTermSet As a side effect, if non-null, this Set is
+     * used to collect "core" terms that can be reached from focalTerm
+     *
+     * @return The int that is the maximum depth of the path
+     * accessible from the terms in focalTermSet along
+     * syntacticSubordinate
+     *
+     */
+    private int computeMaxDepthFromFocalTerm(KB kb, 
+                                             String focalTerm,
+                                             Set focalTermSet, 
+                                             Set pathTerms,
+                                             Set coreTermSet) {
+        int depth = 0;
+        try {
+            depth = pathTerms.size();
+
+            String nextTerm = null;
+            for (Iterator it = focalTermSet.iterator(); it.hasNext();) {
+                nextTerm = (String) it.next();
+
+                if (coreTermSet != null) {
+                    // 
+                    // Begin compute core terms
+                    // 
+                    String ioClass = null;
+                    if (DB.isLocalTermReference(nextTerm)) {
+                        if (!isSkipNode(kb, nextTerm)) {
+                            ioClass = getFirstContainingClass(kb, nextTerm);
+                            if (StringUtil.isNonEmptyString(ioClass)) {
+                                coreTermSet.add(ioClass);
+                            }
+                        }
+                    }
+                    else {
+                        coreTermSet.add(nextTerm);
+                    }
+
+                    List unionedTerms = getSyntacticUnionTerms(kb, nextTerm, 2);
+                    if (unionedTerms.isEmpty() && (ioClass != null)) {
+                        unionedTerms = getSyntacticUnionTerms(kb, ioClass, 2);
+                    }
+                    coreTermSet.addAll(unionedTerms);
+                    // 
+                    // End compute core terms
+                    // 
+                }
+
+                if (!pathTerms.contains(nextTerm)) {
+                    Set nextFocalTermSet = new HashSet();
+                    nextFocalTermSet.addAll(getSubordinateAttributes(kb, nextTerm));
+                    nextFocalTermSet.addAll(getSubordinateElements(kb, nextTerm));
+                    List pair = getInheritedSubordinates(kb, 
+                                                         nextTerm, 
+                                                         coreTermSet // To compute core terms
+                                                         );
+                    nextFocalTermSet.addAll((List) pair.get(0));
+                    nextFocalTermSet.addAll((List) pair.get(1));
+                    Set nextPathTerms = new HashSet(pathTerms);
+                    nextPathTerms.add(nextTerm);
+                    int nextDepth = computeMaxDepthFromFocalTerm(kb, 
+                                                                 focalTerm,
+                                                                 nextFocalTermSet, 
+                                                                 nextPathTerms,
+                                                                 coreTermSet);
+                    depth = ((depth > nextDepth) ? depth : nextDepth);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return depth;
+    }
+
+    /** *************************************************************
+     * Returns the maximum number of steps "descending" along
+     * syntacticSubordinate from focalTerm.
+     *
+     * @param kb The KB in which syntacticSubordinate graph is
+     * computed
+     *
+     * @param focalTerm The top-level term from which maximum graph
+     * depth is to be computed
+     *
+     * @param coreTermSet As a side effect, if non-null, this Set is
+     * used to collect core terms
+     *
+     * @return The int that is the maximum depth reachable from
+     * focalTerm
+     *
+     */
+    private int getMaxDepthFromFocalTerm(KB kb, String focalTerm, Set coreTermSet) {
+        long t1 = System.currentTimeMillis();
+        System.out.println("  ENTER DocGen.getMaxDepthFromFocalTerm("
+                           + kb.name + ", "
+                           + focalTerm + ", "
+                           + ((coreTermSet == null)
+                              ? null
+                              : ("[coreTermSet: " + coreTermSet.size() + " terms]"))
+                           + ")");
+        int ans = 0;
+        try {
+            String intStr = (String) maxDepthFromFocalTerm.get(focalTerm);
+            if (intStr == null) {
+                Set focalTermSet = new HashSet();
+                focalTermSet.add(focalTerm);
+                Set pathTerms = new HashSet();
+                ans = computeMaxDepthFromFocalTerm(kb, 
+                                                   focalTerm,
+                                                   focalTermSet, 
+                                                   pathTerms, 
+                                                   coreTermSet);
+                maxDepthFromFocalTerm.put(focalTerm, String.valueOf(ans));
+            }
+            else {
+                ans = Integer.parseInt(intStr);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        System.out.println("  EXIT DocGen.getMaxDepthFromFocalTerm("
+                           + kb.name + ", "
+                           + focalTerm + ", "
+                           + ((coreTermSet == null)
+                              ? null
+                              : ("[coreTermSet: " + coreTermSet.size() + " terms]"))
+                           + ")");
+        System.out.println("    ==> " + maxDepthFromFocalTerm.get(focalTerm));
+        /*
+          System.out.println("  Time: " 
+          + ((System.currentTimeMillis() - t1) / 1000.0) 
+          + " seconds");
+        */
+
+        return ans;
+    }
+
+    /** *************************************************************
+     * Returns the maximum number of steps "descending" along
+     * syntacticSubordinate from focalTerm.
+     *
+     * @param kb The KB in which syntacticSubordinate graph is
+     * computed
+     *
+     * @param focalTerm The top-level term from which maximum graph
+     * depth is to be computed
+     *
+     * @return The int that is the maximum depth reachable from
+     * focalTerm
+     *
+     */
+    private int getMaxDepthFromFocalTerm(KB kb, String focalTerm) {
+        return getMaxDepthFromFocalTerm(kb, focalTerm, null);
+    }
+
+    /** *************************************************************
+     * Generates HTML files in a tabular format.
+     */
+    private void writeTabularFocalTermFile(KB kb, String kifTerm, String outdirPath) {
+        PrintWriter pw = null;
+        try {
+            String namespace = getTermNamespace(kb, kifTerm);
+            // String pname = getTermPresentationName(kb, namespace, kifTerm);
+            ArrayList context = new ArrayList();
+            context.add(namespace);
+            String description = getTabularOutputTermDocumentation(kb, 
+                                                                   kifTerm, 
+                                                                   context);
+            String w3cName = DB.kifToW3c(kifTerm);
+            // String titleName = termName.replace(":", "-");
+
+            List attrs = getSubordinateAttributes(kb, kifTerm);
+            List elems = getSubordinateElements(kb, kifTerm);
+            if (!attrs.isEmpty() || !elems.isEmpty()) {
+
+                int maxDepth = getMaxDepthFromFocalTerm(kb, kifTerm);
+                int columns = (maxDepth + 3);
+                int cspan1 = (columns - 1);
+                int columns2 = (columns - 3);
+                int cspan2 = (columns2 - 1);
+
+                pw = createFocalTermPrintWriter(kifTerm, outdirPath);
+
+                pw.println(generateHtmlDocStart(w3cName));
+
+                // TO DO: Represent the number of columns and their
+                // headings, so that this information can be loaded
+                // from the KB.
+
+                pw.println("<table>");
+
+                pw.println("  <tr>");
+                pw.println("    <td class=\"title-cell\" colspan=\"" + columns + "\">");
+                pw.print("      ");
+                pw.println(w3cName);
+                pw.println("    </td>");
+                pw.println("  </tr>");
+
+                pw.println("  <tr>");
+                pw.println("    <td colspan=\"" + columns + "\">");
+                pw.print("      ");
+                pw.println(description);
+                pw.println("    </td>");
+                pw.println("  </tr>");
+
+                pw.println("  <tr>");
+                pw.println("    <td class=\"title-cell\" colspan=\"" + columns2 + "\">");
+                pw.println("      Message Element");
+                pw.println("    </td>");
+                pw.println("    <td class=\"title-cell\">");
+                pw.println("      Data Type");
+                pw.println("    </td>");
+                pw.println("    <td class=\"title-cell\">");
+                pw.println("      Card");
+                pw.println("    </td>");
+                pw.println("    <td class=\"title-cell\">");
+                pw.println("      Element Description");
+                pw.println("    </td>");
+                pw.println("  </tr>");
+
+                LinkedList<String> path = new LinkedList<String>();
+                path.addFirst(kifTerm);
+                writeTabularFocalTermRows(pw, kb, namespace, path, 0, columns2);
+
+                // pw.println(generateHtmlFooter(""));
+
+                pw.println("</table>");
+                pw.println("  </body>");
+                pw.println("</html>");
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (pw != null) pw.close();
+            }
+            catch (Exception pwe) {
+                pwe.printStackTrace();
+            }
+        }
+        return;
+    }
+
+    /** *************************************************************
+     * Generates HTML table rows.
+     */
+    private void writeTabularFocalTermRows(PrintWriter pw, 
+                                           KB kb, 
+                                           String namespace,
+                                           LinkedList<String> path,
+                                           int depth,
+                                           int maxDepth) {
+
+        long t1 = System.currentTimeMillis();
+        /*
+          System.out.println("ENTER DocGen.writeTabularFocalTermRows("
+          + pw.toString() + ", "
+          + kb.name + ", "
+          + namespace + ", "
+          + path + ")");
+        */
+        try {
+            String kifTerm = path.getFirst();
+            List attrs = getSubordinateAttributes(kb, kifTerm);
+            List elems = getSubordinateElements(kb, kifTerm);
+            List pair = getInheritedSubordinates(kb, kifTerm, null);
+            attrs.addAll(0, (List) pair.get(0));
+            elems.addAll(0, (List) pair.get(1));
+            String subord = null;
+            String pname = null;
+            String datatype = null;
+            String cardinality = null;
+            String description = null;
+            int blen = path.size();
+            int multiplier = ((blen > 0) ? (blen - 1) : blen);
+            int indent = (multiplier * 10);
+            for (Iterator ati = attrs.iterator(); ati.hasNext();) {
+                subord = (String) ati.next();
+                if (!path.contains(subord)) {
+                    writeTabularTermRow(pw, kb, namespace, subord, depth, maxDepth, true);
+                    LinkedList<String> newPath = new LinkedList<String>(path);
+                    newPath.addFirst(subord);
+                    writeTabularFocalTermRows(pw, 
+                                              kb, 
+                                              namespace,
+                                              newPath,
+                                              (depth + 1),
+                                              maxDepth);
+                }
+            }
+            for (Iterator eli = elems.iterator(); eli.hasNext();) {
+                subord = (String) eli.next();
+                if (!path.contains(subord)) {
+                    writeTabularTermRow(pw, kb, namespace, subord, depth, maxDepth, false);
+                    LinkedList<String> newPath = new LinkedList<String>(path);
+                    newPath.addFirst(subord);
+                    writeTabularFocalTermRows(pw, 
+                                              kb, 
+                                              namespace,
+                                              newPath,
+                                              (depth + 1),
+                                              maxDepth);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        long t2 = (System.currentTimeMillis() - t1);
+
+        /*
+          System.out.println("EXIT DocGen.writeTabularFocalTermRows("
+          + pw.toString() + ", "
+          + kb.name + ", "
+          + namespace + ", "
+          + path + ")");
+          System.out.println("  " + (t2 / 1000.0) + " seconds");
+        */
+
+        return;
+    }
+
+    /** *************************************************************
+     * Generates one HTML table row.
+     */
+    private void writeTabularTermRow(PrintWriter pw, 
+                                     KB kb, 
+                                     String namespace, 
+                                     String kifTerm,
+                                     int indent,
+                                     int maxDepth,
+                                     boolean isAttribute) {
+        try {
+            int cspan = (maxDepth - indent);
+            List context = new ArrayList();
+            context.add(namespace);
+            if (!context.contains(kifTerm)) context.add(kifTerm);
+            String pname = getTermPresentationName(kb, namespace, kifTerm, true);
+            String datatype = getFirstDatatype(kb, kifTerm);
+            if (StringUtil.isNonEmptyString(datatype)) {
+                datatype = showTermName(kb, datatype, getDefaultNamespace(), true);
+            }
+            else {
+                datatype = "";
+            }
+            String cardinality = showCardinalityCell(kb, "", kifTerm, "");
+            String description = getTabularOutputTermDocumentation(kb, 
+                                                                   kifTerm, 
+                                                                   context);
+            String classVal = (isAttribute ? "attribute" : "element");
+            List keys = Arrays.asList("datatype", "cardinality", "description");
+            List vals = new ArrayList();
+            vals.add(datatype);
+            vals.add(cardinality);
+            vals.add(description);
+
+            // Start a new row.
+            pw.println("  <tr>");
+
+            for (int i = 0; i < indent; i++) {
+                pw.println("    <td>&nbsp;</td>");
+            }
+
+            pw.print("    <td class=\"");
+            pw.print(classVal);
+            pw.print("\" colspan=\"" + cspan + "\"> ");
+            pw.print(pname);
+            pw.println(" </td>");
+
+            // The final three columns.
+            String key = null;
+            String val = null;
+            int vlen = keys.size();
+            for (int i = 0; i < vlen; i++) {
+                key = (String) keys.get(i);
+                val = (String) vals.get(i);
+                pw.println("    <td class=\"" + key + "\">");
+                pw.print("      ");
+                pw.println(val);
+                pw.println("    </td>");
+            }
+            pw.println("  </tr>");
+
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** *************************************************************
+     * Returns a documetation String for kifTerm, specially formatted
+     * for tabular output mode.
+     */
+    private String getTabularOutputTermDocumentation(KB kb, String kifTerm, List context) {
+        String docstr = "";
+        try {
+            String tmpstr = getContextualDocumentation(kb, kifTerm, context);
+            tmpstr = processDocString(kb, 
+                                      "", 
+                                      getDefaultNamespace(), 
+                                      tmpstr,
+                                      false,
+                                      false);
+            docstr = tmpstr.replaceAll("&%\\w+_", "");
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return docstr;
+    }
+
+    /** *************************************************************
+     * Returns a List containing the subordinate XmlAttributes of
+     * kifTerm, else return an empty List.
+     */
+    private ArrayList getSubordinateAttributes(KB kb, String kifTerm) {
+        ArrayList attrs = new ArrayList();
+        try {
+            // Get the direct subordinate attributes of kifTerm.
+            String pred = "subordinateXmlAttribute";
+            attrs.addAll(kb.getTermsViaPredicateSubsumption(pred,
+                                                            2,
+                                                            kifTerm,
+                                                            1,
+                                                            true));
+
+            if (attrs.isEmpty()) {
+                if (DB.isLocalTermReference(kifTerm)) {
+                    String gt = getFirstGeneralTerm(kb, kifTerm);
+                    if (StringUtil.isNonEmptyString(gt)) {
+                        attrs.addAll(kb.getTermsViaPredicateSubsumption(pred,
+                                                                        2,
+                                                                        gt,
+                                                                        1,
+                                                                        true));
+                    }
+                }
+            }
+
+            Collections.sort(attrs, String.CASE_INSENSITIVE_ORDER);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return attrs;
+    }
+
+    /** *************************************************************
+     * Returns a List containing the subordinate XmlElements of
+     * kifTerm, else return an empty List.
+     */
+    private ArrayList getSubordinateElements(KB kb, String kifTerm) {
+        ArrayList elems = new ArrayList();
+        try {
+            String pred = "subordinateXmlElement";
+            List nextElems = kb.getTermsViaPredicateSubsumption(pred,
+                                                                2,
+                                                                kifTerm,
+                                                                1,
+                                                                true);
+
+            if (nextElems.isEmpty()) {
+                if (DB.isLocalTermReference(kifTerm)) {
+                    String gt = getFirstGeneralTerm(kb, kifTerm);
+                    if (StringUtil.isNonEmptyString(gt)) {
+                        nextElems.addAll(kb.getTermsViaPredicateSubsumption(pred,
+                                                                            2,
+                                                                            gt,
+                                                                            1,
+                                                                            true));
+                    }
+                }
+            }
+
+            Collections.sort(nextElems, String.CASE_INSENSITIVE_ORDER);
+            String eterm = null;
+            for (Iterator eti = nextElems.iterator(); eti.hasNext();) {
+                eterm = (String) eti.next();
+                if (kb.isInstanceOf(eterm, "XmlSequenceElement")) {
+                    elems.addAll(getSubordinateElements(kb, eterm));
+                }
+                else {
+                    elems.add(eterm);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return elems;
+    }
+
+    /** *************************************************************
+     * Returns a List containing the "inherited" subordinates of
+     * kifTerm, else return an empty List.  As a side effect, if
+     * focalTerm is non-null the "core terms" inherited through
+     * kifTerm are recorded in a Set that is a value in the coreTerms
+     * Map.
+     *
+     * @param kb The KB from which relevant statements or terms are
+     * gathered
+     *
+     * @param kifTerm The SUO-KIF term that is the starting point for
+     * computing inherited syntactic subordinate terms
+     *
+     * @param coreTermSet As a side effect, if non-null, this Set is
+     * used to collect "core" terms
+     *
+     * @return A List of the inherited syntactic subordinates of
+     * kifTerm, or an empty List if no inherited subordinates can be
+     * computed
+     */
+    private ArrayList getInheritedSubordinates(KB kb, 
+                                               String kifTerm,
+                                               Set coreTermSet) {
+        ArrayList subs = new ArrayList();
+        try {
+            List attrs = new ArrayList();
+            List elems = new ArrayList();
+            List extended = 
+                kb.getTermsViaPredicateSubsumption("syntacticExtension",
+                                                   1,
+                                                   kifTerm,
+                                                   2,
+                                                   true);
+            if (extended.isEmpty() && DB.isLocalTermReference(kifTerm)) {
+                String gt = getFirstGeneralTerm(kb, kifTerm);
+                if (coreTermSet != null) coreTermSet.add(gt);
+                extended.addAll(kb.getTermsViaPredicateSubsumption("syntacticExtension",
+                                                                   1,
+                                                                   gt,
+                                                                   2,
+                                                                   true));
+            }
+            String ext = null;
+            for (Iterator exi = extended.iterator(); exi.hasNext();) {
+                ext = (String) exi.next();
+                if ((coreTermSet != null) && !DB.isLocalTermReference(ext)) 
+                    coreTermSet.add(ext);
+                List inhattrs = getSubordinateAttributes(kb, ext);
+                if (!inhattrs.isEmpty()) {
+                    Collections.sort(inhattrs, String.CASE_INSENSITIVE_ORDER);
+                    attrs.addAll(0, inhattrs);
+                }
+                List inhelems = getSubordinateElements(kb, ext);
+                if (!inhelems.isEmpty()) {
+                    Collections.sort(inhelems, String.CASE_INSENSITIVE_ORDER);
+                    elems.addAll(0, inhelems);
+                }
+                List pair = getInheritedSubordinates(kb, ext, coreTermSet);
+                List attrs1 = (List) pair.get(0);
+                if (!attrs1.isEmpty()) {
+                    Collections.sort(attrs1, String.CASE_INSENSITIVE_ORDER);
+                    attrs.addAll(0, attrs1);
+                }
+                List elems1 = (List) pair.get(1);
+                if (!elems1.isEmpty()) {
+                    Collections.sort(elems1, String.CASE_INSENSITIVE_ORDER);
+                    elems.addAll(0, elems1);
+                }
+            }
+
+            subs.add(attrs);
+            subs.add(elems);
+
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return subs;
+    }
+
+    /** *************************************************************
+     * This method computes and returns a List of Formulae with
+     * instance or its child predicates that are entailed by
+     * (derivable from) statements in the KB.
+     *
+     * @param kb The KB from which relevant statements or terms are
+     * gathered
+     *
+     * @param term The index/reference term used to obtain initial
+     * seed Formulae
+     *
+     * @param termArgNum An int value, the argument number of term
+     *
+     * @param isNamespaceRequired If true, only Formulae with terms
+     * that have explicit namespace prefixes will be computed
+     *
+     * @return A List of derived Formulae
+     */
+    protected ArrayList<Formula> computeDerivedInstanceFormulae(KB kb, 
+                                                                int termArgNum,
+                                                                String term,
+                                                                boolean isNamespaceRequired) {
+        ArrayList<Formula> result = new ArrayList<Formula>();
+        try {
+            Set reduced = new TreeSet();
+            Set broader = new TreeSet();
+            Set accumulator = new TreeSet();
+            accumulator.addAll(kb.getTermsViaPredicateSubsumption("instance",
+                                                                  termArgNum,
+                                                                  term,
+                                                                  ((termArgNum == 1)
+                                                                   ? 2
+                                                                   : 1),
+                                                                  true));
+            List working = new LinkedList();
+            String bt = null;
+            Iterator it = null;
+            while (!accumulator.isEmpty()) {
+                working.clear();
+                working.addAll(accumulator);
+                accumulator.clear();
+                for (it = working.iterator(); it.hasNext();) {
+                    bt = (String) it.next();
+                    if (!isNamespaceRequired 
+                        || StringUtil.isNonEmptyString(getTermNamespace(kb, bt))) {
+                        broader.add(bt);
+                    }
+                    accumulator.addAll(kb.getAllSuperClassesWithPredicateSubsumption(bt));
+                }
+            }
+            List preds = kb.getTermsViaPredicateSubsumption("subrelation",
+                                                            2,
+                                                            "instance",
+                                                            1,
+                                                            true);
+            preds.add("instance");
+            Set narrower = new TreeSet();
+            String nt = null;
+            for (it = preds.iterator(); it.hasNext();) {
+                nt = (String) it.next();
+                if (!isNamespaceRequired 
+                    || StringUtil.isNonEmptyString(getTermNamespace(kb, nt))) {
+                    narrower.add(nt);
+                }
+            }
+            StringBuilder sb = new StringBuilder();
+            Iterator it2 = null;
+            String p = null;
+            String x = null;
+            String y = null;
+            for (it = narrower.iterator(); it.hasNext();) {
+                p = (String) it.next();
+                for (it2 = broader.iterator(); it2.hasNext();) {
+                    x = term;
+                    y = (String) it2.next();
+                    if (termArgNum == 2) {
+                        x = y;
+                        y = term;
+                    }
+                    sb.setLength(0);
+                    sb.append("(");
+                    sb.append(p);
+                    sb.append(" ");
+                    sb.append(x);
+                    sb.append(" ");
+                    sb.append(y);
+                    sb.append(")");
+                    Formula newF = new Formula();
+                    newF.read(sb.toString());
+                    reduced.add(newF);
+                }
+            }
+            result.addAll(reduced);
+            Collections.sort(result);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     * This method writes a set of SUO-KIF Formulae (Strings) to the
+     * PrintWriter pw.  First, it gathers and sorts all instances of
+     * the Classes provided in the List classes.  Then, for each
+     * instance, it retrieves statements formed with the relations and
+     * arguments specifications provided in the List relationsToUse,
+     * and writes all statements to the output stream.
+     *
+     * @param kb The KB from which relevant statements or terms are
+     * gathered
+     *
+     * @param classes A List of classes, the instances of which are to
+     * be the subjects about which statements are gathered
+     *
+     * @param relationsToUse A List of predicates that are used to
+     * gather statements pertaining to the instances of the Classes
+     * listed in classes
+     *
+     * @param replacements A List of regular expression/substitution
+     * pairs that, if present, will be used to transform each
+     * expression before it is written to pw
+     *
+     * @param isNamespaceRequired If true, output of Formulae for
+     * which the main predicate (argument 0) lacks an explicit
+     * namespace prefix will be suppressed
+     *
+     * @param pw The PrintWriter via which output should be written
+     *
+     * @return void
+     */
+    protected void exportFormulaeToStream(KB kb, 
+                                          List classes,
+                                          List relationsToUse,
+                                          List replacements,
+                                          boolean isNamespaceRequired,
+                                          PrintWriter pw) {
+        try {
+            if (classes instanceof List) {
+                Set instances = new TreeSet();
+                Iterator it = null;
+                for (it = classes.iterator(); it.hasNext();) {
+                    String cl = (String) it.next();
+                    instances.addAll(kb.getAllInstancesWithPredicateSubsumption(cl));
+                }
+                
+                // Try harder to get all relevant terms.
+                List predlist = new LinkedList();
+                predlist.add("kifManifestation");
+                String pred = kb.getFirstTermViaPredicateSubsumption("subrelation",
+                                                                     2,
+                                                                     "kifManifestation",
+                                                                     1,
+                                                                     true);
+                if (StringUtil.isNonEmptyString(pred)) {
+                    predlist.add(pred);
+                }
+
+                for (it = predlist.iterator(); it.hasNext();) {
+                    pred = (String) it.next();
+                    instances.addAll(kb.getTermsViaAsk(0, pred, 1));
+                }
+                List pair = null;
+                String inst = null;
+                String idxStr = null;
+                Iterator itr = null;
+                Set formulae = new TreeSet();
+                StringBuilder sb = new StringBuilder();
+                String sbout = "";
+                for (it = instances.iterator(); it.hasNext();) {
+                    inst = (String) it.next();
+                    if (!isNamespaceRequired 
+                        || StringUtil.isNonEmptyString(getTermNamespace(kb, inst))) {
+                        formulae.clear();
+                        for (itr = relationsToUse.iterator(); itr.hasNext();) {
+                            pair = (List) itr.next();
+                            if ((pair != null) && (pair.size() > 1)) {
+                                pred = (String) pair.get(0);
+                                idxStr = (String) pair.get(1);
+                                int argIdx = 1;
+                                try {
+                                    argIdx = Integer.parseInt(idxStr);
+                                }
+                                catch (Exception pex) {
+                                    argIdx = 1;
+                                    pex.printStackTrace();
+                                }
+                                List flist = kb.askWithPredicateSubsumption(pred, argIdx, inst);
+                                if (pred.equals("documentation")) {
+                                    retainByPattern(flist, ".*documentation.+EnglishLanguage.*");
+                                }
+                                formulae.addAll(flist);
+                            }
+                        }
+                    }
+                    List iflist = computeDerivedInstanceFormulae(kb, 
+                                                                 1,
+                                                                 inst,
+                                                                 isNamespaceRequired);
+                    retainByPattern(iflist, ".+Rule\\)$|.+Constraint\\)$");
+                    formulae.addAll(iflist);
+                    if (!formulae.isEmpty()) {
+                        sb.setLength(0);
+                        sb.append(";; ");
+                        sb.append(inst);
+                        sb.append(lineSeparator);
+                        sb.append(lineSeparator);
+                        Formula f = null;
+                        for (Iterator itf = formulae.iterator(); itf.hasNext();) {
+                            f = (Formula) itf.next();
+                            sb.append(f.format("", "  ", lineSeparator));
+                            sb.append(lineSeparator);
+                            sb.append(lineSeparator);
+
+                            String arg0 = f.car();
+                            if (arg0.matches(".*(?i)kif.*")
+                                && StringUtil.isNonEmptyString(getTermNamespace(kb, arg0))) {
+                                Formula origF = new Formula();
+                                origF.read(f.getArgument(2));
+                                sb.append(origF.format("", "  ", lineSeparator));
+                                sb.append(lineSeparator);
+                                sb.append(lineSeparator);
+                            }
+                        }
+                        sbout = sb.toString();
+                        if ((replacements != null) && !replacements.isEmpty()) {
+                            String patx = null;
+                            String paty = null;
+                            for (itr = replacements.iterator(); itr.hasNext();) {
+                                pair = (List) itr.next();
+                                if ((pair != null) && (pair.size() > 1)) {
+                                    patx = (String) pair.get(0);
+                                    paty = (String) pair.get(1);
+                                    sbout = sbout.replace(patx, paty);
+                                }
+                            }
+                        }
+                        pw.println(sbout);
+                        pw.flush();
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (pw != null) pw.close();
+            }
+            catch (Exception ioe) {
+                ioe.printStackTrace();
+            }
+        }
+        return;
+    }
 
     /** *************************************************************
      * A test method.
@@ -5964,30 +9317,36 @@ public class DocGen {
     public static void main (String args[]) {
 
         try {
-            KBmanager.getMgr().initializeOnce();
-        } catch (IOException ioe ) {
-            System.out.println(ioe.getMessage());
+
+            // 1. In config.xml, set the KB name to something
+            // appropriate.
+
+            // 2. In config.xml, specify the desired initial
+            // constituent files.  For DDEX, these would be Merge.kif,
+            // RCOX.kif, and DdexTranslation.kif.
+
+            // 3. Make sure $SIGMA_HOME is set appropriately.
+
+            // 4. Initialize the KB: KBmanager.getMgr().initializeOnce();
+
+            // 4. Call DocGen with the appropriate input arguments.
+            // Now, this need be only the name of the ontology: DDEX.
+            
+            // 5. Process the declarative information needed to
+            // generate the KIF file from the SCOW .csv file.
+
+            // 6. Wrtie out the .kif file.
+
+            // 7. Add the canonical pathname of the .kif file to the
+            // KB's constituent's list.
+
+            // 8. Reload the KB.
+
+            // 9. Generate the various types of files.
+
+        } 
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("DDEX");
-        DocGen gen = DocGen.getInstance();
-
-        System.out.println("terms differing only in capitalization");
-        gen.capitalizationAlternates(kb.terms);
-
-        TreeSet ts = gen.generateMessageTerms(kb);
-        System.out.println(ts);
-        System.out.println();
-        System.out.println("Negative terms:");
-        kb.terms.removeAll(ts);
-        System.out.println(kb.terms);
-
-        //String exp = "(documentation foo \"blah blah is so \\\"blah\\\" yeah\")";
-        //System.out.println(exp);
-        //exp = exp.replace("\\\"","\"");
-        //System.out.println(exp);
-        //System.out.println(kb.ask("arg",0,"headword"));
-        //System.out.println(kb.ask("arg",2,"Composite"));
-        //System.out.println(kb.ask("arg",2,"\"Composite\""));
-        //gen.generateHTML(kb,"ddex",true);    // KB, language, simplified
     }
-}
+} // DocGen.java
