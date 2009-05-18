@@ -833,20 +833,49 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     *  Import links from www.image-net.org that are linked to
+     *  WordNet and links them to SUMO terms when the synset has a
+     *  directly equivalent SUMO term
+    */
+    public void imageNetLinks() {
+
+        System.out.println("In WordNetUtilities.imageNetLinks()");
+        try {
+            FileReader r = new FileReader("nounLinks.txt");
+            LineNumberReader lr = new LineNumberReader(r);
+            String l;
+            while ((l = lr.readLine()) != null) {
+                //System.out.println(";; " + l);
+                String synset = l.substring(1,9);
+                String url = l.substring(10);
+                String term = (String) WordNet.wn.nounSUMOHash.get(synset);
+                //System.out.println(synset);
+                //System.out.println(term);
+                //if (term.endsWith("=")) {
+                    term = term.substring(2,term.length()-1);
+                    System.out.println("(externalImage " + term + " \"" + url + "\")"); 
+                //}
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } 
+    }
+
+    /** ***************************************************************
     *  A main method, used only for testing.  It should not be called
     *  during normal operation.
     */
     public static void main (String[] args) {
 
-       try {
+   //    try {
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
             WordNetUtilities wnu = new WordNetUtilities();
-            wnu.updateWNversion();
-        }
-        catch (IOException ioe) {
-            System.out.println("Error in WordNet.main(): IOException: " + ioe.getMessage());
-        } 
+            wnu.imageNetLinks();
+   //     }
+   //     catch (IOException ioe) {
+    //        System.out.println("Error in WordNet.main(): IOException: " + ioe.getMessage());
+    //    } 
 
     }
 }
