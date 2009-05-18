@@ -5021,6 +5021,8 @@ public class KB {
     }
 
     /** *************************************************************
+     *  @return a string with termFormat expressions created for all
+     *  the terms in the knowledge base
      */
     private String allTerms() {
 
