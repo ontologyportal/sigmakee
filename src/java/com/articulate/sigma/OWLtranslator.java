@@ -31,6 +31,8 @@ public class OWLtranslator {
     }
 
     /** ***************************************************************
+     *  Convert an arbitrary string to a legal KIF identifier by
+     *  substituting dashes for illegal characters.
      */
     private static String StringToKIFid(String s) {
 
@@ -39,10 +41,11 @@ public class OWLtranslator {
         s = s.trim();
         if (s.length() < 1)
             return s;
-        if (!Character.isJavaIdentifierStart(s.charAt(0)) || 
-               s.charAt(0) > 122)
+        if (s.charAt(0) != '?' &&
+            (!Character.isJavaIdentifierStart(s.charAt(0)) || 
+               s.charAt(0) > 122))
                s = "S" + s.substring(1);
-        int i = 0;
+        int i = 1;
         while (i < s.length()) {
             if (!Character.isJavaIdentifierPart(s.charAt(i)) || 
                 s.charAt(i) > 122) 
@@ -79,17 +82,20 @@ public class OWLtranslator {
     }
 
     /** ***************************************************************
-     * Write OWL format.
+     * Read OWL format and write out KIF.
      */
-    private static void decode(SimpleElement se, String parentTerm, String parentTag) {
-
+    private static void decode(PrintWriter pw, SimpleElement se, String parentTerm, 
+                               String parentTag, String indent) {
+        
         String tag = se.getTagName();
         String value = null;
-        // System.out.println(";; " + tag);
+        String existential = null;
+        String parens = null;
+        // pw.println(";; " + tag);
         if (tag.equals("owl:Class") || tag.equals("owl:ObjectProperty") || 
             tag.equals("owl:DatatypeProperty") || tag.equals("owl:FunctionalProperty") || 
             tag.equals("owl:InverseFunctionalProperty") || tag.equals("owl:TransitiveProperty") || 
-            tag.equals("owl:SymmetricProperty")) {
+            tag.equals("owl:SymmetricProperty") || tag.equals("rdf:Description")) {
             parentTerm = se.getAttribute("rdf:ID");
             if (parentTerm != null) {
                 if (parentTerm.indexOf("#") > -1) 
@@ -101,27 +107,35 @@ public class OWLtranslator {
                     if (parentTerm.indexOf("#") > -1) 
                         parentTerm = parentTerm.substring(parentTerm.indexOf("#") + 1);
                 }
+                else {
+                    // pw.println(";; nodeID? ");
+                    parentTerm = se.getAttribute("rdf:nodeID");
+                    if (parentTerm != null) {
+                        parentTerm = "?nodeID-" + parentTerm;
+                        existential = parentTerm;
+                    }
+                }
             }
             parentTerm = StringToKIFid(parentTerm);
+            // pw.println(";; parentTerm" + parentTerm);
             if ((tag.equals("owl:ObjectProperty") || tag.equals("owl:DatatypeProperty") || 
                  tag.equals("owl:InverseFunctionalProperty")) && parentTerm != null) 
-                System.out.println("(instance " + parentTerm + " BinaryRelation)");  
+                pw.println(indent + "(instance " + parentTerm + " BinaryRelation)");  
             if (tag.equals("owl:TransitiveProperty") && parentTerm != null) 
-                System.out.println("(instance " + parentTerm + " TransitiveRelation)");              
+                pw.println(indent + "(instance " + parentTerm + " TransitiveRelation)");              
             if (tag.equals("owl:FunctionalProperty") && parentTerm != null) 
-                System.out.println("(instance " + parentTerm + " SingleValuedRelation)");              
+                pw.println(indent + "(instance " + parentTerm + " SingleValuedRelation)");              
             if (tag.equals("owl:SymmetricProperty") && parentTerm != null) 
-                System.out.println("(instance " + parentTerm + " SymmetricRelation)");              
+                pw.println(indent + "(instance " + parentTerm + " SymmetricRelation)");              
         }
         else if (tag.equals("rdfs:domain")) {
             value = se.getAttribute("rdf:resource");
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                //kb.tell("(domain " + parentTerm + " 1 " + value + ")");
                 value = StringToKIFid(value);
                 if (value != null && parentTerm != null) 
-                    System.out.println("(domain " + parentTerm + " 1 " + value + ")");
+                    pw.println(indent + "(domain " + parentTerm + " 1 " + value + ")");
             }
         }
         else if (tag.equals("rdfs:range")) {
@@ -129,18 +143,16 @@ public class OWLtranslator {
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                //kb.tell("(domain " + parentTerm + " 2 " + value + ")");
                 value = StringToKIFid(value);
                 if (value != null && parentTerm != null) 
-                    System.out.println("(domain " + parentTerm + " 2 " + value + ")");
+                    pw.println(indent + "(domain " + parentTerm + " 2 " + value + ")");
             }
         }
         else if (tag.equals("rdfs:comment")) {
             String text = se.getText();
             text = processStringForKIFOutput(text);
-            //kb.tell("(documentation " + parentTerm + " \"" + text + "\")");
             if (parentTerm != null && text != null) 
-                System.out.println(DB.wordWrap("(documentation " + parentTerm + " \"" + text + "\")",70));
+                pw.println(DB.wordWrap(indent + "(documentation " + parentTerm + " \"" + text + "\")",70));
         }
         else if (tag.equals("owl:inverseOf")) {
             ArrayList children = se.getChildElements();
@@ -157,19 +169,17 @@ public class OWLtranslator {
                         value = value.substring(value.indexOf("#") + 1);
                 }
             }
-            //kb.tell("(inverse " + parentTerm + " " + value + ")");
             value = StringToKIFid(value);
             if (value != null && parentTerm != null) 
-                System.out.println("(inverse " + parentTerm + " " + value + ")");
+                pw.println(indent + "(inverse " + parentTerm + " " + value + ")");
         }
         else if (tag.equals("rdfs:subClassOf")) {
             value = getParentReference(se);
             value = StringToKIFid(value);
-            //kb.tell("(subclass " + parentTerm + " " + value + ")");
             if (value != null) 
-                System.out.println("(subclass " + parentTerm + " " + value + ")");           
-            //else
-              //  System.out.println(";; missing or unparsed subclass statment for " + parentTerm);
+                pw.println(indent + "(subclass " + parentTerm + " " + value + ")");           
+            else
+                pw.println(";; missing or unparsed subclass statment for " + parentTerm);
         }
         else if (tag.equals("owl:Restriction")) { }
         else if (tag.equals("owl:onProperty")) { }
@@ -182,9 +192,8 @@ public class OWLtranslator {
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                //kb.tell("(domain " + parentTerm + " 2 " + value + ")");
                 value = StringToKIFid(value);
-                System.out.println("(instance " + value + " SingleValuedRelation)");
+                pw.println(indent + "(instance " + value + " SingleValuedRelation)");
             }
         }
         else if (tag.equals("owl:minCardinality")) { }
@@ -193,28 +202,31 @@ public class OWLtranslator {
             value = getParentReference(se);
             value = StringToKIFid(value);
             if (value != null) 
-                System.out.println("(instance " + parentTerm + " " + value + ")"); 
-           // else
-                // System.out.println(";; missing or unparsed subclass statment for " + parentTerm);
+                pw.println(indent + "(instance " + parentTerm + " " + value + ")"); 
+            else
+                pw.println(";; missing or unparsed subclass statment for " + parentTerm);
         }
         else {
             value = se.getAttribute("rdf:resource");
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                //kb.tell("(domain " + parentTerm + " 2 " + value + ")");
                 value = StringToKIFid(value);
                 tag = StringToKIFid(tag);
                 if (value != null && parentTerm != null) 
-                    System.out.println("(" + tag + " " + parentTerm + " " + value + ")");
+                    pw.println(indent + "(" + tag + " " + parentTerm + " " + value + ")");
             }
             else {
                 String text = se.getText();
+                String datatype = se.getAttribute("rdf:datatype");
                 text = processStringForKIFOutput(text);
+                if (datatype == null || 
+                    (!datatype.endsWith("integer") && !datatype.endsWith("decimal"))) 
+                    text = "\"" + text + "\"";
                 tag = StringToKIFid(tag);
-                if (!DB.emptyString(text)) {
-                    if (parentTerm != null && tag != null && text != null) 
-                        System.out.println("(" + tag + " " + parentTerm + " \"" + text + "\")"); 
+                if (!DB.emptyString(text) && !text.equals("\"\"")) {
+                    if (parentTerm != null && tag != null && text != null)  
+                        pw.println(indent + "(" + tag + " " + parentTerm + " " + text + ")"); 
                 }
                 else {
                     ArrayList children = se.getChildElements();
@@ -227,10 +239,22 @@ public class OWLtranslator {
                             if (value != null && value.indexOf("#") > -1) 
                                 value = value.substring(value.indexOf("#") + 1);
                             if (value != null && parentTerm != null) 
-                                System.out.println("(" + tag + " " + parentTerm + " " + value + ")");
+                                pw.println(indent + "(" + tag + " " + parentTerm + " " + value + ")");
                         }
                     }
                 }
+            }
+        }
+        if (existential != null) {
+            pw.println("(exists (" + existential + ") ");
+            if (se.getChildElements().size() > 1) {
+                pw.println("  (and ");
+                indent = indent + "    ";
+                parens = "))";
+            }
+            else {
+                indent = indent + "  ";
+                parens = ")";
             }
         }
 
@@ -244,7 +268,12 @@ public class OWLtranslator {
         it = al.iterator();
         while (it.hasNext()) {
             SimpleElement child = (SimpleElement) it.next();
-            decode(child,parentTerm,tag);
+            decode(pw,child,parentTerm,tag,indent);
+        }
+        if (existential != null) {
+            existential = null;
+            pw.println (parens);
+            parens = null;
         }
         //System.out.println(se.toString());
     }
@@ -252,11 +281,28 @@ public class OWLtranslator {
     /** ***************************************************************
      * Write OWL format.
      */
-    public static void read(String filename) {
+    public static void read(String filename) throws IOException {
 
-        SimpleElement se = SimpleDOMParser.readFile(filename);
-        decode(se,"","");
-        //System.out.println(se.toString());
+        FileWriter fw = null;
+        PrintWriter pw = null;
+
+        try {
+            SimpleElement se = SimpleDOMParser.readFile(filename);
+            fw = new FileWriter(filename + ".kif");
+            pw = new PrintWriter(fw);
+            decode(pw,se,"","","");
+        }
+        catch (java.io.IOException e) {
+            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
+        }
+        finally {
+            if (pw != null) {
+                pw.close();
+            }
+            if (fw != null) {
+                fw.close();
+            }
+        }
     }
 
     /** ***************************************************************
@@ -437,7 +483,13 @@ public class OWLtranslator {
             System.out.println(e.getMessage());
         }
  * */
-        read(args[0]);
+        try {
+            read(args[0]);
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 }
