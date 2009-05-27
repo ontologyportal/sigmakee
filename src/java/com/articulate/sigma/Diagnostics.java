@@ -41,30 +41,30 @@ public class Diagnostics {
         Formula formula = null;
         String pred = null;
         Iterator it = kb.terms.iterator();
-        while ( it.hasNext() ) {
+        while (it.hasNext()) {
             term = (String) it.next();
             forms = kb.ask("arg",argnum,term);
-            if ( forms == null || forms.isEmpty() ) {
+            if (forms == null || forms.isEmpty()) {
                 if (letter < 'A' || term.charAt(0) == letter) 
                     result.add(term);                
             }
             else {
                 boolean found = false;
                 it2 = forms.iterator();
-                while ( it2.hasNext() ) {
+                while (it2.hasNext()) {
                     formula = (Formula) it2.next();
                     pred = formula.car();
-                    if ( pred.equals(rel) ) {
+                    if (pred.equals(rel)) {
                         found = true;
                         break;
                     }
                 }
-                if ( ! found ) {
+                if (!found) {
                     if (letter < 'A' || term.charAt(0) == letter) 
                         result.add(term);                    
                 }
             }
-            if ( limit > 0 && result.size() > limit ) {
+            if (limit > 0 && result.size() > limit) {
                 result.add("limited to " + limit + " results");
                 break;
             }
@@ -80,44 +80,6 @@ public class Diagnostics {
         System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
 
         return termsWithoutRelation(kb,"documentation",1,100,' ');                                              
-        /**
-        ArrayList result = new ArrayList();
-        String term = null;
-        ArrayList forms = null;
-        Iterator it2 = null;
-        Formula formula = null;
-        String pred = null;
-        Iterator it = kb.terms.iterator();
-        int count = 0;
-        while ( it.hasNext() ) {
-            term = (String) it.next();
-            forms = kb.ask("arg",1,term);
-            if ( forms == null || forms.isEmpty() ) {
-                result.add(term);
-            }
-            else {
-                boolean found = false;
-                it2 = forms.iterator();
-                while ( it2.hasNext() ) {
-                    formula = (Formula) it2.next();
-                    pred = formula.car();
-                    if ( pred.equals("documentation") ) {
-                        found = true;
-                        break;
-                    }
-                }
-                if ( ! found ) {
-                    result.add(term);
-                    count++;
-                }
-            }
-            if ( count > 99 ) {
-                result.add("limited to 100 results");
-                break;
-            }
-        }
-        return result;
-         * **/
     }
 
     /** *****************************************************************
@@ -155,25 +117,6 @@ public class Diagnostics {
             }
         }
 
-        /*
-        ArrayList result = new ArrayList();
-        String term = null;
-        ArrayList forms = null;
-        Iterator it = kb.terms.iterator();
-        int count = 0;
-        while ( it.hasNext() ) {
-            term = (String) it.next();
-            forms = kb.askWithRestriction(0,"documentation",1,term);
-            if (forms.size() > 1) {
-                result.add(term);
-                count++;
-            }
-            if ( count > 99 ) {
-                result.add("limited to 100 results");
-                break;
-            }
-        }
-        */
         return new ArrayList(result);
     }
 
@@ -194,24 +137,25 @@ public class Diagnostics {
         while (it.hasNext()) {
             term = (String) it.next();
             forms = kb.ask("arg",1,term);
-            if ( forms == null || forms.isEmpty() ) {
+            if (forms == null || forms.isEmpty()) {
                 result.add(term);
                 count++;
             }
             else {
                 boolean found = false;
                 it2 = forms.iterator();
-                while ( it2.hasNext() ) {
+                while (it2.hasNext()) {
                     pred = ((Formula) it2.next()).car();
                     found = preds.contains(pred);
-                    if ( found ) { break; };
+                    if (found) 
+                        break;
                 }
-                if ( ! found ) { 
+                if (!found) { 
                     result.add(term); 
                     count++;
                 }
             }
-            if ( count > 99 ) {
+            if (count > 99) {
                 result.add("limited to 100 results");
                 break;
             }
@@ -482,6 +426,232 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * Add a key to a map and a value to the ArrayList corresponding
+     * to the key.  Results are a side effect.
+     */
+    public static void addToMapList(TreeMap m, String key, String value) {
+
+        ArrayList al = (ArrayList) m.get(key);
+        if (al == null) {
+            al = new ArrayList();
+            m.put(key,al);
+        }
+        if (!al.contains(value)) 
+            al.add(value);
+    }
+
+    /** *****************************************************************
+     * Add a key to a map and a key, value to the map
+     * corresponding to the key.  Results are a side effect.
+     */
+    public static void addToDoubleMapList(TreeMap m, String key1, String key2, String value) {
+
+        TreeMap tm = (TreeMap) m.get(key1);
+        if (tm == null) {
+            tm = new TreeMap();
+            m.put(key1,tm);
+        }
+        addToMapList(tm,key2,value);
+    }
+
+    /** *****************************************************************
+     */
+    private static void termLinks(KB kb, TreeMap termsUsed, TreeMap termsDefined) {
+
+        Iterator it = kb.terms.iterator();
+        while (it.hasNext()) {                          // Check every term in the KB
+            String term = (String) it.next();
+            ArrayList forms = kb.ask("arg",1,term);     // Get every formula with the term as arg 1
+                                                        // Only definitional uses are in the arg 1 position
+            if (forms != null && forms.size() > 0) {
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula formula = (Formula) forms.get(i);
+                    String relation = formula.getArgument(0);
+                    String filename = formula.sourceFile;
+                    if (relation.equals("instance") || relation.equals("subclass") ||
+                        relation.equals("domain") || relation.equals("documentation") ||
+                        relation.equals("subrelation")) {
+                        addToMapList(termsDefined,term,filename);
+                    }
+                    else
+                        addToMapList(termsUsed,term,filename);
+                }
+            }
+
+            forms = kb.ask("arg",2,term);   
+            ArrayList newform;
+            for (int i = 3; i < 7; i++) {
+                newform = kb.ask("arg",i,term);
+                if (newform != null) 
+                    forms.addAll(newform);                
+            }
+            newform = kb.ask("ant",-1,term);
+            if (newform != null) 
+                forms.addAll(newform);                
+            newform = kb.ask("cons",-1,term);
+            if (newform != null) 
+                forms.addAll(newform);                
+            newform = kb.ask("stmt",-1,term);
+            if (newform != null) 
+                forms.addAll(newform);                
+            if (forms != null && forms.size() > 0) {
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula formula = (Formula) forms.get(i);
+                    String filename = formula.sourceFile;
+                    addToMapList(termsUsed,term,filename);
+                }
+            }
+        }
+    }
+
+    /** *****************************************************************
+     */
+    private static void fileLinks(KB kb, TreeMap fileDefines, TreeMap fileUses, 
+                                  TreeMap termsUsed, TreeMap termsDefined) {
+
+        Iterator it = termsUsed.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            ArrayList values = (ArrayList) termsUsed.get(key);
+            for (int i = 0; i < values.size(); i++) {
+                String value = (String) values.get(i);
+                addToMapList(fileUses,value,key);
+            }
+        }
+        it = termsDefined.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            ArrayList values = (ArrayList) termsDefined.get(key);
+            for (int i = 0; i < values.size(); i++) {
+                String value = (String) values.get(i);
+                addToMapList(fileDefines,value,key);
+            }
+        }
+    }
+
+    /** *****************************************************************
+     * Return a list of terms that have basic definitional
+     * information (instance, subclass, domain, subrelation,
+     * documentation) in a KB constituent that also uses terms
+     * defined in another file, which would entail a mutual file
+     * dependency, rather than a hierarchy of files.
+     * @return a TreeMap of file name keys and an ArrayList of the
+     *         files on which it depends.
+     */
+    private static TreeMap termDependency(KB kb) {
+
+        System.out.println("INFO in Diagnostics.termDependency()");
+
+        // A map of terms keys with an ArrayList as values listing files
+        // in which the term is used.
+        TreeMap termsUsed = new TreeMap();
+
+        // A map of terms keys with an ArrayList as values listing files
+        // in which the term is defined (meaning appearance in an
+        // instance, subclass, domain, subrelation, or documentation statement).
+        // 
+        TreeMap termsDefined = new TreeMap();
+
+        // A map of file names and ArrayList values listing term names defined
+        // in the file;
+        TreeMap fileDefines = new TreeMap();
+
+        // A map of file names and ArrayList values listing term names used but not defined
+        // in the file;
+        TreeMap fileUses = new TreeMap();
+
+        // A map of file name keys and TreeMap values listing file names
+        // on which the given file depends.  The interior TreeMap file name
+        // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
+        TreeMap fileDepends = new TreeMap();
+
+        termLinks(kb,termsUsed,termsDefined);
+        fileLinks(kb,fileDefines,fileUses,termsUsed,termsDefined);
+
+        Iterator it = fileUses.keySet().iterator();
+        while (it.hasNext()) {
+            String fileUsesName = (String) it.next();
+            ArrayList termUsedNames = (ArrayList) fileUses.get(fileUsesName);
+            for (int i = 0; i < termUsedNames.size(); i++) {
+                String term = (String) termUsedNames.get(i);
+                ArrayList fileDependencies = (ArrayList) termsDefined.get(term);
+                if (fileDependencies != null) {
+                    String fileDepend = null;
+                    for (int j = 0; j < fileDependencies.size(); j++) {
+                        fileDepend = (String) fileDependencies.get(j);
+                        if (!fileDepend.equals(fileUsesName)) 
+                            addToDoubleMapList(fileDepends,fileUsesName,fileDepend,term);
+                    }
+                }
+            }
+        }
+        return fileDepends;
+    }
+
+    /** *****************************************************************
+     * Check the size of the dependency list.
+     */
+    private static int dependencySize(TreeMap depend, String f, String f2) {
+
+        TreeMap tm = (TreeMap) depend.get(f2);
+        if (tm != null) {
+            ArrayList al = (ArrayList) tm.get(f);
+            if (al != null) 
+                return al.size();            
+        } 
+        return -1;
+    }
+
+    /** *****************************************************************
+     * Show file dependencies.  If two files depend on each other,
+     * show only the smaller list of dependencies, under the
+     * assumption that that is the erroneous set.
+     */
+    public static String printTermDependency(KB kb, String kbHref) {
+
+        // A list of String of filename1-filename2 of pairs already examined so that
+        // the routine doesn't waste time examining filename2-filename1
+        ArrayList examined = new ArrayList();
+
+        StringBuffer result = new StringBuffer();
+        TreeMap fileDepends = Diagnostics.termDependency(kb);
+        Iterator it = fileDepends.keySet().iterator();
+        while (it.hasNext()) {
+            String f = (String) it.next();
+            // result.append("File " + f + " depends on: ");
+            TreeMap tm = (TreeMap) fileDepends.get(f);
+            Iterator it2 = tm.keySet().iterator();
+            while (it2.hasNext()) {
+                String f2 = (String) it2.next();                
+                ArrayList al = (ArrayList) tm.get(f2);
+                if (dependencySize(fileDepends,f,f2) * 2 > al.size() &&
+                    !examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)) {  // show mutual dependencies of comparable size
+                    result.append("\nFile " + f2 + " dependency size on file " + f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
+                    result.append("\nFile " + f + " dependency size on file " + f2 + " is " + al.size() + "\n");
+                    result.append(" with terms:<br>\n ");
+                    for (int i = 0; i < al.size(); i++) {
+                        String term = (String) al.get(i);
+                        result.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
+                        if (i < al.size()-1) 
+                            result.append(", ");
+                    }
+                    result.append("<P>\n");
+                }
+                else {
+                    int i = dependencySize(fileDepends,f,f2);
+                    if (i > 0 && !examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)) {
+                        result.append("\nFile " + f2 + " dependency size on file " + f + " is " + i + "<P>\n");
+                    }
+                }
+                if (!examined.contains(f + "-" + f2)) 
+                    examined.add(f + "-" + f2);
+            }
+            result.append("\n\n");
+        }
+        return result.toString();
+    }
+
+    /** *****************************************************************
      * Make an empty KB for use in Diagnostics. 
      */
     private static KB makeEmptyKB(String kbName) {
@@ -621,13 +791,15 @@ public class Diagnostics {
      */
     public static void main(String args[]) {
 
-        try {
+        //try {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println(Diagnostics.unrootedTerms(kb));
-        }
-        catch (Exception ex) {
-            System.out.println("Error in Diagnostics.main(): " + ex.getMessage());
-        }      
+            System.out.println(printTermDependency(kb,""));
+
+        //}
+        //catch (IOException ioe) {
+        //    System.out.println("Error in Diagnostics.main(): " + ioe.getMessage());
+        //    ioe.printStackTrace();
+        //}      
     }
 }
