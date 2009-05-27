@@ -184,6 +184,15 @@ August 9, Acapulco, Mexico.
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><br/>
 
+  <%
+  show.setLength( 0 );
+  t1 = System.currentTimeMillis();
+  show.append(Diagnostics.printTermDependency(kb,kbHref) + "<br/><br/>");
+%>
+<br><b>&nbsp;Warning: Files with mutual dependencies</b></br>
+<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
+  <%=show.toString() %><br/>
+
 <%
     System.out.println(((System.currentTimeMillis() - t0) / 1000.0) + " seconds to run all diagnostics");
 %>
