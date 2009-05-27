@@ -23,9 +23,9 @@ KB kb = null;
        response.sendRedirect("KBs.jsp");     
   }
   else {      
-      String fileName = "";    
+      String fileName = "";   
       try {  
-          int postSize = 2000000;
+          int postSize = 8000000;
           boolean isError = false;
           MultipartRequest multiPartRequest = null;
           StringBuffer result = new StringBuffer();
