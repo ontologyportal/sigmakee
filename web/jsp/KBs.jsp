@@ -22,7 +22,7 @@ August 9, Acapulco, Mexico.
 <BODY BGCOLOR=#FFFFFF>
 <%
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
-    KBmanager.getMgr().initializeOnce();
+    // KBmanager.getMgr().initializeOnce();
     System.out.println("INFO in KB.jsp: baseDir == " + KBmanager.getMgr().getPref("baseDir"));
     System.out.println("INFO in KB.jsp:   kbDir == " + KBmanager.getMgr().getPref("kbDir"));
 
