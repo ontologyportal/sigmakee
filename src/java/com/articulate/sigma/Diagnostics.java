@@ -41,8 +41,11 @@ public class Diagnostics {
         String pred = null;
         Iterator it = kb.terms.iterator();
         Iterator it2 = null;
+        List excluded = Arrays.asList("and","or","not","exists","forall","=>","<=>","holds");
         while (it.hasNext()) {
             term = (String) it.next();
+            if (excluded.contains(term)) 
+                continue;
             forms = kb.ask("arg",argnum,term);
             if (forms == null || forms.isEmpty()) {
                 if (letter < 'A' || term.charAt(0) == letter) 
@@ -357,77 +360,6 @@ public class Diagnostics {
             }
             if (result.size() > 19) {
                 result.add("limited to 20 results");
-                return result;
-            }
-        }
-        return result;
-    }
-
-    /** *****************************************************************
-     * Return whether the given term has the given parent.
-     */
-    public static boolean findParent(KB kb, String term, String parent) {
-
-        boolean found = false;
-        ArrayList forms = kb.ask("arg",1,term);     // Get every formula with the term as arg 1
-        if (forms == null || forms.size() < 1) 
-            return false;            
-        else {
-            boolean isClassOrInstance = false;
-            for (int i = 0; i < forms.size(); i++) {
-                Formula formula = (Formula) forms.get(i);
-                String predicate = formula.getArgument(0);
-                if (Formula.isNonEmptyString(formula.theFormula) &&  // look at every instance, subclass etc relation with this term
-                    (formula.theFormula.indexOf(")") == formula.theFormula.length()-1) &&
-                    (predicate.equals("instance") || predicate.equals("subAttribute") ||
-                     predicate.equals("subrelation") || predicate.equals("subclass"))) {
-                    isClassOrInstance = true;
-                    String p = formula.getArgument(2);
-                    HashSet parentList = (HashSet) kb.parents.get(p.intern());
-                    if ((parentList != null && parentList.contains(parent)) || p.equals(parent)) 
-                        found = true;                                                                                             
-                }
-            }
-        }
-        return found;
-    }
-
-    /** *****************************************************************
-     * Return a list of terms that do not ultimately subclass from Entity.
-     * Need to figure out how to merge this with findParent() above.
-     */
-    public static ArrayList unrootedTerms(KB kb) {
-
-        System.out.println("INFO in Diagnostics.unrootedTerms()");
-        ArrayList result = new ArrayList();
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {                          // Check every term in the KB
-            String term = (String) it.next();
-            ArrayList forms = kb.ask("arg",1,term);     // Get every formula with the term as arg 1
-            if (forms == null || forms.size() < 1) 
-                result.add(term);            
-            else {
-                boolean found = false;
-                boolean isClassOrInstance = false;
-                for (int i = 0; i < forms.size(); i++) {
-                    Formula formula = (Formula) forms.get(i);
-                    String predicate = formula.getArgument(0);
-                    if (Formula.isNonEmptyString(formula.theFormula) &&  // look at every instance, subclass etc relation with this term
-                        (formula.theFormula.indexOf(")") == formula.theFormula.length()-1) &&
-                        (predicate.equals("instance") || predicate.equals("subAttribute") ||
-                         predicate.equals("subrelation") || predicate.equals("subclass"))) {
-                        isClassOrInstance = true;
-                        String parent = formula.getArgument(2);
-                        HashSet parentList = (HashSet) kb.parents.get(parent.intern());
-                        if ((parentList != null && parentList.contains("Entity")) || parent.equalsIgnoreCase("Entity")) 
-                            found = true;                                                                                             
-                    }
-                }
-                if (found == false && isClassOrInstance) 
-                    result.add(term);                
-            }
-            if (result.size() > 99) {
-                result.add("limited to 100 results");
                 return result;
             }
         }
