@@ -24,7 +24,7 @@ public class Diagnostics {
 
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not 
-     * have a speicifed relation.
+     * have a specifed relation.
      * @param kb the knowledge base
      * @param rel the relation name
      * @param argnum the argument position of the term
@@ -37,10 +37,10 @@ public class Diagnostics {
         ArrayList result = new ArrayList();
         String term = null;
         ArrayList forms = null;
-        Iterator it2 = null;
         Formula formula = null;
         String pred = null;
         Iterator it = kb.terms.iterator();
+        Iterator it2 = null;
         while (it.hasNext()) {
             term = (String) it.next();
             forms = kb.ask("arg",argnum,term);
@@ -104,12 +104,11 @@ public class Diagnostics {
                 term = f.getArgument(1);
                 key = (term + f.getArgument(2));
 
-                if (withDoc.contains(key)) {
-                    result.add(term);
-                }
-                else {
+                if (withDoc.contains(key)) 
+                    result.add(term);                
+                else 
                     withDoc.add(key);
-                }
+                
                 if (result.size() > 99) {
                     result.add("limited to 100 results");
                     break;
@@ -120,45 +119,55 @@ public class Diagnostics {
         return new ArrayList(result);
     }
 
+
+    /** *****************************************************************
+     * Return a list of terms that do not have a parent term.
+     */
+    private static boolean hasParent(KB kb, String term) {
+
+        String pred = null;
+        ArrayList forms = null;
+        List preds = Arrays.asList("instance", "subclass", "subAttribute", "subrelation", "subCollection");
+        forms = kb.ask("arg",1,term);
+        if (forms != null && !forms.isEmpty()) {
+            boolean found = false;
+            Iterator it = forms.iterator();
+            while (it.hasNext()) {
+                Formula f = (Formula) it.next();
+                pred = f.getArgument(0);
+                if (preds.contains(pred)) {
+                    String secondArg = f.getArgument(2);
+                    if (secondArg.equals("Entity")) 
+                        return true;
+                    boolean otherParent = hasParent(kb,secondArg);
+                    if (otherParent) 
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** *****************************************************************
      * Return a list of terms that do not have a parent term.
      */
     public static ArrayList termsWithoutParent(KB kb) {
 
+        List excluded = Arrays.asList("Entity","and","or","not","exists","forall","=>","<=>","holds");
         System.out.println("INFO in Diagnostics.termsWithoutParent(): "); 
         ArrayList result = new ArrayList();
-        List preds = Arrays.asList( "instance", "subclass", "subAttribute", "subrelation", "subCollection" );
-        String term = null;
-        String pred = null;
-        ArrayList forms = null;
         Iterator it = kb.terms.iterator();
-        Iterator it2 = null;
         int count = 0;
-        while (it.hasNext()) {
-            term = (String) it.next();
-            forms = kb.ask("arg",1,term);
-            if (forms == null || forms.isEmpty()) {
-                result.add(term);
+        while (it.hasNext() && count < 100) {
+            String term = (String) it.next();
+            if (excluded.contains(term)) 
+                continue;
+            if (!hasParent(kb,term)) {
+                result.add(term); 
                 count++;
             }
-            else {
-                boolean found = false;
-                it2 = forms.iterator();
-                while (it2.hasNext()) {
-                    pred = ((Formula) it2.next()).car();
-                    found = preds.contains(pred);
-                    if (found) 
-                        break;
-                }
-                if (!found) { 
-                    result.add(term); 
-                    count++;
-                }
-            }
-            if (count > 99) {
-                result.add("limited to 100 results");
-                break;
-            }
+            if (count > 99) 
+                result.add("limited to 100 results");            
         }
         return result;
     }
@@ -184,17 +193,17 @@ public class Diagnostics {
             term = (String) it.next();
             parentSet = kb.getCachedRelationValues( "subclass", term, 1, 2 );
             parents = null;
-            if ( (parentSet != null) && !parentSet.isEmpty() ) {
+            if ((parentSet != null) && !parentSet.isEmpty()) {
                 parents = parentSet.toArray();
             }
-            if ( parents != null ) {
-                for ( int i = 0 ; (i < parents.length) && !contradiction ; i++ ) {
+            if (parents != null) {
+                for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
                     termX = (String) parents[i];
-                    disjoints = kb.getCachedRelationValues( "disjoint", termX, 1, 2 );
-                    if ( (disjoints != null) && !disjoints.isEmpty() ) {
-                        for ( int j = (i + 1) ; j < parents.length ; j++ ) {
+                    disjoints = kb.getCachedRelationValues( "disjoint", termX, 1, 2);
+                    if ((disjoints != null) && !disjoints.isEmpty()) {
+                        for (int j = (i + 1) ; j < parents.length ; j++) {
                             termY = (String) parents[j];
-                            if ( disjoints.contains(termY) ) {
+                            if (disjoints.contains(termY)) {
                                 result.add( term );
                                 contradiction = true;
                                 count++;
@@ -213,7 +222,7 @@ public class Diagnostics {
                 }
             }
 
-            if ( count > 99 ) {
+            if (count > 99) {
                 result.add("limited to 100 results");
                 break;
             }
@@ -794,7 +803,7 @@ public class Diagnostics {
         //try {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println(printTermDependency(kb,""));
+            System.out.println(termsWithoutParent(kb));
 
         //}
         //catch (IOException ioe) {
