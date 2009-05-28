@@ -22,26 +22,31 @@
   String URLString = request.getRequestURL().toString();
   String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
   //System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
+  //System.out.println("INFO in Prelude.jsp: userRole: " + KBmanager.getMgr().getPref("userRole"));
   if (KBmanager.getMgr().getPref("userRole") != null && 
       !KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator") && !userPages.contains(pageString)) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0;URL=login.html\">");
       out.println("</html>");
+      //System.out.println("resetting (1)");
       return;
   }
-  if (!Formula.isNonEmptyString(KBmanager.getMgr().getPref("userName"))
-      && !Formula.isNonEmptyString(request.getParameter("userName"))
-      && !Formula.isNonEmptyString(request.getParameter("newuser"))) { 
+  if (Formula.empty(KBmanager.getMgr().getPref("userName"))
+      && Formula.empty(request.getParameter("userName"))
+      && Formula.empty(request.getParameter("newuser"))) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=login.html\">");
       out.println("</html>");
+      //System.out.println("resetting (2)");
       return;
   }
   if (!pageString.startsWith("KBs.jsp") &&
       !pageString.startsWith("Properties.jsp") && 
       !pageString.startsWith("AddConstituent.jsp") && 
       !pageString.startsWith("AllPictures.jsp") && 
+      !pageString.startsWith("WordNet.jsp") && 
       !Formula.isNonEmptyString(request.getParameter("kb"))) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=KBs.jsp\">");
       out.println("</html>");
+      //System.out.println("resetting (3)");
       return;
   }
 %>
