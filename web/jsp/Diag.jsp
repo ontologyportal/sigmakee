@@ -85,19 +85,6 @@ August 9, Acapulco, Mexico.
   System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms without parents");
   show.append(HTMLformatter.termList(termsWithoutParent,kbHref));
 %>
-<br><b>&nbsp;Error: Terms without parent</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
-
-<%
-  show.setLength( 0 );
-  t1 = System.currentTimeMillis();
-  ArrayList unrooted = Diagnostics.unrootedTerms(kb);
-  unrooted.removeAll(termsWithoutParent);
-  t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting unrooted terms");
-  show.append(HTMLformatter.termList(unrooted,kbHref));
-%>
 <br><b>&nbsp;Error: Terms without a root at Entity</B>
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
