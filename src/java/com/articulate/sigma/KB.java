@@ -476,7 +476,10 @@ public class KB {
      * 
      * @return A HashSet, or null if no HashSet corresponds to term.
      */
-    public HashSet getCachedRelationValues(String relation, String term, int keyArg, int valueArg) {
+    public HashSet getCachedRelationValues(String relation, 
+                                           String term, 
+                                           int keyArg, 
+                                           int valueArg) {
         RelationCache cache = getRelationCache(relation, keyArg, valueArg);
         if (cache != null) {
             return (HashSet) cache.get(term);
@@ -1014,7 +1017,9 @@ public class KB {
     public boolean isVariableArityRelation(String relnName) {
         boolean ans = false;
         try {
-            ans = VA_RELNS.contains(relnName) || (getValence(relnName) == 0);
+            ans = (VA_RELNS.contains(relnName) 
+                   || (getValence(relnName) == 0)
+                   || isInstanceOf(relnName, "VariableArityRelation"));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1126,9 +1131,18 @@ public class KB {
      * @return true or false.
      */
     public boolean isInstanceOf(String i, String c) {
-
-        Set instances = getAllInstancesWithPredicateSubsumption(c);
-        return instances.contains(i);
+        boolean ans = false;
+        try {
+            Set classes = getCachedRelationValues("instance", i, 1, 2); 
+            // was: getAllInstancesWithPredicateSubsumption(c);
+            if (classes != null) {
+                ans = classes.contains(c);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
     }
 
     /** *************************************************************
@@ -1178,8 +1192,11 @@ public class KB {
         boolean ans = false;
         try {
             if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(c2)) {
-                Set terms = getAllSubClassesWithPredicateSubsumption(c2);
-                ans = terms.contains(c1);
+                Set terms = getCachedRelationValues("subclass", c1, 1, 2); 
+                // was: getAllSubClassesWithPredicateSubsumption(c2);
+                if (terms != null) {
+                    ans = terms.contains(c2);
+                }
             }
         }
         catch (Exception ex) {
@@ -3074,8 +3091,9 @@ public class KB {
                                + buildCachesP + ", " 
                                + loadVampireP + ")");
             System.out.println("  Parsed file " 
-                               + canonicalPath + " of size " 
-                               + file.formulas.keySet().size());
+                               + canonicalPath + " containing " 
+                               + file.formulas.keySet().size()
+                               + " KIF expressions");
             it = file.formulas.keySet().iterator();
             int count = 0;
             while (it.hasNext()) {                
@@ -4327,7 +4345,9 @@ public class KB {
      * @return a TreeSet of Strings. 
      */
     public TreeSet preProcess(Set forms) {
-        // System.out.println("INFO in kb.preProcess()");
+
+        System.out.println("ENTER KB.preProcess()");
+
         TreeSet newTreeSet = new TreeSet();
         try {
             KBmanager mgr = KBmanager.getMgr();
@@ -4345,11 +4365,13 @@ public class KB {
             ArrayList processed = null;         // An ArrayList of Formula(s).  
 
             Iterator it = null;
+            int numberProcessed = 0;
+            long t_prevTotal = 0L;
+            long t_total = 0L;
+            for (it = forms.iterator(); it.hasNext(); numberProcessed++) {
 
-            // If the Formula which is to be preprocessed does not
-            // contain row variables, then this list will have only
-            // one element.
-            for (it = forms.iterator(); it.hasNext();) {
+                long t_start = System.currentTimeMillis();
+
                 form = (String) it.next();
                 f = (Formula) formulaMap.get(form);
                 // newFormula = new Formula();
@@ -4384,6 +4406,25 @@ public class KB {
                     p = (Formula) itp.next();
                     if (StringUtil.isNonEmptyString(p.theFormula))
                         newTreeSet.add(p.theFormula);
+                }
+                long t_elapsed = (System.currentTimeMillis() - t_start);
+                t_total += t_elapsed;
+                if ((numberProcessed > 0) && ((numberProcessed % 1000) == 0)) {
+                    System.out.println("Formulae per second per last 1000: "
+                                       + (1000.0 / ((t_total - t_prevTotal) / 1000.0)));
+                    t_prevTotal = t_total;
+                }
+                if (t_elapsed > 3000) {
+                    System.out.println("DEBUG: "
+                                       + (t_elapsed / 1000.0)
+                                       + " seconds to process form:");
+                    System.out.println("  f == " + f.toString());
+                    System.out.println("  processed == " 
+                                       + processed.get(0)
+                                       + System.getProperty("line.separator")
+                                       + "  and "
+                                       + (processed.size() - 1)
+                                       + " other result forms");
                 }
             }
             long dur = (System.currentTimeMillis() - t1);
@@ -4471,6 +4512,8 @@ public class KB {
         }
      
         clearSortalTypeCache();
+
+        System.out.println("EXIT KB.preProcess()");
 
         return newTreeSet;
     }
