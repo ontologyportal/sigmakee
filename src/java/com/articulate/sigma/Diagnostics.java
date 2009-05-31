@@ -124,31 +124,51 @@ public class Diagnostics {
 
 
     /** *****************************************************************
-     * Return a list of terms that do not have a parent term.
+     * Returns true if term has an explicitly stated parent, or a
+     * parent can be inferred from the transitive relation caches,
+     * else returns false.
      */
     private static boolean hasParent(KB kb, String term) {
-
-        String pred = null;
-        ArrayList forms = null;
-        List preds = Arrays.asList("instance", "subclass", "subAttribute", "subrelation", "subCollection");
-        forms = kb.ask("arg",1,term);
-        if (forms != null && !forms.isEmpty()) {
-            boolean found = false;
-            Iterator it = forms.iterator();
-            while (it.hasNext()) {
-                Formula f = (Formula) it.next();
-                pred = f.getArgument(0);
-                if (preds.contains(pred)) {
-                    String secondArg = f.getArgument(2);
-                    if (secondArg.equals("Entity")) 
-                        return true;
-                    boolean otherParent = hasParent(kb,secondArg);
-                    if (otherParent) 
-                        return true;
+        boolean ans = false;
+        try {
+            List<String> preds = Arrays.asList("instance", 
+                                               "subclass", 
+                                               "subAttribute", 
+                                               "subrelation", 
+                                               "subCollection");
+            Set cached = null;
+            for (String pred : preds) {
+                cached = kb.getCachedRelationValues(pred, term, 1, 2);
+                if ((cached != null) && !cached.isEmpty()) {
+                    ans = true;
+                    break;
                 }
             }
+            /*
+            ArrayList forms = null;
+            forms = kb.ask("arg",1,term);
+            if (forms != null && !forms.isEmpty()) {
+                boolean found = false;
+                Iterator it = forms.iterator();
+                while (it.hasNext()) {
+                    Formula f = (Formula) it.next();
+                    pred = f.getArgument(0);
+                    if (preds.contains(pred)) {
+                        String secondArg = f.getArgument(2);
+                        if (secondArg.equals("Entity")) 
+                            return true;
+                        boolean otherParent = hasParent(kb,secondArg);
+                        if (otherParent) 
+                            return true;
+                    }
+                }
+            }
+            */
         }
-        return false;
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
     }
 
     /** *****************************************************************
