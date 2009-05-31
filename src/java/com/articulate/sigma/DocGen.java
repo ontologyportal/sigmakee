@@ -27,25 +27,28 @@ public class DocGen {
      *
      * @see getInstance()
      */
-    private static DocGen DEFAULT_INSTANCE = null;
+    protected static DocGen DEFAULT_INSTANCE = null;
 
     /** ***************************************************************
      * The default base plus file suffix name for the main index file
      * for a set of HTML output files.
      */
-    private static String INDEX_FILE_NAME = "index.html";
+    protected static String INDEX_FILE_NAME = "index.html";
 
     /** ***************************************************************
      * To obtain an instance of DocGen, use the static factory method
      * getInstance().
      */
-    private DocGen() {
+    protected DocGen() {
     }
 
     /** ***************************************************************
-     * The default lineSeparator for the current runtime platform.
+     * Returns the default line separator token for the current
+     * runtime platform.
      */
-    private String lineSeparator = "\n";
+    public String getLineSeparator() {
+        return System.getProperty("line.separator");
+    }
 
     /** ***************************************************************
      * Ths static factory method to be used to obtain a DocGen
@@ -54,7 +57,6 @@ public class DocGen {
     public static DocGen getInstance() {
         if (DEFAULT_INSTANCE == null) {
             DEFAULT_INSTANCE = new DocGen();
-            DEFAULT_INSTANCE.lineSeparator = System.getProperty("line.separator");
         }
         return DEFAULT_INSTANCE;
     }
@@ -783,28 +785,28 @@ public class DocGen {
             StringBuilder sb = new StringBuilder();
 
             sb.append("<html>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("  <head>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("    <meta http-equiv=\"Content-Type\" ");
             sb.append("content=\"text/html; charset=utf-8\">");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             if (StringUtil.isNonEmptyString(cssf)) {
                 sb.append("    <link rel=\"stylesheet\" type=\"text/css\" href=\"");
                 sb.append(cssf);
                 sb.append("\">");
-                sb.append(lineSeparator);
+                sb.append(getLineSeparator());
             }
             if (StringUtil.isNonEmptyString(docTitle)) {
                 sb.append("    <title>");
                 sb.append(docTitle);
                 sb.append("</title>");
-                sb.append(lineSeparator);
+                sb.append(getLineSeparator());
             }
             sb.append("  </head>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("  <body>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             result = sb.toString();
         }
         catch (Exception ex) {
@@ -836,19 +838,19 @@ public class DocGen {
             StringBuilder sb = new StringBuilder();
 
             sb.append("<table width=\"100%\">" );
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("  <tr class=\"title\">");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("    <td>");
-            // sb.append(lineSeparator);
+            // sb.append(getLineSeparator());
             sb.append(text);
-            // sb.append(lineSeparator);
+            // sb.append(getLineSeparator());
             sb.append("    </td>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("  </tr>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("</table>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             result = sb.toString();
         }
         catch (Exception ex) {
@@ -1893,14 +1895,14 @@ public class DocGen {
                 String docString = getContextualDocumentation(kb, term, context);
                 docString = processDocString(kb, kbHref, language, docString, false, true);
                 result.append("<tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"description\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    ");
                 result.append(docString);
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>"); 
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("</tr>");
                 
                 markup = result.toString();
@@ -1947,7 +1949,7 @@ public class DocGen {
                 Collections.sort(docs);
 
                 result.append("<tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"label\">Comments</td>");
 
                 String docString = null;
@@ -1956,20 +1958,20 @@ public class DocGen {
                     docString = processDocString(kb, kbHref, language, docString, false, true);
                     if (i > 0) {
                         result.append("<tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td>&nbsp;</td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                     }
                     result.append("  <td valign=\"top\" colspan=\"2\" class=\"cell\">");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("      ");
                     result.append(docString);
                     result.append("<br/>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("  </td>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("</tr>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                 }
             }
         }
@@ -2014,7 +2016,7 @@ public class DocGen {
                     }
                     if (!synonyms.isEmpty()) {
                         result.append("<tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"cell\">");
                         result.append("<strong>Synonyms(s)</strong>");
                         boolean isFirst = true;
@@ -2026,9 +2028,9 @@ public class DocGen {
                             result.append("</i>");
                         }
                         result.append("</td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("</tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                     }
                 }
             }
@@ -2072,13 +2074,13 @@ public class DocGen {
             ArrayList<String> extensionOfs = getSyntacticExtensionTerms(kb, term, 2, true);
             if (!extensionOfs.isEmpty()) {
                 result.append("<tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"label\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    Has Same Components As");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 boolean isFirst = true;
                 StringBuilder hrefSB = new StringBuilder();
                 for (String extended : extensionOfs) {
@@ -2092,18 +2094,18 @@ public class DocGen {
                     hrefSB.append("</a>");
                     if (isFirst) {
                         result.append("  <td valign=\"top\" class=\"cell\">");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         isFirst = false;
                     }
                     result.append("    ");
                     result.append(hrefSB.toString());
                     result.append("<br/>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                 }
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("</tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
             }
         }
         return result.toString();
@@ -2151,14 +2153,14 @@ public class DocGen {
                     */
                     if (!extensions.isEmpty()) {
                         result.append("<tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"label\">");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("    ");
                         result.append("Composites Using Same Components");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         String extension = null;
                         boolean isFirst = true;
                         StringBuilder hrefSB = new StringBuilder();
@@ -2174,18 +2176,18 @@ public class DocGen {
                             hrefSB.append("</a>");
                             if (isFirst) {
                                 result.append("  <td valign=\"top\" class=\"cell\">");
-                                result.append(lineSeparator);
+                                result.append(getLineSeparator());
                                 isFirst = false;
                             }
                             result.append("    ");
                             result.append(hrefSB.toString());
                             result.append("<br/>");
-                            result.append(lineSeparator);
+                            result.append(getLineSeparator());
                         }
                         result.append("  </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("</tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                     }
                 }
             }
@@ -2257,9 +2259,9 @@ public class DocGen {
                     List<String> sorted = new ArrayList<String>(parents);
                     Collections.sort(sorted, String.CASE_INSENSITIVE_ORDER);
                     sb.append("<tr>");
-                    sb.append(lineSeparator);
+                    sb.append(getLineSeparator());
                     sb.append("  <td valign=\"top\" class=\"label\">Parents</td>");
-                    sb.append(lineSeparator);
+                    sb.append(getLineSeparator());
                     StringBuilder hrefSB = new StringBuilder();
                     boolean isFirst = true;
                     for (String parent : sorted) {
@@ -2273,18 +2275,18 @@ public class DocGen {
                         hrefSB.append("</a>");
                         if (!isFirst) {
                             sb.append("<tr>");
-                            sb.append(lineSeparator);
+                            sb.append(getLineSeparator());
                             sb.append("  <td>&nbsp;</td>");                
-                            sb.append(lineSeparator);
+                            sb.append(getLineSeparator());
                         }
                         isFirst = false;
                         sb.append("  <td valign=\"top\" class=\"cell\">");
                         sb.append(hrefSB.toString());
                         sb.append("</td>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         String docStr = getContextualDocumentation(kb, parent, null);
                         sb.append("  <td valign=\"top\" class=\"cell\">");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("    ");
                         sb.append(processDocString(kb, 
                                                    kbHref, 
@@ -2292,12 +2294,12 @@ public class DocGen {
                                                    docStr,
                                                    false,
                                                    true));
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("  </td>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                     }
                     sb.append("</tr>");
-                    sb.append(lineSeparator);
+                    sb.append(getLineSeparator());
                     result = sb.toString();
                 }
             }
@@ -2362,9 +2364,9 @@ public class DocGen {
             if (!kids.isEmpty()) {
                 Collections.sort(kids, String.CASE_INSENSITIVE_ORDER);
                 result.append("<tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"label\">Children</td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 boolean isFirst = true;
                 for (Iterator ik = kids.iterator(); ik.hasNext();) {
                     s = (String) ik.next();
@@ -2378,7 +2380,7 @@ public class DocGen {
                     result.append("<td valign=\"top\" class=\"cell\">" + docString + "</td>");
                     isFirst = false;
                 }
-                result.append("</tr>" + lineSeparator);
+                result.append("</tr>" + getLineSeparator());
             }
         }
         return result.toString();
@@ -2508,7 +2510,7 @@ public class DocGen {
                         result.append(docString);
                         result.append("</td>");
                         result.append("</tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                     }
                 }
                 markup = result.toString();
@@ -2581,7 +2583,7 @@ public class DocGen {
                     }
                     if (!isQuantifiedVarlist && (level > 0)) {
                         sb.append("<br>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         for (int i = 0; i < level; i++) {
                             sb.append(indentSeq);
                         }
@@ -2659,7 +2661,7 @@ public class DocGen {
                     suffix = ".html";
                 ArrayList relations = getPredicates(kb);
 
-                // System.out.println(lineSeparator + "relations == " + relations + lineSeparator);
+                // System.out.println(getLineSeparator() + "relations == " + relations + getLineSeparator());
 
                 if (!relations.isEmpty()) {
                     Set avoid = getInhibitDisplayRelations();
@@ -2738,7 +2740,7 @@ public class DocGen {
                                     sb.append("<td valign=\"top\" class=\"cell\">" 
                                               + termHref
                                               + "</td></tr>"
-                                              + lineSeparator);
+                                              + getLineSeparator());
                                 }
                             }
                         }                
@@ -2863,12 +2865,12 @@ public class DocGen {
             if (StringUtil.emptyString(kbHref)) 
                 suffix = ".html";
             sb.append("<tr>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("  <td></td>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
 
             sb.append("  <td valign=\"top\" class=\"cell\">");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
 
             String parentClass = "";
             ArrayList instanceForms = kb.askWithPredicateSubsumption("instance", 1, term);
@@ -2902,25 +2904,25 @@ public class DocGen {
                 }
             }
             sb.append("  </td>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
 
             sb.append("  <td valign=\"top\" class=\"cell\">");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             ArrayList clist = new ArrayList();
             clist.add(language);
             String docString = getContextualDocumentation(kb, term, clist);
             docString = processDocString(kb, kbHref, language, docString, false, true);
             sb.append("    ");
             sb.append(docString); 
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
             sb.append("  </td>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
 
             sb.append("  <td valign=\"top\" class=\"card\">");
             if (indent > 0)        
                 sb.append(showCardinalityCell(kb, kbHref, term, ""));
             sb.append("  </td>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
 
             sb.append("  <td valign=\"top\" class=\"cell\">");
             String dataTypeName = getFirstDatatype(kb, term);
@@ -2939,13 +2941,13 @@ public class DocGen {
                     sb.append(DB.kifToW3c(xsdType));
                     sb.append(")");
                 }
-                sb.append(lineSeparator);
+                sb.append(getLineSeparator());
             }
             sb.append("  </td>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
 
             sb.append("</tr>");
-            sb.append(lineSeparator);
+            sb.append(getLineSeparator());
 
             result = sb.toString();
         }
@@ -3255,9 +3257,9 @@ public class DocGen {
                     if (context.equals(containingComp)) {
 
                         sb.append("<tr>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("  <td>&nbsp;</td>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("  <td valign=\"top\" class=\"cell\">");
                         sb.append(indentChars("&nbsp;&nbsp;", indent));
                         sb.append("<a href=\"");
@@ -3267,9 +3269,9 @@ public class DocGen {
                         sb.append("\">");
                         sb.append(showTermName(kb,containingComp,language,true));
                         sb.append("</a></td>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("  <td valign=\"top\" class=\"cell\">");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("    ");
                         sb.append(processDocString(kb, 
                                                    kbHref, 
@@ -3277,17 +3279,17 @@ public class DocGen {
                                                    f.getArgument(3), 
                                                    false, 
                                                    true));
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("  </td>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("  <td valign=\"top\" class=\"card\">");
                         sb.append(showCardinalityCell(kb,kbHref,instance,context));
                         sb.append("  </td>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("  <td>&nbsp;</td>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                         sb.append("</tr>");
-                        sb.append(lineSeparator);
+                        sb.append(getLineSeparator());
                     }
                 }
                 result = sb.toString();
@@ -3443,15 +3445,15 @@ public class DocGen {
                     || !parents.contains(className))) {
                 StringBuilder result = new StringBuilder();
                 result.append("<tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"label\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    Belongs to Class");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("<a href=\""); 
                 result.append(kbHref);
                 result.append(className);
@@ -3460,11 +3462,11 @@ public class DocGen {
                 result.append(showTermName(kb, className, language, true));
                 result.append("</a>");        
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td></td><td></td><td></td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("</tr>"); 
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 markup = result.toString();
             }
@@ -3628,7 +3630,7 @@ public class DocGen {
                         limitString = ("<br>Display limited to " 
                                        + localLimit
                                        + " statements of each type.<p>"
-                                       + lineSeparator);
+                                       + getLineSeparator());
                     for (int i = 0; i < localLimit; i++) {
                         Formula form = (Formula) forms.get(i);
                         result.append(LanguageFormatter.htmlParaphrase(kbHref,
@@ -3638,7 +3640,7 @@ public class DocGen {
                                                                        kb,
                                                                        language) 
                                       + "<br>"
-                                      + lineSeparator);
+                                      + getLineSeparator());
                     }
                 }
                 result.append(limitString);
@@ -3654,7 +3656,7 @@ public class DocGen {
                     limitString = ("<br>Display limited to " 
                                    + localLimit
                                    + " statements of each type.<p>"
-                                   + lineSeparator);
+                                   + getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(LanguageFormatter.htmlParaphrase(kbHref,
@@ -3663,7 +3665,7 @@ public class DocGen {
                                                                    kb.getTermFormatMap(language), 
                                                                    kb,
                                                                    language) 
-                                  + lineSeparator);
+                                  + getLineSeparator());
                 }
             }
             result.append(limitString);
@@ -3678,7 +3680,7 @@ public class DocGen {
                     limitString = ("<br>Display limited to " 
                                    + localLimit
                                    + " statements of each type.<p>"
-                                   + lineSeparator);
+                                   + getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(LanguageFormatter.htmlParaphrase(kbHref,
@@ -3687,7 +3689,7 @@ public class DocGen {
                                                                    kb.getTermFormatMap(language), 
                                                                    kb,
                                                                    language) 
-                                  + lineSeparator);
+                                  + getLineSeparator());
                 }
             }
             result.append(limitString);
@@ -3702,7 +3704,7 @@ public class DocGen {
                     limitString = ("<br>Display limited to " 
                                    + localLimit
                                    + " statements of each type.<p>"
-                                   + lineSeparator);
+                                   + getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(LanguageFormatter.htmlParaphrase(kbHref,
@@ -3712,7 +3714,7 @@ public class DocGen {
                                                                    kb,
                                                                    language) 
                                   + "<br>" 
-                                  + lineSeparator);
+                                  + getLineSeparator());
                 }
             }
             result.append(limitString);
@@ -3727,7 +3729,7 @@ public class DocGen {
                     limitString = ("<br>Display limited to " 
                                    + localLimit
                                    + " statements of each type.<p>"
-                                   + lineSeparator);
+                                   + getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(LanguageFormatter.htmlParaphrase(kbHref,
@@ -3737,7 +3739,7 @@ public class DocGen {
                                                                    kb,
                                                                    language) 
                                   + "<br>"
-                                  + lineSeparator);
+                                  + getLineSeparator());
                 }
             }
             result.append(limitString);
@@ -3748,7 +3750,7 @@ public class DocGen {
                                   + "These statements express (potentially complex) "
                                   + "facts about the term and are "
                                   + "automatically generated.</td></tr>"
-                                  + lineSeparator
+                                  + getLineSeparator()
                                   + "<tr><td valign=\"top\" class=\"cell\">"));
                 result.insert(0, ("<p><table><tr><td valign=\"top\" class=\"label\">"
                                   + "<b>Other statements</b>"
@@ -3923,41 +3925,41 @@ public class DocGen {
                                                     // + "Dictionary.html"
                                                     ));
                 result.append("<table width=\"100%\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <tr bgcolor=\"#DDDDDD\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    <td valign=\"top\" class=\"cell\"><font size=\"+2\">");
                 result.append(showTermName(kb,term,language,true));
                 result.append("</font>");
                 result.append("    </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 String relevance = createTermRelevanceNotice(kb, kbHref, term, language);
                 if (StringUtil.isNonEmptyString(relevance)) {
                     result.append("  <tr bgcolor=\"#DDDDDD\">");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("    <td valign=\"top\" class=\"cell\">");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append(relevance);
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("    </td>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("  </tr>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                 }
 
                 result.append(createDocs(kb,kbHref,term,language));
                 result.append("</table>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 // result.append("<p>");
-                // result.append(lineSeparator);
+                // result.append(getLineSeparator());
 
                 // result.append(HTMLformatter.htmlDivider);
 
                 result.append("<table>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append(createSynonyms(kb, kbHref, term));
 
                 ArrayList superComposites = findContainingComposites(kb, term); 
@@ -3969,13 +3971,13 @@ public class DocGen {
                     || hasSubComponents(kb, term)) {
 
                     result.append("<tr class=\"title_cell\">");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("  <td valign=\"top\" class=\"label\">Component Structure</td>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("  <td valign=\"top\" colspan=\"4\"></td>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("</tr>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
 
                     if (sb1.length() > 0) {
                         result.append(sb1);
@@ -3984,23 +3986,23 @@ public class DocGen {
 
                     if (hasSubComponents(kb, term)) {
                         result.append("<tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"label\">Components</td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\">Name</td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\">");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("    Description of Element Role");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\">Cardinality</td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\">Data Type</td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("</tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                 
                         ArrayList attrs = new ArrayList();
                         ArrayList elems = new ArrayList();
@@ -4056,34 +4058,34 @@ public class DocGen {
                     if (!superComposites.isEmpty()) {
                         Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
                         result.append("<tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"label\">");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("    Is Member of Composites");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\">");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("    Composite Name");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\">");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("    Description of Element Role");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\">");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("    Cardinality");
                         result.append("  </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("  <td valign=\"top\" class=\"title_cell\"> &nbsp; </td>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
                         result.append("</tr>");
-                        result.append(lineSeparator);
+                        result.append(getLineSeparator());
 
                         result.append(formatContainingComposites(kb,
                                                                  kbHref,
@@ -4097,31 +4099,31 @@ public class DocGen {
                 sb1.append(createUsingSameComponents(kb, kbHref, term, language));
                 if (sb1.length() > 0) {
                     result.append("<tr class=\"title_cell\">");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("  <td valign=\"top\" class=\"label\">");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("    Relationships");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("  </td>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("  <td></td><td></td><td></td><td></td>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
                     result.append("</tr>");
-                    result.append(lineSeparator);
+                    result.append(getLineSeparator());
 
                     result.append(sb1);
 
                     sb1.setLength(0);
                 }
                 result.append("</table>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 result.append(generateHtmlFooter(""));
 
                 result.append("  </body>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("</html>"); 
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 markup = result.toString();
             }
@@ -4168,73 +4170,73 @@ public class DocGen {
                                                 ));
             }
             result.append("<table width=\"100%\">");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("  <tr bgcolor=\"#DDDDDD\">");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("    <td valign=\"top\" class=\"cell\">");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("      <font size=\"+2\">");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("        ");
             result.append(showTermName(kb,term,language,true));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("      </font>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("    </td>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("  </tr>"); 
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             String relevance = createTermRelevanceNotice(kb, kbHref, term, language);
             if (StringUtil.isNonEmptyString(relevance)) {
                 result.append("  <tr bgcolor=\"#DDDDDD\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    <td valign=\"top\" class=\"cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append(relevance);
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
             }
 
             result.append(createDocs(kb, kbHref, term, language));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("</table>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             // result.append("<p>");
-            // result.append(lineSeparator);
+            // result.append(getLineSeparator());
             result.append("<table width=\"100%\">");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append(createSynonyms(kb, kbHref, term));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append(createComments(kb, kbHref, term, language));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             Set<String> parents = new HashSet<String>();
             sb1.append(createParents(kb, kbHref, term, language, parents));
-            sb1.append(lineSeparator);
+            sb1.append(getLineSeparator());
             sb2.append(createChildren(kb, kbHref, term, language));
-            sb2.append(lineSeparator);
+            sb2.append(getLineSeparator());
 
             if ((sb1.length() > 0) || (sb2.length() > 0)) {
                 result.append("<tr class=\"title_cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"label\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    Relationships");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td>&nbsp;</td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td>&nbsp;</td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td>&nbsp;</td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("</tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 // Parents
                 result.append(sb1.toString());
@@ -4249,68 +4251,68 @@ public class DocGen {
             Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
 
             result.append(createInstances(kb, kbHref, term, language, superComposites));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             result.append(createRelations(kb, kbHref, term, language));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             result.append(createUsingSameComponents(kb, kbHref, term, language));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             result.append(createBelongsToClass(kb, kbHref, term, language, parents));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             if (!superComposites.isEmpty()) {
                 result.append("<tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"label\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    Is Member of Composites");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"title_cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    Composite Name");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"title_cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    Description of Element Role");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"title_cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    Cardinality");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  <td> &nbsp; </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("</tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 result.append(formatContainingComposites(kb,
                                                          kbHref,
                                                          superComposites,
                                                          term,
                                                          language));
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
             }
 
             result.append("</table>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             // result.append(HTMLformatter.htmlDivider);
 
             result.append(generateHtmlFooter(""));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("  </body>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("</html>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
 
             // result.append(createAllStatements(kb,kbHref,term,limit));
 
@@ -4344,12 +4346,12 @@ public class DocGen {
         try {
             StringBuilder result = new StringBuilder();
             result.append(generateHtmlDocStart(""));
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("<table width=\"100%\">");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("  <tr>");
             for (char c = 65; c < 91; c++) {
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 String cString = Character.toString(c);   
                 result.append("    <td valign=\"top\"><a href=\"");
                 result.append(kbHref);
@@ -4361,12 +4363,12 @@ public class DocGen {
                 result.append("*\">");
                 result.append(cString);
                 result.append("</a></td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
             }
             result.append("  </tr>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             result.append("</table>");
-            result.append(lineSeparator);
+            result.append(getLineSeparator());
             markup = result.toString();
         }
         catch (Exception ex) {
@@ -4421,7 +4423,7 @@ public class DocGen {
                         sb2.append("\">");
                         sb2.append(cString);
                         sb2.append("</a></td>");
-                        sb2.append(lineSeparator);
+                        sb2.append(getLineSeparator());
                     }
                 }
 
@@ -4436,7 +4438,7 @@ public class DocGen {
                         sb2.append("\">");
                         sb2.append(cString);
                         sb2.append("</a></td>");
-                        sb2.append(lineSeparator);
+                        sb2.append(getLineSeparator());
                     }
                 }
 
@@ -4445,9 +4447,9 @@ public class DocGen {
 
                 StringBuilder sb1 = new StringBuilder();
                 sb1.append("<table width=\"100%\">");
-                sb1.append(lineSeparator);
+                sb1.append(getLineSeparator());
                 sb1.append("  <tr>");
-                sb1.append(lineSeparator);
+                sb1.append(getLineSeparator());
                 sb1.append("    <td valign=\"top\" colspan=\"");
                 sb1.append(colNum);
                 sb1.append("\" class=\"title\">");
@@ -4457,11 +4459,11 @@ public class DocGen {
                 }
                 sb1.append(title);
                 sb1.append("    </td>");
-                sb1.append(lineSeparator);
+                sb1.append(getLineSeparator());
                 sb1.append("  </tr>");
-                sb1.append(lineSeparator);
+                sb1.append(getLineSeparator());
                 sb1.append("  <tr class=\"letter\">"); 
-                sb1.append(lineSeparator);
+                sb1.append(getLineSeparator());
 
                 // Assemble everything in the correct order.
                 result.append(sb1);
@@ -4470,11 +4472,11 @@ public class DocGen {
                 result.append("    <td><a href=\""); 
                 result.append(allname); 
                 result.append("\">All</a></td>"); 
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("</table>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 setTocHeader(result.toString());
             }
@@ -4529,52 +4531,52 @@ public class DocGen {
                 }
                 termToPrint = showTermName(kb, realTermName, language, true);
                 result.append("  <tr>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 // Term Name
                 result.append("    <td valign=\"top\" class=\"cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("      <a href=\""); 
                 result.append(realTermName); 
                 result.append(".html\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("        ");
                 result.append(termToPrint);
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("      </a>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 // Relevance
                 result.append("    <td valign=\"top\" class=\"cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("      ");
                 result.append(getTermRelevance(kb, getOntology(), realTermName).equals("message")
                               ? "&nbsp;&nbsp;&nbsp;&nbsp;MT&nbsp;&nbsp;&nbsp;&nbsp;"
                               : "");
                 result.append("    </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
 
                 // Documentation
                 docString = processDocString(kb, "", language, docString, false, true);
 
                 result.append("    <td valign=\"top\" class=\"cell\">");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("      ");
                 result.append(docString);
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("    </td>");
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
                 result.append("  </tr>"); 
-                result.append(lineSeparator);
+                result.append(getLineSeparator());
             }
             //if ((count++ % 100) == 1) { System.out.print("."); }
         }
         //System.out.println();
-        // result.append("</tr>" + lineSeparator);
+        // result.append("</tr>" + getLineSeparator());
         result.append("</table>");
-        result.append(lineSeparator);
+        result.append(getLineSeparator());
         return result.toString();
     }
 
@@ -4690,7 +4692,7 @@ public class DocGen {
                                        + dir + ")");
                     System.out.println("Error writing file " 
                                        + filename
-                                       + lineSeparator
+                                       + getLineSeparator()
                                        + e.getMessage());
                     e.printStackTrace();
                 }
@@ -5076,17 +5078,17 @@ public class DocGen {
 
             /*
               pw.println("<html>" 
-              + lineSeparator
+              + getLineSeparator()
               + "  <head><meta http-equiv=\"Content-Type\" "
               + "content=\"text/html; charset=utf-8\">" 
-              + lineSeparator
+              + getLineSeparator()
               + "    <link rel=\"stylesheet\" type=\"text/css\" "
               + "href=\"simple.css\">" 
-              + lineSeparator
+              + getLineSeparator()
               + "  </head>" 
-              + lineSeparator
+              + getLineSeparator()
               + "  <body>" 
-              + lineSeparator);
+              + getLineSeparator());
             */
 
             // pw.println(this.header);
@@ -9157,17 +9159,18 @@ public class DocGen {
 
     /** *************************************************************
      * This method writes a set of SUO-KIF Formulae (Strings) to the
-     * PrintWriter pw.  First, it gathers and sorts all instances of
-     * the Classes provided in the List classes.  Then, for each
-     * instance, it retrieves statements formed with the relations and
-     * arguments specifications provided in the List relationsToUse,
-     * and writes all statements to the output stream.
+     * file identified by the pathname String outpath.  First, it
+     * gathers and sorts all instances of the Classes or Sets provided
+     * in the List classes.  Then, for each instance or element, it
+     * retrieves statements formed with the relations and argument
+     * specifications provided in the List relationsToUse, and writes
+     * all statements to the output file.
      *
      * @param kb The KB from which relevant statements or terms are
      * gathered
      *
-     * @param classes A List of classes, the instances of which are to
-     * be the subjects about which statements are gathered
+     * @param formulaType A term denoting a type of Formula, the
+     * instances or elements of which will be gathered
      *
      * @param relationsToUse A List of predicates that are used to
      * gather statements pertaining to the instances of the Classes
@@ -9181,53 +9184,77 @@ public class DocGen {
      * which the main predicate (argument 0) lacks an explicit
      * namespace prefix will be suppressed
      *
-     * @param pw The PrintWriter via which output should be written
+     * @param defaultNamespace If a non-empty String, this value
+     * denotes the default namespace for computation
+     *
+     * @param outpath The pathname String of the output file
      *
      * @return void
      */
-    protected void exportFormulaeToStream(KB kb, 
-                                          List classes,
-                                          List relationsToUse,
-                                          List replacements,
-                                          boolean isNamespaceRequired,
-                                          PrintWriter pw) {
+    protected void exportFormulaeToFile(KB kb, 
+                                        String formulaType,
+                                        List relationsToUse,
+                                        List replacements,
+                                        boolean isNamespaceRequired,
+                                        String defaultNamespace,
+                                        String outpath) {
+
+        System.out.println("ENTER DocGen.exportFormulaeToFile("
+                           + kb.name + ", "
+                           + formulaType + ", "
+                           + relationsToUse + ", "
+                           + replacements + ", "
+                           + isNamespaceRequired + ", "
+                           + defaultNamespace + ", "
+                           + outpath + ")");
+
+        PrintWriter pw = null;
         try {
-            if (classes instanceof List) {
+            if (StringUtil.isNonEmptyString(formulaType) 
+                && StringUtil.isNonEmptyString(outpath)) {
                 Set instances = new TreeSet();
-                Iterator it = null;
-                for (it = classes.iterator(); it.hasNext();) {
-                    String cl = (String) it.next();
-                    instances.addAll(kb.getAllInstancesWithPredicateSubsumption(cl));
-                }
+                instances.addAll(kb.getAllInstancesWithPredicateSubsumption(formulaType));
                 
                 // Try harder to get all relevant terms.
-                List predlist = new LinkedList();
-                predlist.add("kifManifestation");
-                String pred = kb.getFirstTermViaPredicateSubsumption("subrelation",
-                                                                     2,
-                                                                     "kifManifestation",
-                                                                     1,
-                                                                     true);
-                if (StringUtil.isNonEmptyString(pred)) {
-                    predlist.add(pred);
-                }
+                /*
+                  List predlist = new LinkedList();
+                  predlist.add("kifManifestation");
+                  String pred = kb.getFirstTermViaPredicateSubsumption("subrelation",
+                  2,
+                  "kifManifestation",
+                  1,
+                  true);
+                  if (StringUtil.isNonEmptyString(pred)) {
+                  predlist.add(pred);
+                  }
 
-                for (it = predlist.iterator(); it.hasNext();) {
-                    pred = (String) it.next();
-                    instances.addAll(kb.getTermsViaAsk(0, pred, 1));
-                }
+                  for (it = predlist.iterator(); it.hasNext();) {
+                  pred = (String) it.next();
+                  instances.addAll(kb.getTermsViaAsk(0, pred, 1));
+                  }
+                */
+
                 List pair = null;
                 String inst = null;
                 String idxStr = null;
                 Iterator itr = null;
-                Set formulae = new TreeSet();
+                Set formulae = new LinkedHashSet();
                 StringBuilder sb = new StringBuilder();
                 String sbout = "";
-                for (it = instances.iterator(); it.hasNext();) {
+
+                System.out.println(instances.size() + " instances");
+
+                List printable = new ArrayList(instances);
+                Collections.sort(printable);
+                for (Iterator it = printable.iterator(); it.hasNext();) {
                     inst = (String) it.next();
-                    if (!isNamespaceRequired 
-                        || StringUtil.isNonEmptyString(getTermNamespace(kb, inst))) {
+                    String tns = getTermNamespace(kb, inst);
+
+                    // System.out.println("namespace for " + inst + " == " + tns);
+                    
+                    if (!isNamespaceRequired || StringUtil.isNonEmptyString(tns)) {
                         formulae.clear();
+                        String pred = null;
                         for (itr = relationsToUse.iterator(); itr.hasNext();) {
                             pair = (List) itr.next();
                             if ((pair != null) && (pair.size() > 1)) {
@@ -9243,56 +9270,74 @@ public class DocGen {
                                 }
                                 List flist = kb.askWithPredicateSubsumption(pred, argIdx, inst);
                                 if (pred.equals("documentation")) {
-                                    retainByPattern(flist, ".*documentation.+EnglishLanguage.*");
+                                    String ptrn = (".*documentation.+" 
+                                                   + (StringUtil.isNonEmptyString(defaultNamespace)
+                                                      ? defaultNamespace
+                                                      : "EnglishLanguage")
+                                                   + ".*");
+                                    retainByPattern(flist, ptrn);
                                 }
                                 formulae.addAll(flist);
                             }
                         }
-                    }
-                    List iflist = computeDerivedInstanceFormulae(kb, 
-                                                                 1,
-                                                                 inst,
-                                                                 isNamespaceRequired);
-                    retainByPattern(iflist, ".+Rule\\)$|.+Constraint\\)$");
-                    formulae.addAll(iflist);
-                    if (!formulae.isEmpty()) {
-                        sb.setLength(0);
-                        sb.append(";; ");
-                        sb.append(inst);
-                        sb.append(lineSeparator);
-                        sb.append(lineSeparator);
-                        Formula f = null;
-                        for (Iterator itf = formulae.iterator(); itf.hasNext();) {
-                            f = (Formula) itf.next();
-                            sb.append(f.format("", "  ", lineSeparator));
-                            sb.append(lineSeparator);
-                            sb.append(lineSeparator);
 
-                            String arg0 = f.car();
-                            if (arg0.matches(".*(?i)kif.*")
-                                && StringUtil.isNonEmptyString(getTermNamespace(kb, arg0))) {
-                                Formula origF = new Formula();
-                                origF.read(f.getArgument(2));
-                                sb.append(origF.format("", "  ", lineSeparator));
-                                sb.append(lineSeparator);
-                                sb.append(lineSeparator);
-                            }
-                        }
-                        sbout = sb.toString();
-                        if ((replacements != null) && !replacements.isEmpty()) {
-                            String patx = null;
-                            String paty = null;
-                            for (itr = replacements.iterator(); itr.hasNext();) {
-                                pair = (List) itr.next();
-                                if ((pair != null) && (pair.size() > 1)) {
-                                    patx = (String) pair.get(0);
-                                    paty = (String) pair.get(1);
-                                    sbout = sbout.replace(patx, paty);
+                        List iflist = computeDerivedInstanceFormulae(kb, 
+                                                                     1,
+                                                                     inst,
+                                                                     isNamespaceRequired);
+                        // retainByPattern(iflist, ".+Rule\\)$|.+Constraint\\)$");
+                        formulae.addAll(iflist);
+
+                        // System.out.println(formulae.size() + " formulae");
+
+                        if (!formulae.isEmpty()) {
+                            // sb.setLength(0);
+                            sb.append(";; ");
+                            sb.append(inst);
+                            sb.append(getLineSeparator());
+                            sb.append(getLineSeparator());
+                            Formula f = null;
+                            for (Iterator itf = formulae.iterator(); itf.hasNext();) {
+                                f = (Formula) itf.next();
+                                sb.append(f.format("", "  ", getLineSeparator()));
+                                sb.append(getLineSeparator());
+                                sb.append(getLineSeparator());
+
+                                String arg0 = f.car();
+                                if (arg0.matches(".*(?i)kif.*")
+                                    && StringUtil.isNonEmptyString(getTermNamespace(kb, arg0))) {
+                                    Formula origF = new Formula();
+                                    origF.read(f.getArgument(2));
+                                    sb.append(origF.format("", "  ", getLineSeparator()));
+                                    sb.append(getLineSeparator());
+                                    sb.append(getLineSeparator());
                                 }
                             }
                         }
-                        pw.println(sbout);
-                        pw.flush();
+                    }
+                }
+                sbout = sb.toString();
+                if (StringUtil.isNonEmptyString(sbout)) {
+                    if ((replacements != null) && !replacements.isEmpty()) {
+                        String patx = null;
+                        String paty = null;
+                        for (itr = replacements.iterator(); itr.hasNext();) {
+                            pair = (List) itr.next();
+                            if ((pair != null) && (pair.size() > 1)) {
+                                patx = (String) pair.get(0);
+                                paty = (String) pair.get(1);
+                                sbout = sbout.replace(patx, paty);
+                            }
+                        }
+                    }
+
+                    File outfile = new File(outpath);
+                    pw = new PrintWriter(new FileWriter(outfile));
+                    pw.println(sbout);
+                    pw.flush();
+
+                    if (outfile.exists() && outfile.canRead()) {
+                        System.out.println("  Written: " + outpath);
                     }
                 }
             }
@@ -9308,6 +9353,16 @@ public class DocGen {
                 ioe.printStackTrace();
             }
         }
+
+        System.out.println("EXIT DocGen.exportFormulaeToFile("
+                           + kb.name + ", "
+                           + formulaType + ", "
+                           + relationsToUse + ", "
+                           + replacements + ", "
+                           + isNamespaceRequired + ", "
+                           + defaultNamespace + ", "
+                           + outpath + ")");
+
         return;
     }
 

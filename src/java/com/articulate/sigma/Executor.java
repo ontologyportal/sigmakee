@@ -137,11 +137,11 @@ public class Executor {
                 }
 
                 /*
-                if (fileTypes.isEmpty()) {
-                    status += (ls + "No file types were entered");
-                    ok = false;
-                    break;
-                }
+                  if (fileTypes.isEmpty()) {
+                  status += (ls + "No file types were entered");
+                  ok = false;
+                  break;
+                  }
                 */
 
                 KBmanager mgr = KBmanager.getMgr();
@@ -227,10 +227,10 @@ public class Executor {
                                                         (term.matches("^\\w+" 
                                                                       + DB.KIF_NS_DELIMITER 
                                                                       + ".+")
-                                                           && !dg.getNamespaces(dgkb,
-                                                                                dgonto, 
-                                                                                false).contains(term)
-                                                           && !DB.isLocalTermReference(term));
+                                                         && !dg.getNamespaces(dgkb,
+                                                                              dgonto, 
+                                                                              false).contains(term)
+                                                         && !DB.isLocalTermReference(term));
 
                                                     if (ans) {
                                                         String namespace = 
@@ -244,10 +244,10 @@ public class Executor {
                                             }
                                         }
                                         /*
-                                        System.out.println("INFO isLegalForDisplay("
-                                                           + dg + ", "
-                                                           + term + ")");
-                                        System.out.println("  ==> " + ans);
+                                          System.out.println("INFO isLegalForDisplay("
+                                          + dg + ", "
+                                          + term + ")");
+                                          System.out.println("  ==> " + ans);
                                         */
                                     }
                                     catch (Exception ex) {
@@ -289,7 +289,7 @@ public class Executor {
                                     gen.setFooterText(val);
                             }
                         }
-                        
+
                         t2 = System.currentTimeMillis();
                         gen.setTopLevelTerms(gen.computeTopLevelTermsByNamespace(kb, ontology));
                         tltElapsedTime = (System.currentTimeMillis() - t2);
@@ -368,8 +368,630 @@ public class Executor {
                                + (tabElapsedTime / 1000.0) 
                                + " seconds to generate tabular display files");
         }
-
         return status;
+    }
+
+    // basicTypes
+    private static final int CF_FAMILY   = 0;
+    private static final int CF_CONTEXT  = 1;
+    private static final int CF_RESOURCE = 2;
+    private static final int CF_TIME     = 3;
+    private static final int CF_PLACE    = 4;
+
+    /** *************************************************************
+     * Processes the Context Family .dif files found in the directory
+     * denoted by indirpath, and saves the resulting KIF file in the
+     * directory denoted by outdirpath.
+     *
+     * @param indirpath A String denoting a directory pathname
+     *
+     * @param outdirpath A String denoting a directory pathname
+     *
+     * @return void
+     */
+    public static void cfFilesToKifHierarchyFile(String indirpath, String outdirpath) {
+        File outdir = null;
+        File indir = null;
+        PrintWriter pw = null;
+        try {
+            indir = new File(indirpath);
+            if (indir.canRead()) {
+                Map hier = new HashMap();
+                Set<String> compositeRelators = new TreeSet<String>();
+                Set<String> statements = new LinkedHashSet<String>();
+                List<String> skipFiles = Arrays.asList("CF_Template", 
+                                                       "Summary", 
+                                                       "SOW_Template", 
+                                                       "OntX_log");
+                List<File> files = Arrays.asList(indir.listFiles());
+                Collections.sort(files);
+                DB db = DB.getInstance();
+
+                // Read and process CF files.
+                int cfsDone = 0;
+                for (File f : files) {
+                    if (!f.isDirectory()) {
+                        String filename = f.getName();
+                        int eidx = filename.indexOf(".dif");
+                        String base = ((eidx > 0)
+                                       ? filename.substring(0, eidx)
+                                       : filename);
+                        if (!skipFiles.contains(base)) {
+                            String cp = f.getCanonicalPath();
+                            List tblarr = db.readDataInterchangeFormatFile(cp);
+
+                            /*
+                              if (!tblarr.isEmpty()) {
+                              System.out.println("");
+                              for (Iterator it = tblarr.iterator(); it.hasNext();) {
+                              System.out.println( it.next() );
+                              }
+                              }
+                              System.out.println("");
+                            */
+
+                            /*  */
+                            if (!tblarr.isEmpty()) {
+                                normalizeCfTable(db, tblarr);
+                                statements.add(((cfsDone > 0)
+                                                ? db.getLineSeparator()
+                                                : "") + ";; " + base);
+                                processCfTable(db, tblarr, hier, compositeRelators, statements);
+                                cfsDone++;
+                            }
+                        }
+                    }
+                }
+
+                System.out.println("");
+                System.out.println(compositeRelators.size() + " composite relators created");
+                // System.out.println("");
+                // System.out.println("  hier == " + hier);
+                // System.out.println("");
+
+                Formula f = null;
+                String arg1 = null;
+                String arg2 = null;
+                List plist1 = null;
+                List plist2 = null;
+                String p1 = null;
+                String p2 = null;
+                int subRelCount = 0;
+                for (String fstr : compositeRelators) {
+                    f = new Formula();
+                    f.read(fstr);
+                    arg1 = f.getArgument(1);
+                    arg2 = f.getArgument(2);
+                    plist1 = (List) hier.get(arg1);
+                    if ((plist1 != null) && !plist1.isEmpty()) {
+                        plist2 = (List) hier.get(arg2);
+                        if ((plist2 != null) && !plist2.isEmpty()) {
+                            for (Iterator it1 = plist1.iterator(); it1.hasNext();) {
+                                p1 = (String) it1.next();
+                                for (Iterator it2 = plist2.iterator(); it2.hasNext();) {
+                                    p2 = (String) it2.next();
+                                    String fstr2 = ("(PredicateFn " + p1 + " " + p2 + ")");
+                                    if (compositeRelators.contains(fstr2)
+                                        && !fstr.equals(fstr2)) {
+                                        if (subRelCount == 0) {
+                                            statements.add(db.getLineSeparator() 
+                                                           + ";; coa:IsSubRelatorOf");
+                                        }
+                                        statements.add(DB.makeStatement("coa:IsSubRelatorOf",
+                                                                        fstr,
+                                                                        fstr2));
+                                        subRelCount++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                System.out.println(subRelCount + " coa:IsSubRelatorOf statements added");
+                System.out.println("");
+
+                // Write SUO-KIF statements.
+                outdir = new File(outdirpath);
+                if (outdir.canWrite()) {
+                    File outfile = new File(outdir, "ContextFamilies.kif");
+                    pw = new PrintWriter(new FileWriter(outfile));
+                    db.printSuoKifStatements(statements, pw);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (pw != null) pw.close();
+            }
+            catch (Exception ioe) {
+                ioe.printStackTrace();
+            }
+        }
+        return;
+    }
+
+    /** *************************************************************
+     * Processes the List of Lists tblarr to produce Strings denoting
+     * KIF statements, which are added to the Set statements.
+     *
+     * @param db A DB utility object used to process tblarr
+     *
+     * @param tblarr A List of Lists representing a spreadsheet or
+     * database table
+     *
+     * @param hier A Map used to compute the parent (subclass)
+     * hierarchy
+     *
+     * @param compositeRelators The set of all computed relators
+     *
+     * @param statements A Set containing Strings that represent KIF
+     * statements
+     *
+     * @return void
+     */
+    private static void processCfTable(DB db, 
+                                       List<List> tblarr, 
+                                       Map hier,
+                                       Set<String> compositeRelators,
+                                       Set<String> statements) {
+        try {
+            Map relatorComponents = new HashMap();
+            String nsToken = "coa";
+            String namespace = ("ns" + DB.getW3cNamespaceDelimiter() + nsToken);
+            String nsPrefix = (nsToken + DB.getW3cNamespaceDelimiter());
+            db.buildTableColumnNames(null, null);
+            List commentCols = Arrays.asList("I", "J", "K", "L", "M", "N", "O", "P", "Q", "R");
+            List adjCols = Arrays.asList("S", "T", "U");
+            List adjNames = Arrays.asList("HistoricAdjective", 
+                                          "CurrentAdjective", 
+                                          "PotentialAdjective");
+            List propCols = Arrays.asList("V", "W", "X");
+            List propNames = Arrays.asList("HistoricProperty", 
+                                           "CurrentProperty", 
+                                           "PotentialProperty");
+            List<String> synonyms = new ArrayList<String>();
+            String family = null;
+            String contextType = null;
+            List<String> utilList = new ArrayList<String>();  // an empty List
+            for (List row : tblarr) {
+                int bti = -1;
+                String basicType = (String) row.get(db.getColumnIndex("A"));
+                if (StringUtil.isNonEmptyString(basicType)) {
+                    basicType = basicType.trim();
+                    if (basicType.equals("$$$")) {
+                        break;
+                    }
+                    String rowFocalTerm = null;
+                    String familyMembers = (String) row.get(db.getColumnIndex("B"));
+                    List<String> fmList = (StringUtil.isNonEmptyString(familyMembers)
+                                           ? Arrays.asList(familyMembers.split("\\|"))
+                                           : utilList);
+                    String parents = (String) row.get(db.getColumnIndex("C"));
+                    List<String> parentList = (StringUtil.isNonEmptyString(parents)
+                                               ? Arrays.asList(parents.split("\\|"))
+                                               : utilList);
+                    String cardinality = (String) row.get(db.getColumnIndex("E"));
+                    if (StringUtil.emptyString(cardinality)) {
+                        cardinality = "";
+                    }
+                    String minstr = "";
+                    String maxstr = "";
+                    int min = -1;
+                    int max = -1;
+                    int ridx = cardinality.indexOf("-");
+                    if (ridx > -1) {
+                        minstr = cardinality.substring(0, ridx);
+                        maxstr = cardinality.substring(ridx + 1);
+                        if (maxstr.equals("n")) {
+                            maxstr = Integer.toString(Integer.MAX_VALUE);
+                        }
+                    }
+                    else if (cardinality.equals("n")) {
+                        minstr = Integer.toString(Integer.MAX_VALUE);
+                        maxstr = minstr;
+                    }
+                    else if (StringUtil.isDigitString(cardinality)) {
+                        minstr = cardinality;
+                        maxstr = cardinality;
+                    }
+                    try {
+                        min = Integer.parseInt(minstr);
+                    }
+                    catch (Exception e1) {
+                        min = -1;
+                    }
+                    try {
+                        max = Integer.parseInt(maxstr);
+                    }
+                    catch (Exception e2) {
+                        max = -1;
+                    }
+
+                    // System.out.println("  min == " + min);
+                    // System.out.println("  max == " + max);
+
+                    String twoOrMore = ((max > 1) ? "true" : "false");
+                    String definition = (String) row.get(db.getColumnIndex("F"));
+
+                    // if (!parentList.isEmpty()) System.out.println("  parentList == " + parentList);
+
+                    if (basicType.equals("Family")) {
+                        bti = CF_FAMILY;
+                        family = familyMembers;
+                        rowFocalTerm = family;
+                        if (StringUtil.isNonEmptyString(family)) {
+                            statements.add(DB.makeStatement("coa:IsA", 
+                                                            family, 
+                                                            "coa:ContextFamily"));
+                        }
+                    }
+                    else if (!fmList.isEmpty()) {
+
+                        // System.out.println("  fmList == " + fmList);
+
+                        int fmlen = fmList.size();
+                        int i = 0;
+                        if (basicType.equals("Verb")) {
+                            for (String term : fmList) {
+                                int idx = term.indexOf(DB.getW3cNamespaceDelimiter());
+                                String newTerm = null;
+                                if ((idx > 0) && (idx < term.length())) {
+                                    newTerm = term.substring(idx + 1);
+                                }
+                                synonyms.add(newTerm);
+                            }
+                            for (String term : parentList) {
+                                String parentFamily = (term + "_CF");
+                                statements.add(DB.makeStatement("coa:IsSubClassOf",
+                                                                family,
+                                                                parentFamily));
+                            }
+                        }
+                        else if (basicType.equals("ContextType")) {
+                            bti = CF_CONTEXT;
+                            for (String term : fmList) {
+                                int idx = term.indexOf(DB.getW3cNamespaceDelimiter());
+                                String newTerm = null;
+                                if ((idx > 0) && (idx < term.length())) {
+                                    newTerm = term.substring(idx + 1);
+                                }
+                                if (i == 0) {
+                                    newTerm = (nsPrefix + newTerm);
+                                    contextType = newTerm;
+                                    rowFocalTerm = contextType;
+                                    relatorComponents.put(DB.w3cToKif(rowFocalTerm),
+                                                          twoOrMore);
+                                }
+                                else {
+                                    statements.add(DB.makeStatement("synonym",
+                                                                    namespace,
+                                                                    contextType,
+                                                                    DB.quote(newTerm)));
+                                }
+                                i++;
+                            }
+                            for (String syn : synonyms) {
+                                statements.add(DB.makeStatement("synonym",
+                                                                namespace,
+                                                                contextType,
+                                                                DB.quote(syn)));
+                            }                                
+                        }
+                        else if (basicType.startsWith("ResourceRole")) {
+                            bti = CF_RESOURCE;
+                        }
+                        else if (basicType.startsWith("TimeRole")) {
+                            bti = CF_TIME;
+                        }
+                        else if (basicType.startsWith("PlaceRole")) {
+                            bti = CF_PLACE;
+                        }
+
+                        if (bti > CF_CONTEXT) {
+                            for (String term : fmList) {
+                                int idx = term.indexOf(DB.getW3cNamespaceDelimiter());
+                                String newTerm = null;
+                                if ((idx > 0) && (idx < term.length())) {
+                                    newTerm = term.substring(idx + 1);
+                                }
+                                if (i == 0) {
+                                    newTerm = (nsPrefix + newTerm);
+                                    rowFocalTerm = newTerm;
+                                    if (bti == CF_RESOURCE) {
+                                        relatorComponents.put(DB.w3cToKif(rowFocalTerm),
+                                                              twoOrMore);
+                                    }
+                                }
+                                else {
+                                    statements.add(DB.makeStatement("synonym",
+                                                                    namespace,
+                                                                    rowFocalTerm,
+                                                                    DB.quote(newTerm)));
+                                }
+                                i++;
+                            }
+                        }
+                        if (StringUtil.isNonEmptyString(rowFocalTerm)) {
+                            if (StringUtil.isNonEmptyString(family)) {
+                                statements.add(DB.makeStatement("coa:HasCfMember",
+                                                                family,
+                                                                DB.quote(rowFocalTerm)));
+                            }
+                            if (!parentList.isEmpty()) {
+                                for (String p : parentList) {
+                                    statements.add(DB.makeStatement("coa:IsSubClassOf",
+                                                                    rowFocalTerm,
+                                                                    p));
+                                }
+                            }
+                        }
+                        if ((bti == CF_CONTEXT) || (bti == CF_RESOURCE)) {
+                            if (StringUtil.isNonEmptyString(rowFocalTerm)) {
+                                String kifTerm = DB.w3cToKif(rowFocalTerm);
+                                if (!parentList.isEmpty()) {
+                                    List plist = (List) hier.get(kifTerm);
+                                    if (plist == null) {
+                                        plist = new LinkedList();
+                                        hier.put(kifTerm, plist);
+                                    }
+                                    for (String s : parentList) {
+                                        String kifParent = DB.w3cToKif(s);
+                                        if (!plist.contains(kifParent)) {
+                                            plist.add(kifParent);
+                                        }
+                                    }
+                                }
+
+                                // System.out.println("  cardinality == " + cardinality);
+
+                                if (StringUtil.isNonEmptyString(cardinality)) {
+                                    addCardinalityStatements(kifTerm, cardinality, statements);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // System.out.println("  relatorComponents == " + relatorComponents);
+            String c1 = null;
+            String c2 = null;
+            String boolStr = null;
+            for (Iterator it1 = relatorComponents.keySet().iterator(); it1.hasNext();) {
+                c1 = (String) it1.next();
+                boolStr = (String) relatorComponents.get(c1);
+                boolean isTwoOrMore = (StringUtil.isNonEmptyString(boolStr) 
+                                       && boolStr.equals("true"));
+                for (Iterator it2 = relatorComponents.keySet().iterator(); it2.hasNext();) {
+                    c2 = (String) it2.next();
+                    if (!c1.equals(c2) || isTwoOrMore) {
+
+                        String pred = ("(PredicateFn " + c1 + " " + c2 + ")");
+
+                        // if (c1.equals(c2) && isTwoOrMore) {
+                        //     System.out.println("  same domain and range: " + pred);
+                        // }
+
+                        compositeRelators.add(pred);
+                        String relatorStr = (db.stripNamespace(c1)
+                                             + "."
+                                             + db.stripNamespace(c2));
+                        statements.add(DB.makeStatement("termFormat",
+                                                        namespace,
+                                                        pred,
+                                                        DB.quote(relatorStr)));
+                        statements.add(DB.makeStatement("coa:HasCfMember",
+                                                        family,
+                                                        DB.quote(nsPrefix + relatorStr)));
+                        statements.add(DB.makeStatement("coa:IsA", pred, "coa:Relator"));
+                        statements.add(DB.makeStatement("coa:HasDomain", pred, c1));
+                        statements.add(DB.makeStatement("coa:HasRange", pred, c2));
+                        String inv = ("(PredicateFn " + c2 + " " + c1 + ")");
+                        statements.add(DB.makeStatement("coa:IsReciprocalOf", inv, pred));
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** *************************************************************
+     * Creates cardinality statement Strings and adds them to the Set
+     * of statements.
+     *
+     * @param countable A String, the SUO-KIF term that denotes a
+     * countable entity and will be the first argument in the created
+     * cardinality statements
+     *
+     * @param cardinality A String token that denotes an integer
+     * value, or a range consisting of min and max values
+     *
+     * @param statements A Set in which the String representations of
+     * KIF formulae are collected
+     *
+     * @return void
+     */
+    private static void addCardinalityStatements(String countable, 
+                                                 String cardinality,
+                                                 Set statements) {
+        try {
+            if (StringUtil.isNonEmptyString(countable)
+                && StringUtil.isNonEmptyString(cardinality)) {
+                int minint = -1;
+                int maxint = -1;
+                String min = null;
+                String max = null;
+                int didx = cardinality.indexOf("-");
+                if (didx > -1) { 
+                    min = cardinality.substring(0,didx);
+                    max = ((cardinality.length() > didx)
+                           ? cardinality.substring(didx+1)
+                           : "");
+                }
+                else if (StringUtil.isDigitString(cardinality)) {
+                    min = cardinality;
+                    max = cardinality;
+                }
+                if (min.equals("n")) {
+                    min = Integer.toString(Integer.MAX_VALUE);
+                }
+                if (max.equals("n")) {
+                    max = Integer.toString(Integer.MAX_VALUE);
+                }
+                try {
+                    minint = Integer.parseInt(min);
+                }
+                catch (Exception e1) {
+                    minint = -1;
+                }
+                try {
+                    maxint = Integer.parseInt(max);
+                }
+                catch (Exception e2) {
+                    maxint = -1;
+                }
+                ArrayList arg0s = new ArrayList();
+                ArrayList arg2s = new ArrayList();
+                if (minint > -1) {
+                    if (minint == maxint) {
+                        if (minint < Integer.MAX_VALUE) {
+                            arg0s.add("hasExactCardinality");
+                            arg2s.add(Integer.toString(minint));
+                        }
+                        else {
+                            arg0s.add("hasMaxCardinality");
+                            arg2s.add("coa:MaxInteger");  // Integer.toString(minint);
+                        }
+                    }
+                    else if (minint < maxint) {
+                        arg0s.add("hasMinCardinality");
+                        arg2s.add(Integer.toString(minint));
+                        arg0s.add("hasMaxCardinality");
+                        arg2s.add((maxint == Integer.MAX_VALUE)
+                                  ? "coa:MaxInteger"
+                                  : Integer.toString(maxint));
+                    }
+                }
+                int a0Len = arg0s.size();
+                String cArg2 = null;
+                String cArg0 = null;
+                String specArg0 = null;
+                for (int i = 0; i < a0Len; i++) {
+                    cArg0 = (String) arg0s.get(i);
+                    /*
+                      specArg0 = kb.getFirstTermViaPredicateSubsumption("subrelation",
+                      2,
+                      cArg0,
+                      1,
+                      true);
+                      if (StringUtil.isNonEmptyString(specArg0)) {
+                      cArg0 = specArg0;
+                      }
+                    */
+                    cArg2 = (String) arg2s.get(i);
+                    statements.add(DB.makeStatement(cArg0, countable, cArg2));
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** *************************************************************
+     * Normalizes each field of tblarr, which is a List of Lists.
+     *
+     * @param db A DB utility object used to process tblarr
+     *
+     * @param tblarr A List of Lists representing a spreadsheet or
+     * database table
+     *
+     * @return void
+     */
+    private static void normalizeCfTable(DB db, List<List> tblarr) {
+        try {
+            db.buildTableColumnNames(null, null);
+            List constantKeys = Arrays.asList("B", "C", "S", "T", "U", "V", "W", "X");
+            boolean isNormalizing = false;
+            String nsToken = "coa";
+            String nsPrefix = (nsToken + DB.getW3cNamespaceDelimiter());
+            String termDelim = "|";
+            String nameDelim = "!";
+            StringBuilder sb = new StringBuilder();
+            String cell = null;
+            String newCell = null;
+            String key = null;
+            for (List row : tblarr) {
+                int rowlen = row.size();
+                for (int i = 0; i < rowlen; i++) {
+                    key = db.getColumnKey(i);
+                    cell = (String) row.get(i);
+                    if (StringUtil.isNonEmptyString(cell)) {
+
+                        // System.out.println("  cell == " + cell);
+
+                        newCell = StringUtil.removeEnclosingQuotes(cell.trim());
+
+                        if (key.equals("A") && newCell.equals("Family")) {
+                            isNormalizing = true;
+                        }
+                        else if (isNormalizing) {
+                            if (constantKeys.contains(key)) {
+
+                                // if (key.equals("C")) {
+                                //     System.out.println("  newCell == " + newCell);
+                                // }
+
+                                if (newCell.matches(".*\\s+.*") 
+                                    // || newCell.matches(".*\\s*syn!.*")
+                                    || newCell.matches(DB.NAMES_FIELD_PATTERN)
+                                    ) {
+                                    sb.setLength(0);
+                                    List<String> strings = 
+                                        (newCell.contains("syn!")
+                                         ? Arrays.asList(newCell.split("\\s*syn!"))
+                                         : Arrays.asList(newCell.split("\\s+")));
+
+                                    // System.out.println("  strings == " + strings);
+
+                                    int j = 0;
+                                    for (String str : strings) {
+                                        int nidx = str.indexOf(nameDelim);
+                                        if ((nidx > 0) 
+                                            && (nidx < (str.length() - 1))) {
+                                            str = str.substring(nidx + 1);
+                                        }
+                                        if (!str.startsWith(nsToken)) {
+                                            str = (nsPrefix + str);
+                                        }
+                                        if (j > 0) sb.append(termDelim);
+                                        sb.append(str);
+                                        j++;
+                                    }
+                                    newCell = sb.toString();
+                                }
+                                else if (!newCell.startsWith(nsToken)) {
+                                    newCell = (nsPrefix + newCell);
+                                }
+                            }
+                        }
+                        row.set(i, newCell);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
     }
 
     /** *************************************************************
