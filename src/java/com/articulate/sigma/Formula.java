@@ -4349,7 +4349,10 @@ public class Formula implements Comparable {
                         System.out.println("  f == " + f);
                     }
 
-                    this.getTheTptpFormulas().add(tptpParseSUOKIFString(f.theFormula));
+                    String tptpStr = tptpParseSUOKIFString(f.theFormula);
+                    if (StringUtil.isNonEmptyString(tptpStr)) {
+                        this.getTheTptpFormulas().add(tptpStr);
+                    }
                 }
 
                 //         System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
