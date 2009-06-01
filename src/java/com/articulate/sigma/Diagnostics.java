@@ -214,11 +214,10 @@ public class Diagnostics {
         while (it.hasNext()) {
             contradiction = false;
             term = (String) it.next();
-            parentSet = kb.getCachedRelationValues( "subclass", term, 1, 2 );
+            parentSet = kb.getCachedRelationValues("subclass", term, 1, 2);
             parents = null;
-            if ((parentSet != null) && !parentSet.isEmpty()) {
-                parents = parentSet.toArray();
-            }
+            if ((parentSet != null) && !parentSet.isEmpty())
+                parents = parentSet.toArray();            
             if (parents != null) {
                 for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
                     termX = (String) parents[i];
@@ -227,17 +226,9 @@ public class Diagnostics {
                         for (int j = (i + 1) ; j < parents.length ; j++) {
                             termY = (String) parents[j];
                             if (disjoints.contains(termY)) {
-                                result.add( term );
+                                result.add(term);
                                 contradiction = true;
                                 count++;
-                                /*
-                                System.out.println( "INFO in Diagnostics.childrenOfDisjointParents(): " 
-                                                    + termX 
-                                                    + " and " 
-                                                    + termY 
-                                                    + " are disjoint parents of " 
-                                                    + term  );
-                                */
                                 break;
                             }
                         }
@@ -497,7 +488,9 @@ public class Diagnostics {
      * defined in another file, which would entail a mutual file
      * dependency, rather than a hierarchy of files.
      * @return a TreeMap of file name keys and an ArrayList of the
-     *         files on which it depends.
+     *         files on which it depends. The interior TreeMap file
+     *         name keys index ArrayLists of terms.  file -depends
+     *         on->filenames -that defines-> terms
      */
     private static TreeMap termDependency(KB kb) {
 
@@ -551,6 +544,11 @@ public class Diagnostics {
 
     /** *****************************************************************
      * Check the size of the dependency list.
+     * @param depend is a map of file name keys and TreeMap values
+     *               listing file names on which the given file
+     *               depends. The interior TreeMap file name keys
+     *               index ArrayLists of terms. file -depends on->
+     *               filename -that defines-> terms
      */
     private static int dependencySize(TreeMap depend, String f, String f2) {
 
@@ -575,6 +573,10 @@ public class Diagnostics {
         ArrayList examined = new ArrayList();
 
         StringBuffer result = new StringBuffer();
+
+        // A map of file name keys and TreeMap values listing file names
+        // on which the given file depends.  The interior TreeMap file name
+        // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
         TreeMap fileDepends = Diagnostics.termDependency(kb);
         Iterator it = fileDepends.keySet().iterator();
         while (it.hasNext()) {
@@ -585,8 +587,9 @@ public class Diagnostics {
             while (it2.hasNext()) {
                 String f2 = (String) it2.next();                
                 ArrayList al = (ArrayList) tm.get(f2);
-                if (dependencySize(fileDepends,f,f2) * 2 > al.size() &&
-                    !examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)) {  // show mutual dependencies of comparable size
+                if (al != null && (dependencySize(fileDepends,f,f2) > al.size() || al.size() < 20))
+                    //!examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)
+                    {  // show mutual dependencies of comparable size
                     result.append("\nFile " + f2 + " dependency size on file " + f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
                     result.append("\nFile " + f + " dependency size on file " + f2 + " is " + al.size() + "\n");
                     result.append(" with terms:<br>\n ");
@@ -600,9 +603,12 @@ public class Diagnostics {
                 }
                 else {
                     int i = dependencySize(fileDepends,f,f2);
-                    if (i > 0 && !examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)) {
-                        result.append("\nFile " + f2 + " dependency size on file " + f + " is " + i + "<P>\n");
-                    }
+                    int j = dependencySize(fileDepends,f2,f);
+                    // && !examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)
+                    if (i > 0 ) 
+                        result.append("\nFile " + f2 + " dependency size on file " + f + " is " + i + "<P>\n");                    
+                    if (j > 0 ) 
+                        result.append("\nFile " + f + " dependency size on file " + f2 + " is " + j + "<P>\n");                    
                 }
                 if (!examined.contains(f + "-" + f2)) 
                     examined.add(f + "-" + f2);
