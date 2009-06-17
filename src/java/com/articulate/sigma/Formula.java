@@ -4761,11 +4761,9 @@ public class Formula implements Comparable {
         int ans = 0;
         if (queryLiteral instanceof List) {
             String term = null;
-            for (int i = 0 ; i < queryLiteral.size() ; i++) {
-                term = (String) queryLiteral.get(i);
-                if (term.startsWith("?")) {
-                    ans++;
-                }
+            for (Iterator it = queryLiteral.iterator(); it.hasNext();) {
+                term = (String) it.next();
+                if (term.startsWith("?")) ans++;
             }
         }
         return ans;
@@ -4809,13 +4807,29 @@ public class Formula implements Comparable {
                 if (sortedQLits.size() > 1) {
                     Comparator comp = new Comparator() {
                             public int compare(Object o1, Object o2) {
-                                Integer len1 = Integer.valueOf(((List) o1).size());
-                                Integer len2 = Integer.valueOf(((List) o2).size());
-                                return len1.compareTo(len2);
+                                Integer c1 = Integer.valueOf(getVarCount((List) o1));
+                                Integer c2 = Integer.valueOf(getVarCount((List) o2));
+                                return c1.compareTo(c2);
                             }
                         };
                     Collections.sort(sortedQLits, Collections.reverseOrder(comp));
                 }
+                
+                // Put instance literals last.
+                List tmplist = new ArrayList(sortedQLits);
+                List ioLits = new ArrayList();
+                sortedQLits.clear();
+                List ql = null;
+                for (Iterator iql = tmplist.iterator(); iql.hasNext();) {
+                    ql = (List) iql.next();
+                    if (((String)(ql.get(0))).equals("instance")) {
+                        ioLits.add(ql);
+                    }
+                    else {
+                        sortedQLits.add(ql);
+                    }
+                }
+                sortedQLits.addAll(ioLits);
 
                 // Literals that will be used to try to simplify the
                 // formula before pred var instantiation.
@@ -4824,7 +4838,7 @@ public class Formula implements Comparable {
                 // The literal that will serve as the pattern for
                 // extracting var replacement terms from answer
                 // literals.
-                ArrayList keyLit = null;
+                List keyLit = null;
 
                 // The list of answer literals retrieved using the
                 // query lits, possibly built up via a sequence of
@@ -4833,7 +4847,6 @@ public class Formula implements Comparable {
 
                 Set working = new HashSet();
                 ArrayList accumulator = null;
-                ArrayList ql = null;
 
                 boolean satisfiable = true;
                 boolean tryNextQueryLiteral = true;
@@ -4841,15 +4854,17 @@ public class Formula implements Comparable {
                 // The first query lit for which we get an answer is
                 // the key lit.
                 for (i = 0; 
-                     (i < sortedQLits.size()) 
-                         && tryNextQueryLiteral
-                         ; 
+                     (i < sortedQLits.size()) && tryNextQueryLiteral; 
                      i++) {
-                    ql = (ArrayList) sortedQLits.get(i);
+                    ql = (List) sortedQLits.get(i);
                     accumulator = kb.askWithLiteral(ql);
                     satisfiable = ((accumulator != null) && !accumulator.isEmpty());
                     tryNextQueryLiteral = 
-                        (satisfiable || !((String)(ql.get(0))).equals("instance"));
+                        (satisfiable 
+                         || 
+                         (getVarCount(ql) > 1)
+                         // !((String)(ql.get(0))).equals("instance")
+                         );
 
                     // System.out.println(ql + " accumulator == " + accumulator);
 
@@ -4866,10 +4881,10 @@ public class Formula implements Comparable {
 
                             // Winnow the answers list.
                             working.clear();
-                            ArrayList ql2 = null;
+                            List ql2 = null;
                             int varPos = ql.indexOf(idxVar);
                             for (j = 0 ; j < accumulator.size() ; j++) {
-                                ql2 = (ArrayList) accumulator.get(j);
+                                ql2 = (List) accumulator.get(j);
                                 working.add((String)ql2.get(varPos));
                             }
                             accumulator.clear();
@@ -4877,7 +4892,7 @@ public class Formula implements Comparable {
                             answers.clear();
                             varPos = keyLit.indexOf(idxVar);
                             for (j = 0; j < accumulator.size(); j++) {
-                                ql2 = (ArrayList) accumulator.get(j);
+                                ql2 = (List) accumulator.get(j);
                                 if (working.contains((String)ql2.get(varPos))) {
                                     answers.add(ql2);
                                 }
