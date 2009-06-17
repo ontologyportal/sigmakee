@@ -185,8 +185,8 @@ public class KBmanager {
                                 }
                             }
                             kb.buildRelationCaches();
-                            if ( useCacheFile ) {
-                                result.append( kb.cache() );
+                            if (useCacheFile) {
+                                result.append(kb.cache());
                             }
                             kb.loadVampire();
                         }
@@ -208,23 +208,32 @@ public class KBmanager {
      * configuration file if none exists.
      */
 
-    private static void copyFile(File in, File out)  
-    throws IOException {  
-        FileInputStream fis     = new FileInputStream(in);  
-        FileOutputStream fos    = new FileOutputStream(out);  
-         
-        try {  
+    private static void copyFile(File in, File out) {  
+        FileInputStream fis  = null;
+        FileOutputStream fos = null;
+        try {
+            fis = new FileInputStream(in);
+            fos = new FileOutputStream(out);
             byte[] buf = new byte[1024];  
             int i = 0;  
             while ((i = fis.read(buf)) != -1) {  
                 fos.write(buf, 0, i);  
             }  
-        }  
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         finally {  
-            if (fis != null) fis.close();  
-            if (fos != null) fos.close();  
+            try {
+                if (fis != null) fis.close();  
+                if (fos != null) fos.close();  
+            }
+            catch (Exception ioe) {
+                ioe.printStackTrace();
+            }
         }  
-    }     
+        return;
+    }
 
     /** ***************************************************************
      * Reads an XML configuration file from the directory
