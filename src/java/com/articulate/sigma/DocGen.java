@@ -872,16 +872,15 @@ public class DocGen {
     public boolean isComposite(KB kb, String term) {
         boolean ans = false;
         try {
-            ans = (kb.isInstanceOf(term, "CompositeContentBearingObject")
-                   || kb.isSubclass(term, "CompositeContentBearingObject")
-                   || kb.isInstanceOf(term, "CompositeContentBearingObjectType"));
+            ans = (isInstanceOf(kb, term, "CompositeContentBearingObject")
+                   || isSubclass(kb, term, "CompositeContentBearingObject")
+                   || isInstanceOf(kb, term, "CompositeContentBearingObjectType"));
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
         return ans;
     }
-
 
     /** **************************************************************
      * Returns true if statements that include term and occur in the
@@ -3375,8 +3374,8 @@ public class DocGen {
     private static boolean isSkipNode(KB kb, String term) {
         boolean ans = false;
         try {
-            ans = (kb.isInstanceOf(term, "XmlSequenceElement")
-                   || kb.isInstanceOf(term, "XmlChoiceElement"));
+            ans = (isInstanceOf(kb, term, "XmlSequenceElement")
+                   || isInstanceOf(kb, term, "XmlChoiceElement"));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -6607,7 +6606,7 @@ public class DocGen {
                     if (isSkipNode(kb, subTerm)) {  
 
                         // XmlChoiceElement or XmlSequenceElement
-                        if (kb.isInstanceOf(subTerm, "XmlChoiceElement")) {
+                        if (isInstanceOf(kb, subTerm, "XmlChoiceElement")) {
                             newElem = makeChoiceElement(kb, doc, subTerm, newPath);
                         }
                         else {
@@ -7311,7 +7310,7 @@ public class DocGen {
                                                                          1,
                                                                          ontology,
                                                                          2);
-                                if (kb.isInstanceOf(term, focalInstanceClass)) {
+                                if (isInstanceOf(kb, term, focalInstanceClass)) {
 
                                     Element _msgElem = makeElementElement(kb, 
                                                                           _doc, 
@@ -7595,7 +7594,7 @@ public class DocGen {
                                                                       avsType,
                                                                       1,
                                                                       false);
-            if (members.isEmpty() && kb.isSubclass(avsType, "CodedIdentifier")) {
+            if (members.isEmpty() && isSubclass(kb, avsType, "CodedIdentifier")) {
                 members = kb.getTermsViaPredicateSubsumption("instance",
                                                              2,
                                                              avsType,
@@ -7610,6 +7609,68 @@ public class DocGen {
             ex.printStackTrace();
         }
         return result;
+    }
+
+    /** *************************************************************
+     * Supports memoization for isSubclass(kb, c1, c2).
+     */
+    private static Map isSubclassCache = new HashMap();
+
+    /** *************************************************************
+     * Returns true if c1 is found to be a subclass of c2, else
+     * returns false.
+     *
+     * @param kb, A KB object
+     * @param c1 A String, the name of a SetOrClass
+     * @param c2 A String, the name of a SetOrClass
+     * @return boolean
+     */
+    private static boolean isSubclass(KB kb, String c1, String c2) {
+        boolean ans = false;
+        try {
+            if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(c2)) {
+                Set terms = (Set) isSubclassCache.get(c1);
+                if (terms == null) {
+                    terms = kb.getAllSuperClassesWithPredicateSubsumption(c1);
+                    isSubclassCache.put(c1, terms);
+                }
+                ans = terms.contains(c2);
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** *************************************************************
+     * Supports memoization for isInstanceOf(kb, c1, c2).
+     */
+    private static Map isInstanceOfCache = new HashMap();
+
+
+    /** *************************************************************
+     * Returns true if i is an instance of c, else returns false.
+     *
+     * @param kb A KB object
+     * @param i A String denoting an instance
+     * @param c A String denoting a Class
+     * @return true or false
+     */
+    protected static boolean isInstanceOf(KB kb, String i, String c) {
+        boolean ans = false;
+        try {
+            Set classes = (Set) isInstanceOfCache.get(i);
+            if (classes == null) {
+                classes = kb.getAllInstanceOfsWithPredicateSubsumption(i);
+                isInstanceOfCache.put(i, classes);
+            }
+            ans = classes.contains(c);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
     }
 
     /** *************************************************************
@@ -8011,7 +8072,7 @@ public class DocGen {
             }
             this.setOutputParentDir(outdir);
             String ontoTerm = null;
-            if (kb.isInstanceOf(ontologyName, "Ontology")) {
+            if (isInstanceOf(kb, ontologyName, "Ontology")) {
                 ontoTerm = ontologyName;
             }
             else {
@@ -8023,7 +8084,7 @@ public class DocGen {
                         f = (Formula) it.next();
                         if (f.getArgument(3).matches(".*" + ontologyName + ".*")) {
                             term = f.getArgument(2);
-                            if (kb.isInstanceOf(term, "Ontology")) {
+                            if (isInstanceOf(kb, term, "Ontology")) {
                                 ontoTerm = term;
                                 break;
                             }
@@ -8961,7 +9022,7 @@ public class DocGen {
             String eterm = null;
             for (Iterator eti = nextElems.iterator(); eti.hasNext();) {
                 eterm = (String) eti.next();
-                if (kb.isInstanceOf(eterm, "XmlSequenceElement")) {
+                if (isInstanceOf(kb, eterm, "XmlSequenceElement")) {
                     elems.addAll(getSubordinateElements(kb, eterm));
                 }
                 else {

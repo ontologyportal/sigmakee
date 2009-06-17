@@ -329,6 +329,9 @@ public class Executor {
                             t2 = System.currentTimeMillis();
                         }
                     }
+
+                    // System.out.println("  basesToQWords == " + db.basesToQWords);
+
                 }
                 ok = false;
             }
@@ -378,6 +381,8 @@ public class Executor {
     private static final int CF_TIME     = 3;
     private static final int CF_PLACE    = 4;
 
+    private static final String DOT_OP   = "-";  // was: "."
+
     /** *************************************************************
      * Processes the Context Family .dif files found in the directory
      * denoted by indirpath, and saves the resulting KIF file in the
@@ -399,6 +404,7 @@ public class Executor {
                 Map hier = new HashMap();
                 Set<String> compositeRelators = new TreeSet<String>();
                 Set<String> statements = new LinkedHashSet<String>();
+                Set<String> localStatements = new LinkedHashSet<String>();
                 List<String> skipFiles = Arrays.asList("CF_Template", 
                                                        "Summary", 
                                                        "SOW_Template", 
@@ -436,7 +442,13 @@ public class Executor {
                                 statements.add(((cfsDone > 0)
                                                 ? db.getLineSeparator()
                                                 : "") + ";; " + base);
-                                processCfTable(db, tblarr, hier, compositeRelators, statements);
+                                localStatements.clear();
+                                processCfTable(db, 
+                                               tblarr, 
+                                               hier, 
+                                               compositeRelators, 
+                                               localStatements);
+                                statements.addAll(localStatements);
                                 cfsDone++;
                             }
                         }
@@ -539,7 +551,9 @@ public class Executor {
                                        Set<String> compositeRelators,
                                        Set<String> statements) {
         try {
-            Map relatorComponents = new HashMap();
+            Set<String> zeroCardinality = new HashSet<String>();
+            Map<String, String> cardinalities = new HashMap<String, String>();
+            Map<String, String> relatorComponents = new HashMap<String, String>();
             String nsToken = "coa";
             String namespace = ("ns" + DB.getW3cNamespaceDelimiter() + nsToken);
             String nsPrefix = (nsToken + DB.getW3cNamespaceDelimiter());
@@ -614,7 +628,7 @@ public class Executor {
                     // System.out.println("  min == " + min);
                     // System.out.println("  max == " + max);
 
-                    String twoOrMore = ((max > 1) ? "true" : "false");
+                    String twoOrMoreP = ((max > 1) ? "true" : "false");
                     String definition = (String) row.get(db.getColumnIndex("F"));
 
                     // if (!parentList.isEmpty()) System.out.println("  parentList == " + parentList);
@@ -646,7 +660,7 @@ public class Executor {
                             }
                             for (String term : parentList) {
                                 String parentFamily = (term + "_CF");
-                                statements.add(DB.makeStatement("coa:IsSubClassOf",
+                                statements.add(DB.makeStatement("coa:HasLogicalParent",
                                                                 family,
                                                                 parentFamily));
                             }
@@ -664,7 +678,7 @@ public class Executor {
                                     contextType = newTerm;
                                     rowFocalTerm = contextType;
                                     relatorComponents.put(DB.w3cToKif(rowFocalTerm),
-                                                          twoOrMore);
+                                                          twoOrMoreP);
                                 }
                                 else {
                                     statements.add(DB.makeStatement("synonym",
@@ -703,7 +717,7 @@ public class Executor {
                                     rowFocalTerm = newTerm;
                                     if (bti == CF_RESOURCE) {
                                         relatorComponents.put(DB.w3cToKif(rowFocalTerm),
-                                                              twoOrMore);
+                                                              twoOrMoreP);
                                     }
                                 }
                                 else {
@@ -719,7 +733,7 @@ public class Executor {
                             if (StringUtil.isNonEmptyString(family)) {
                                 statements.add(DB.makeStatement("coa:HasCfMember",
                                                                 family,
-                                                                DB.quote(rowFocalTerm)));
+                                                                rowFocalTerm));
                             }
                             if (!parentList.isEmpty()) {
                                 for (String p : parentList) {
@@ -749,12 +763,38 @@ public class Executor {
                                 // System.out.println("  cardinality == " + cardinality);
 
                                 if (StringUtil.isNonEmptyString(cardinality)) {
-                                    addCardinalityStatements(kifTerm, cardinality, statements);
+                                    addCfCardinalityValues(db,
+                                                           kifTerm, 
+                                                           cardinality, 
+                                                           cardinalities,
+                                                           zeroCardinality);
                                 }
                             }
                         }
                     }
                 }
+            }
+
+            List rcKeys = new ArrayList(relatorComponents.keySet());
+            Iterator its = null;
+            Iterator itr = null;
+            for (String zc : zeroCardinality) {
+                for (its = statements.iterator(); its.hasNext();) {
+                    String stmt = (String) its.next();
+                    if (stmt.contains(zc) && !stmt.matches(".*Has\\w+Cardinality.*")) {
+                        its.remove();
+                        System.out.println("  removed stmt == " + stmt);
+                    }
+                }
+                /*
+                for (itr = rcKeys.iterator(); itr.hasNext();) {
+                    String key = (String) itr.next();
+                    if (key.contains(zc)) {
+                        relatorComponents.remove(key);
+                        System.out.println("  removed key == " + key);
+                    }
+                }
+                */
             }
 
             // System.out.println("  relatorComponents == " + relatorComponents);
@@ -768,6 +808,14 @@ public class Executor {
                                        && boolStr.equals("true"));
                 for (Iterator it2 = relatorComponents.keySet().iterator(); it2.hasNext();) {
                     c2 = (String) it2.next();
+                    String domainCard = (String) cardinalities.get(c1);
+                    if (domainCard == null) {
+                        domainCard = "nil";
+                    }
+                    String rangeCard = (String) cardinalities.get(c2);
+                    if (rangeCard == null) {
+                        rangeCard = "nil";
+                    }
                     if (!c1.equals(c2) || isTwoOrMore) {
 
                         String pred = ("(PredicateFn " + c1 + " " + c2 + ")");
@@ -776,22 +824,52 @@ public class Executor {
                         //     System.out.println("  same domain and range: " + pred);
                         // }
 
-                        compositeRelators.add(pred);
                         String relatorStr = (db.stripNamespace(c1)
-                                             + "."
+                                             + DOT_OP
                                              + db.stripNamespace(c2));
-                        statements.add(DB.makeStatement("termFormat",
-                                                        namespace,
-                                                        pred,
-                                                        DB.quote(relatorStr)));
-                        statements.add(DB.makeStatement("coa:HasCfMember",
-                                                        family,
-                                                        DB.quote(nsPrefix + relatorStr)));
-                        statements.add(DB.makeStatement("coa:IsA", pred, "coa:Relator"));
-                        statements.add(DB.makeStatement("coa:HasDomain", pred, c1));
-                        statements.add(DB.makeStatement("coa:HasRange", pred, c2));
-                        String inv = ("(PredicateFn " + c2 + " " + c1 + ")");
-                        statements.add(DB.makeStatement("coa:IsReciprocalOf", inv, pred));
+
+                        if (!domainCard.equals("0") && !rangeCard.equals("0")) {
+                            compositeRelators.add(pred);
+                            statements.add(DB.makeStatement("termFormat",
+                                                            namespace,
+                                                            pred,
+                                                            DB.quote(relatorStr)));
+                            statements.add(DB.makeStatement("coa:HasCfMember",
+                                                            family,
+                                                            pred));
+                            statements.add(DB.makeStatement("coa:IsA", pred, "coa:Relator"));
+                            statements.add(DB.makeStatement("coa:HasDomain", pred, c1));
+                            statements.add(DB.makeStatement("coa:HasRange", pred, c2));
+                            String inv = ("(PredicateFn " + c2 + " " + c1 + ")");
+                            statements.add(DB.makeStatement("coa:IsReciprocalOf", inv, pred));
+                        }
+
+                        String domainConstraint = ("coarule:" + relatorStr + "_DomainCardinality");
+                        String rangeConstraint = ("coarule:" + relatorStr + "_RangeCardinality");
+                        statements.add(DB.makeStatement("coa_itd:HasRuleType",
+                                                        domainConstraint,
+                                                        "coa:RelatorCardinalityConstraint"));
+                        statements.add(DB.makeStatement("coa:ConstrainsDomain",
+                                                        domainConstraint,
+                                                        c1));
+                        statements.add(DB.makeStatement("coa:ConstrainsRelator",
+                                                        domainConstraint,
+                                                        pred));
+                        makeCfConstraintCardinalityStatements(domainConstraint, 
+                                                              domainCard,
+                                                              statements);
+                        statements.add(DB.makeStatement("coa_itd:HasRuleType",
+                                                        rangeConstraint,
+                                                        "coa:RelatorCardinalityConstraint"));
+                        statements.add(DB.makeStatement("coa:ConstrainsRange",
+                                                        rangeConstraint,
+                                                        c2));
+                        statements.add(DB.makeStatement("coa:ConstrainsRelator",
+                                                        rangeConstraint,
+                                                        pred));
+                        makeCfConstraintCardinalityStatements(rangeConstraint, 
+                                                              rangeCard,
+                                                              statements);
                     }
                 }
             }
@@ -802,27 +880,11 @@ public class Executor {
         return;
     }
 
-    /** *************************************************************
-     * Creates cardinality statement Strings and adds them to the Set
-     * of statements.
-     *
-     * @param countable A String, the SUO-KIF term that denotes a
-     * countable entity and will be the first argument in the created
-     * cardinality statements
-     *
-     * @param cardinality A String token that denotes an integer
-     * value, or a range consisting of min and max values
-     *
-     * @param statements A Set in which the String representations of
-     * KIF formulae are collected
-     *
-     * @return void
-     */
-    private static void addCardinalityStatements(String countable, 
-                                                 String cardinality,
-                                                 Set statements) {
+    private static void makeCfConstraintCardinalityStatements(String constraint, 
+                                                              String cardinality,
+                                                              Set statements) {
         try {
-            if (StringUtil.isNonEmptyString(countable)
+            if (StringUtil.isNonEmptyString(constraint)
                 && StringUtil.isNonEmptyString(cardinality)) {
                 int minint = -1;
                 int maxint = -1;
@@ -862,21 +924,19 @@ public class Executor {
                 if (minint > -1) {
                     if (minint == maxint) {
                         if (minint < Integer.MAX_VALUE) {
-                            arg0s.add("hasExactCardinality");
+                            arg0s.add("coa:HasExactCardinality");
                             arg2s.add(Integer.toString(minint));
                         }
                         else {
-                            arg0s.add("hasMaxCardinality");
-                            arg2s.add("coa:MaxInteger");  // Integer.toString(minint);
+                            arg0s.add("coa:HasMaxCardinality");
+                            arg2s.add(Integer.toString(minint));  // Integer.toString(minint);
                         }
                     }
                     else if (minint < maxint) {
-                        arg0s.add("hasMinCardinality");
+                        arg0s.add("coa:HasMinCardinality");
                         arg2s.add(Integer.toString(minint));
-                        arg0s.add("hasMaxCardinality");
-                        arg2s.add((maxint == Integer.MAX_VALUE)
-                                  ? "coa:MaxInteger"
-                                  : Integer.toString(maxint));
+                        arg0s.add("coa:HasMaxCardinality");
+                        arg2s.add(Integer.toString(maxint));
                     }
                 }
                 int a0Len = arg0s.size();
@@ -885,18 +945,74 @@ public class Executor {
                 String specArg0 = null;
                 for (int i = 0; i < a0Len; i++) {
                     cArg0 = (String) arg0s.get(i);
-                    /*
-                      specArg0 = kb.getFirstTermViaPredicateSubsumption("subrelation",
-                      2,
-                      cArg0,
-                      1,
-                      true);
-                      if (StringUtil.isNonEmptyString(specArg0)) {
-                      cArg0 = specArg0;
-                      }
-                    */
                     cArg2 = (String) arg2s.get(i);
-                    statements.add(DB.makeStatement(cArg0, countable, cArg2));
+                    statements.add(DB.makeStatement(cArg0, constraint, cArg2));
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** *************************************************************
+     * Processes cardinality value strings.
+     *
+     * @param countable A String, the SUO-KIF term that denotes a type
+     * of countable entity that is a member of a Context Family.
+     *
+     * @param cardinality A String token that denotes an integer
+     * value, or a range consisting of min and max values
+     *
+     * @param cardinalitiess A Map relating Context Family members to
+     * their cardinality values represented as Strings
+     *
+     * @param zeroCardinality A Set containing those Context Family
+     * members for which the explicit cardinality is 0
+     *
+     * @return void
+     */
+    private static void addCfCardinalityValues(DB db,
+                                               String countable, 
+                                               String cardinality,
+                                               Map<String, String> cardinalities,
+                                               Set zeroCardinality) {
+        try {
+            if (StringUtil.isNonEmptyString(countable)
+                && StringUtil.isNonEmptyString(cardinality)) {
+                String min = null;
+                String max = null;
+                int didx = cardinality.indexOf("-");
+                if (didx > -1) { 
+                    min = cardinality.substring(0,didx);
+                    max = ((cardinality.length() > didx)
+                           ? cardinality.substring(didx+1)
+                           : "");
+                }
+                else if (StringUtil.isDigitString(cardinality)) {
+                    min = cardinality;
+                    max = cardinality;
+                }
+                if (min.equals("n")) {
+                    min = Integer.toString(Integer.MAX_VALUE);
+                }
+                if (max.equals("n")) {
+                    max = Integer.toString(Integer.MAX_VALUE);
+                }
+                if (!StringUtil.isDigitString(min)) {
+                    min = max;
+                }
+                if (!StringUtil.isDigitString(max)) {
+                    max = min;
+                }
+                String val = min;
+                if (!min.equals(max)) {
+                    val += ("-" + max);
+                }
+                cardinalities.put(countable, val);
+                if (val.equals("0")) {
+                    zeroCardinality.add(db.stripNamespace(countable));
                 }
             }
         }
