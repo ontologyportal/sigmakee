@@ -185,25 +185,34 @@ public class StringUtil {
 
     /** ***************************************************************
      * @param str A String
-     * @return A String with all non-ASCII characters replaced by "-".
+     * @return true if str contains any non-ASCII characters, else
+     * false.
+     */
+    public static boolean containsNonAsciiChars(String str) {
+        return isNonEmptyString(str) && str.matches(".*[^\\p{ASCII}].*");
+    }
+
+    /** ***************************************************************
+     * @param str A String
+     * @return A String with all non-ASCII characters replaced by "x".
      */
     public static String replaceNonAsciiChars(String str) {
         String ans = str;
         if (isNonEmptyString(ans)) {
-            ans = ans.replaceAll("[^\\p{ASCII}]", "-");
+            ans = ans.replaceAll("[^\\p{ASCII}]", "x");
         }
         return ans;
     }
 
     /** ***************************************************************
      *  Replace any character that isn't a valid KIF identifier
-     *  character with a hyphen.
+     *  character with a lower-case x.
      */
     public static String replaceNonIdChars(String st) {
 
         String ans = st;
         if (isNonEmptyString(ans)) {
-            ans = ans.replaceAll("[\\W.]", "-");
+            ans = ans.replaceAll("[\\W.]", "x");
             while (ans.matches(".+[^\\p{Alnum}]$")) {
                 ans = ans.substring(0, ans.length() - 1);
             }
@@ -329,24 +338,10 @@ public class StringUtil {
      *
      * @param input A String
      *
+     * @return true or false
      */
     public static boolean isDigitString(String input) {
-        boolean ans = false;
-        try {
-            if (isNonEmptyString(input)) {
-                ans = true;
-                char ch = '0';
-                int ilen = input.length();
-                for (int i = 0; i < ilen; i++) {
-                    ans = Character.isDigit(input.charAt(i));
-                    if (!ans) break;
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
+        return isNonEmptyString(input) && !input.matches(".*\\D+.*");
     }
 
     /** ***************************************************************
