@@ -4883,9 +4883,13 @@ public class Formula implements Comparable {
                             working.clear();
                             List ql2 = null;
                             int varPos = ql.indexOf(idxVar);
-                            for (j = 0 ; j < accumulator.size() ; j++) {
+                            String term = null;
+                            for (j = 0; j < accumulator.size(); j++) {
                                 ql2 = (List) accumulator.get(j);
-                                working.add((String)ql2.get(varPos));
+                                term = (String) (ql2.get(varPos));
+                                // if (!term.endsWith("Fn")) {
+                                working.add(term);
+                                // }
                             }
                             accumulator.clear();
                             accumulator.addAll(answers);
@@ -4893,7 +4897,8 @@ public class Formula implements Comparable {
                             varPos = keyLit.indexOf(idxVar);
                             for (j = 0; j < accumulator.size(); j++) {
                                 ql2 = (List) accumulator.get(j);
-                                if (working.contains((String)ql2.get(varPos))) {
+                                term = (String) (ql2.get(varPos));
+                                if (working.contains(term)) {
                                     answers.add(ql2);
                                 }
                             }
