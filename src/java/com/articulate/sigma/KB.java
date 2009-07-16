@@ -9,7 +9,8 @@ cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico. see also ****
+http://sigmakee.sourceforge.net **
 */
 
 /*************************************************************************************************/
@@ -35,8 +36,7 @@ public class KB {
     public String name;                       
 
     /** An ArrayList of Strings which are the full path file names of
-     * the files which comprise the KB. 
-     */
+     * the files which comprise the KB. */
     public ArrayList constituents = new ArrayList();
 
     /** The natural language in which axiom paraphrases should be presented. */
@@ -54,10 +54,8 @@ public class KB {
     /** A HashMap of HashSets, which contain all the disjoint classes of a given class. */
     public HashMap disjoint = new HashMap();
 
-    /** 
-     * A threshold limiting the number of values that will be added to
-     * a single relation cache table.
-     */
+    /** A threshold limiting the number of values that will be added to
+     * a single relation cache table. */
     private static final int MAX_CACHE_SIZE = 1000000;
 
     /** A List of the names of cached transitive relations. */
@@ -86,18 +84,52 @@ public class KB {
     /** An ArrayList of RelationCache objects. */
     private ArrayList relationCaches = new ArrayList();
 
-    /** *************************************************************
-     * If true, assertions of the form (predicate x x) will be
-     * included in the relation cache tables.
-     */
+    /** The instance of the CELT process. */
+    public CELT celt = null;
+
+    /** A Set of Strings, which are all the terms in the KB. */
+    public TreeSet terms = new TreeSet(); 
+
+    /** The String constant that is the suffix for files of user assertions. */
+    public static final String _userAssertionsString = "_UserAssertions.kif";
+
+    /** The String constant that is the suffix for files of cached assertions. */
+    public static final String _cacheFileSuffix      = "_Cache.kif";
+
+    /** A Map of all the Formula objects in the KB.  Each key is a
+     * String representation of a Formula.  Each value is the Formula
+     * object corresponding to the key. */
+    public HashMap formulaMap = new HashMap(); 
+
+    /** A HashMap of ArrayLists of Formulae, containing all the
+     * formulae in the KB.  Keys are the formula itself, a formula ID, and term
+     * indexes created in KIF.createKey().  */
+    public HashMap formulas = new HashMap();                                                   
+
+    /** The natural language formatting strings for relations in the
+     *  KB. It is a HashMap of language keys and HashMap values.
+     *  The interior HashMap is term name keys and String values. */
+    private HashMap formatMap = new HashMap();
+
+    /** The natural language strings for terms in the KB. It is a
+     *  HashMap of language keys and HashMap values. The interior
+     *  HashMap is term name keys and String values. */
+    private HashMap termFormatMap = new HashMap();
+
+    /** Errors and warnings found during loading of the KB constituents. */
+    public TreeSet errors = new TreeSet();
+
+    /** whether the contents of the KB have been modified without updating the caches */
+    public boolean modifiedContents = false;
+
+    /** If true, assertions of the form (predicate x x) will be
+     * included in the relation cache tables. */
     private boolean cacheReflexiveAssertions = false;
 
     /** *************************************************************
      * Sets the private instance variable cacheReflexiveAssertions to
      * val.
-     *
      * @param val true or false
-     *
      * @return void
      */
     public void setCacheReflexiveAssertions(boolean val) {
@@ -116,8 +148,6 @@ public class KB {
     }
 
     /** *************************************************************
-     * Returns a list of the names of cached relations.
-     * 
      * @return An ArrayList of relation names (Strings).
      */
     private ArrayList getCachedRelationNames() {
@@ -152,8 +182,6 @@ public class KB {
     }
 
     /** *************************************************************
-     * Returns a list of the names of cached reflexive relations.
-     * 
      * @return An ArrayList of relation names (Strings).
      */
     private ArrayList getCachedReflexiveRelationNames() {
@@ -180,57 +208,14 @@ public class KB {
     }
 
     /** *************************************************************
-     * Returns an ArrayList of RelationCache objects.
-     * 
      * @return An ArrayList of RelationCache objects.
      */
     protected ArrayList getRelationCaches() {
         return this.relationCaches;
     }
 
-    /** The instance of the CELT process. */
-    public CELT celt = null;
-
-    /** A Set of Strings, which are all the terms in the KB. */
-    public TreeSet terms = new TreeSet(); 
-
-    /** The String constant that is the suffix for files of user assertions. */
-    public static final String _userAssertionsString = "_UserAssertions.kif";
-
-    /** The String constant that is the suffix for files of cached assertions. */
-    public static final String _cacheFileSuffix      = "_Cache.kif";
-
-    /** 
-     * A Map of all the Formula objects in the KB.  Each key is a
-     * String representation of a Formula.  Each value is the Formula
-     * object corresponding to the key.
-     */
-    public HashMap formulaMap = new HashMap(); 
-
-    /** 
-     * A HashMap of ArrayLists of Formulae, containing all the
-     * formulae in the KB.  Keys are the formula itself, a formula ID, and term
-     * indexes created in KIF.createKey().
-     */
-    private HashMap formulas = new HashMap();                                                   
-
-    /** The natural language formatting strings for relations in the
-     *  KB. It is a HashMap of language keys and HashMap values.
-     *  The interior HashMap is term name keys and String values. */
-    private HashMap formatMap = new HashMap();
-
-    /** The natural language strings for terms in the KB. It is a
-     *  HashMap of language keys and HashMap values. The interior
-     *  HashMap is term name keys and String values. */
-    private HashMap termFormatMap = new HashMap();
-
-    /** Errors and warnings found during loading of the KB constituents. */
-    public TreeSet errors = new TreeSet();
-
-    /** whether the contents of the KB have been modified without updating the caches */
-    public boolean modifiedContents = false;
-
-    /** Returns the platform-specific line separator String. */
+    /** *************************************************************
+     * Returns the platform-specific line separator String. */
     protected String getLineSeparator() {
         return System.getProperty("line.separator");
     }
@@ -529,11 +514,8 @@ public class KB {
      * Adds one value to the cache, indexed under keyTerm.
      *
      * @param cache The RelationCache object to be updated.
-     *
      * @param keyTerm The String that is the key for this entry.
-     *
      * @param valueTerm The String that is the value for this entry.
-     * 
      * @return The int value 1 if a new entry is added, else 0.
      */
     private int addRelationCacheEntry(RelationCache cache, String keyTerm, String valueTerm) {
@@ -556,15 +538,11 @@ public class KB {
      * identified by relation, keyArg, and valueArg.
      *
      * @param relation A String, the name of a relation.
-     *
      * @param term A String (key) that indexes a HashSet.
-     *
      * @param keyArg An int value that, with relation and valueArg,
      * identifies a RelationCache.
-     *
      * @param valueArg An int value that, with relation and keyArg,
      * identifies a RelationCache.
-     * 
      * @return A HashSet, or null if no HashSet corresponds to term.
      */
     public HashSet getCachedRelationValues(String relation, 
@@ -586,7 +564,6 @@ public class KB {
      * arg2 keys toward arg1 children).
      *
      * @param relationName The name of a relation.
-     *
      * @return void
      */
     private void computeTransitiveCacheClosure(String relationName) {
@@ -879,7 +856,8 @@ public class KB {
             }
             relnsWithRelnArgs.clear();
             Set relnClasses = getCachedRelationValues("subclass", "Relation", 2, 1);
-            relnClasses.add("Relation");
+            if (relnClasses != null)
+                relnClasses.add("Relation");
 
             // System.out.println("  relnClasses == " + relnClasses);
 
