@@ -43,10 +43,19 @@ public class WordNetUtilities {
     /** *************************************************************** 
      * Extract the POS from a word_POS_num sense key
      */
-    public static String getPOSfromKey (String sense) {
+    public static String getPOSfromKey (String senseKey) {
 
-        int firstUS = sense.indexOf("_");
-        return sense.substring(firstUS+1,firstUS+3);
+        int lastUS = senseKey.lastIndexOf("_");
+        return senseKey.substring(lastUS-2,lastUS);
+    }
+
+    /** *************************************************************** 
+     * Extract the POS from a word_POS_num sense key
+     */
+    public static String getWordFromKey (String senseKey) {
+
+        int lastUS = senseKey.lastIndexOf("_");
+        return senseKey.substring(0,lastUS-3);
     }
 
     /** *************************************************************** 
@@ -139,7 +148,7 @@ public class WordNetUtilities {
             case '4': return 'r';
             case '5': return 's';
         }
-        System.out.println("Error in WordNetUtilities.posLetterToNumber(): bad number: " + POS);
+        System.out.println("Error in WordNetUtilities.posNumberToLetter(): bad number: " + POS);
         return 'n';
     }
 
@@ -168,7 +177,7 @@ public class WordNetUtilities {
         if (pos.equalsIgnoreCase("VB")) return "2";
         if (pos.equalsIgnoreCase("JJ")) return "3";
         if (pos.equalsIgnoreCase("RB")) return "4";
-        System.out.println("Error in WordNetUtilities.posNumberToLetters(): bad letters: " + pos);
+        System.out.println("Error in WordNetUtilities.posLettersToNumber(): bad letters: " + pos);
         return "1";
     }
 
