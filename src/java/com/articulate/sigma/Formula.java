@@ -268,7 +268,8 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Read a String into the variable 'theFormula'.
+    *  @return a unique ID by appending the hashCode() of the
+    *  formula String to the file name in which it appears
      */
     public String createID() {
 
@@ -1843,7 +1844,7 @@ public class Formula implements Comparable {
      * negative literals, but this test would require converting the
      * Formula to clausal form.
      */
-    private boolean isRule() {
+    public boolean isRule() {
         return (this.listP() 
                 && (this.theFormula.indexOf('"') == -1)
                 && this.theFormula.matches(".*\\(\\s*\\<?" + IF + "\\s+.*"));
