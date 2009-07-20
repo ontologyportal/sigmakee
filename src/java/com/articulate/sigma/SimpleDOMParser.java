@@ -73,7 +73,9 @@ public class SimpleDOMParser {
             int index;
             String tagName;
             
-            String currentTag = readTag().trim();                               // remove the prepend or trailing white spaces
+            String currentTag = null;
+            while (currentTag == null || currentTag.startsWith("<!--"))         // ignore comments
+                currentTag = readTag().trim();                                  // remove the prepend or trailing white spaces
             if (currentTag.startsWith("</")) {                                  // close tag
                 tagName = currentTag.substring(2, currentTag.length()-1).trim();
                 if (currentElement == null)                                     // no open tag
