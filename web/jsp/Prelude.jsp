@@ -42,6 +42,7 @@
       !pageString.startsWith("Properties.jsp") && 
       !pageString.startsWith("AddConstituent.jsp") && 
       !pageString.startsWith("AllPictures.jsp") && 
+      !pageString.startsWith("Mapping.jsp") && 
       !pageString.startsWith("WordNet.jsp") && 
       !Formula.isNonEmptyString(request.getParameter("kb"))) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=KBs.jsp\">");
