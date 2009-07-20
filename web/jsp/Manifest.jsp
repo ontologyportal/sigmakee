@@ -61,8 +61,7 @@ August 9, Acapulco, Mexico.
 
     if (saveAs != null && saveAs.equals("OWL")) {
         OWLtranslator owt = new OWLtranslator();
-        owt.kb = kb;
-        owt.write(kbDir + saveFile);
+        owt.write(kbName,kbDir + saveFile);
     }
 
     if (saveAs != null && saveAs.equals("KIF"))
