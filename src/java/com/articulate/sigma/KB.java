@@ -3134,6 +3134,10 @@ public class KB {
         StringBuffer result = new StringBuffer();
 
         try {
+            if (filename.endsWith(".owl") || filename.endsWith(".OWL")) {
+                OWLtranslator.read(filename);
+                filename = filename + ".kif";
+            }
             File constituent = new File(filename);
             String canonicalPath = constituent.getCanonicalPath();
             Iterator it;
