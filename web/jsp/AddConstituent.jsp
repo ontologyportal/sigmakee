@@ -14,13 +14,10 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-  if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+  if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) 
        response.sendRedirect("KBs.jsp");     
-  }
   else {
-
       System.out.println("ENTER AddConstituent.jsp");
-
       StringBuffer result = new StringBuffer();
       String fileName = "";    
       String srcDir = KBmanager.getMgr().getPref("kbDir");
@@ -71,9 +68,8 @@ August 9, Acapulco, Mexico.
                       System.out.println("fileName == " + fileName);
 
                       File file = null;
-                      if (fileName != null) {
-                          file = new File(dir, fileName);
-                      }
+                      if (fileName != null) 
+                          file = new File(dir, fileName);                      
 
                       System.out.println("file == " + file);
                       if ((file == null) || !file.exists()) {
@@ -105,19 +101,17 @@ August 9, Acapulco, Mexico.
                           if (KBmanager.getMgr().getKB(kbName) == null) 
                               KBmanager.getMgr().addKB(kbName);
                           KB kb = KBmanager.getMgr().getKB(kbName);
-                          result.append( kb.addConstituent(file.getCanonicalPath(), true, false) );
-                          if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
-                              result.append(kb.cache());
-                          }
+                          result.append(kb.addConstituent(file.getCanonicalPath(),true,false));
+                          if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) 
+                              result.append(kb.cache());                          
                           kb.loadVampire();
                       }
                   }
               }
               KBmanager.getMgr().writeConfiguration();
           }
-          if (!isError) {
-              response.sendRedirect("Manifest.jsp?kb=" + kbName);
-          }
+          if (!isError) 
+              response.sendRedirect("Manifest.jsp?kb=" + kbName);          
       }
       catch (Exception e) {
           String errStr = "ERROR in AddConstituent.jsp: " + e.getMessage();
