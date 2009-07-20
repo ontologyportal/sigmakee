@@ -202,7 +202,8 @@ August 9, Acapulco, Mexico.
 <%  } 
 
   if (isAdministrator) {
-      out.println("<A href=\"MiscUtilities.jsp?kb=" + kbName + "\">Other Utilities</A><P>");
+      out.println("<A href=\"MiscUtilities.jsp?kb=" + kbName + "\">Other Utilities</A> |");
+      out.println("<a href=\"Mapping.jsp\">Ontology Mappings</a><P>");
 
       kbNames = KBmanager.getMgr().getKBnames().iterator();
     
