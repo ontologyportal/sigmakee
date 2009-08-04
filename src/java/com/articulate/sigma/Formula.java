@@ -316,14 +316,13 @@ public class Formula implements Comparable {
         boolean ans = false;
         try {
             if (this.listP()) {
-                if (this.empty()) {
-                    ans = true;  
-                }
+                if (this.empty()) 
+                    ans = true;                  
                 else {
                     String input = this.theFormula.trim();
                     List quoteChars = Arrays.asList('"', '\'');
                     int i = 0;
-                    int len = theFormula.length();
+                    int len = input.length();
                     int end = len - 1;
                     int pLevel = 0;
                     int qLevel = 0;
@@ -334,12 +333,10 @@ public class Formula implements Comparable {
                     while (i < len) {
                         ch = input.charAt(i);
                         if (!insideQuote) {
-                            if (ch == '(') {
-                                pLevel++;
-                            }
-                            else if (ch == ')') {
-                                pLevel--;
-                            }
+                            if (ch == '(') 
+                                pLevel++;                            
+                            else if (ch == ')') 
+                                pLevel--;                            
                             else if (quoteChars.contains(ch) && (prev != '\\')) {
                                 insideQuote = true;
                                 quoteCharInForce = ch;
@@ -395,7 +392,7 @@ public class Formula implements Comparable {
                     StringBuilder sb = new StringBuilder();
                     List quoteChars = Arrays.asList('"', '\'');
                     int i = 1;
-                    int len = theFormula.length();
+                    int len = input.length();
                     int end = len - 1;
                     int level = 0;
                     char prev = '0';
@@ -473,7 +470,7 @@ public class Formula implements Comparable {
                     String input = theFormula.trim();
                     List quoteChars = Arrays.asList('"', '\'');
                     int i = 1;
-                    int len = theFormula.length();
+                    int len = input.length();
                     int end = len - 1;
                     int level = 0;
                     char prev = '0';
