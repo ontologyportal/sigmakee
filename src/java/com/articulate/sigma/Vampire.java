@@ -204,7 +204,6 @@ public class Vampire {
     private Vampire () {
     }
 
-
     /** *************************************************************
      * Creates a running instance of Vampire.  To obtain a new
      * instance of Vampire, use the static factory method
