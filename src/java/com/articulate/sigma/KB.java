@@ -1218,6 +1218,14 @@ public class KB {
     }
 
     /** *************************************************************
+     */
+    public boolean isInstance(String term) {
+
+        ArrayList al = askWithRestriction(0,"instance",1,term);
+        return (al != null && al.size() > 0);
+    }
+
+    /** *************************************************************
      * Determine whether a particular class or instance "child" is a
      * child of the given "parent".
      *
