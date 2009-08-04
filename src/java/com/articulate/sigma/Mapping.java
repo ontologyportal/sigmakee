@@ -22,7 +22,9 @@ Map ontologies using an approach based on:
 John Li, "LOM: A Lexicon-based Ontology Mapping Tool",
 Proceedings of the Performance Metrics for Intelligent
 Systems  (PerMIS.'04), 2004.
-
+*
+*This is not yet fully implemented here
+*
 This class also includes utilities for converting other
 ad-hoc formats to KIF
    */
