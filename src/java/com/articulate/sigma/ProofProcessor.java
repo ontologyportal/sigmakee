@@ -54,9 +54,8 @@ public class ProofProcessor {
         BasicXMLelement bindingSet = (BasicXMLelement) answer.subelements.get(0);
 	if ( bindingSet != null ) {
 	    String attr =  (String) bindingSet.attributes.get("type");
-	    if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) ) {
-		return false;
-	    }
+	    if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) ) 
+		return false;	    
 	    BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(0); 
             // The bindingSet element should just have one subelement, since non-definite answers are rejected.
 	    for (int j = 0; j < binding.subelements.size(); j++) {
@@ -156,13 +155,12 @@ public class ProofProcessor {
                 processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
                 processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
                 processedStep.axiom = removeAnswerClause(processedStep.axiom);
-								//----If there is a conclusion role, record
-								if (conclusion.subelements.size() > 1) {
-									BasicXMLelement conclusionRole = (BasicXMLelement) conclusion.subelements.get(1);
-									if (conclusionRole.attributes.containsKey("type")) {
-										processedStep.formulaRole = (String) conclusionRole.attributes.get("type");
-									}
-								}
+                //----If there is a conclusion role, record
+                if (conclusion.subelements.size() > 1) {
+                    BasicXMLelement conclusionRole = (BasicXMLelement) conclusion.subelements.get(1);
+                    if (conclusionRole.attributes.containsKey("type")) 
+                            processedStep.formulaRole = (String) conclusionRole.attributes.get("type");                        
+                }
                 if (conclusionFormula.attributes.containsKey("number"))
                     processedStep.number = new Integer(Integer.parseInt((String) conclusionFormula.attributes.get("number")));
                 for (int j = 0; j < premises.subelements.size(); j++) {
@@ -258,14 +256,11 @@ public class ProofProcessor {
            for (int i = 0; i < pp.numAnswers(); i++) {
                ArrayList proofSteps = pp.getProofSteps(i);
                proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
-               if (i != 0) {
-                   result.append("\n");
-               }
-               result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i) +
-"\n");
-               if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
-                   result.append(tptpProof(proofSteps));
-               }
+               if (i != 0) 
+                   result.append("\n");               
+               result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i) + "\n");
+               if (!pp.returnAnswer(i).equalsIgnoreCase("no")) 
+                   result.append(tptpProof(proofSteps));               
            }
            System.out.println(result.toString());
         }
