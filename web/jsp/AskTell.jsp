@@ -11,19 +11,14 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
 // General Setup:
   String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) {
-    hostname = "localhost";
-  }
-
-
-
+  if (hostname == null) 
+    hostname = "localhost";  
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
-
 
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
   String BuiltInDir = KBmanager.getMgr().getPref("systemsDir");
@@ -41,27 +36,15 @@ August 9, Acapulco, Mexico.
 //----Determine Location
   String location = request.getParameter("systemOnTPTP");  
   if (location == null) {
-    if (tptpWorldExists) { 
-      location = "local";
-    } else if (builtInExists) {
-      location = "local";
-    } else {
-      location = "remote";
-    }
+      if (tptpWorldExists)
+          location = "local";
+      else if (builtInExists)
+          location = "local";
+      else 
+          location = "remote";      
   }
 
-
-
-
-
 %>
-
-
-
-
-
-
-
 
 <HTML>
 <HEAD>
@@ -89,19 +72,16 @@ August 9, Acapulco, Mexico.
 <% } %>
 //----Toggle to either the local/builtin/remote list by showing new and hiding current
     function toggleList (location) {
-      if (current_location == location) {
-        return;
-      }
+      if (current_location == location) 
+        return;      
       var obj;
       obj = window.document.getElementById("systemList" + current_location);
-      if (obj) {
-        obj.setAttribute("style","display:none");
-      }
+      if (obj) 
+        obj.setAttribute("style","display:none");      
       current_location = location;
       obj = window.document.getElementById("systemList" + location);
-      if (obj) {
-        obj.setAttribute("style","display:inline");
-      }
+      if (obj) 
+        obj.setAttribute("style","display:inline");      
     }
   //]]></script>
 
@@ -129,10 +109,10 @@ August 9, Acapulco, Mexico.
     int timeout = 30;
 
     if (chosenEngine == null) {
-      if (kb.inferenceEngine == null) 
-        chosenEngine = "SoTPTP";
-      else
-        chosenEngine = "Vampire";
+        if (kb.inferenceEngine == null) 
+            chosenEngine = "SoTPTP";
+        else
+            chosenEngine = "Vampire";
     }
  
     if (request.getParameter("maxAnswers") != null) 
@@ -183,70 +163,40 @@ August 9, Acapulco, Mexico.
         stmt = englishStatement;
     }
 
-
-
-
-
-
 //----SystemOnTPTP parameters
-  String systemChosenLocal = request.getParameter("systemChosenLocal");
-  String systemChosenRemote = request.getParameter("systemChosenRemote");
-  String systemChosenBuiltIn = request.getParameter("systemChosenBuiltIn");
-  if (systemChosenLocal == null) {
-    systemChosenLocal = defaultSystemLocal;
-  }
-  if (systemChosenRemote == null) {
-    systemChosenRemote = defaultSystemRemote;
-  }
-  if (systemChosenBuiltIn == null) {
-    systemChosenBuiltIn = defaultSystemBuiltIn;
-  }
+    String systemChosenLocal = request.getParameter("systemChosenLocal");
+    String systemChosenRemote = request.getParameter("systemChosenRemote");
+    String systemChosenBuiltIn = request.getParameter("systemChosenBuiltIn");
+    if (systemChosenLocal == null) 
+        systemChosenLocal = defaultSystemLocal;
+    if (systemChosenRemote == null) 
+        systemChosenRemote = defaultSystemRemote;
+    if (systemChosenBuiltIn == null) 
+        systemChosenBuiltIn = defaultSystemBuiltIn;
 
-  String quietFlag = request.getParameter("quietFlag");
-  String tstpFormat = request.getParameter("tstpFormat");
-  String systemChosen;
+    String quietFlag = request.getParameter("quietFlag");
+    String tstpFormat = request.getParameter("tstpFormat");
+    String systemChosen;
 
-  if (quietFlag == null) {
-    quietFlag = "hyperlinkedKIF";
-  }
-  if (systemChosenLocal == null) {
-    systemChosenLocal = defaultSystemLocal;
-  }
-  if (systemChosenRemote == null) {
-    systemChosenRemote = defaultSystemRemote;
-  }
-  if (systemChosenBuiltIn == null) {
-    systemChosenBuiltIn = defaultSystemBuiltIn;
-  }
+    if (quietFlag == null) 
+        quietFlag = "hyperlinkedKIF";
+    if (systemChosenLocal == null) 
+        systemChosenLocal = defaultSystemLocal;
+    if (systemChosenRemote == null) 
+        systemChosenRemote = defaultSystemRemote;
+    if (systemChosenBuiltIn == null)
+        systemChosenBuiltIn = defaultSystemBuiltIn;
 
-  if (location.equals("local")) {
-    if (tptpWorldExists) { 
-      systemChosen = systemChosenLocal;
-    } else {
-      systemChosen = systemChosenBuiltIn;
-    }
-  } else {
-    systemChosen = systemChosenRemote;
-  }
+    if (location.equals("local")) {
+        if (tptpWorldExists) 
+            systemChosen = systemChosenLocal;
+        else 
+            systemChosen = systemChosenBuiltIn;
+    } else
+        systemChosen = systemChosenRemote;
 
-  if (tstpFormat == null) {
-    tstpFormat = "";
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    if (tstpFormat == null) 
+        tstpFormat = "";
 
     String resultVampire = null;        
     String resultSoTPTP = null;        
@@ -268,8 +218,7 @@ August 9, Acapulco, Mexico.
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("Vampire")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		resultVampire = kb.ask( stmt, timeout, maxAnswers );
-
+		        resultVampire = kb.ask( stmt, timeout, maxAnswers );
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
                 if (stmt.indexOf('@') != -1)
@@ -283,9 +232,6 @@ August 9, Acapulco, Mexico.
             status.append(ioe.getMessage());
         }
     }
-
-
-
 
 %>
 
@@ -335,46 +281,41 @@ August 9, Acapulco, Mexico.
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
 <% if (location.equals("local")) { out.print(" CHECKED"); } %>
-<% if (tptpWorldExists) {
-     out.println("onClick=\"javascript:toggleList('Local');\"");
-   } else {
-     out.println("onClick=\"javascript:toggleList('BuiltIn');\"");     
-   }
+<% if (tptpWorldExists) 
+       out.println("onClick=\"javascript:toggleList('Local');\"");
+   else 
+       out.println("onClick=\"javascript:toggleList('BuiltIn');\"");     
+   
 %>
   >Local 
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
 <% if (location.equals("remote")) { out.print(" CHECKED"); } %>
-  onClick="javascript:toggleList('Remote');">Remote
-&nbsp;
-  System:
+  onClick="javascript:toggleList('Remote');">Remote&nbsp;System:
 <%
   String params;
   //----Create atp drop down list for local
   if (tptpWorldExists) {
-    if (location.equals("local")) {
-      params = "ID=systemListLocal style='display:inline'";
-    } else {
-      params = "ID=systemListLocal style='display:none'";
-    }
-    out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
+      if (location.equals("local"))
+          params = "ID=systemListLocal style='display:inline'";
+      else 
+          params = "ID=systemListLocal style='display:none'";     
+      out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
                                          systemListLocal, params)); 
   }
   //----Create atp drop down list for builtin
   if (builtInExists && !tptpWorldExists) {
-    if (location.equals("local")) {
-      params = "ID=systemListBuiltIn style='display:inline'";
-    } else {
-      params = "ID=systemListBuiltIn style='display:none'";
-    }
-    out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
+      if (location.equals("local"))
+          params = "ID=systemListBuiltIn style='display:inline'";
+      else
+          params = "ID=systemListBuiltIn style='display:none'";     
+      out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
                                          systemListBuiltIn, params));
   }
   //----Create atp drop down list for remote
-  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) {
-    params = "ID=systemListRemote style='display:inline'";
-  } else {
-    params = "ID=systemListRemote style='display:none'";
-  }
+  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) 
+      params = "ID=systemListRemote style='display:inline'";
+  else
+      params = "ID=systemListRemote style='display:none'";
   out.println(HTMLformatter.createMenu("systemChosenRemote",systemChosenRemote,
                                        systemListRemote, params));
 %>
@@ -412,19 +353,14 @@ August 9, Acapulco, Mexico.
         out.println(status.toString());
     }
     if (chosenEngine.equals("Vampire")) {
-        if ((resultVampire != null) && (resultVampire.indexOf("Syntax error detected") != -1)) {        
+        if ((resultVampire != null) && (resultVampire.indexOf("Syntax error detected") != -1))         
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        } else {
-            out.println(HTMLformatter.formatProofResult(resultVampire,stmt,stmt,lineHtml,kbName,language ));
-        }
+        else 
+            out.println(HTMLformatter.formatProofResult(resultVampire,stmt,stmt,lineHtml,kbName,language ));       
     }
-    if ((chosenEngine.equals("SoTPTP"))&&(resultSoTPTP != null)) {
+    if ((chosenEngine.equals("SoTPTP"))&&(resultSoTPTP != null))
         out.print(resultSoTPTP);
-    }
-
-
-
-%>
+  %>
 <p>
 
 <%@ include file="Postlude.jsp" %>
