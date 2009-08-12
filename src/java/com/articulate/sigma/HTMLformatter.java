@@ -59,13 +59,12 @@ public class HTMLformatter {
             result.append(stepNum.toString() + " ");            
         }
         if (step.premises.size() == 0) {
-            if (step.formulaRole != null) {
+            if (step.formulaRole != null)
                 result.append(step.formulaRole);
-            } else if (Formula.isNegatedQuery(query,f.theFormula)) {
+            else if (Formula.isNegatedQuery(query,f.theFormula)) 
                 result.append("[Negated Query]");
-            } else {
-                result.append("[KB]");
-            }
+            else 
+                result.append("[KB]");            
         }
         result.append("</td><td width=\"40%\" valign=\"top\">");
         if (StringUtil.isNonEmptyString(language)) {
@@ -75,24 +74,21 @@ public class HTMLformatter {
                                                           KBmanager.getMgr().getKB(kbName).getTermFormatMap(language), 
                                                           kb,
                                                           language);
-	    if (StringUtil.emptyString(pph)) {
-                pph = "";
-            }
+	    if (StringUtil.emptyString(pph)) 
+                pph = "";            
             else {
                 pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
                 boolean isArabic = (language.matches(".*(?i)arabic.*")
                                     || language.equalsIgnoreCase("ar"));
-                if (isArabic) {
+                if (isArabic)
                     pph = ("<span dir=\"rtl\">" + pph + "</span>");
-                    // pph = ("&#x202b;" + pph + "&#x202c;");
-                }
+                    // pph = ("&#x202b;" + pph + "&#x202c;");                
             }
             result.append(pph);        
         }
         result.append("</td>");
         return result.toString();
     }
-
 
     /** *************************************************************
      */
@@ -457,9 +453,8 @@ public class HTMLformatter {
                                                                kb.getTermFormatMap(language), 
                                                                kb, 
                                                                language);
-        	    if (StringUtil.emptyString(pph)) {
-                        pph = ""; 
-                    }
+        	    if (StringUtil.emptyString(pph)) 
+                        pph = "";                     
                     else {
                         pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
                         if (isArabic) {
@@ -613,7 +608,6 @@ public class HTMLformatter {
         return result.toString();
     }
 
-
     /** *************************************************************
      *  Create an HTML menu with an ID, given an ArrayList of Strings.
      */
@@ -659,14 +653,12 @@ public class HTMLformatter {
                                            String lineHtml, String kbName, String language, int answerOffset) {
 
 	// System.out.println( "INFO in HTMLformatter.formatProofResult(): " + result );
-
         StringBuilder html = new StringBuilder();
         if (result != null && result.toString().length() > 0) {
             BasicXMLparser res = new BasicXMLparser(result.toString());
 
             // System.out.print("INFO in AskTell.jsp: Number of XML elements: ");
             // System.out.println(res.elements.size());
-
             ProofProcessor pp = new ProofProcessor(res.elements);
             for (int i = 0; i < pp.numAnswers(); i++) {
                 ArrayList proofSteps = pp.getProofSteps(i);
@@ -674,7 +666,6 @@ public class HTMLformatter {
 
                 // System.out.print("Proof steps: ");
                 // System.out.println(proofSteps.size());
-
                 if (i != 0) 
                     html = html.append(lineHtml + "\n");
                 html = html.append("Answer " + "\n");
@@ -683,17 +674,17 @@ public class HTMLformatter {
                 if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
                     html = html.append("<p><table width=\"95%\">" + "\n");
                     for (int j = 0; j < proofSteps.size(); j++) {
-
                         // System.out.print("Printing proof step: ");
-
                         // System.out.println(j);
-                        html = html.append("<tr>" + "\n");
+                        if (j % 2 == 1) 
+                            html = html.append("<tr bgcolor=#EEEEEE>" + "\n");
+                        else
+                            html = html.append("<tr>" + "\n");
                         html = html.append("<td valign=\"top\">" + "\n");
                         html = html.append(j+1);
                         html = html.append(". </td>" + "\n");
                         html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language) + "\n");                       
-                        // System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       
-			
+                        // System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       			
                         html = html.append("</tr>\n" + "\n");
                     }
                     html = html.append("</table>" + "\n");
