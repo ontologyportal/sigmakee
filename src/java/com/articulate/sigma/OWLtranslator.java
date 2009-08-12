@@ -107,6 +107,18 @@ public class OWLtranslator {
 
     /** ***************************************************************
      */
+    private static String processStringForXMLOutput(String s) {
+
+        if (s == null) 
+            return null;
+        s = s.replaceAll("<","&lt;");
+        s = s.replaceAll(">","&gt;");
+        s = s.replaceAll("&","&amp;");
+        return s;
+    }
+
+    /** ***************************************************************
+     */
     private static String processStringForKIFOutput(String s) {
 
         if (s == null) 
@@ -929,15 +941,15 @@ public class OWLtranslator {
             }
             pw.println("</owl:Class>");
         }
-        pw.println("<owl:Class rdf:ID=\"WordSense\"/>");
+        pw.println("<owl:Class rdf:ID=\"WordSense\">");
         pw.println("  <rdfs:label xml:lang=\"en\">word sense</rdfs:label>");
         pw.println("  <rdfs:comment xml:lang=\"en\">A particular sense of a word.</rdfs:comment>");
         pw.println("</owl:Class>");
-        pw.println("<owl:Class rdf:ID=\"Word\"/>");
+        pw.println("<owl:Class rdf:ID=\"Word\">");
         pw.println("  <rdfs:label xml:lang=\"en\">word</rdfs:label>");
         pw.println("  <rdfs:comment xml:lang=\"en\">A particular word.</rdfs:comment>");
         pw.println("</owl:Class>");
-        pw.println("<owl:Class rdf:ID=\"VerbFrame\"/>");
+        pw.println("<owl:Class rdf:ID=\"VerbFrame\">");
         pw.println("  <rdfs:label xml:lang=\"en\">verb frame</rdfs:label>");
         pw.println("  <rdfs:comment xml:lang=\"en\">A string template showing allowed form of use of a verb.</rdfs:comment>");
         pw.println("</owl:Class>");
@@ -1093,7 +1105,8 @@ public class OWLtranslator {
             pw.println("  <rdfs:label>" + ((String) al.get(0)) + "</rdfs:label>");
         for (int i = 0; i < al.size(); i++) {
             String word = (String) al.get(i);
-            pw.println("  <word rdf:resource\"#WN30Word-" + word + "\"/>");
+            String wordAsID = StringToKIFid(word);
+            pw.println("  <word rdf:resource=\"#WN30Word-" + wordAsID + "\"/>");
         }
         String doc = null;
         switch (synset.charAt(0)) {
@@ -1102,6 +1115,7 @@ public class OWLtranslator {
           case '3': doc = (String) WordNet.wn.adjectiveDocumentationHash.get(synset.substring(1)); break;
           case '4': doc = (String) WordNet.wn.adverbDocumentationHash.get(synset.substring(1)); break;
         }
+        doc = processStringForXMLOutput(doc);
         pw.println("  <rdfs:comment xml:lang=\"en\">" + doc + "</rdfs:comment>");
         al = (ArrayList) WordNet.wn.relations.get(synset);
         if (al != null) {
@@ -1128,7 +1142,7 @@ public class OWLtranslator {
             pw.println("  <rdf:type rdf:resource=\"#Word\"/>");
             pw.println("  <rdfs:label xml:lang=\"en\">" + singular + "</rdfs:label>");
             pw.println("  <rdfs:comment xml:lang=\"en\">\"" + singular + "\", is the singular form" +
-                       " of the irregular plural \"" + plural + "\"</rdfs:label>");
+                       " of the irregular plural \"" + plural + "\"</rdfs:comment>");
             pw.println("</owl:Thing>");
         }
         it = WordNet.wn.exceptionVerbHash.keySet().iterator();
@@ -1152,7 +1166,8 @@ public class OWLtranslator {
         Iterator it = WordNet.wn.wordsToSenses.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
-            pw.println("<owl:Thing rdf:ID=\"WN30Word-" + word + "\">");
+            String wordAsID = StringToKIFid(word);
+            pw.println("<owl:Thing rdf:ID=\"WN30Word-" + wordAsID + "\">");
             pw.println("  <rdf:type rdf:resource=\"#Word\"/>");
             pw.println("  <rdfs:label xml:lang=\"en\">" + word + "</rdfs:label>");
             String wordOrPhrase = "word";
@@ -1262,8 +1277,8 @@ public class OWLtranslator {
         try {
             KBmanager.getMgr().initializeOnce();
             ot.write("SUMO","SUMOfull.owl");
-            //WordNet.wn.initOnce();
-            //ot.writeWordNet(kbDir + "WordNet.owl");
+            WordNet.wn.initOnce();
+            ot.writeWordNet("WordNet.owl");
         } catch (Exception e ) {
             System.out.println(e.getMessage());
             e.printStackTrace();
