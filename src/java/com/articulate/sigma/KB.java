@@ -1,5 +1,5 @@
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the termsof the GNU
+/** This code is copyright Articulate Software (c) 2003.  Some
+portions copyright Teknowledge (c) 2003 and reused under the termsof the GNU
 license.  This software is released under the GNU Public License
 <http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
 by use of this code, to credit Articulate Software and Teknowledge in any
@@ -9,8 +9,8 @@ cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. see also ****
-http://sigmakee.sourceforge.net **
+August 9, Acapulco, Mexico. see also 
+http://sigmakee.sourceforge.net 
 */
 
 /*************************************************************************************************/
@@ -30,7 +30,8 @@ public class KB {
     private static boolean DEBUG = false;
 
     /** The inference engine process for this KB. */
-    public Vampire inferenceEngine;                 
+    //public Vampire inferenceEngine;                 
+    public InferenceEngine inferenceEngine;  
 
     /** The name of the knowledge base. */
     public String name;                       
@@ -2659,7 +2660,8 @@ public class KB {
 
                 System.out.println("  processedStmts == " + processedStmts);
 
-                if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof Vampire)) {
+                //if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof Vampire)) {
+                if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof InferenceEngine)) {
                     result = 
                         this.inferenceEngine
                         .submitQuery(((Formula)processedStmts.get(0)).theFormula,
@@ -2674,6 +2676,93 @@ public class KB {
         return result;
     }
 
+    /** *************************************************************
+     * Submits a query to specified InferenceEngine object.  Returns an XML
+     * formatted String that contains the response of the inference
+     * engine.  It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @param timeout The number of seconds after which the underlying inference
+     * engine should give up. (Time taken by axiom selection doesn't count.)
+     *
+     * @param maxAnswers The maximum number of answers (binding sets)
+     * the inference engine should return.
+     * 
+     * @param engine InferenceEngine object that will be used for the inference.
+     *
+     * @return A String indicating the status of the ask operation.
+     */
+    public String askEngine(String suoKifFormula, int timeout, int maxAnswers, InferenceEngine engine) {
+
+        System.out.println("INFO in KB.askEngine(" + suoKifFormula + ", " + timeout + ", " + maxAnswers + ", " + engine + ")");
+
+        String result = "";
+        try {
+
+            // Start by assuming that the ask is futile.
+            result = "<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n<summary proofs=\"0\"/>\n</queryResponse>\n";
+            result = result.replaceAll("&lt;","<");
+            result = result.replaceAll("&gt;",">");
+
+            if (Formula.isNonEmptyString(suoKifFormula)) {
+                Formula query = new Formula();
+                query.read(suoKifFormula);
+                ArrayList processedStmts = query.preProcess(true, this);
+
+                System.out.println("  processedStmts == " + processedStmts);
+
+                if (!processedStmts.isEmpty() && (engine instanceof InferenceEngine)) {
+                    result = engine.submitQuery(((Formula)processedStmts.get(0)).theFormula,
+                                                              timeout,
+                                                              maxAnswers);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     * Submits a query to the SInE inference engine.  Returns an XML
+     * formatted String that contains the response of the inference
+     * engine.  It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @param timeout The number of seconds after which the underlying inference
+     * engine should give up. (Time taken by axiom selection doesn't count.)
+     *
+     * @param maxAnswers The maximum number of answers (binding sets)
+     * the inference engine should return.
+     *
+     * @return A String indicating the status of the ask operation.
+     */
+    public String askSInE(String suoKifFormula, int timeout, int maxAnswers) {
+
+        String result = "";
+
+        try {
+            InferenceEngine.EngineFactory factory=SInE.getFactory();
+            InferenceEngine engine=createInferenceEngine(factory);
+
+            result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
+
+            if (engine != null)
+                engine.terminate();                
+        } 
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return result;
+    }
 
     /** ***************************************************************
      * Takes a term and returns true if the term occurs in the KB.
@@ -4360,6 +4449,45 @@ public class KB {
     }
 
     /** *************************************************************
+     * Creates InferenceEngine and loads all of the constituents into it.
+     * 
+     * @param factory Factory object used to create new InferenceEngine.
+     * @return InferenceEngine object with all constituents loaded.
+     */
+    public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory)
+    {
+    	InferenceEngine res=null;
+
+        try {
+            if (!formulaMap.isEmpty()) {
+
+                System.out.println("INFO in KB.createInferenceEngine(): preprocessing " + formulaMap.size() + " formulas");
+
+                TreeSet forms = preProcess(formulaMap.keySet());
+                String filename = writeInferenceEngineFormulas(forms);
+                boolean vFileSaved = Formula.isNonEmptyString(filename);
+                if (vFileSaved) {
+                    System.out.println("INFO in KB.createInferenceEngine(): " + forms.size() + " formulas saved to " + filename);
+                }
+                else {
+                    System.out.println("INFO in KB.createInferenceEngine(): new -v.kif file not written");
+                }
+
+                if (vFileSaved) {
+                    System.out.println("INFO in KB.createInferenceEngine(): getting new inference engine");
+                    res = factory.createFromKBFile(filename);
+                    System.out.println("INFO in KB.createInferenceEngine(): created " + res);        
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in KB.createInferenceEngine(): " + e.getMessage());
+            e.printStackTrace();
+        }
+        return res;
+    }
+
+    /** *************************************************************
      *  Starts Vampire and collects, preprocesses and loads all of the
      *  constituents into it.
      */
@@ -4388,7 +4516,7 @@ public class KB {
                     System.out.println("INFO in KB.loadVampire(): new -v.kif file not written");
                 }
 
-                if (inferenceEngine instanceof Vampire) {
+                if (inferenceEngine instanceof InferenceEngine) {
                     System.out.println("INFO in KB.loadVampire(): terminating inference engine");
                     long t1 = System.currentTimeMillis();
                     inferenceEngine.terminate();
@@ -4411,7 +4539,7 @@ public class KB {
             System.out.println("Error in KB.loadVampire(): " + e.getMessage());
             e.printStackTrace();
         }
-        if (!(inferenceEngine instanceof Vampire)) {
+        if (!(inferenceEngine instanceof InferenceEngine)) {
             mgr.setError(mgr.getError()
                          + "\n<br/>No local inference engine is available\n<br/>");
         }

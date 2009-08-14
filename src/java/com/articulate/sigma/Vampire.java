@@ -1,5 +1,5 @@
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
+/** This code is copyright Articulate Software (c) 2003.  Some
+portions copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
 and Teknowledge in any writings, briefings, publications, presentations, or 
@@ -8,7 +8,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
 package com.articulate.sigma;
@@ -16,6 +16,8 @@ package com.articulate.sigma;
 import java.io.*;
 import java.util.*;
 
+import com.articulate.sigma.InferenceEngine.EngineFactory;
+import com.articulate.sigma.SInE.SInEFactory;
 /**
  * Class for invoking the KIF version of Vampire from Java. Vampire takes XML input
  * and returns XML output.  Input forms are either <query optionalArgs>KIF formula</query>
@@ -53,12 +55,29 @@ import java.util.*;
  * @author Andrei Voronkov
  * @since 14/08/2003, Acapulco 
  */
-public class Vampire {
+public class Vampire extends InferenceEngine {
 
     private Process _vampire;
     private BufferedReader _reader; 
     private BufferedWriter _writer; 
     private BufferedReader _error; 
+
+    public static class VampireFactory extends EngineFactory {
+
+        @Override
+        public InferenceEngine createWithFormulas(Iterable formulaSource) {
+                return Vampire.getNewInstanceWithFormulas(formulaSource);
+        }
+
+        @Override
+        public InferenceEngine createFromKBFile(String kbFileName) {
+                return Vampire.getNewInstance(kbFileName);
+        }
+    }
+
+    public static EngineFactory getFactory() {
+            return new VampireFactory();
+    }
 
     /** *************************************************************
      * This static factory method returns a new Vampire instance.
@@ -76,7 +95,41 @@ public class Vampire {
         String error = null;
 
         try {
+            File kbFile = null;
+            if ( error == null ) {
+                kbFile = new File( kbFileName );
+                if ( ! kbFile.exists() ) {
+                    error = ( "The file " + kbFileName + " does not exist" );
+                    System.out.println( "INFO in Vampire.getNewInstance(): " + error );
+                    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
+                                                 + "\n<br/>" + error + "\n<br/>" );
+                }
+            }
 
+            if ( error == null ) {
+                KIF kif = new KIF();
+                kif.setParseMode( KIF.RELAXED_PARSE_MODE );
+                kif.readFile( kbFile.getCanonicalPath() );
+                Iterable formulaSource = kif.formulaSet;
+                
+                vpr=getNewInstanceWithFormulas(formulaSource);
+            }
+        }
+        catch ( Exception ex ) {
+            System.out.println( ex.getMessage() );
+            ex.printStackTrace();
+        }
+        return vpr;
+    }
+
+    /** *************************************************************
+     *  */
+    public static Vampire getNewInstanceWithFormulas(Iterable formulaSource) {
+
+        Vampire vpr = null;
+        String error = null;
+
+        try {
             String execPathname = KBmanager.getMgr().getPref("inferenceEngine");
 
             if (!StringUtil.isNonEmptyString(execPathname)) {
@@ -92,17 +145,6 @@ public class Vampire {
                 if (!vampireExecutable.exists()) {
                     error = ("The executable file " + vampireExecutable.getCanonicalPath() + " does not exist");
                     System.out.println("Error in Vampire.getNewInstance(): " + error);
-                    KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                + "\n<br/>" + error + "\n<br/>");
-                }
-            }
-
-            File kbFile = null;
-            if (error == null) {
-                kbFile = new File(kbFileName);
-                if (!kbFile.exists()) {
-                    error = ("The file " + kbFileName + " does not exist");
-                    System.out.println("INFO in Vampire.getNewInstance(): " + error);
                     KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                                 + "\n<br/>" + error + "\n<br/>");
                 }
@@ -133,12 +175,9 @@ public class Vampire {
         
                 Vampire vprInst = new Vampire(vampireExecutable, initFile);
                 if (vprInst instanceof Vampire) {
-                    KIF kif = new KIF();
-                    kif.setParseMode(KIF.RELAXED_PARSE_MODE);
-                    kif.readFile(kbFile.getCanonicalPath());
-                    if (!kif.formulaSet.isEmpty()) {
+                    Iterator it = formulaSource.iterator();
+                    if (it.hasNext()) {
                         List badFormulas = new ArrayList();
-                        Iterator it = kif.formulaSet.iterator();
                         String formStr = null;
                         String response = null;
                         int goodCount = 0;
@@ -168,8 +207,7 @@ public class Vampire {
                                                + bc
                                                + " FORMULA"
                                                + ((bc == 1) ? "" : "S")
-                                               + " REJECTED from " 
-                                               + kbFile.getCanonicalPath());
+                                               + " REJECTED ");
                             int badCount = 1;
                             String badStr = null;
                             String mgrErrStr = KBmanager.getMgr().getError();
