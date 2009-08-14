@@ -14,7 +14,6 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
-// General Setup:
   String hostname = KBmanager.getMgr().getPref("hostname");
   if (hostname == null) 
     hostname = "localhost";  
@@ -43,7 +42,6 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
       else 
           location = "remote";      
   }
-
 %>
 
 <HTML>
@@ -200,6 +198,7 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
     String resultVampire = null;        
     String resultSoTPTP = null;        
+    String resultSInE = null;        
 
     String lineHtml =
       "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
@@ -219,6 +218,12 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
 		        resultVampire = kb.ask( stmt, timeout, maxAnswers );
+            }
+
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SInE")) {
+                if (stmt.indexOf('@') != -1)
+                    throw(new IOException("Row variables not allowed in query: " + stmt));
+                resultSInE = kb.askSInE( stmt, timeout, maxAnswers );
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
                 if (stmt.indexOf('@') != -1)
@@ -269,6 +274,9 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
     Vampire <BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SInE" <% if (chosenEngine.equals("SInE")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'">
+    SInE (+Vampire) (experimental)<BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
@@ -276,7 +284,7 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 <%
 //----System selection
 %>
-  <DIV ID="SoTPTPControl" <% if (chosenEngine.equals("Vampire")) {%>style="display:none;"<%}%>>
+  <DIV ID="SoTPTPControl" <% if (!chosenEngine.equals("SoTPTP")) {%>style="display:none;"<%}%>>
     <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
@@ -333,10 +341,6 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     >Hyperlinked KIF
     <br>
   </DIV>
-<%
-//----End System selection
-%>
-
     <INPUT type="submit" name="request" value="Ask">
 
 <% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
@@ -347,7 +351,6 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
-
     if (status != null && status.toString().length() > 0) {
         out.println("Status: ");
         out.println(status.toString());
@@ -358,8 +361,15 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
         else 
             out.println(HTMLformatter.formatProofResult(resultVampire,stmt,stmt,lineHtml,kbName,language ));       
     }
-    if ((chosenEngine.equals("SoTPTP"))&&(resultSoTPTP != null))
+    if ((chosenEngine.equals("SoTPTP")) && (resultSoTPTP != null))
         out.print(resultSoTPTP);
+
+    if (chosenEngine.equals("SInE")) {
+        if ((resultSInE != null) && (resultSInE.indexOf("Syntax error detected") != -1)) 
+            out.println("<font color='red'>A syntax error was detected in your input.</font>");
+        else 
+            out.println(HTMLformatter.formatProofResult(resultSInE,stmt,stmt,lineHtml,kbName,language ));
+    }
   %>
 <p>
 
