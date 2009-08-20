@@ -17,18 +17,13 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.See also http://sigmakee.sourceforge.net
 
-Map ontologies using an approach based on:
+This class maps ontologies. It includes embedded subclasses that
+implement specific mapping heuristics.
 
-John Li, "LOM: A Lexicon-based Ontology Mapping Tool",
-Proceedings of the Performance Metrics for Intelligent
-Systems  (PerMIS.'04), 2004.
-*
-*This is not yet fully implemented here
-*
 This class also includes utilities for converting other
 ad-hoc formats to KIF
    */
-public class Mapping {
+abstract public class Mapping {
 
     /** *************************************************************
      *  Write synonymousExternalConcept expressions for cases where
@@ -74,34 +69,6 @@ public class Mapping {
             }
         }
         return filename + " written to ";
-    }
-
-    /** *************************************************************
-    *   Normalize a string by replacing all non-letter, non-digit
-    *   characters with spaces, adding spaces on capitalization
-    *   boundaries, and then converting to lower case
-     */
-    private static String normalize(String s)  {
-
-        if (s == null || s.length() < 1) 
-            return null;
-        StringBuffer result = new StringBuffer();
-        for (int i = 0; i < s.length(); i++) {
-            if ((Character.isLetter(s.charAt(i)) && Character.isLowerCase(s.charAt(i))) ||
-                Character.isDigit(s.charAt(i))) 
-                result.append(s.charAt(i));
-            else {
-                if (Character.isLetter(s.charAt(i)) && Character.isUpperCase(s.charAt(i))) {
-                    if (result.length() < 1 || result.charAt(result.length()-1) != ' ') 
-                        result.append(" ");
-                    result.append(Character.toLowerCase(s.charAt(i)));
-                }
-                else 
-                    if (result.length() < 1 || result.charAt(result.length()-1) != ' ') 
-                        result.append(" ");             
-            }
-        }
-        return result.toString();
     }
 
     /** *************************************************************
@@ -162,37 +129,24 @@ public class Mapping {
                     System.out.print(".");
                     counter = 0;
                 }
-                String term1 = (String) it1.next();            
-                String normTerm1 = normalize(term1);
-                if (term1.length() > 2 && !Formula.isLogicalOperator(term1)) {
+                String term1 = (String) it1.next();
+                if (isValidTerm(term1)) {
+                    String normTerm1 = normalize(term1);
                     TreeMap tm = (TreeMap) result.get(term1);
                     if (tm == null) 
                         tm = new TreeMap();
                     Iterator it2 = kb2.terms.iterator();
                     while (it2.hasNext()) {
                         String term2 = (String) it2.next();
-                        String normTerm2 = normalize(term2);
-                        if (term2.length() > 2 && !Formula.isLogicalOperator(term2)) {
-                            if (normTerm1.equals(normTerm2)) {
-                                Integer score = new Integer(1);
-                                tm.put(score,term2);
-                            } 
-                            else {
-                                if (normTerm1.indexOf(normTerm2) > -1) {
-                                    Integer score = new Integer(normTerm1.indexOf(normTerm2) + 
-                                        (normTerm1.length() - normTerm2.length()));
-                                    tm.put(score,term2);
-                                }
-                                else if (normTerm2.indexOf(normTerm1) > -1) {
-                                    Integer score = new Integer(normTerm2.indexOf(normTerm1) + 
-                                        (normTerm2.length() - normTerm1.length()));
-                                    tm.put(score,term2);
-                                }
-                            }
+                        if (isValidTerm(term2)) {
+                            String normTerm2 = normalize(term2);
+                            int score = getDistance(normTerm1, kb1, normTerm2, kb2);
+                            if (score < Integer.MAX_VALUE)
+                                tm.put(new Integer(score), term2);
                         }
                     }
-                    if (tm.keySet().size() > 0) 
-                        result.put(term1,tm);                    
+                    if (tm.keySet().size() > 0)
+                        result.put(term1,tm);
                 }
             }
         }
@@ -207,6 +161,162 @@ public class Mapping {
     }
 
     /** *************************************************************
+     *   get distance between two terms
+     */
+    abstract public int getDistance(String term1, KB kb1, String term2, KB kb2);
+
+    /** *************************************************************
+     *   check whether a term is valid (worthy of being compared)
+     */
+    public boolean isValidTerm(String term) {
+        return term.length() > 2 && !Formula.isLogicalOperator(term);
+    }
+
+    /** *************************************************************
+     *   Normalize a string by replacing all non-letter, non-digit
+     *   characters with spaces, adding spaces on capitalization
+     *   boundaries, and then converting to lower case
+     */
+    public String normalize(String s) {
+        if (s == null || s.length() < 1)
+            return null;
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < s.length(); i++) {
+            if ((Character.isLetter(s.charAt(i)) && Character.isLowerCase(s.charAt(i))) ||
+                Character.isDigit(s.charAt(i))) 
+                result.append(s.charAt(i));
+            else {
+                if (Character.isLetter(s.charAt(i)) && Character.isUpperCase(s.charAt(i))) {
+                    if (result.length() < 1 || result.charAt(result.length()-1) != ' ') 
+                        result.append(" ");
+                    result.append(Character.toLowerCase(s.charAt(i)));
+                }
+                else 
+                    if (result.length() < 1 || result.charAt(result.length()-1) != ' ') 
+                        result.append(" ");             
+            }
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
+     *  Substring Mapping Method: returns 1 if the two strings
+     *  are identical, scores >1 if one string is a substring of
+     *  the other, and Integer.MAX_VALUE if there is no substring
+     *  match
+     *
+     *  This approach is based on:
+     *  John Li, "LOM: A Lexicon-based Ontology Mapping Tool",
+     *  Proceedings of the Performance Metrics for Intelligent
+     *  Systems  (PerMIS.'04), 2004.
+     *
+     *  *** This is not yet fully implemented here ***
+     *
+     */
+    public static class SubstringMapping extends Mapping {
+        public int getDistance(String term1, KB kb1, String term2, KB kb2) {
+            if (term1.equals(term2))
+                return 1;
+            else if (term1.indexOf(term2) > -1)
+                return term1.indexOf(term2) + 
+                        (term1.length() - term2.length());
+            else if (term2.indexOf(term1) > -1)
+                return term2.indexOf(term1) + (term2.length() - term1.length());
+            else
+                return Integer.MAX_VALUE;
+        }
+    }
+
+    /** *************************************************************
+     *  Jaro-Winkler Mapping Method
+     *  implemented by Gerard de Melo
+     */
+    public static class JaroWinklerMapping extends Mapping {
+        private static final int SCALING_FACTOR = 10000;
+        private int winklerMaxPrefixLen = 4;
+        private double winklerPrefixWeight = 0.1;
+
+        public int getDistance(String s1, KB kb1, String s2, KB kb2) {
+            int len1 = s1.length();
+            int len2 = s2.length();
+            if (len1 == 0 || len2 == 0)
+                return SCALING_FACTOR;
+            
+            // without loss of generality assume s1 is longer
+            if (len1 < len2) {
+                String t = s1;
+                s1 = s2;
+                s2 = t;
+                len1 = len2;
+                len2 = s2.length();
+            }
+            
+            // count and flag the matched pairs
+            int maxDistance = (len1 >= 4) ? (int) Math.floor(len1 / 2) - 1 : 0;
+            boolean[] s1Matches = new boolean[len1]; // initialized to false
+            boolean[] s2Matches = new boolean[len2]; // initialized to false
+            int nMatches = 0;
+            for (int i = 0; i < len2; i++) { // index in s2
+                char c = s2.charAt(i);
+                int jStart = (i > maxDistance) ? i - maxDistance : 0;
+                int jEnd = i + maxDistance + 1;
+                if (jEnd > len1)
+                    jEnd = len1;
+                for (int j = jStart; j < jEnd; j++) { // possible matching positions within s1
+                    if (!s1Matches[j] && c == s1.charAt(j)) {
+                        s1Matches[j] = true;
+                        s2Matches[i] = true;
+                        nMatches++;
+                        break;
+                    }
+                }
+            }
+            
+            if (nMatches == 0)
+                return SCALING_FACTOR;
+            
+            // count transpositions
+            int nTranspositions = 0;
+            int k = 0;
+            for (int i = 0; i < len2; i++) // index in s2
+                if (s2Matches[i]) {
+                    int j;
+                    for (j = k; j < len1; j++)
+                        if (s1Matches[j]) {
+                            k = j + 1;
+                            break;
+                        }
+                        if (s2.charAt(i) != s1.charAt(j))
+                            nTranspositions++;
+                    }
+            int halfTranspositions = nTranspositions / 2;
+
+            double jaroScore = ((double) nMatches / len1 
+                               +(double) nMatches / len2 
+                               +(double) (nMatches - halfTranspositions) / nMatches)
+                               / 3.0;
+
+            // Winkler bias
+            int cMaxPrefixLen = winklerMaxPrefixLen;
+            if (len1 < cMaxPrefixLen)
+                cMaxPrefixLen = len1;
+            if (len2 < cMaxPrefixLen)
+                cMaxPrefixLen = len2;
+            int l = 0;
+            while (l < cMaxPrefixLen)
+                if (s1.charAt(l) == s2.charAt(l))
+                    l++;
+                else
+                    break;
+            double jaroWinklerScore = jaroScore + l * winklerPrefixWeight * (1.0 - jaroScore);
+            
+            // return as a distance value such that larger
+            // values indicate greater distances
+            return (int) (SCALING_FACTOR * (1.0 - jaroWinklerScore));
+        }
+    }
+
+    /** *************************************************************
      * A test method.
      */
     public static void main(String args[]) {
@@ -218,13 +328,12 @@ public class Mapping {
         catch (Exception e ) {
           System.out.println(e.getMessage());
         }
-        Mapping m = new Mapping();
+        Mapping m = new SubstringMapping();
         m.mapOntologies("SUMO","YAGO");
 
-
-        //System.out.println(normalize("Philippe_Mex-s"));
-        //System.out.println(normalize("AntiguaAndBarbuda"));
-        //System.out.println(normalize("SUMO"));
+        //System.out.println(m.normalize("Philippe_Mex-s"));
+        //System.out.println(m.normalize("AntiguaAndBarbuda"));
+        //System.out.println(m.normalize("SUMO"));
 /***
         try {
             convertYAGO("TypeExtractor.txt","citizen");
