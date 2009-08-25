@@ -3054,6 +3054,7 @@ public class KB {
      * format strings.
      */
     protected void loadFormatMaps(String lang) {
+
         try {
             if (formatMap == null) 
                 formatMap = new HashMap();            
@@ -3079,10 +3080,13 @@ public class KB {
                         Formula f = (Formula) ite.next();
                         String key = f.getArgument(2);
                         String format = f.getArgument(3);
+                        //System.out.println("INFO in KB.loadFormatMaps(): 1 format: " + format);
                         format = StringUtil.removeEnclosingQuotes(format);                   
-                        if (format.indexOf("$") < 0) 
-                            format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");                   
+                        //System.out.println("INFO in KB.loadFormatMaps(): 2 format: " + format);
+                        //if (format.indexOf("$") < 0) 
+                        //    format = format.replaceAll("\\x26\\x25", "\\&\\%"+key+"\\$");                   
                         langFormatMap.put(key, format);
+                        //System.out.println("INFO in KB.loadFormatMaps(): 3 format: " + format);
                     }
                     // formatMap.put(lang,newFormatMap);
                     /*
@@ -3163,6 +3167,7 @@ public class KB {
      *  and the values are format strings.
      */
     public HashMap getFormatMap(String lang) {
+
         //System.out.println("ENTER getFormatMap(" + this.name + ", " + lang + ")");
         if (!StringUtil.isNonEmptyString(lang)) {
             lang = "EnglishLanguage";
