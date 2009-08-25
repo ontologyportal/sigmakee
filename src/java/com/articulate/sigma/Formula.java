@@ -1010,13 +1010,13 @@ public class Formula implements Comparable {
      * @return A non-negative int, or -1.
      */
     public int listLength() {
+
         int ans = -1;
         try {
             if (this.listP()) {
                 int idx = 0;
-                while (isNonEmptyString(this.getArgument(idx))) {
-                    ans = ++idx;
-                }
+                while (isNonEmptyString(this.getArgument(idx))) 
+                    ans = ++idx;                
             }
         }
         catch (Exception ex) {
