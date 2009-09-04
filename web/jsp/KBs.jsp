@@ -202,8 +202,12 @@ August 9, Acapulco, Mexico.
 <%  } 
 
   if (isAdministrator) {
-      out.println("<A href=\"MiscUtilities.jsp?kb=" + kbName + "\">Other Utilities</A> |");
-      out.println("<a href=\"Mapping.jsp\">Ontology Mappings</a><P>");
+      out.println("<a href=\"MiscUtilities.jsp?kb=" + kbName + "\">Other Utilities</a>");
+      // NS -- 2009-09-03 -- I'm commenting out the link below until
+      // someone has time to fix the implementation of ontology
+      // mapping: 
+      // out.println(" | <a href=\"Mapping.jsp\">Ontology Mappings</a>");
+      out.println("<p>");
 
       kbNames = KBmanager.getMgr().getKBnames().iterator();
     
