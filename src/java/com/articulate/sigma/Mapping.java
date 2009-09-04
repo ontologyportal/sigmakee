@@ -4,8 +4,6 @@ package com.articulate.sigma;
 import java.io.*;
 import java.util.*;
 
-import com.sun.source.tree.Tree;
-
 /** This code is copyright Articulate Software (c) 2004.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
