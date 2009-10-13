@@ -129,7 +129,7 @@ public class OWLtranslator {
     /** ***************************************************************
      *  Remove quotes around a string
      */
-    private static String removeQuotes(String s) {
+    public static String removeQuotes(String s) {
 
         if (s == null) 
             return s;
@@ -326,7 +326,13 @@ public class OWLtranslator {
             String text = se.getText();
             text = processStringForKIFOutput(text);
             if (parentTerm != null && text != null) 
-                pw.println(DB.wordWrap(indent + "(documentation " + parentTerm + " \"" + text + "\")",70));
+                pw.println(DB.wordWrap(indent + "(documentation " + parentTerm + " EnglishLanguage \"" + text + "\")",70));
+        }
+        else if (tag.equals("rdfs:label")) {
+            String text = se.getText();
+            text = processStringForKIFOutput(text);
+            if (parentTerm != null && text != null) 
+                pw.println(DB.wordWrap(indent + "(termFormat EnglishLanguage " + parentTerm + " \"" + text + "\")",70));
         }
         else if (tag.equals("owl:inverseOf")) {
             ArrayList children = se.getChildElements();
