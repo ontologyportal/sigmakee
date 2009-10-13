@@ -250,8 +250,12 @@ public class SimpleDOMParser {
         if (next != '<') 
             throw new IOException("Expected < but got " + (char)next);        
         sb.append((char)reader.read());
-        while (peek() != '>') 
-            sb.append((char)reader.read());        
+        while (peek() != '>') {
+            char c = (char)reader.read();
+            if (Character.isWhitespace(c)) 
+                c = ' ';            
+            sb.append(c);        
+        }
         sb.append((char)reader.read());
 
         //System.out.println("Tag: " + sb.toString());
