@@ -32,6 +32,13 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     String port = KBmanager.getMgr().getPref("port");
     if (StringUtil.emptyString(port))
         port = "8080";
+    String matchMethod = request.getParameter("matchMethod");
+    if (matchMethod == null) 
+        matchMethod = "Substring";
+    String thresholdSt = request.getParameter("threshold");
+    int threshold = 10;
+    if (thresholdSt != null) 
+        threshold = Integer.valueOf(thresholdSt).intValue();    
     String kbname1 = request.getParameter("kbname1");
     String kbname2 = request.getParameter("kbname2");
     String save = request.getParameter("save");
@@ -41,9 +48,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         kbname2 = "Select a KB";
     if (!kbname1.equals("Select a KB") && !kbname2.equals("Select a KB")) {
         Mapping m = new Mapping();
-        result = m.mapOntologies(kbname1,kbname2);
+        result = m.mapOntologies(kbname1,kbname2,threshold);
         if (save != null && save.startsWith("Save")) 
-            status = m.writeEquivalences(result,kbname1,kbname2);
+            status = m.writeEquivalences(result,kbname1,kbname2,threshold);
     }
     String kbHref1 = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbname1 + "&term=";
     String kbHref2 = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbname2 + "&term=";
@@ -92,7 +99,14 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                else
                    out.println("<tr>");
                even = !even;
-               out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a></td><td>");
+               KB kb1 = KBmanager.getMgr().getKB(kbname1);
+               String name1 = Mapping.getTermFormat(kb1,term1);
+               if (name1 != null)                
+                   out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a> (" +
+                               name1 + ")</td><td>");
+               else
+                   out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a>" +
+                               "</td><td>");
                TreeMap value = (TreeMap) result.get(term1);
                int counter = 0;
                Iterator it2 = value.keySet().iterator();
@@ -100,15 +114,28 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                    counter++;
                    Integer score = (Integer) it2.next();
                    String term2 = (String) value.get(score);
-                   out.println("<a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a> - " + score.toString() + "<br>");
+
+                   KB kb2 = KBmanager.getMgr().getKB(kbname2);
+                   String name2 = Mapping.getTermFormat(kb2,term2);
+                   if (name2 != null)                        
+                       out.println("<a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a> (" +
+                                   name2 + ") - " + score.toString() + "<br>");
+                   else
+                       out.println("<a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a>" +
+                                   " - " + score.toString() + "<br>");
                }
                out.println("</tr>");
            }
            out.println("</table>");
        }
-       out.println(status + "<P>");
+       if (status != null)        
+           out.println(status + "<P>");
 %>
-
+  <P>Match Threshold (lower is more strict): 
+     <INPUT type="text" size="5" name="threshold" value="<%=threshold%>">
+  <p>String match method: 
+     <input type="radio" name="matchMethod" value="Substring" <%=matchMethod.equals("Substring") ? "checked" : ""%>>Substring 
+     <input type="radio" name="matchMethod" value="JaroWinkler" <%=matchMethod.equals("JaroWinkler") ? "checked" : ""%>>JaroWinkler<br>
   <P><INPUT type="submit" NAME="save" VALUE="Save Mappings"><P>
 </FORM><P>
 
