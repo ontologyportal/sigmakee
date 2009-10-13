@@ -21,14 +21,14 @@ implement specific mapping heuristics.
 This class also includes utilities for converting other
 ad-hoc formats to KIF
    */
-abstract public class Mapping {
+public class Mapping {
 
     /** *************************************************************
      *  Write synonymousExternalConcept expressions for cases where
      *  the match score is above a certain threshold.
      */
     public static String writeEquivalences(TreeMap mappings, String kbname1, 
-                                           String kbname2) throws IOException {
+                                           String kbname2, int threshold) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
@@ -36,9 +36,7 @@ abstract public class Mapping {
 
         try {
             fw = new FileWriter(filename);
-            pw = new PrintWriter(fw);
-            int threshold = 2;  // lower number is more strict
-        
+            pw = new PrintWriter(fw);        
             Iterator it = mappings.keySet().iterator();
             while (it.hasNext()) {
                 String term1 = (String) it.next();
@@ -99,6 +97,33 @@ abstract public class Mapping {
     }
 
     /** *************************************************************
+    *   Get the termFormat label for a term.  Return only the first
+    *   such label.  Return null if no label.
+     */
+    public static String getTermFormat(KB kb, String term) {
+
+        ArrayList al = kb.askWithRestriction(0,"termFormat",2,term);
+        if (al != null && al.size() > 0) {
+            Formula f = (Formula) al.get(0);
+            String t = f.getArgument(3);
+            t = OWLtranslator.removeQuotes(t);
+            return t;
+        }
+        return null;
+    }
+
+    /** *************************************************************
+    *   @return the minimum of two ints
+     */
+    private static int min(int n1, int n2) {
+
+        if (n1<n2) 
+            return n1;
+        else
+            return n2;
+    }
+
+    /** *************************************************************
      * Map ontologies through 4 methods:
      * (1) identical term names
      * (2) substrings of term names are equal
@@ -112,8 +137,10 @@ abstract public class Mapping {
      *         score and the values are terms from the second
      *         ontology.
      */
-    public TreeMap mapOntologies(String kbName1, String kbName2) {
+    public TreeMap mapOntologies(String kbName1, String kbName2, int threshold) {
 
+        System.out.println("INFO in Mapping.mapOntologies()");
+        boolean jaroWinkler = false;    // map terms using Jaro-Winkler method or just substring
         TreeMap result = new TreeMap();
         int counter = 0;
         KB kb1,kb2;
@@ -122,14 +149,11 @@ abstract public class Mapping {
         if (kb1 != null && kb2 != null) {
             Iterator it1 = kb1.terms.iterator();
             while (it1.hasNext()) {
-                counter++;
-                if (counter == 100) {
-                    System.out.print(".");
-                    counter = 0;
-                }
+                System.out.print(".");
                 String term1 = (String) it1.next();
                 if (isValidTerm(term1)) {
                     String normTerm1 = normalize(term1);
+                    String normLabel1 = normalize(getTermFormat(kb1,term1));
                     TreeMap tm = (TreeMap) result.get(term1);
                     if (tm == null) 
                         tm = new TreeMap();
@@ -138,9 +162,34 @@ abstract public class Mapping {
                         String term2 = (String) it2.next();
                         if (isValidTerm(term2)) {
                             String normTerm2 = normalize(term2);
-                            int score = getDistance(normTerm1, kb1, normTerm2, kb2);
-                            if (score < Integer.MAX_VALUE)
-                                tm.put(new Integer(score), term2);
+                            String normLabel2 = normalize(getTermFormat(kb2,term2));
+                            int score = Integer.MAX_VALUE;
+                            if (jaroWinkler) 
+                                score = min(score,getJaroWinklerDistance(normTerm1, kb1, normTerm2, kb2));
+                            else 
+                                score = min(score,getSubstringDistance(normTerm1, kb1, normTerm2, kb2));
+                            if (normLabel1 != null && isValidTerm(normLabel1)) {
+                                if (jaroWinkler)
+                                    score = min(score,getJaroWinklerDistance(normLabel1, kb1, normTerm2, kb2));
+                                else 
+                                    score = min(score,getSubstringDistance(normLabel1, kb1, normTerm2, kb2));
+                            }
+                            if (normLabel2 != null && isValidTerm(normLabel2)) {
+                                if (jaroWinkler)
+                                    score = min(score,getJaroWinklerDistance(normTerm1, kb1, normLabel2, kb2));
+                                else 
+                                    score = min(score,getSubstringDistance(normTerm1, kb1, normLabel2, kb2));
+                            }
+                            if (normLabel1 != null && normLabel2 != null && 
+                                isValidTerm(normLabel1) && isValidTerm(normLabel2)) {
+                                if (jaroWinkler)
+                                    score = min(score,getJaroWinklerDistance(normLabel1, kb1, normLabel2, kb2));
+                                else 
+                                    score = min(score,getSubstringDistance(normLabel1, kb1, normLabel2, kb2));
+                            }
+                            if (score > 0 && score < Integer.MAX_VALUE)
+                                if (score < threshold)                                     
+                                    tm.put(new Integer(score), term2);
                         }
                     }
                     if (tm.keySet().size() > 0)
@@ -159,14 +208,10 @@ abstract public class Mapping {
     }
 
     /** *************************************************************
-     *   get distance between two terms
-     */
-    abstract public int getDistance(String term1, KB kb1, String term2, KB kb2);
-
-    /** *************************************************************
      *   check whether a term is valid (worthy of being compared)
      */
     public boolean isValidTerm(String term) {
+
         return term.length() > 2 && !Formula.isLogicalOperator(term);
     }
 
@@ -176,6 +221,7 @@ abstract public class Mapping {
      *   boundaries, and then converting to lower case
      */
     public String normalize(String s) {
+
         if (s == null || s.length() < 1)
             return null;
         StringBuffer result = new StringBuffer();
@@ -209,110 +255,107 @@ abstract public class Mapping {
      *  Systems  (PerMIS.'04), 2004.
      *
      *  *** This is not yet fully implemented here ***
-     *
      */
-    public static class SubstringMapping extends Mapping {
-        public int getDistance(String term1, KB kb1, String term2, KB kb2) {
-            if (term1.equals(term2))
-                return 1;
-            else if (term1.indexOf(term2) > -1)
-                return term1.indexOf(term2) + 
-                        (term1.length() - term2.length());
-            else if (term2.indexOf(term1) > -1)
-                return term2.indexOf(term1) + (term2.length() - term1.length());
-            else
-                return Integer.MAX_VALUE;
-        }
+    public int getSubstringDistance(String term1, KB kb1, String term2, KB kb2) {
+
+        if (term1.equals(term2))
+            return 1;
+        else if (term1.indexOf(term2) > -1)
+            return term1.indexOf(term2) + 
+                    (term1.length() - term2.length());
+        else if (term2.indexOf(term1) > -1)
+            return term2.indexOf(term1) + (term2.length() - term1.length());
+        else
+            return Integer.MAX_VALUE;
     }
 
     /** *************************************************************
      *  Jaro-Winkler Mapping Method
      *  implemented by Gerard de Melo
      */
-    public static class JaroWinklerMapping extends Mapping {
-        private static final int SCALING_FACTOR = 10000;
-        private int winklerMaxPrefixLen = 4;
-        private double winklerPrefixWeight = 0.1;
+    public int getJaroWinklerDistance(String s1, KB kb1, String s2, KB kb2) {
 
-        public int getDistance(String s1, KB kb1, String s2, KB kb2) {
-            int len1 = s1.length();
-            int len2 = s2.length();
-            if (len1 == 0 || len2 == 0)
-                return SCALING_FACTOR;
-            
-            // without loss of generality assume s1 is longer
-            if (len1 < len2) {
-                String t = s1;
-                s1 = s2;
-                s2 = t;
-                len1 = len2;
-                len2 = s2.length();
-            }
-            
-            // count and flag the matched pairs
-            int maxDistance = (len1 >= 4) ? (int) Math.floor(len1 / 2) - 1 : 0;
-            boolean[] s1Matches = new boolean[len1]; // initialized to false
-            boolean[] s2Matches = new boolean[len2]; // initialized to false
-            int nMatches = 0;
-            for (int i = 0; i < len2; i++) { // index in s2
-                char c = s2.charAt(i);
-                int jStart = (i > maxDistance) ? i - maxDistance : 0;
-                int jEnd = i + maxDistance + 1;
-                if (jEnd > len1)
-                    jEnd = len1;
-                for (int j = jStart; j < jEnd; j++) { // possible matching positions within s1
-                    if (!s1Matches[j] && c == s1.charAt(j)) {
-                        s1Matches[j] = true;
-                        s2Matches[i] = true;
-                        nMatches++;
-                        break;
-                    }
+        int SCALING_FACTOR = 10000;
+        int winklerMaxPrefixLen = 4;
+        double winklerPrefixWeight = 0.1;
+
+        int len1 = s1.length();
+        int len2 = s2.length();
+        if (len1 == 0 || len2 == 0)
+            return SCALING_FACTOR;
+        
+        // without loss of generality assume s1 is longer
+        if (len1 < len2) {
+            String t = s1;
+            s1 = s2;
+            s2 = t;
+            len1 = len2;
+            len2 = s2.length();
+        }
+        
+        // count and flag the matched pairs
+        int maxDistance = (len1 >= 4) ? (int) Math.floor(len1 / 2) - 1 : 0;
+        boolean[] s1Matches = new boolean[len1]; // initialized to false
+        boolean[] s2Matches = new boolean[len2]; // initialized to false
+        int nMatches = 0;
+        for (int i = 0; i < len2; i++) { // index in s2
+            char c = s2.charAt(i);
+            int jStart = (i > maxDistance) ? i - maxDistance : 0;
+            int jEnd = i + maxDistance + 1;
+            if (jEnd > len1)
+                jEnd = len1;
+            for (int j = jStart; j < jEnd; j++) { // possible matching positions within s1
+                if (!s1Matches[j] && c == s1.charAt(j)) {
+                    s1Matches[j] = true;
+                    s2Matches[i] = true;
+                    nMatches++;
+                    break;
                 }
             }
-            
-            if (nMatches == 0)
-                return SCALING_FACTOR;
-            
-            // count transpositions
-            int nTranspositions = 0;
-            int k = 0;
-            for (int i = 0; i < len2; i++) // index in s2
-                if (s2Matches[i]) {
-                    int j;
-                    for (j = k; j < len1; j++)
-                        if (s1Matches[j]) {
-                            k = j + 1;
-                            break;
-                        }
-                        if (s2.charAt(i) != s1.charAt(j))
-                            nTranspositions++;
-                    }
-            int halfTranspositions = nTranspositions / 2;
-
-            double jaroScore = ((double) nMatches / len1 
-                               +(double) nMatches / len2 
-                               +(double) (nMatches - halfTranspositions) / nMatches)
-                               / 3.0;
-
-            // Winkler bias
-            int cMaxPrefixLen = winklerMaxPrefixLen;
-            if (len1 < cMaxPrefixLen)
-                cMaxPrefixLen = len1;
-            if (len2 < cMaxPrefixLen)
-                cMaxPrefixLen = len2;
-            int l = 0;
-            while (l < cMaxPrefixLen)
-                if (s1.charAt(l) == s2.charAt(l))
-                    l++;
-                else
-                    break;
-            double jaroWinklerScore = jaroScore + l * winklerPrefixWeight * (1.0 - jaroScore);
-            
-            // return as a distance value such that larger
-            // values indicate greater distances
-            return (int) (SCALING_FACTOR * (1.0 - jaroWinklerScore));
         }
-    }
+        
+        if (nMatches == 0)
+            return SCALING_FACTOR;
+        
+        // count transpositions
+        int nTranspositions = 0;
+        int k = 0;
+        for (int i = 0; i < len2; i++) // index in s2
+            if (s2Matches[i]) {
+                int j;
+                for (j = k; j < len1; j++)
+                    if (s1Matches[j]) {
+                        k = j + 1;
+                        break;
+                    }
+                    if (s2.charAt(i) != s1.charAt(j))
+                        nTranspositions++;
+                }
+        int halfTranspositions = nTranspositions / 2;
+
+        double jaroScore = ((double) nMatches / len1 
+                           +(double) nMatches / len2 
+                           +(double) (nMatches - halfTranspositions) / nMatches)
+                           / 3.0;
+
+        // Winkler bias
+        int cMaxPrefixLen = winklerMaxPrefixLen;
+        if (len1 < cMaxPrefixLen)
+            cMaxPrefixLen = len1;
+        if (len2 < cMaxPrefixLen)
+            cMaxPrefixLen = len2;
+        int l = 0;
+        while (l < cMaxPrefixLen)
+            if (s1.charAt(l) == s2.charAt(l))
+                l++;
+            else
+                break;
+        double jaroWinklerScore = jaroScore + l * winklerPrefixWeight * (1.0 - jaroScore);
+        
+        // return as a distance value such that larger
+        // values indicate greater distances
+        return (int) (SCALING_FACTOR * (1.0 - jaroWinklerScore));
+    }    
 
     /** *************************************************************
      * A test method.
@@ -326,8 +369,8 @@ abstract public class Mapping {
         catch (Exception e ) {
           System.out.println(e.getMessage());
         }
-        Mapping m = new SubstringMapping();
-        m.mapOntologies("SUMO","YAGO");
+        Mapping m = new Mapping();
+        m.mapOntologies("SUMO","OBO",10);
 
         //System.out.println(m.normalize("Philippe_Mex-s"));
         //System.out.println(m.normalize("AntiguaAndBarbuda"));
