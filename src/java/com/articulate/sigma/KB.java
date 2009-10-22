@@ -2416,12 +2416,34 @@ public class KB {
     }
 
     /** *************************************************************
+     *  Rename term2 as term1 throughout the knowledge base.  This
+     *  is an operation with side effects - the term names in the KB
+     *  are changed.
+     */
+    public void rename(String term2, String term1) {
+
+        System.out.println("INFO in KB.rename(): replace " + term2 + " with " + term1);
+        TreeSet<Formula> formulas = new TreeSet<Formula>();
+        for (int i = 0; i < 7; i++)
+            formulas.addAll(ask("arg",i,term2));        
+        formulas.addAll(ask("ant",0,term2));        
+        formulas.addAll(ask("cons",0,term2));        
+        formulas.addAll(ask("stmt",0,term2));        
+        Iterator<Formula> it = formulas.iterator();
+        while (it.hasNext()) {
+            Formula f = it.next();
+            f.theFormula = f.rename(term2,term1).theFormula;
+        }
+    }
+
+    /** *************************************************************
      *  Writes a list of Formulas to a file.
      * @param formulas an AraryList of Strings.
      * @param fname The fully qualified file name.
      * @return void
      */
     private void writeFormulas(ArrayList formulas, String fname) {
+
         FileWriter fr = null;
         try {
             fr = new FileWriter(fname,true);
@@ -3412,35 +3434,35 @@ public class KB {
     }
 
     /** ***************************************************************
-     * Write a KIF file.
+     * Write a KIF file consisting of all the formulas in the
+     * knowledge base.
      * @param fname - the name of the file to write, including full path.
      */
     public void writeFile(String fname) throws IOException {
 
         FileWriter fr = null;
         PrintWriter pr = null;
-        Iterator it;
-        HashSet formulaSet = new  HashSet();
-        ArrayList formulaArray;
-        String key;
-        ArrayList list;
-        Formula f;
-        String s;
+        HashSet formulaSet = new HashSet();
 
+        Iterator it = formulas.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            ArrayList list = (ArrayList) formulas.get(key);
+            for (int i = 0; i < list.size(); i++) {
+                Formula f = (Formula) list.get(i);
+                String s = f.theFormula;
+                formulaSet.add(s);
+            }
+        }
         try {
             fr = new FileWriter(fname);
             pr = new PrintWriter(fr);
 
-            it = formulas.keySet().iterator();
+            it = formulaSet.iterator();
             while (it.hasNext()) {
-                key = (String) it.next();
-                list = (ArrayList) formulas.get(key);
-                for (int i = 0; i < list.size(); i++) {
-                    f = (Formula) list.get(i);
-                    s = f.toString();
-                    pr.println(s);
-                    pr.println();
-                }
+                String s = (String) it.next();
+                pr.println(s);
+                pr.println();
             }
         }
         catch (java.io.IOException e) {
