@@ -592,6 +592,14 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * @return a new Formula, or the original Formula if the cons fails.
+     */
+    private Formula cons(Formula f) {
+
+        return cons(f.theFormula);
+    }
+
+    /** ***************************************************************
      * Returns the LISP 'cdr' of the formula as a new Formula, if
      * possible, else returns null.
      *
@@ -668,6 +676,33 @@ public class Formula implements Comparable {
      */
     public String caddr() {
         return this.getArgument(2);
+    }
+
+    /** ***************************************************************
+     * Returns the LISP 'append' of the formulas
+     * Note that this operation has no side effect on the Formula.
+     * @return a Formula
+     *
+     */
+    public Formula append(Formula f) {
+
+        Formula newFormula = new Formula();
+        newFormula.read(theFormula);
+        if (newFormula.equals("") || newFormula.atom()) {
+            System.out.println("Error in KB.append(): attempt to append to non-list: " + theFormula);
+            return this;
+        }
+        if (f == null || f.theFormula == null || f.theFormula == "" || f.theFormula.equals("()")) 
+            return newFormula;
+        f.theFormula = f.theFormula.trim();
+        if (!f.atom()) 
+            f.theFormula = f.theFormula.substring(1,f.theFormula.length()-1);
+        int lastParen = theFormula.lastIndexOf(")");
+        String sep = "";
+        if (lastParen > 1) 
+            sep = " ";
+        newFormula.theFormula = newFormula.theFormula.substring(0,lastParen) + sep + f.theFormula + ")";
+        return newFormula;
     }
 
     /** ***************************************************************
@@ -6374,6 +6409,37 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     *  Replace term2 with term1
+     */
+    public Formula rename(String term2, String term1) {
+
+        // System.out.println("Formula.rename(): " + this.theFormula);
+        Formula newFormula = new Formula();
+        newFormula.read("()");
+        if (atom()) {
+            if (theFormula.equals(term2)) 
+                theFormula = term1;
+            return this;
+        }
+        if (!empty()) {
+            Formula f1 = new Formula();
+            f1.read(this.car());
+            // System.out.println("car: " + f1.theFormula);
+            if (f1.listP()) {
+                newFormula = newFormula.cons(f1.rename(term2,term1));
+            }
+            else
+                newFormula = newFormula.append(f1.rename(term2,term1));
+            Formula f2 = new Formula();
+            f2.read(this.cdr());
+            // System.out.println("cdr: " + f2);
+            newFormula = newFormula.append(f2.rename(term2,term1));
+        }
+        //System.out.println("Return: " + newFormula.theFormula);
+        return newFormula;
+    }
+
+    /** ***************************************************************
      * This method returns a new Formula in which all variables have
      * been renamed to ensure uniqueness.
      *
@@ -7199,7 +7265,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * A test method.
      */
-    public static void main(String[] args) {
+    public static void testClausifier(String[] args) {
 
         BufferedWriter bw = null;
         try {
@@ -7264,6 +7330,32 @@ public class Formula implements Comparable {
             }
         }
         return;
+    }
+
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void main(String[] args) {
+
+        // Formula.testClausifier(args);
+
+        Formula f2 = new Formula();
+        f2.read("O");
+        System.out.println("Format: " + f2.format("","",""));
+
+        Formula f1 = new Formula();
+        // f1.read(args[0]);
+        // System.out.println(f1.rename(args[2],args[1]));
+
+        f1.read("(=> (and (attribute ?SYLLABLE Stressed) (instance ?WORD Word) (part ?SYLLABLE ?WORD)) (not (exists (?SYLLABLE2) (and (instance ?SYLLABLE2 Syllable) (part ?SYLLABLE2 ?WORD) (attribute ?SYLLABLE2 Stressed) (not (equal ?SYLLABLE2 ?SYLLABLE))))))");
+        System.out.println(f1.rename("part","part-of"));
+        /**
+        Formula f1 = new Formula();
+        f1.read(args[0]);
+        f2.read(args[1]);
+        System.out.println(f1.cons(f2));
+         */
     }
 
 }  // Formula.java
