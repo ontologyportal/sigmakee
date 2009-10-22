@@ -23,17 +23,24 @@ ad-hoc formats to KIF
    */
 public class Mapping {
 
-    /** *************************************************************
-     *  Write synonymousExternalConcept expressions for cases where
-     *  the match score is above a certain threshold.
-     */
-    public static String writeEquivalences(TreeMap mappings, String kbname1, 
-                                           String kbname2, int threshold) throws IOException {
+    public static TreeMap mappings = new TreeMap();
 
+    /** *************************************************************
+     *  Write synonymousExternalConcept expressions for term pairs
+     *  given in cbset.
+     *  @return error messages if necessary
+     */
+    public static String writeEquivalences(TreeSet cbset, String kbname1, String kbname2) throws IOException {
+
+        System.out.println("INFO in Mapping.writeEquivalences()");
         FileWriter fw = null;
         PrintWriter pw = null; 
-        String filename = kbname1 + "-links.kif";
+        String dir = (String) KBmanager.getMgr().getPref("baseDir");
+        String filename = dir + File.separator + kbname1 + "-links.kif";
 
+        if (mappings.keySet().size() < 1) 
+            return "Error: No mappings found";
+        
         try {
             fw = new FileWriter(filename);
             pw = new PrintWriter(fw);        
@@ -42,10 +49,16 @@ public class Mapping {
                 String term1 = (String) it.next();
                 TreeMap value = (TreeMap) mappings.get(term1);
                 Iterator it2 = value.keySet().iterator();
+                int counter = 0;
                 while (it2.hasNext()) {
+                    counter++;
                     Integer score = (Integer) it2.next();
                     String term2 = (String) value.get(score);
-                    if (score.intValue() < threshold) {
+                    String topScoreFlag = "";
+                    if (counter == 1) 
+                        topScoreFlag = "T_";
+                    String cbName = "checkbox_" + topScoreFlag + term1 + "_" + term2;
+                    if (cbset.contains(cbName)) {
                         pw.println("(synonymousExternalConcept \"" + term2 + 
                                    "\" " + term1 + " " + kbname2 + ")");
                     }
@@ -64,7 +77,73 @@ public class Mapping {
                 fw.close();
             }
         }
-        return filename + " written to ";
+        return "Wrote: " + filename;
+    }
+
+    /** *************************************************************
+     *  rename terms in KB kbname2 to conform to names in kbname1
+     *  @return error messages if necessary
+     */
+    public static String merge(TreeSet cbset, String kbname1, String kbname2) {
+
+        System.out.println("INFO in Mapping.merge()");
+        if (mappings.keySet().size() < 1) 
+            return "Error: No mappings found";
+
+        KB kb1 = KBmanager.getMgr().getKB(kbname1);
+        KB kb2 = KBmanager.getMgr().getKB(kbname2);
+        Iterator it = mappings.keySet().iterator();
+        while (it.hasNext()) {
+            String term1 = (String) it.next();
+            TreeMap value = (TreeMap) mappings.get(term1);
+            System.out.println("INFO in Mapping.merge(): outer loop, examining " + term1);
+            Iterator it2 = value.keySet().iterator();
+            int counter = 0;
+            while (it2.hasNext()) {
+                counter++;
+                Integer score = (Integer) it2.next();
+                String term2 = (String) value.get(score);
+                System.out.println("INFO in Mapping.merge(): inner loop, examiing " + term2);
+                String topScoreFlag = "";
+                if (counter == 1) 
+                    topScoreFlag = "T_";
+                String cbName = "checkbox_" + topScoreFlag + term1 + "-" + term2;
+                String subName = "sub_checkbox_" + topScoreFlag + term1 + "-" + term2;
+                if (cbset.contains(cbName) && !term2.equals(term1))
+                    kb2.rename(term2,term1);                    
+                if (cbset.contains(subName)) {
+                    if (kb2.isInstance(term2)) {
+                        kb2.tell("(instance " + term2 + " " + term1 + ")");
+                        System.out.println("(instance " + term2 + " " + term1 + ")");
+                    }
+                    else {
+                        kb2.tell("(subclass " + term2 + " " + term1 + ")");
+                        System.out.println("(subclass " + term2 + " " + term1 + ")");
+                    }
+                }
+            }           
+        }
+        String dir = (String) KBmanager.getMgr().getPref("baseDir");
+        String filename = dir + File.separator + kbname2 + "-merged-" + kbname1;
+        try {
+            File f = new File(filename + ".kif");
+            int counter = 0;
+            while (f.exists()) {
+                counter++;
+                f = new File(filename + counter + ".kif");
+            }
+            if (counter == 0) 
+                filename = filename + ".kif";
+            else
+                filename = filename + counter + ".kif";
+            kb2.writeFile(filename);
+            kb1.addConstituent(filename);
+            KBmanager.getMgr().removeKB(kbname2);
+        }
+        catch (java.io.IOException e) {
+            return "Error writing file " + filename + "\n" + e.getMessage();
+        }
+        return "Successful renaming of terms in " + kbname2 + " to those in " + kbname1;
     }
 
     /** *************************************************************
@@ -102,12 +181,14 @@ public class Mapping {
      */
     public static String getTermFormat(KB kb, String term) {
 
-        ArrayList al = kb.askWithRestriction(0,"termFormat",2,term);
-        if (al != null && al.size() > 0) {
-            Formula f = (Formula) al.get(0);
-            String t = f.getArgument(3);
-            t = OWLtranslator.removeQuotes(t);
-            return t;
+        if (kb != null) {
+            ArrayList al = kb.askWithRestriction(0,"termFormat",2,term);
+            if (al != null && al.size() > 0) {
+                Formula f = (Formula) al.get(0);
+                String t = f.getArgument(3);
+                t = OWLtranslator.removeQuotes(t);
+                return t;
+            }
         }
         return null;
     }
@@ -137,7 +218,7 @@ public class Mapping {
      *         score and the values are terms from the second
      *         ontology.
      */
-    public TreeMap mapOntologies(String kbName1, String kbName2, int threshold) {
+    public static void mapOntologies(String kbName1, String kbName2, int threshold) {
 
         System.out.println("INFO in Mapping.mapOntologies()");
         boolean jaroWinkler = false;    // map terms using Jaro-Winkler method or just substring
@@ -149,7 +230,11 @@ public class Mapping {
         if (kb1 != null && kb2 != null) {
             Iterator it1 = kb1.terms.iterator();
             while (it1.hasNext()) {
-                System.out.print(".");
+                counter++;
+                if (counter > 100) {
+                    System.out.print(".");
+                    counter = 0;
+                }
                 String term1 = (String) it1.next();
                 if (isValidTerm(term1)) {
                     String normTerm1 = normalize(term1);
@@ -204,13 +289,13 @@ public class Mapping {
                 System.out.println(kbName2 + " not found<P>\n");            
         }
         System.out.println();
-        return result;
+        mappings = result;
     }
 
     /** *************************************************************
      *   check whether a term is valid (worthy of being compared)
      */
-    public boolean isValidTerm(String term) {
+    public static boolean isValidTerm(String term) {
 
         return term.length() > 2 && !Formula.isLogicalOperator(term);
     }
@@ -220,7 +305,7 @@ public class Mapping {
      *   characters with spaces, adding spaces on capitalization
      *   boundaries, and then converting to lower case
      */
-    public String normalize(String s) {
+    public static String normalize(String s) {
 
         if (s == null || s.length() < 1)
             return null;
@@ -256,7 +341,7 @@ public class Mapping {
      *
      *  *** This is not yet fully implemented here ***
      */
-    public int getSubstringDistance(String term1, KB kb1, String term2, KB kb2) {
+    public static int getSubstringDistance(String term1, KB kb1, String term2, KB kb2) {
 
         if (term1.equals(term2))
             return 1;
@@ -273,7 +358,7 @@ public class Mapping {
      *  Jaro-Winkler Mapping Method
      *  implemented by Gerard de Melo
      */
-    public int getJaroWinklerDistance(String s1, KB kb1, String s2, KB kb2) {
+    public static int getJaroWinklerDistance(String s1, KB kb1, String s2, KB kb2) {
 
         int SCALING_FACTOR = 10000;
         int winklerMaxPrefixLen = 4;
@@ -369,8 +454,7 @@ public class Mapping {
         catch (Exception e ) {
           System.out.println(e.getMessage());
         }
-        Mapping m = new Mapping();
-        m.mapOntologies("SUMO","OBO",10);
+        Mapping.mapOntologies("SUMO","OBO",10);
 
         //System.out.println(m.normalize("Philippe_Mex-s"));
         //System.out.println(m.normalize("AntiguaAndBarbuda"));
