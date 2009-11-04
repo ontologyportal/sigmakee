@@ -3258,7 +3258,8 @@ public class KB {
         StringBuffer result = new StringBuffer();
 
         try {
-            if (filename.endsWith(".owl") || filename.endsWith(".OWL")) {
+            if (filename.endsWith(".owl") || filename.endsWith(".OWL") ||
+                filename.endsWith(".rdf") || filename.endsWith(".RDF")) {
                 OWLtranslator.read(filename);
                 filename = filename + ".kif";
             }
