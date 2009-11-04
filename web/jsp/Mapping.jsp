@@ -103,7 +103,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         port = "8080";
     String matchMethod = request.getParameter("matchMethod");
     if (matchMethod == null) 
-        matchMethod = "Substring";
+        matchMethod = "JaroWinkler";
     String thresholdSt = request.getParameter("threshold");
     int threshold = 10;
     if (thresholdSt != null) 
@@ -119,7 +119,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         kbname2 = "Select a KB";
     if (!kbname1.equals("Select a KB") && !kbname2.equals("Select a KB")) {
         if (find != null && find.startsWith("Find")) 
-            Mapping.mapOntologies(kbname1,kbname2,threshold);        
+            Mapping.mapOntologies(kbname1,kbname2,threshold,matchMethod);        
         if (save != null && save.startsWith("Save")) 
             status = Mapping.writeEquivalences(cbset,kbname1,kbname2);
         if (merge != null && merge.startsWith("Merge")) {
@@ -156,105 +156,107 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 <FORM name=kbmapper ID=kbmapper action="Mapping.jsp" method="GET">
 <%
-       ArrayList kbnames = new ArrayList();
-       kbnames.addAll(KBmanager.getMgr().getKBnames());
-       kbnames.add("Select a KB");
-       out.println("<table><tr><td>KB #1</td><td>KB #2</td></tr>");
-       out.print("<tr><td>");
-       out.println(HTMLformatter.createMenu("kbname1",kbname1,kbnames));
-       out.print("</td><td>");
-       out.println(HTMLformatter.createMenu("kbname2",kbname2,kbnames));
-       out.println("</td></tr></table>");
-       out.println("<P><INPUT type=\"submit\" NAME=\"find\" VALUE=\"Find Mappings\"><P><hr align=left width=\"30%\">");
-       out.println("<P>");
-       if (Mapping.mappings != null && Mapping.mappings.keySet().size() > 0 && 
-           kbname1 != null && !kbname1.equals("Select a KB") && 
-           kbname2 != null && !kbname2.equals("Select a KB") ) {
-           out.println("<table><tr><td><b>KB#1: " + kbname1 + 
-                       "</b></td><td>equiv.</td><td>subclass</td><td><b>KB#2: " + 
-                         kbname2 + "</b></td></tr>\n");
-           out.print("<tr><td></td><td><input type=\"checkbox\" name=\"toggleAll\"" +
-                       " title=\"ToggleAllEq\" onclick=\"ToggleAllEq(document.kbmapper, this);\" />" +
-                       "toggle all</td>");
-           out.println("<td><input type=\"checkbox\" name=\"toggleAll\"" +
-                       " title=\"ToggleAllSub\" onclick=\"ToggleAllSub(document.kbmapper, this);\" />" +
-                       "toggle all</td><td></td></tr>");
-
-           out.print("<tr><td></td><td><input type=\"checkbox\" name=\"toggleBest\"" +
-                       " title=\"ToggleBestEq\" onclick=\"ToggleBestEq(document.kbmapper, this);\" />" +
-                       "toggle best</td>");
-           out.println("<td><input type=\"checkbox\" name=\"toggleAll\"" +
-                       " title=\"ToggleBestSub\" onclick=\"ToggleBestSub(document.kbmapper, this);\" />" +
-                       "toggle best</td><td></td></tr>");
-           boolean even = true;
-           Iterator it = Mapping.mappings.keySet().iterator();
-           while (it.hasNext()) {
-               String term1 = (String) it.next();
-               if (even) 
-                   out.println("<tr bgcolor=#DDDDDD>");
-               else
-                   out.println("<tr>");
-               even = !even;
-               KB kb1 = KBmanager.getMgr().getKB(kbname1);
-               String name1 = Mapping.getTermFormat(kb1,term1);
-               if (name1 != null)                
-                   out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a> (" +
-                               name1 + ")</td>");
-               else
-                   out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a>" +
-                               "</td>");
-               TreeMap value = (TreeMap) Mapping.mappings.get(term1);
-               int counter = 0;
-               Iterator it2 = value.keySet().iterator();
-               while (it2.hasNext() && counter < 10) {
-                   counter++;
-                   Integer score = (Integer) it2.next();
-                   String term2 = (String) value.get(score);
-
-                   KB kb2 = KBmanager.getMgr().getKB(kbname2);
-                   String name2 = Mapping.getTermFormat(kb2,term2);
-                   String topScoreFlag = "";
-                   if (counter == 1)
-                                            // Since we're iterating through a TreeSet we know
-                       topScoreFlag = "T_"; // the first element has the top score.                   
-                   if (counter > 1) 
-                       out.println("<tr><td></td>");
-                   out.print("<td><input type=\"checkbox\" name=\"checkbox_" +
-                               topScoreFlag + term1 + "-" + term2 + "\" id=\"checkbox_"+
-                               topScoreFlag + term1 + "-" + term2 + "\" ");
-                   if (((cbset == null || cbset.size() < 1) && counter == 1) || 
-                       ((cbset != null && cbset.contains("checkbox_" + topScoreFlag + term1 + "-" + term2))))
-                       out.print("checked");
-                   out.println(" /></td>");
-                   
-                   out.print("<td><input type=\"checkbox\" name=\"sub_checkbox_" +
-                               topScoreFlag + term1 + "-" + term2 + "\" id=\"checkbox_"+
-                               topScoreFlag + term1 + "-" + term2 + "\" ");
-
-                   if (((cbset == null || cbset.size() < 1) && counter != 1) || 
-                       ((cbset != null && cbset.contains("sub_checkbox_" + topScoreFlag + term1 + "-" + term2))))
-                       out.print("checked");
-                   out.println(" /></td>");
-                   if (name2 != null)                        
-                       out.println("<td><a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a> (" +
-                                   name2 + ") - " + score.toString() + "</td>");
-                   else
-                       out.println("<td><a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a>" +
-                                   " - " + score.toString() + "</td>");
-                   out.println("</tr>");
-               }
-               out.println("</tr>");
-           }
-           out.println("</table>");
-       }
-       if (status != null)        
-           out.println(status + "<P>");
+    ArrayList kbnames = new ArrayList();
+    kbnames.addAll(KBmanager.getMgr().getKBnames());
+    kbnames.add("Select a KB");
+    out.println("<table><tr><td>KB #1</td><td>KB #2</td></tr>");
+    out.print("<tr><td>");
+    out.println(HTMLformatter.createMenu("kbname1",kbname1,kbnames));
+    out.print("</td><td>");
+    out.println(HTMLformatter.createMenu("kbname2",kbname2,kbnames));
+    out.println("</td></tr></table>");
 %>
   <P>Match Threshold (lower is more strict): 
      <INPUT type="text" size="5" name="threshold" value="<%=threshold%>">
   <p>String match method: 
      <input type="radio" name="matchMethod" value="Substring" <%=matchMethod.equals("Substring") ? "checked" : ""%>>Substring 
-     <input type="radio" name="matchMethod" value="JaroWinkler" <%=matchMethod.equals("JaroWinkler") ? "checked" : ""%>>JaroWinkler<br>
+     <input type="radio" name="matchMethod" value="JaroWinkler" <%=matchMethod.equals("JaroWinkler") ? "checked" : ""%>>JaroWinkler
+     <input type="radio" name="matchMethod" value="Levenshtein" <%=matchMethod.equals("Levenshtein") ? "checked" : ""%>>Levenshtein<br>
+<%
+    out.println("<P><INPUT type=\"submit\" NAME=\"find\" VALUE=\"Find Mappings\"><P><hr align=left width=\"30%\">");
+    out.println("<P>");
+    if (Mapping.mappings != null && Mapping.mappings.keySet().size() > 0 && 
+        kbname1 != null && !kbname1.equals("Select a KB") && 
+        kbname2 != null && !kbname2.equals("Select a KB") ) {
+        out.println("<table><tr><td><b>KB#1: " + kbname1 + 
+                    "</b></td><td>equiv.</td><td>subclass</td><td><b>KB#2: " + 
+                      kbname2 + "</b></td></tr>\n");
+        out.print("<tr><td></td><td><input type=\"checkbox\" name=\"toggleAll\"" +
+                  " title=\"ToggleAllEq\" onclick=\"ToggleAllEq(document.kbmapper, this);\" />" +
+                  "toggle all</td>");
+        out.println("<td><input type=\"checkbox\" name=\"toggleAll\"" +
+                    " title=\"ToggleAllSub\" onclick=\"ToggleAllSub(document.kbmapper, this);\" />" +
+                    "toggle all</td><td></td></tr>");
+        out.print("<tr><td></td><td><input type=\"checkbox\" name=\"toggleBest\"" +
+                  " title=\"ToggleBestEq\" onclick=\"ToggleBestEq(document.kbmapper, this);\" />" +
+                  "toggle best</td>");
+        out.println("<td><input type=\"checkbox\" name=\"toggleAll\"" +
+                    " title=\"ToggleBestSub\" onclick=\"ToggleBestSub(document.kbmapper, this);\" />" +
+                    "toggle best</td><td></td></tr>");
+        boolean even = true;
+        Iterator it = Mapping.mappings.keySet().iterator();
+        while (it.hasNext()) {
+            String term1 = (String) it.next();
+            if (even) 
+                out.println("<tr bgcolor=#DDDDDD>");
+            else
+                out.println("<tr>");
+            even = !even;
+            KB kb1 = KBmanager.getMgr().getKB(kbname1);
+            String name1 = Mapping.getTermFormat(kb1,term1);
+            if (name1 != null)                
+                out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a> (" +
+                            name1 + ")</td>");
+            else
+                out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a>" +
+                            "</td>");
+            TreeMap value = (TreeMap) Mapping.mappings.get(term1);
+            int counter = 0;
+            Iterator it2 = value.keySet().iterator();
+            while (it2.hasNext() && counter < 10) {
+                counter++;
+                Integer score = (Integer) it2.next();
+                String term2 = (String) value.get(score);
+
+                KB kb2 = KBmanager.getMgr().getKB(kbname2);
+                String name2 = Mapping.getTermFormat(kb2,term2);
+                String topScoreFlag = "";
+                if (counter == 1)
+                                         // Since we're iterating through a TreeSet we know
+                    topScoreFlag = "T_"; // the first element has the top score.                   
+                if (counter > 1) 
+                    out.println("<tr><td></td>");
+                out.print("<td><input type=\"checkbox\" name=\"checkbox_" +
+                          topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" id=\"checkbox_"+
+                          topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" ");
+                if (((cbset == null || cbset.size() < 1) && counter == 1) || 
+                    ((cbset != null && cbset.contains("checkbox_" + topScoreFlag + term1 + Mapping.termSeparator + term2))))
+                    out.print("checked");
+                out.println(" /></td>");
+                   
+                out.print("<td><input type=\"checkbox\" name=\"sub_checkbox_" +
+                          topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" id=\"checkbox_"+
+                          topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" ");
+
+                if (((cbset == null || cbset.size() < 1) && counter != 1) || 
+                    ((cbset != null && cbset.contains("sub_checkbox_" + topScoreFlag + term1 + Mapping.termSeparator + term2))))
+                    out.print("checked");
+                out.println(" /></td>");
+                if (name2 != null)                        
+                    out.println("<td><a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a> (" +
+                                name2 + ") - " + score.toString() + "</td>");
+                else
+                    out.println("<td><a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a>" +
+                                " - " + score.toString() + "</td>");
+                out.println("</tr>");
+            }
+            out.println("</tr>");
+        }
+        out.println("</table>");
+    }
+    if (status != null)        
+        out.println(status + "<P>");
+%>
   <P><INPUT type="submit" NAME="save" VALUE="Save Mappings"><P>
   <P><INPUT type="submit" NAME="merge" VALUE="Merge (#2 into #1)"><P>
 </FORM><P>
