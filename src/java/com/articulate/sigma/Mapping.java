@@ -24,45 +24,71 @@ ad-hoc formats to KIF
 public class Mapping {
 
     public static TreeMap mappings = new TreeMap();
+    public static char termSeparator = '!';
 
     /** *************************************************************
      *  Write synonymousExternalConcept expressions for term pairs
-     *  given in cbset.
+     *  given in cbset.  They are strings of the form
+     *  [checkbox|subcheckbox]_[T_]name1-name2
+     * 
+     *  There's a known bug when ontology terms contain dashes.
+     * 
      *  @return error messages if necessary
      */
     public static String writeEquivalences(TreeSet cbset, String kbname1, String kbname2) throws IOException {
 
-        System.out.println("INFO in Mapping.writeEquivalences()");
+        System.out.println("INFO in Mapping.writeEquivalences(): size: " + cbset.size());
         FileWriter fw = null;
         PrintWriter pw = null; 
         String dir = (String) KBmanager.getMgr().getPref("baseDir");
-        String filename = dir + File.separator + kbname1 + "-links.kif";
+        String filename = dir + File.separator + kbname1 + "-" + kbname2 + "-links";
 
         if (mappings.keySet().size() < 1) 
             return "Error: No mappings found";
         
         try {
+            File f = new File(filename + ".kif");
+            int fileCounter = 0;
+            while (f.exists()) {
+                fileCounter++;
+                f = new File(filename + fileCounter + ".kif");
+            }
+            if (fileCounter == 0) 
+                filename = filename + ".kif";
+            else
+                filename = filename + fileCounter + ".kif";
+
             fw = new FileWriter(filename);
             pw = new PrintWriter(fw);        
-            Iterator it = mappings.keySet().iterator();
+            Iterator it = cbset.iterator();
             while (it.hasNext()) {
-                String term1 = (String) it.next();
-                TreeMap value = (TreeMap) mappings.get(term1);
-                Iterator it2 = value.keySet().iterator();
-                int counter = 0;
-                while (it2.hasNext()) {
-                    counter++;
-                    Integer score = (Integer) it2.next();
-                    String term2 = (String) value.get(score);
-                    String topScoreFlag = "";
-                    if (counter == 1) 
-                        topScoreFlag = "T_";
-                    String cbName = "checkbox_" + topScoreFlag + term1 + "_" + term2;
-                    if (cbset.contains(cbName)) {
-                        pw.println("(synonymousExternalConcept \"" + term2 + 
-                                   "\" " + term1 + " " + kbname2 + ")");
-                    }
+                String st = (String) it.next();
+                boolean subcheckbox = false;
+                if (st.startsWith("sub_checkbox_")) {
+                    st = st.substring(13);
+                    subcheckbox = true;
                 }
+                else {
+                    if (st.startsWith ("checkbox_")) 
+                        st = st.substring(9);
+                    else
+                        return "Error in Mapping.writeEquivalences(): malformed string " + st;
+                }
+
+                if (st.startsWith ("T_")) 
+                    st = st.substring(2);
+                int i = st.indexOf(termSeparator);
+                if (i < 0)                     
+                    return "Error in Mapping.writeEquivalences(): malformed string (no '" + termSeparator + "') " + st;
+                String term1 = st.substring(0,i);
+                String term2 = st.substring(i+1);
+                if (!subcheckbox) 
+                    pw.println("(synonymousExternalConcept \"" + term2 + 
+                               "\" " + term1 + " " + kbname2 + ")");
+                else
+                    pw.println("(subsumedExternalConcept \"" + term2 + 
+                               "\" " + term1 + " " + kbname2 + ")");
+                
             }
         }
         catch (java.io.IOException e) {
@@ -96,19 +122,19 @@ public class Mapping {
         while (it.hasNext()) {
             String term1 = (String) it.next();
             TreeMap value = (TreeMap) mappings.get(term1);
-            System.out.println("INFO in Mapping.merge(): outer loop, examining " + term1);
+            // System.out.println("INFO in Mapping.merge(): outer loop, examining " + term1);
             Iterator it2 = value.keySet().iterator();
             int counter = 0;
             while (it2.hasNext()) {
                 counter++;
                 Integer score = (Integer) it2.next();
                 String term2 = (String) value.get(score);
-                System.out.println("INFO in Mapping.merge(): inner loop, examiing " + term2);
+                // System.out.println("INFO in Mapping.merge(): inner loop, examining " + term2);
                 String topScoreFlag = "";
                 if (counter == 1) 
                     topScoreFlag = "T_";
-                String cbName = "checkbox_" + topScoreFlag + term1 + "-" + term2;
-                String subName = "sub_checkbox_" + topScoreFlag + term1 + "-" + term2;
+                String cbName = "checkbox_" + topScoreFlag + term1 + termSeparator + term2;
+                String subName = "sub_checkbox_" + topScoreFlag + term1 + termSeparator + term2;
                 if (cbset.contains(cbName) && !term2.equals(term1))
                     kb2.rename(term2,term1);                    
                 if (cbset.contains(subName)) {
@@ -204,6 +230,18 @@ public class Mapping {
             return n2;
     }
 
+
+    /** *************************************************************
+     */
+    private static int stringMatch(String t1, String t2, String matchMethod) {
+
+        if (matchMethod.equals("JaroWinkler")) 
+            return getJaroWinklerDistance(t1, t2);
+        if (matchMethod.equals("Levenshtein")) 
+            return getLevenshteinDistance(t1, t2);
+        return getSubstringDistance(t1,t2);
+    }
+
     /** *************************************************************
      * Map ontologies through 4 methods:
      * (1) identical term names
@@ -218,15 +256,25 @@ public class Mapping {
      *         score and the values are terms from the second
      *         ontology.
      */
-    public static void mapOntologies(String kbName1, String kbName2, int threshold) {
+    public static void mapOntologies(String kbName1, String kbName2, int threshold, String matchMethod) {
 
         System.out.println("INFO in Mapping.mapOntologies()");
-        boolean jaroWinkler = false;    // map terms using Jaro-Winkler method or just substring
+        long t1 = System.currentTimeMillis();
+        int mapCount = 0;
+        if (!matchMethod.equals("JaroWinkler") && 
+            !matchMethod.equals("Levenshtein") &&
+            !matchMethod.equals("Substring")) {
+            matchMethod = "Substring";
+            System.out.println("Error in Mapping.mapOntologies(): Invalid match method " + 
+                               matchMethod + ". Defaulting to substring match.");
+        }
+            
         TreeMap result = new TreeMap();
         int counter = 0;
         KB kb1,kb2;
         kb1 = KBmanager.getMgr().getKB(kbName1);
         kb2 = KBmanager.getMgr().getKB(kbName2);
+        int totalCandidates = kb1.terms.size() * kb2.terms.size();
         if (kb1 != null && kb2 != null) {
             Iterator it1 = kb1.terms.iterator();
             while (it1.hasNext()) {
@@ -248,33 +296,20 @@ public class Mapping {
                         if (isValidTerm(term2)) {
                             String normTerm2 = normalize(term2);
                             String normLabel2 = normalize(getTermFormat(kb2,term2));
-                            int score = Integer.MAX_VALUE;
-                            if (jaroWinkler) 
-                                score = min(score,getJaroWinklerDistance(normTerm1, kb1, normTerm2, kb2));
-                            else 
-                                score = min(score,getSubstringDistance(normTerm1, kb1, normTerm2, kb2));
-                            if (normLabel1 != null && isValidTerm(normLabel1)) {
-                                if (jaroWinkler)
-                                    score = min(score,getJaroWinklerDistance(normLabel1, kb1, normTerm2, kb2));
-                                else 
-                                    score = min(score,getSubstringDistance(normLabel1, kb1, normTerm2, kb2));
-                            }
-                            if (normLabel2 != null && isValidTerm(normLabel2)) {
-                                if (jaroWinkler)
-                                    score = min(score,getJaroWinklerDistance(normTerm1, kb1, normLabel2, kb2));
-                                else 
-                                    score = min(score,getSubstringDistance(normTerm1, kb1, normLabel2, kb2));
-                            }
+                            int score = Integer.MAX_VALUE; 
+                            score = min(score,stringMatch(normTerm1, normTerm2,matchMethod));
+                            if (normLabel1 != null && isValidTerm(normLabel1))
+                                score = min(score,stringMatch(normLabel1,normTerm2,matchMethod));                            
+                            if (normLabel2 != null && isValidTerm(normLabel2)) 
+                                score = min(score,stringMatch(normTerm1, normLabel2,matchMethod));                            
                             if (normLabel1 != null && normLabel2 != null && 
-                                isValidTerm(normLabel1) && isValidTerm(normLabel2)) {
-                                if (jaroWinkler)
-                                    score = min(score,getJaroWinklerDistance(normLabel1, kb1, normLabel2, kb2));
-                                else 
-                                    score = min(score,getSubstringDistance(normLabel1, kb1, normLabel2, kb2));
-                            }
+                                isValidTerm(normLabel1) && isValidTerm(normLabel2)) 
+                                score = min(score,stringMatch(normLabel1, normLabel2,matchMethod));                            
                             if (score > 0 && score < Integer.MAX_VALUE)
-                                if (score < threshold)                                     
+                                if (score < threshold) {                                
                                     tm.put(new Integer(score), term2);
+                                    mapCount++;
+                                }
                         }
                     }
                     if (tm.keySet().size() > 0)
@@ -289,6 +324,9 @@ public class Mapping {
                 System.out.println(kbName2 + " not found<P>\n");            
         }
         System.out.println();
+        System.out.println(totalCandidates + " " + " possible mappings checked with " +
+                           mapCount + " mappings found in "
+                           + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         mappings = result;
     }
 
@@ -316,12 +354,12 @@ public class Mapping {
                 result.append(s.charAt(i));
             else {
                 if (Character.isLetter(s.charAt(i)) && Character.isUpperCase(s.charAt(i))) {
-                    if (result.length() < 1 || result.charAt(result.length()-1) != ' ') 
+                    if (result.length() > 0 && result.charAt(result.length()-1) != ' ') 
                         result.append(" ");
                     result.append(Character.toLowerCase(s.charAt(i)));
                 }
                 else 
-                    if (result.length() < 1 || result.charAt(result.length()-1) != ' ') 
+                    if (result.length() > 0 && result.charAt(result.length()-1) != ' ') 
                         result.append(" ");             
             }
         }
@@ -341,7 +379,7 @@ public class Mapping {
      *
      *  *** This is not yet fully implemented here ***
      */
-    public static int getSubstringDistance(String term1, KB kb1, String term2, KB kb2) {
+    public static int getSubstringDistance(String term1, String term2) {
 
         if (term1.equals(term2))
             return 1;
@@ -354,13 +392,67 @@ public class Mapping {
             return Integer.MAX_VALUE;
     }
 
+
+    /** *************************************************************
+     */
+    private static int minimum(int a, int b, int c) {
+
+        if (a <= b && a <= c) 
+            return a;
+        if (b <= a && b <= c) 
+            return b;
+        if (c <= b && c <= a) 
+            return c;
+        return a; // this can never occur, but is needed so compiler doesn't complain.
+    }
+
+    /** *************************************************************
+     *  LevenshteinDistance(char s[1..m], char t[1..n])
+     *  courtesy of Wikipedia
+     *  http://en.wikipedia.org/wiki/Levenshtein_distance
+     *  int LevenshteinDistance(char s[1..m], char t[1..n])
+     */
+    public static int getLevenshteinDistance(String s, String t) {
+
+        int m = s.length();
+        int n = t.length();
+        // d is a table with m+1 rows and n+1 columns
+        int[][] d = new int[m][n];
+      
+        for (int i = 0; i < m; i++)
+            d[i][0] = i; // deletion
+        for (int j = 0; j < n; j++)
+            d[0][j] = j; // insertion
+      
+        for (int j = 1; j < n; j++) {
+            for (int i = 1; i < m; i++) {
+                if (s.charAt(i) == t.charAt(j)) 
+                    d[i][j] = d[i-1][j-1];
+                else
+                    d[i][j] = minimum(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + 1);
+            }                      // deletion,      insertion,     substitution
+        }       
+/**
+        int result = 0;
+        for (int j = 1; j < n; j++) {
+            int min = Integer.MAX_VALUE;
+            for (int i = 1; i < m; i++) {
+                if (d[i][j] < min) 
+                    min = d[i][j];
+            }
+            result =+ min - 1;
+        }
+     *  */
+        return d[m-1][n-1];
+     }
+
     /** *************************************************************
      *  Jaro-Winkler Mapping Method
      *  implemented by Gerard de Melo
      */
-    public static int getJaroWinklerDistance(String s1, KB kb1, String s2, KB kb2) {
+    public static int getJaroWinklerDistance(String s1, String s2) {
 
-        int SCALING_FACTOR = 10000;
+        int SCALING_FACTOR = 10;
         int winklerMaxPrefixLen = 4;
         double winklerPrefixWeight = 0.1;
 
@@ -445,9 +537,97 @@ public class Mapping {
     /** *************************************************************
      * A test method.
      */
+    private static void timingTest() {
+
+        String s1 = normalize("sitting");
+        String s2 = normalize("kitten");
+        String s3 = normalize("arm");
+        String s4 = normalize("Arm");
+        String s5 = normalize("alarm");
+        String s6 = normalize("Arm");
+        String s7 = normalize("farm");
+        String s8 = normalize("Armory");
+        String s9 = normalize("hiccup");
+        String s10 = normalize("Armory");
+        String s11 = normalize("isSubclassOf");
+        String s12 = normalize("subclass");
+        String s13 = normalize("subclassOf");
+        String s14 = normalize("subclass");
+
+        long t1 = System.currentTimeMillis();
+        for (int i = 0; i < 100000; i++) {
+            getJaroWinklerDistance(s1,s2);
+            getJaroWinklerDistance(s3,s4);
+            getJaroWinklerDistance(s5,s6);
+            getJaroWinklerDistance(s7,s8);
+            getJaroWinklerDistance(s9,s10);
+            getJaroWinklerDistance(s11,s12);
+            getJaroWinklerDistance(s13,s14);
+        }
+        System.out.println("Jaro-Winkler: " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+
+        t1 = System.currentTimeMillis();
+        for (int i = 0; i < 100000; i++) {
+            getLevenshteinDistance(s1,s2);
+            getLevenshteinDistance(s3,s4);
+            getLevenshteinDistance(s5,s6);
+            getLevenshteinDistance(s7,s8);
+            getLevenshteinDistance(s9,s10);
+            getLevenshteinDistance(s11,s12);
+            getLevenshteinDistance(s13,s14);
+        }
+        System.out.println("Levenshtein: " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+
+        t1 = System.currentTimeMillis();
+        for (int i = 0; i < 100000; i++) {
+            getSubstringDistance(s1,s2);
+            getSubstringDistance(s3,s4);
+            getSubstringDistance(s5,s6);
+            getSubstringDistance(s7,s8);
+            getSubstringDistance(s9,s10);
+            getSubstringDistance(s11,s12);
+            getSubstringDistance(s13,s14);
+        }
+        System.out.println("Substring: " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+    }
+
+    /** *************************************************************
+     * A test method.
+     */
+    private static void printTest(String s1, String s2) {
+
+        System.out.println("\"" + s1 + "\" \"" + s2 + "\"");
+        s1 = normalize(s1);
+        s2 = normalize(s2);
+        System.out.println("\"" + s1 + "\" \"" + s2 + "\"");
+        System.out.print(getJaroWinklerDistance(s1,s2));
+        System.out.print(" ");
+        System.out.print(getLevenshteinDistance(s1,s2));
+        System.out.print(" ");
+        System.out.println(getSubstringDistance(s1,s2));
+        System.out.println();
+    }
+
+    /** *************************************************************
+     * A test method.
+     */
     public static void main(String args[]) {
         // read(args[0]);
 
+        printTest("sitting","kitten");
+        printTest("arm","Arm");
+        printTest("alarm","Arm");
+        printTest("farm","Armory");
+        printTest("hiccup","Armory");
+        printTest("isSubclassOf","subclass");
+        printTest("subclassOf","subclass");
+        printTest("supercalafragalisticexpialadotious","subclass");
+        printTest("subclass","supercalafragalisticexpialadotious");
+        printTest("fix","arm");
+
+        timingTest();
+
+        /**
         try {
           KBmanager.getMgr().initializeOnce();
         } 
@@ -455,6 +635,7 @@ public class Mapping {
           System.out.println(e.getMessage());
         }
         Mapping.mapOntologies("SUMO","OBO",10);
+        **/
 
         //System.out.println(m.normalize("Philippe_Mex-s"));
         //System.out.println(m.normalize("AntiguaAndBarbuda"));
