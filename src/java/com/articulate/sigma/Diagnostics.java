@@ -22,6 +22,9 @@ import java.text.ParseException;
  */
 public class Diagnostics {
 
+    private static List LOG_OPS = Arrays.asList("and","or","not","exists",
+                                                "forall","=>","<=>","holds");
+
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not 
      * have a specifed relation.
@@ -31,8 +34,11 @@ public class Diagnostics {
      * @param limit the maximum number of results to return, or -1 if all
      * @param letter the first letter of the term name
      */
-    public static ArrayList termsWithoutRelation(KB kb, String rel, int argnum, 
-                                                 int limit, char letter) {
+    public static ArrayList termsWithoutRelation(KB kb, 
+                                                 String rel, 
+                                                 int argnum, 
+                                                 int limit, 
+                                                 char letter) {
 
         ArrayList result = new ArrayList();
         String term = null;
@@ -41,30 +47,43 @@ public class Diagnostics {
         String pred = null;
         Iterator it = kb.terms.iterator();
         Iterator it2 = null;
-        List excluded = Arrays.asList("and","or","not","exists","forall","=>","<=>","holds");
+        boolean isNaN = true;
         while (it.hasNext()) {
             term = (String) it.next();
-            if (excluded.contains(term)) 
+
+            // Exclude the logical operators.
+            if (LOG_OPS.contains(term)) 
                 continue;
-            forms = kb.ask("arg",argnum,term);
-            if (forms == null || forms.isEmpty()) {
-                if (letter < 'A' || term.charAt(0) == letter) 
-                    result.add(term);                
+
+            // Exclude numbers.
+            isNaN = true;
+            try {
+                double dval = Double.parseDouble(term);
+                isNaN = Double.isNaN(dval);
             }
-            else {
-                boolean found = false;
-                it2 = forms.iterator();
-                while (it2.hasNext()) {
-                    formula = (Formula) it2.next();
-                    pred = formula.car();
-                    if (pred.equals(rel)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
+            catch (Exception nex) {
+            }
+            if (isNaN) {
+                forms = kb.ask("arg",argnum,term);
+                if (forms == null || forms.isEmpty()) {
                     if (letter < 'A' || term.charAt(0) == letter) 
-                        result.add(term);                    
+                        result.add(term);                
+                }
+                else {
+                    boolean found = false;
+                    it2 = forms.iterator();
+                    while (it2.hasNext()) {
+                        formula = (Formula) it2.next();
+                        pred = formula.car();
+                        if (pred.equals(rel)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        if (letter < 'A' || term.charAt(0) == letter) 
+                            result.add(term);                    
+                    }
                 }
             }
             if (limit > 0 && result.size() > limit) {
@@ -99,18 +118,29 @@ public class Diagnostics {
         String key = "";
         ArrayList forms = kb.ask("arg", 0, "documentation");
         if (!forms.isEmpty()) {
+            boolean isNaN = true;
             Iterator it = forms.iterator();
             while (it.hasNext()) {
                 f = (Formula) it.next();
 
                 // Append term and language to make a key.
                 term = f.getArgument(1);
-                key = (term + f.getArgument(2));
 
-                if (withDoc.contains(key)) 
-                    result.add(term);                
-                else 
-                    withDoc.add(key);
+                isNaN = true;
+                try {
+                    double dval = Double.parseDouble(term);
+                    isNaN = Double.isNaN(dval);
+                }
+                catch (Exception nex) {
+                }
+                if (isNaN) {
+
+                    key = (term + f.getArgument(2));
+                    if (withDoc.contains(key)) 
+                        result.add(term);                
+                    else 
+                        withDoc.add(key);
+                }
                 
                 if (result.size() > 99) {
                     result.add("limited to 100 results");
@@ -176,18 +206,29 @@ public class Diagnostics {
      */
     public static ArrayList termsWithoutParent(KB kb) {
 
-        List excluded = Arrays.asList("Entity","and","or","not","exists","forall","=>","<=>","holds");
+        List excluded = new ArrayList(LOG_OPS);
+        excluded.add("Entity");
         System.out.println("INFO in Diagnostics.termsWithoutParent(): "); 
         ArrayList result = new ArrayList();
+        boolean isNaN = true;
         Iterator it = kb.terms.iterator();
         int count = 0;
         while (it.hasNext() && count < 100) {
             String term = (String) it.next();
             if (excluded.contains(term)) 
                 continue;
-            if (!hasParent(kb,term)) {
-                result.add(term); 
-                count++;
+            isNaN = true;
+            try {
+                double dval = Double.parseDouble(term);
+                isNaN = Double.isNaN(dval);
+            }
+            catch (Exception nex) {
+            }
+            if (isNaN) {
+                if (!hasParent(kb,term)) {
+                    result.add(term); 
+                    count++;
+                }
             }
             if (count > 99) 
                 result.add("limited to 100 results");            
@@ -208,28 +249,38 @@ public class Diagnostics {
         Set parentSet = null;
         Object[] parents = null;
         Set disjoints = null;
+        boolean isNaN = true;
         Iterator it = kb.terms.iterator();
         int count = 0;
         boolean contradiction = false;
         while (it.hasNext()) {
             contradiction = false;
             term = (String) it.next();
-            parentSet = kb.getCachedRelationValues("subclass", term, 1, 2);
-            parents = null;
-            if ((parentSet != null) && !parentSet.isEmpty())
-                parents = parentSet.toArray();            
-            if (parents != null) {
-                for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
-                    termX = (String) parents[i];
-                    disjoints = kb.getCachedRelationValues( "disjoint", termX, 1, 2);
-                    if ((disjoints != null) && !disjoints.isEmpty()) {
-                        for (int j = (i + 1) ; j < parents.length ; j++) {
-                            termY = (String) parents[j];
-                            if (disjoints.contains(termY)) {
-                                result.add(term);
-                                contradiction = true;
-                                count++;
-                                break;
+            isNaN = true;
+            try {
+                double dval = Double.parseDouble(term);
+                isNaN = Double.isNaN(dval);
+            }
+            catch (Exception nex) {
+            }
+            if (isNaN) {
+                parentSet = kb.getCachedRelationValues("subclass", term, 1, 2);
+                parents = null;
+                if ((parentSet != null) && !parentSet.isEmpty())
+                    parents = parentSet.toArray();            
+                if (parents != null) {
+                    for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
+                        termX = (String) parents[i];
+                        disjoints = kb.getCachedRelationValues("disjoint", termX, 1, 2);
+                        if ((disjoints != null) && !disjoints.isEmpty()) {
+                            for (int j = (i + 1) ; j < parents.length ; j++) {
+                                termY = (String) parents[j];
+                                if (disjoints.contains(termY)) {
+                                    result.add(term);
+                                    contradiction = true;
+                                    count++;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -245,40 +296,106 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
-     * Return a list of classes that are subclasses of a partitioned class,
-     * which do not appear in the partition listing.  For example,
-     * (subclass E A), (partition A B C D).  "exhaustiveDecomposition" has
-     * the same meaning and needs to be checked also.
+     * Returns a list of terms, each of which is an instance of some
+     * exhaustively decomposed class but is not an instance of any of
+     * the subclasses that constitute the exhaustive decomposition.
+     * For example, given (instance E A) and (partition A B C D), then
+     * E is included in the list of terms to be returned if E is not a
+     * instance of B, C, or D.
      */
-    public static ArrayList extraSubclassInPartition(KB kb) {
-
-        System.out.println("INFO in Diagnostics.extraSubclassInPartition(): "); 
+    public static ArrayList membersNotInAnyPartitionClass(KB kb) {
+        long t1 = System.currentTimeMillis();
+        System.out.println("ENTER Diagnostics.membersNotInAnyPartitionClass("
+                           + kb.name + ")"); 
         ArrayList result = new ArrayList();
-        ArrayList forms = kb.ask("arg",0,"partition");
-        if (forms == null) 
-            forms = new ArrayList();
-        ArrayList forms2 = kb.ask("arg",0,"exhaustiveDecomposition");
-        if (forms2 != null) 
-            forms.addAll(forms2);
-        for (int i = 0; i < forms.size(); i++) {
-            Formula form = (Formula) forms.get(i);
-            String parent = form.getArgument(1);
-            ArrayList partition = form.argumentsToArrayList(2);
-            ArrayList subs = kb.askWithRestriction(0, "subclass", 2, parent);
-            if (subs != null) {
-                for (int j = 0; j < subs.size(); j++) {
-                    Formula subform = (Formula) subs.get(j);
-                    String child = subform.getArgument(1);
-                    if (!partition.contains(child.intern())) {
-                        result.add(child);
-                    }
-                    if (result.size() > 99) {
-                        result.add("limited to 100 results");
-                        return result;
+        try {
+            Set reduce = new TreeSet();
+
+            // Use all partition statements and all
+            // exhaustiveDecomposition statements.
+            ArrayList forms = kb.ask("arg",0,"partition");
+            if (forms == null) 
+                forms = new ArrayList();
+            ArrayList forms2 = kb.ask("arg",0,"exhaustiveDecomposition");
+            if (forms2 != null) 
+                forms.addAll(forms2);
+            boolean go = true;
+            Iterator it = null;
+            Iterator it2 = null;
+            Iterator it3 = null;
+            for (it = forms.iterator(); go && it.hasNext();) {
+                Formula form = (Formula) it.next();
+                String parent = form.getArgument(1);
+                ArrayList partition = form.argumentsToArrayList(2);
+                List instances = kb.getTermsViaPredicateSubsumption("instance", 
+                                                                    2, 
+                                                                    parent, 
+                                                                    1, 
+                                                                    true);
+
+                if ((instances != null) && !instances.isEmpty()) {
+
+                    boolean isInstanceSubsumed = false;
+                    boolean isNaN = true;
+                    String inst = null;
+                    for (it2 = instances.iterator(); go && it2.hasNext();) {
+                        isInstanceSubsumed = false;
+                        isNaN = true;
+                        inst = (String) it2.next();
+
+                        // For diagnostics, try to avoid treating
+                        // numbers as bonafide terms.
+                        try {
+                            double dval = Double.parseDouble(inst);
+                            isNaN = Double.isNaN(dval);
+                        }
+                        catch (Exception nex) {
+                        }
+                        if (isNaN) {
+                            for (it3 = partition.iterator(); it3.hasNext();) {
+                                String pclass = (String) it3.next();
+                                if (kb.isInstanceOf(inst, pclass)) {
+                                    isInstanceSubsumed = true;
+                                    break;
+                                }
+                            }
+
+                            if (isInstanceSubsumed) {
+                                continue;
+                            }
+                            else {
+                                /*
+                                System.out.println("");
+                                System.out.println("  >    parent == " + parent);
+                                System.out.println("  > partition == " + partition);
+                                System.out.println("  >      inst == " + inst);
+                                */
+
+                                reduce.add(inst);
+                            }
+                        }
+                        if (reduce.size() > 99) {
+                            go = false;
+                        }
                     }
                 }
             }
+            result.addAll(reduce);
+            if (result.size() > 99) {
+                result.add("limited to 100 results");
+            }
         }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        System.out.println("EXIT Diagnostics.membersNotInAnyPartitionClass("
+                           + kb.name + ")");
+        System.out.println("  > result == " + result.size() + " instances");
+        // System.out.println("  > "
+        //                    + ((System.currentTimeMillis() - t1) / 1000.0)
+        //                    + " seconds elapsed time");
+
         return result;
     }
 
@@ -288,14 +405,24 @@ public class Diagnostics {
     public static ArrayList termsWithoutRules(KB kb) {
 
         System.out.println("INFO in Diagnostics.termsWithoutRules(): "); 
+        boolean isNaN = true;
         ArrayList result = new ArrayList();
         Iterator it = kb.terms.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
-            ArrayList forms = kb.ask("ant",-1,term);
-            ArrayList forms2 = kb.ask("cons",-1,term);
-            if (forms == null && forms2 == null) 
-                result.add(term);
+            isNaN = true;
+            try {
+                double dval = Double.parseDouble(term);
+                isNaN = Double.isNaN(dval);
+            }
+            catch (Exception nex) {
+            }
+            if (isNaN) {
+                ArrayList forms = kb.ask("ant",-1,term);
+                ArrayList forms2 = kb.ask("cons",-1,term);
+                if (forms == null && forms2 == null) 
+                    result.add(term);
+            }
             if (result.size() > 99) {
                 result.add("limited to 100 results");
                 return result;
@@ -313,8 +440,7 @@ public class Diagnostics {
         if (f.theFormula == null || f.theFormula.length() < 1 ||
             !f.listP() || f.empty())
             return false;
-        if (!f.car().equalsIgnoreCase("forall") &&                       // Recurse for complex expressions.
-            !f.car().equalsIgnoreCase("exists")) {
+        if (!Arrays.asList("forall", "exists").contains(f.car())) {
             Formula f1 = new Formula();
             f1.read(f.car());
             Formula f2 = new Formula();
