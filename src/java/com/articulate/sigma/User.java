@@ -17,15 +17,17 @@ import java.net.*;
  */
 public class User {
 
-    public String username;
-      /** Encrypted password */
-    public String password;
-      /** A String which is one of: user, administrator */
+    private static final String CHARSET = "UTF-8";
+
+    private String username;
+    /** Encrypted password */
+    private String password;
+    /** A String which is one of: user, administrator */
     private String role = "user";
-      /** A HashMap of String keys and String values */
-    public HashMap attributes = new HashMap();
-      /** An ArrayList of String keys consisting of unique project names. */
-    public ArrayList projects = new ArrayList();
+    /** A HashMap of String keys and String values */
+    private Map<String, String> attributes = new HashMap<String, String>();
+    /** A List of String keys consisting of unique project names. */
+    private List<String> projects = new ArrayList<String>();
   
     /** ***************************************************************** 
      */
@@ -42,10 +44,11 @@ public class User {
         username = (String) xml.attributes.get("name");
         password = (String) xml.attributes.get("password");
         try {
-            password = URLDecoder.decode(password,"UTF-8");
+            password = URLDecoder.decode(password,CHARSET);
         }
         catch (UnsupportedEncodingException uee) {
-            System.out.println("Error in User.fromXML(): Unsupported encoding exception: " + uee.getMessage());
+            System.out.println("Error in User.fromXML(): Unsupported encoding exception: " 
+                               + uee.getMessage());
         }
         setRole((String) xml.attributes.get("role"));
         System.out.println("Read role: " + xml.attributes.get("role"));
@@ -76,8 +79,8 @@ public class User {
         StringBuffer result = new StringBuffer();
 
         try {
-            result.append("<user name='" + username + "' password='" + 
-                       URLEncoder.encode(password,"UTF-8") + "' role='" + getRole() + "'>\n");
+            result.append("<user name=\"" + username + "\" password=\"" + 
+                          URLEncoder.encode(password,CHARSET) + "\" role=\"" + getRole() + "\">\n");
         }
         catch (UnsupportedEncodingException uee) {
             System.out.println("Error in User.toXML(): Unsupported encoding exception: " + uee.getMessage());
@@ -86,12 +89,12 @@ public class User {
         while (it.hasNext()) {
             String attribute = (String) it.next();
             String value = (String) attributes.get(attribute);
-            result.append("  <attribute name='" + attribute + "' value='" + value + "'/>\n");
+            result.append("  <attribute name=\"" + attribute + "\" value=\"" + value + "\"/>\n");
         }
         Iterator it2 = projects.iterator();
         while (it2.hasNext()) {
             String project = (String) it.next();
-            result.append("  <project name='" + project + "'>\n");
+            result.append("  <project name=\"" + project + "\">\n");
         }
         result.append("</user>\n");
         return result.toString();
@@ -99,24 +102,92 @@ public class User {
 
     /** ***************************************************************** 
      */
-    public void setRole(String newRole) {
+    public void setUsername(String uname) {
+        username = uname;
+        return;
+    }
 
-        if (newRole.equals("user") || newRole.equals("administrator"))
+    /** ***************************************************************** 
+     */
+    public String getUsername() {
+        return username;
+    }
+
+    /** ***************************************************************** 
+     */
+    public void setPassword(String newPassword) {
+        password = newPassword;
+        return;
+    }
+
+    /** ***************************************************************** 
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /** ***************************************************************** 
+     */
+    public void setAttribute(String k, String v) {
+        this.attributes.put(k, v);
+        return;
+    }
+
+    /** ***************************************************************** 
+     */
+    public String getAttribute(String k) {
+        return this.attributes.get(k);
+    }
+
+    /** ***************************************************************** 
+     */
+    public void setRole(String newRole) {
+        if (Arrays.asList(StringUtil.encrypt(PasswordService.USER_ROLE, CHARSET), 
+                          StringUtil.encrypt(PasswordService.ADMIN_ROLE, CHARSET))
+            .contains(newRole))
             role = newRole;
         else
             System.out.println("Error in User.setRole(): Bad role name: " + newRole);
+        return;
     }
 
     /** ***************************************************************** 
      */
     public String getRole() {
-
         return role;
     }
 
     /** ***************************************************************** 
      */
-    public static void main(String args[]) {
+    public boolean addProject(String projectName) {
+        boolean result = false;
+        if (StringUtil.isNonEmptyString(projectName)) {
+            String canonicalName = projectName.intern();
+            if (!projects.contains(canonicalName)) 
+                result = projects.add(canonicalName);
+        }
+        return result;
+    }
+
+    /** ***************************************************************** 
+     */
+    public boolean removeProject(String projectName) {
+        boolean result = false;
+        if (StringUtil.isNonEmptyString(projectName)) {
+            result = projects.remove(projectName.intern());
+        }
+        return result;
+    }
+
+    /** ***************************************************************** 
+     */
+    public List<String> getProjects() {
+        return projects;
+    }
+
+    /** ***************************************************************** 
+     */
+    public static void main(String[] args) {
 
     }
 

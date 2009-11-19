@@ -7,10 +7,6 @@ code.  */
 package com.articulate.sigma;
 
 import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import sun.misc.BASE64Encoder;
-import sun.misc.CharacterEncoder;
 import java.util.*;
 import java.io.*;
 import java.text.*;
@@ -22,133 +18,242 @@ import com.articulate.sigma.*;
  */
 public final class PasswordService {
 
-    private static PasswordService instance;
-    private static HashMap users = new HashMap();
+    private static final String CHARSET = "UTF-8";
+    private static final String USERS_FILENAME = "users.txt";
+    protected static final String ADMIN_ROLE = "administrator";
+    protected static final String USER_ROLE = "user";
+    private static final String DELIMITER1 = ":";
+    private static final String DELIMITER2 = "0xyz1";
+    private static final String USER_DELIMITER = "1uuuxuuu2";
+    private static PasswordService INSTANCE = null;
+    private static HashMap<String, User> users = new HashMap<String, User>();
   
     /** ***************************************************************** 
-     * Create an instance of PasswordService
+     * Use the static factory method getInstance().
      */
-    public PasswordService() {
-
-        try {
-            String config = readUserFile();
-            //if no users exists, initialize the file with user "admin"
-                if (config == "") {
-                    User admin = new User();
-                    admin.username = "admin";
-                    admin.setRole("administrator");
-                    admin.password = encrypt("admin");
-                    addUser(admin);
-                    writeUserFile();
-                    config = readUserFile();
-		}
-
-            processUserFile(config);
-        }
-        catch (java.io.IOException e) {
-            System.out.println("Error in PasswordService(): IO exception reading file " + e.getMessage());
-        }
+    private PasswordService() {
     }
 
     /** ***************************************************************** 
      * Encrypts a string with a deterministic algorithm.
      */
-    public synchronized String encrypt(String plaintext) {
-
-        MessageDigest md = null;
-        try {
-            md = MessageDigest.getInstance("SHA");
-        }
-        catch(NoSuchAlgorithmException e) {
-            System.out.println(e.getMessage());
-        }
-        try {
-            md.update(plaintext.getBytes("UTF-8"));
-        }
-        catch (UnsupportedEncodingException e) {
-            System.out.println(e.getMessage());
-        }
-        byte raw[] = md.digest(); 
-        String hash = (new BASE64Encoder()).encode(raw); 
-        return hash; 
+    public String encrypt(String plaintext) {
+        return StringUtil.encrypt(plaintext, CHARSET);
     }
 
     /** ***************************************************************** 
      */
-    public static synchronized PasswordService getInstance() {
+    public static PasswordService getInstance() {
+        try {
+            synchronized (users) {
+                if (INSTANCE == null) {
+                    INSTANCE = new PasswordService();
+                    SigmaServer ss = KBmanager.getMgr().getSigmaServer();
+                    INSTANCE.setUsersFileDirectory(ss.getWebDirectory());
+                }
+                if (INSTANCE.users.isEmpty()) {
+                    INSTANCE.readUserFile();
 
-        if (instance == null)
-            instance = new PasswordService();
-        return instance;        
-    }
-
-    /** ***************************************************************** 
-     * Take a user name and unencrypted password and compare it to an
-     * existing collection of users with encrypted passwords.
-     */
-    public boolean authenticate(String username, String pass) {
-
-        if (users.containsKey(username)) {
-            User user = (User) users.get(username);
-            System.out.println("INFO in PasswordService.authenticate(): Reading: " + username + " " + encrypt(pass));
-            System.out.println("INFO in PasswordService.authenticate(): Reading: " + user.username + " " + user.password);
-            if (encrypt(pass).equals(user.password)) {
-                return true;
+                    // If no user file exists, create one and initialize
+                    // it with user "admin".
+                    if (INSTANCE.users.isEmpty()) {
+                        User admin = new User();
+                        admin.setUsername("admin");
+                        admin.setPassword(INSTANCE.encrypt("admin"));
+                        admin.setRole(INSTANCE.encrypt(ADMIN_ROLE));
+                        INSTANCE.addUser(admin);
+                    }
+                }
             }
-            else
-                return false;
         }
-        else
-            return false;
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return INSTANCE;
+    }
+
+    private File usersFileDirectory = null;
+
+    public void setUsersFileDirectory(File dir) {
+        usersFileDirectory = dir;
+        return;
+    }
+
+    public File getUsersFileDirectory() {
+        return this.usersFileDirectory;
+    }
+
+    /** *****************************************************************
+     * Accepts as input a base 64 String consisting of a user name and
+     * password.  Returns true if the user can be authenticated, else
+     * returns false.
+     *
+     * @param String A concatenated user name and password in base 64
+     * representation
+     *
+     * @return True if the user can be authenticated, else false
+     */
+    protected boolean isUserAuthenticated(String usernamePassword64) {
+        boolean ans = false;
+        try {
+            List<String> pair = toNamePasswordPairFrom64(usernamePassword64);
+            String username = pair.get(0);
+            String password = pair.get(1);
+            if (StringUtil.isNonEmptyString(password)) {
+                ans = encrypt(password).equals(getUser(username).getPassword());
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /** *****************************************************************
+     * Accepts as input a base 64 String consisting of a user name and
+     * password.  Breaks and decodes the input String, if possible,
+     * and returns a List containing a user name String and an
+     * encrypted password String.
+     *
+     * @param usernamePassword64 A base 64 encoded String consisting
+     * of a user name and an encrypted password
+     *
+     * @return A two-element List consisting of a user name and an
+     * encrypted password.  Both the user name and the encrypted
+     * password could be empty Strings if decoding of the input String
+     * fails.
+     */
+    protected ArrayList<String> toNamePasswordPairFrom64(String usernamePassword64) {
+        ArrayList<String> pair = new ArrayList<String>();
+        try {
+            String authtype = "Basic ";
+            int bidx = usernamePassword64.indexOf(authtype);
+            if (bidx != -1)
+                usernamePassword64 = usernamePassword64.substring(bidx + authtype.length());
+            String usernamePassword = StringUtil.fromBase64(usernamePassword64, CHARSET);
+            int idx1 = usernamePassword.indexOf(DELIMITER1);
+            int d1len = DELIMITER1.length();
+            String username = "";
+            String password = "";
+            if (idx1 != -1) {
+                username = usernamePassword.substring(0, idx1);
+                User user = getUser(username);
+                if (user != null) {
+                    int idx2 = (idx1 + d1len);
+                    password = ((idx2 < usernamePassword.length())
+                                ? usernamePassword.substring(idx2)
+                                : "");
+                }
+            }
+            pair.add(username);
+            pair.add(password);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return pair;
     }
 
     /** ***************************************************************** 
      */
     public User getUser(String username) {
+        User result = null;
+        synchronized (users) {
+            result = users.get(username);
+        }
+        return result;
+    }
 
-        if (username != null && username != "") 
-            return (User) users.get(username);
-        else
-            return null;
+    /** ***************************************************************** 
+     */
+    protected User getUserFromNamePassword64(String namepass64) {
+        User u = null;
+        try {
+            u = getUser(toNamePasswordPairFrom64(namepass64).get(0));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return u;
     }
 
     /** ***************************************************************
-     * Read an XML-formatted configuration file. 
+     * Read a text file consisting of partly encrypted user password
+     * and role authorization data.
      */
-    private String readUserFile() throws IOException {
-        
-//        String fname = System.getProperty("user.dir") + File.separator + "users.txt";
-        String fname = KBmanager.getMgr().getPref("kbDir") + File.separator + "users.txt";
-        StringBuffer xml = new StringBuffer();
-        File f = new File(fname);
-        if (!f.exists()) 
-            return "";
-        //System.out.println("INFO in PasswordService.readUserFile(): Reading: " + fname);
-        BufferedReader br = new BufferedReader(new FileReader(fname));
-
+    private void readUserFile() {
+        System.out.println("ENTER PasswordService.readUserFile()");
+        BufferedReader br = null;
+        File f = null;
+        String canonicalPath = null;
         try {
-            do {
-                String line = br.readLine();
-                xml.append(line + "\n");
-            } while (br.ready());
+            File fdir = getUsersFileDirectory(); // new File(KBmanager.getMgr().getPref("kbDir"));
+            f = new File(fdir, USERS_FILENAME);
+            canonicalPath = f.getCanonicalPath();
+            if (f.canRead()) {
+                br = new BufferedReader(new FileReader(f));
+                StringBuilder sb = new StringBuilder();
+                users.clear();
+                int i = -1;
+                while ((i = br.read()) != -1) {
+                    sb.append((char) i);
+                }
+                if (sb.length() > 0) {
+                    String filestr = StringUtil.fromBase64(sb.toString(), CHARSET);
+                    List<String> userStrs = Arrays.asList(filestr.split(USER_DELIMITER));
+                    for (String udata : userStrs) {
+                        if (StringUtil.isNonEmptyString(udata)) {
+                            List<String> u_p_r = Arrays.asList(udata.split(DELIMITER2));
+                            if (u_p_r.size() > 2) {
+                                User user = new User();
+                                String userName = u_p_r.get(0);
+                                String password = u_p_r.get(1);
+                                String role = u_p_r.get(2);
+                                System.out.println("  > userName == " + userName);
+                                user.setUsername(userName);
+                                System.out.println("  > password == " + password);
+                                user.setPassword(password);
+                                System.out.println("  > role == " + role);
+                                user.setRole(role);
+                                users.put(userName, user);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                System.out.println("WARNING in PasswordService.readUserFile()");
+                System.out.println("  > Cannot read " + canonicalPath);
+            }
         }
-        catch (java.io.IOException e) {
-            System.out.println("Error in PasswordService.readUserFile(): IO exception parsing file " + fname);
+        catch (Exception ex) {
+            System.out.println("ERROR in PasswordService.readUserFile()");
+            System.out.println("  > f == " + canonicalPath);
+            System.out.println("  > " + ex.getMessage());
+            ex.printStackTrace();
         }
         finally {
-            if (br != null) 
-                br.close();
+            try {
+                if (br != null) 
+                    br.close();
+            }
+            catch (Exception e1) {
+                e1.printStackTrace();
+            }
         }
         //System.out.println(xml.toString());
-        return xml.toString();
+        System.out.println("EXIT PasswordService.readUserFile()");
+        return;
     }
 
     /** ***************************************************************
      * Read an XML-formatted configuration file. 
+     * @deprecated
      */
     private void processUserFile(String configuration) {
 
-        users = new HashMap();
+        if (users == null) users = new HashMap();
+        users.clear();
         BasicXMLparser config = new BasicXMLparser(configuration);
         //System.out.println("INFO in PasswordService.processUserFile(): Initializing.");
         //System.out.print("INFO in PasswordService.processUserFile(): Number of users:");
@@ -158,89 +263,113 @@ public final class PasswordService {
             if (element.tagname.equalsIgnoreCase("user")) {
                 User user = new User();
                 user.fromXML(element);
-                users.put(user.username,user);
+                users.put(user.getUsername(),user);
             }
             else
-                System.out.println("Error in PasswordService.processUserFile(): Bad element: " + element.tagname);
+                System.out.println("Error in PasswordService.processUserFile(): Bad element: " 
+                                   + element.tagname);
         }        
     }
 
     /** ***************************************************************** 
      */
-    public void writeUserFile() throws IOException {
-
-        FileWriter fw = null;
+    protected void writeUserFile() {
+        System.out.println("ENTER PasswordService.writeUserFile()");
         PrintWriter pw = null;
-//        String fname = "users.txt";
-        String fname = KBmanager.getMgr().getPref("kbDir") + File.separator + "users.txt";
-
-        //System.out.println("INFO in PasswordService.writeUserFile: Writing user file.");
+        File usersFile = null;
+        String canonicalPath = null;
         try {
-            fw = new FileWriter(fname);
-            pw = new PrintWriter(fw);
-            Iterator it = users.keySet().iterator();
-            while (it.hasNext()) {
-                String username = (String) it.next();
-                User user = (User) users.get(username);
-                pw.print(user.toXML());
+            File ufDir = getUsersFileDirectory(); // new File(KBmanager.getMgr().getPref("kbDir"));
+            usersFile = new File(ufDir, USERS_FILENAME);
+            canonicalPath = usersFile.getCanonicalPath();
+            pw = new PrintWriter(new FileWriter(usersFile));
+            StringBuilder sb = new StringBuilder();
+            User u = null;
+            String password = null;
+            String role = null;
+            for (String username : users.keySet()) {
+                u = users.get(username);
+                password = u.getPassword();
+                role = u.getRole();
+                System.out.println("  > username == " + username);
+                sb.append(username);
+                sb.append(DELIMITER2);
+                System.out.println("  > password == " + password);
+                sb.append(u.getPassword());
+                sb.append(DELIMITER2);
+                System.out.println("  > role == " + role);
+                sb.append(u.getRole());
+                sb.append(USER_DELIMITER);
             }
+            String udata = StringUtil.toBase64(sb.toString(), CHARSET);
+            System.out.println("  > udata == " + udata);
+            pw.println(udata);
         }
-        catch (java.io.IOException e) {
-            throw new IOException("Error writing file " + fname + ". " + e.getMessage());
+        catch (Exception ex) {
+            System.out.println("Error writing file " 
+                               + ((usersFile == null)
+                                  ? USERS_FILENAME
+                                  : canonicalPath)
+                               + ": " 
+                               + ex.getMessage());
+            ex.printStackTrace();
         }
         finally {
-            // System.out.println("INFO in PasswordService.writeUserFile: Completed writing user file");           
             if (pw != null) {
                 pw.close();
             }
-            if (fw != null) {
-                fw.close();
-            }
         }
+        return;
     }
 
     /** *****************************************************************
      */
     public boolean userExists(String username) {
-        
-        return users.keySet().contains(username);
+        return (getUser(username) != null);
     }
 
     /** *****************************************************************
      */
     public void updateUser(User user) {
-
-        if (!userExists(user.username)) {
-            System.out.println("Error in PasswordService.addUser():  User " + user.username + " doesn't exist.");
-            return;
+        try {        
+            synchronized (users) {
+                String uname = user.getUsername();
+                if (userExists(uname)) {
+                    users.put(uname, user);
+                    writeUserFile();
+                }
+                else {
+                    System.out.println("ERROR in PasswordService.updateUser(" + uname + ")");
+                    System.out.println("  > User " + uname + " does not exist");
+                }
+            }
         }
-        users.put(user.username,user);
-
-        try {
-            writeUserFile();
+        catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (java.io.IOException e) {
-            System.out.println("Error in PasswordService.addUser():  Error writing user file." + e.getMessage());
-        }
+        return;
     }
 
     /** *****************************************************************
      */
     public void addUser(User user) {
-
-        if (userExists(user.username)) {
-            System.out.println("Error in PasswordService.addUser():  User " + user.username + " already exists.");
-            return;
-        }
-        users.put(user.username,user);
-
-        System.out.println("INFO in PasswordService.addUser():  Password: " + user.password);
         try {
-            writeUserFile();
+            synchronized (users) {
+                String uname = user.getUsername();
+                if (userExists(uname)) {
+                    System.out.println("ERROR in PasswordService.addUser(" + uname + ")");
+                    System.out.println("  > User " + uname + " already exists");
+                }
+                else {
+                    users.put(uname, user);
+                    writeUserFile();
+                }
+            }
         }
-        catch (java.io.IOException e) {
-            System.out.println("Error in PasswordService.addUser():  Error writing user file." + e.getMessage());
+        catch (Exception e) {
+            e.printStackTrace();
         }
+        return;
     }
 
     /** ***************************************************************** 

@@ -72,65 +72,86 @@ public class KBmanager {
         return error;
     }
 
+    private SigmaServer sigmaServer = null;
+
+    public void setSigmaServer(SigmaServer ss) {
+        this.sigmaServer = ss;
+        return;
+    }
+
+    public SigmaServer getSigmaServer() {
+        return this.sigmaServer;
+    }
+
     /** ***************************************************************
      * Set default attribute values if not in the configuration file.
      */
     private void setDefaultAttributes() {
-
+        System.out.println("ENTER KBmanager.setDefaultAttributes()");
         try {
             String sep = File.separator;
             String base = System.getenv("SIGMA_HOME");
             String tptpHome = System.getenv("TPTP_HOME");
             String systemsHome = System.getenv("SYSTEMS_HOME");
-            if (base == null || base == "") {
+            if (StringUtil.emptyString(base))
                 base = System.getProperty("user.dir");
-            }
-            if (tptpHome == null || tptpHome == "") {
+            if (StringUtil.emptyString(tptpHome))
                 tptpHome = System.getProperty("user.dir");
-            }
-            if (systemsHome == null || systemsHome == "") {
+            if (StringUtil.emptyString(systemsHome))
                 systemsHome = System.getProperty("user.dir");
-            }
-            System.out.println("INFO in KBmanager.setDefaultAttributes(): base == " + base);
+            System.out.println("  > base == " + base);
             String tomcatRoot = System.getenv("CATALINA_HOME");
-            System.out.println("INFO in KBmanager.setDefaultAttributes(): CATALINA_HOME == " + tomcatRoot);
-            if ((tomcatRoot == null) || tomcatRoot.equals("")) {
+            System.out.println("  > CATALINA_HOME == " + tomcatRoot);
+            if (StringUtil.emptyString(tomcatRoot))
                 tomcatRoot = System.getProperty("user.dir");
-            }
             File tomcatRootDir = new File(tomcatRoot);
             File baseDir = new File(base);
             File tptpHomeDir = new File(tptpHome);
             File systemsDir = new File(systemsHome);
             File kbDir = new File(baseDir, "KBs");
             File inferenceTestDir = new File(kbDir, "tests");
+
             // The links for the test results files will be broken if
             // they are not put under [Tomcat]/webapps/sigma.
             // Unfortunately, we don't know where [Tomcat] is.
-            File testOutputDir = new File(tomcatRootDir,("webapps" + sep + "sigma" + sep + "tests"));
+            File testOutputDir = new File(tomcatRootDir,
+                                          ("webapps" + sep + "sigma" + sep + "tests"));
             preferences.put("baseDir",baseDir.getCanonicalPath());
             preferences.put("tptpHomeDir",tptpHomeDir.getCanonicalPath());
             preferences.put("systemsDir",systemsDir.getCanonicalPath());
             preferences.put("kbDir",kbDir.getCanonicalPath());
             preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());  
             preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
-            // No way to determine the full inferenceEngine path without
-            // asking the user.
-            preferences.put("inferenceEngine", "kif");
+
+            // There is no foolproof way to determine the actual
+            // inferenceEngine path without asking the user.  But we
+            // can make an educated guess.
+            String _OS = System.getProperty("os.name");
+            String ieExec = "kif-linux";
+            if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*"))
+                ieExec = "kif.exe";
+            File ieDirFile = new File(baseDir, "inference");
+            File ieExecFile = (ieDirFile.isDirectory()
+                               ? new File(ieDirFile, ieExec)
+                               : new File(ieExec));
+            preferences.put("inferenceEngine",ieExecFile.getCanonicalPath());
             preferences.put("loadCELT","no");  
             preferences.put("showcached","yes");  
             preferences.put("typePrefix","yes");  
-            preferences.put("holdsPrefix","no");  // if no then instantiate variables in predicate position
+
+            // If no then instantiate variables in predicate position.
+            preferences.put("holdsPrefix","no");  
             preferences.put("cache","no");
             preferences.put("TPTP","yes");  
             preferences.put("userBrowserLimit","25");
             preferences.put("adminBrowserLimit","200");
-            preferences.put("port","8080");
-            
+            preferences.put("port","8080");            
             preferences.put("hostname","localhost");  
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
+        System.out.println("EXIT KBmanager.setDefaultAttributes()");
         return;
     }
 
@@ -207,8 +228,7 @@ public class KBmanager {
      * called "configuration".  It also creates the KBs directory and an empty
      * configuration file if none exists.
      */
-
-    private static void copyFile(File in, File out) {  
+    public static void copyFile(File in, File out) {  
         FileInputStream fis  = null;
         FileOutputStream fos = null;
         try {
@@ -219,6 +239,7 @@ public class KBmanager {
             while ((i = fis.read(buf)) != -1) {  
                 fos.write(buf, 0, i);  
             }  
+            fos.flush();
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -245,12 +266,12 @@ public class KBmanager {
      * empty configuration file if none exists.
      */
     private SimpleElement readConfiguration(String configDirPath) {
+        System.out.println("ENTER KBmanager.readConfiguration(" 
+                           + configDirPath
+                           + ")"); 
         SimpleElement configuration = null;
         BufferedReader br = null;
         try {
-            System.out.println("ENTER KBmanager.readConfiguration(" 
-                               + configDirPath
-                               + ")"); 
             String kbDirStr = configDirPath;
             if (StringUtil.emptyString(kbDirStr)) {
                 kbDirStr = (String) preferences.get("kbDir");
@@ -282,9 +303,9 @@ public class KBmanager {
                 else writeConfiguration();
             }
 
-            System.out.println("  username == " + username);
-            System.out.println("  userrole == " + userrole);
-            System.out.println("  configFile == " + configFile.getCanonicalPath());
+            System.out.println("  >   username == " + username);
+            System.out.println("  >   userrole == " + userrole);
+            System.out.println("  > configFile == " + configFile.getCanonicalPath());
 
             br = new BufferedReader(new FileReader(configFile));
             SimpleDOMParser sdp = new SimpleDOMParser();
@@ -303,15 +324,17 @@ public class KBmanager {
                 if (br != null) {
                     br.close();
                 }
-                System.out.println("EXIT KBmanager.readConfiguration(" 
-                                   + configDirPath
-                                   + ")");
-                System.out.println("  => " + configuration); 
             }
             catch (Exception ex2) {
                 ex2.printStackTrace();
             }
         }
+
+        System.out.println("EXIT KBmanager.readConfiguration(" 
+                           + configDirPath
+                           + ")");
+        System.out.println("  > configuration == \n" + configuration); 
+
         return configuration;
     }
 
@@ -343,7 +366,7 @@ public class KBmanager {
      * configFileDir is not null and a configuration file can be read
      * from the directory, reinitialization is forced.
      */
-    public void initializeOnce(String configFileDir) {
+    public synchronized void initializeOnce(String configFileDir) {
         try {
             System.out.println("ENTER KBmanager.initializeOnce("
                                + configFileDir
@@ -360,12 +383,8 @@ public class KBmanager {
                 if (StringUtil.isNonEmptyString(result)) {
                     error = result;
                 }
-
                 String kbDir = (String) preferences.get("kbDir");
                 System.out.println("  kbDir == " + kbDir);
-
-                PasswordService.getInstance();
-
                 LanguageFormatter.readKeywordMap(kbDir);
             }
         }
@@ -373,7 +392,7 @@ public class KBmanager {
                 System.out.println("ERROR in KBmanager.initializeOnce("
                                    + configFileDir
                                    + ")");
-                System.out.println(ex.getMessage());
+                System.out.println("  > " + ex.getMessage());
                 ex.printStackTrace();
         }
         initialized = true;
@@ -390,7 +409,7 @@ public class KBmanager {
      */
     public static String escapeFilename(String fname) {
 
-        StringBuffer newstring = new StringBuffer("");
+        StringBuilder newstring = new StringBuilder("");
         
         for (int i = 0; i < fname.length(); i++) {
             if (fname.charAt(i) == 92 && fname.charAt(i+1) != 92) 
@@ -433,15 +452,17 @@ public class KBmanager {
             if (kb.inferenceEngine != null) 
                 kb.inferenceEngine.terminate();
         }
-        catch (IOException ioe) {
-            System.out.println("Error in KBmanager.removeKB(): Error terminating inference engine: " + ioe.getMessage());
+        catch (Exception ioe) {
+            System.out.println("Error in KBmanager.removeKB(): ");
+            System.out.println("  Error terminating inference engine: " + ioe.getMessage());
         }
         kbs.remove(name);
         try {
             writeConfiguration();
         }
-        catch (IOException ioe) {
-            System.out.println("Error in KBmanager.removeKB(): Error writing configuration file. " + ioe.getMessage());
+        catch (Exception ioe) {
+            System.out.println("Error in KBmanager.removeKB(): ");
+            System.out.println("  Error writing configuration file: " + ioe.getMessage());
         }
 
         System.out.println("INFO in KBmanager.removeKB: Removing KB: " + name);
@@ -452,54 +473,56 @@ public class KBmanager {
      * writeConfiguration() on each KB object to write its manifest.
      */
     public void writeConfiguration() throws IOException {
-
+        System.out.println("ENTER KBmanager.writeConfiguration()");
         FileWriter fw = null;
         PrintWriter pw = null;
-        Iterator it; 
         String dir = (String) preferences.get("kbDir");
         File fDir = new File(dir);
         String username = (String) preferences.get("userName");
         String userrole = (String) preferences.get("userRole");
-        String config_file = ((username != null && userrole.equalsIgnoreCase("administrator") && !username.equalsIgnoreCase("admin"))?username + "_" :"") + CONFIG_FILE;
+        String config_file = (((username != null) 
+                               && userrole.equalsIgnoreCase("administrator") 
+                               && !username.equalsIgnoreCase("admin"))
+                              ? username + "_" 
+                              : "") + CONFIG_FILE;
         File file = new File(fDir, config_file);
-        // File file = new File(fDir, CONFIG_FILE);
-        System.out.println("wrote "+fDir+"/"+"CONFIG_FILE");
+        String canonicalPath = file.getCanonicalPath();
         String key;
         String value;
         KB kb = null;
 
         SimpleElement configXML = new SimpleElement("configuration");
 
-        it = preferences.keySet().iterator();
-        while (it.hasNext()) {
+        for (Iterator it = preferences.keySet().iterator(); it.hasNext();) {
             key = (String) it.next();
             value = (String) preferences.get(key);
             //System.out.println("INFO in KBmanager.writeConfiguration(): key, value: " + key + " " + value);
-            if (key.compareTo("kbDir") == 0 || key.compareTo("celtdir") == 0 || 
-                key.compareTo("inferenceEngine") == 0 || key.compareTo("inferenceTestDir") == 0)
+            if (Arrays.asList("kbDir", 
+                              "celtdir", 
+                              "inferenceEngine", 
+                              "inferenceTestDir").contains(key))
                 value = escapeFilename(value);
-            if ((key.compareTo("userName") != 0) && (key.compareTo("userRole") != 0)) {
+            if (!Arrays.asList("userName", "userRole").contains(key)) {
                 SimpleElement preference = new SimpleElement("preference");
                 preference.setAttribute("name",key);
                 preference.setAttribute("value",value);
                 configXML.addChildElement(preference);
             }
         }
-        it = kbs.keySet().iterator();
-        while (it.hasNext()) {
+        for (Iterator it = kbs.keySet().iterator(); it.hasNext();) {
             key = (String) it.next();
             kb = (KB) kbs.get(key);
             SimpleElement kbXML = kb.writeConfiguration();            
             configXML.addChildElement(kbXML);
         }
-
         try {
-            fw = new FileWriter( file );
+            fw = new FileWriter(file);
             pw = new PrintWriter(fw);
             pw.println(configXML.toFileString());
+            System.out.println("  > wrote " + canonicalPath);
         }
         catch (java.io.IOException e) {                                                  
-            throw new IOException("Error writing file " + file.getCanonicalPath() + ".\n " + e.getMessage());
+            throw new IOException("Error writing file " + canonicalPath + ".\n " + e.getMessage());
         }
         finally {
             if (pw != null) {
@@ -509,6 +532,8 @@ public class KBmanager {
                 fw.close();
             }
         }
+        System.out.println("EXIT KBmanager.writeConfiguration()");
+        return;
     }
 
     /** ***************************************************************
