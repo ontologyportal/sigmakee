@@ -26,6 +26,7 @@ public class AnswerFinder {
         }  
         return AnswerFinder.findProof(problem, OneAnswerSystem, systemsDir);
     }
+
     public static String findProof (String problem, String system, String systemsDir) throws Exception {
         // create tempfile
         String filename = "AnswerFinder.findProof";
@@ -55,11 +56,11 @@ public class AnswerFinder {
     // send to one-answer system (Metis)
     public static String findProofWithAnswers (String tptp, String systemsDir) {
 
-        /*
+        /*          */
         System.out.println("ENTER AnswerFinder.findProofWithAnswers("
                            + tptp + ", "
                            + systemsDir + ")");
-        */
+
         String result = "";
         try {
             if ((tptp instanceof String) && !tptp.equals("")) {
@@ -77,33 +78,39 @@ public class AnswerFinder {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        /*
+        /*        */
         System.out.println("  result == " + result);
         System.out.println("EXIT AnswerFinder.findProofWithAnswers("
                            + tptp + ", "
                            + systemsDir + ")");
-        */
         return result;
     } 
 
 
-    public static String findProofWithAnswers (BufferedReader reader, String systemsDir) throws Exception {
-        String problem = "";
-        TPTPParser parser = TPTPParser.parse(reader);    
-        TPTPFormula conjecture = AnswerExtractor.extractVine(parser.ftable);    
-        // no conjecture = no answers
-        if (conjecture == null) {    
-            String errorMsg = "% WARNING: No fof conjecture in proof -> no lemmas -> cannot call one-answer system -> find answers failed";
-            System.out.println(errorMsg);
-            return errorMsg;
+    public static String findProofWithAnswers (BufferedReader reader, String systemsDir) {
+        String ans = "";
+        try {
+            String problem = "";
+            TPTPParser parser = TPTPParser.parse(reader);    
+            TPTPFormula conjecture = AnswerExtractor.extractVine(parser.ftable);    
+            // no conjecture = no answers
+            if (conjecture == null) {    
+                String errorMsg = "% WARNING: No fof conjecture in proof -> no lemmas -> cannot call one-answer system -> find answers failed";
+                System.out.println(errorMsg);
+                return errorMsg;
+            }
+            ArrayList<TPTPFormula> lemmas = ProofSummary.getLemmaVine(conjecture);
+            // gather problem, to be sent to one-answer system
+            problem += conjecture.fofify() + "\n\n";
+            for (TPTPFormula lemma : lemmas) {
+                problem += lemma.fofify() + "\n\n";
+            }
+            ans = findProof(problem, systemsDir);
         }
-        ArrayList<TPTPFormula> lemmas = ProofSummary.getLemmaVine(conjecture);
-        // gather problem, to be sent to one-answer system
-        problem += conjecture.fofify() + "\n\n";
-        for (TPTPFormula lemma : lemmas) {
-            problem += lemma.fofify() + "\n\n";
-        }   
-        return findProof(problem, systemsDir);
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
     } 
 
       
