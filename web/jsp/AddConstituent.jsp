@@ -14,100 +14,114 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-  if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) 
+  // KBmanager mgr = KBmanager.getMgr();
+  if (!mgr.getPref("userRole").equalsIgnoreCase("administrator")) 
        response.sendRedirect("KBs.jsp");     
   else {
       System.out.println("ENTER AddConstituent.jsp");
-      StringBuffer result = new StringBuffer();
-      String fileName = "";    
-      String srcDir = KBmanager.getMgr().getPref("kbDir");
-      File dir = new File( srcDir );
-      //System.out.println("INFO in AddConstituent.jsp: KB dir: " + srcDir);
-      MultipartRequest multiPartRequest = null;
-      String kbName = null;
-      int postSize = 9000000;
+      StringBuilder result = new StringBuilder();
+      String kbDir = mgr.getPref("kbDir");
+      File kbDirFile = new File(kbDir);
+      //System.out.println("INFO in AddConstituent.jsp: KB dir: " + kbDir);
+      MultipartParser mpp = null;
+      String kbName = "";
+      int postSize = Integer.MAX_VALUE;
+      Part requestPart = null;
+      String fileName = "";
+      String baseName = "";
+      String overwrite = "";
+      File existingFile = null;
+      File outfile = null;
+      long writeCount = -1L;
 
       try {  
           boolean isError = false;
-          System.out.println("request == " + request);
-          multiPartRequest = new MultipartRequest(request,srcDir,postSize);
-          System.out.println("multiPartRequest == " + multiPartRequest);
 
-          kbName = multiPartRequest.getParameter("kb");
-          // System.out.println("INFO in AddConstituent.jsp: kb: " + kbName);
-          // System.out.println("INFO in AddConstituent.jsp: filename: " + multiPartRequest.getParameter("constituent"));
-          Enumeration params = multiPartRequest.getParameterNames();
-          while (params.hasMoreElements()) {
-              String param = params.nextElement().toString();
-              System.out.println("INFO in AddConstituent.jsp: param == " + param);
+          System.out.println("request == " + request);
+
+          mpp = new MultipartParser(request, postSize, true, true);
+
+          System.out.println("mpp == " + mpp);
+
+          while ((requestPart = mpp.readNextPart()) != null) {
+              String paramName = requestPart.getName();
+              if (paramName == null) 
+                  paramName = "";
+              if (requestPart.isParam()) {
+                  ParamPart pp = (ParamPart) requestPart;
+                  if (paramName.equalsIgnoreCase("kb"))
+                      kbName = pp.getStringValue();
+                  else if (paramName.equalsIgnoreCase("overwrite"))
+                      overwrite = pp.getStringValue();
+              }
+              else if (requestPart.isFile()) {
+                  FilePart fp = (FilePart) requestPart;
+                  fileName = fp.getFileName();
+                  int lidx = fileName.lastIndexOf(".");
+                  baseName = ((lidx != -1)
+                              ? fileName.substring(0, lidx)
+                              : fileName);
+                  existingFile = new File(kbDirFile, (baseName + ".kif"));
+                  outfile = StringUtil.renameFileIfExists(existingFile);
+                  FileOutputStream fos = new FileOutputStream(outfile);
+                  BufferedOutputStream bos = new BufferedOutputStream(fos);
+                  writeCount = -1L;
+                  try {
+                      writeCount = fp.writeTo(bos);
+                      bos.flush();
+                      bos.close();
+                      fos.close();
+                  }
+                  catch (Exception ioe) {
+                      ioe.printStackTrace();
+                  }
+              }
           }
-          if (!Formula.isNonEmptyString(kbName)) {
-              String errStr = "Error: No knowledge base name specified";
-              KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                          + "\n<br/>" + errStr + "\n<br/>");
+
+          String errStr = "";
+          if (StringUtil.isNonEmptyString(overwrite)
+              && overwrite.equalsIgnoreCase("yes")
+              && !existingFile.getCanonicalPath().equalsIgnoreCase(outfile.getCanonicalPath())) {
+              boolean overwriteSucceeded = false;
+              try {
+                  if (existingFile.delete() && outfile.renameTo(existingFile)) {
+                      outfile = existingFile;
+                      overwriteSucceeded = outfile.canRead();
+                  }
+              }
+              catch (Exception owex) {
+                  owex.printStackTrace();
+              }
+              if (!overwriteSucceeded)
+                  errStr = "Error: Could not overwrite existing consituent file";
+          }
+          if (StringUtil.emptyString(errStr)) {
+              if (StringUtil.emptyString(kbName)) {
+                  errStr = "Error: No knowledge base name specified";
+              }
+              else if ((outfile == null) || !outfile.canRead()) 
+                  errStr = "Error: The constituent file could not be saved or cannot be read";
+          }
+          if (StringUtil.isNonEmptyString(errStr)) {
+              mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
               System.out.println(errStr);
               isError = true;
               response.sendRedirect("KBs.jsp"); 
           }
           else {
-              Enumeration fileTags = multiPartRequest.getFileNames(); // There should be just one filename though.
-              System.out.println("fileTags == " + fileTags);
-              if (fileTags == null) {
-                  String errStr = "Error: The input file does not exist or cannot be read";
-                  KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                              + "\n<br/>" + errStr + "\n<br/>");
-                  System.out.println(errStr);
-                  isError = true;
-                  response.sendRedirect("KBs.jsp"); 
+              if (mgr.getKB(kbName) == null) 
+                  mgr.addKB(kbName);
+              KB kb = mgr.getKB(kbName);
+              // Remove the constituent, if it is already present.
+              for (ListIterator lit = kb.constituents.listIterator(); lit.hasNext();) {
+                  String constituent = (String) lit.next();
+                  if (StringUtil.isNonEmptyString(baseName) && constituent.contains(baseName))
+                      lit.remove();
               }
-              else {
-                  while (fileTags.hasMoreElements()) {                    
-                      String fileTag = fileTags.nextElement().toString();
-                      System.out.println("fileTag == " + fileTag);
-                      fileName = multiPartRequest.getOriginalFileName(fileTag);
-                      System.out.println("fileName == " + fileName);
-
-                      File file = null;
-                      if (fileName != null) 
-                          file = new File(dir, fileName);                      
-
-                      System.out.println("file == " + file);
-                      if ((file == null) || !file.exists()) {
-                          String errStr = "Error: The input file does not exist or cannot be read";
-                          KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                      + "\n<br/>" + errStr + "\n<br/>");
-                          System.out.println(errStr);
-                          isError = true;
-                          response.sendRedirect("KBs.jsp"); 
-                          break;
-                      }
-                      else if (file.length() == 0) {
-                          try {
-                              file.delete();
-                          }
-                          catch (Exception ex) {
-                          }
-                          String errStr = "Error: The input file does not exist or cannot be read";
-                          KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                      + "\n<br/>" + errStr + "\n<br/>");
-                          System.out.println(errStr);
-                          isError = true;
-                          response.sendRedirect("KBs.jsp"); 
-                          break;
-                      }
-                      else {
-                          //System.out.println("INFO in AddConstituent.jsp: filetag: " + fileTag);
-                          //System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
-                          if (KBmanager.getMgr().getKB(kbName) == null) 
-                              KBmanager.getMgr().addKB(kbName);
-                          KB kb = KBmanager.getMgr().getKB(kbName);
-                          result.append(kb.addConstituent(file.getCanonicalPath(),true,false));
-                          if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) 
-                              result.append(kb.cache());                          
-                          kb.loadVampire();
-                      }
-                  }
-              }
+              result.append(kb.addConstituent(outfile.getCanonicalPath(),true,false));
+              if (mgr.getPref("cache").equalsIgnoreCase("yes")) 
+                  result.append(kb.cache());                          
+              kb.loadVampire();
               KBmanager.getMgr().writeConfiguration();
           }
           if (!isError) 
@@ -115,15 +129,13 @@ August 9, Acapulco, Mexico.
       }
       catch (Exception e) {
           String errStr = "ERROR in AddConstituent.jsp: " + e.getMessage();
-          KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                      + "\n<br/>" + errStr + "\n<br/>");
+          mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
           System.out.println(errStr);
           System.out.println("  kbName == " + kbName);
-          System.out.println("  filename == " + fileName);
+          System.out.println("  fileName == " + fileName);
           e.printStackTrace();
           response.sendRedirect("KBs.jsp"); 
       }
-  
   }
 
 %>
