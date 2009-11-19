@@ -107,8 +107,10 @@ public class InterfaceTPTP {
         URLParameters.put("ListStatus","SoTPTP");
 
         try {
-            reader = new BufferedReader(new InputStreamReader(
-                                                              ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
+            URL replyUrl = new URL(SystemOnTPTPFormReplyURL);
+            InputStreamReader isr = new InputStreamReader(ClientHttpRequest.post(replyUrl,
+                                                                                 URLParameters));
+            reader = new BufferedReader(isr);
             //----Read List of Remote Systems
             while ((responseLine = reader.readLine()) != null) {
                 systemListRemote.add(responseLine);
@@ -243,14 +245,20 @@ public class InterfaceTPTP {
             URLParameters.put("ProblemSource","UPLOAD");
             URLParameters.put("UPLOADProblem",new File(problemFile));
             URLParameters.put("SubmitButton","RunSelectedSystems");
-            reader = new BufferedReader(new InputStreamReader(
-                                                              ClientHttpRequest.post(new URL(SystemOnTPTPFormReplyURL),URLParameters)));
+            URL url = new URL(SystemOnTPTPFormReplyURL);
+            InputStreamReader isr = 
+                new InputStreamReader(ClientHttpRequest.post(url,URLParameters));
+            reader = new BufferedReader(isr);
             atpOut.printResult += "<PRE>";
             while ((responseLine = reader.readLine()) != null) {
+                responseLine = trimUnexpectedTokens(responseLine);
+                responseLine = StringUtil.safeToKifNamespaceDelimiters(responseLine);
                 if (responseLine.startsWith("Loading IDV")) {
                     tptpEnd = true;
                 }
-                if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%") && !tptpEnd) {
+                if (StringUtil.isNonEmptyString(responseLine)
+                    && !responseLine.startsWith("%") 
+                    && !tptpEnd) {
                     atpOut.cleanResult += responseLine + "\n";
                 }           
                 if (tptpEnd && quietFlag.equals("IDV")) {
@@ -261,9 +269,6 @@ public class InterfaceTPTP {
                     atpOut.printResult += responseLine + "\n";
                 }
             }
-            atpOut.originalResult = trimUnexpectedTokens(atpOut.originalResult);
-            atpOut.cleanResult = trimUnexpectedTokens(atpOut.cleanResult);
-            atpOut.idvResult = trimUnexpectedTokens(atpOut.idvResult);
             atpOut.idvResult += "</PRE>\n";
             atpOut.printResult += "</PRE>";
         }
@@ -317,17 +322,19 @@ public class InterfaceTPTP {
             proc = Runtime.getRuntime().exec(command);
             reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
-
             atpOut.printResult += "<PRE>";
             while ((responseLine = reader.readLine()) != null) {
-                if (!responseLine.equals("") && !responseLine.substring(0,1).equals("%")) {
+                responseLine = trimUnexpectedTokens(responseLine);
+                responseLine = StringUtil.safeToKifNamespaceDelimiters(responseLine);
+                if (StringUtil.isNonEmptyString(responseLine)
+                    && !responseLine.startsWith("%")) {
                     atpOut.cleanResult += responseLine + "\n";
                 }
                 atpOut.originalResult += responseLine + "\n";
-                if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { atpOut.printResult += responseLine + "\n"; }
+                if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { 
+                    atpOut.printResult += responseLine + "\n"; 
+                }
             }
-            atpOut.originalResult = trimUnexpectedTokens(atpOut.originalResult);
-            atpOut.cleanResult = trimUnexpectedTokens(atpOut.cleanResult);
             atpOut.printResult += "</PRE>";
         }
         catch (Exception ex) {
@@ -372,6 +379,7 @@ public class InterfaceTPTP {
                                                problemFile);
 
             result = trimUnexpectedTokens(result);
+            result = StringUtil.safeToKifNamespaceDelimiters(result);
 
             atpOut.originalResult = result;
             atpOut.printResult += "<PRE>";
@@ -384,7 +392,7 @@ public class InterfaceTPTP {
                 String temp = "";
                 while (st.hasMoreTokens()) {
                     String next = st.nextToken(); 
-                    if (!next.equals("") && !next.substring(0,1).equals("%")) {
+                    if (StringUtil.isNonEmptyString(next) && !next.startsWith("%")) {
                         temp += next + "\n";   
                     }
                 }
@@ -410,10 +418,10 @@ public class InterfaceTPTP {
                                     String quietFlag, 
                                     String kbName, 
                                     String language, 
-                                    JspWriter out) 
+                                    Writer out) 
         throws Exception {
 
-        /*
+        /*        */
           System.out.println("ENTER InterfaceTPTP.queryTPTP(");
           System.out.println("  " + stmt + ",");
           System.out.println("  " + timeout + ",");
@@ -425,7 +433,6 @@ public class InterfaceTPTP {
           System.out.println("  " + kbName + ",");
           System.out.println("  " + language + ",");
           System.out.println("  " + out + ")");
-        */
 
         //----Setup
         String resultAll = "";
@@ -461,10 +468,14 @@ public class InterfaceTPTP {
 
         String oldConjecture = conjectureFormula.theFormula;
         conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
-        boolean suppressAnswerExtraction = (oldConjecture == conjectureFormula.theFormula);
+        boolean suppressAnswerExtraction = oldConjecture.equals(conjectureFormula.theFormula);
+
+        System.out.println("  conjectureFormula.theFormula == " + conjectureFormula.theFormula);
+        System.out.println("  suppressAnswerExtraction == " + suppressAnswerExtraction);
+
         //if (suppressAnswerExtraction) resultAll += "suppress definite answers<br/>";
 
-        conjectureFormula.tptpParse(true,kb);
+        conjectureFormula.tptpParse(true, kb);
         Iterator it = conjectureFormula.getTheTptpFormulas().iterator();
         String theTPTPFormula = (String) it.next();
 	String originalConjecture = theTPTPFormula;
@@ -502,7 +513,8 @@ public class InterfaceTPTP {
                 //----Get symbols from lastAnswer
                 TreeSet<TPTPParser.Symbol> newSymbols = TPTPParser.getSymbolList(lastAnswer);
                 //----Find uniqueSymbols from lastAnswer not in symbolsSoFar
-                TreeSet<TPTPParser.Symbol> uniqueSymbols = LooksDifferent.getUniqueSymbols(symbolsSoFar, newSymbols);
+                TreeSet<TPTPParser.Symbol> uniqueSymbols = 
+                    LooksDifferent.getUniqueSymbols(symbolsSoFar, newSymbols);
                 //----symbolsSOFar = uniqueSymbols U symbolsSoFar
                 symbolsSoFar.addAll(uniqueSymbols);
                 //----Get new set of ld axioms from the unique symbols
@@ -517,14 +529,19 @@ public class InterfaceTPTP {
                 } else {
                     conjectureTPTPFormula = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
                 }
-                //----keep originalKBFile intact so that we do not have to keep recreating it, just copy and append to copy then delete copy, only delete original at the end of run
-                //----delete last kbFileName
+                //----keep originalKBFile intact so that we do not
+                //----have to keep recreating it, just copy and append
+                //----to copy then delete copy, only delete original
+                //----at the end of run delete last kbFileName
                 if (kbFileName != null) {
                     (new File(kbFileName)).delete();
                 }
                 //----kbFileName = originalKBFileName + all ld axioms + conjectureTPTPFormula;
                 //----Copy original kb file
                 kbFileName = kb.copyFile(originalKBFileName);
+
+                System.out.println("  kbFileName == " + kbFileName);
+
                 //----Append ld axioms and conjecture to the end
                 kb.addToFile(kbFileName, ldAxiomsSoFar, conjectureTPTPFormula);
                 //----Reset last answer
@@ -580,7 +597,13 @@ public class InterfaceTPTP {
                     resultAll += atpOut.printResult;
                     idvResult += atpOut.idvResult;
                     result += atpOut.cleanResult;
-                    originalResult +=atpOut.originalResult;                
+                    
+                    System.out.println("  result == " + result);
+
+                    originalResult += atpOut.originalResult;    
+
+                    System.out.println("  originalResult == " + originalResult);
+            
                 }            
             }
             else {
@@ -588,17 +611,20 @@ public class InterfaceTPTP {
                     ".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.";
             }
             //----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
-            if (!(systemChosen.startsWith(TPTP_ANSWER_SYSTEM)&&location.equals("local")&&builtInExists && !tptpWorldExists)) {
+            if (!(systemChosen.startsWith(TPTP_ANSWER_SYSTEM)
+                  && location.equals("local")
+                  && builtInExists 
+                  && !tptpWorldExists)) {
                 String answerResult = AnswerFinder.findProofWithAnswers(result, BuiltInDir);
                 //----If answer is blank, ERROR, or WARNING, do not place in result
-                if (!answerResult.equals("") && 
-                    !answerResult.startsWith("% ERROR:") &&
-                    !answerResult.startsWith("% WARNING:")) {
+                if (StringUtil.isNonEmptyString(answerResult) 
+                    && !answerResult.startsWith("% ERROR:") 
+                    && !answerResult.startsWith("% WARNING:")) {
                     result = answerResult;
                 } 
                 //----If ERROR is answer result, report to user
                 if (answerResult.startsWith("% ERROR:")) {
-                    resultAll += "==" + answerResult;
+                    resultAll += ("==" + answerResult);
                 } 
             }
             if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
@@ -632,17 +658,18 @@ public class InterfaceTPTP {
                     int size = SystemOnTPTP.getTPTPFormulaSize(result);
                     if (size > 0) {
                         String port = KBmanager.getMgr().getPref("port");
-                        if ((port == null) || port.equals(""))
+                        if (StringUtil.emptyString(port))
                             port = "8080";
                         String hostname = KBmanager.getMgr().getPref("hostname");
-                        if (hostname == null) {
+                        if (StringUtil.emptyString(hostname)) {
                             hostname = "localhost";
                         }
 			StringTokenizer st = new StringTokenizer(result,"\n");
 			String temp = "";
 			while (st.hasMoreTokens()) {
 			    String next = st.nextToken();
-			    if (!next.equals("") && !next.substring(0,1).equals("%")) {
+			    if (StringUtil.isNonEmptyString(next) 
+                                && !next.startsWith("%")) {
 				temp += next + "\n";
 			    }
 			}
@@ -667,7 +694,11 @@ public class InterfaceTPTP {
                 //----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
                 if (!lastAnswer.equals("")) {
                     //resultAll += "<br>There was an Answer before! <br>";
-                    String bindConjecture = "fof(bindConj" + ", conjecture,(" + LooksDifferent.bindConjecture(originalConjecture, originalAnswer, lastAnswer) + ")).";
+                    String bindConjecture = ("fof(bindConj, conjecture,(" 
+                                             + LooksDifferent.bindConjecture(originalConjecture, 
+                                                                             originalAnswer, 
+                                                                             lastAnswer) 
+                                             + ")).");
                     //----With new bindConjecture, take last result, filter out anything with LDs in it, put in prover
                     String axioms = LooksDifferent.filterLooksDifferent(originalResult);
                     //----Redo proof using OneAnswerSystem again
@@ -737,7 +768,7 @@ public class InterfaceTPTP {
             (new File(originalKBFileName)).delete();
         }
 
-        /*
+        /*        */
           System.out.println("EXIT InterfaceTPTP.queryTPTP(");
           System.out.println("  " + stmt + ",");
           System.out.println("  " + timeout + ",");
@@ -750,7 +781,6 @@ public class InterfaceTPTP {
           System.out.println("  " + language + ",");
           System.out.println("  " + out + ")");
           System.out.println("  ==> " + resultAll);
-        */
 
         return resultAll;
     }
