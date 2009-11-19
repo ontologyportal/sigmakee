@@ -26,7 +26,7 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
   String text = request.getParameter("text");
   KB kb = KBmanager.getMgr().getKB(kbName);
   Formula form = kb.getFormulaByKey(formID);
-  if (!DB.emptyString(text)) {
+  if (!StringUtil.emptyString(text)) {
       form.theFormula = text;
       kb.rehashFormula(form,formID);
       formID = form.createID();

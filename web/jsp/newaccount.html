@@ -1,72 +1,72 @@
-<HTML>
-<HEAD>
-    <TITLE>Create New Account</TITLE>
+<html>
+  <head>
+    <title>Create New Account</title>
+  </head>
 
-<BODY>
+  <body>
 
-<p>
   <table border="0" align="left" cellspacing="0" cellpadding="0">
-      <tr>
-          <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-          <td>&nbsp;&nbsp;</td>
-          <td align="left" valign="top">
-            <img src="pixmaps/logoText-gray.gif">
-            <br />
-            <b>Create New Account</b>
-          </td>
-      </tr>
+    <tr>
+        <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
+        <td>&nbsp;&nbsp;</td>
+        <td align="left" valign="top">
+          <table border="0" align="left" cellspacing="0" cellpadding="0">
+            <tr>
+              <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"></td>
+            </tr>
+            <tr><td align="left" valign="top"><b>Create New Account</b></td></tr>
+          </table>
+        </td>
+    </tr>
+    <tr><td colspan="3">&nbsp;&nbsp;&nbsp;</td></tr>
+    <tr>
+      <td colspan="3" align="center" valign="top">
+        <form name="createNewAccount" id="createNewAccount" method="POST" action="KBs.jsp">
+          <table align="center" border="0">
+            <tr>
+              <td colspan="2">&nbsp;&nbsp;</td>
+            </tr>
+            <tr>
+              <td valign="top" align="right">
+                <b>User name:</b>
+              </td>
+              <td valign="top">
+                <input name="userName" type="text" maxlength="10" size="10">
+              </td>
+            </tr>
+
+            <tr>
+              <td valign="top" align="right">
+                <b>Password:</b>
+              </td>
+              <td valign="top">
+                <input name="password1" type="password" maxlength="10" size="10">
+              </td>
+            </tr>
+
+            <tr>
+              <td valign="top" align="right">
+                <b>Repeat Password:</b>
+              </td>
+              <td valign="top">
+                <input name="password2" type="password" maxlength="10" size="10">
+              </td>
+            </tr>
+            
+            <tr>
+              <td colspan="2">&nbsp;&nbsp;</td>
+            </tr>
+
+            <tr>
+              <td colspan="2" valign="center" align="middle">
+                <input name="createAccount" value=" Create Account " type="submit">
+              </td>
+            </tr>
+          </table>
+        </form>
+      </td>
+    </tr>
   </table>
-</p>
 
-<p><br /><br /></p>
-
-<FORM METHOD="POST"  ACTION="KBs.jsp">
-<p>
-<TABLE ALIGN=CENTER BORDER="0" >
-<TR>
-  <TD colspan="2">&nbsp;&nbsp;</td>
-</TR>
-<TR>
-  <TD VALIGN=TOP ALIGN=RIGHT>
-	<B>User name:</B>
-  </TD>
-
-  <TD VALIGN=TOP>
-	<B><INPUT NAME="userName" TYPE="TEXT" MAXLENGTH="10" SIZE="10"></B>
-  </TD>
-</TR>
-
-<TR>
-  <TD VALIGN=TOP ALIGN=RIGHT>
-	<B>Password:</B>
-  </TD>
-
-  <TD VALIGN=TOP>
-	<B><INPUT NAME="password1" TYPE="Password" MAXLENGTH="6" SIZE="6"></B>
-  </TD>
-</TR>
-
-<TR>
-  <TD VALIGN=TOP ALIGN=RIGHT>
-	<B>Repeat Password:</B>
-  </TD>
-
-  <TD VALIGN=TOP>
-	<B><INPUT NAME="password2" TYPE="Password" MAXLENGTH="6" SIZE="6"></B>
-  </TD>
-</TR>
-
-<TR>
-  <TD VALIGN=CENTER>
-	<B><INPUT VALUE="  Create Account  " TYPE="SUBMIT"></B>
-  </TD>
-</TR>
-
-
-</TABLE>
-</p>
-
-</FORM>
-
-</BODY>
-</HTML>
+  </body>
+</html>
