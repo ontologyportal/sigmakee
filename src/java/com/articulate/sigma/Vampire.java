@@ -134,7 +134,7 @@ public class Vampire extends InferenceEngine {
 
             if (!StringUtil.isNonEmptyString(execPathname)) {
                 error = "No pathname has been set for \"inferenceEngine\"";
-                System.out.println("Error in Vampire.getNewInstance(): " + error);
+                System.out.println("Error in Vampire.getNewInstanceWithFormulas(): " + error);
                 KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                             + "\n<br/>" + error + "\n<br/>");
             }
@@ -144,7 +144,7 @@ public class Vampire extends InferenceEngine {
                 vampireExecutable = new File(execPathname);
                 if (!vampireExecutable.exists()) {
                     error = ("The executable file " + vampireExecutable.getCanonicalPath() + " does not exist");
-                    System.out.println("Error in Vampire.getNewInstance(): " + error);
+                    System.out.println("Error in Vampire.getNewInstanceWithFormulas(): " + error);
                     KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                                 + "\n<br/>" + error + "\n<br/>");
                 }
@@ -154,8 +154,10 @@ public class Vampire extends InferenceEngine {
 
                 File vampireDirectory = vampireExecutable.getParentFile();
 
-                System.out.println("INFO in Vampire.getNewInstance(): executable == " + vampireExecutable.getCanonicalPath());
-                System.out.println("INFO in Vampire.getNewInstance(): directory == " + vampireDirectory.getCanonicalPath());
+                System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): executable == " 
+                                   + vampireExecutable.getCanonicalPath());
+                System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): directory == " 
+                                   + vampireDirectory.getCanonicalPath());
 
                 // It should only ever be necessary to write this file once.
                 File initFile = new File(vampireDirectory, "init-v.kif");
@@ -170,8 +172,11 @@ public class Vampire extends InferenceEngine {
                     }
                 }
 
-                System.out.println("INFO in Vampire.getNewInstance(): Starting vampire as " 
-                                   + vampireExecutable.getCanonicalPath() + " " + initFile.getCanonicalPath());
+                System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): "
+                                   + "Starting vampire as " 
+                                   + vampireExecutable.getCanonicalPath() 
+                                   + " " 
+                                   + initFile.getCanonicalPath());
         
                 Vampire vprInst = new Vampire(vampireExecutable, initFile);
                 if (vprInst instanceof Vampire) {
@@ -203,7 +208,7 @@ public class Vampire extends InferenceEngine {
                         if (!badFormulas.isEmpty()) {
                             int bc = badFormulas.size();
                             Iterator it2 = badFormulas.iterator();
-                            System.out.println("INFO in Vampire.getNewInstance(): "
+                            System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): "
                                                + bc
                                                + " FORMULA"
                                                + ((bc == 1) ? "" : "S")
@@ -286,11 +291,14 @@ public class Vampire extends InferenceEngine {
     public String assertFormula(String formula) throws IOException {
         String result = "";
         try {
-            String assertion = ("<assertion> " + formula + " </assertion>\n");
+            StringBuilder assertion = new StringBuilder();
+            String safe = StringUtil.replaceUnsafeNamespaceDelimiters(formula);
+            safe = StringUtil.replaceNonAsciiChars(safe);
+            assertion.append("<assertion> ");
+            assertion.append(safe);
+            assertion.append(" </assertion>\n");
 
-            // System.out.println("INFO Vampire.assertFormula(): " + assertion);
-
-            _writer.write(assertion);
+            _writer.write(assertion.toString());
             _writer.flush();
             for (;;) {
                 String line = _reader.readLine();
@@ -316,7 +324,7 @@ public class Vampire extends InferenceEngine {
 
     /** *************************************************************
      * Terminate this instance of Vampire. 
-     * <font color='red'><b>Warning:</b></font>After calling this functions
+     * <font color='red'><b>Warning:</b></font>After calling this function
      * no further assertions or queries can be done.
      *
      * @throws IOException should not normally be thrown
