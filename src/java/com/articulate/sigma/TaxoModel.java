@@ -84,7 +84,8 @@ public class TaxoModel {
         n.parents = new ArrayList();
         rootList.clear();  // = new HashMap();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        ArrayList forms = kb.askWithRestriction(0,relation,1,nodeName);
+        ArrayList forms = kb.askWithPredicateSubsumption(relation,1,nodeName);
+        // kb.askWithRestriction(0,relation,1,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
             Formula form = (Formula) forms.get(i);
@@ -139,7 +140,8 @@ public class TaxoModel {
         n.oneChild = null;
         n.children = new ArrayList();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        ArrayList forms = kb.askWithRestriction(0,relation,2,nodeName);
+        ArrayList forms = kb.askWithPredicateSubsumption(relation,2,nodeName);
+        // kb.askWithRestriction(0,relation,2,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
             Formula form = (Formula) forms.get(i);
