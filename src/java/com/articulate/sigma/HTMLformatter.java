@@ -20,10 +20,70 @@ import java.io.*;
  /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
-    public static String htmlDivider = "<table align=\"left\" width=\"50%\"><tr><td bgcolor=\"#A8BACF\">" + 
-        "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>\n";
-    public static String kbHref = ""; // set by BrowseBody.jsp or SimpleBrowseBody.jsp
-    public static String language = "EnglishLanguage"; // set by BrowseBody.jsp or SimpleBrowseBody.jsp
+    public static String htmlDivider = 
+        ("<table align=\"left\" width=\"50%\">"
+         + "<tr><td bgcolor=\"#A8BACF\">" 
+         + "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\">"
+         + "</td></tr>"
+         + "</table><br><br>\n");
+
+    // set by BrowseBody.jsp or SimpleBrowseBody.jsp
+    public static String kbHref = ""; 
+
+    // set by BrowseBody.jsp or SimpleBrowseBody.jsp
+    public static String language = "EnglishLanguage"; 
+
+    /** *************************************************************
+     *  Create the HTML for the labeled divider between the sections
+     *  of the term display.  Each section displays a sorted list of
+     *  the Formulae for which a term appears in a specified argument
+     *  position.
+     */
+    public static String htmlDivider(String label) {
+        String result = "";
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("<div><br>");
+            sb.append("<table align=\"left\" width=\"50%\">");
+            sb.append(StringUtil.getLineSeparator());
+            if (StringUtil.isNonEmptyString(label)) {
+                sb.append("  <tr>");
+                sb.append(StringUtil.getLineSeparator());
+                sb.append("    <td align=\"left\" valign=\"bottom\">");
+                sb.append(StringUtil.getLineSeparator());
+                sb.append("      <b>");
+                sb.append(label);
+                sb.append("</b>");
+                sb.append(StringUtil.getLineSeparator());
+                sb.append("    </td>");
+                sb.append(StringUtil.getLineSeparator());
+                sb.append("  </tr>");
+                sb.append(StringUtil.getLineSeparator());
+            }
+            sb.append("  <tr>");
+            sb.append(StringUtil.getLineSeparator());
+            sb.append("    <td bgcolor=\"#A8BACF\">");
+            sb.append(StringUtil.getLineSeparator());
+            sb.append("      ");
+            sb.append("<img src=\"pixmaps/1pixel.gif\" ");
+            sb.append("alt=\"-------------------------\" width=\"1\" height=\"1\">");
+            sb.append(StringUtil.getLineSeparator());
+            sb.append("    </td>");
+            sb.append(StringUtil.getLineSeparator());
+            sb.append("  </tr>");
+            sb.append(StringUtil.getLineSeparator());
+            sb.append("</table>");
+            sb.append(StringUtil.getLineSeparator());
+            sb.append("<br>");
+            sb.append("<br>");
+            sb.append(StringUtil.getLineSeparator());
+            result = sb.toString();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
 
     /** *************************************************************
      *  Create the HTML for a single step in a proof.
@@ -143,95 +203,6 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
-     *  Show knowledge base statements containing the given term at
-     * different argument positions.
-
-    public static String showFormulas(KB kb, String term) {
-
-        return showFormulasLimit(kb,term,0,25);
-    }
-
-    ** *************************************************************
-     *  Show knowledge base statements containing the given term at
-     * different argument positions.
-
-    public static String showFormulasLimitArg(KB kb, String term, int start, int limit, int arg, String type) {
-
-        StringBuilder show = new StringBuilder();
-       
-        int localLimit = start + limit;
-        String limitString = "";
-        ArrayList forms = kb.ask(type,arg,term);
-        if (forms != null && KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
-            forms = TaxoModel.removeCached(forms);
-        if (forms != null && forms.size() > 0) {
-            Collections.sort(forms);
-            show.append("<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</B>");
-            show.append(htmlDivider + "<table width=\"95%\">");
-
-            if (forms.size() < localLimit) 
-                localLimit = forms.size();
-            else {
-                limitString = "<tr><td><br></td></tr><tr><td>Display limited to " + 
-                        (new Integer(limit)).toString() + " items. " +
-                        "<a href=\"BrowseExtra.jsp?term=" + term + "&kb=" + kb.name + 
-                        "&start=" + (new Integer(start+limit)).toString() + "&arg=" + (new Integer(arg)).toString() +                       
-                        "&type=" + type + "\">Show next " + (new Integer(limit)).toString() + "</a></td></tr>\n";
-            }
-            for (int i = start; i < localLimit; i++) {
-                Formula f = (Formula) forms.get(i);
-                if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
-                    !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
-                    show.append("<tr><td width=\"50%\" valign=\"top\">");
-                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" BGCOLOR=#B8CADF>";
-                    if ((f.theFormula.length() > 14 && f.theFormula.substring(1,14).compareTo("documentation") == 0) ||
-                        (f.theFormula.length() > 8 && f.theFormula.substring(1,8).compareTo("comment") == 0))
-                        show.append(kb.formatDocumentation(kbHref,formattedFormula));
-                    else
-                        show.append(formattedFormula);
-                    String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
-                    show.append("<a href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
-                    if (!DB.emptyString(sourceFilename)) 
-                        show.append(sourceFilename);
-                    show.append(" " + (new Integer(f.startLine)).toString() + "-" + (new Integer(f.endLine)).toString());
-                    show.append("</a>");
-                    show.append("</td>\n<td width=\"40%\" valign=\"top\">");
-                    String pph = "";
-                    if (f.theFormula.substring(1,14).compareTo("documentation") == 0 || f.theFormula.substring(1,7).compareTo("format") == 0) 
-                        show.append("</td></tr>\n");		    
-                    else 
-                        pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,kb.getFormatMap(language),kb.getTermFormatMap(language),kb,language);
-                    if (pph == null)
-                        pph = "";
-                    if (StringUtil.isNonEmptyString(pph)) {
-                        if (language.equalsIgnoreCase("ar")) {
-                            pph = ("<span dir=\"rtl\">" + pph + "</span>");
-                            // pph = ("&#x202b;" + pph + "&#x202c;");
-                        }
-                    }
-                    show.append(pph + "<br></td></tr>\n");
-                }                
-            }
-            show.append(limitString);
-            show.append("</table>\n");
-        }        
-        return show.toString();
-    }
-
-    ** *************************************************************
-     *  Show knowledge base statements containing the given term at
-     * different argument positions.
-     *
-    public static String showFormulasLimit(KB kb, String term, int start, int limit) {
-
-        StringBuilder show = new StringBuilder();
-       
-        for (int arg = 1; arg < 6; arg++)
-            show.append(showFormulasLimitArg(kb,term,start,limit,arg,"arg"));       
-        return show.toString();
-    }
-*/
-    /** *************************************************************
      *  Show knowledge base pictures
      */
     public static String showPictures(KB kb, String term) {
@@ -301,9 +272,13 @@ public class HTMLformatter {
             show.append("<tr><td><i><a href=\""+ kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</a>" + "</i></td></tr>\n");
             for (int i = 0; i < 30; i++) {
                 String relation = (String) relations.get(i);
-                String relationName = DocGen.getInstance().showTermName(kb,relation,language);
+                String relationName = DocGen.getInstance(kb.name).showTermName(kb,
+                                                                               relation,
+                                                                               language);
                 String nonRelation = (String) nonRelations.get(i);
-                String nonRelationName = DocGen.getInstance().showTermName(kb,nonRelation,language);
+                String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb,
+                                                                                  nonRelation,
+                                                                                  language);
                 if (relation != "" || nonRelation != "") {
                     if (i == 14) {
                         show.append("<tr>\n");
@@ -402,12 +377,9 @@ public class HTMLformatter {
 
         if (forms != null && !KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes")) 
             forms = TaxoModel.removeCached(forms);
-        if (forms != null && forms.size() > 0) {
+        if (forms != null && !forms.isEmpty()) {
             Collections.sort(forms);
-            if (header != null) 
-                show.append("<br><b>&nbsp;" + header + "</b>");
-            if (htmlDivider != null) 
-                show.append(htmlDivider);
+            show.append(htmlDivider(header));
             show.append("<table width=\"95%\">");
             if (forms.size() < localLimit) 
                 localLimit = forms.size();
