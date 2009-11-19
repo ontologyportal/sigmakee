@@ -1,8 +1,11 @@
 
 <%@ include file="Prelude.jsp" %>
 <html>                                             
-<HEAD><TITLE> Knowledge base Browser</TITLE></HEAD>
-<BODY BGCOLOR="#FFFFFF">
+  <head>
+    <title> Knowledge base Browser</title>
+  </head>
+
+  <body bgcolor="#FFFFFF">
 
 <%
 
@@ -24,9 +27,7 @@ August 9, Acapulco, Mexico.
   long t1 = t0;
   long t2 = t0;
 
-  StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
-  String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
   String kbName = null;   // Name of the knowledge base
   KB kb = null;   // The knowledge base object.
   String formattedFormula = null;
@@ -47,19 +48,19 @@ August 9, Acapulco, Mexico.
 
 %>
 
-<FORM action="Diag.jsp">
+<form action="Diag.jsp">
     <table width="95%" cellspacing="0" cellpadding="0">
         <tr>
             <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
             <td>&nbsp;</td>
             <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-                <B>Knowledge Base Diagnostics</B></td>
+                <b>Knowledge Base Diagnostics</b></td>
             <td valign="bottom"></td>
             <td><b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|&nbsp;
                 <A href="AskTell.jsp?kb=<%=kbName %>&lang=<%=language %>"><b>Ask/Tell</b></A>&nbsp;|&nbsp;
                 <a href="Properties.jsp"><b>Prefs</b></a>&nbsp;
-                <B>]</B> <br>
-                <img src="pixmaps/1pixel.gif" HEIGHT="3"><br>
+                <b>]</b> <br>
+                <img src="pixmaps/1pixel.gif" height="3"><br>
                 <b>KB:&nbsp;
 <%
                 ArrayList kbnames = new ArrayList();
@@ -74,119 +75,122 @@ August 9, Acapulco, Mexico.
     <br>
 </form>
 
-<A HREF="WNDiag.jsp?kb=<%=kbName%>">Run WordNet diagnostics</A><P>
-<br>
+<a href="WNDiag.jsp?kb=<%=kbName%>">Run WordNet diagnostics</a><p>
 
 <%
-  show.setLength( 0 );
+  // Terms without parents
   t1 = System.currentTimeMillis();
   ArrayList termsWithoutParent = Diagnostics.termsWithoutParent(kb);
   t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms without parents");
-  show.append(HTMLformatter.termList(termsWithoutParent,kbHref));
-%>
-<br><b>&nbsp;Error: Terms without a root at Entity</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
+  System.out.println("  > " + ((t2 - t1) / 1000.0) 
+                     + " seconds collecting terms without parents");
+  out.println(HTMLformatter.htmlDivider("Error: Terms without a root at Entity"));
+// out.println("<br>");
+// out.println("<br>");
+  out.println(HTMLformatter.termList(termsWithoutParent,kbHref));
+// out.println("<br>");
 
-<%
-  show.setLength( 0 );
+  // Children of disjoint parents
   t1 = System.currentTimeMillis();
   ArrayList disjoint = Diagnostics.childrenOfDisjointParents(kb);
   t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting children of disjoint parents");
-  show.append(HTMLformatter.termList(disjoint,kbHref));
-%>
-<br><b>&nbsp;Error: Terms with disjoint parents</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
+  System.out.println("  > " + ((t2 - t1) / 1000.0) 
+                     + " seconds collecting children of disjoint parents");
+  out.println("<br>");
+  out.println(HTMLformatter.htmlDivider("Error: Terms with disjoint parents"));
+// out.println("<br>");
+// out.println("<br>");
+  out.println(HTMLformatter.termList(disjoint,kbHref));
+// out.println("<br>");
 
-<%
-  show.setLength( 0 );
+  // Terms without documentation
   t1 = System.currentTimeMillis();
   ArrayList termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
   t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms without documentation");
-  show.append(HTMLformatter.termList(termsWithoutDoc,kbHref));
-%>
+  System.out.println("  > " + ((t2 - t1) / 1000.0) 
+                     + " seconds collecting terms without documentation");
+  out.println("<br>");
+  out.println(HTMLformatter.htmlDivider("Warning: Terms without documentation"));
+// out.println("<br>");
+// out.println("<br>");
+  out.println(HTMLformatter.termList(termsWithoutDoc,kbHref));
+// out.println("<br>");
 
-<br><b>&nbsp;Warning: Terms without documentation</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
-
-<%
-  show.setLength( 0 );
+  // Terms with multiple documentation
   t1 = System.currentTimeMillis();
   ArrayList termsWithMultipleDoc = Diagnostics.termsWithMultipleDoc(kb);
   t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms with multiple documentation");
-  show.append(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
-%>
+  System.out.println("  > " + ((t2 - t1) / 1000.0) 
+                     + " seconds collecting terms with multiple documentation");
+  out.println("<br>");
+  out.println(HTMLformatter.htmlDivider("Warning: Terms with multiple documentation"));
+// out.println("<br>");
+// out.println("<br>");
+  out.println(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
+// out.println("<br>");
 
-<br><b>&nbsp;Warning: Terms with multiple documentation</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
-
-<%
-  show.setLength( 0 );
+  // Members (instances) of a parent class that are not also members
+  // of one of the subclasses that constitute the exhaustive
+  // decomposition of the parent class.
   t1 = System.currentTimeMillis();
-  ArrayList extra = Diagnostics.extraSubclassInPartition(kb);
+  ArrayList termsMissingFromPartition = Diagnostics.membersNotInAnyPartitionClass(kb);
   t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting subclasses of partitioned classes");
-  show.append(HTMLformatter.termList(extra,kbHref));
-%>
-<br><b>&nbsp;Warning: Terms that are subclasses of a partitioned class</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
+  System.out.println("  > " + ((t2 - t1) / 1000.0) 
+                     + " seconds processing instances of partitioned classes");
+  out.println("<br>");
+  out.println(HTMLformatter.htmlDivider("Warning: Instances of a partitioned class that are not instances of one of the class's partitioning subclasses"));
+  out.println("<br>");
+// out.println("<br>");
+  out.println(HTMLformatter.termList(termsMissingFromPartition,kbHref));
+// out.println("<br>");
 
-
-<%
-  show.setLength( 0 );
+  // Terms that do not occur in any rules
   t1 = System.currentTimeMillis();
   ArrayList norule = Diagnostics.termsWithoutRules(kb);
   t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting terms without rules");
-  show.append(HTMLformatter.termList(norule,kbHref));
-%>
-<br><b>&nbsp;Warning: Terms that do not appear in any rules</B>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
+  System.out.println("  > " + ((t2 - t1) / 1000.0) 
+                     + " seconds collecting terms without rules");
+  out.println("<br>");
+  out.println(HTMLformatter.htmlDivider("Warning: Terms that do not appear in any rules"));
+// out.println("<br>");
+// out.println("<br>");
+  out.println(HTMLformatter.termList(norule,kbHref));
+// out.println("<br>");
 
-<%
-  show.setLength( 0 );
+  // Formulae with extraneous quantifiers
   t1 = System.currentTimeMillis();
   ArrayList noquant = Diagnostics.quantifierNotInBody(kb);
   t2 = System.currentTimeMillis();
-  System.out.println("  " + ((t2 - t1) / 1000.0) + " seconds collecting formulae with extraneous quantifiers");
+  System.out.println("  > " + ((t2 - t1) / 1000.0) 
+                     + " seconds collecting formulae with extraneous quantifiers");
   if (!noquant.isEmpty()) {
+      out.println("<br>");
+      out.println(HTMLformatter.htmlDivider("Warning: Formulae with extraneous quantified variables"));
+      // out.println("<br>");
+      // out.println("<br>");
       Iterator it = noquant.iterator();
       while (it.hasNext()) {
           Formula f = (Formula) it.next();
-          show.append(f.htmlFormat(kb));
-          show.append("<br/><br/>");
+          out.println(f.htmlFormat(kb));
+          out.println("<br><br>");
       }
   }
-%>
-<br><b>&nbsp;Warning: Formulae with extraneous quantified variables</b>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><br/>
 
-  <%
-  show.setLength( 0 );
+  // Files with mutual dependencies
   t1 = System.currentTimeMillis();
-  show.append(Diagnostics.printTermDependency(kb,kbHref) + "<br/><br/>");
-%>
-<br><b>&nbsp;Warning: Files with mutual dependencies</b></br>
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><br/>
+  out.println("<br>");
+  out.println(HTMLformatter.htmlDivider("Warning: Files with mutual dependencies"));
+// out.println("<br>");
+// out.println("<br>");
+  out.println(Diagnostics.printTermDependency(kb,kbHref));
+// out.println("<br>");
 
-<%
-    System.out.println(((System.currentTimeMillis() - t0) / 1000.0) + " seconds to run all diagnostics");
-%>
+  System.out.println("  > " + ((System.currentTimeMillis() - t0) / 1000.0) 
+                     + " seconds to run all diagnostics");
 
+%>
 
 <%@ include file="Postlude.jsp" %>
-</BODY>
-</HTML>
 
-
+  </body>
+</html>

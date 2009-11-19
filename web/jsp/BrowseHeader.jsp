@@ -22,31 +22,35 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
           <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
               <b>Browsing Interface</b></td>
           <td valign="bottom"></td>
-          <td><b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|&nbsp;
+          <td>
+          <span class="navlinks">
+          <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;|&nbsp;
 <%
               if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userRole") != null && 
                   KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
-                  out.println("<A href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language+ "\"><b>Ask/Tell</b></A>&nbsp;|&nbsp;");
+                  out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\">Ask/Tell</a>&nbsp;|&nbsp;");
               }
 %>
-              <a href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>&term=<%=term %>"><b>Graph</b></a>&nbsp;|&nbsp;
+              <a href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>&term=<%=term %>">Graph</a>&nbsp;|&nbsp;
 <%
               if (KBmanager.getMgr().getPref("userRole") != null && 
                   KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
-                  out.println("<a href=\"Properties.jsp\"><b>Prefs</b></a>");
+                  out.println("<a href=\"Properties.jsp\">Preferences</a>");
               }
 %>
-              <b>]</b> <br>
-              <img src="pixmaps/1pixel.gif" height="3"><br>
-              <b>KB:&nbsp;
+             &nbsp;]
+           </b>
+           </span>
+           <br>
+              <img src="pixmaps/1pixel.gif" height="3"> <br>
+              <b>KB:&nbsp;</b>
 <%
               ArrayList kbnames = new ArrayList();
               kbnames.addAll(KBmanager.getMgr().getKBnames());
               out.println(HTMLformatter.createMenu("kb",kbName,kbnames));
 %>
-              </b>
               <% if (kb != null) { %>
-              <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
+              <b>Language:&nbsp;</b><%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %>
               <% } %>
           </td>
       </tr>
@@ -54,7 +58,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
   <br>
   <table cellspacing="0" cellpadding="0">
       <tr>
-          <td width="100"><font face="Arial,helvetica"><b>KB Term:&nbsp;</b></font></td>
+          <td align="right"><b>KB Term:&nbsp;</b></td>
           <td align="left" valign="top" colspan="2">
               <input type="text" size="38" name="term" value=<%= "\"" + (term==null?"":term) + "\"" %>>
           </td>
@@ -70,7 +74,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 <!-- show WordNet search input -->
 <form method="GET" action="WordNet.jsp">
   <tr>
-      <td width="100"><font face="Arial,helvetica"><b>English Word:&nbsp;</b></font></TD>
+      <td align="right"><b>English Word:&nbsp;</b></td>
       <td align="left" valign="top">
           <input type="text" size="27" name="word">
           <img src="pixmaps/1pixel.gif" width="3"></td>

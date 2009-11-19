@@ -1,6 +1,6 @@
 <%@ page
    language="java"
-   import="com.articulate.sigma.*,java.text.ParseException,java.net.URLConnection,java.net.URL,ClientHttpRequest.*,com.oreilly.servlet.*,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
+   import="com.articulate.sigma.*,java.text.ParseException,java.net.URLConnection,java.net.URL,ClientHttpRequest.*,com.oreilly.servlet.*,com.oreilly.servlet.multipart.*,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
    pageEncoding="UTF-8"
    contentType="text/html;charset=UTF-8"
 %>
@@ -9,6 +9,8 @@
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <%
+  System.out.println("ENTER Prelude.jsp");
+
   ArrayList userPages = new ArrayList();
   userPages.add("AllPictures.jsp");
   userPages.add("Browse.jsp");
@@ -23,11 +25,22 @@
   String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
   //System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
   //System.out.println("INFO in Prelude.jsp: userRole: " + KBmanager.getMgr().getPref("userRole"));
+
+KBmanager mgr = KBmanager.getMgr();
+mgr.setPref("userName", "admin");
+mgr.setPref("userRole", "administrator");
+
+System.out.println("  userName == " + mgr.getPref("userName"));
+System.out.println("  userRole == " + mgr.getPref("userRole"));
+System.out.println("pageString == " + pageString);
+// System.out.println("    kbName == " + kbName);
+
   if (KBmanager.getMgr().getPref("userRole") != null && 
       !KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator") && !userPages.contains(pageString)) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0;URL=login.html\">");
       out.println("</html>");
       //System.out.println("resetting (1)");
+System.out.println("EXIT Prelude.jsp: 1");
       return;
   }
   if (Formula.empty(KBmanager.getMgr().getPref("userName"))
@@ -36,8 +49,10 @@
       out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=login.html\">");
       out.println("</html>");
       //System.out.println("resetting (2)");
+System.out.println("EXIT Prelude.jsp: 2");
       return;
   }
+/*
   if (!pageString.startsWith("KBs.jsp") &&
       !pageString.startsWith("Properties.jsp") && 
       !pageString.startsWith("AddConstituent.jsp") && 
@@ -48,8 +63,10 @@
       out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=KBs.jsp\">");
       out.println("</html>");
       //System.out.println("resetting (3)");
+System.out.println("EXIT Prelude.jsp: 3");
       return;
   }
+*/
 %>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 <%
@@ -70,5 +87,6 @@ August 9, Acapulco, Mexico.  See also www.ontologyportal.org
 %>
       <link rel="stylesheet" type="text/css" href="simple.css" />
 <%
+    System.out.println("EXIT Prelude.jsp: 4");
   }
 %>

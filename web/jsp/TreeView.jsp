@@ -26,7 +26,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  * */
 
  String kbName = request.getParameter("kb");
- if (Formula.isNonEmptyString(kbName)) {
+ if (StringUtil.isNonEmptyString(kbName)) {
      TaxoModel.kbName = kbName;
  }
  else {
@@ -35,20 +35,20 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  String language = null;
 
  String contract = request.getParameter("contract");
- if (Formula.isNonEmptyString(contract)) 
+ if (StringUtil.isNonEmptyString(contract)) 
      TaxoModel.collapseNode(contract);
  String expand = request.getParameter("expand");
- if (Formula.isNonEmptyString(expand)) 
+ if (StringUtil.isNonEmptyString(expand)) 
      TaxoModel.expandNode(expand);
  String up = request.getParameter("up");
- if (Formula.isNonEmptyString(up)) 
+ if (StringUtil.isNonEmptyString(up)) 
      TaxoModel.expandParentNodes(up);
  String down = request.getParameter("down");
- if (Formula.isNonEmptyString(down)) 
+ if (StringUtil.isNonEmptyString(down)) 
      TaxoModel.collapseParentNodes(down);
 
  String term = request.getParameter("term");
- if (!Formula.isNonEmptyString(term)) 
+ if (!StringUtil.isNonEmptyString(term)) 
    term = TaxoModel.defaultTerm;
  TaxoModel.displayTerm(term);
 %>
@@ -58,7 +58,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   KB kb = null;
   String parentPage = "TreeView.jsp";
   String simple = request.getParameter("simple");
-  if (Formula.isNonEmptyString(simple) && simple.equals("yes")) {
+  if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
     <%@ include file="SimpleBrowseBody.jsp" %>
 <%
@@ -68,7 +68,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <%@ include file="BrowseBody.jsp" %>
 <%
   }
-  if (Formula.isNonEmptyString(simple) && simple.equals("yes")) {
+  if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
     <%@ include file="SimpleBrowseHeader.jsp" %>
 <%
@@ -98,7 +98,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     </tr>
 </table><p>
 <%
-  if (Formula.isNonEmptyString(simple) && simple.equals("yes")) {
+  if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
     <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&lang=<%=language%>&term=<%=term%>">Show without tree</a></small><p>
 <%

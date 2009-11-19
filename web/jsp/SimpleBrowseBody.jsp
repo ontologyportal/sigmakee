@@ -19,7 +19,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
  kbName = request.getParameter("kb");
  kb = null;
- if (Formula.isNonEmptyString(kbName)) {
+ if (StringUtil.isNonEmptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
      if (kb != null) 
          TaxoModel.kbName = kbName;     
@@ -85,11 +85,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
 
-    TreeMap alphaList = DocGen.getInstance().createAlphaList(kb,tfm);
-    if (DocGen.getInstance().isCompositeInstance(kb,term)) 
-        show.append(DocGen.getInstance().createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
+    TreeMap alphaList = DocGen.getInstance(kb.name).createAlphaList(kb,tfm);
+    if (DocGen.isComposite(kb,term)) 
+        show.append(DocGen.getInstance(kb.name).createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,language,kb.name));
     else
-        show.append(DocGen.getInstance().createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,language));
+        show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,language,kb.name));
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");

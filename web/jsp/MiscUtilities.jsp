@@ -20,54 +20,82 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 
-String kbName = "";
-String namespace = "";
-String language = "";
-String term = "";
-String relation = "";
-String header = DocGen.getInstance().getTitleText();
-String footer = DocGen.getInstance().getFooterText();
-String filename = "";
-KB kb = null;
+  String sigmaHome = System.getenv("SIGMA_HOME");
+  if (StringUtil.emptyString(sigmaHome))
+      sigmaHome = "SIGMA_HOME";
+  String kbDir = KBmanager.getMgr().getPref("kbDir");
+  File kbDirFile = new File(kbDir);
+  String kbName = "";
+  String namespace = "";
+  String language = "";
+  String term = "";
+  String relation = "";
+  String ontology = "";
+  String header = "";
+  String footer = "";
+  String filename = "";
+  String action = "";
+  String status = "";
+  KB kb = null;
 
   if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
        response.sendRedirect("KBs.jsp");     
   }
   else {
-      kbName = request.getParameter("kb");
+      if (StringUtil.emptyString(kbName)) 
+          kbName = request.getParameter("kb");
       namespace = request.getParameter("namespace");
       if (namespace == null) 
           namespace = "";
-      if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) {
+      if (StringUtil.emptyString(kbName) || (KBmanager.getMgr().getKB(kbName) == null)) {
           System.out.println(" no such knowledge base " + kbName);
           Set names = KBmanager.getMgr().getKBnames();
           if (names != null && names.size() > 0) {
               Iterator it = names.iterator();
-              if (it.hasNext()) 
+              if (it.hasNext()) {
                   kbName = (String) it.next();
+                  System.out.println("kbName == " + kbName);
+              }
           }
       }
-      else
+      if (StringUtil.isNonEmptyString(kbName))
           kb = KBmanager.getMgr().getKB(kbName);
       language = request.getParameter("lang");
+      ontology = request.getParameter("ontology");
+      if (StringUtil.emptyString(ontology) || ontology.equalsIgnoreCase("null"))
+          ontology = "";
       header = request.getParameter("header");
+      if (StringUtil.emptyString(header) || header.equalsIgnoreCase("null"))
+          header = "";
       footer = request.getParameter("footer");
+      if (StringUtil.emptyString(footer) || footer.equalsIgnoreCase("null"))
+          footer = "";
       term = request.getParameter("term");
       relation = request.getParameter("relation");
       filename = request.getParameter("filename");
-      if (!StringUtil.emptyString(header)) 
-          DocGen.getInstance().setTitleText(header);
-      if (!StringUtil.emptyString(footer)) 
-          DocGen.getInstance().setFooterText(footer);
-      String action = request.getParameter("action");
-      language = HTMLformatter.processLanguage(language,kb);
-      if (action != null && action != "" && action.equals("generateDocs")) 
-          DocGen.getInstance().generateHTML(kb,language,true);      
-      if (action != null && action != "" && action.equals("generateSingle")) 
-          DocGen.getInstance().generateSingleHTML(kb,language,true);  
-      if (action != null && action != "" && action.equals("dotGraph")) {
-          Graph g = new Graph();
-          g.createDotGraph(kb, term, relation, filename);
+      action = request.getParameter("action");
+      if (StringUtil.emptyString(action) || action.equalsIgnoreCase("null")) 
+          action = "";
+      language = HTMLformatter.processLanguage(language, kb);
+      if (StringUtil.isNonEmptyString(action)) {
+          if (kb != null) {
+              if (action.equalsIgnoreCase("generateDocs")
+                  || action.equalsIgnoreCase("generateSingle")) {
+                  if (ontology == null) ontology = "";
+                  String formatType = "dd";
+                  if (action.equalsIgnoreCase("generateSingle"))
+                      formatType = "tab";
+                  List<String> args = Arrays.asList("rcdocgen", kb.name, ontology, formatType);
+                  boolean isSimple = (action.equalsIgnoreCase("generateSingle")
+                                      || ontology.matches(".*(?i)ccli.*") 
+                                      || ontology.matches(".*(?i)ddex.*"));
+                  status = DocGen.generateHtmlFiles(args, isSimple, header, footer);
+              }
+              else if (action.equals("dotGraph")) {
+                  Graph g = new Graph();
+                  g.createDotGraph(kb, term, relation, filename);
+              }
+          }
       }
   }
 
@@ -88,57 +116,123 @@ KB kb = null;
         <td valign="bottom">
         </td>
         <td>
-          <font face="Arial,helvetica" SIZE=-1><b>[ <a href="KBs.jsp">Home</a></b>
-          <b><a href="Properties.jsp">Prefs</a></B> <B>]</B></font><BR>
-          <font face="Arial,helvetica" SIZE=-1><b>KB:</b></font><p>
+          <span class="navlinks">
+          <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;|&nbsp;
+          <a href="Properties.jsp">Preferences</a>&nbsp;]</b>
+          </span>
+          <br>
+          <b>KB:&nbsp;</b>
           <%
             ArrayList kbnames = new ArrayList();
             kbnames.addAll(KBmanager.getMgr().getKBnames());
-            out.println(HTMLformatter.createMenu("kb",kbName,kbnames)); 
+            out.println(HTMLformatter.createMenu("kb", kbName, kbnames)); 
           %>              
-          <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,KBmanager.getMgr().allAvailableLanguages()) %></b>
+          &nbsp;<b>Language:&nbsp;</b><%= HTMLformatter.createMenu("lang",language,KBmanager.getMgr().allAvailableLanguages()) %>
         </td>
       </tr>
-    </table><BR>
-    <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
-        <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><p>
+    </table>
+<p>
+
+    <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
+	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
+<!--
+<hr class="rowdiv" />
+<p>
+-->
+
+<%
+               if (action.equalsIgnoreCase("generateDocs") 
+                   || action.equalsIgnoreCase("generateSingle")) {
+                   if (StringUtil.isNonEmptyString(status)) {
+                       if (!status.trim().startsWith("Error")) {
+                           out.println("HTML files have been written to " + status);
+                       }
+                       else {
+                           out.println(status);
+                       }
+                       out.println("<br><br>");
+                   }
+               }
+%>
+
     <b>Generate HTML</b><P>
     <table>
-        <tr><td>Document header:&nbsp;</td><td><input type="text" name="header" size=100 value="<%=DocGen.getInstance().getTitleText()%>"></td></tr>
-        <tr><td>Document footer:&nbsp;</td><td><input type="text" name="footer" size=100 value="<%=DocGen.getInstance().getFooterText()%>"></td></tr>
-        <tr><td><input type="submit" name="action" value="generateDocs">&nbsp;&nbsp;</td><td>Generate all HTML pages for the KB</td></tr>
-        <tr><td><input type="submit" name="action" value="generateSingle">&nbsp;&nbsp;</td><td>Generate a single HTML page for the KB</td></tr>
+        <tr><td align="right">KB:&nbsp;</td><td><input type="text" name="kb" size="25" value="<%=kb.name%>"></td></tr>
+        <tr><td align="right">Ontology:&nbsp;</td><td><input type="text" name="ontology" size="25" value="<%=ontology%>"></td></tr>
+        <tr><td align="right">Document header:&nbsp;</td><td><input type="text" name="header" size="70" value="<%=header%>"></td></tr>
+        <tr><td align="right">Document footer:&nbsp;</td><td><input type="text" name="footer" size="70" value="<%=footer%>"></td></tr>
+        <tr><td align="right"><input type="submit" name="action" value="generateDocs">&nbsp;&nbsp;</td><td>Generate all HTML pages for the KB</td></tr>
+        <tr><td align="right"><input type="submit" name="action" value="generateSingle">&nbsp;&nbsp;</td><td>Generate a single HTML page for the KB</td></tr>
     </table><p>
 
-    <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
-        <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><p>
+    <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
+	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
+<!--
+<hr class="rowdiv" />
+<p>
+-->
     <b>Create dotted graph format (for <a href="www.graphviz.org">GraphViz</a>)</b><P>
     <table>
-        <tr><td>Term:&nbsp;</td><td><input type="text" name="term" size=20 value=""></td></tr>
-        <tr><td>Relation:&nbsp;</td><td><input type="text" name="relation" size=20 value=""></td></tr>
-        <tr><td>Filename:&nbsp;</td><td><input type="text" name="filename" size=20 value="<%=kbName + "-graph.dot"%>">(saved in $SIGMA_HOME)</td></tr>
-        <tr><td><input type="submit" name="action" value="dotGraph">&nbsp;&nbsp;</td><td>Generate graph file</td></tr>
+        <tr><td align="right">Term:&nbsp;</td><td><input type="text" name="term" size=20 value=""></td></tr>
+        <tr><td align="right">Relation:&nbsp;</td><td><input type="text" name="relation" size=20 value=""></td></tr>
+        <tr><td align="right">Filename:&nbsp;</td><td><input type="text" name="filename" size=20 value="<%=kbName + "-graph.dot"%>">(saved in <%=sigmaHome%>)</td></tr>
+        <tr><td align="right"><input type="submit" name="action" value="dotGraph">&nbsp;&nbsp;</td><td>Generate graph file</td></tr>
     </table>
 
 </form><p>
 
+    <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
+	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
+<!--
+<hr class="rowdiv" />
+<p>
+-->
 
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
-    <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><br><P>
-<b>Generate KIF from CSV</b><p>
-
-<form action="ProcessFile.jsp"  ID="misc" method="POST" enctype="multipart/form-data">
-    <table>
-        <tr><td>Namespace: </td><td><input type="text" size="30" name="namespace" value="<%=namespace %>"></td></tr>
-        <tr><td>CSV file</td><td><INPUT type=file name=csvFile></td></tr>
-        <tr><td><input type="submit" name="action" value="kifFromCSV">&nbsp;&nbsp;</td><td>Save to 
-                Sigma KBs directory with same filename and .kif extension<br>
-                <small>Note that if this file is already loaded, Sigma will need to be restarted 
-                to see the new version</small></td></tr>
-    </table>
-</form><p>
+<b>Generate KIF from a DIF (.dif) or CSV (.csv) file</b>
+<p>
+<form action="ProcessFile.jsp"  id="misc" method="POST" enctype="multipart/form-data">
+  <table>
+    <tr>
+      <td align="right">KB:&nbsp;</td>
+      <td><input type="text" size="30" name="kb" value=<%=kbName %> ></td>
+    </tr>
+    <tr>
+      <td align="right">Ontology:&nbsp;</td>
+      <td><input type="text" size="30" name="ontology" value=<%=ontology %> ></td>
+    </tr>
+    <tr>
+      <td align="right">Data file:&nbsp;</td>
+      <td><input type="file" name="dataFile"></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>
+        <input type="checkbox" name="overwrite" value="yes">&nbsp;Replace existing files
+      </td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>
+        <input type="checkbox" name="load" value="yes">&nbsp;Load generated KIF file
+      </td>
+    </tr>
+    <tr>
+      <td align="right"><input type="submit" name="action" value="kifFromDataFile">&nbsp;&nbsp;</td>
+      <td>
+        <small>
+          The KIF file will have the same base name as the data
+          file, but with the extension .kif and maybe with an
+          infixed integer.  It will be saved in the directory
+          <%=kbDirFile.getCanonicalPath()%>.
+        </small>
+      </td>
+    </tr>
+  </table>
+</form>
+<p>
 
 <%@ include file="Postlude.jsp" %>
+
 </body>
 </html>
 

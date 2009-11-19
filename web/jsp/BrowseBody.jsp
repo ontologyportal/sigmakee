@@ -21,7 +21,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  term = request.getParameter("term");
 
  kbName = request.getParameter("kb");
- if (Formula.isNonEmptyString(kbName)) {
+ if (StringUtil.isNonEmptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
      if (kb != null)
          TaxoModel.kbName = kbName;
@@ -40,7 +40,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     port = "8080";
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&kb=" + kbName;
 
- if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
+ if (kb != null && StringUtil.emptyString(term))        // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
  else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term 
     show.append(HTMLformatter.showNeighborTerms(kb,term));
@@ -112,9 +112,10 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
      // show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
 
      for (int arg = 1; arg < 6; arg++) {
-         String argHeader = "<br><b>&nbsp;appearance as argument number " + (new Integer(arg)).toString() + "</b>";
+         String argHeader = ("appearance as argument number " + arg);
          show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,0,limit,arg,"arg"));
      }
+
      //forms = kb.ask("ant",0,term);
      show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,0,limit,0,"ant"));
 

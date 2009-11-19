@@ -25,26 +25,29 @@ August 9, Acapulco, Mexico.
 */
 
     String kbName = request.getParameter("kb");
-
-    String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+    String kbDir = KBmanager.getMgr().getPref("kbDir");
+    File kbDirFile = new File(kbDir);
     String saveAs = request.getParameter("saveAs");
     String constituent = request.getParameter("constituent");
     String saveFile = request.getParameter("saveFile");
     String delete = request.getParameter("delete");
     String result = "";
     KB kb = KBmanager.getMgr().getKB(kbName);
-    if (kb == null || kbName == null)
+
+    if ((kb == null) || StringUtil.emptyString(kbName))
         response.sendRedirect("KBs.jsp");  // That KB does not exist  
 
     if (saveAs != null && saveAs.equals("prolog")) {
-        String prologFile = kb.writePrologFile(kbDir + kb.name + ".pl");
+        File plFile = new File(kbDirFile, (kb.name + ".pl"));
+        String prologFile = kb.writePrologFile(plFile.getCanonicalPath());
         String statusStr = ( "\n<br/>Wrote file " + prologFile + "\n<br/>" );
-        if (!Formula.isNonEmptyString(prologFile))
+        if (!StringUtil.isNonEmptyString(prologFile))
             statusStr = "\n<br/>Could not write a Prolog file\n<br/>";
         KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
     }
 
-    if (saveAs != null && (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL"))) {
+    if (StringUtil.isNonEmptyString(saveAs) 
+        && (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL"))) {
         // Force translation of the KB to TPTP, even if the user has not
         // requested this on the Preferences page.
     	if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
@@ -52,20 +55,49 @@ August 9, Acapulco, Mexico.
     	    kb.tptpParse();
     	}
     	boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
-        String tptpFile = kb.writeTPTPFile(kbDir + saveFile + ".tptp",null,onlyPlainFOL,"");
-    	String statusStr = ( "\n<br/>Wrote file " + tptpFile + "\n<br/>" );
-    	if (!Formula.isNonEmptyString(tptpFile)) 
+        File tptpf = new File(kbDirFile, (saveFile + ".tptp"));
+        String tptpFile = kb.writeTPTPFile(tptpf.getCanonicalPath(), null, onlyPlainFOL, "");
+    	String statusStr = ("\n<br/>Wrote file " + tptpFile + "\n<br/>");
+    	if (StringUtil.emptyString(tptpFile)) 
     	    statusStr = "\n<br/>Could not write a TPTP file\n<br/>";
         KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
     }
 
-    if (saveAs != null && saveAs.equals("OWL")) {
-        OWLtranslator owt = new OWLtranslator();
-        owt.write(kbName,kbDir + saveFile);
+    if (StringUtil.isNonEmptyString(saveAs) && saveAs.equalsIgnoreCase("Turtle")) {
+        System.out.println("INFO in Manifest.jsp: generating Turtle file");
+
+        String fname = saveFile;
+        if (StringUtil.emptyString(fname)) 
+            fname = kb.name;
+        String ttldir = KBmanager.getMgr().getPref("kbDir");
+        File ttlDirFile = new File(ttldir);
+        File ttlFile = new File(ttlDirFile, (fname + ".ttl"));
+        String ttlCanonicalPath = ttlFile.getCanonicalPath();
+        String ttlResult = DocGen.writeTurtleFile(kb, ttlFile);
+        String ttlMsg = "";
+    	if (StringUtil.emptyString(ttlResult) || !ttlFile.canRead()) { 
+    	    ttlMsg = ("\n<br/>Could not write the Turtle file " 
+                      + ttlCanonicalPath
+                      + "\n<br/>");
+        }
+        else {
+    	    ttlMsg = ("\n<br/>Wrote the Turtle file " 
+                      + ttlCanonicalPath
+                      + "\n<br/>");
+        }
+        KBmanager.getMgr().setError(KBmanager.getMgr().getError() + ttlMsg);
     }
 
-    if (saveAs != null && saveAs.equals("KIF"))
-        kb.writeFile(kbDir + kbName + ".kif");
+    if (StringUtil.isNonEmptyString(saveAs) && saveAs.equals("OWL")) {
+        OWLtranslator owt = new OWLtranslator();
+        File owlFile = new File(kbDirFile, saveFile);
+        owt.write(kbName, owlFile.getCanonicalPath());
+    }
+
+    if (saveAs != null && saveAs.equals("KIF")) {
+        File kifFile = new File(kbDirFile, (kbName + ".kif"));
+        kb.writeFile(kifFile.getCanonicalPath());
+    }
 
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
@@ -76,18 +108,23 @@ August 9, Acapulco, Mexico.
             KBmanager.getMgr().writeConfiguration();
         }
         System.out.println("INFO in Manifest.jsp");
-        System.out.println("  constituent == " + constituent);
-        System.out.println("  call: kb.reload()");
+        System.out.println("  > kb.constituents 81 == " + kb.constituents);
+        System.out.println("  > call: kb.reload()");
 	    result = kb.reload();
+        System.out.println("  > kb.constituents 84 == " + kb.constituents);
     }
     else if (constituent != null) {
+            System.out.println("  > kb.constituents 87 == " + kb.constituents);
         kb.addConstituent(constituent, true, false);
+            System.out.println("  > kb.constituents 89 == " + kb.constituents);
         //System.out.println("INFO in Manifest.jsp (top): The error string is : " + KBmanager.getMgr().getError());
         KBmanager.getMgr().writeConfiguration();
+            System.out.println("INFO in Manifest.jsp");
+            System.out.println("  > kb.constituents 93 == " + kb.constituents);
 	    if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
             System.out.println("INFO in Manifest.jsp");
-            System.out.println("  constituent == " + constituent);
-            System.out.println("  call: kb.cache()");
+            System.out.println("  > kb.constituents 96 == " + kb.constituents);
+            System.out.println("  > call: kb.cache()");
 	        kb.cache();
 	    }
 	    kb.loadVampire();
@@ -110,7 +147,11 @@ August 9, Acapulco, Mexico.
       </table>
     </td>
     <td valign="bottom"></td>
-    <td><font face="Arial,helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A> ]</b></FONT></td>
+    <td>
+    <span class="navlinks">
+        <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;]</b>
+    </span>
+    </td>
   </tr>
 </table>
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
@@ -153,17 +194,32 @@ August 9, Acapulco, Mexico.
 <P>
 
 <% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
-    <hr><B>Add a new constituent</B>
-    <FORM name=kbUploader ID=kbUploader action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
-        <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
-        <B>KB Constituent</B><INPUT type="file" name="constituent"><BR>
-        <INPUT type="submit" NAME="submit" VALUE="Load">
-    </FORM>
+    <hr><b>Add a new constituent</b>
+    <form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="kb" value=<%=kbName%>><br> 
+  <table>
+    <tr>
+      <td>
+        <b>KB Constituent:</b>&nbsp;
+      </td>
+      <td>
+        <input type="file" name="constituent">
+      </td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>
+        <input type="checkbox" name="overwrite" value="yes">&nbsp;Replace existing file
+      </td>
+    </tr>
+  </table>
+        <input type="submit" name="submit" value="Load">
+    </form>
 
     <hr><B>Save KB to other formats</B>
     <FORM name=save ID=save action="Manifest.jsp" method="GET">
         <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
-        <B>Filename:</B><INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
+        <B>Filename:</B>&nbsp;<INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
         <INPUT type="submit" NAME="submit" VALUE="Save">
         <select name="saveAs">
             <option value="OWL">OWL
@@ -171,6 +227,7 @@ August 9, Acapulco, Mexico.
             <option value="KIF">KIF
             <option value="TPTP">TPTP
             <option value="tptpFOL">TPTP FOL
+            <option value="Turtle">Turtle
         </select>
     </FORM>
 
@@ -178,21 +235,21 @@ August 9, Acapulco, Mexico.
 
   String er = KBmanager.getMgr().getError();
   //out.println("INFO in Manifest.jsp: Error string is : " + er);
-  if (er != "" && er != null) {
+  if (StringUtil.isNonEmptyString(er)) {
       out.println(er);  
       //System.out.println(er);
       KBmanager.getMgr().setError("");
   }
   else
-      if (constituent != null && delete == null)       
+      if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))
           out.println("File " + constituent + " loaded successfully.");
-  if (result != "") 
+  if (StringUtil.isNonEmptyString(result))
       out.println(result);
 
 %>
 
 <P>
-  <A HREF="KBs.jsp" >Return to home page</A><p>
+  <a href="KBs.jsp" >Return to home page</a><p>
 
 <%@ include file="Postlude.jsp" %>
 </BODY>

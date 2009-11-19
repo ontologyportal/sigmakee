@@ -1,8 +1,4 @@
 <%@ include file="Prelude.jsp" %>
-
-<HTML>
-<HEAD>
-<TITLE>Sigma Knowledge Engineering Environment - Main</TITLE>
 <%
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -16,16 +12,53 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
-%>
-</HEAD>
 
-<BODY BGCOLOR=#FFFFFF>
-<%
+    out.println("<html>");
+    out.println("  <head>");
+    out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
+    out.println("  </head>");
+    out.println("  <body bgcolor=\"#FFFFFF\">");
+
+// KBmanager mgr = KBmanager.getMgr();
+    String baseDir = mgr.getPref("baseDir");
+    String kbDir = mgr.getPref("kbDir");
+    System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
+    System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
+    String rUserName = request.getParameter("userName");
+    String rPassword = request.getParameter("password");
+    String mUserName = mgr.getPref("userName");
+
+    // Set a default greeting.
+    String greeting = ("Welcome " + (StringUtil.isNonEmptyString(mUserName)
+                                     ? mUserName
+                                     : " to Sigma") + "!");
+
+// If the user is already logged in, do nothing.
+
+// If the user is known, log them in.
+
+// If the user is unknown, initiate the new account creation routine
+// (user role, not admin role).
+
+// If no KBmanager object exists, create one.  If the KBmanager object
+// already exists, use the existing object.
+
+// If the KBmanager object has not been initialized, invoke
+// mgr.initializeOnce(<config-file-pathname>).  If the KBmanager
+// object has already been initialized, do nothing.
+
+// FUTURE: Create a qualified user name by concatenating the browser
+// name (or other data pulled from the HTTP header) with the user's
+// name.  For now, only ever create one KBmanager object, but use the
+// table of user names and roles/privileges to control the actions
+// available to, or permitted for, each user.  NS: 09/14/2009.
+
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
-    // KBmanager.getMgr().initializeOnce();
-    System.out.println("INFO in KB.jsp: baseDir == " + KBmanager.getMgr().getPref("baseDir"));
-    System.out.println("INFO in KB.jsp:   kbDir == " + KBmanager.getMgr().getPref("kbDir"));
+    KBmanager.getMgr().initializeOnce();
 
+%>
+
+<%
 /*
     if (request.getParameter("userName") != null)
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
@@ -33,10 +66,42 @@ August 9, Acapulco, Mexico.
 
 /* new Password Validation */
 
-    String prefUserName = KBmanager.getMgr().getPref("userName");
-    String greeting = ("Welcome " + (StringUtil.isNonEmptyString(prefUserName)
-                                     ? prefUserName
-                                     : ""));
+/*
+    PasswordService psvc = PasswordService.getInstance();
+    if (StringUtil.isNonEmptyString(rUserName)) {
+        if (StringUtil.isNonEmptyString(rPassword) 
+            && psvc.authenticate(rUserName,rPassword)) {
+                greeting = ("Welcome " + KBmanager.getMgr().getPref("userRole") + 
+                            " " + KBmanager.getMgr().getPref("userName"));
+            }
+        else if (!request.getParameter("userName").equalsIgnoreCase("guest") &&
+                 StringUtil.isNonEmptyString(request.getParameter("password1")) &&
+                 StringUtil.isNonEmptyString(request.getParameter("password2")) &&
+                 request.getParameter("password2").equals(request.getParameter("password1"))) {
+
+            if (!PasswordService.getInstance().userExists(request.getParameter("userName"))) {
+                User newuser = new User();
+                newuser.username = request.getParameter("userName");
+                newuser.setRole("user");
+                newuser.password = PasswordService.getInstance().encrypt(request.getParameter("password1"));
+                PasswordService.getInstance().addUser(newuser);
+                KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
+            }
+            else if (PasswordService.getInstance().authenticate(request.getParameter("userName"),
+                                                                request.getParameter("oldpassword"))) {
+                User updateuser = PasswordService.getInstance().getUser(request.getParameter("userName"));
+                updateuser.password = PasswordService.getInstance().encrypt(request.getParameter("password1"));
+                PasswordService.getInstance().updateUser(updateuser);
+                KBmanager.newMgr(request.getParameter("userName")).initializeOnce();
+            }
+        }
+        else {
+            KBmanager.getMgr().setPref("userName","guest");
+            //out.println("Could not verify user " + request.getParameter("userName") +
+            greeting = "You are logged in as \"guest\"";
+        }
+    }
+
     
     if (StringUtil.isNonEmptyString(request.getParameter("userName"))) {
         if (StringUtil.isNonEmptyString(request.getParameter("password")) &&
@@ -71,10 +136,13 @@ August 9, Acapulco, Mexico.
         else {
             KBmanager.getMgr().setPref("userName","guest");
             //out.println("Could not verify user " + request.getParameter("userName") +
-            greeting = "You are logged in as guest";
+            greeting = "You are logged in as \"guest\"";
         }
     }
+*/
+%>
 
+<%
     String hostname = KBmanager.getMgr().getPref("hostname");
     if (StringUtil.emptyString(hostname))
         hostname = "localhost";
@@ -97,9 +165,11 @@ August 9, Acapulco, Mexico.
                 
             </table>
         </td>
-        <td><font face="Arial,helvetica" SIZE=-1>
-        <b>[ <A href="Properties.jsp">Preferences</b></A>&nbsp;</FONT>
-        <font face="Arial,helvetica" SIZE=-1> ]</b></FONT></td>
+        <td>
+        <span class="navlinks">
+          <b>[&nbsp;<a href="Properties.jsp">Preferences</a>&nbsp;]</b>
+        </span>
+        </td>
     </tr>
 </table>
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
@@ -109,14 +179,14 @@ August 9, Acapulco, Mexico.
   Iterator kbNames = null;
   String kbName = request.getParameter("kb");
   String remove = request.getParameter("remove");  // Delete the given KB
-  if (StringUtil.isNonEmptyString(remove) && remove.equalsIgnoreCase("true")) 
+if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) && remove.equalsIgnoreCase("true"))
       KBmanager.getMgr().removeKB(kbName);
 
 
   if (KBmanager.getMgr().getKBnames() != null && !KBmanager.getMgr().getKBnames().isEmpty()) {
       System.out.println(KBmanager.getMgr().getKBnames().size());
       kbNames = KBmanager.getMgr().getKBnames().iterator();
-      System.out.println("INFO in KB.jsp: Got KB names.");
+      System.out.println("INFO in KBs.jsp: Got KB names.");
   }
 
   boolean isAdministrator = 
@@ -136,51 +206,52 @@ August 9, Acapulco, Mexico.
       System.out.println("Showing knowledge bases.");
       boolean first = true;
       boolean odd = true;
+      String kbName2 = null;
       while (kbNames.hasNext()) {
-          kbName = (String) kbNames.next();
+          kbName2 = (String) kbNames.next();
           if (first) {
-              defaultKB = kbName;
+              defaultKB = kbName2;
               first = false;
           }
-          KB kb = (KB) KBmanager.getMgr().getKB(kbName);
+          KB kb = (KB) KBmanager.getMgr().getKB(kbName2);
           String language = HTMLformatter.language;
           language = HTMLformatter.processLanguage(language,kb);
           HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language;
 %>
           <TR VALIGN="center" <%= odd==false? "bgcolor=#eeeeee":""%>>
-            <TD><%=kbName%></TD>
+            <TD><%=kbName2%></TD>
 <%
           out.println("<TD>");
           if (odd) odd = false;
           if (kb.constituents == null || kb.constituents.isEmpty())
-              out.println("No <A href=\"Manifest.jsp?kb=" + kbName + "\">constituents</A>");
+              out.println("No <A href=\"Manifest.jsp?kb=" + kbName2 + "\">constituents</A>");
           else {
               out.print("(" + kb.constituents.size() + ")&nbsp;");
-              out.println("<A href=\"Manifest.jsp?kb=" + kbName + "\">Manifest</A>");
+              out.println("<A href=\"Manifest.jsp?kb=" + kbName2 + "\">Manifest</A>");
           }
           out.println("</TD>");          
-          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName + "&lang=" + language + "\">Browse</A></TD>");                                                      
-          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName + "&lang=" + language + "\">Graph</A></TD>");    
+          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName2 + "&lang=" + language + "\">Browse</A></TD>");                                                      
+          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + language + "\">Graph</A></TD>");    
 
           if (isAdministrator) {
 
-              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
+              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
 
               if (kb.inferenceEngine != null) {
-                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName + "&lang=" + language + "\">Consistency Check</A></TD>"); 
+                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "\">Consistency Check</A></TD>"); 
               }
 
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName + "&lang=" + language + "\">Inference Tests</A></TD>");
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + language + "\">Inference Tests</A></TD>");
 
               if (kb.celt != null) {
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName + "&lang=" + language + "\">CELT Tests</A></TD>");
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + language + "\">CELT Tests</A></TD>");
               }
 
-              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName + "&lang=" + language + "\">WordNet Check</A></TD>");
+              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName2 + "&lang=" + language + "\">WordNet Check</A></TD>");
 
-              out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName + "\">Ask/Tell</A>&nbsp;</TD>");
+              out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName2 + "\">Ask/Tell</A>&nbsp;</TD>");
 
-              out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName + "\">Remove</A></TD></TR>");
+              out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName2 + "\">Remove</A></TD></TR>");
           }
       }
 %>
@@ -193,34 +264,65 @@ August 9, Acapulco, Mexico.
 
 <% 
     if (isAdministrator) { %>
-    <B>Add a new knowledge base</B>
-    <FORM name=kbUploader ID=kbUploader action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
-        <B>KB Name</B><INPUT type="TEXT" name=kb><br> 
-        <B>KB Constituent</B><INPUT type=file name=constituent><BR>
-        <INPUT type="submit" NAME="submit" VALUE="Submit">
-    </FORM><P>
+    <b>Add a new knowledge base</b>
+    <form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
+  <table>
+    <tr>
+      <td>
+        <b>KB Name:</b>&nbsp;
+      </td>
+      <td>
+        <input type="text" name="kb">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>KB Constituent:</b>&nbsp;
+      </td>
+      <td>
+        <input type="file" name="constituent">
+      </td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>
+        <input type="checkbox" name="overwrite" value="yes">&nbsp;Replace existing file
+      </td>
+    </tr>
+  </table>
+        <input type="submit" name="submit" value="Submit">
+    </form><p>
 <%  } 
 
   if (isAdministrator) {
-      out.println("<a href=\"MiscUtilities.jsp?kb=" + kbName + "\">Other Utilities</a>");
+      out.println("<a href=\"MiscUtilities.jsp?kb=" 
+                  + kbName 
+                  + "\">More Output Utilities</a>");
       out.println(" | <a href=\"Mapping.jsp\">Ontology Mappings</a>");
       out.println("<p>");
 
       kbNames = KBmanager.getMgr().getKBnames().iterator();
-    
+      String kbName3 = null;
+      boolean kbErrorsFound = false;
       while (kbNames.hasNext()) {
-         kbName = (String) kbNames.next();
-         KB kb = (KB) KBmanager.getMgr().getKB(kbName);
-         if (kb.errors.size() > 0)
+         kbName3 = (String) kbNames.next();
+         KB kb = (KB) KBmanager.getMgr().getKB(kbName3);
+         if (kb.errors.size() > 0) {
              out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
+             kbErrorsFound = true;
+         }
          out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
          kb.errors = new TreeSet();
      }  
    
      out.println("<p>\n");
-     if (KBmanager.getMgr().getError().length() > 0)
-         out.println("<b>Other Errors</b>\n");
-     out.println(KBmanager.getMgr().getError());  
+     if (KBmanager.getMgr().getError().length() > 0) {
+         out.print("<b>");
+         if (kbErrorsFound) out.print("Other ");
+         out.println("Warnings and Error Notices</b>\n<br>\n");
+         out.println(KBmanager.getMgr().getError());
+         KBmanager.getMgr().setError("");
+     }
   }
 %>
 </ul>
