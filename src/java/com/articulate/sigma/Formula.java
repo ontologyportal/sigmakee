@@ -1,3 +1,18 @@
+/** This code is copyright Articulate Software (c) 2003.  Some
+portions copyright Teknowledge (c) 2003 and reused under the terms of
+the GNU license.  This software is released under the GNU Public
+License <http://www.gnu.org/copyleft/gpl.html>.  Users of this code
+also consent, by use of this code, to credit Articulate Software and
+Teknowledge in any writings, briefings, publications, presentations,
+or other representations of any software which incorporates, builds
+on, or uses this code.  Please cite the following article in any
+publication with references:
+
+Pease, A., (2003). The Sigma Ontology Development Environment, in
+Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed
+Systems, August 9, Acapulco, Mexico.
+*/
+
 package com.articulate.sigma;
 
 import java.util.*;
@@ -5,22 +20,11 @@ import java.util.regex.*;
 import java.io.*;
 import java.text.ParseException;
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
-code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
-*/
-
-/** Handle operations on an individual formula.  This includes formatting
- *  for presentation as well as pre-processing for sending to the 
- *  inference engine.
+/** ************************************************************
+ * Handle operations on an individual formula.  This includes
+ * formatting for presentation as well as pre-processing for sending
+ * to the inference engine.
  */
 public class Formula implements Comparable {
 
@@ -39,6 +43,7 @@ public class Formula implements Comparable {
     protected static final String LT     = "lessThan";
     protected static final String LTET   = "lessThanOrEqualTo";
 
+    protected static final String KAPPAFN  = "KappaFn";
     protected static final String PLUSFN   = "AdditionFn";
     protected static final String MINUSFN  = "SubtractionFn";
     protected static final String TIMESFN  = "MultiplicationFn";
@@ -82,7 +87,16 @@ public class Formula implements Comparable {
                                                                      DIVIDEFN);
 
     /** The source file in which the formula appears. */
-    public String sourceFile;   
+    protected String sourceFile;   
+
+    public String getSourceFile() {
+        return this.sourceFile;
+    }
+
+    public void setSourceFile(String filename) {
+        this.sourceFile = filename;
+        return;
+    }
 
     /** The line in the file on which the formula starts. */
     public int startLine;       
@@ -105,7 +119,35 @@ public class Formula implements Comparable {
         return System.getProperty("line.separator");
     }
 
-    /** 
+    /** ***************************************************************
+     * Should be false if this Formula occurs in and was loaded from
+     * sourceFile.  Should be true if this Formula does not actually
+     * occur in sourceFile but was computed (derived) from at least
+     * some Formulae in sourceFile, possibly in combination with other
+     * Formulae not is sourceFile.
+     */
+    private boolean isComputed = false;
+
+    /** ***************************************************************
+     * Should return false if this Formula occurs in and was loaded
+     * from sourceFile.  Should return true if this Formula does not
+     * actually occur in sourceFile but was computed (derived) from at
+     * least some Formulae in sourceFile, possibly in combination with
+     * other Formulae not is sourceFile.
+     */
+    public boolean getIsComputed() {
+        return isComputed;
+    }
+
+    /** ***************************************************************
+     * Sets the value of isComputed to val.
+     */
+    public void setIsComputed(boolean val) {
+        isComputed = val;
+        return;
+    }
+
+    /** ***************************************************************
      * A list of TPTP formulas (Strings) that together constitute the
      * translation of theFormula.  This member is a List, because
      * predicate variable instantiation and row variable expansion
@@ -188,7 +230,7 @@ public class Formula implements Comparable {
 
     /** 
      * Returns a List of List objects.  Each such object contains, in
-     * turn, a pair of List objects.  In List object in a pair
+     * turn, a pair of List objects.  Each List object in a pair
      * contains Formula objects.  The Formula objects contained in the
      * first List object (0) of a pair represent negative literals
      * (antecedent conjuncts).  The Formula objects contained in the
@@ -274,7 +316,7 @@ public class Formula implements Comparable {
     public String createID() {
 
         String fname = sourceFile;
-        if (!DB.emptyString(fname) && fname.lastIndexOf(File.separator) > -1) 
+        if (StringUtil.isNonEmptyString(fname) && fname.lastIndexOf(File.separator) > -1) 
             fname = fname.substring(fname.lastIndexOf(File.separator)+1);
         return (new Integer(theFormula.hashCode())).toString() + fname;
     }
@@ -343,7 +385,9 @@ public class Formula implements Comparable {
                                 qLevel++;
                             }
                         }
-                        else if (quoteChars.contains(ch) && (ch == quoteCharInForce) && (prev != '\\')) {
+                        else if (quoteChars.contains(ch) 
+                                 && (ch == quoteCharInForce) 
+                                 && (prev != '\\')) {
                             insideQuote = false;
                             quoteCharInForce = '0';
                             qLevel--;
@@ -1045,13 +1089,12 @@ public class Formula implements Comparable {
      * @return A non-negative int, or -1.
      */
     public int listLength() {
-
         int ans = -1;
         try {
             if (this.listP()) {
-                int idx = 0;
-                while (isNonEmptyString(this.getArgument(idx))) 
-                    ans = ++idx;                
+                ans = 0;
+                while (isNonEmptyString(this.getArgument(ans))) 
+                    ++ans;
             }
         }
         catch (Exception ex) {
@@ -1099,97 +1142,146 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Collect all the quantified variables in the input, which
-     * is the String representation of a Formula.
+     * Collects all variables in this Formula.  Returns an ArrayList
+     * containing a pair of ArrayList.  The first contains all
+     * explicitly quantified variables in the Formula.  The second
+     * contains all variables in Formula that are not within the scope
+     * of some explicit quantifier.
      *
-     * @return An ArrayList of variables (Strings).
+     * @see Formula.collectVariables_1()
+     *
+     * @return An ArrayList containing two ArrayLists, each of which
+     * could be empty
      */
-    private ArrayList collectQuantifiedVariables(String theFormula) {
-        ArrayList quantVariables = new ArrayList();
-        int startIndex = -1;
-        int tmpIndex = -1;
-        int forallIndex = theFormula.indexOf("(forall (?",startIndex);
-        int existsIndex = theFormula.indexOf("(exists (?",startIndex);
-        int kappaFnIndex = theFormula.indexOf("(KappaFn ?",startIndex);
-        while ((forallIndex != -1) || (existsIndex != -1) || (kappaFnIndex != -1)) {
-            if ((forallIndex < existsIndex && forallIndex != -1) || existsIndex == -1) {
-                tmpIndex = forallIndex;
-            }
-            else {
-                tmpIndex = existsIndex;
-            }
-            if ((tmpIndex < kappaFnIndex && tmpIndex != -1) || kappaFnIndex == -1) {
-                startIndex = tmpIndex + 9;
-            }
-            else {
-                startIndex = kappaFnIndex + 9;
-            }
-
-            int i = startIndex;
-            while ((theFormula.charAt(i) != ')') && 
-                   (theFormula.charAt(i) != '(') &&
-                   (i < theFormula.length())) {
-                i++;
-                if (theFormula.charAt(i) == ' ') {
-                    if (!quantVariables.contains(theFormula.substring(startIndex,i).intern()))
-                        quantVariables.add(theFormula.substring(startIndex,i));
-                    //System.out.println(theFormula.substring(startIndex,i));
-                    startIndex = i+1;
-                }
-            }
-            //System.out.println(startIndex);
-            //System.out.println(i);
-            if (i < theFormula.length()) {
-                if (!quantVariables.contains(theFormula.substring(startIndex,i).intern()))
-                    quantVariables.add(theFormula.substring(startIndex,i).intern());
-                //System.out.println(theFormula.substring(startIndex,i));
-                startIndex = i+1;
-            }
-            else {
-                startIndex = theFormula.length();
-            }
-            forallIndex = theFormula.indexOf("(forall (?",startIndex);
-            existsIndex = theFormula.indexOf("(exists (?",startIndex);
-            kappaFnIndex = theFormula.indexOf("(KappaFn ?",startIndex);
+    public ArrayList<ArrayList> collectVariables() {
+        /*
+        long t1 = System.currentTimeMillis();
+        System.out.println("ENTER Formula.collectVariables()");
+        */
+        ArrayList<ArrayList> ans = new ArrayList<ArrayList>();
+        ans.add(new ArrayList());
+        ans.add(new ArrayList());
+        try {
+            Set quantified = new HashSet();
+            Set unquantified = new HashSet();
+            collectVariables_1(this, quantified, unquantified);
+            ans.get(0).addAll(quantified);
+            ans.get(1).addAll(unquantified);
         }
-        return quantVariables;
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        /*
+        System.out.println("EXIT Formula.collectVariables()");
+        System.out.println("  elapsed time == " 
+                           + ((System.currentTimeMillis() - t1) / 1000.0)
+                           + " seconds");
+        */
+        return ans;
     }
 
     /** ***************************************************************
-     * Collect all the quantified variables in this Formula.
+     * A utility method used internally by Formula.collectVariables().
+     *
+     * @see Formula.collectVariables()
+     *
+     * @param originalF The original top-level Formula
+     *
+     * @param quantified A Set for collecting all explicitly
+     * quantified variables in originalF
+     *
+     * @param unquantified A Set for collecting all variables in
+     * originalF that are not within the scope of an explicit
+     * quantifier
+     */
+    private void collectVariables_1(Formula originalF,
+                                    Set quantified, 
+                                    Set unquantified) {
+        /*
+          System.out.println("ENTER Formula.collectVariables_1("
+          + this + ", "
+          + originalF + ", "
+          + quantified + ", "
+          + unquantified + ")");
+        */
+        try {
+            if (this.theFormula.contains(V_PREF) || this.theFormula.contains(R_PREF)) {
+                KBmanager mgr = KBmanager.getMgr();
+                List quantifiers = Arrays.asList(UQUANT, EQUANT, KAPPAFN);
+                Formula f = this;
+                if (isVariable(f.theFormula) && !quantified.contains(f.theFormula)) {
+                    unquantified.add(f.theFormula);
+                }
+                else if (f.listP() && !f.empty()) {
+                    String arg0 = f.car();
+                    if (quantifiers.contains(arg0)) {
+                        String arg1 = f.getArgument(1);
+                        if (arg0.equals(KAPPAFN) && isVariable(arg1)) {
+                            arg1 = "(" + arg1 + ")";
+                        }
+                        Formula arg1F = new Formula();
+                        arg1F.read(arg1);
+                        if (arg1F.listP() && !arg1F.empty()) {
+                            for (Iterator it = arg1F.literalToArrayList().iterator();
+                                 it.hasNext();) {
+                                String var = (String) it.next();
+                                if (isVariable(var)
+                                    && (quantified.contains(var) || unquantified.contains(var))) {
+                                    String err = ("Possible quantification error for "
+                                                  + var + " in "); 
+                                    System.out.println(err);
+                                    System.out.println(originalF);
+                                    mgr.setError(mgr.getError() + "\n<br/>" 
+                                                 + err + "\n<br/>"
+                                                 + originalF + "\n<br/>");
+                                }
+                                quantified.add(var);
+                            }
+                            Formula arg2F = new Formula();
+                            arg2F.read(f.getArgument(2));
+                            arg2F.collectVariables_1(originalF, quantified, unquantified);
+                        }
+                    }
+                    else {
+                        Formula arg0F = new Formula();
+                        arg0F.read(arg0);
+                        arg0F.collectVariables_1(originalF, quantified, unquantified);
+                        Formula cdrF = f.cdrAsFormula();
+                        if (cdrF != null) {
+                            cdrF.collectVariables_1(originalF, quantified, unquantified);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        /*
+          System.out.println("EXIT Formula.collectVariables_1("
+          + this + ", "
+          + originalF + ", "
+          + quantified + ", "
+          + unquantified + ")");
+        */
+        return;
+    }
+
+    /** ***************************************************************
+     * Collect all of the quantified variables in the input, which is
+     * the String representation of a Formula.
      *
      * @return An ArrayList of variables (Strings).
      */
     private ArrayList collectQuantifiedVariables() {
-
-        return this.collectQuantifiedVariables(this.theFormula);
+        return collectVariables().get(0);
     }
 
     /** ***************************************************************
      * Collect all the unquantified variables in a formula
      */
-    private ArrayList collectUnquantifiedVariables(String theFormula, ArrayList quantVariables) {
-
-        int startIndex = 0;
-        ArrayList unquantVariables = new ArrayList();
-
-        while (theFormula.indexOf(V_PREF,startIndex) != -1) {
-            startIndex = theFormula.indexOf(V_PREF,startIndex);
-            int spaceIndex = theFormula.indexOf(SPACE,startIndex);
-            int parenIndex = theFormula.indexOf(RP,startIndex);
-            int i;
-            if ((spaceIndex < parenIndex && spaceIndex != -1) || parenIndex == -1) 
-                i = spaceIndex;
-            else
-                i = parenIndex;
-            if (!quantVariables.contains(theFormula.substring(startIndex,i).intern()) &&
-                !unquantVariables.contains(theFormula.substring(startIndex,i).intern())) {
-                unquantVariables.add(theFormula.substring(startIndex,i).intern());    
-                //System.out.println(theFormula.substring(startIndex,i));
-            }
-            startIndex = i;
-        }
-        return unquantVariables;
+    private ArrayList collectUnquantifiedVariables() {
+        return collectVariables().get(1);
     }
 
     /** ***************************************************************
@@ -1203,33 +1295,26 @@ public class Formula implements Comparable {
     public String makeQuantifiersExplicit(boolean query) {
         String result = this.theFormula;
         try {
-            List avoid = Arrays.asList("documentation",
-                                       "comment",
-                                       "localDocumentation",
-                                       "externalImage",
-                                       "format",
-                                       "termFormat");
             String arg0 = this.car();
-            if (!avoid.contains(arg0)) {
-                ArrayList quantVariables = collectQuantifiedVariables(theFormula);
-                ArrayList unquantVariables = collectUnquantifiedVariables(theFormula,
-                                                                          quantVariables);
-                if (!unquantVariables.isEmpty()) {   // Quantify all the unquantified variables
-                    StringBuilder sb = new StringBuilder();
-                    sb.append((query ? "(exists (" : "(forall ("));
-                    boolean afterTheFirst = false;
-                    for (Iterator itu = unquantVariables.iterator(); itu.hasNext();) {
-                        if (afterTheFirst) sb.append(" ");
-                        sb.append(itu.next().toString());
-                        afterTheFirst = true;
-                    }
-                    //System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
-                    //    quant.toString() + ") " + theFormula + ")");
-                    sb.append(") ");
-                    sb.append(this.theFormula);
-                    sb.append(")");
-                    result = sb.toString();
+            ArrayList<ArrayList> vpair = collectVariables();
+            ArrayList quantVariables = vpair.get(0);
+            ArrayList unquantVariables = vpair.get(1);
+
+            if (!unquantVariables.isEmpty()) {   // Quantify all the unquantified variables
+                StringBuilder sb = new StringBuilder();
+                sb.append((query ? "(exists (" : "(forall ("));
+                boolean afterTheFirst = false;
+                for (Iterator itu = unquantVariables.iterator(); itu.hasNext();) {
+                    if (afterTheFirst) sb.append(" ");
+                    sb.append(itu.next().toString());
+                    afterTheFirst = true;
                 }
+                //System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " + 
+                //    quant.toString() + ") " + theFormula + ")");
+                sb.append(") ");
+                sb.append(this.theFormula);
+                sb.append(")");
+                result = sb.toString();
             }
         }
         catch (Exception ex) {
@@ -1317,20 +1402,6 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Gathers the row variable names in the String input and returns
-     * them in a TreeSet.  
-     *
-     * @return a TreeSet, possibly empty, containing row variable
-     * names, each of which will start with the row variable
-     * designator '@'.
-     */
-    private TreeSet findRowVars(String input) {
-        Formula f = new Formula();
-        f.read(input);
-        return f.findRowVars();
-    }
-
-    /** ***************************************************************
      * Gathers the row variable names in this.theFormula and returns
      * them in a TreeSet.
      *
@@ -1396,9 +1467,9 @@ public class Formula implements Comparable {
      */
     protected ArrayList expandRowVars(KB kb) {
         /*
-        System.out.println("ENTER Formula.expandRowVars(" 
-                           + this.theFormula + ", "
-                           + kb.name + ")");
+          System.out.println("ENTER Formula.expandRowVars(" 
+          + this.theFormula + ", "
+          + kb.name + ")");
         */
         ArrayList resultList = new ArrayList();
         try {
@@ -1505,10 +1576,10 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
         /*
-        System.out.println("EXIT Formula.expandRowVars("
-                           + this.theFormula + ", "
-                           + kb.name + ")");
-        System.out.println("  ==> " + resultList);
+          System.out.println("EXIT Formula.expandRowVars("
+          + this.theFormula + ", "
+          + kb.name + ")");
+          System.out.println("  ==> " + resultList);
         */
         return resultList;
     }
@@ -1541,7 +1612,7 @@ public class Formula implements Comparable {
         try {
             if (isNonEmptyString(var)) {
                 String rowVar = var;
-                if (! var.startsWith("@")) {
+                if (!var.startsWith("@")) {
                     rowVar = ("@" + var);
                 }
                 List accumulator = new ArrayList();
@@ -1799,17 +1870,17 @@ public class Formula implements Comparable {
             Formula f = this;
             if (f.listP() && !f.empty()) {
                 String relation = f.car();
-                if (!(isVariable(relation) || relation.equals("SkFn"))) {
+                if (!isVariable(relation) && !relation.equals("SkFn")) {
                     Formula newF = f.cdrAsFormula();
                     while (newF.listP() && !newF.empty()) {
                         String term = newF.car();
                         String rowVar = term;
                         if (isVariable(rowVar)) {
-                            if (rowVar.startsWith("?") && (varsToVars != null)) {
+                            if (rowVar.startsWith(V_PREF) && (varsToVars != null)) {
                                 rowVar = getOriginalVar(term, varsToVars);
                             }
                         }
-                        if (rowVar.startsWith("@")) {
+                        if (rowVar.startsWith(R_PREF)) {
                             TreeSet relns = (TreeSet) varsToRelns.get(term);
                             if (relns == null) {
                                 relns = new TreeSet();
@@ -1870,17 +1941,34 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Returns true only if this Formula starts with "=>" or "<=>",
-     * else returns false.  It would be better to test for the
-     * occurrence of at least one positive literal with one or more
-     * negative literals, but this test would require converting the
-     * Formula to clausal form.
+     * Returns true only if this Formula, explicitly quantified or
+     * not, starts with "=>" or "<=>", else returns false.  It would
+     * be better to test for the occurrence of at least one positive
+     * literal with one or more negative literals, but this test would
+     * require converting the Formula to clausal form.
      */
     public boolean isRule() {
-        return (this.listP() 
-                && (this.theFormula.indexOf('"') == -1)
-                && this.theFormula.matches(".*\\(\\s*\\<?" + IF + "\\s+.*"));
-        // Arrays.asList(IF, IFF).contains(this.car()));
+        boolean ans = false;
+        try {
+            if (this.listP()) {
+                String arg0 = this.car();
+                if (isQuantifier(arg0)) {
+                    String arg2 = this.getArgument(2);
+                    if (Formula.listP(arg2)) {
+                        Formula newF = new Formula();
+                        newF.read(arg2);
+                        ans = newF.isRule();
+                    }
+                }
+                else {
+                    ans = Arrays.asList(IF, IFF).contains(arg0);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
     }
 
     /** ***************************************************************
@@ -2027,50 +2115,6 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
         return tuple;
-    }
-
-    /** ***************************************************************
-     * This method returns all SUO-KIF variables that occur in the
-     * Formula.
-     *
-     * @see gatherVariables(TreeSet accumulator)
-     * 
-     * @return A TreeSet containing variables (Strings), or an empty
-     * TreeSet if no variables can be found.
-     */
-    private TreeSet gatherVariables() {
-        return this.gatherVariables(null);
-    }
-
-    /** ***************************************************************
-     * @see gatherVariables()
-     *
-     * @param accumulator A TreeSet used for storing variables
-     * (Strings).
-     * 
-     * @return A TreeSet containing variables (Strings), or an empty
-     * TreeSet if no variables can be found.
-     */
-    private TreeSet gatherVariables(TreeSet accumulator) {
-        if (accumulator == null) {
-            accumulator = new TreeSet();
-        }
-        try {
-            if (this.listP() && !this.empty()) {
-                String arg0 = this.car();
-                Formula arg0F = new Formula();
-                arg0F.read(arg0);
-                arg0F.gatherVariables(accumulator);
-                this.cdrAsFormula().gatherVariables(accumulator);
-            }
-            else if (isVariable(this.theFormula)) {
-                accumulator.add(this.theFormula);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return accumulator;
     }
 
     /** ***************************************************************
@@ -3484,10 +3528,10 @@ public class Formula implements Comparable {
      */
     private ArrayList replacePredVarsAndRowVars(KB kb, boolean addHoldsPrefix) {
         /*
-        System.out.println("ENTER Formula.replacePredVarsAndRowVars(" 
-                           + this + ", "
-                           + kb.name + ", "
-                           + addHoldsPrefix + ")");
+          System.out.println("ENTER Formula.replacePredVarsAndRowVars(" 
+          + this + ", "
+          + kb.name + ", "
+          + addHoldsPrefix + ")");
         */
         ArrayList result = new ArrayList();
         try {
@@ -3618,11 +3662,11 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
         /*
-        System.out.println("EXIT Formula.replacePredVarsAndRowVars(" 
-                           + this + ", "
-                           + kb.name + ", "
-                           + addHoldsPrefix + ")");
-        System.out.println("  ==> " + result);
+          System.out.println("EXIT Formula.replacePredVarsAndRowVars(" 
+          + this + ", "
+          + kb.name + ", "
+          + addHoldsPrefix + ")");
+          System.out.println("  ==> " + result);
         */
         return result;
     }
@@ -3668,7 +3712,7 @@ public class Formula implements Comparable {
                             arg0 = f.car();
                             int start = -1;
                             if (arg0.equals("subclass")) start = 0;
-                            if (arg0.equals("instance")) start = 1;
+                            else if (arg0.equals("instance")) start = 1;
                             if (start > -1) {
                                 List args = Arrays.asList(f.getArgument(1), 
                                                           f.getArgument(2));
@@ -3823,95 +3867,133 @@ public class Formula implements Comparable {
      * @param eolChars - the proper character for end of line.
      */
     public String format(String hyperlink, String indentChars, String eolChars) {
-
-        boolean inQuantifier = false;
-        StringBuilder token = new StringBuilder();
-        StringBuilder formatted = new StringBuilder();
-        int indentLevel = 0;
-        boolean inToken = false;
-        boolean inVariable = false;
-        boolean inVarlist = false;
-        boolean inComment = false;
-
-        if (isNonEmptyString(theFormula)) {
-            theFormula = theFormula.trim();
-        }
-
-        for (int i = 0; i < theFormula.length(); i++) {
-            // System.out.println("INFO in format(): " + formatted.toString());
-            if (!inComment) {
-                if (theFormula.charAt(i) == '(' && !inQuantifier && (indentLevel != 0 || i > 1)) {
-                    if (i > 0 && Character.isWhitespace(theFormula.charAt(i-1))) { 
-                        //System.out.println("INFO in format(): Deleting at end of : |" + formatted.toString() + "|");
-                        formatted = formatted.deleteCharAt(formatted.length()-1);
-                    }
-                    formatted.append(eolChars);
-                    for (int j = 0; j < indentLevel; j++) 
-                        formatted.append(indentChars);                    
-                }
-                if (theFormula.charAt(i) == '(' && indentLevel == 0 && i == 0) 
-                    formatted.append(theFormula.charAt(i));
-                if (Character.isJavaIdentifierStart(theFormula.charAt(i)) && !inToken && !inVariable) {
-                    token = new StringBuilder(theFormula.charAt(i));
-                    inToken = true;
-                }
-                if ((Character.isJavaIdentifierPart(theFormula.charAt(i)) || theFormula.charAt(i) == '-') && inToken)
-                    token = token.append(theFormula.charAt(i));
-                if (theFormula.charAt(i) == '(') {
-                    if (inQuantifier) {
-                        inQuantifier = false;
-                        inVarlist = true;
-                        token = new StringBuilder();
-                    }
-                    else
-                        indentLevel++;
-                }
-                if (theFormula.charAt(i) == '"') 
-                    inComment = true;    // The next character will be handled in the "else" clause of this primary "if"
-                if (theFormula.charAt(i) == ')') {
-                    if (!inVarlist)
-                        indentLevel--;
-                    else
-                        inVarlist = false;
-                }
-                if (token.toString().compareTo("exists") == 0 || token.toString().compareTo("forall") == 0)
-                    inQuantifier = true;
-                if (!Character.isJavaIdentifierPart(theFormula.charAt(i)) && inVariable) 
-                    inVariable = false;
-                if (theFormula.charAt(i) == '?' || theFormula.charAt(i) == '@')
-                    inVariable = true;
-                if (!(Character.isJavaIdentifierPart(theFormula.charAt(i)) || theFormula.charAt(i) == '-') && inToken) {
-                    inToken = false;
-                    if (hyperlink != "")
-                        formatted.append("<a href=\"" + hyperlink + "&term=" + token + "\">" + token + "</a>");
-                    else
-                        formatted.append(token);
-                    token = new StringBuilder();
-                }
-                if (!inToken && i>0 && !(Character.isWhitespace(theFormula.charAt(i)) && theFormula.charAt(i-1) == '(')) {
-                    if (Character.isWhitespace(theFormula.charAt(i))) { 
-                        if (!Character.isWhitespace(theFormula.charAt(i-1)))
-                            formatted.append(" ");
-                    }
-                    else
-                        formatted.append(theFormula.charAt(i));
-                }
+        String result = this.theFormula;
+        try {
+            if (isNonEmptyString(this.theFormula)) {
+                this.theFormula = this.theFormula.trim();
             }
-            else {     // In a comment
-                formatted.append(theFormula.charAt(i));
-                if (i > 70 && theFormula.charAt(i) == '/')      // add spaces to long URL strings 
-                    formatted.append(" ");                
-                if (theFormula.charAt(i) == '"') 
-                    inComment = false;
+
+            String legalTermChars = "-:";
+            String varStartChars = "?@";
+            String quantifiers = "forall|exists";
+            StringBuilder token = new StringBuilder();
+            StringBuilder formatted = new StringBuilder();
+            int indentLevel = 0;
+            boolean inQuantifier = false;
+            boolean inToken = false;
+            boolean inVariable = false;
+            boolean inVarlist = false;
+            boolean inComment = false;
+
+            int flen = this.theFormula.length();
+            char pch = '0';  // char at (i-1)
+            char ch = '0';   // char at i
+            for (int i = 0; i < flen; i++) {
+                // System.out.println("INFO in format(): " + formatted.toString());
+                ch = this.theFormula.charAt(i);
+                if (inComment) {     // In a comment
+                    formatted.append(ch);
+                    if ((i > 70) && (ch == '/')) // add spaces to long URL strings
+                        formatted.append(" ");                
+                    if (ch == '"') 
+                        inComment = false;
+                }
+                else {
+                    if ((ch == '(') 
+                        && !inQuantifier 
+                        && ((indentLevel != 0) || (i > 1))) {
+                        if ((i > 0) && Character.isWhitespace(pch)) { 
+                            formatted = formatted.deleteCharAt(formatted.length()-1);
+                        }
+                        formatted.append(eolChars);
+                        for (int j = 0; j < indentLevel; j++) 
+                            formatted.append(indentChars);                    
+                    }
+                    if ((i == 0) && (indentLevel == 0) && (ch == '('))
+                        formatted.append(ch);
+                    if (!inToken && !inVariable && Character.isJavaIdentifierStart(ch)) {
+                        token.setLength(0);
+                        // token.append(ch);
+                        // token = new StringBuilder(ch);
+                        inToken = true;
+                    }
+                    if (inToken && (Character.isJavaIdentifierPart(ch) 
+                                    || (legalTermChars.indexOf(ch) > -1)))
+                        token.append(ch);
+                    if (ch == '(') {
+                        if (inQuantifier) {
+                            inQuantifier = false;
+                            inVarlist = true;
+                            token.setLength(0);
+                            // token = new StringBuilder();
+                        }
+                        else
+                            indentLevel++;
+                    }
+                    if (ch == '"') 
+                        inComment = true;
+                    if (ch == ')') {
+                        if (!inVarlist)
+                            indentLevel--;
+                        else
+                            inVarlist = false;
+                    }
+                    if ((token.indexOf("forall") > -1) || (token.indexOf("exists") > -1))
+                        inQuantifier = true;
+                    if (inVariable 
+                        && !Character.isJavaIdentifierPart(ch) 
+                        && (legalTermChars.indexOf(ch) == -1))
+                        inVariable = false;
+                    if (varStartChars.indexOf(ch) > -1)
+                        inVariable = true;
+                    if (inToken 
+                        && !Character.isJavaIdentifierPart(ch) 
+                        && (legalTermChars.indexOf(ch) == -1)) {
+                        inToken = false;
+                        if (StringUtil.isNonEmptyString(hyperlink)) {
+                            formatted.append("<a href=\"");
+                            formatted.append(hyperlink);
+                            formatted.append("&term="); 
+                            formatted.append(token);
+                            formatted.append("\">");
+                            formatted.append(token);
+                            formatted.append("</a>");
+                        }
+                        else
+                            formatted.append(token);
+                        token.setLength(0);
+                        // token = new StringBuilder();
+                    }
+                    if ((i > 0) && !inToken && !(Character.isWhitespace(ch) && (pch == '('))) {
+                        if (Character.isWhitespace(ch)) { 
+                            if (!Character.isWhitespace(pch))
+                                formatted.append(" ");
+                        }
+                        else
+                            formatted.append(ch);
+                    }
+                }
+                pch = ch;
             }
+            if (inToken) {    // A term which is outside of parenthesis, typically, a binding.
+                if (StringUtil.isNonEmptyString(hyperlink)) {
+                    formatted.append("<a href=\"");
+                    formatted.append(hyperlink);
+                    formatted.append("&term=");
+                    formatted.append(token);
+                    formatted.append("\">");
+                    formatted.append(token);
+                    formatted.append("</a>");
+                }
+                else
+                    formatted.append(token);
+            }
+            result = formatted.toString();
         }
-        if (inToken) {    // A term which is outside of parenthesis, typically, a binding.
-            if (hyperlink != "")
-                formatted.append("<a href=\"" + hyperlink + "&term=" + token + "\">" + token + "</a>");
-            else
-                formatted.append(token);
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return formatted.toString();
+        return result;
     }
 
     /** ***************************************************************
@@ -4007,8 +4089,6 @@ public class Formula implements Comparable {
     public static final String termSymbolPrefix   = "s__";
     public static final String termVariablePrefix = "V__";
   
-    private static List renameExceptions = Arrays.asList("en");
-
     /** ***************************************************************
      * Encapsulates translateWord_1, which translates the logical
      * operators and inequalities in SUO-KIF to their TPTP
@@ -4017,7 +4097,7 @@ public class Formula implements Comparable {
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
      */
-    private static String translateWord(StreamTokenizer_s st,boolean hasArguments) {
+    private static String translateWord(StreamTokenizer_s st, boolean hasArguments) {
         String result = null;
         try {
 
@@ -4070,7 +4150,7 @@ public class Formula implements Comparable {
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
      */
-    private static String translateWord_1(StreamTokenizer_s st,boolean hasArguments) {
+    private static String translateWord_1(StreamTokenizer_s st, boolean hasArguments) {
 
         int translateIndex;
 
@@ -4109,7 +4189,8 @@ public class Formula implements Comparable {
         String variablePrefix = Formula.termVariablePrefix;
         try {
             mgr = KBmanager.getMgr();
-            holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
+            holdsPrefixInUse = ((mgr != null) 
+                                && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
             if (holdsPrefixInUse && !kifRelations.contains(st.sval)) {
                 mentionSuffix = ""; 
             }
@@ -4124,7 +4205,13 @@ public class Formula implements Comparable {
                    st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
         }
         //----Fix variables to have leading V_
-        if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
+        char ch0 = ((st.sval.length() > 0)
+                    ? st.sval.charAt(0)
+                    : 'x');
+        char ch1 = ((st.sval.length() > 1)
+                    ? st.sval.charAt(1)
+                    : 'x');
+        if (ch0 == '?' || ch0 == '@') {
             return(termVariablePrefix + st.sval.substring(1).replace('-','_'));
         }
         //----Translate special predicates
@@ -4158,9 +4245,8 @@ public class Formula implements Comparable {
         }
         //----Do nothing to numbers
         if (st.ttype == StreamTokenizer.TT_NUMBER ||
-            (st.sval != null && (Character.isDigit(st.sval.charAt(0)) ||
-                                 (st.sval.charAt(0) == '-' &&
-                                  Character.isDigit(st.sval.charAt(1)))))) {
+            (st.sval != null && (Character.isDigit(ch0) ||
+                                 (ch0 == '-' && Character.isDigit(ch1))))) {
             return(st.sval);
             //SANITIZE return("n" + st.sval.replace('-','n').replaceAll("[.]","dot"));
         }
@@ -4172,11 +4258,24 @@ public class Formula implements Comparable {
         //----Add a "mention" suffix to relation names that occur as arguments
         //----to other relations.
         if (!hasArguments) {
-            if ((Character.isLowerCase(st.sval.charAt(0)) && !st.sval.endsWith(mentionSuffix))
-                || st.sval.endsWith("Fn")) {
-                if (!renameExceptions.contains(term)) {
-                    term += mentionSuffix;
-                }
+            if (
+                // The purely syntactic criteria for testing if a term
+                // denotes a Relation are reliable only for "pure"
+                // SUO-KIF.  They break down if the terms to be
+                // translated contain namespace prefixes and other
+                // non-SUO-KIF lexical conventions.
+                (!term.endsWith(mentionSuffix)
+
+                 && ((!term.contains(StringUtil.getKifNamespaceDelimiter())
+                      && Character.isLowerCase(ch0))
+
+                     || term.endsWith("Fn")
+        
+                     // The semantic test below works only if a KB is
+                     // loaded.
+                     || KB.isInstanceOfInAnyKB(term, "Relation")))) {
+
+                term += mentionSuffix;
             }
         }
         //return("s_" + term.replace('-','_'));
@@ -4192,7 +4291,7 @@ public class Formula implements Comparable {
     private static int operatorArity(StreamTokenizer_s st) {
 
         int translateIndex;
-        String kifOps[] = {"forall", "exists", "not", "and", "or", "=>", "<=>"};
+        String kifOps[] = {UQUANT, EQUANT, NOT, AND, OR, IF, IFF};
 
         translateIndex = 0; 
         while (translateIndex < kifOps.length && 
@@ -4225,10 +4324,10 @@ public class Formula implements Comparable {
 
         String tptpVariable;
 
-	if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
+        if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
             tptpVariable = translateWord(st,false);
             if (variables.indexOf(tptpVariable) == -1) {
-		variables.add(tptpVariable);
+                variables.add(tptpVariable);
             }
         }
     }
@@ -4378,7 +4477,8 @@ public class Formula implements Comparable {
                         incrementTOS(countStack);
                     }
                     //----Collect variables that are used and quantified
-                    if (isNonEmptyString(st.sval) && (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@')) {
+                    if (isNonEmptyString(st.sval) 
+                        && (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@')) {
                         if (inQuantifierVars) {
                             addVariable(st,quantifiedVariables);
                         } else {
@@ -4724,9 +4824,11 @@ public class Formula implements Comparable {
                                         // substituting terms from each ground lit
                                         // for vars in the template.
                                         Iterator it3 = templates.iterator();
+                                        Formula templateF = new Formula();
                                         while (it3.hasNext()) {
                                             template = (String) it3.next();
-                                            quantVars = collectQuantifiedVariables(template);
+                                            templateF.read(template);
+                                            quantVars = templateF.collectQuantifiedVariables();
                                             for (i = 0 ; i < varTuple.size() ; i++) {
                                                 var = (String) varTuple.get(i);
                                                 if (isVariable(var)) {
@@ -5296,10 +5398,10 @@ public class Formula implements Comparable {
      */
     private ArrayList gatherPredVarQueryLits(KB kb, List varWithTypes) {
         /*
-        System.out.println("ENTER Formula.gatherPredVarQueryLits(" 
-                           + this + ", " 
-                           + kb.name + ", " 
-                           + varWithTypes + ")");
+          System.out.println("ENTER Formula.gatherPredVarQueryLits(" 
+          + this + ", " 
+          + kb.name + ", " 
+          + varWithTypes + ")");
         */
         ArrayList ans = new ArrayList();
         try {
@@ -5452,11 +5554,11 @@ public class Formula implements Comparable {
                 ans.add(0, var);
             }
             /*
-            System.out.println("EXIT Formula.gatherPredVarQueryLits(" 
-                               + this + ", " 
-                               + kb.name + ", " 
-                               + varWithTypes + ")");
-            System.out.println("  ==> " + ans);
+              System.out.println("EXIT Formula.gatherPredVarQueryLits(" 
+              + this + ", " 
+              + kb.name + ", " 
+              + varWithTypes + ")");
+              System.out.println("  ==> " + ans);
             */
         }
         catch (Exception ex) {
