@@ -20,7 +20,7 @@
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" classpath="lib/antlr-2.7.5.jar:lib/servlet.jar:.">
+    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpath="lib/antlr-2.7.5.jar:lib/servlet.jar:lib/commons-codec-1.4.jar">
         <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
