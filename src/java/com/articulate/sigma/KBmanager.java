@@ -72,6 +72,7 @@ public class KBmanager {
         return error;
     }
 
+    /* Future:
     private SigmaServer sigmaServer = null;
 
     public void setSigmaServer(SigmaServer ss) {
@@ -82,6 +83,7 @@ public class KBmanager {
     public SigmaServer getSigmaServer() {
         return this.sigmaServer;
     }
+    */
 
     /** ***************************************************************
      * Set default attribute values if not in the configuration file.

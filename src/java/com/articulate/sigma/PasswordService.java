@@ -48,8 +48,9 @@ public final class PasswordService {
             synchronized (users) {
                 if (INSTANCE == null) {
                     INSTANCE = new PasswordService();
-                    SigmaServer ss = KBmanager.getMgr().getSigmaServer();
-                    INSTANCE.setUsersFileDirectory(ss.getWebDirectory());
+                    // Future:
+                    // SigmaServer ss = KBmanager.getMgr().getSigmaServer();
+                    // INSTANCE.setUsersFileDirectory(ss.getWebDirectory());
                 }
                 if (INSTANCE.users.isEmpty()) {
                     INSTANCE.readUserFile();
