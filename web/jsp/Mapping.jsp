@@ -81,6 +81,38 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             }
         }
     }
+
+    // Set the time estimate value.
+    // This is confusing code - I'm using JSP code to write the JavaScript
+    // array definition that holds KB term counts.
+    function SetEstimate(theForm){
+
+        <%
+            Iterator iter = KBmanager.getMgr().getKBnames().iterator();
+            out.println("var termSize = new Array();");
+            while (iter.hasNext()) {
+                String name = (String) iter.next();
+                KB kb = KBmanager.getMgr().getKB(name);
+                int count = kb.terms.size();
+                out.println("termSize[\"" + name + "\"] = " + count + ";");
+            }
+        %>
+
+        if (theForm.elements["kbname1"].value != "Select%20a%20KB" && 
+            theForm.elements["kbname2"].value != "Select%20a%20KB") {
+            total = termSize[theForm.elements["kbname1"].value] * termSize[theForm.elements["kbname2"].value] / 10000;
+            if (theForm.elements["matchMethod"].value == "JaroWinkler") {
+                total = total / 10;
+            }
+            if (theForm.elements["matchMethod"].value == "Levenshtein") {
+                total = total / 5;
+            }
+            if (theForm.elements["matchMethod"].value == "Substring") {
+                total = total / 100;
+            }
+            theForm.elements["timeEst"].value = total;
+        }
+    }
 </script>
 
 <BODY BGCOLOR=#FFFFFF>
@@ -103,7 +135,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         port = "8080";
     String matchMethod = request.getParameter("matchMethod");
     if (matchMethod == null) 
-        matchMethod = "JaroWinkler";
+        matchMethod = "Substring";
+    String timeEst = request.getParameter("timeEst");
+    if (timeEst == null) 
+        timeEst = "";
     String thresholdSt = request.getParameter("threshold");
     int threshold = 10;
     if (thresholdSt != null) 
@@ -161,13 +196,15 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     kbnames.add("Select a KB");
     out.println("<table><tr><td>KB #1</td><td>KB #2</td></tr>");
     out.print("<tr><td>");
-    out.println(HTMLformatter.createMenu("kbname1",kbname1,kbnames));
+    out.println(HTMLformatter.createMenu("kbname1",kbname1,kbnames,"onChange=SetEstimate(document.kbmapper)"));
     out.print("</td><td>");
-    out.println(HTMLformatter.createMenu("kbname2",kbname2,kbnames));
+    out.println(HTMLformatter.createMenu("kbname2",kbname2,kbnames,"onChange=SetEstimate(document.kbmapper)"));
     out.println("</td></tr></table>");
 %>
   <P>Match Threshold (lower is more strict): 
      <INPUT type="text" size="5" name="threshold" value="<%=threshold%>">
+     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+     Estimated completion time: <input type="text" size="5" name="timeEst" value=<%=timeEst%>> (seconds)
   <p>String match method: 
      <input type="radio" name="matchMethod" value="Substring" <%=matchMethod.equals("Substring") ? "checked" : ""%>>Substring 
      <input type="radio" name="matchMethod" value="JaroWinkler" <%=matchMethod.equals("JaroWinkler") ? "checked" : ""%>>JaroWinkler
@@ -193,15 +230,15 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         out.println("<td><input type=\"checkbox\" name=\"toggleAll\"" +
                     " title=\"ToggleBestSub\" onclick=\"ToggleBestSub(document.kbmapper, this);\" />" +
                     "toggle best</td><td></td></tr>");
-        boolean even = true;
+        boolean even = false;
         Iterator it = Mapping.mappings.keySet().iterator();
         while (it.hasNext()) {
             String term1 = (String) it.next();
+            even = !even;
             if (even) 
                 out.println("<tr bgcolor=#DDDDDD>");
             else
                 out.println("<tr>");
-            even = !even;
             KB kb1 = KBmanager.getMgr().getKB(kbname1);
             String name1 = Mapping.getTermFormat(kb1,term1);
             if (name1 != null)                
@@ -224,8 +261,13 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                 if (counter == 1)
                                          // Since we're iterating through a TreeSet we know
                     topScoreFlag = "T_"; // the first element has the top score.                   
-                if (counter > 1) 
-                    out.println("<tr><td></td>");
+                if (counter > 1) {
+                    if (even) 
+                        out.println("<tr bgcolor=#DDDDDD>");
+                    else
+                        out.println("<tr>");
+                    out.println("<td></td>");
+                }
                 out.print("<td><input type=\"checkbox\" name=\"checkbox_" +
                           topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" id=\"checkbox_"+
                           topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" ");
