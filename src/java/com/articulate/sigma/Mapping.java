@@ -452,7 +452,7 @@ public class Mapping {
      */
     public static int getJaroWinklerDistance(String s1, String s2) {
 
-        int SCALING_FACTOR = 10;
+        int SCALING_FACTOR = 100;
         int winklerMaxPrefixLen = 4;
         double winklerPrefixWeight = 0.1;
 
