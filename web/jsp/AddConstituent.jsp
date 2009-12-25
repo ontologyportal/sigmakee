@@ -22,13 +22,14 @@ August 9, Acapulco, Mexico.
       StringBuilder result = new StringBuilder();
       String kbDir = mgr.getPref("kbDir");
       File kbDirFile = new File(kbDir);
-      //System.out.println("INFO in AddConstituent.jsp: KB dir: " + kbDir);
+      System.out.println("INFO in AddConstituent.jsp: KB dir: " + kbDir);
       MultipartParser mpp = null;
       String kbName = "";
       int postSize = Integer.MAX_VALUE;
       Part requestPart = null;
       String fileName = "";
       String baseName = "";
+      String extension = "";
       String overwrite = "";
       File existingFile = null;
       File outfile = null;
@@ -36,12 +37,9 @@ August 9, Acapulco, Mexico.
 
       try {  
           boolean isError = false;
-
-          System.out.println("request == " + request);
-
+          System.out.println("INFO in AddConstituent.jsp: request == " + request);
           mpp = new MultipartParser(request, postSize, true, true);
-
-          System.out.println("mpp == " + mpp);
+          System.out.println("INFO in AddConstituent.jsp: mpp == " + mpp);
 
           while ((requestPart = mpp.readNextPart()) != null) {
               String paramName = requestPart.getName();
@@ -61,7 +59,12 @@ August 9, Acapulco, Mexico.
                   baseName = ((lidx != -1)
                               ? fileName.substring(0, lidx)
                               : fileName);
-                  existingFile = new File(kbDirFile, (baseName + ".kif"));
+                  extension = ((lidx != -1)
+                              ? fileName.substring(lidx,fileName.length())
+                              : ".kif");
+                  existingFile = new File(kbDirFile, (baseName + extension));
+
+                  System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
                   outfile = StringUtil.renameFileIfExists(existingFile);
                   FileOutputStream fos = new FileOutputStream(outfile);
                   BufferedOutputStream bos = new BufferedOutputStream(fos);
