@@ -7435,6 +7435,518 @@ public class Formula implements Comparable {
     }
 
 
+
+
+    /** ***************************************************************
+    /** ***************************************************************
+    *        Start of new code by Chris: THF transformation
+    /** ***************************************************************
+    /** ***************************************************************
+
+    /** ***************************************************************
+     * A variable for enabling/diabling debugging mode; when set then 
+     * there will be useful information printed
+     */
+    private static Boolean THFdebug = false;
+
+
+    /** ***************************************************************
+     * A variable that defines the THF type delimiter
+     */
+    private static String typeDelimiter = " > ";
+
+    /** ***************************************************************
+     * A debug print function (uses variable THFdebug)
+     */
+    private String THFdebugOut (String str) {
+	if (THFdebug) {
+	    System.out.println(str);
+	    return str;
+	}
+	return "";
+    }
+
+    /** ***************************************************************
+     * A Map from global variables to Types (used by TPTP THF translation)
+     */
+    private HashMap gvars = new HashMap();
+
+    /** ***************************************************************
+     * A Map from constant symbols to Types (used by TPTP THF translation)
+     */
+    private HashMap consts = new HashMap();
+
+    /** ***************************************************************
+     * A Map from terms to Types (used by TPTP THF translation)
+     */
+    private HashMap terms = new HashMap();
+
+    /** ***************************************************************
+     * Declaration of an special THF type used in the TPTP THF translation
+     */
+    private String unknown = "ukn";
+
+
+    /** ***************************************************************
+     * A recursive function that turns a SUMO axiom into an axiom in 
+     * TPTP THF representation
+     *
+     * @param f A formula to convert into THF format
+     *
+     */
+    private String convertFormula(Formula f) {
+
+        StringBuilder result = new StringBuilder();
+	
+	HashMap lvars = new HashMap();
+
+	String res = convertFormulaHelp(f,"$o",lvars);
+
+	Set constants = consts.keySet();
+	
+	result.append("\n%%% The extracted Signature %%%");
+	result.append("\n thf(unknownDummyType,type,(" + unknown + ": $tType)).");
+
+	for (Iterator it = constants.iterator(); it.hasNext();) {
+	    String con = (String) it.next();
+	    String ty = (String) consts.get(con);
+	    result.append("\n thf(" + con + ",type,(" + con + ": " + ty + ")).");
+	}
+
+	Set localvars = lvars.keySet();
+
+	for (Iterator it = localvars.iterator(); it.hasNext();) {
+	    String var = (String) it.next();
+	    String ty = (String) lvars.get(var);
+	    /* result.append("\n % thf(" + var + ",type local var,(" + var + ": " + ty + "))."); */
+	}
+
+	Set globalvars = gvars.keySet();
+
+	for (Iterator it = globalvars.iterator(); it.hasNext();) {
+	    String var = (String) it.next();
+	    String ty = (String) gvars.get(var);
+	    /* result.append("\n % thf(" + var + ",type global var,(" + var + ": " + ty + "))."); */
+	}
+
+	result.append("\n\n%%% The translated formulas %%%");
+	
+	result.append("\n thf(ax,axiom,");
+	if (!globalvars.isEmpty()) {
+	    result.append("(![");
+	    for (Iterator it = globalvars.iterator(); it.hasNext();) {
+		String var = (String) it.next();
+		if (it.hasNext()) {
+		    result.append(var + ":" + gvars.get(var) + ",");
+		}
+		else {
+		    result.append(var + ":" + gvars.get(var));
+		}
+	    }
+	    result.append("]: " + res + ")).");
+	}
+	else {
+	    result.append(res + ").");
+	}
+	return result.toString();
+    }
+
+
+
+   /** ***************************************************************
+     * A recursive function that turns a SUMO formula into a THF string.
+     *
+     * @param f A formula to convert into THF format
+     *
+     * @param lvars A Map of local variables to THF types 
+     *
+     */
+    private String convertFormulaHelp(Formula f, String type, HashMap lvars) {
+
+        THFdebugOut("\n convertFormulaHelp(" + f.theFormula + ", " + type + ")");
+
+	StringBuilder result = new StringBuilder();
+
+	if (!f.listP()) {
+	    String sym = f.theFormula;
+	    /* sym might be logical connective TRUE or FALSE */
+	    if (sym.equals(LOG_TRUE)) { 
+		result.append("$true"); 
+		terms.put("$true","$o");
+	    }
+	    else if (sym.equals(LOG_FALSE)) { 
+		result.append("$false"); 
+		terms.put("$false","$o");
+	    }
+	    /* sym is a variable */
+	    else if ((sym.startsWith("?")) || (sym.startsWith("@"))) { 
+		String symcon = sym.substring(1);
+		/* sym is a local variable with undefined type */
+		if (lvars.containsKey(symcon) && unknown.equals(lvars.get(symcon))) {
+		    THFdebugOut("\n Debug: " + symcon + " is  known local variable with type \"unknown\" ");
+		    lvars.put(symcon,type);
+		    terms.put(symcon,type);
+		}
+		/* sym is a local variable with defined type that is different to the agrument type */
+		else if (lvars.containsKey(symcon) && !type.equals(lvars.get(symcon))) {
+		    THFdebugOut("\n Type inconstistency detected (local variables): " + symcon + ": " + lvars.get(symcon) + " vs. " + type);
+		}
+		/* sym is a local variable with defined type that is consistent with the agrument type */
+		else if (lvars.containsKey(symcon) && type.equals(lvars.get(symcon))) {
+		    THFdebugOut("\n Type inormation exists (local variables): " + symcon + ": " + lvars.get(symcon) + " vs. " + type);
+		}
+		/* sym is a global variable with undefined type */
+		else if (gvars.containsKey(symcon) && unknown.equals(gvars.get(symcon))) {
+		    THFdebugOut("\n Debug: " + symcon + " is known global variable with type \"unknown\" ");
+		    gvars.put(symcon,type);
+		    terms.put(symcon,type);
+		}
+		/* sym is a global variable with defined type that is different to the agrument type */
+		else if (gvars.containsKey(symcon) && !type.equals(gvars.get(symcon))) {
+		    THFdebugOut("\n Type inconstistency detected (global variables): " + symcon + ": " + gvars.get(symcon) + " vs. " + type);
+		}
+		/* sym is a global variable with defined type that is consistent with the agrument type */
+		else if (gvars.containsKey(symcon) && type.equals(gvars.get(symcon))) {
+		    THFdebugOut("\n Type inormation exists (global variables): " + symcon + ": " + gvars.get(symcon) + " vs. " + type);
+		}
+		/* sym must be a global variable whose type needs to be defined as type */
+		else {
+		    THFdebugOut("\n Debug: " + symcon + " is an unseen global variable; type will be now defined as: " + type);
+		    gvars.put(symcon,type); 
+		    terms.put(symcon,type);
+		}
+
+		result.append(symcon);
+	    }
+	    /* sym is a constant symbol */
+	    else {
+		String symcon = sym.toLowerCase();
+
+		/* sym is a constant symbol with undefined type */
+		if (consts.containsKey(symcon) && unknown.equals(consts.get(symcon))) {
+		    consts.put(symcon,type);
+		    terms.put(symcon,type);
+		}
+		/* sym is a constant symbol with defined type that is different to the agrument type */
+		else if (consts.containsKey(symcon) && !type.equals(consts.get(symcon))) {
+		    THFdebugOut("\n Type inconstistency detected (constants): " + symcon + ": " + consts.get(symcon) + " vs. " + type);
+		}
+		/* sym must be a constant symbol whose type needs to be defined as type */
+		else {
+		    consts.put(symcon,type);
+		    terms.put(symcon,type); 
+		}
+		result.append(symcon);
+	    }
+	}	
+	/* the empty list should not be occuring */
+	else if (f.empty()) {
+	    THFdebugOut("\n Something went wrong; empty formula: " + f.theFormula);
+	    result.append(f.theFormula.trim());
+	}
+	/* double bracketed formula */
+	else if (listP(f.car())) {
+	    String arg1 = convertFormulaHelp2(f.car(),"$o",lvars);
+	    result.append(arg1); 
+	    terms.put(f.theFormula,"$o");
+	    }
+	/* the formula has form (h arg1 ... argN) */	    
+	else
+	    {
+	    String h = f.getArgument(0);
+	    /* we first treat the cases where h is a logical connective */
+	    if (h.equals(NOT)) {
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$o",lvars);
+		String res = "(~ " + arg1 + ")";
+		result.append(res);
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(AND)) {
+		StringBuilder resTerm = new StringBuilder();
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$o",lvars);
+		resTerm.append("(" + arg1);
+		int len = f.listLength();
+		for (int i = 2; i < len; i++) {
+		    String argi =  convertFormulaHelp2(f.getArgument(i),"$o",lvars);
+		    resTerm.append(" & " + argi);
+		}
+		resTerm.append(")");
+		result.append(resTerm.toString());
+		terms.put(resTerm.toString(),"$o");
+	    }
+	    else if (h.equals(OR)) {
+		StringBuilder resTerm = new StringBuilder();
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$o",lvars);
+		resTerm.append("(" + arg1);
+		int len = f.listLength();
+		for (int i = 2; i < len; i++) {
+		    String argi =  convertFormulaHelp2(f.getArgument(i),"$o",lvars);
+		    resTerm.append(" | " + argi);
+		}
+		resTerm.append(")");
+		result.append(resTerm.toString());
+		terms.put(resTerm.toString(),"$o");
+	    }
+	    else if (h.equals(IF)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$o",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$o",lvars);
+		String res = "(" + arg1 + " => " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(IFF)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$o",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$o",lvars);
+		String res = "(" + arg1 + " <=> " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(EQUAL)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),unknown,lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),unknown,lvars);
+		String res = "(" + arg1 + " = " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(UQUANT)) { 
+		String varlist = f.getArgument(1);
+		Formula varlistF = new Formula();
+		varlistF.read(varlist);
+		StringBuilder resTerm = new StringBuilder();
+		resTerm.append("(!["); 
+		int len = varlistF.listLength();
+		for (int i = 0; i < len; i++) {
+		    String var = varlistF.getArgument(i);
+		    String varcon = var.substring(1);
+		    lvars.put(varcon,unknown);
+		}
+		String innerform = convertFormulaHelp2(f.getArgument(2),"$o",lvars);
+		for (int i = 0; i < len; i++) {
+		    String var = varlistF.getArgument(i);
+		    String varcon = var.substring(1);
+		    if (i < 1) {
+			resTerm.append(varcon + ": " + lvars.get(varcon));
+		    }
+		    else {
+			resTerm.append("," + varcon + ": " + lvars.get(varcon));
+		    }
+		}
+		resTerm.append("]: " + innerform + ")"); 
+		result.append(resTerm.toString());
+		terms.put(resTerm.toString(),"$o");
+	    }
+	    else if (h.equals(EQUANT)) { 
+		String varlist = f.getArgument(1);
+		Formula varlistF = new Formula();
+		varlistF.read(varlist);
+		StringBuilder resTerm = new StringBuilder();
+		resTerm.append("(?["); 
+		int len = varlistF.listLength();
+		for (int i = 0; i < len; i++) {
+		    String var = varlistF.getArgument(i);
+		    String varcon = var.substring(1);
+		    lvars.put(varcon,unknown);
+		}
+		String innerform = convertFormulaHelp2(f.getArgument(2),"$o",lvars);
+		for (int i = 0; i < len; i++) {
+		    String var = varlistF.getArgument(i);
+		    String varcon = var.substring(1);
+		    if (i < 1) {
+			resTerm.append(varcon + ": " + lvars.get(varcon));
+		    }
+		    else {
+			resTerm.append("," + varcon + ": " + lvars.get(varcon));
+		    }
+		}
+		resTerm.append("]: " + innerform + ")"); 
+		result.append(resTerm.toString());
+		terms.put(resTerm.toString(),"$o");
+	    }
+	    else if (h.equals(KAPPAFN)) {
+		String res = "kappaFn_todo";
+		consts.put(res,type);
+		result.append(res);
+	    }
+	    else if (h.equals(GT)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "gt";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(GTET)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "gtet";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(LT))  { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "lt";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(LTET)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "ltet";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o");
+	    }
+	    else if (h.equals(PLUSFN)) {
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "plus";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o"); 
+	    }  
+	    else if (h.equals(MINUSFN)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "minus";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o"); 
+	    }  
+	    else if (h.equals(TIMESFN)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "mult";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o"); 
+	    }  
+	    else if (h.equals(DIVIDEFN)) { 
+		String arg1 = convertFormulaHelp2(f.getArgument(1),"$i",lvars);
+		String arg2 = convertFormulaHelp2(f.getArgument(2),"$i",lvars);
+		String hcon = "div";
+		consts.put(hcon,"$i > $i > $o");
+		String res = "((" + hcon + " @ " + arg1 + ") @ " + arg2 + ")";
+		result.append(res); 
+		terms.put(res,"$o"); 
+	    }
+	    /* now h must be some undefined constant symbol h and arg1 ... argN */
+	    else {
+		String hconv = h.toLowerCase();
+		StringBuilder resTerm = new StringBuilder();
+		resTerm.append("(" + hconv); 
+		StringBuilder resType = new StringBuilder();
+		/* no type information for consts can be found yet */
+		if (!consts.containsKey(hconv)) {
+		    resType.append("("); 
+		    int len = f.listLength();
+		    for (int i = 1; i < len; i++) { 
+			String argi = convertFormulaHelp2(f.getArgument(i),unknown,lvars);
+			resTerm.append(" @ " + argi);
+			resType.append(terms.get(argi) + typeDelimiter);
+		    }
+		    resTerm.append(")"); 
+		    resType.append(type + ")"); 
+		    consts.put(hconv,resType.toString());
+		    result.append(resTerm.toString());
+		}
+		/* type information for h is already available */
+		else {
+		    resType.append("("); 
+		    String hconvtype = (String) consts.get(hconv);
+		    THFdebugOut("\n Declared Type of " + hconv + " is " + hconvtype);
+		    String hconvtypeWObrackets = "";
+		    if (hconvtype.matches("\\(.*\\)")) { 
+			hconvtypeWObrackets = hconvtype.substring(1,hconvtype.length() - 1);
+		    }
+		    else {
+			hconvtypeWObrackets = hconvtype;
+		    }
+		    String [] hconvargtypes = hconvtypeWObrackets.split(typeDelimiter);
+		    int len = f.listLength();
+		    int len2 = hconvargtypes.length;
+		    for (int i = 0; i < (hconvargtypes.length - 1); i++) { 
+			String argi = convertFormulaHelp2(f.getArgument(i + 1),unknown,lvars);
+			String argtype = (String) terms.get(argi);
+			THFdebugOut("\n   INFO: argi=" + argi + " argtype=" + argtype);
+			String givenargtype = hconvargtypes[i];
+			if (argtype.equals(givenargtype)) {
+			    THFdebugOut("\n   CASE 1");
+			    resTerm.append(" @ " + argi);
+			    resType.append(argtype + typeDelimiter);
+			}
+			else if (givenargtype.equals(unknown)) {
+			    THFdebugOut("\n   CASE 2");
+			    resTerm.append(" @ " + argi);
+			    resType.append(argtype + typeDelimiter);
+			}
+			else if (argtype.equals(unknown)) {
+			    THFdebugOut("\n   CASE 3, givenargtype is " + givenargtype);
+			    String arginew = convertFormulaHelp2(f.getArgument(i + 1),givenargtype,lvars);
+			    resTerm.append(" @ " + arginew);
+			    resType.append(givenargtype + typeDelimiter);
+			}
+			else {
+			    THFdebugOut("\n   CASE 4");
+			    resTerm.append(" @ " + "TodoTypeClash");
+			    resType.append(givenargtype + typeDelimiter);
+			}
+		    }
+		    resTerm.append(")"); 
+		    resType.append(type + ")"); 
+		    consts.put(hconv,resType.toString());
+		    result.append(resTerm.toString());
+		}
+	    }
+	    }
+	return result.toString();
+    }
+
+
+
+
+    /** ***************************************************************
+     * A recursive function that turns a SUMO formula into a THF string.
+     *
+     * @param f A formula to convert into THF format
+     *
+     * @param type The THF type we expect for f
+     *
+     * @param lvars A Map of local variables to THF types 
+     *
+     */
+    private String convertFormulaHelp2(String formula, String type, HashMap lvars) {   
+
+	Formula f = new Formula();
+	f.read(formula);
+	return convertFormulaHelp(f,type,lvars);
+    }
+
+
+
+    /** ***************************************************************
+     * The main method for converting formulas into THF format
+     */
+    public String toTHF() {
+	
+	String g = this.theFormula.trim();
+	String h = convertFormula(this);
+
+        return "\n\n%%%% SUMO Axiom \n" + g + "\n\n --- conversion to THF ---> \n" +  h + "\n\n"; 
+   
+        
+    } 
+
+
     /** ***************************************************************
      * A test method.
      */
@@ -7458,6 +7970,47 @@ public class Formula implements Comparable {
         f2.read(args[1]);
         System.out.println(f1.cons(f2));
          */
+
+        Formula E1 = new Formula();
+	Formula E2 = new Formula();
+	Formula E3 = new Formula();
+	Formula E4 = new Formula();
+	Formula E5 = new Formula();
+	Formula E6 = new Formula();
+	Formula E7 = new Formula();
+	Formula E8 = new Formula();
+
+	E1.read("((=> (and (believes John (and TRUE FALSE)) (attribute ?SYLLABLE2 Stressed) (instance ?WORD Word) (part ?SYLLABLE ?WORD)) (not (exists (?SYLLABLE2 ?BLU ?BLI) (and (believes John ?BLU) (instance ?SYLLABLE2 Syllable) (part ?SYLLABLE2 ?WORD) (attribute ?SYLLABLE2 Stressed) (not (equal ?SYLLABLE2 ?SYLLABLE)))))))"); 
+
+	
+	E2.read("((=> (and (believes John (and TRUE FALSE)) (attribute ?SYLLABLE2 Stressed) (instance ?WORD Word) (part ?SYLLABLE ?WORD)) (not (exists (?SYLLABLE2 ?BlU ?BLI) (and (believes John TRUE) (instance ?SYLLABLE2 Syllable) (part ?SYLLABLE2 ?WORD) (attribute ?SYLLABLE2 Stressed) (not (equal ?SYLLABLE2 ?SYLLABLE)))))))");
+
+        E3.read("(exists (?BLI) (and (believes John ?BLI) FALSE))"); 
+	
+	E4.read("(=>  (instance ?PHRASE Phrase)  (exists (?PART1 ?PART2)    (and      (part ?PART1 ?PHRASE)      (part ?PART2 ?PHRASE)      (instance ?PART1 Word)      (instance ?PART2 Word)      (not (equal ?PART1 ?PART2)))))"); 
+
+	E5.read("(=> (knows ?X (and ?FACT1 ?FACT2 ?FACT3)) (and (believes ?X ?FACT1) (believes ?X (and ?FACT2 ?FACT2))))"); 
+
+	E6.read("(=> (knows ?X ?FACT1) (and (knows ?X ?FACT1) (knows ?X ?FACT2) (knows ?X ?FACT3)))");
+
+	E7.read("(=> (knows ?X (and ?FACT1 ?FACT2 ?FACT3)) (and (knows ?X ?FACT1) (knows ?X ?FACT2) (knows ?X ?FACT3)))");
+
+	E8.read("(=> (and (knows ?X ?FACT1) (knows ?X ?FACT1) (knows ?X ?FACT2)) (knows ?X (and ?FACT1 ?FACT2)))");
+
+
+	THFdebug = false;  /* set this to true for lots of debug output */
+
+	System.out.println("\n\n Example f1:\n " + f1.toTHF());	
+        System.out.println("\n\n Example E1:\n " + E1.toTHF());
+        System.out.println("\n\n Example E2:\n " + E2.toTHF());
+        System.out.println("\n\n Example E3:\n " + E3.toTHF());
+        System.out.println("\n\n Example E4:\n " + E4.toTHF());
+        System.out.println("\n\n Example E5:\n " + E5.toTHF());
+        System.out.println("\n\n Example E6:\n " + E6.toTHF());
+        System.out.println("\n\n Example E7:\n " + E7.toTHF());
+        System.out.println("\n\n Example E8:\n " + E8.toTHF());
+
+
     }
 
 }  // Formula.java
