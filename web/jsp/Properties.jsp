@@ -136,6 +136,18 @@ if ( iePref == null ) { iePref = ""; }
           holdsPrefix = "no";
   }
 
+  String overwrite = request.getParameter("overwrite");
+  if (StringUtil.isNonEmptyString(overwrite)) {
+      changed = true;
+      KBmanager.getMgr().setPref("overwrite",overwrite);
+  }
+  else {
+      overwrite = KBmanager.getMgr().getPref("overwrite");
+      if (StringUtil.emptyString(overwrite)
+          || !overwrite.equalsIgnoreCase("yes"))
+          overwrite = "no";
+  }
+  
   String showcached = request.getParameter("showcached");
   if (showcached != null) {
       changed = true;
@@ -387,6 +399,19 @@ if ( (kbNames != null) && !(kbNames.isEmpty()) ) {
     <label for="lineNumberCommand">
     <INPUT type="text" name="lineNumberCommand" value=<%=lineNumberCommand %> >
     Command line option for text editor to set cursor at a particular line</label><P>
+
+    <label for="overwrite">                                                   
+    <INPUT type="radio" name="overwrite" value="yes" <%  // default is no
+        overwrite = mgr.getPref("overwrite");
+if (StringUtil.isNonEmptyString(overwrite) &&
+            overwrite.equalsIgnoreCase("yes")) 
+            out.print("checked=yes"); 
+        %> > yes
+    <INPUT type="radio" name="overwrite" value="no" <% 
+    if (StringUtil.emptyString(overwrite) ||
+            overwrite.equalsIgnoreCase("no")) 
+            out.print("checked=no"); %> > no
+      : Overwrite files of the same name when creating, copying, and loading KB constituents</label><P>
 
     <label for="showcached">                                                   
     <INPUT type="radio" name="showcached" value="yes" <%                       // default to showing cached statements

@@ -31,8 +31,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   String term = "";
   String relation = "";
   String ontology = "";
-  String header = "";
-  String footer = "";
+// String header = "";
+// String footer = "";
   String filename = "";
   String action = "";
   String status = "";
@@ -64,12 +64,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       ontology = request.getParameter("ontology");
       if (StringUtil.emptyString(ontology) || ontology.equalsIgnoreCase("null"))
           ontology = "";
-      header = request.getParameter("header");
-      if (StringUtil.emptyString(header) || header.equalsIgnoreCase("null"))
-          header = "";
-      footer = request.getParameter("footer");
-      if (StringUtil.emptyString(footer) || footer.equalsIgnoreCase("null"))
-          footer = "";
+
+      // NS - 2009-12-21
+      // Temporarily removed the header and footer type-in regions.
+
       term = request.getParameter("term");
       relation = request.getParameter("relation");
       filename = request.getParameter("filename");
@@ -83,13 +81,20 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                   || action.equalsIgnoreCase("generateSingle")) {
                   if (ontology == null) ontology = "";
                   String formatType = "dd";
+                  if (ontology.matches(".*(?i)ddex.*"))
+                      formatType = "dd1";
+                  else if (ontology.matches(".*(?i)ccli.*"))
+                      formatType = "dd2";
                   if (action.equalsIgnoreCase("generateSingle"))
                       formatType = "tab";
-                  List<String> args = Arrays.asList("rcdocgen", kb.name, ontology, formatType);
                   boolean isSimple = (action.equalsIgnoreCase("generateSingle")
-                                      || ontology.matches(".*(?i)ccli.*") 
-                                      || ontology.matches(".*(?i)ddex.*"));
-                  status = DocGen.generateHtmlFiles(args, isSimple, header, footer);
+                                      || DocGen.getControlTokens().contains(formatType));
+                  status = DocGen.generateDocumentsFromKB(kbName,
+                                                          ontology, 
+                                                          DocGen.getControlBitValue(formatType),
+                                                          isSimple,
+                                                          null,   // was header
+                                                          null);  // was footer
               }
               else if (action.equals("dotGraph")) {
                   Graph g = new Graph();
@@ -159,8 +164,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <table>
         <tr><td align="right">KB:&nbsp;</td><td><input type="text" name="kb" size="25" value="<%=kb.name%>"></td></tr>
         <tr><td align="right">Ontology:&nbsp;</td><td><input type="text" name="ontology" size="25" value="<%=ontology%>"></td></tr>
-        <tr><td align="right">Document header:&nbsp;</td><td><input type="text" name="header" size="70" value="<%=header%>"></td></tr>
-        <tr><td align="right">Document footer:&nbsp;</td><td><input type="text" name="footer" size="70" value="<%=footer%>"></td></tr>
+
+                     <!-- NS - 2009-12-21 - Temporarily removed the header and footer type-in areas -->
+
         <tr><td align="right"><input type="submit" name="action" value="generateDocs">&nbsp;&nbsp;</td><td>Generate all HTML pages for the KB</td></tr>
         <tr><td align="right"><input type="submit" name="action" value="generateSingle">&nbsp;&nbsp;</td><td>Generate a single HTML page for the KB</td></tr>
     </table><p>
@@ -207,13 +213,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <tr>
       <td>&nbsp;</td>
       <td>
-        <input type="checkbox" name="overwrite" value="yes">&nbsp;Replace existing files
-      </td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>
-        <input type="checkbox" name="load" value="yes">&nbsp;Load generated KIF file
+        <input type="checkbox" name="load" value="yes">&nbsp;Load the generated KIF file
       </td>
     </tr>
     <tr>

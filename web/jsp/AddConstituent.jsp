@@ -29,8 +29,10 @@ August 9, Acapulco, Mexico.
       Part requestPart = null;
       String fileName = "";
       String baseName = "";
+      String overwrite = mgr.getPref("overwrite");
+      boolean overwriteP = (StringUtil.isNonEmptyString(overwrite)
+                            && overwrite.equalsIgnoreCase("yes"));
       String extension = "";
-      String overwrite = "";
       File existingFile = null;
       File outfile = null;
       long writeCount = -1L;
@@ -49,8 +51,6 @@ August 9, Acapulco, Mexico.
                   ParamPart pp = (ParamPart) requestPart;
                   if (paramName.equalsIgnoreCase("kb"))
                       kbName = pp.getStringValue();
-                  else if (paramName.equalsIgnoreCase("overwrite"))
-                      overwrite = pp.getStringValue();
               }
               else if (requestPart.isFile()) {
                   FilePart fp = (FilePart) requestPart;
@@ -82,8 +82,7 @@ August 9, Acapulco, Mexico.
           }
 
           String errStr = "";
-          if (StringUtil.isNonEmptyString(overwrite)
-              && overwrite.equalsIgnoreCase("yes")
+          if (overwriteP
               && !existingFile.getCanonicalPath().equalsIgnoreCase(outfile.getCanonicalPath())) {
               boolean overwriteSucceeded = false;
               try {

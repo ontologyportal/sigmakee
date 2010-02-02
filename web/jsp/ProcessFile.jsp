@@ -33,7 +33,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       String fileName = "";
       String suffix = "";
       String baseName = "";
-      String overwrite = "";
       boolean overwriteP = false;
       String load = "";
       boolean loadP = false;
@@ -65,9 +64,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                   else if (paramName.equalsIgnoreCase("ontology"))
                       // && StringUtil.emptyString(ontology))
                       ontology = ppval;
-                  else if (paramName.equalsIgnoreCase("overwrite"))
-                      // && StringUtil.emptyString(overwrite))
-                      overwrite = ppval;
                   else if (paramName.equalsIgnoreCase("load"))
                       // && StringUtil.emptyString(load))
                       load = ppval;
@@ -104,7 +100,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                   }
               }
           }
-          overwriteP = (StringUtil.isNonEmptyString(overwrite) 
+          String overwrite = mgr.getPref("overwrite");
+          overwriteP = (StringUtil.isNonEmptyString(overwrite)
                         && overwrite.equalsIgnoreCase("yes"));
           loadP = (StringUtil.isNonEmptyString(load)
                    && load.equalsIgnoreCase("yes"));

@@ -272,7 +272,7 @@ if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) &
         <b>KB Name:</b>&nbsp;
       </td>
       <td>
-        <input type="text" name="kb">
+        <input type="text" name="kb" size="60">
       </td>
     </tr>
     <tr>
@@ -280,13 +280,7 @@ if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) &
         <b>KB Constituent:</b>&nbsp;
       </td>
       <td>
-        <input type="file" name="constituent">
-      </td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>
-        <input type="checkbox" name="overwrite" value="yes">&nbsp;Replace existing file
+        <input type="file" name="constituent" size="60">
       </td>
     </tr>
   </table>
@@ -307,12 +301,12 @@ if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) &
       while (kbNames.hasNext()) {
          kbName3 = (String) kbNames.next();
          KB kb = (KB) KBmanager.getMgr().getKB(kbName3);
-         if (kb.errors.size() > 0) {
+         if (!kb.errors.isEmpty()) {
              out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
              kbErrorsFound = true;
          }
          out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
-         kb.errors = new TreeSet();
+         kb.errors.clear();
      }  
    
      out.println("<p>\n");

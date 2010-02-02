@@ -37,68 +37,98 @@ August 9, Acapulco, Mexico.
     if ((kb == null) || StringUtil.emptyString(kbName))
         response.sendRedirect("KBs.jsp");  // That KB does not exist  
 
-    if (saveAs != null && saveAs.equals("prolog")) {
-        File plFile = new File(kbDirFile, (kb.name + ".pl"));
-        String prologFile = kb.writePrologFile(plFile.getCanonicalPath());
-        String statusStr = ( "\n<br/>Wrote file " + prologFile + "\n<br/>" );
-        if (!StringUtil.isNonEmptyString(prologFile))
-            statusStr = "\n<br/>Could not write a Prolog file\n<br/>";
-        KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
-    }
-
-    if (StringUtil.isNonEmptyString(saveAs) 
-        && (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL"))) {
-        // Force translation of the KB to TPTP, even if the user has not
-        // requested this on the Preferences page.
-    	if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
-    	    System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas");
-    	    kb.tptpParse();
-    	}
-    	boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
-        File tptpf = new File(kbDirFile, (saveFile + ".tptp"));
-        String tptpFile = kb.writeTPTPFile(tptpf.getCanonicalPath(), null, onlyPlainFOL, "");
-    	String statusStr = ("\n<br/>Wrote file " + tptpFile + "\n<br/>");
-    	if (StringUtil.emptyString(tptpFile)) 
-    	    statusStr = "\n<br/>Could not write a TPTP file\n<br/>";
-        KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
-    }
-
-    if (StringUtil.isNonEmptyString(saveAs) && saveAs.equalsIgnoreCase("Turtle")) {
-        System.out.println("INFO in Manifest.jsp: generating Turtle file");
-
-        String fname = saveFile;
-        if (StringUtil.emptyString(fname)) 
-            fname = kb.name;
-        String ttldir = KBmanager.getMgr().getPref("kbDir");
-        File ttlDirFile = new File(ttldir);
-        File ttlFile = new File(ttlDirFile, (fname + ".ttl"));
-        String ttlCanonicalPath = ttlFile.getCanonicalPath();
-        String ttlResult = DocGen.writeTurtleFile(kb, ttlFile);
-        String ttlMsg = "";
-    	if (StringUtil.emptyString(ttlResult) || !ttlFile.canRead()) { 
-    	    ttlMsg = ("\n<br/>Could not write the Turtle file " 
-                      + ttlCanonicalPath
-                      + "\n<br/>");
+    else if (StringUtil.isNonEmptyString(saveAs)) {
+        if (saveAs.equalsIgnoreCase("prolog")) {
+            File plFile = new File(kbDirFile, (kb.name + ".pl"));
+            String pfcp = null;
+            String prologFile = null;
+            try {
+                pfcp = plFile.getCanonicalPath();
+                prologFile = kb.writePrologFile(pfcp);
+            }
+            catch (Exception pfe) {
+                pfe.printStackTrace();
+            }
+            result = ((StringUtil.isNonEmptyString(prologFile) && plFile.canRead())
+                      ? ("Wrote the Prolog file " + prologFile)
+                      : "Could not write a Prolog file");
+            // KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
         }
-        else {
-    	    ttlMsg = ("\n<br/>Wrote the Turtle file " 
-                      + ttlCanonicalPath
-                      + "\n<br/>");
+        else if (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL")) {
+            // Force translation of the KB to TPTP, even if the user has not
+            // requested this on the Preferences page.
+            if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
+                System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas");
+                kb.tptpParse();
+            }
+            boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
+            File tptpf = new File(kbDirFile, (saveFile + ".tptp"));
+            String tptpfcp = null;
+            String tptpFile = null;
+            try {
+                tptpfcp = tptpf.getCanonicalPath();
+                tptpFile = kb.writeTPTPFile(tptpfcp, null, onlyPlainFOL, "");
+            }
+            catch (Exception tptpfe) {
+                tptpfe.printStackTrace();
+            }
+            result = (StringUtil.isNonEmptyString(tptpFile)
+                      ? ("Wrote the TPTP file " + tptpFile)
+                      : "Could not write a TPTP file");
+            // KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
         }
-        KBmanager.getMgr().setError(KBmanager.getMgr().getError() + ttlMsg);
+        else if (saveAs.equalsIgnoreCase("Turtle")) {
+            System.out.println("INFO in Manifest.jsp: generating Turtle file");
+            String fname = saveFile;
+            if (StringUtil.emptyString(fname)) 
+                fname = kb.name;
+            String ttldir = KBmanager.getMgr().getPref("kbDir");
+            File ttlDirFile = new File(ttldir);
+            File ttlFile = new File(ttlDirFile, (fname + ".ttl"));
+            String ttlCanonicalPath = null;
+            String ttlResult = null;
+            try {
+                ttlCanonicalPath = ttlFile.getCanonicalPath();
+                ttlResult = OntXDocGen.writeTurtleFile(kb, ttlFile);
+            }
+            catch (Exception ttlex) {
+                ttlex.printStackTrace();
+            }
+            result = ((StringUtil.isNonEmptyString(ttlResult) && ttlFile.canRead())
+                      ? ("Wrote the Turtle file " + ttlCanonicalPath)
+                      : "Could not write a Turtle file");
+            // KBmanager.getMgr().setError(KBmanager.getMgr().getError() + ttlMsg);
+        }
+        else if (saveAs.equalsIgnoreCase("OWL")) {
+            OWLtranslator owltrans = new OWLtranslator();
+            File owlFile = new File(kbDirFile, (saveFile + ".owl"));
+            String ofcp = null;
+            try {
+                ofcp = owlFile.getCanonicalPath();
+                owltrans.write(kbName, ofcp);
+            }
+            catch (Exception ofe) {
+                ofe.printStackTrace();
+            }
+            result = ((StringUtil.isNonEmptyString(ofcp) && owlFile.canRead())
+                      ? ("Wrote the OWL file " + ofcp)
+                      : "Could not write an OWL file");
+        }
+        else if (saveAs.equalsIgnoreCase("KIF")) {
+            File kifFile = new File(kbDirFile, (kbName + ".kif"));
+            String kfcp = null;
+            try {
+                kfcp = kifFile.getCanonicalPath();
+                kb.writeFile(kfcp);
+            }
+            catch (Exception kfe) {
+                kfe.printStackTrace();
+            }
+            result = ((StringUtil.isNonEmptyString(kfcp) && kifFile.canRead())
+                      ? ("Wrote the KIF file " + kfcp)
+                      : "Could not write a KIF file");
+        }
     }
-
-    if (StringUtil.isNonEmptyString(saveAs) && saveAs.equals("OWL")) {
-        OWLtranslator owt = new OWLtranslator();
-        File owlFile = new File(kbDirFile, saveFile);
-        owt.write(kbName, owlFile.getCanonicalPath());
-    }
-
-    if (saveAs != null && saveAs.equals("KIF")) {
-        File kifFile = new File(kbDirFile, (kbName + ".kif"));
-        kb.writeFile(kifFile.getCanonicalPath());
-    }
-
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
         if (i == -1)
@@ -206,17 +236,20 @@ August 9, Acapulco, Mexico.
         <input type="file" name="constituent">
       </td>
     </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>
-        <input type="checkbox" name="overwrite" value="yes">&nbsp;Replace existing file
-      </td>
-    </tr>
   </table>
         <input type="submit" name="submit" value="Load">
     </form>
 
-    <hr><B>Save KB to other formats</B>
+    <hr>
+    <p><b>Save KB to other formats</b></p>
+
+<% if (StringUtil.isNonEmptyString(result)) {
+       out.println("<p>");
+       out.println(result); 
+       out.println("</p>");
+       result = "";
+   } %>
+
     <FORM name=save ID=save action="Manifest.jsp" method="GET">
         <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
         <B>Filename:</B>&nbsp;<INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
@@ -243,8 +276,6 @@ August 9, Acapulco, Mexico.
   else
       if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))
           out.println("File " + constituent + " loaded successfully.");
-  if (StringUtil.isNonEmptyString(result))
-      out.println(result);
 
 %>
 
