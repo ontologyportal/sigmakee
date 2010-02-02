@@ -21,12 +21,18 @@ August 9, Acapulco, Mexico.
 if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))         
        response.sendRedirect("KBs.jsp");     
 
+System.out.println("ENTER EditStmt.jsp");
   String formID = request.getParameter("formID");
+System.out.println("  formID == " + formID);
   String kbName = request.getParameter("kb");
+System.out.println("  kbName == " + kbName);
   String text = request.getParameter("text");
+System.out.println("  text == " + text);
   KB kb = KBmanager.getMgr().getKB(kbName);
+System.out.println("  kb == " + kb.name);
   Formula form = kb.getFormulaByKey(formID);
-  if (!StringUtil.emptyString(text)) {
+System.out.println("  form == " + form);
+if ((form != null) && StringUtil.isNonEmptyString(text)) {
       form.theFormula = text;
       kb.rehashFormula(form,formID);
       formID = form.createID();
@@ -54,8 +60,8 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
   </tr>
 </table>
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-<SCRIPT LANGUAGE=JavaScript>
-
+<script language="JavaScript">
+<!--
    function update_onclick(){
 
        alert("in javascript");
@@ -68,24 +74,28 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
 
        document.updateForm.sourceChanged.value = "true";
    }
+-->
+</script>
 
-</Script>
+<p>
+  <strong>Work in Progress</strong>
+</p>
 
-<Form name="updateForm" method="POST" >
+<form name="updateForm" method="POST" >
  <Table>
    <TR>
      <TD>
-       <textarea rows="15" wrap="virtual" name="text" cols="100" onChange="textAreaOnChange()"><%= form.theFormula %></textarea> 
+       <textarea rows="15" wrap="virtual" name="text" cols="100" onChange="textAreaOnChange()" disabled="disabled"><%= form.theFormula %></textarea> 
      </TD>
    </TR>     
    <TR>
      <TD align=center>
        <input type="hidden" value="<%= formID %>">
-       <input type = submit name = "action" value="Update">
+       <input type="submit" name="action" value="Update" disabled="disabled">
      </TD>
    </TR>
  </Table>
-</Form>
+</form>
 
 </BODY>
 </HTML>
