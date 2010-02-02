@@ -833,25 +833,46 @@ public class OWLtranslator {
     /** ***************************************************************
      * Read a mapping file from YAGO to SUMO terms and store in SUMOYAGOMap
      */
-    private void readYAGOSUMOMappings() throws IOException {
-
-        File f = new File("yago-sumo-mappings.txt");
-        if (f == null) {
-            System.out.println( "INFO in readYAGOSUMOMappings(): " 
-                                + "The mappings file does not exist" );
-            return;
-        }
-        FileReader r = new FileReader(f);
-        LineNumberReader lr = new LineNumberReader(r);
-        String line = null;
-        while ((line = lr.readLine()) != null) {
-            line = line.trim();
-            if (line != null && line.length() > 0 && line.charAt(0) != '#') {
-                String YAGO = line.substring(0,line.indexOf(" "));
-                String SUMO = line.substring(line.indexOf(" ")+1);
-                SUMOYAGOMap.put(SUMO,YAGO);
+    private void readYAGOSUMOMappings() {
+        FileReader r = null;
+        LineNumberReader lr = null;
+        try {
+            File f = new File("yago-sumo-mappings.txt");
+            if (!f.canRead()) {
+                System.out.println( "INFO in readYAGOSUMOMappings(): " 
+                                    + "The mappings file does not exist" );
+                return;
+            }
+            r = new FileReader(f);
+            lr = new LineNumberReader(r);
+            String line = null;
+            String YAGO = null;
+            String SUMO = null;
+            while ((line = lr.readLine()) != null) {
+                line = line.trim();
+                if (StringUtil.isNonEmptyString(line) && line.charAt(0) != '#') {
+                    YAGO = line.substring(0,line.indexOf(" "));
+                    SUMO = line.substring(line.indexOf(" ")+1);
+                    SUMOYAGOMap.put(SUMO,YAGO);
+                }
             }
         }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (lr != null) lr.close();
+            }
+            catch (Exception lre) {
+            }
+            try {
+                if (r != null) r.close();
+            }
+            catch (Exception re) {
+            }
+        }
+        return;
     }
 
     /** ***************************************************************
@@ -884,25 +905,26 @@ public class OWLtranslator {
             Date d = new Date();
             pw.println("<rdfs:comment xml:lang=\"en\">Produced on date: " + d.toString() + "</rdfs:comment>");
             pw.println("</owl:Ontology>");
-            Iterator it = kb.terms.iterator();
-            while (it.hasNext()) {
-                String term = (String) it.next();
-                if (kb.childOf(term,"BinaryRelation") && kb.isInstance(term)) 
-                    writeRelations(pw,term);                
-                if (Character.isUpperCase(term.charAt(0)) &&
-                    !kb.childOf(term,"Function")) {
-                    ArrayList instances = kb.askWithRestriction(0,"instance",1,term);  // Instance expressions for term.
-                    ArrayList classes = kb.askWithRestriction(0,"subclass",1,term);    // Class expressions for term.
-                    String documentation = null;
-                    Formula form;
-                    if (instances.size() > 0 && !kb.childOf(term,"BinaryRelation"))
-                        writeInstances(pw,term,instances);   
-                    boolean isInstance = false;
-                    if (classes.size() > 0) {
-                        if (instances.size() > 0) 
-                            isInstance = true;
-                        writeClasses(pw,term,classes,isInstance); 
-                        isInstance = false;
+            Set<String> kbterms = kb.getTerms();
+            synchronized (kbterms) {
+                for (String term : kbterms) {
+                    if (kb.childOf(term,"BinaryRelation") && kb.isInstance(term)) 
+                        writeRelations(pw,term);                
+                    if (Character.isUpperCase(term.charAt(0)) &&
+                        !kb.childOf(term,"Function")) {
+                        ArrayList instances = kb.askWithRestriction(0,"instance",1,term);  // Instance expressions for term.
+                        ArrayList classes = kb.askWithRestriction(0,"subclass",1,term);    // Class expressions for term.
+                        String documentation = null;
+                        Formula form;
+                        if (instances.size() > 0 && !kb.childOf(term,"BinaryRelation"))
+                            writeInstances(pw,term,instances);   
+                        boolean isInstance = false;
+                        if (classes.size() > 0) {
+                            if (instances.size() > 0) 
+                                isInstance = true;
+                            writeClasses(pw,term,classes,isInstance); 
+                            isInstance = false;
+                        }
                     }
                 }
             }
@@ -914,12 +936,16 @@ public class OWLtranslator {
             throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
         }
         finally {
-            if (pw != null) {
-                pw.flush();
-                pw.close();
+            try {
+                if (pw != null) {
+                    pw.flush();
+                    pw.close();
+                }
+                if (fw != null) {
+                    fw.close();
+                }
             }
-            if (fw != null) {
-                fw.close();
+            catch (Exception ioe) {
             }
         }
     }
