@@ -9,7 +9,7 @@
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <%
-  System.out.println("ENTER Prelude.jsp");
+      // System.out.println("ENTER Prelude.jsp");
 
   ArrayList userPages = new ArrayList();
   userPages.add("AllPictures.jsp");
@@ -26,33 +26,60 @@
   //System.out.println("INFO in Prelude.jsp: calling page: " + pageString);
   //System.out.println("INFO in Prelude.jsp: userRole: " + KBmanager.getMgr().getPref("userRole"));
 
+String userName = request.getParameter("userName");
+String password = request.getParameter("password");
 KBmanager mgr = KBmanager.getMgr();
-mgr.setPref("userName", "admin");
-mgr.setPref("userRole", "administrator");
+if (StringUtil.isNonEmptyString(userName)) {
+    mgr.setPref("userName",userName);
+    if (StringUtil.isNonEmptyString(password)) {
+        mgr.setPref("userRole",
+                    (userName.equalsIgnoreCase("admin") && password.equalsIgnoreCase("admin"))
+                    ? "administrator"
+                    : "user");
+    }
+}
+userName = mgr.getPref("userName");
+String userRole = mgr.getPref("userRole");
+if (StringUtil.emptyString(userName) || StringUtil.emptyString(userRole)) {
+    response.sendRedirect("login.html");
+    return;
+}
 
-System.out.println("  userName == " + mgr.getPref("userName"));
-System.out.println("  userRole == " + mgr.getPref("userRole"));
-System.out.println("pageString == " + pageString);
-// System.out.println("    kbName == " + kbName);
+// System.out.println("ENTER Prelude.jsp");
+// System.out.println("    userName == " + userName);
+// System.out.println("    userRole == " + userRole);
+// System.out.println("  pageString == " + pageString);
+if (StringUtil.isNonEmptyString(userName)) {
+    String kbName = request.getParameter("kb");
+    KB kb = null;
+    if (StringUtil.isNonEmptyString(kbName))
+        kb = mgr.getKB(kbName);
+    // System.out.println("      kbName == " + kbName);
+    // System.out.println("          kb == " + kb);
+}
 
-  if (KBmanager.getMgr().getPref("userRole") != null && 
-      !KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator") && !userPages.contains(pageString)) { 
+if (!userRole.equalsIgnoreCase("administrator") && !userPages.contains(pageString)) { 
+    mgr.setError("You are not authorized to visit " + pageString);
+    response.sendRedirect("KBs.jsp");
+    return;
+}
+
+/*
       out.println("<meta http-equiv=\"Refresh\" content=\"0;URL=login.html\">");
       out.println("</html>");
-      //System.out.println("resetting (1)");
-System.out.println("EXIT Prelude.jsp: 1");
+      // System.out.println("resetting (1)");
+      // System.out.println("EXIT Prelude.jsp: 1");
       return;
-  }
+
   if (Formula.empty(KBmanager.getMgr().getPref("userName"))
       && Formula.empty(request.getParameter("userName"))
       && Formula.empty(request.getParameter("newuser"))) { 
       out.println("<meta http-equiv=\"Refresh\" content=\"0; URL=login.html\">");
       out.println("</html>");
-      //System.out.println("resetting (2)");
-System.out.println("EXIT Prelude.jsp: 2");
+      // System.out.println("resetting (2)");
+      // System.out.println("EXIT Prelude.jsp: 2");
       return;
   }
-/*
   if (!pageString.startsWith("KBs.jsp") &&
       !pageString.startsWith("Properties.jsp") && 
       !pageString.startsWith("AddConstituent.jsp") && 
@@ -82,11 +109,11 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also www.ontologyportal.org
 */
-  String smpl = request.getParameter("simple");
-  if (Formula.isNonEmptyString(smpl) && smpl.equals("yes")) {
-%>
-      <link rel="stylesheet" type="text/css" href="simple.css" />
-<%
-    System.out.println("EXIT Prelude.jsp: 4");
-  }
+if (StringUtil.isNonEmptyString(userName)) {
+    String simple = request.getParameter("simple");
+    if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) {
+        out.println("");
+        out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\" />");
+    }
+}
 %>
