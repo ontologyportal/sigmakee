@@ -90,7 +90,7 @@ public class KB {
     public CELT celt = null;
 
     /** A synchronized SortedSet of Strings, which are all the terms in the KB. */
-    protected SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
+    private SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
 
     /** Returns a synchronized SortedSet of Strings, which are all the terms in the KB. */
     public SortedSet<String> getTerms() {
@@ -2070,21 +2070,24 @@ public class KB {
 
         ArrayList<Formula> result = new ArrayList<Formula>();
         try {
-            ArrayList partial1 = ask("arg", argnum1, term1);
-            ArrayList partial2 = ask("arg", argnum2, term2);
-            ArrayList partial = partial1;
-            int arg = argnum2;
-            String term = term2;
-            if (partial1.size() > partial2.size()) {
-                partial = partial2;
-                arg = argnum1;
-                term = term1;
-            }
-            Formula f = null;
-            for (int i = 0; i < partial.size(); i++) {
-                f = (Formula) partial.get(i);
-                if (f.getArgument(arg).equals(term)) {
-                    result.add(f);
+            if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)) {
+                ArrayList partial1 = ask("arg", argnum1, term1);
+                ArrayList partial2 = ask("arg", argnum2, term2);
+                ArrayList partial = partial1;
+                int arg = argnum2;
+                String term = term2;
+                if (partial1.size() > partial2.size()) {
+                    partial = partial2;
+                    arg = argnum1;
+                    term = term1;
+                }
+                Formula f = null;
+                int plen = partial.size();
+                for (int i = 0; i < plen; i++) {
+                    f = (Formula) partial.get(i);
+                    if (f.getArgument(arg).equals(term)) {
+                        result.add(f);
+                    }
                 }
             }
         }
@@ -2107,91 +2110,95 @@ public class KB {
                                             int argnum3, String term3) {
 
         ArrayList result = new ArrayList();
-        ArrayList partiala = new ArrayList();           // will get the smallest list
-        ArrayList partialb = new ArrayList();           // next smallest
-        ArrayList partialc = new ArrayList();           // biggest
-        ArrayList partial1 = ask("arg",argnum1,term1);
-        ArrayList partial2 = ask("arg",argnum2,term2);
-        ArrayList partial3 = ask("arg",argnum3,term3);
-        int arga = -1;
-        String terma = "";
-        int argb = -1;
-        String termb = "";
-        int argc = -1;
-        String termc = "";
-        if (partial1 == null || partial2 == null || partial3 == null) 
-            return result;
-        if (partial1.size() > partial2.size() && partial1.size() > partial3.size()) {
-            partialc = partial1;
-            argc = argnum1;
-            termc = term1;
-            if (partial2.size() > partial3.size()) {
-                argb = argnum2;
-                termb = term2;
-                partialb = partial1;
-                arga = argnum3;
-                terma = term3;
-                partiala = partial3;
+        if (StringUtil.isNonEmptyString(term1)
+            && StringUtil.isNonEmptyString(term2)
+            && StringUtil.isNonEmptyString(term3)) {
+            ArrayList partiala = new ArrayList();           // will get the smallest list
+            ArrayList partialb = new ArrayList();           // next smallest
+            ArrayList partialc = new ArrayList();           // biggest
+            ArrayList partial1 = ask("arg",argnum1,term1);
+            ArrayList partial2 = ask("arg",argnum2,term2);
+            ArrayList partial3 = ask("arg",argnum3,term3);
+            int arga = -1;
+            String terma = "";
+            int argb = -1;
+            String termb = "";
+            int argc = -1;
+            String termc = "";
+            if (partial1 == null || partial2 == null || partial3 == null) 
+                return result;
+            if (partial1.size() > partial2.size() && partial1.size() > partial3.size()) {
+                partialc = partial1;
+                argc = argnum1;
+                termc = term1;
+                if (partial2.size() > partial3.size()) {
+                    argb = argnum2;
+                    termb = term2;
+                    partialb = partial1;
+                    arga = argnum3;
+                    terma = term3;
+                    partiala = partial3;
+                }
+                else {
+                    argb = argnum3;
+                    termb = term3;
+                    partialb = partial3;
+                    arga = argnum2;
+                    terma = term2;
+                    partiala = partial2;
+                }
             }
-            else {
-                argb = argnum3;
-                termb = term3;
-                partialb = partial3;
-                arga = argnum2;
-                terma = term2;
-                partiala = partial2;
+            if (partial2.size() > partial1.size() && partial2.size() > partial3.size()) {
+                partialc = partial2;
+                argc = argnum2;
+                termc = term2;
+                if (partial1.size() > partial3.size()) {
+                    argb = argnum1;
+                    termb = term1;
+                    partialb = partial1;
+                    arga = argnum3;
+                    terma = term3;
+                    partiala = partial3;
+                }
+                else {
+                    argb = argnum3;
+                    termb = term3;
+                    partialb = partial3;
+                    arga = argnum1;
+                    terma = term1;
+                    partiala = partial1;
+                }
             }
-        }
-        if (partial2.size() > partial1.size() && partial2.size() > partial3.size()) {
-            partialc = partial2;
-            argc = argnum2;
-            termc = term2;
-            if (partial1.size() > partial3.size()) {
-                argb = argnum1;
-                termb = term1;
-                partialb = partial1;
-                arga = argnum3;
-                terma = term3;
-                partiala = partial3;
+            if (partial3.size() > partial1.size() && partial3.size() > partial2.size()) {
+                partialc = partial3;
+                argc = argnum3;
+                termc = term3;
+                if (partial1.size() > partial2.size()) {
+                    argb = argnum1;
+                    termb = term1;
+                    partialb = partial1;
+                    arga = argnum2;
+                    terma = term2;
+                    partiala = partial2;
+                }
+                else {
+                    argb = argnum2;
+                    termb = term2;
+                    partialb = partial2;
+                    arga = argnum1;
+                    terma = term1;
+                    partiala = partial1;
+                }
             }
-            else {
-                argb = argnum3;
-                termb = term3;
-                partialb = partial3;
-                arga = argnum1;
-                terma = term1;
-                partiala = partial1;
-            }
-        }
-        if (partial3.size() > partial1.size() && partial3.size() > partial2.size()) {
-            partialc = partial3;
-            argc = argnum3;
-            termc = term3;
-            if (partial1.size() > partial2.size()) {
-                argb = argnum1;
-                termb = term1;
-                partialb = partial1;
-                arga = argnum2;
-                terma = term2;
-                partiala = partial2;
-            }
-            else {
-                argb = argnum2;
-                termb = term2;
-                partialb = partial2;
-                arga = argnum1;
-                terma = term1;
-                partiala = partial1;
-            }
-        }
 
-        if (partiala != null) {
-            Formula f = null;
-            for (int i = 0; i < partiala.size(); i++) {
-                f = (Formula) partiala.get(i);
-                if (f.getArgument(argb).equals(termb)) {
-                    if (f.getArgument(argc).equals(termc))                     
-                        result.add(f);
+            if (partiala != null) {
+                Formula f = null;
+                for (int i = 0; i < partiala.size(); i++) {
+                    f = (Formula) partiala.get(i);
+                    if (f.getArgument(argb).equals(termb)) {
+                        if (f.getArgument(argc).equals(termc))                     
+                            result.add(f);
+                    }
                 }
             }
         }
@@ -3303,26 +3310,25 @@ public class KB {
      *  An accessor providing a Formulas.
      */
     public Formula getFormulaByKey(String key) {
-
+        Formula f = null;
         ArrayList al = (ArrayList) formulas.get(key);
-        if (al != null && al.size() > 0) 
-            return (Formula) al.get(0);
-        else
-            return null;
+        if ((al != null) && !al.isEmpty()) 
+            f = (Formula) al.get(0);
+        return f;
     }
     
     /** ***************************************************************
      */
     public void rehashFormula(Formula f, String formID) {
-
         ArrayList al = (ArrayList) formulas.get(formID);
-        if (al != null && al.size() > 0) {
+        if ((al != null) && !al.isEmpty()) {
             if (al.size() == 1) {
+                String newID = f.createID();
                 formulas.remove(formID);
                 al = new ArrayList();
                 al.add(f);
-                if (!formulas.keySet().contains(f.createID())) 
-                    formulas.put(f.createID(),al);
+                if (!formulas.keySet().contains(newID)) 
+                    formulas.put(newID,al);
             }
             else
                 System.out.println("INFO in KB.rehashFormula(): Formula hash collision for: " 

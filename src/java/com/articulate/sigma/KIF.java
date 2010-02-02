@@ -161,7 +161,6 @@ public class KIF {
         */
 
         String key = null;
-        ArrayList keySet;
         StringBuilder expression = new StringBuilder();
         StreamTokenizer_s st;
         int parenLevel;
@@ -174,6 +173,7 @@ public class KIF {
         boolean isEOL;
         String com;
         Formula f = new Formula();
+        String fstr = null;
         ArrayList list;
         String errStart = ("Parsing error in " + filename);
         String errStr = null;
@@ -194,7 +194,7 @@ public class KIF {
             argumentNum = -1;
             inAntecedent = false;
             inConsequent = false;
-            keySet = new ArrayList();
+            Set<String> keySet = new HashSet<String>();
             lineStart = 0;
             isEOL = false;
             do {
@@ -202,7 +202,7 @@ public class KIF {
                 st.nextToken();
                 // check the situation when multiple KIF statements read as one
                 // This relies on extra blank line to seperate KIF statements
-                if (st.ttype == StreamTokenizer.TT_EOL ) {
+                if (st.ttype == StreamTokenizer.TT_EOL) {
                     if (isEOL) { 
                         // two line seperators in a row, shows a new KIF
                         // statement is to start.  check if a new statement
@@ -267,11 +267,12 @@ public class KIF {
                     expression.append(")");
                     if (parenLevel == 0) {                                    
                         // The end of the statement...
-                        f.theFormula = StringUtil.replaceDateTime(expression.toString()).intern();
-                        //if (KBmanager.getMgr().getPref("TPTP").equals("yes"))                       
+                        fstr = StringUtil.normalizeSpaceChars(expression.toString());
+                        f.theFormula = (StringUtil.replaceDateTime(fstr)).intern();
+
                         // if (f.theFormula.startsWith("(contentRegex")) {
-                        //     System.out.println("  formula == " + f.theFormula);
-                        // }
+                        //      System.out.println("  formula == " + f.theFormula);
+                        //  }
 
                         //f.tptpParse(false,null);   // not a query
                         if (formulaSet.contains(f.theFormula)) {
@@ -313,12 +314,12 @@ public class KIF {
                         keySet.add(f.theFormula);           // Make the formula itself a key
                         keySet.add(f.createID());  
                         f.endLine = st.lineno() + totalLinesForComments;
-                        for (int i = 0; i < keySet.size(); i++) {             
+                        for (String fkey : keySet) {
                             // Add the expression but ...
-                            if (formulas.containsKey(keySet.get(i))) {
+                            if (formulas.containsKey(fkey)) {
                                 if (!formulaSet.contains(f.theFormula)) {  
                                     // don't add keys if formula is already present
-                                    list = (ArrayList) formulas.get(keySet.get(i));
+                                    list = (ArrayList) formulas.get(fkey);
                                     if (!list.contains(f)) 
                                         list.add(f);
                                 }
@@ -326,7 +327,7 @@ public class KIF {
                             else {
                                 list = new ArrayList();
                                 list.add(f);
-                                formulas.put((String) keySet.get(i),list);
+                                formulas.put(fkey,list);
                             }
                         }
                         formulaSet.add(f.theFormula);
@@ -334,7 +335,7 @@ public class KIF {
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
-                        lineStart = st.lineno()+1;                            
+                        lineStart = (st.lineno() + 1);                            
 
                         // start next statement from next line
                         expression = new StringBuilder();
@@ -361,13 +362,15 @@ public class KIF {
                     //System.out.println("INFO in KIF.parse()");
                     //System.out.println(st.sval);
                     
-                    // if (st.sval.contains("S[")) {
-                    //  System.out.println("  st.sval == " + st.sval);
-                    //  }
-                    
-                    st.sval = st.sval.replace("\"","\\\"");
+                    st.sval = StringUtil.escapeQuoteChars(st.sval);
+                    // st.sval = st.sval.replace("\"","\\\"");
+
+                    // if (st.sval.contains("W[")) {
+                    //   System.out.println("  st.sval == " + st.sval);
+                    // }
+
                     //System.out.println(st.sval);
-                    if (lastVal != 40)                                        // add back whitespace that ST removes
+                    if (lastVal != 40)           // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
                     com = st.sval;
@@ -379,11 +382,13 @@ public class KIF {
                     totalLinesForComments += countChar(com,(char)0X0A);
                     expression.append(com);
                     expression.append("\"");
-                    if (parenLevel<2)                                 // Don't care if parenLevel > 1
+
+                    if (parenLevel < 2)   // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
                 }
                 else if ((st.ttype == StreamTokenizer.TT_NUMBER) || 
-                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {                  // number
+                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) { 
+                    // number
                     if (lastVal != 40)  // add back whitespace that ST removes
                         expression.append(" ");
                     if (st.nval == 0) 
@@ -618,14 +623,11 @@ public class KIF {
 
         FileWriter fr = null;
         PrintWriter pr = null;
-        Iterator it;
-        ArrayList formulaArray;
         try {
             fr = new FileWriter(fname);
             pr = new PrintWriter(fr);
 
-            it = formulaSet.iterator();
-            while (it.hasNext())
+            for (Iterator it = formulaSet.iterator(); it.hasNext();)
                 pr.println((String) it.next());          
         }
         catch (Exception ex) {

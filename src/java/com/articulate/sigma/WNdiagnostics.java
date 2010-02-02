@@ -89,12 +89,14 @@ public class WNdiagnostics {
                 break;
             }
             if (term != null) {
-                ArrayList termList = WordNetUtilities.convertTermList(term);
-                for (int i = 0; i < termList.size(); i++) {
-                    String newterm = (String) termList.get(i);
-                    if (newterm.charAt(0) != '(') {
-                        if (!kb.terms.contains(newterm)) 
-                            result.add(POS+synset);                     
+                synchronized (kb.getTerms()) {
+                    ArrayList termList = WordNetUtilities.convertTermList(term);
+                    for (int i = 0; i < termList.size(); i++) {
+                        String newterm = (String) termList.get(i);
+                        if (newterm.charAt(0) != '(') {
+                            if (!kb.getTerms().contains(newterm)) 
+                                result.add(POS+synset);                     
+                        }
                     }
                 }
             }
