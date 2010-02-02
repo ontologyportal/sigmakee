@@ -163,29 +163,42 @@ public class LanguageFormatter {
      * term format string to all other atoms.
      */
     private static String processAtom(String atom, Map termMap, String language) {
-
-        if (StringUtil.isQuotedString(atom))
-            return atom;
-        if (atom.startsWith("\"http") && atom.endsWith("\"")) {
-            StringBuilder formatted = new StringBuilder(atom);
-            if (formatted.length() > 50) {
-                for (int i = 50; i < formatted.length(); i++) {                
-                    if (i > 50 && formatted.charAt(i) == '/') 
-                        // add spaces to long URL strings 
-                        formatted = formatted.insert(i+1,' ');                     
+        String result = atom;
+        String unquoted = StringUtil.removeEnclosingQuotes(atom);
+        boolean isNumber = false;
+        try {
+            Double dbl = Double.valueOf(unquoted);
+            isNumber = !dbl.isNaN();
+        }
+        catch (Exception nex) {
+            isNumber = false;
+        }
+        if (isNumber) 
+            ; // do nothing
+        else if (StringUtil.isQuotedString(atom)) {
+            if (unquoted.startsWith("http")) {
+                StringBuilder formatted = new StringBuilder(atom);
+                if (formatted.length() > 50) {
+                    for (int i = 50; i < formatted.length(); i++) {                
+                        if (i > 50 && formatted.charAt(i) == '/') 
+                            // add spaces to long URL strings 
+                            formatted = formatted.insert(i+1,' ');                     
+                    }
+                    result = formatted.toString();
                 }
-                atom = formatted.toString();
             }
         }
-        if (Formula.isVariable(atom))
-	    return atom;
-	if (termMap.containsKey(atom)) {
+        else if (Formula.isVariable(atom))
+	    ; // do nothing
+        else if (StringUtil.isDigitString(unquoted)) 
+            ; // do nothing
+	else if (termMap.containsKey(atom)) {
 	    String formattedString = (String) termMap.get(atom);
-            atom = "&%" + atom + "$\"" + formattedString + "\"";
+            result = ("&%" + atom + "$\"" + formattedString + "\"");
         }
         else            
-            atom = "&%" + atom + "$\"" + atom + "\"";        
-	return atom;
+            result = ("&%" + atom + "$\"" + atom + "\"");
+	return result;
     }
 
     /** ***************************************************************
