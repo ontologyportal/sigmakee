@@ -45,50 +45,51 @@ public class Diagnostics {
         ArrayList forms = null;
         Formula formula = null;
         String pred = null;
-        Iterator it = kb.terms.iterator();
         Iterator it2 = null;
         boolean isNaN = true;
-        while (it.hasNext()) {
-            term = (String) it.next();
+        synchronized (kb.getTerms()) {
+            for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+                term = (String) it.next();
 
-            // Exclude the logical operators.
-            if (LOG_OPS.contains(term)) 
-                continue;
+                // Exclude the logical operators.
+                if (LOG_OPS.contains(term)) 
+                    continue;
 
-            // Exclude numbers.
-            isNaN = true;
-            try {
-                double dval = Double.parseDouble(term);
-                isNaN = Double.isNaN(dval);
-            }
-            catch (Exception nex) {
-            }
-            if (isNaN) {
-                forms = kb.ask("arg",argnum,term);
-                if (forms == null || forms.isEmpty()) {
-                    if (letter < 'A' || term.charAt(0) == letter) 
-                        result.add(term);                
+                // Exclude numbers.
+                isNaN = true;
+                try {
+                    double dval = Double.parseDouble(term);
+                    isNaN = Double.isNaN(dval);
                 }
-                else {
-                    boolean found = false;
-                    it2 = forms.iterator();
-                    while (it2.hasNext()) {
-                        formula = (Formula) it2.next();
-                        pred = formula.car();
-                        if (pred.equals(rel)) {
-                            found = true;
-                            break;
+                catch (Exception nex) {
+                }
+                if (isNaN) {
+                    forms = kb.ask("arg",argnum,term);
+                    if (forms == null || forms.isEmpty()) {
+                        if (letter < 'A' || term.charAt(0) == letter) 
+                            result.add(term);                
+                    }
+                    else {
+                        boolean found = false;
+                        it2 = forms.iterator();
+                        while (it2.hasNext()) {
+                            formula = (Formula) it2.next();
+                            pred = formula.car();
+                            if (pred.equals(rel)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            if (letter < 'A' || term.charAt(0) == letter) 
+                                result.add(term);                    
                         }
                     }
-                    if (!found) {
-                        if (letter < 'A' || term.charAt(0) == letter) 
-                            result.add(term);                    
-                    }
                 }
-            }
-            if (limit > 0 && result.size() > limit) {
-                result.add("limited to " + limit + " results");
-                break;
+                if (limit > 0 && result.size() > limit) {
+                    result.add("limited to " + limit + " results");
+                    break;
+                }
             }
         }
         return result;
@@ -165,7 +166,8 @@ public class Diagnostics {
                                                "subclass", 
                                                "subAttribute", 
                                                "subrelation", 
-                                               "subCollection");
+                                               "subCollection",
+                                               "subentity");
             Set cached = null;
             for (String pred : preds) {
                 cached = kb.getCachedRelationValues(pred, term, 1, 2);
@@ -211,27 +213,28 @@ public class Diagnostics {
         System.out.println("INFO in Diagnostics.termsWithoutParent(): "); 
         ArrayList result = new ArrayList();
         boolean isNaN = true;
-        Iterator it = kb.terms.iterator();
         int count = 0;
-        while (it.hasNext() && count < 100) {
-            String term = (String) it.next();
-            if (excluded.contains(term)) 
-                continue;
-            isNaN = true;
-            try {
-                double dval = Double.parseDouble(term);
-                isNaN = Double.isNaN(dval);
-            }
-            catch (Exception nex) {
-            }
-            if (isNaN) {
-                if (!hasParent(kb,term)) {
-                    result.add(term); 
-                    count++;
+        synchronized (kb.getTerms()) {
+            for (Iterator it = kb.getTerms().iterator(); (it.hasNext() && (count < 100));) {
+                String term = (String) it.next();
+                if (excluded.contains(term)) 
+                    continue;
+                isNaN = true;
+                try {
+                    double dval = Double.parseDouble(term);
+                    isNaN = Double.isNaN(dval);
                 }
+                catch (Exception nex) {
+                }
+                if (isNaN) {
+                    if (!hasParent(kb,term)) {
+                        result.add(term); 
+                        count++;
+                    }
+                }
+                if (count > 99) 
+                    result.add("limited to 100 results");            
             }
-            if (count > 99) 
-                result.add("limited to 100 results");            
         }
         return result;
     }
@@ -250,46 +253,47 @@ public class Diagnostics {
         Object[] parents = null;
         Set disjoints = null;
         boolean isNaN = true;
-        Iterator it = kb.terms.iterator();
         int count = 0;
         boolean contradiction = false;
-        while (it.hasNext()) {
-            contradiction = false;
-            term = (String) it.next();
-            isNaN = true;
-            try {
-                double dval = Double.parseDouble(term);
-                isNaN = Double.isNaN(dval);
-            }
-            catch (Exception nex) {
-            }
-            if (isNaN) {
-                parentSet = kb.getCachedRelationValues("subclass", term, 1, 2);
-                parents = null;
-                if ((parentSet != null) && !parentSet.isEmpty())
-                    parents = parentSet.toArray();            
-                if (parents != null) {
-                    for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
-                        termX = (String) parents[i];
-                        disjoints = kb.getCachedRelationValues("disjoint", termX, 1, 2);
-                        if ((disjoints != null) && !disjoints.isEmpty()) {
-                            for (int j = (i + 1) ; j < parents.length ; j++) {
-                                termY = (String) parents[j];
-                                if (disjoints.contains(termY)) {
-                                    result.add(term);
-                                    contradiction = true;
-                                    count++;
-                                    break;
+        synchronized (kb.getTerms()) {
+            for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+                contradiction = false;
+                term = (String) it.next();
+                isNaN = true;
+                try {
+                    double dval = Double.parseDouble(term);
+                    isNaN = Double.isNaN(dval);
+                }
+                catch (Exception nex) {
+                }
+                if (isNaN) {
+                    parentSet = kb.getCachedRelationValues("subclass", term, 1, 2);
+                    parents = null;
+                    if ((parentSet != null) && !parentSet.isEmpty())
+                        parents = parentSet.toArray();            
+                    if (parents != null) {
+                        for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
+                            termX = (String) parents[i];
+                            disjoints = kb.getCachedRelationValues("disjoint", termX, 1, 2);
+                            if ((disjoints != null) && !disjoints.isEmpty()) {
+                                for (int j = (i + 1) ; j < parents.length ; j++) {
+                                    termY = (String) parents[j];
+                                    if (disjoints.contains(termY)) {
+                                        result.add(term);
+                                        contradiction = true;
+                                        count++;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (count > 99) {
-                result.add("limited to 100 results");
-                break;
+                if (count > 99) {
+                    result.add("limited to 100 results");
+                    break;
+                }
             }
         }
         return result;
@@ -407,25 +411,27 @@ public class Diagnostics {
         System.out.println("INFO in Diagnostics.termsWithoutRules(): "); 
         boolean isNaN = true;
         ArrayList result = new ArrayList();
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            isNaN = true;
-            try {
-                double dval = Double.parseDouble(term);
-                isNaN = Double.isNaN(dval);
-            }
-            catch (Exception nex) {
-            }
-            if (isNaN) {
-                ArrayList forms = kb.ask("ant",-1,term);
-                ArrayList forms2 = kb.ask("cons",-1,term);
-                if (forms == null && forms2 == null) 
-                    result.add(term);
-            }
-            if (result.size() > 99) {
-                result.add("limited to 100 results");
-                return result;
+        synchronized (kb.getTerms()) {
+            for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+                String term = (String) it.next();
+                isNaN = true;
+                try {
+                    double dval = Double.parseDouble(term);
+                    isNaN = Double.isNaN(dval);
+                }
+                catch (Exception nex) {
+                }
+                if (isNaN) {
+                    ArrayList forms = kb.ask("ant",0,term);
+                    ArrayList forms2 = kb.ask("cons",0,term);
+                    if (((forms == null) || forms.isEmpty()) 
+                        && ((forms2 == null) || forms2.isEmpty()))
+                        result.add(term);
+                }
+                if (result.size() > 99) {
+                    result.add("limited to 100 results");
+                    break;
+                }
             }
         }
         return result;
@@ -535,51 +541,56 @@ public class Diagnostics {
     /** *****************************************************************
      */
     private static void termLinks(KB kb, TreeMap termsUsed, TreeMap termsDefined) {
-
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {                          // Check every term in the KB
-            String term = (String) it.next();
-            ArrayList forms = kb.ask("arg",1,term);     // Get every formula with the term as arg 1
-                                                        // Only definitional uses are in the arg 1 position
-            if (forms != null && forms.size() > 0) {
-                for (int i = 0; i < forms.size(); i++) {
-                    Formula formula = (Formula) forms.get(i);
-                    String relation = formula.getArgument(0);
-                    String filename = formula.sourceFile;
-                    if (relation.equals("instance") || relation.equals("subclass") ||
-                        relation.equals("domain") || relation.equals("documentation") ||
-                        relation.equals("subrelation")) {
-                        addToMapList(termsDefined,term,filename);
+        List definitionalRelations = Arrays.asList("instance",
+                                                   "subclass",
+                                                   "domain",
+                                                   "documentation",
+                                                   "subrelation");
+        synchronized (kb.getTerms()) {
+            for (Iterator it = kb.getTerms().iterator(); it.hasNext();) { 
+                // Check every term in the KB
+                String term = (String) it.next();
+                ArrayList forms = kb.ask("arg",1,term);     
+                // Get every formula with the term as arg 1
+                // Only definitional uses are in the arg 1 position
+                if (forms != null && forms.size() > 0) {
+                    for (int i = 0; i < forms.size(); i++) {
+                        Formula formula = (Formula) forms.get(i);
+                        String relation = formula.getArgument(0);
+                        String filename = formula.sourceFile;
+                        if (definitionalRelations.contains(relation)) 
+                            addToMapList(termsDefined,term,filename);
+                        else
+                            addToMapList(termsUsed,term,filename);
                     }
-                    else
-                        addToMapList(termsUsed,term,filename);
                 }
-            }
 
-            forms = kb.ask("arg",2,term);   
-            ArrayList newform;
-            for (int i = 3; i < 7; i++) {
-                newform = kb.ask("arg",i,term);
+                forms = kb.ask("arg",2,term);   
+                ArrayList newform;
+                for (int i = 3; i < 7; i++) {
+                    newform = kb.ask("arg",i,term);
+                    if (newform != null) 
+                        forms.addAll(newform);                
+                }
+                newform = kb.ask("ant",-1,term);
                 if (newform != null) 
                     forms.addAll(newform);                
-            }
-            newform = kb.ask("ant",-1,term);
-            if (newform != null) 
-                forms.addAll(newform);                
-            newform = kb.ask("cons",-1,term);
-            if (newform != null) 
-                forms.addAll(newform);                
-            newform = kb.ask("stmt",-1,term);
-            if (newform != null) 
-                forms.addAll(newform);                
-            if (forms != null && forms.size() > 0) {
-                for (int i = 0; i < forms.size(); i++) {
-                    Formula formula = (Formula) forms.get(i);
-                    String filename = formula.sourceFile;
-                    addToMapList(termsUsed,term,filename);
+                newform = kb.ask("cons",-1,term);
+                if (newform != null) 
+                    forms.addAll(newform);                
+                newform = kb.ask("stmt",-1,term);
+                if (newform != null) 
+                    forms.addAll(newform);                
+                if (forms != null && forms.size() > 0) {
+                    for (int i = 0; i < forms.size(); i++) {
+                        Formula formula = (Formula) forms.get(i);
+                        String filename = formula.sourceFile;
+                        addToMapList(termsUsed,term,filename);
+                    }
                 }
             }
         }
+        return;
     }
 
     /** *****************************************************************

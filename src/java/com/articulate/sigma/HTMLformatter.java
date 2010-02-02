@@ -403,22 +403,25 @@ public class HTMLformatter {
 
                 if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
+                    String arg0 = f.getArgument(0);
                     show.append("<tr><td width=\"50%\" valign=\"top\">");
                     String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
-                    if ((f.getArgument(0).equals("documentation")) ||
-                        (f.getArgument(0).equals("comment")))
+                    if (Formula.DOC_PREDICATES.contains(arg0))
                         show.append(kb.formatDocumentation(kbHref,formattedFormula,language));
                     else
                         show.append(formattedFormula);
-                    String sourceFilename = f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
+                    File srcfile = new File(f.sourceFile);
+                    String sourceFilename = srcfile.getName();
+                    // f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
                     show.append("<a href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
-                    if (StringUtil.isNonEmptyString(sourceFilename)) 
+                    if (StringUtil.isNonEmptyString(sourceFilename)) {
                         show.append(sourceFilename);
-                    show.append(" " + f.startLine + "-" + f.endLine);
+                        show.append(" " + f.startLine + "-" + f.endLine);
+                    }
                     show.append("</a>");
                     show.append("</td>\n<td width=\"40%\" valign=\"top\">");
                     String pph = null;
-                    if (!f.getArgument(0).equals("documentation"))
+                    if (!Formula.DOC_PREDICATES.contains(arg0))
                         pph = LanguageFormatter.htmlParaphrase(kbHref,
                                                                f.theFormula,
                                                                kb.getFormatMap(language), 
@@ -427,12 +430,10 @@ public class HTMLformatter {
                                                                language);
         	    if (StringUtil.emptyString(pph)) 
                         pph = "";                     
-                    else {
+                    else if (isArabic)
+                        pph = ("<span dir=\"rtl\">" + pph + "</span>");
+                    else
                         pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
-                        if (isArabic) {
-                            pph = ("<span dir=\"rtl\">" + pph + "</span>");
-                        }
-                    }
                     show.append(pph + "</td></tr>\n"); 
                 }
             }
@@ -562,8 +563,7 @@ public class HTMLformatter {
         result.append("<select name=" + menuNameProcessed);
         result.append(" MULTIPLE size=");
         result.append(Integer.toString(options.keySet().size()) + ">\n  ");
-        Iterator it = options.keySet().iterator();
-        while (it.hasNext()) {
+        for (Iterator it = options.keySet().iterator(); it.hasNext();) {
             result.append("<option value='");
             String menuItem = (String) it.next();
             String selected = (String) options.get(menuItem);
@@ -595,9 +595,7 @@ public class HTMLformatter {
             result.append(" " + params + " ");
         }
         result.append(">\n  ");
-
-        Iterator it = menuOptions.iterator();
-        while (it.hasNext()) {
+        for (Iterator it = menuOptions.iterator(); it.hasNext();) {
             String menuItem = (String) it.next();
             result.append("<option value='");
             String menuItemProcessed = encodeForURL(menuItem);

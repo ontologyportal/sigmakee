@@ -86,6 +86,12 @@ public class Formula implements Comparable {
                                                                      TIMESFN, 
                                                                      DIVIDEFN);
 
+    public static final List<String> DOC_PREDICATES = Arrays.asList("documentation",
+                                                                    "comment",
+                                                                    "format" //,
+                                                                    // "termFormat"
+                                                                    );
+
     /** The source file in which the formula appears. */
     protected String sourceFile;   
 
@@ -757,9 +763,8 @@ public class Formula implements Comparable {
         boolean ans = false;
         if (isNonEmptyString(s)) {
             String str = s.trim();
-            ans = ( (str.startsWith("\"") && str.endsWith("\""))
-                    ||
-                    (!str.contains(")") && !str.matches(".*\\s.*")) );
+            ans = (StringUtil.isQuotedString(s)
+                   || (!str.contains(")") && !str.matches(".*\\s.*")));
         }
         return ans;
     }

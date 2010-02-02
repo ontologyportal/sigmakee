@@ -111,4 +111,60 @@ public class SetUtil {
         return ans;
     }
 
+    /** **************************************************************
+     * Filters the List of Strings seq, removing all items that match
+     * the regular expression pattern regex.
+     *
+     * @param seq A List of Strings
+     *
+     * @param regex A regular expression pattern String that will be
+     * matched against the Strings in seq
+     *
+     */
+    public static void removeByPattern(List seq, String regex) {
+        try {
+            if ((seq instanceof List) && StringUtil.isNonEmptyString(regex)) {
+                Object obj = null;
+                for (ListIterator it = seq.listIterator(); it.hasNext();) {
+                    obj = (Object) it.next();
+                    if (obj.toString().matches(regex)) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
+    /** **************************************************************
+     * Filters the List of Strings seq, retaining only items that match
+     * the regular expression pattern regex.
+     *
+     * @param seq A List of Strings
+     *
+     * @param regex A regular expression pattern String that will be
+     * matched against the Strings in seq
+     *
+     */
+    public static void retainByPattern(List seq, String regex) {
+        try {
+            if ((seq instanceof List) && StringUtil.isNonEmptyString(regex)) {
+                Object obj = null;
+                for (ListIterator it = seq.listIterator(); it.hasNext();) {
+                    obj = (Object) it.next();
+                    if (!obj.toString().matches(regex)) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return;
+    }
+
 }  // SetUtil

@@ -17,6 +17,7 @@ package com.articulate.sigma;
 
 import java.util.*;
 import java.io.*;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.security.*;
 import org.apache.commons.codec.binary.*;
@@ -27,8 +28,73 @@ import org.apache.commons.codec.binary.*;
  */
 public class StringUtil {
 
+    private static String CHARSET = "UTF-8";
+
     private StringUtil() {
         // This class should not have any instances.
+    }
+
+    /** *************************************************************
+     * Sets the default value of CHARSET to charEncoding.
+     * charEncoding should be a String denoting a valid W3C character
+     * encoding scheme, such as &quot;UTF-8&quot;.
+     *
+     * @param charEncoding A String denoting a character encoding scheme
+     *
+     * @return String
+     */
+    public static void setCharset(String charEncoding) {
+        CHARSET = charEncoding;
+    }
+
+    /** *************************************************************
+     * Returns a String denoting a character encoding scheme.  The
+     * default value is &quot;UTF-8&quot;.
+     *
+     * @return String
+     */
+    public static String getCharset() {
+        return CHARSET;
+    }
+
+    /** *************************************************************
+     * Returns a URL encoded String obtained from input, which is
+     * assumed to be a String composed of characters in the default
+     * charset.  In most cases, the charset will be UTF-8.
+     *
+     * @param input A String which has not yet been URL encoded
+     *
+     * @return A URL encoded String
+     */
+    public static String encode(String input) {
+        String encoded = input;
+        try {
+            encoded = URLEncoder.encode(input, getCharset());
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return encoded;
+    }
+
+    /** *************************************************************
+     * Returns a URL decoded String obtained from input, which is
+     * assumed to be a URL encoded String composed of characters in
+     * the default charset.  In most cases, the charset will be UTF-8.
+     *
+     * @param input A URL encoded String
+     *
+     * @return A String that has been URL decoded
+     */
+    public static String decode(String input) {
+        String decoded = input;
+        try {
+            decoded = URLDecoder.decode(input, getCharset());
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return decoded;
     }
 
     /** *************************************************************
@@ -246,11 +312,10 @@ public class StringUtil {
         if (isNonEmptyString(s)) {
             sb.append(s);
             int lasti = (sb.length() - 1);
-            int count = 0;
-            while ((count < n)
-                   && (lasti > 0)
-                   && (sb.charAt(0) == '"')
-                   && (sb.charAt(lasti) == '"')) {
+            for (int count = 0; ((count < n)
+                                 && (lasti > 0)
+                                 && (sb.charAt(0) == '"')
+                                 && (sb.charAt(lasti) == '"')); count++) {
                 sb.deleteCharAt(lasti);
                 sb.deleteCharAt(0);
                 lasti = (sb.length() - 1);
@@ -270,6 +335,7 @@ public class StringUtil {
         if (isNonEmptyString(ans)) {
             // ans = ans.replaceAll("(?s)\\s", " ");
             ans = ans.replaceAll("\\s+", " ");
+            ans = ans.replaceAll("\\(\\s+", "(");
             // ans = ans.replaceAll("\\.\\s+", ".  ");
             // ans = ans.replaceAll("\\?\\s+", "?  ");
             // ans = ans.replaceAll("\\:\\s+", ":  ");
@@ -286,7 +352,7 @@ public class StringUtil {
     public static String escapeQuoteChars(String str) {
         String ans = str;
         if (isNonEmptyString(str)) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             char prevCh = 'x';
             char ch = 'x';
             for (int i = 0; i < str.length(); i++) {
@@ -310,7 +376,7 @@ public class StringUtil {
     public static String escapeEscapeChars(String str) {
         String ans = str;
         if (isNonEmptyString(str)) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             char prevCh = 'x';
             char ch = 'x';
             for (int i = 0; i < str.length(); i++) {
@@ -333,7 +399,7 @@ public class StringUtil {
     public static String removeQuoteEscapes(String str) {
         String ans = str;
         if (isNonEmptyString(str)) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             char prevCh = 'x';
             char ch = 'x';
             int strlen = str.length();
@@ -352,13 +418,38 @@ public class StringUtil {
 
     /** ***************************************************************
      * @param str A String
+     * @return A String in which each sequence of two or more
+     * slash-escape chars is replaced by one slash-escape char.
+     */
+    public static String removeEscapedEscapes(String str) {
+        String ans = str;
+        if (isNonEmptyString(str)) {
+            StringBuilder sb = new StringBuilder();
+            char prevCh = 'x';
+            char ch = 'x';
+            int strlen = str.length();
+            for (int i = 0; i < strlen; i++) {
+                ch = str.charAt(i);
+                if ((ch == '\\') && (prevCh == '\\')) {
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+                sb.append(ch);
+                prevCh = ch;
+            }
+            ans = sb.toString();
+        }
+        return ans;
+    }
+
+    /** ***************************************************************
+     * @param str A String
      * @return A String with all internal escaped double quote
      * characters removed
      */
     public static String removeEscapedDoubleQuotes(String str) {
         String ans = str;
         if (isNonEmptyString(str)) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             char prevCh = 'x';
             char ch = 'x';
             int strlen = str.length();
@@ -392,7 +483,7 @@ public class StringUtil {
         String ans = str;
         if (isNonEmptyString(str)) {
             String newstr = str.trim();
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             char ch = 'x';
             int strlen = newstr.length();
             for (int i = 0; i < strlen; i++) {
@@ -415,7 +506,7 @@ public class StringUtil {
     public static String replaceRepeatedDoubleQuotes(String str) {
         String ans = str;
         if (isNonEmptyString(str)) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             char prevCh = 'x';
             char ch = 'x';
             for (int i = 0; i < str.length(); i++) {

@@ -274,46 +274,50 @@ public class Mapping {
         KB kb1,kb2;
         kb1 = KBmanager.getMgr().getKB(kbName1);
         kb2 = KBmanager.getMgr().getKB(kbName2);
-        int totalCandidates = kb1.terms.size() * kb2.terms.size();
+        int totalCandidates = kb1.getTerms().size() * kb2.getTerms().size();
         if (kb1 != null && kb2 != null) {
-            Iterator it1 = kb1.terms.iterator();
-            while (it1.hasNext()) {
-                counter++;
-                if (counter > 100) {
-                    System.out.print(".");
-                    counter = 0;
-                }
-                String term1 = (String) it1.next();
-                if (isValidTerm(term1)) {
-                    String normTerm1 = normalize(term1);
-                    String normLabel1 = normalize(getTermFormat(kb1,term1));
-                    TreeMap tm = (TreeMap) result.get(term1);
-                    if (tm == null) 
-                        tm = new TreeMap();
-                    Iterator it2 = kb2.terms.iterator();
-                    while (it2.hasNext()) {
-                        String term2 = (String) it2.next();
-                        if (isValidTerm(term2)) {
-                            String normTerm2 = normalize(term2);
-                            String normLabel2 = normalize(getTermFormat(kb2,term2));
-                            int score = Integer.MAX_VALUE; 
-                            score = min(score,stringMatch(normTerm1, normTerm2,matchMethod));
-                            if (normLabel1 != null && isValidTerm(normLabel1))
-                                score = min(score,stringMatch(normLabel1,normTerm2,matchMethod));                            
-                            if (normLabel2 != null && isValidTerm(normLabel2)) 
-                                score = min(score,stringMatch(normTerm1, normLabel2,matchMethod));                            
-                            if (normLabel1 != null && normLabel2 != null && 
-                                isValidTerm(normLabel1) && isValidTerm(normLabel2)) 
-                                score = min(score,stringMatch(normLabel1, normLabel2,matchMethod));                            
-                            if (score > 0 && score < Integer.MAX_VALUE)
-                                if (score < threshold) {                                
-                                    tm.put(new Integer(score), term2);
-                                    mapCount++;
+            synchronized (kb1.getTerms()) {
+                synchronized (kb2.getTerms()) {
+                    Iterator it1 = kb1.getTerms().iterator();
+                    while (it1.hasNext()) {
+                        counter++;
+                        if (counter > 100) {
+                            System.out.print(".");
+                            counter = 0;
+                        }
+                        String term1 = (String) it1.next();
+                        if (isValidTerm(term1)) {
+                            String normTerm1 = normalize(term1);
+                            String normLabel1 = normalize(getTermFormat(kb1,term1));
+                            TreeMap tm = (TreeMap) result.get(term1);
+                            if (tm == null) 
+                                tm = new TreeMap();
+                            Iterator it2 = kb2.getTerms().iterator();
+                            while (it2.hasNext()) {
+                                String term2 = (String) it2.next();
+                                if (isValidTerm(term2)) {
+                                    String normTerm2 = normalize(term2);
+                                    String normLabel2 = normalize(getTermFormat(kb2,term2));
+                                    int score = Integer.MAX_VALUE; 
+                                    score = min(score,stringMatch(normTerm1, normTerm2,matchMethod));
+                                    if (normLabel1 != null && isValidTerm(normLabel1))
+                                        score = min(score,stringMatch(normLabel1,normTerm2,matchMethod));                            
+                                    if (normLabel2 != null && isValidTerm(normLabel2)) 
+                                        score = min(score,stringMatch(normTerm1, normLabel2,matchMethod));                            
+                                    if (normLabel1 != null && normLabel2 != null && 
+                                        isValidTerm(normLabel1) && isValidTerm(normLabel2)) 
+                                        score = min(score,stringMatch(normLabel1, normLabel2,matchMethod));                            
+                                    if (score > 0 && score < Integer.MAX_VALUE)
+                                        if (score < threshold) {                                
+                                            tm.put(new Integer(score), term2);
+                                            mapCount++;
+                                        }
                                 }
+                            }
+                            if (tm.keySet().size() > 0)
+                                result.put(term1,tm);
                         }
                     }
-                    if (tm.keySet().size() > 0)
-                        result.put(term1,tm);
                 }
             }
         }
@@ -396,14 +400,10 @@ public class Mapping {
     /** *************************************************************
      */
     private static int minimum(int a, int b, int c) {
-
-        if (a <= b && a <= c) 
-            return a;
-        if (b <= a && b <= c) 
-            return b;
-        if (c <= b && c <= a) 
-            return c;
-        return a; // this can never occur, but is needed so compiler doesn't complain.
+        int ans = a;
+        if (b < ans) ans = b;
+        if (c < ans) ans = c;
+        return ans;
     }
 
     /** *************************************************************
