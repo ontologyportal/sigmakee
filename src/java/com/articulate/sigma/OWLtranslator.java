@@ -468,8 +468,10 @@ public class OWLtranslator {
 
         try {
             SimpleElement se = SimpleDOMParser.readFile(filename);
+            System.out.println("INFO in WLtranslator.read(): input filename: " + filename);
             fw = new FileWriter(filename + ".kif");
             pw = new PrintWriter(fw);
+            System.out.println("INFO in WLtranslator.read(): output filename: " + filename + ".kif");
             decode(pw,se,"","","");
         }
         catch (java.io.IOException e) {
@@ -834,6 +836,7 @@ public class OWLtranslator {
      * Read a mapping file from YAGO to SUMO terms and store in SUMOYAGOMap
      */
     private void readYAGOSUMOMappings() {
+
         FileReader r = null;
         LineNumberReader lr = null;
         try {
@@ -865,11 +868,15 @@ public class OWLtranslator {
                 if (lr != null) lr.close();
             }
             catch (Exception lre) {
+                System.out.println("Exception in OWLtranslator.readYAGOSUMOMappings()");
+                System.out.println(lre);
             }
             try {
                 if (r != null) r.close();
             }
             catch (Exception re) {
+                System.out.println("Exception in OWLtranslator.readYAGOSUMOMappings()");
+                System.out.println(re);
             }
         }
         return;
@@ -878,7 +885,7 @@ public class OWLtranslator {
     /** ***************************************************************
      * Write OWL format.
      */
-    public void write(String kbName, String filename) throws IOException {
+ public void write(String kbName, String filename) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
@@ -949,7 +956,6 @@ public class OWLtranslator {
             }
         }
     }
-
 
     /** ***************************************************************
      */
