@@ -15,10 +15,10 @@ http://sigmakee.sourceforge.net
 
 /*************************************************************************************************/
 package com.articulate.sigma;
-import java.util.*;
-import java.util.regex.*;
 import java.io.*;
 import java.text.ParseException;
+import java.util.*;
+import java.util.regex.*;
 
 /** *****************************************************************
  *  Contains methods for reading, writing knowledge bases and their
@@ -36,8 +36,8 @@ public class KB {
     /** The name of the knowledge base. */
     public String name;                       
 
-    /** An ArrayList of Strings that are the full canonical pathnames
-     * of the files that comprise the KB.
+    /** An ArrayList of Strings that are the full
+     * canonical pathnames of the files that comprise the KB.
      */
     public ArrayList constituents = new ArrayList();
 
@@ -58,7 +58,7 @@ public class KB {
 
     /** A threshold limiting the number of values that will be added to
      * a single relation cache table. */
-    private static final long MAX_CACHE_SIZE = 1000000L;
+    private static final int MAX_CACHE_SIZE = 1000000L;
 
     /** A List of the names of cached transitive relations. */
     private List cachedTransitiveRelationNames = Arrays.asList("subclass", 
@@ -91,20 +91,6 @@ public class KB {
 
     /** A synchronized SortedSet of Strings, which are all the terms in the KB. */
     private SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
-
-    /** Returns a synchronized SortedSet of Strings, which are all the terms in the KB. */
-    public SortedSet<String> getTerms() {
-        return this.terms;
-    }
-
-    /** Sets the synchronized SortedSet of all the terms in the KB to be kbTerms. */
-    public void setTerms(SortedSet<String> newTerms) {
-        synchronized (getTerms()) {
-            getTerms().clear();
-            this.terms = Collections.synchronizedSortedSet(newTerms);
-        }
-        return;
-    }
 
     /** The String constant that is the suffix for files of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
@@ -141,6 +127,29 @@ public class KB {
     /** If true, assertions of the form (predicate x x) will be
      * included in the relation cache tables. */
     private boolean cacheReflexiveAssertions = false;
+
+    /** A global counter used to ensure that constants created by
+     *  instantiateFormula() are unique. */
+    private int gensym = 0;
+
+
+    /** ************************************************************
+     * Returns a synchronized SortedSet of Strings, which are all
+     * the terms in the KB. */
+    public SortedSet<String> getTerms() {
+        return this.terms;
+    }
+
+    /** ************************************************************
+     *  Sets the synchronized SortedSet of all the terms in the
+     *  KB to be kbTerms. */
+    public void setTerms(SortedSet<String> newTerms) {
+        synchronized (getTerms()) {
+            getTerms().clear();
+            this.terms = Collections.synchronizedSortedSet(newTerms);
+        }
+        return;
+    }
 
     /** *************************************************************
      * Sets the private instance variable cacheReflexiveAssertions to
@@ -210,13 +219,7 @@ public class KB {
         ArrayList ans = new ArrayList();
         try {
             Set symmset = getAllInstancesWithPredicateSubsumption("SymmetricRelation");
-            /*
-              symmset.addAll(getTermsViaPredicateSubsumption("subrelation", 
-              2, 
-              "inverse",
-              1,
-              true));
-            */
+            // symmset.addAll(getTermsViaPredicateSubsumption("subrelation",2,"inverse",1,true));
             symmset.add("inverse");
             ans.addAll(symmset);
         }
@@ -298,6 +301,7 @@ public class KB {
      */
     protected void clearSortalTypeCache() {
         try {
+
             System.out.println("INFO in KB.clearSortalTypeCache()");
             System.out.println("  Clearing " + getSortalTypeCache().size() + " entries");
             Object obj = null;
@@ -308,6 +312,7 @@ public class KB {
                 }
             }
             getSortalTypeCache().clear();
+
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -343,7 +348,7 @@ public class KB {
         try {
             KBmanager mgr = KBmanager.getMgr();
             if (mgr != null) { 
-                // initRelationCaches(true);
+                // initRelationCaches();
                 String loadCelt = mgr.getPref("loadCELT");
                 if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
                     celt = new CELT();
@@ -381,7 +386,7 @@ public class KB {
     }
 
     /** *************************************************************
-     * Initializes all RelationCaches.  Creates the RelationCache
+      * Initializes all RelationCaches.  Creates the RelationCache
      * objects if they do not yet exist, and clears all existing
      * RelationCache objects if clearExistingCaches is true.
      *
@@ -671,6 +676,7 @@ public class KB {
      * @return void
      */
     private void computeTransitiveCacheClosure(String relationName) {
+
         long t1 = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder("ENTER KB.computeTransitiveCacheClosure(");
         sb.append(relationName);
@@ -809,6 +815,7 @@ public class KB {
      * @return void
      */
     private void computeInstanceCacheClosure() {
+
         long t1 = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder("ENTER KB.computeInstanceCacheClosure()");
         sb.append(getLineSeparator());
@@ -884,10 +891,9 @@ public class KB {
      * This method computes the closure for the caches of symmetric
      * relations.  As currently implemented, it really applies to only
      * disjoint.
-     *
-     * @return void
      */
     private void computeSymmetricCacheClosure(String relationName) {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER KB.computeSymmetricCacheClosure(" + relationName + ")");
         long count = 0L;
@@ -907,9 +913,7 @@ public class KB {
                 Iterator it        = null;
                 String sc2ValTerm  = null;
                 Set dc1ValSet2     = null;
-
                 // int passes = 0;
-
                 // One pass is sufficient.
                 boolean changed = true;
                 while (changed) {
@@ -917,7 +921,6 @@ public class KB {
                     dc1KeySet = dc1.keySet();
                     dc1KeyArr = dc1KeySet.toArray();
                     for (int i = 0; (i < dc1KeyArr.length) && (count < MAX_CACHE_SIZE); i++) {
-
                         dc1KeyTerm = (String) dc1KeyArr[i];
                         dc1ValSet = (Set) dc1.get(dc1KeyTerm);
                         dc1ValArr = dc1ValSet.toArray();
@@ -946,7 +949,6 @@ public class KB {
                                 }
                             }
                         }
-
                         it = dc1.values().iterator();
                         count = 0;
                         while (it.hasNext()) {
@@ -960,7 +962,6 @@ public class KB {
                     // System.out.println("  " + count + " disjoint entries after pass " + ++passes);
                 }
             }
-
             // printDisjointness();
         }
         catch (Exception ex) {
@@ -1088,8 +1089,12 @@ public class KB {
         return null;
     }
 
+    /** *************************************************************
+     *  */
     private HashMap relationValences = new HashMap();
 
+    /** *************************************************************
+     *  */
     private void cacheRelationValences() {
 
         long t1 = System.currentTimeMillis();
@@ -1150,7 +1155,6 @@ public class KB {
         System.out.println("  " 
                            + ((System.currentTimeMillis() - t1) / 1000.0)
                            + " seconds elapsed time");
-
         return;
     }
 
@@ -1170,6 +1174,7 @@ public class KB {
      * value can be obtained
      */
     public String getArgType(String reln, int argPos) {
+
         // long t1 = System.currentTimeMillis();
         // System.out.println("ENTER KB.getArgType(" + reln + ", " + argPos + ")");
         String className = null;
@@ -1449,6 +1454,7 @@ public class KB {
      * @return void
      */
     public void buildRelationCaches(boolean clearExistingCaches) {
+
         System.out.println("ENTER KB.buildRelationCaches("
                            + clearExistingCaches + ")");
         long t1 = System.currentTimeMillis();
@@ -1464,7 +1470,6 @@ public class KB {
                 clearExistingCaches = false;
 
                 cacheGroundAssertionsAndPredSubsumptionEntailments();
-
                 it = getCachedTransitiveRelationNames().iterator();
                 relationName = null;
                 while (it.hasNext()) {
@@ -1538,6 +1543,7 @@ public class KB {
             System.out.println("  " + term);
             }
             }
+
             }
             }
         */
@@ -1577,7 +1583,6 @@ public class KB {
                                                                           1,
                                                                           true));
             subInverses.add("inverse");
-
             System.out.println("  subInverses == " + subInverses);
 
             String relation = null;
@@ -1705,9 +1710,7 @@ public class KB {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
         System.out.println("EXIT KB.cacheGroundAssertions()");
-
         return;
     }
 
@@ -1845,9 +1848,7 @@ public class KB {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
         System.out.println("EXIT KB.cacheGroundAssertionsAndPredSubsumptionEntailments()");
-
         return;
     }
 
@@ -2063,12 +2064,9 @@ public class KB {
      *
      * @return ArrayList
      */
-    public ArrayList<Formula> askWithRestriction(int argnum1, 
-                                                 String term1, 
-                                                 int argnum2, 
-                                                 String term2) {
+    public ArrayList askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
+       ArrayList<Formula> result = new ArrayList<Formula>();
         try {
             if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)) {
                 ArrayList partial1 = ask("arg", argnum1, term1);
@@ -2190,7 +2188,7 @@ public class KB {
                     partiala = partial1;
                 }
             }
-
+    
             if (partiala != null) {
                 Formula f = null;
                 for (int i = 0; i < partiala.size(); i++) {
@@ -2374,7 +2372,7 @@ public class KB {
      *         empy ArrayList if no Formulae are retrieved.  
      */
     public ArrayList askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
-        /*            
+        /*
           System.out.println("ENTER KB.askWithPredicateSubsumption("
           + relation + ", "
           + idxArgnum + ", "
@@ -2428,7 +2426,7 @@ public class KB {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        /*          
+        /*
           System.out.println("EXIT KB.askWithPredicateSubsumption("
           + relation + ", "
           + idxArgnum + ", "
@@ -3320,6 +3318,7 @@ public class KB {
     /** ***************************************************************
      */
     public void rehashFormula(Formula f, String formID) {
+
         ArrayList al = (ArrayList) formulas.get(formID);
         if ((al != null) && !al.isEmpty()) {
             if (al.size() == 1) {
@@ -3461,7 +3460,6 @@ public class KB {
             i = 0;
         return (String) tal.get(i);
     }
-
     /** ***************************************************************
      * Get the alphabetically num higher neighbor of this initial term, which
      * must exist in the current KB otherwise an empty string is returned.
@@ -3804,9 +3802,7 @@ public class KB {
                 buildRelationCaches();            
 
             if (loadVampireP) 
-                loadVampire();
-
-            // this.resortKbTerms();
+                loadVampire();            
         }
         catch (Exception ex) {
             result.append(ex.getMessage());
@@ -3834,7 +3830,7 @@ public class KB {
             synchronized (this.getTerms()) {
                 for (Iterator ci = constituents.iterator(); ci.hasNext();) {
                     cName = (String) ci.next();
-
+    
                     // Don't reuse the same cached data.  Instead, recompute
                     // it.
                     if (!cName.endsWith(_cacheFileSuffix))
@@ -3845,7 +3841,7 @@ public class KB {
                 formulaMap.clear();
                 terms.clear();
                 clearFormatMaps();
-
+    
                 int i = 0;
                 for (Iterator nci = newConstituents.iterator(); nci.hasNext(); i++) {
                     cName = (String) nci.next();
@@ -3853,14 +3849,14 @@ public class KB {
                     System.out.println("  constituent == " + cName);
                     sb.append(addConstituent(cName, false, false));
                 }
-
+    
                 // Rebuild the in-memory relation caches.
                 buildRelationCaches();
-
+    
                 // If cache == yes, write the cache file.
                 if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
                     sb.append(cache());            
-
+    
                 // At this point, we have reloaded all constituents, have
                 // rebuilt the relation caches, and, if cache == yes, have
                 // written out the _Cache.kif file.  Now we reload the
@@ -3868,7 +3864,6 @@ public class KB {
                 loadVampire();
             }
 
-            // this.resortKbTerms();
             result = sb.toString();
         }
         catch (Exception ex) {
@@ -3878,29 +3873,6 @@ public class KB {
         System.out.println("EXIT KB.reload()");
         return result;
     }
-
-    // /** ***************************************************************
-    //  * Resorts kb.terms ignoring namespace prefixes, if a DocGen
-    //  * instance can be obtained.  If there no namespace prefixes are
-    //  * used in the current KB, the resulting terms set is simply
-    //  * sorted by the term name in case insensitive alphabetic order.
-    //  *
-    //  * @return A SortedSet of Strings, which contains the same values
-    //  * as kb.terms.
-    //  */
-    // private SortedSet<String> resortKbTerms() {
-    //     SortedSet<String> result = null;
-    //     try {
-    //         DocGen dg = DocGen.getInstance(this.name);
-    //         if (dg != null) {
-    //             result = dg.resortKbTerms(this);
-    //         }
-    //     }
-    //     catch (Exception ex) {
-    //         ex.printStackTrace();
-    //     }
-    //     return result;
-    // }
 
     /** ***************************************************************
      * Write a KIF file consisting of all the formulas in the
@@ -6058,13 +6030,436 @@ public class KB {
      * List all terms that don't have an externalImage link
      */
     private void termsWithNoPictureLinks() {
-        synchronized (this.getTerms()) {
+
+       synchronized (this.getTerms()) {
             for (Iterator it = getTerms().iterator(); it.hasNext();) {
                 String term = (String) it.next();
                 ArrayList al = askWithRestriction(0,"externalImage",1,term);
                 if (al == null || al.size() < 1) 
-                    System.out.println(term + ", ");            
+                    System.out.println(term + ", ");
             }
+        }
+    }
+
+    /** *************************************************************
+     *  Turn SUMO into a semantic network by extracting all ground
+     *  binary relations, turning all higher arity relations into a
+     *  set of binary relations, and making all term co-occurring in
+     *  an axiom to be related with a general "link" relation. Also
+     *  use the subclass hierarchy to relate all parents of terms in
+     *  domain statements, through the relation itself but with a
+     *  suffix designating it as a separate relation. Convert SUMO
+     *  terms to WordNet synsets.
+     */
+    private void generateSemanticNetwork() {
+
+        TreeSet resultSet = new TreeSet();
+        Iterator it = formulaMap.keySet().iterator();
+        while (it.hasNext()) {
+            String formula = (String) it.next();
+            StreamTokenizer_s st = new StreamTokenizer_s(new StringReader(formula));
+            KIF.setupStreamTokenizer(st);
+            ArrayList al = new ArrayList();
+            boolean firstToken = true;
+            String predicate = "link";
+            try {
+                while (st.nextToken() != StreamTokenizer_s.TT_EOF) {
+                    if (st.ttype == StreamTokenizer_s.TT_WORD) {
+                        String token = st.sval;
+                        // System.out.println("INFO in KB.generateSemanticNetwork(): token: " + token);
+                        if (firstToken && !Formula.isLogicalOperator(token))                         
+                            predicate = token;
+                        if (Formula.isTerm(token) && !Formula.isLogicalOperator(token) && !firstToken)
+                            al.add(token);
+                        if (firstToken) 
+                            firstToken = false;
+                    }
+                }
+            } catch (IOException ioe) {
+                System.out.println("Error in KB.generateSemanticNetwork(): error parsing: " + formula);
+            }
+            if (al != null && al.size() > 1 && !predicate.equals("link") && 
+                !predicate.equals("instance") && !predicate.equals("subclass") && 
+                !predicate.equals("domain")) {
+                for (int i = 0; i < al.size(); i++) {
+                    String firstTerm = (String) al.get(i);
+                    for (int j = i; j < al.size(); j++) {
+                        String otherTerm = (String) al.get(j);
+                        if (!firstTerm.equals(otherTerm)) {
+                            ArrayList synsets1 = (ArrayList) WordNet.wn.SUMOHash.get(firstTerm);
+                            ArrayList synsets2 = (ArrayList) WordNet.wn.SUMOHash.get(otherTerm);
+                            if (synsets1 != null & synsets2 != null) {
+                                for (int k = 0; k < synsets1.size(); k++) {
+                                    String firstSynset = (String) synsets1.get(k);
+                                    for (int l = 0; l < synsets2.size(); l++) {
+                                        String secondSynset = (String) synsets2.get(l);
+                                        // resultSet.add(predicate + " " + firstSynset + " " + secondSynset);
+                                        // System.out.println(predicate + " " + firstSynset + " " + secondSynset);
+                                        char firstLetter = WordNetUtilities.posNumberToLetter(firstSynset.charAt(0));
+                                        char secondLetter = WordNetUtilities.posNumberToLetter(secondSynset.charAt(0));
+                                        System.out.println("u:ENG-30-" + firstSynset.substring(1) + "-" + firstLetter + " " + 
+                                                           "v:ENG-30-" + secondSynset.substring(1) + "-" + secondLetter);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /*
+        if (resultSet != null) {
+            Iterator it2 = resultSet.iterator();
+            while (it2.hasNext()) {
+                String entry = (String) it2.next();
+                System.out.println(entry);
+            }
+        } */
+    }
+
+    /** *************************************************************
+     *  Replace variables in a formula with "gensym" constants.
+     */
+    private void instantiateFormula(Formula pre, ArrayList<Formula> assertions) {
+
+
+        System.out.println("INFO in KB.instantiateFormula(): " + pre);
+        ArrayList<ArrayList> al = pre.collectVariables();
+        ArrayList<String> vars = new ArrayList();
+        vars.addAll((ArrayList) al.get(0));
+        vars.addAll((ArrayList) al.get(1));
+        System.out.println(vars);
+        TreeMap<String,String> m = new TreeMap();
+        for (int i = 0; i < vars.size(); i++) 
+            m.put((String) vars.get(i),"gensym" + (new Integer(gensym++)).toString()); 
+        System.out.println(m);
+        pre = pre.instantiateVariables(m);
+        assertions.add(pre);
+    }
+
+    /** *************************************************************
+     *  Take the precondition from a rule and try to separate it
+     *  into separate clauses that can be solved and placed into
+     *  "head".
+     *  @param head is the current set of preconditions which will
+     *              keep getting expanded until its not possible to
+     *              find more, or the proof size limit is reached.
+     *              Setting this list is a side effect.
+     *  @param assertions is the list of ground assertions that are
+     *                    needed as background knowledge to support
+     *                    the proof.  Setting this list is a side
+     *                    effect.
+     */
+    private void extractPreconditions(Formula pre, ArrayList<Formula> head, 
+                                      ArrayList<Formula> assertions) {
+
+        String pred = pre.car();
+        if (pred.equals("and")) {
+            Formula f = new Formula();
+            f.read(pre.cdr());
+            while (!f.empty()) {
+                Formula f2 = new Formula();
+                f2.read(f.car());
+                f.read(f.cdr());
+                extractPreconditions(f2,head,assertions);
+            }
+        }
+        else if (pred.equals("not")) {
+            if (!head.contains(pre))             
+                head.add(pre);
+        }
+        else if (Formula.isLogicalOperator(pred)) {
+            System.out.println("INFO in KB.extractPreconditions(): rejecting formula:");
+            System.out.println(pre.theFormula);
+            instantiateFormula(pre,assertions);
+        }
+        else {
+            if (!head.contains(pre))             
+                head.add(pre);
+        }
+    }
+
+    /** *************************************************************
+     *  Take the consequent from a rule and try to separate it
+     *  into separate clauses
+     *  @return an ArrayList of Formulas
+     */
+    private ArrayList<Formula> extractConsequentClauses(Formula form) {
+
+        ArrayList<Formula> result = new ArrayList();
+        String pred = form.car();
+        if (pred.equals("and")) {
+            Formula f = new Formula();
+            f.read(form.cdr());
+            while (!f.empty()) {
+                Formula f2 = new Formula();
+                f2.read(f.car());
+                f.read(f.cdr());
+                result.addAll(extractConsequentClauses(f2));
+            }
+        }
+  //      else if (pred.equals("exists")) {
+  //          result.addAll(extractConsequentClauses(form));
+  //      }
+        else {
+            result.add(form);
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     *  Find the ground formula that satisfies this
+     *  statement, which is assumed to be a simple clause.
+     */
+    private Formula findGroundFormulaInferenceMatch(Formula f) {
+
+        System.out.println("INFO in KB.findGroundFormulaInferenceMatch(): " + f);
+        if (f.argumentsToArrayList(0) == null)
+            return null;
+        String arg1 = null;
+        String arg2 = null;
+        int argnum1 = 0;
+        int argnum2 = 0;
+        int i = 0;
+        while (arg2 == null && i < f.argumentsToArrayList(0).size()) {
+            String arg = f.getArgument(i++);
+            if (arg1 == null) {
+                arg1 = f.getArgument(i-1);
+                argnum1 = i-1;
+            }
+            else {
+                arg2 = f.getArgument(i-1);
+                argnum2 = i-1;
+            }
+        }
+        ArrayList<Formula> al = null;
+        if (arg1 != null && arg2 == null) {
+            al = ask("stmt",argnum1,arg1);
+        }
+        al = askWithRestriction(argnum1,arg1,argnum2,arg2);
+        Formula f2 = null;
+        for (int j = 0; j < al.size(); j++) {
+            TreeMap m = f.unify(f2);
+            if (m != null) {
+                return f2.substitute(m);
+            }
+        }
+        return null;
+    }
+
+    /** *************************************************************
+     *  Find the first rule that satisfies this
+     *  statement, which is assumed to be a simple clause
+     */
+    private ArrayList<String> removeVariablesFromList(ArrayList<String> al) {
+
+        System.out.println("INFO in KB.removeVariablesFromList(): " + al);
+        ArrayList<String> result = new ArrayList();
+        if (al == null) 
+            return result;
+        for (int i = 0; i < al.size(); i++) {
+            String s = (String) al.get(i);
+            if (!Formula.isVariable(s) && !result.contains(s)) 
+                result.add(s);
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     *  Find the first rule that satisfies this
+     *  statement, which is assumed to be a simple clause
+     */
+    private Formula findRuleInferenceMatch(Formula f) {
+
+        System.out.println("INFO in KB.findRuleInferenceMatch(): " + f);
+        ArrayList<String> termList = f.argumentsToArrayList(0);
+        termList = removeVariablesFromList(termList);
+        System.out.println("terms: " + termList);
+        if (termList.size() > 0) {
+            ArrayList<Formula> rules = ask("cons",0,(String) termList.get(termList.size()-1));
+            System.out.println("Found " + rules.size() + " matching rules");
+            for (int i = 0; i < rules.size(); i++) {
+                Formula f2 = (Formula) rules.get(i);
+                boolean match = true;
+                String consequent = f2.getArgument(2);
+                System.out.println("consequent: " + consequent);
+                Formula f3 = new Formula();
+                f3.read(consequent);
+                String pred = f3.getArgument(0);
+                if (f2.theFormula.indexOf("or") < 0 && f2.theFormula.indexOf("exists") < 0 &&
+                    !f2.isHigherOrder()) {
+                    for (int j = 1; j < termList.size(); j++) {
+                        String s = (String) termList.get(j);
+                        if (consequent.indexOf(s) < 0) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        System.out.println("Attempting to unify rule " + f2);
+                        System.out.println("with " + f);
+                        TreeMap m = f.unify(f2);
+                        if (m != null) {
+                            System.out.println("Matched rule " + f2);
+                            return f2;
+                        }
+                    }
+                }
+            }
+
+        }
+        return null;
+    }
+
+    /** *************************************************************
+     *  Find the first rule or ground formula that satisfies this
+     *  statement, which can be a simple clause or a more complex
+     *  formula.
+     */
+    private Formula findInferenceMatch(Formula f) {
+
+        System.out.println("INFO in KB.findInferenceMatch(): " + f);
+        if (f.isRule())         // exclude rules for now
+            return null;
+        Formula f2 = findGroundFormulaInferenceMatch(f);
+        if (f2 == null)
+            return findRuleInferenceMatch(f);        
+        else
+            return f2;
+    }
+
+    /** *************************************************************
+     *  Take the precondition from a rule and try to separate it
+     *  into separate clauses that can be solved and placed into
+     *  "head".
+     *  @param head is the current set of preconditions which will
+     *              keep getting expanded until its not possible to
+     *              find more, or the proof size limit is reached.
+     *              Setting this list is a side effect.
+     *  @param assertions is the list of ground assertions that are
+     *                    needed as background knowledge to support
+     *                    the proof.  Setting this list is a side
+     *                    effect.
+     */
+    private void findProofFromRule(Formula f, ArrayList<Formula> head, 
+                                   ArrayList<Formula> assertions,
+                                   int numAxioms,
+                                   ArrayList<Formula> axioms) {
+
+        Formula pre = new Formula();
+        pre.read(f.getArgument(1));
+        axioms.add(f);
+        extractPreconditions(pre,head,assertions);
+        while (head.size() > 0) {
+            ArrayList<Formula> newhead = new ArrayList<Formula>(); 
+            newhead.addAll(head);
+            for (int j = 0; j < head.size(); j++) {
+                Formula f2 = (Formula) head.get(j);
+                newhead.remove(f2);
+                if (axioms.size() + head.size() < numAxioms) {
+                    if (f2.isRule()) {
+                        findProofFromRule(f2,newhead,assertions,numAxioms,axioms);
+                        if (!axioms.contains(f2))                         
+                            axioms.add(f2);
+                    }
+                    else {
+                        Formula match = findInferenceMatch(f2);
+                        System.out.println("match:" + match);
+                        if (match == null) {
+                            instantiateFormula(f2,assertions);
+                        }
+                        else { 
+                            System.out.println("Adding match to head");
+                            if (!newhead.contains(match)) 
+                                newhead.add(match);
+                        }
+                    }
+                }
+                else {
+                    if (f2.isRule()) {
+                        Formula ant = new Formula();
+                        ant.read(f2.getArgument(1));
+                        instantiateFormula(ant,assertions);
+                    }
+                    else
+                        instantiateFormula(f2,assertions);
+                }
+            }
+            head = new ArrayList<Formula>();
+            head.addAll(newhead);
+
+            System.out.println("INFO in KB.findProofFromRule(): head:");
+            for (int j = 0; j < head.size(); j++) {
+                Formula f2 = (Formula) head.get(j);
+                System.out.println(f2);
+            }
+        }
+
+    }
+
+    /** *************************************************************
+     *  Generate random proof trees, then write out a set of
+     *  assertions, a query, and the proof.  The assertions and
+     *  query then become a test for a theorem prover.
+     *  Randomly find an axiom, then find ground statements or rules
+     *  with conclusions that satisfy the axiom.  Repeat until all
+     *  ground preconditions are found, or the number of axioms
+     *  found is greater than numAxioms, at which point generate
+     *  ground statements to satisfy any remaining preconditions.
+     */
+    private void generateRandomProof() {
+
+        System.out.println("INFO in KB.generateRandomProof(): starting");
+        int numProofs = 1;
+        ArrayList<Formula> formulaList = new ArrayList<Formula>();
+        ArrayList<Formula> rules = new ArrayList<Formula>();
+
+        formulaList.addAll(formulaMap.values());
+        for (int i = 0; i < formulaList.size(); i++) {
+            Formula f = (Formula) formulaList.get(i);
+            if (f.isRule() && !rules.contains(f)) 
+                rules.add(f);
+        }
+        formulaList.addAll(formulaMap.values());
+
+        for (int i = 0; i < numProofs; i++) {
+            int numAxioms = 5;
+            Random r = new Random(4);
+            ArrayList<Formula> axioms = new ArrayList<Formula>(); 
+            ArrayList<Formula> head = new ArrayList<Formula>(); 
+            ArrayList<Formula> assertions = new ArrayList<Formula>();
+            Formula query = new Formula();
+            while (axioms.size() < 2) {
+                axioms = new ArrayList<Formula>(); 
+                head = new ArrayList<Formula>(); 
+                assertions = new ArrayList<Formula>(); 
+                Formula f = (Formula) rules.get(r.nextInt(rules.size()));
+                while (f.isHigherOrder()) 
+                    f = (Formula) rules.get(r.nextInt(rules.size()));
+
+                System.out.println("INFO in KB.generateRandomProof(): start rule:" + f);
+                query = new Formula();
+                query.read(f.getArgument(2));
+
+                findProofFromRule(f,head,assertions,numAxioms,axioms);
+
+                System.out.println();
+                System.out.println();
+                System.out.println("INFO in KB.generateRandomProof(): query:");
+                System.out.println(query);
+
+                System.out.println("INFO in KB.generateRandomProof(): axioms:");
+                for (int j = 0; j < axioms.size(); j++) {
+                    Formula f2 = (Formula) axioms.get(j);
+                    System.out.println(f2);
+                }
+                System.out.println("INFO in KB.generateRandomProof(): assertions:");
+                for (int j = 0; j < assertions.size(); j++) {
+                    Formula f2 = (Formula) assertions.get(j);
+                    System.out.println(f2);
+                }                                                                        
+            }
+
         }
     }
 
@@ -6082,10 +6477,23 @@ public class KB {
           KB kb = KBmanager.getMgr().getKB("SUMO");
           kb.termsWithNoPictureLinks();
         */
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            //WordNet.initOnce();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        //kb.generateSemanticNetwork();
+        kb.generateRandomProof();
+
+        /*
         String foo = "(rel bar \"test\")";
         Formula f = new Formula();
         f.read(foo);
         System.out.println(f.getArgument(2).equals("\"test\""));
+    */
 
         //System.out.println("-------------- Terms ---------------");
         //System.out.println(kb.allTerms());
