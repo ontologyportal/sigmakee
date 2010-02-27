@@ -58,7 +58,7 @@ public class KB {
 
     /** A threshold limiting the number of values that will be added to
      * a single relation cache table. */
-    private static final int MAX_CACHE_SIZE = 1000000L;
+    private static final int MAX_CACHE_SIZE = 1000000;
 
     /** A List of the names of cached transitive relations. */
     private List cachedTransitiveRelationNames = Arrays.asList("subclass", 
