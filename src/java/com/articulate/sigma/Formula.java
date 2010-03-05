@@ -3964,7 +3964,7 @@ public class Formula implements Comparable {
                                 String arg = null;
                                 for (int i = start; i < argslen; i++) {
                                     arg = (String) args.get(i);
-                                    if (!isVariable(arg) && !arg.equal("SetOrClass")) {
+                                    if (!isVariable(arg) && !arg.equals("SetOrClass")) {
                                         StringBuilder sb = new StringBuilder();
                                         sb.setLength(0);
                                         sb.append("(instance ");
