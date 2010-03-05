@@ -58,7 +58,7 @@ public class KB {
 
     /** A threshold limiting the number of values that will be added to
      * a single relation cache table. */
-    private static final int MAX_CACHE_SIZE = 1000000;
+    private static final long MAX_CACHE_SIZE = 1000000;
 
     /** A List of the names of cached transitive relations. */
     private List cachedTransitiveRelationNames = Arrays.asList("subclass", 
@@ -6394,7 +6394,6 @@ public class KB {
                 System.out.println(f2);
             }
         }
-
     }
 
     /** *************************************************************
@@ -6464,6 +6463,50 @@ public class KB {
     }
 
     /** *************************************************************
+     *  Find all cases of where (instance A B) (instance B C) as
+     *  well as all cases of where (instance A B) (instance B C)
+     *  (instance C D).  Report true if any such cases are found,
+     *  false otherwise.
+     */
+    public boolean instanceOfInstanceP() {
+
+        boolean result = false;
+        Iterator it = terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            ArrayList<Formula> al = askWithRestriction(0,"instance",1,term);
+            for (int i = 0; i < al.size(); i++) {
+                Formula f = (Formula) al.get(i);
+                String term2 = f.getArgument(2);
+                if (Formula.atom(term2)) {
+                    ArrayList<Formula> al2 = askWithRestriction(0,"instance",1,term2);
+                    if (al2.size() > 0) 
+                        result = true;
+                    for (int j = 0; j < al2.size(); j++) {
+                        Formula f2 = (Formula) al2.get(j);
+                        String term3 = f2.getArgument(2);
+                        System.out.println(term + "->" + term2 + "->" + term3);
+                        System.out.println(f);
+                        System.out.println(f2);
+                        if (Formula.atom(term3)) {
+                            ArrayList<Formula> al3 = askWithRestriction(0,"instance",1,term3);
+                            for (int k = 0; k < al3.size(); k++) {
+                                Formula f3 = (Formula) al3.get(k);
+                                String term4 = f3.getArgument(2);
+                                System.out.println(term + "->" + term2 + "->" + term3 + "->" + term4);
+                                System.out.println(f);
+                                System.out.println(f2);
+                                System.out.println(f3);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /** *************************************************************
      */
     public static void main(String[] args) {
 
@@ -6486,7 +6529,8 @@ public class KB {
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
         //kb.generateSemanticNetwork();
-        kb.generateRandomProof();
+        //kb.generateRandomProof();
+        kb.instanceOfInstanceP();
 
         /*
         String foo = "(rel bar \"test\")";
