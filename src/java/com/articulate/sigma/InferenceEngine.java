@@ -1,16 +1,12 @@
-/** This code is copyright Krystof Hoder and Articulate Software
+/** This code is copyright Articulate Software
 2009. This software is released under the GNU Public License
 <http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
 by use of this code, to credit Articulate Software in any
 writings, briefings, publications, presentations, or other representations
 of any software which incorporates, builds on, or uses this code.  
 
-Please cite the following when describing SInE
-Hoder, K., (2008) The SUMO Inference Engine (SInE).  Master's thesis,
-Charles University, Prague.  See also http://www.cs.man.ac.uk/~hoderk/sine/
-                                           
 Please cite the following article in any publication with references
-when addressing Sigma in general:
+when addressing Sigma:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
@@ -21,8 +17,7 @@ package com.articulate.sigma;
 import java.io.IOException;
 
 /**
- * @author Krystof Hoder
- *
+ * @author Adam Pease
  */
 public abstract class InferenceEngine {
 
@@ -31,7 +26,7 @@ public abstract class InferenceEngine {
 		public abstract InferenceEngine createFromKBFile(String kbFileName);
 	}
 	
-    /**
+    /** *************************************************************
      * Submit a query.
      *
      * @param formula query in the KIF syntax
@@ -43,7 +38,7 @@ public abstract class InferenceEngine {
     public abstract String submitQuery (String formula,int timeLimit,int bindingsLimit) 
         throws IOException;
 
-    /**
+    /** *************************************************************
      * Add an assertion.
      *
      * @param formula asserted formula in the KIF syntax
