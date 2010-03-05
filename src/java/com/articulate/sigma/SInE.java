@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.regex.*;
 
 /**
- * @author Krystof Hoder
+ * @author Krystof Hoder - Minor changes by Adam Pease
  */
 public class SInE extends InferenceEngine {
 
@@ -122,7 +122,7 @@ public class SInE extends InferenceEngine {
             kbFile = new File(kbFileName);
             if (!kbFile.exists() ) {
                 error = ("The file " + kbFileName + " does not exist");
-                System.out.println("INFO in Vampire.getNewInstance(): " + error);
+                System.out.println("INFO in SInE(): " + error);
                 KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                              + "\n<br/>" + error + "\n<br/>");
             }
