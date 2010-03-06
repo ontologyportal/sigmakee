@@ -4321,6 +4321,7 @@ public class Formula implements Comparable {
     }
 
     public static final String termMentionSuffix  = "__m";
+    public static final String classSymbolSuffix  = "__t";  // for the case when a class is used as an instance
     public static final String termSymbolPrefix   = "s__";
     public static final String termVariablePrefix = "V__";
   
@@ -4333,51 +4334,36 @@ public class Formula implements Comparable {
      * @return the String that is the translated token
      */
     private static String translateWord(StreamTokenizer_s st, boolean hasArguments) {
+
         String result = null;
         try {
-
             if (DEBUG) {
-                System.out.println("ENTER Formula.translateWord("
-                                   + st.toString()
-                                   + ", "
-                                   + hasArguments
-                                   + ")");
+                System.out.println("ENTER Formula.translateWord(" + st.toString()
+                                   + ", " + hasArguments + ")");
                 System.out.println("  st.ttype == " + st.ttype);
                 System.out.println("  st.sval == " + st.sval);
                 System.out.println("  st.nval == " + st.nval);
             }
-
             result = translateWord_1(st, hasArguments);
-
         }
         catch (Exception ex) {
-            System.out.println("Error in Formula.translateWord(" 
-                               + st.toString() 
-                               + ", " 
-                               + hasArguments
-                               + "): "
-                               + ex.getMessage());
+            System.out.println("Error in Formula.translateWord(" + st.toString() 
+                               + ", " + hasArguments + "): " + ex.getMessage());
             System.out.println("  st.ttype == " + st.ttype);
             System.out.println("  st.sval == " + st.sval);
             System.out.println("  st.nval == " + st.nval);
             ex.printStackTrace();
         }
-
         if (DEBUG) {
-            System.out.println("EXIT Formula.translateWord("
-                               + st.toString()
-                               + ", "
-                               + hasArguments
-                               + ")");
+            System.out.println("EXIT Formula.translateWord(" + st.toString()
+                               + ", " + hasArguments + ")");
             System.out.println("  st.ttype == " + st.ttype);
             System.out.println("  st.sval == " + st.sval);
             System.out.println("  st.nval == " + st.nval);
             System.out.println("  result == " + result);
         }
-
         return result;
     }
-
 
     /** ***************************************************************
      * Convert the logical operators and inequalities in SUO-KIF to 
@@ -4410,7 +4396,7 @@ public class Formula implements Comparable {
         kifRelations.addAll(kifPredicates);
         kifRelations.addAll(kifFunctions);
 
-        //DEBUG System.out.println("Translating word " + st.sval + " with hasArguments " + hasArguments);
+        // DEBUG System.out.println("Translating word " + st.sval + " with hasArguments " + hasArguments);
 
         // Context creeps back in here whether we want it or not.  We
         // consult the KBmanager to determine if holds prefixing is
@@ -4424,21 +4410,17 @@ public class Formula implements Comparable {
         String variablePrefix = Formula.termVariablePrefix;
         try {
             mgr = KBmanager.getMgr();
-            holdsPrefixInUse = ((mgr != null) 
-                                && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
-            if (holdsPrefixInUse && !kifRelations.contains(st.sval)) {
-                mentionSuffix = ""; 
-            }
+            holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
+            if (holdsPrefixInUse && !kifRelations.contains(st.sval)) 
+                mentionSuffix = "";             
         }
         catch (Exception ex) {
             //---Be silent if there is a problem getting the KBmanager.
         }
 
         //----Places single quotes around strings, and replace \n by space
-        if (st.ttype == 34) {
-            return("'" + 
-                   st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
-        }
+        if (st.ttype == 34) 
+            return("'" + st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");        
         //----Fix variables to have leading V_
         char ch0 = ((st.sval.length() > 0)
                     ? st.sval.charAt(0)
@@ -4446,38 +4428,28 @@ public class Formula implements Comparable {
         char ch1 = ((st.sval.length() > 1)
                     ? st.sval.charAt(1)
                     : 'x');
-        if (ch0 == '?' || ch0 == '@') {
-            return(termVariablePrefix + st.sval.substring(1).replace('-','_'));
-        }
+        if (ch0 == '?' || ch0 == '@') 
+            return(termVariablePrefix + st.sval.substring(1).replace('-','_'));        
         //----Translate special predicates
         translateIndex = 0;
-        while (translateIndex < kifPredicates.size() &&
-               !st.sval.equals(kifPredicates.get(translateIndex))) {
-            translateIndex++;
-        }
-        if (translateIndex < kifPredicates.size()) {
+        while (translateIndex < kifPredicates.size() && !st.sval.equals(kifPredicates.get(translateIndex))) 
+            translateIndex++;        
+        if (translateIndex < kifPredicates.size()) 
             // return((hasArguments ? "$" : "") + tptpPredicates[translateIndex]);
-            return(tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
-        }
+            return(tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));        
         //----Translate special functions
         translateIndex = 0;
-        while (translateIndex < kifFunctions.size() &&
-               !st.sval.equals(kifFunctions.get(translateIndex))) {
-            translateIndex++;
-        }
-        if (translateIndex < kifFunctions.size()) {
+        while (translateIndex < kifFunctions.size() && !st.sval.equals(kifFunctions.get(translateIndex))) 
+            translateIndex++;        
+        if (translateIndex < kifFunctions.size()) 
             // return((hasArguments ? "$" : "") + tptpFunctions[translateIndex]);
-            return(tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
-        }
+            return(tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));        
         //----Translate operators
         translateIndex = 0;
-        while (translateIndex < kifOps.size() &&
-               !st.sval.equals(kifOps.get(translateIndex))) {
-            translateIndex++;
-        }
-        if (translateIndex < kifOps.size()) {
-            return(tptpOps.get(translateIndex));
-        }
+        while (translateIndex < kifOps.size() && !st.sval.equals(kifOps.get(translateIndex))) 
+            translateIndex++;        
+        if (translateIndex < kifOps.size()) 
+            return(tptpOps.get(translateIndex));        
         //----Do nothing to numbers
         if (st.ttype == StreamTokenizer.TT_NUMBER ||
             (st.sval != null && (Character.isDigit(ch0) ||
@@ -4571,16 +4543,18 @@ public class Formula implements Comparable {
      * Parse a single formula into TPTP format
      */
     public static String tptpParseSUOKIFString(String suoString) {
-
-        /*
-          System.out.println("ENTER Formula.tptpParseSUOKIFString(\""
-          + suoString
-          + "\")");
-        */
+        
+        //  System.out.println("ENTER Formula.tptpParseSUOKIFString(\"" + suoString + "\")");
+        Formula tempF = new Formula();      // Special case to renam Foo for (instance Foo SetOrClass)
+        tempF.read(suoString);              // so a symbol can't be both a class and an instance.
+        if (tempF.getArgument(0).equals("instance") && 
+            tempF.getArgument(2).equals("SetOrClass")) {
+            String arg1 = tempF.getArgument(1);
+            suoString = "(instance " + arg1 + classSymbolSuffix + " SetOrClass)";
+        }
 
         StreamTokenizer_s st = null;
         String translatedFormula = null;
-
         try {
             int parenLevel;
             boolean inQuantifierVars;
@@ -4608,17 +4582,15 @@ public class Formula implements Comparable {
             KIF.setupStreamTokenizer(st);
 
             do {
-                st.nextToken();
-                //----Open bracket
-                if (st.ttype==40) {
-                    if (lastWasOpen) {    //----Should not have ((in KIF
+                st.nextToken();                
+                if (st.ttype==40) {         //----Open bracket
+                    if (lastWasOpen) {      //----Should not have ((in KIF
                         System.out.println("ERROR: Double open bracket at " + tptpFormula);
                         throw new ParseException("Parsing error in " + suoString,0);
                     }
                     //----Track nesting of ()s for hol__, so I know when to close the '
-                    if (inHOL) {
-                        inHOLCount++;
-                    }
+                    if (inHOL) 
+                        inHOLCount++;                    
                     lastWasOpen = true;
                     parenLevel++;
                     //----Operators
@@ -4640,23 +4612,18 @@ public class Formula implements Comparable {
                         tptpFormula.append((String)operatorStack.peek()); 
                     }
                     //----If this is the start of a hol__ situation, quote it all
-                    if (inHOL && inHOLCount == 1) {
-                        tptpFormula.append("'");
-                    }
-                    //----()s around all operator expressions
-                    tptpFormula.append("(");      
-                    //----Output unary as prefix
-                    if (arity == 1) {
+                    if (inHOL && inHOLCount == 1) 
+                        tptpFormula.append("'");                                        
+                    tptpFormula.append("(");          //----()s around all operator expressions                
+                    if (arity == 1) {                 //----Output unary as prefix
                         tptpFormula.append(translateWord(st,false));
                         //----Note the new operator (dummy) with 0 operands so far
                         countStack.push(new Integer(0));
                         operatorStack.push(",");
                         //----Check if the next thing will be the quantified variables
-                        if (st.sval.equals("forall") || st.sval.equals("exists")) {
-                            inQuantifierVars = true;
-                        }
-                        //----Binary operator
-                    } else if (arity == 2) {
+                        if (st.sval.equals("forall") || st.sval.equals("exists")) 
+                            inQuantifierVars = true;                                                
+                    } else if (arity == 2) {    //----Binary operator
                         //----Note the new operator with 0 operands so far
                         countStack.push(new Integer(0));
                         operatorStack.push(translateWord(st,false));
@@ -4668,30 +4635,24 @@ public class Formula implements Comparable {
                     if (!inHOL) {
                         inHOL = true;
                         inHOLCount = 0;
-                    }
-                    //----Quote - Term token translation to TPTP
-                } else if (st.ttype == 34 ||
+                    }                    
+                } else if (st.ttype == 34 ||  //----Quote - Term token translation to TPTP
                            st.ttype == StreamTokenizer.TT_NUMBER || 
                            (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
-                           st.ttype == StreamTokenizer.TT_WORD) {      
-                    //----Start of a predicate or variable list
-                    if (lastWasOpen) {
-                        //----Variable list
-                        if (inQuantifierVars) {
+                           st.ttype == StreamTokenizer.TT_WORD) {                          
+                    if (lastWasOpen) {          //----Start of a predicate or variable list                        
+                        if (inQuantifierVars) { //----Variable list
                             tptpFormula.append("[");
                             tptpFormula.append(translateWord(st,false));
-                            incrementTOS(countStack);
-                            //----Predicate
-                        } else {
+                            incrementTOS(countStack);                            
+                        } else {                //----Predicate
                             //----This is the start of a new term - put in the infix operator if not the
                             //----first term for this operator
-                            if ((Integer)(countStack.peek()) > 0) {
-                                tptpFormula.append((String)operatorStack.peek());
-                            }
+                            if ((Integer)(countStack.peek()) > 0) 
+                                tptpFormula.append((String)operatorStack.peek());                           
                             //----If this is the start of a hol__ situation, quote it all
-                            if (inHOL && inHOLCount == 1) {
-                                tptpFormula.append("'");
-                            }
+                            if (inHOL && inHOLCount == 1) 
+                                tptpFormula.append("'");                            
                             //----Predicate or function and (
                             tptpFormula.append(translateWord(st,true));
                             tptpFormula.append("(");
@@ -4703,9 +4664,8 @@ public class Formula implements Comparable {
                     } else {
                         //----This is the start of a new term - put in the infix operator if not the
                         //----first term for this operator
-                        if ((Integer)(countStack.peek()) > 0) {
-                            tptpFormula.append((String)operatorStack.peek());
-                        }
+                        if ((Integer)(countStack.peek()) > 0) 
+                            tptpFormula.append((String)operatorStack.peek());                        
                         //----Output the word
                         tptpFormula.append(translateWord(st,false));
                         //----Increment counter for this level
@@ -4714,19 +4674,16 @@ public class Formula implements Comparable {
                     //----Collect variables that are used and quantified
                     if (isNonEmptyString(st.sval) 
                         && (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@')) {
-                        if (inQuantifierVars) {
+                        if (inQuantifierVars) 
                             addVariable(st,quantifiedVariables);
-                        } else {
-                            addVariable(st,allVariables);
-                        }
+                        else 
+                            addVariable(st,allVariables);                        
                     }
-                    lastWasOpen = false; 
-                    //----Close bracket.
-                } else if (st.ttype==41) {
+                    lastWasOpen = false;                     
+                } else if (st.ttype==41) {      //----Close bracket
                     //----Track nesting of ()s for hol__, so I know when to close the '
-                    if (inHOL) {
-                        inHOLCount--;
-                    }
+                    if (inHOL) 
+                        inHOLCount--;                    
                     //----End of quantified variable list
                     if (inQuantifierVars) {
                         //----Fake restarting the argument list because the quantified variable list
@@ -4760,27 +4717,23 @@ public class Formula implements Comparable {
                         if (allVariables.size() > 0) {
                             quantification = "! [";
                             for (index = 0; index < allVariables.size(); index++) {
-                                if (index > 0) {
-                                    quantification += ",";
-                                }
+                                if (index > 0) 
+                                    quantification += ",";                                
                                 quantification += (String)allVariables.elementAt(index);
                             }
                             quantification += "] : ";
                             tptpFormula.insert(0,"( " + quantification);
                             tptpFormula.append(" )");
                         }
-                        if (StringUtil.emptyString(translatedFormula)) {
+                        if (StringUtil.emptyString(translatedFormula)) 
                             translatedFormula = "( " + tptpFormula.toString() + " )";
-                        } else {
+                        else 
                             translatedFormula += "& ( " + tptpFormula.toString() + " )";
-                        }
-
-                        if ((Integer)(countStack.pop()) != 1) {
-                            System.out.println("Error in KIF.tptpParse(): Not one formula");
-                        }
+                        
+                        if ((Integer)(countStack.pop()) != 1) 
+                            System.out.println("Error in KIF.tptpParse(): Not one formula");                        
                     } else if (parenLevel < 0) {
-                        System.out.print("ERROR: Extra closing bracket at " + 
-                                         tptpFormula.toString());
+                        System.out.print("ERROR: Extra closing bracket at " + tptpFormula.toString());
                         throw new ParseException("Parsing error in " + suoString,0);
                     }      
                 } else if (st.ttype != StreamTokenizer.TT_EOF) {
@@ -4791,9 +4744,8 @@ public class Formula implements Comparable {
             } while (st.ttype != StreamTokenizer.TT_EOF);
 
             //----Bare word like $false didn't get done by a closing)
-            if (StringUtil.emptyString(translatedFormula)) {
-                translatedFormula = tptpFormula.toString();
-            }
+            if (StringUtil.emptyString(translatedFormula)) 
+                translatedFormula = tptpFormula.toString();            
         }
         catch (Exception ex2) {
             System.out.println("Error in Formula.tptpParseSUOKIFString(" + suoString + ")");
@@ -4801,14 +4753,8 @@ public class Formula implements Comparable {
             System.out.println("  message == " + ex2.getMessage());
             ex2.printStackTrace();
         }
-
-        /*
-          System.out.println("  ==> " + translatedFormula);
-          System.out.println("EXIT Formula.tptpParseSUOKIFString(\""
-          + suoString
-          + "\")");
-        */
-
+          //System.out.println("  ==> " + translatedFormula);
+          //System.out.println("EXIT Formula.tptpParseSUOKIFString(\"" + suoString + "\")");        
         return translatedFormula;
     }
 
@@ -4817,18 +4763,10 @@ public class Formula implements Comparable {
      */
     public void tptpParse(boolean query, KB kb, List preProcessedForms) 
         throws ParseException, IOException {
-        if (DEBUG) {
-            System.out.println("ENTER Formula.tptpParse(" 
-                               + this
-                               + ", "
-                               + query
-                               + ", "
-                               + kb
-                               + ", "
-                               + preProcessedForms
-                               + ")");
-        }
 
+        if (DEBUG) 
+            System.out.println("ENTER Formula.tptpParse(" + this + ", "
+                               + query + ", " + kb + ", " + preProcessedForms + ")");       
         try {
             KBmanager mgr = KBmanager.getMgr();
 
@@ -4837,49 +4775,31 @@ public class Formula implements Comparable {
 
             if (!this.isBalancedList()) {
                 String errStr = "Unbalanced parentheses or quotes";
-                System.out.println("Error in Formula.tptpParse(" 
-                                   + this.theFormula
-                                   + ", "
-                                   + query 
-                                   + ", " 
-                                   + kb.name 
-                                   + ", "
-                                   + preProcessedForms
-                                   + ")");
+                System.out.println("Error in Formula.tptpParse(" + this.theFormula + ", "
+                                   + query + ", " + kb.name + ", " + preProcessedForms + ")");
                 System.out.println("  " + errStr);
-                mgr.setError(mgr.getError()
-                             + ("\n<br/>" 
-                                + errStr 
-                                + " in "
-                                + this.theFormula
+                mgr.setError(mgr.getError() + ("\n<br/>" + errStr + " in " + this.theFormula
                                 + "\n<br/>"));
                 return;
             }
       
             List processed = preProcessedForms;
-            if (processed == null) {
-                processed = this.preProcess(query, kb);
-            }
+            if (processed == null) 
+                processed = this.preProcess(query, kb);            
 
-            if (DEBUG) {
-                System.out.println("  processed == " + processed);
-            }
-
+            if (DEBUG) 
+                System.out.println("  processed == " + processed);            
             //     System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
             //     System.out.println("  processed == " + processed);
 
             if (processed != null) {
                 this.clearTheTptpFormulas();
-
                 //----Performs function on each current processed axiom
                 Formula f = null;
                 for (Iterator g = processed.iterator(); g.hasNext();) {
                     f = (Formula) g.next();
-
-                    if (DEBUG) {
-                        System.out.println("  f == " + f);
-                    }
-
+                    if (DEBUG) 
+                        System.out.println("  f == " + f);                    
                     String tptpStr = tptpParseSUOKIFString(f.theFormula);
                     if (StringUtil.isNonEmptyString(tptpStr)) {
                         this.getTheTptpFormulas().add(tptpStr);
@@ -4892,35 +4812,17 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in Formula.tptpParse("
-                               + this
-                               + ", "
-                               + query
-                               + ", "
-                               + kb
-                               + ", "
-                               + preProcessedForms
-                               + "): "
-                               + ex.getMessage());
+            System.out.println("Error in Formula.tptpParse(" + this + ", " + query
+                               + ", " + kb + ", " + preProcessedForms + "): " + ex.getMessage());
             ex.printStackTrace();
-            if (ex instanceof ParseException) {
-                throw (ParseException) ex;
-            }    
-            if (ex instanceof IOException) {
-                throw (IOException) ex;
-            }
+            if (ex instanceof ParseException) 
+                throw (ParseException) ex;              
+            if (ex instanceof IOException) 
+                throw (IOException) ex;            
         }
-        if (DEBUG) {
-            System.out.println("EXIT Formula.tptpParse(" 
-                               + this
-                               + ", "
-                               + query
-                               + ", "
-                               + kb
-                               + ", "
-                               + preProcessedForms
-                               + ")");
-        }
+        if (DEBUG) 
+            System.out.println("EXIT Formula.tptpParse(" + this + ", " + query
+                               + ", " + kb + ", " + preProcessedForms + ")");        
         return;
     }
 
@@ -4928,10 +4830,10 @@ public class Formula implements Comparable {
      * Parse formulae into TPTP format
      */
     public void tptpParse(boolean query, KB kb) throws ParseException, IOException {
+
         this.tptpParse(query, kb, null);
         return;
     }
-
 
     ///////////////////////////////////////////////////////
     /*
