@@ -11,6 +11,7 @@ publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment, in
 Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed
 Systems, August 9, Acapulco, Mexico.
+See also http://sigmakee.sourceforge.net
 */
 
 package com.articulate.sigma;
@@ -203,7 +204,7 @@ public class StringUtil {
      * A utility for converting Strings (bytes) to and from base-64
      * representation.
      */
-    private static Base64 BASE64 = new Base64();
+    private static Base64 B64 = new Base64();
 
     /** ***************************************************************
      * Given an input String encoded in charset, returns a String
@@ -218,7 +219,7 @@ public class StringUtil {
     public static String toBase64(String input, String charset) {
         String ans = "";
         try {
-            ans = (new String(BASE64.encode(input.getBytes(charset)), charset)).trim();
+            ans = (new String(B64.encode(input.getBytes(charset)), charset)).trim();
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -240,7 +241,7 @@ public class StringUtil {
     public static String fromBase64(String input, String charset) {
         String ans = "";
         try {
-            ans = (new String(BASE64.decode(input), charset)).trim();
+            ans = (new String(B64.decode(input), charset)).trim();
         }
         catch (Exception ex) {
             ex.printStackTrace();
