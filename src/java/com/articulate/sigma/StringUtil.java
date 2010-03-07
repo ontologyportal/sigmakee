@@ -21,7 +21,7 @@ import java.io.*;
 import java.net.*;
 import java.text.SimpleDateFormat;
 import java.security.*;
-import org.apache.commons.codec.binary.*;
+// import org.apache.commons.codec.binary.Base64;
 
 /** ***************************************************************
  * A utility class that defines static methods for common string
@@ -68,6 +68,7 @@ public class StringUtil {
      * @return A URL encoded String
      */
     public static String encode(String input) {
+
         String encoded = input;
         try {
             encoded = URLEncoder.encode(input, getCharset());
@@ -88,6 +89,7 @@ public class StringUtil {
      * @return A String that has been URL decoded
      */
     public static String decode(String input) {
+
         String decoded = input;
         try {
             decoded = URLDecoder.decode(input, getCharset());
@@ -196,15 +198,10 @@ public class StringUtil {
      * names containing non-alphanumeric characters.
      */
     public static String setSafeNamespaceDelimiter(String str) {
+
         SAFE_NAMESPACE_DELIMITER = str;
         return SAFE_NAMESPACE_DELIMITER;
     }
-
-    /** ***************************************************************
-     * A utility for converting Strings (bytes) to and from base-64
-     * representation.
-     */
-    private static Base64 B64 = new Base64();
 
     /** ***************************************************************
      * Given an input String encoded in charset, returns a String
@@ -217,9 +214,10 @@ public class StringUtil {
      * @return a base-64 String
      */
     public static String toBase64(String input, String charset) {
+
         String ans = "";
         try {
-            ans = (new String(B64.encode(input.getBytes(charset)), charset)).trim();
+            ans = (new String(Base64.encodeBytes(input.getBytes(charset)).getBytes(), charset)).trim();
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -239,9 +237,10 @@ public class StringUtil {
      * charset
      */
     public static String fromBase64(String input, String charset) {
+
         String ans = "";
         try {
-            ans = (new String(B64.decode(input), charset)).trim();
+            ans = (new String(Base64.decode(input), charset)).trim();
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -262,6 +261,7 @@ public class StringUtil {
      * and then encrypted via SHA
      */
     public static String encrypt(String input, String charset) {
+
         String encrypted = "";
         try {
             String encoded = toBase64(input, charset);
@@ -282,6 +282,7 @@ public class StringUtil {
      * @return true if obj is a non-empty String, else false.
      */
     public static boolean isNonEmptyString(Object obj) {
+
         return ((obj instanceof String) && !obj.equals(""));
     }
 
@@ -290,6 +291,7 @@ public class StringUtil {
      * @return true if s == null or s is an empty String, else false.
      */
     public static boolean emptyString(Object s) {
+
         return ((s == null) 
                 || ((s instanceof String)
                     && s.equals("")));
@@ -301,6 +303,7 @@ public class StringUtil {
      *
      */
     public static String removeEnclosingQuotes(String s) {
+
         return removeEnclosingQuotes(s, Integer.MAX_VALUE);
     }
 
@@ -309,6 +312,7 @@ public class StringUtil {
      *  end of the String s, if any are present.
      */
     public static String removeEnclosingQuotes(String s, int n) {
+
         StringBuilder sb = new StringBuilder();
         if (isNonEmptyString(s)) {
             sb.append(s);
@@ -332,6 +336,7 @@ public class StringUtil {
      * carriage returns are replaced with spaces.
      */
     public static String normalizeSpaceChars(String str) {
+
         String ans = str;
         if (isNonEmptyString(ans)) {
             // ans = ans.replaceAll("(?s)\\s", " ");
@@ -351,6 +356,7 @@ public class StringUtil {
      * escaped with a left slash character.
      */
     public static String escapeQuoteChars(String str) {
+
         String ans = str;
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
@@ -375,6 +381,7 @@ public class StringUtil {
      * escaped with a left slash character.
      */
     public static String escapeEscapeChars(String str) {
+
         String ans = str;
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
@@ -398,6 +405,7 @@ public class StringUtil {
      * @return A String with all left slash characters removed
      */
     public static String removeQuoteEscapes(String str) {
+
         String ans = str;
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
@@ -423,6 +431,7 @@ public class StringUtil {
      * slash-escape chars is replaced by one slash-escape char.
      */
     public static String removeEscapedEscapes(String str) {
+
         String ans = str;
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
@@ -448,6 +457,7 @@ public class StringUtil {
      * characters removed
      */
     public static String removeEscapedDoubleQuotes(String str) {
+
         String ans = str;
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
@@ -481,6 +491,7 @@ public class StringUtil {
      * removed
      */
     public static String removeInternalDoubleQuotes(String str) {
+
         String ans = str;
         if (isNonEmptyString(str)) {
             String newstr = str.trim();
@@ -505,6 +516,7 @@ public class StringUtil {
      * followed by a double quote character.
      */
     public static String replaceRepeatedDoubleQuotes(String str) {
+
         String ans = str;
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
@@ -529,6 +541,7 @@ public class StringUtil {
      * false.
      */
     public static boolean containsNonAsciiChars(String str) {
+
         return isNonEmptyString(str) && str.matches(".*[^\\p{ASCII}].*");
     }
 
@@ -537,6 +550,7 @@ public class StringUtil {
      * @return A String with all non-ASCII characters replaced by "x".
      */
     public static String replaceNonAsciiChars(String str) {
+
         String ans = str;
         if (isNonEmptyString(ans)) {
             ans = ans.replaceAll("[^\\p{ASCII}]", "x");
@@ -596,6 +610,7 @@ public class StringUtil {
      * @return String
      */
     public static String replaceDateTime(String input) {
+
         String output = input;
         try {
             String token = "{date}";
@@ -694,6 +709,7 @@ public class StringUtil {
      *
      */
     public static String makeQuotedString(String input, char quoteChar) {
+
         String ans = input;
         try {
             if (isNonEmptyString(input)
@@ -721,6 +737,7 @@ public class StringUtil {
      * @return true or false
      */
     public static boolean isDigitString(String input) {
+
         return isNonEmptyString(input) && !input.matches(".*\\D+.*");
     }
 
@@ -734,6 +751,7 @@ public class StringUtil {
      * @return true or false
      */
     public static String concatN(String input, int n) {
+
         String ans = "";
         try {
             StringBuilder sb = new StringBuilder();
@@ -762,6 +780,7 @@ public class StringUtil {
      * matching oldPattern replaced by newTerm
      */
     public static String treeReplace(String oldPattern, String newTerm, String tree) {
+
         String result = tree;
         try {
             StringBuilder sb = new StringBuilder();
@@ -808,6 +827,7 @@ public class StringUtil {
      * @return ArrayList
      */
     public static ArrayList kifListToArrayList(String kifListAsString) {
+
         ArrayList ans = new ArrayList();
         try {
             if (isNonEmptyString(kifListAsString)) {
@@ -834,6 +854,7 @@ public class StringUtil {
      * delimiters replaced by a safe alphanumeric form
      */
     public static String replaceUnsafeNamespaceDelimiters(String input) {
+
         String output = input;
         try {
             if (isNonEmptyString(output)) {
@@ -864,6 +885,7 @@ public class StringUtil {
      * delimiter
      */
     public static String safeToKifNamespaceDelimiters(String input) {
+
         String output = input;
         try {
             if (isNonEmptyString(output)) {
@@ -884,6 +906,7 @@ public class StringUtil {
      *
      */
     public static String toSafeNamespaceDelimiter(String term) {
+
         String ans = term;
         try {
             if (isNonEmptyString(term) && !isUri(term)) {
@@ -911,6 +934,8 @@ public class StringUtil {
      *
      */
     public static String toSafeNamespaceDelimiter(String kbHref, String term) {
+
+
         String ans = term;
         try {
             if (StringUtil.emptyString(kbHref))
@@ -925,6 +950,7 @@ public class StringUtil {
     /** ***************************************************************
      */
     public static String w3cToKif(String term) {
+
         String ans = term;
         if (isNonEmptyString(term) && !StringUtil.isUri(term)) {
             ans = term.replaceFirst(getW3cNamespaceDelimiter(), 
@@ -936,6 +962,7 @@ public class StringUtil {
     /** ***************************************************************
      */
     public static String kifToW3c(String term) {
+
         String ans = term;
         if (isNonEmptyString(term) && !StringUtil.isUri(term)) {
             ans = term.replaceFirst(getKifNamespaceDelimiter(), 
@@ -945,27 +972,27 @@ public class StringUtil {
     }
 
     /** ***************************************************************
-     *
      */
     public static String quote(String input) {
+
         String str = StringUtil.removeEnclosingQuotes(input);
         str = StringUtil.escapeQuoteChars(str);
         return StringUtil.makeQuotedString(str, '"');
     }
 
-    /** ***************************************************************
-     * 
+    /** **************************************************************
      */
     public static String unquote(String input) {
+
         String ans = input;
         ans = StringUtil.removeEnclosingQuotes(ans);
         return StringUtil.replaceRepeatedDoubleQuotes(ans);
     }
 
     /** ***************************************************************
-     * 
      */
     public static boolean isLocalTermReference(String term) {
+
         boolean ans = false;
         if (isNonEmptyString(term)) {
             List<String> blankNodeTokens = Arrays.asList("#", "~", getLocalReferenceBaseName());
@@ -1011,6 +1038,7 @@ public class StringUtil {
      * exists, else f.
      */
     public static File renameFileIfExists(File f) {
+
         File result = f;
         try {
             String canonicalPath = result.getCanonicalPath();
@@ -1034,9 +1062,9 @@ public class StringUtil {
     }
 
     /** *******************************************************************
-     *
      */
     public static String wordWrap(String input, int length) {
+
         String result = input;
         try {
             if (StringUtil.isNonEmptyString(input)
@@ -1077,4 +1105,11 @@ public class StringUtil {
         return result;
     }
 
+    /** ***************************************************************** 
+     */
+    public static void main(String args[]) {
+
+        System.out.println(StringUtil.isNonEmptyString("foo"));
+
+    }
 } // StringUtil
