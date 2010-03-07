@@ -377,6 +377,9 @@ public final class PasswordService {
      */
     public static void main(String args[]) {
 
+        PasswordService ps = PasswordService.getInstance();
+        System.out.println(ps.encrypt("password"));
+
     }
 
 }
