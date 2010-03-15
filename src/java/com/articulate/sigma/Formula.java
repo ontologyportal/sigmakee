@@ -65,7 +65,7 @@ public class Formula implements Comparable {
     protected static final String LOG_FALSE = "False";
 
     /** The SUO-KIF logical operators. */
-    private static final List<String> LOGICAL_OPERATORS = Arrays.asList(UQUANT, 
+    public static final List<String> LOGICAL_OPERATORS = Arrays.asList(UQUANT, 
                                                                         EQUANT,
                                                                         AND, 
                                                                         OR, 
@@ -1150,6 +1150,8 @@ public class Formula implements Comparable {
      */
     private TreeMap<String, String> unifyVar(String f1, String f2, TreeMap m) {
 
+        //System.out.println("INFO in Formula.unifyVar(): Attempting to unify : " + f1 + 
+        //                   " with " + f2);
         if (m.keySet().contains(f1)) 
             return unifyInternal((String) m.get(f1),f2,m);
         else if (m.keySet().contains(f2))         
@@ -1167,6 +1169,9 @@ public class Formula implements Comparable {
      */
     private TreeMap<String, String> unifyInternal(String f1, String f2, TreeMap m) {
 
+
+        //System.out.println("INFO in Formula.unifyInternal(): Attempting to unify : " + f1 + 
+        //                   " with " + f2);
         if (m == null) 
             return null;
         else if (f1.equals(f2)) 
@@ -1180,11 +1185,16 @@ public class Formula implements Comparable {
             form1.read(f1);
             Formula form2 = new Formula();
             form2.read(f2);
-            return unifyInternal(form1.cdr(),form2.cdr(),
-                                 unifyInternal(form1.car(),form2.car(),m));
+            TreeMap<String, String> res = unifyInternal(form1.car(),form2.car(),m);
+            if (res == null) 
+                return null;
+            else
+                return unifyInternal(form1.cdr(),form2.cdr(),res);
         }
-        else
+        else {
+            //System.out.println("failed to unify");
             return null;
+        }
     }
 
     /** ***************************************************************
@@ -1195,24 +1205,30 @@ public class Formula implements Comparable {
      */
     public TreeMap<String, String> unify(Formula f) {
 
+        //System.out.println("INFO in Formula.unify(): Attempting to unify : " + theFormula + 
+        //                   " with " + f.theFormula);
         TreeMap result = new TreeMap();
-        unifyInternal(f.theFormula,this.theFormula,result);
-        if (result.keySet().size() < 1) 
+        result = unifyInternal(f.theFormula,this.theFormula,result);
+        if (result == null || result.keySet().size() < 1) 
             result = null;
         return result;
     }
 
     /** ***************************************************************
-     *  Use a TreeMap of varname,value to substitute value in for
+     *  Use a TreeMap of [varname, value] to substitute value in for
      *  varname wherever it appears in the formula.  This is
      *  iterative, since values can themselves contain varnames.
      */
     public Formula substitute(TreeMap m) {
 
+        //System.out.println("INFO in Formula.substitute(): Replacing vars in " + this +
+        //                   " as per " + m);
         String newForm = null;
-        while (!newForm.equals(theFormula)) {
+        Formula result = null;
+        while (newForm == null || !newForm.equals(theFormula)) {
             newForm = theFormula;
-            instantiateVariables(m);
+            result = instantiateVariables(m);
+            theFormula = result.theFormula;
         }
         return this;
     }
@@ -1358,6 +1374,29 @@ public class Formula implements Comparable {
      */
     private ArrayList collectUnquantifiedVariables() {
         return collectVariables().get(1);
+    }
+
+    /** ***************************************************************
+     * Collect all the terms in a formula
+     */
+    public ArrayList<String> collectTerms() {
+
+        ArrayList<String> result = new ArrayList();
+        if (this.empty()) 
+            return result;
+        if (this.atom()) 
+            result.add(theFormula);        
+        else {
+            Formula f = new Formula();
+            f.read(theFormula);
+            while (!f.empty()) {
+                Formula f2 = new Formula();
+                f2.read(f.car());
+                result.addAll(f2.collectTerms());
+                f.read(f.cdr());
+            }
+        }
+        return result;
     }
 
     /** ***************************************************************
@@ -2176,8 +2215,9 @@ public class Formula implements Comparable {
      * Test whether a Formula is a simple list of terms (including
      * functional terms).
      */
-    private boolean isSimpleClause() {
+    public boolean isSimpleClause() {
 
+        //System.out.println("INFO in Formula.isSimpleClause(): " + this);
         Formula f = new Formula();
         f.read(theFormula);
         while (!f.empty()) {
@@ -2192,6 +2232,28 @@ public class Formula implements Comparable {
             f.read(f.cdr());
         }
         return true;
+    }
+
+    /** ***************************************************************
+     * Test whether a Formula is a simple clause wrapped in a
+     * negation.
+     */
+    public boolean isSimpleNegatedClause() {
+
+        //System.out.println("INFO in Formula.isSimpleNegatedClause(): " + this);
+        Formula f = new Formula();
+        f.read(theFormula);
+        if (f.car().equals("not")) {
+            f.read(f.cdr());
+            if (empty(f.cdr())) {           
+                f.read(f.car());
+                return f.isSimpleClause();
+            }
+            else
+                return false;
+        }
+        else
+            return false;
     }
 
     /** ***************************************************************
@@ -6204,7 +6266,7 @@ public class Formula implements Comparable {
      * part of a Formula, in which the original variables have been
      * replaced by normalized forms
      */
-    protected static String normalizeVariables(String input) {
+    public static String normalizeVariables(String input) {
         return normalizeVariables(input, false);
     }
 
@@ -6684,14 +6746,17 @@ public class Formula implements Comparable {
      */
     public Formula instantiateVariables(Map<String,String> m) {
 
-        System.out.println("INFO in Formula.instantiateVariables(): " + 
-                           this.theFormula);
-        System.out.println(m);
+        //System.out.println("INFO in Formula.instantiateVariables(): " + 
+        //                   this.theFormula);
+        //System.out.println(m);
         Formula newFormula = new Formula();
         newFormula.read("()");
         if (atom()) {
-            if (m.keySet().contains(theFormula)) 
+            if (m.keySet().contains(theFormula)) {
                 theFormula = (String) m.get(theFormula);
+                if (this.listP()) 
+                    theFormula = "(" + theFormula + ")";
+            }
             return this;
         }
         if (!empty()) {
@@ -6706,7 +6771,7 @@ public class Formula implements Comparable {
             f2.read(this.cdr());
             newFormula = newFormula.append(f2.instantiateVariables(m));
         }
-        System.out.println("Return: " + newFormula.theFormula);
+        //System.out.println("Return: " + newFormula.theFormula);
         return newFormula;
     }
 
@@ -7611,8 +7676,52 @@ public class Formula implements Comparable {
 
         Formula f1 = new Formula();
         f1.read("(=> (attribute ?Agent Investor) (exists (?Investing) (agent ?Investing ?Agent)))");
-      
+        System.out.println(f1);
         System.out.println(f1.clausify());
+        Formula f2 = new Formula();
+        f2.read("(attribute Bob Investor)");
+        TreeMap tm = f1.unify(f2);
+        if (tm != null) 
+            System.out.println(f1.substitute(tm));
+        Formula f3 = new Formula();
+        f3.read("(attribute ?X Investor)");
+        tm = f3.unify(f2);
+        System.out.println(tm);
+        if (tm != null) 
+            System.out.println(f3.substitute(tm));
+        f1.read("(=> (and (instance ?CITY AmericanCity) (part ?CITY California) " + 
+                "(not (equal ?CITY LosAngelesCalifornia))) (greaterThan (CardinalityFn " +
+                "(ResidentFn LosAngelesCalifornia)) (CardinalityFn (ResidentFn ?CITY))))");
+        System.out.println(f1);
+        System.out.println(f1.clausify());       
+        f1.read("(not (instance ?X Human))");
+        System.out.println(f1);
+        System.out.println(f1.clausify());       
+        f1.read("(not (and (instance ?X Human) (attribute ?X Male)))");
+        System.out.println(f1);
+        System.out.println(f1.clausify()); 
+        f1.read("(not (instance ?X2 Human))");
+        System.out.println(f1.isSimpleNegatedClause());
+
+        System.out.println(f1.append(f3));
+
+        f1.read("(exists (?MEMBER) (member ?MEMBER Org1-1))");
+        System.out.println(f1.clausify());
+        f1.read("(=> (instance ?X290 Collection) (exists (?X12) (member ?X12 ?X290)))");
+        System.out.println(f1.clausify());
+        f1.read("(member (SkFn 1 ?X3) ?X3)");
+        f3.read("(member ?VAR1 Org1-1)");
+        tm = f1.unify(f3);
+        System.out.println(tm);       
+        System.out.println(f1.substitute(tm));       
+        System.out.println(f3.substitute(tm));
+
+        f1.read("(attribute West American)");
+        f3.read("(attribute ?VAR1 Criminal)");
+        System.out.println(f1);
+        System.out.println(f3);
+        System.out.println(f1.unify(f3));
+
     }
 
 }  // Formula.java
