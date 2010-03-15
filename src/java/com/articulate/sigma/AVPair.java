@@ -8,9 +8,17 @@ software which incorporates, builds on, or uses this code.*/
 package com.articulate.sigma;
 
 
-public class AVPair {
+public class AVPair implements Comparable {
 
     public String attribute ="";
     public String value = "";
 
+    public int compareTo(Object avp) throws ClassCastException {
+
+        if (!avp.getClass().getName().equalsIgnoreCase("com.articulate.sigma.AVPair")) 
+            throw new ClassCastException("Error in AVPair.compareTo(): "
+                                         + "Class cast exception for argument of class: " 
+                                         + avp.getClass().getName());
+        return attribute.compareTo(((AVPair) avp).attribute);
+    }
 }
