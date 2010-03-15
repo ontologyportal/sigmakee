@@ -43,7 +43,7 @@ public class KIF {
     public TreeSet<String> terms = new TreeSet<String>();
 
     /** A HashMap of ArrayLists of Formulas.  @see KIF.createKey for key format. */
-    public HashMap<String, ArrayList> formulas = new HashMap<String, ArrayList>();    
+    public HashMap<String, ArrayList<Formula>> formulas = new HashMap<String, ArrayList<Formula>>();    
 
     /** A "raw" HashSet of unique Strings which are the formulas from the file without 
      *  any further processing, in the order which they appear in the file. */
@@ -144,6 +144,12 @@ public class KIF {
     }
 
     /** ***************************************************************
+     *  This method has the side effect of setting the contents of
+     *  formulaSet and formulas as it parses the file.  It throws a
+     *  ParseException with file line numbers if fatal errors are
+     *  encountered during parsing.
+     *  @return a Set of warnings that may indicate syntax errors,
+     *          but not fatal parse errors.
      */
     protected Set parse(Reader r) {
 
