@@ -2975,8 +2975,7 @@ public class KB {
                     boolean go = true;
                     while (go && it.hasNext()) {
                         // 2. Confirm that the input has been converted into
-                        // 2. at least one Formula object and stored in
-                        // 2. this.formulaMap.
+                        // at least one Formula object and stored in this.formulaMap.
                         fstr = (String) it.next();
                         parsedF = (Formula) this.formulaMap.get(fstr.intern());
                         if (parsedF == null) {
@@ -3030,9 +3029,8 @@ public class KB {
                                     System.out.println("  theTptpFormulas == " 
                                                        + parsedF.getTheTptpFormulas());
                                 }
-                                // 7. If there is an inference engine,
-                                // 7. assert the formula to the
-                                // 7. inference engine's database.
+                                // 7. If there is an inference engine, assert the formula to the
+                                // inference engine's database.
                                 if (inferenceEngine != null) {
                                     String ieResult = null;
                                     Formula processedF = null;
