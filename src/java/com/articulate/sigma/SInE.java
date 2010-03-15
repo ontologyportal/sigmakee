@@ -55,7 +55,7 @@ public class SInE extends InferenceEngine {
     public static class SInEFactory extends EngineFactory {
 
         @Override
-        public InferenceEngine createWithFormulas(Iterable formulaSource) {
+        public InferenceEngine createWithFormulas(Iterable<String> formulaSource) {
                 return new SInE(formulaSource);
         }
 
@@ -141,7 +141,7 @@ public class SInE extends InferenceEngine {
     
     /** *************************************************************
      */
-    public SInE(Iterable formulaSource) { 
+    public SInE(Iterable<String> formulaSource) { 
 
         underlyingEngineFactory = Vampire.getFactory();
         formSymbols = new Hashtable<String, Set<String>>();
@@ -158,16 +158,16 @@ public class SInE extends InferenceEngine {
      * 
      * @param formulaSource Iterable object that contains strings representing formulas.
      */
-    public void loadFormulas(Iterable formulaSource) {
+    public void loadFormulas(Iterable<String> formulaSource) {
 
         Iterator it = formulaSource.iterator();
     
-        //First we go through all formulas, convert them into Formula objects,
+        //First we go through all formulas, 
         //and compute degree of each symbol.
         while (it.hasNext()) {
-            String form = (String) it.next();            
-            formulas.add(form);            
-            for (String sym : getSymbols(form)) {
+            String f = (String) it.next();            
+            formulas.add(f);            
+            for (String sym : getSymbols(f)) {
                 Integer prev = degrees.get(sym);
                 if (prev != null) 
                     degrees.put(sym, prev+1);
