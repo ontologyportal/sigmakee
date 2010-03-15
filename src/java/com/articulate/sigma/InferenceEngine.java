@@ -22,7 +22,7 @@ import java.io.IOException;
 public abstract class InferenceEngine {
 
 	public static abstract class EngineFactory {
-		public abstract InferenceEngine createWithFormulas(Iterable formulaSource);
+		public abstract InferenceEngine createWithFormulas(Iterable<String> formulaSource);
 		public abstract InferenceEngine createFromKBFile(String kbFileName);
 	}
 	
