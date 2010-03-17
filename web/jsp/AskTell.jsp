@@ -198,7 +198,8 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
     String resultVampire = null;        
     String resultSoTPTP = null;        
-    String resultSInE = null;        
+    String resultSInE = null;    
+    String resultLeo = null;    
 
     String lineHtml =
       "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
@@ -225,6 +226,21 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
                     throw(new IOException("Row variables not allowed in query: " + stmt));
                 resultSInE = kb.askSInE( stmt, timeout, maxAnswers );
             }
+	    if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoSine")) {
+                if (stmt.indexOf('@') != -1)
+                    throw(new IOException("Row variables not allowed in query: " + stmt));
+		resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoSine" );
+            }	
+	    if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoLocal")) {
+                if (stmt.indexOf('@') != -1)
+                    throw(new IOException("Row variables not allowed in query: " + stmt));
+		resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoLocal" );
+            }
+	    if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoGlobal")) {
+                if (stmt.indexOf('@') != -1)
+                    throw(new IOException("Row variables not allowed in query: " + stmt));
+		resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoGlobal" );
+            }	
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
@@ -277,6 +293,15 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SInE" <% if (chosenEngine.equals("SInE")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     SInE (+Vampire) (experimental)<BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (chosenEngine.equals("LeoSine")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'">
+    LEO-II with SInE (experimental)<BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoLocal" <% if (chosenEngine.equals("LeoLocal")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'">
+    LEO-II local (experimental)<BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoGlobal" <% if (chosenEngine.equals("LeoGlobal")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'">
+    LEO-II global (experimental)<BR>	
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
@@ -370,8 +395,14 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
         else 
             out.println(HTMLformatter.formatProofResult(resultSInE,stmt,stmt,lineHtml,kbName,language ));
     }
-  %>
-<p>
+    if (chosenEngine.equals("LeoSine") || chosenEngine.equals("LeoLocal") || chosenEngine.equals("LeoGlobal")) {
+        if ((resultLeo != null) && (resultLeo.indexOf("Syntax error detected") != -1)) 
+            out.println("<font color='red'>A syntax error was detected in your input.</font>");
+        else 
+	    out.println("<font color='red'>" + resultLeo + "</font>");
+    }
+%>
+    <p>
 
 <%@ include file="Postlude.jsp" %>
 

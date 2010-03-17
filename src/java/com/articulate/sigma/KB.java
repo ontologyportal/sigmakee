@@ -3235,6 +3235,161 @@ public class KB {
         return result;
     }
 
+    /** *************************************************************
+     * Submits a query to the LEO inference engine.  Returns an XML
+     * formatted String that contains the response of the inference
+     * engine.  It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @param timeout The number of seconds after which the underlying inference
+     * engine should give up. (Time taken by axiom selection doesn't count.)
+     *
+     * @param maxAnswers The maximum number of answers (binding sets)
+     * the inference engine should return.
+     *
+     * @return A String indicating the status of the ask operation.
+     */
+    public String askLEO(String suoKifFormula, int timeout, int maxAnswers, String flag) {
+
+	    String result = "";
+	    
+        try {
+	    
+	    String LeoExecutable = "/Users/christophbenzmueller/leo/trunk/bin/leo";
+	    String LeoInput = "/tmp/prob.p";
+	    String LeoProblem;
+	    String responseLine;
+	    String LeoOutput = "";
+	    File LeoExecutableFile = new File(LeoExecutable);
+	    File LeoInputFile = new File(LeoInput);
+	    FileWriter LeoInputFileW = new FileWriter(LeoInput);
+
+
+            //InferenceEngine.EngineFactory factory=SInE.getFactory();
+            //InferenceEngine engine=createInferenceEngine(factory);
+
+            // result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
+	    
+	    /*
+	    result =
+		("<queryResponse>" + getLineSeparator()
+		 + "  <answer result=\"no \" number=\"0\">" + getLineSeparator()
+		 + "  </answer>" + getLineSeparator()
+		 + "  <summary proofs=\"0\"/>" + getLineSeparator()
+		 + "</queryResponse>" + getLineSeparator());
+	    */
+	   
+	    List<Formula> selectedQuery = new ArrayList<Formula>();
+	    Formula newQ = new Formula();
+	    newQ.read(suoKifFormula);
+	    selectedQuery.add(newQ);
+
+	    String kbFileName = "/Users/christophbenzmueller/Sigma/KBs/Merge.kif";
+	    System.out.println("/n kbFileName = " + kbFileName); 
+
+	    List<String> selFs = null;
+	    
+	    if (flag.equals("LeoSine")) {
+		SInE sine = SInE.getNewInstance(kbFileName);
+		selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
+		sine.terminate();
+	    }
+	    else if (flag.equals("LeoLocal")) {
+		selFs = new ArrayList<String>();
+	    }
+	    else if (flag.equals("LeoGlobal")) {
+		selFs = new ArrayList<String>();
+		for (Iterator it = this.formulaMap.values().iterator(); it.hasNext();) {
+		    Formula entry = (Formula) it.next();
+		    selFs.add(entry.toString());
+		}
+	    }
+		
+	    
+	    // add user asserted formulas
+	    try {
+                File dir = new File(this.kbDir);
+		File file = new File(dir, (this.name + _userAssertionsString));
+                String filename = file.getCanonicalPath();
+		BufferedReader userAssertedInput =  new BufferedReader(new FileReader(filename));
+		
+		try {
+		    String line = null; 
+		    /*
+		     * readLine is a bit quirky :
+		     * it returns the content of a line MINUS the newline.
+		     * it returns null only for the END of the stream.
+		     * it returns an empty String if two newlines appear in a row.
+		     */
+		    while (( line = userAssertedInput.readLine()) != null){
+			selFs.add(line);
+			// System.out.println("/n asserted Formula: " + line);
+		    }
+		}
+		finally {
+		    userAssertedInput.close();
+		}
+	    }
+	    catch (IOException ex){
+		ex.printStackTrace();
+	    }
+	    
+	    List<Formula> selectedFormulas = new ArrayList();
+	    Formula newF = new Formula();
+
+	    for (Iterator it = selFs.iterator(); it.hasNext();) {
+		String entry = (String) it.next();
+		newF = new Formula();
+		newF.read(entry);
+		selectedFormulas.add(newF);
+	    }
+	    
+
+	    System.out.println("/n  selectedFormulas = " +  selFs.toString());
+
+	    THF thf = new THF();
+	    LeoProblem = thf.KIF2THF(selectedFormulas,selectedQuery,this);
+	    LeoInputFileW.write(LeoProblem);
+	    LeoInputFileW.close();
+
+	    String command = LeoExecutableFile.getCanonicalPath() + " -po -t " + timeout + " " + LeoInputFile.getCanonicalPath();
+	    System.out.println("/n  command = " + command);
+
+	    Process leo = Runtime.getRuntime().exec(command);
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
+            while ((responseLine = reader.readLine()) != null) {
+		LeoOutput += responseLine + "\n";
+	    }
+            reader.close();
+	    
+	    System.out.println(LeoOutput);
+
+	    
+
+	    if (LeoOutput.contains("SZS status Theorem")) {
+		result = "Answer 1. yes"
+		    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>") 
+		    + "<br> <br>" + LeoOutput.replaceAll("\\n","<br>");
+	    }
+	    else {
+		result = "Answer 1. don't know" 
+		    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>") 
+		    + "<br> <br>" + LeoOutput.replaceAll("\\n","<br>");
+	    }
+
+            //if (engine != null)
+	    //  engine.terminate();                
+        } 
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return result;
+    }
+
     /** ***************************************************************
      * Takes a term and returns true if the term occurs in the KB.
      *
@@ -5058,6 +5213,7 @@ public class KB {
      *  Starts Vampire and collects, preprocesses and loads all of the
      *  constituents into it.
      */
+
     public void loadVampire() {
 
         // System.out.println("INFO in KB.loadVampire()");

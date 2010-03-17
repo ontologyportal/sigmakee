@@ -1172,6 +1172,9 @@ public class THF {
 	if (!thfTp.startsWith("(")) {
 	    res = help;
 	}
+	else if (help.size() == 1) {
+	    res = Arrays.asList(help);
+	}
 	else {
 	    String last = (String) help.get(help.size() - 1);
 	    help.remove(help.size() - 1);
@@ -1197,6 +1200,8 @@ public class THF {
      */
     private List toTHFListH(String thfTp, int i, List accu) {
 
+
+	THFdebugOut("\n   Enter toTHFListH with: " + thfTp + " " + i + " " + accu.toString());
 	List reslist = new ArrayList();
 	
 	// thfTp is base type
@@ -1273,6 +1278,8 @@ public class THF {
 		}
 	    }
 	}
+	
+	THFdebugOut("\n   Exit toTHFListH with: " + reslist);
 	return reslist;	
     }
 
@@ -1444,9 +1451,9 @@ public class THF {
 	   result.append("something_went_wrong");
        }
        
-       /* double bracketed formula */
-       else if (Formula.listP(f.car())) {
-	   THFdebugOut("\n  Debug: double bracketed formula " + f.theFormula);
+       /* double bracketed formula or bracketed Boolean constant */
+       else if (Formula.listP(f.car()) || (f.listLength() == 1)) {
+	   THFdebugOut("\n  Debug: double bracketed formula or bracketed Boolean constant" + f.theFormula);
 	   String arg1 = f.car();
 	   Formula arg1F = new Formula();
 	   arg1F.read(arg1);
@@ -1822,8 +1829,8 @@ public class THF {
 	   kifFormula.append("something_went_wrong");
        }
        
-       /* double bracketed formula */
-       else if (Formula.listP(f.car())) {
+       /* double bracketed formula or bracketed Boolean constant */
+       else if (Formula.listP(f.car()) || (f.listLength() == 1)) {
 	   String arg1 = f.car();
 	   Formula arg1F = new Formula();
 	   arg1F.read(arg1);
@@ -2349,8 +2356,7 @@ public class THF {
 	    out.close();
 	    System.out.println("\n\nResult written to file " + "/tmp/all2.p");
 	    
-
-
+	    /*
 	    System.out.println("\n\nTest on all KB kb content:");
 	    Collection coll = Collections.EMPTY_LIST;
 	    String kbAll = "";
@@ -2360,6 +2366,36 @@ public class THF {
 	    out.write(kbAll);
 	    out.close();
 	    System.out.println("\n\nResult written to file " + "/tmp/kbAll.p");
+	    */
+	    
+	    System.out.println("\n\nTest on all KB kb content with SInE:");
+	    String kbFileName = args[0];
+	    String query = args[1];
+	    SInE sine = SInE.getNewInstance(kbFileName);	    
+	    Set<String> selectedFormulaStrings = sine.performSelection(query);
+	    //for (String form : selectedFormulas) 
+	    // System.out.println(form); 
+	    List<Formula> selectedFormulas = new ArrayList<Formula>();
+	    for (String str : selectedFormulaStrings) {
+		Formula newForm = new Formula();
+		newForm.read(str);
+		selectedFormulas.add(newForm);
+	    }
+	    List<Formula> selectedQuery = new ArrayList<Formula>();
+	    Formula newQ = new Formula();
+	    newQ.read(query);
+	    selectedQuery.add(newQ);
+	    String kbAll = "";
+	    //kbAll = thf.KIF2THF(selectedFormulas,selectedQuery,kb);
+	    System.out.println(kbAll); 
+	    fstream = new FileWriter("/tmp/kbAll.p");
+	    out = new BufferedWriter(fstream);
+	    out.write(kbAll);
+	    out.close();
+	    System.out.println("\n\nResult written to file " + "/tmp/kbAll.p");
+
+	    System.out.println("\n\naskLEO Test: result = \n" + kb.askLEO(query,30,1,"LeoLocal"));
+	   
 	}
 	catch (Exception ex) {
 	    ex.printStackTrace();

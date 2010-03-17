@@ -367,13 +367,7 @@ public class SInE extends InferenceEngine {
         
         for (String form : selectedFormulas) 
             System.out.println(form); 
-	
-	// Begin Chris Test
-	//KBmanager.getMgr().initializeOnce();
-	//String res = sine.submitQuery(query, 5, 1);      	   
-        //System.out.println(res);
-	// End Chris Test
-
+       
 	sine.terminate();
     }
 }
