@@ -16,20 +16,13 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-
-
-
-
 // General Setup:
   String hostname = KBmanager.getMgr().getPref("hostname");
   if (hostname == null) {
     hostname = "localhost";
   }
 
-
-
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
-
 
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
   String BuiltInDir = KBmanager.getMgr().getPref("systemsDir");
@@ -56,17 +49,7 @@ August 9, Acapulco, Mexico.
     }
   }
 
-
-
-
-
 %>
-
-
-
-
-
-
 
 
 <HTML>
@@ -149,13 +132,6 @@ August 9, Acapulco, Mexico.
         System.out.println("Error: No knowledge base specified");
         return;
     }
-    
-           
-
-
-
-
-
 
 //----SystemOnTPTP parameters
   String systemChosenLocal = request.getParameter("systemChosenLocal");
@@ -198,27 +174,11 @@ August 9, Acapulco, Mexico.
     tstpFormat = "";
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     String resultVampire = null;        
     String resultSoTPTP = null;        
 
     String lineHtml =
       "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-
 
 %>
 
@@ -252,6 +212,10 @@ August 9, Acapulco, Mexico.
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
     Vampire <BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (chosenEngine.equals("LEO")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'"
+    <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
+    LEO-II <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
@@ -259,7 +223,7 @@ August 9, Acapulco, Mexico.
 <%
 //----System selection
 %>
-  <DIV ID="SoTPTPControl" <% if (chosenEngine.equals("Vampire")) {%>style="display:none;"<%}%>>
+  <DIV ID="SoTPTPControl" <% if (chosenEngine.equals("Vampire") || chosenEngine.equals("LEO")) {%>style="display:none;"<%}%>>
     <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
@@ -319,17 +283,6 @@ August 9, Acapulco, Mexico.
 <table ALIGN='LEFT' WIDTH='80%'><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
-
-
-
-
-
-
-
-
-
-
-
 <%
 
   StringBuffer sb = new StringBuffer();
@@ -343,6 +296,10 @@ August 9, Acapulco, Mexico.
           if (chosenEngine.equalsIgnoreCase("Vampire")) {
               out.println("(Testing Vampire-KIF)<br>");
               sb = sb.append(InferenceTestSuite.test(kb));
+          }          
+          if (chosenEngine.equalsIgnoreCase("LEO")) {
+              out.println("(Testing LEO)<br>");
+              sb = sb.append("Chris' method must return a string here.");
           }          
           if (chosenEngine.equalsIgnoreCase("SoTPTP")) {
               if (location.equalsIgnoreCase("local")&&(!tptpWorldExists)&&builtInExists) {
