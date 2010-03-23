@@ -1580,7 +1580,7 @@ public class Formula implements Comparable {
      * 
      * @return an ArrayList of Formulas, or an empty ArrayList.
      */
-    protected ArrayList expandRowVars(KB kb) {
+    public ArrayList expandRowVars(KB kb) {
         /*
           System.out.println("ENTER Formula.expandRowVars(" 
           + this.theFormula + ", "
@@ -1588,9 +1588,11 @@ public class Formula implements Comparable {
         */
         ArrayList resultList = new ArrayList();
         try {
-            TreeSet rowVars = ((this.theFormula.contains(R_PREF) && this.isRule())
+            TreeSet rowVars = (this.theFormula.contains(R_PREF)
                                ? this.findRowVars()
                                : null);
+            // If this Formula contains no row vars to expand, we just
+            // add it to resultList and quit.
             if ((rowVars == null) || rowVars.isEmpty()) {
                 resultList.add(this);
             }
@@ -1833,13 +1835,14 @@ public class Formula implements Comparable {
     private Map getRowVarsMinMax(KB kb) {
 
         /*
-          boolean trace = this.theFormula.contains("(immediateSubclass");
-          if (trace) {
-          System.out.println("ENTER Formula.getRowVarsMinMax(" 
-          + this.theFormula + ", " 
-          + kb.name + ")");
-          }
+          DEBUG = this.theFormula.contains("(immediateSubclass");
         */
+        if (DEBUG) {
+            System.out.println("ENTER Formula.getRowVarsMinMax(" 
+                               + this.theFormula + ", " 
+                               + kb.name + ")");
+        }
+
 
         Map ans = new HashMap();
         try {
@@ -1899,19 +1902,18 @@ public class Formula implements Comparable {
                     //     System.out.println("  literals == " + literals);
                     // }
 
-                    for (int j = 0 ; j < literals.size() ; j++) {
-                        Formula litF = (Formula) literals.get(j);
+                    for (Iterator itl = literals.iterator(); itl.hasNext();) {
+                        Formula litF = (Formula) itl.next();;
                         litF.computeRowVarsWithRelations(rowVarRelns, varMap);
                     }
                 }
 
-                // if (trace) {
-                //     System.out.println("  rowVarRelns == " + rowVarRelns);
-                // }
+                if (DEBUG) {
+                    System.out.println("  rowVarRelns == " + rowVarRelns);
+                }
 
                 if (!rowVarRelns.isEmpty()) {
-                    Iterator kit = rowVarRelns.keySet().iterator();
-                    while (kit.hasNext()) {
+                    for (Iterator kit = rowVarRelns.keySet().iterator(); kit.hasNext();) {
                         String rowVar = (String) kit.next();
                         String origRowVar = getOriginalVar(rowVar, varMap);
                         int[] minMax = (int[]) ans.get(origRowVar);
@@ -1922,8 +1924,7 @@ public class Formula implements Comparable {
                             ans.put(origRowVar, minMax);
                         }
                         TreeSet val = (TreeSet) rowVarRelns.get(rowVar);
-                        Iterator vit = val.iterator();
-                        while (vit.hasNext()) {
+                        for (Iterator vit = val.iterator(); vit.hasNext();) {
                             String reln = (String) vit.next();
                             int arity = kb.getValence(reln);
                             if (arity < 1) {
@@ -1933,8 +1934,9 @@ public class Formula implements Comparable {
                             }
                             else {
                                 minMax[0] = 1;
-                                if ((arity + 1) < minMax[1]) {
-                                    minMax[1] = (arity + 1);
+                                int arityPlusOne = (arity + 1);
+                                if (arityPlusOne < minMax[1]) {
+                                    minMax[1] = arityPlusOne;
                                 }
                             }
                         }
@@ -1946,24 +1948,23 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
 
-        /*
-          if (trace) {
-          System.out.println("EXIT Formula.getRowVarsMinMax(" 
-          + this.theFormula + ", " 
-          + kb.name + ")");
-          System.out.println("  ==> " + ans);
-          }
-        */
+        /*          */
+        if (DEBUG) {
+            System.out.println("EXIT Formula.getRowVarsMinMax(" 
+                               + this.theFormula + ", " 
+                               + kb.name + ")");
+            System.out.println("  ==> " + ans);
+        }
 
         return ans;
     }
 
     /** ***************************************************************
      * Finds all the relations in this Formula that are applied to row
-     * variables, and a specific arity might be computed.  Note that
-     * results are accumulated in varsToRelns, and the variable
-     * correspondences (if any) in varsToVars are used to compute the
-     * results.
+     * variables, and for which a specific arity might be computed.
+     * Note that results are accumulated in varsToRelns, and the
+     * variable correspondences (if any) in varsToVars are used to
+     * compute the results.
      *
      * @param varsToRelns A Map for accumulating row var data for one
      * Formula literal.  The keys are row variables (Strings) and the
@@ -5493,10 +5494,7 @@ public class Formula implements Comparable {
             if (f.listP() && !f.empty()) {
                 StringBuilder litBuf = new StringBuilder();
                 String arg0 = f.car();
-                if (f.isRule()
-                    // arg0.equals("<=>") || 
-                    // arg0.equals("=>") 
-                    ) {
+                if (Arrays.asList(IF, IFF).contains(arg0)) {
                     String arg1 = f.getArgument(1);
                     String arg2 = f.getArgument(2);
                     if (arg1.equals(litF.theFormula)) {
