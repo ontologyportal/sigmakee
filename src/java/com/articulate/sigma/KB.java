@@ -90,7 +90,7 @@ public class KB {
     public CELT celt = null;
 
     /** A synchronized SortedSet of Strings, which are all the terms in the KB. */
-    private SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
+    public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
 
     /** The String constant that is the suffix for files of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
@@ -6209,8 +6209,13 @@ public class KB {
 
         TreeSet resultSet = new TreeSet();
         Iterator it = formulaMap.keySet().iterator();
-        while (it.hasNext()) {
+        while (it.hasNext()) {          // look at all formulas in the KB
             String formula = (String) it.next();
+            Formula f = new Formula();
+            f.read(formula);
+            if (f.isRule() || f.car().equals("instance") || f.car().equals("subclass")) {
+                continue;
+            }
             StreamTokenizer_s st = new StreamTokenizer_s(new StringReader(formula));
             KIF.setupStreamTokenizer(st);
             ArrayList al = new ArrayList();
@@ -6245,14 +6250,18 @@ public class KB {
                             if (synsets1 != null & synsets2 != null) {
                                 for (int k = 0; k < synsets1.size(); k++) {
                                     String firstSynset = (String) synsets1.get(k);
-                                    for (int l = 0; l < synsets2.size(); l++) {
-                                        String secondSynset = (String) synsets2.get(l);
-                                        // resultSet.add(predicate + " " + firstSynset + " " + secondSynset);
-                                        // System.out.println(predicate + " " + firstSynset + " " + secondSynset);
-                                        char firstLetter = WordNetUtilities.posNumberToLetter(firstSynset.charAt(0));
-                                        char secondLetter = WordNetUtilities.posNumberToLetter(secondSynset.charAt(0));
-                                        System.out.println("u:ENG-30-" + firstSynset.substring(1) + "-" + firstLetter + " " + 
-                                                           "v:ENG-30-" + secondSynset.substring(1) + "-" + secondLetter);
+                                    if (firstSynset.endsWith("=")) {
+                                        for (int l = 0; l < synsets2.size(); l++) {
+                                            String secondSynset = (String) synsets2.get(l);
+                                            if (secondSynset.endsWith("=")) {
+                                                // resultSet.add(predicate + " " + firstSynset + " " + secondSynset);
+                                                // System.out.println(predicate + " " + firstSynset + " " + secondSynset);
+                                                char firstLetter = WordNetUtilities.posNumberToLetter(firstSynset.charAt(0));
+                                                char secondLetter = WordNetUtilities.posNumberToLetter(secondSynset.charAt(0));
+                                                System.out.println("u:ENG-30-" + firstSynset.substring(1) + "-" + firstLetter + " " + 
+                                                                   "v:ENG-30-" + secondSynset.substring(1) + "-" + secondLetter);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -6677,14 +6686,14 @@ public class KB {
 
         try {
             KBmanager.getMgr().initializeOnce();
-            //WordNet.initOnce();
+            WordNet.initOnce();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        //kb.generateSemanticNetwork();
+        kb.generateSemanticNetwork();
         //kb.generateRandomProof();
-        kb.instanceOfInstanceP();
+        //kb.instanceOfInstanceP();
 
         /*
         String foo = "(rel bar \"test\")";
