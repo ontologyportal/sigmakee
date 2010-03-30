@@ -28,8 +28,13 @@ public class STP extends InferenceEngine {
 
     /** Previously solved lemmas that is used to prevent cycles  */
     TreeMap<String, ArrayList<Formula>> lemmas = new TreeMap();
-    TreeSet<String> current = new TreeSet();
-    TreeSet<String> failed = new TreeSet();
+
+    /** To Be Used - also has a list of axioms used to derive the
+     *  clause. */
+    ArrayList<AnotherAVP> TBU = new ArrayList();
+
+    //TreeSet<String> current = new TreeSet();
+    //TreeSet<String> failed = new TreeSet();
 
     /** The indexes */
     TreeMap<String, Formula> negLits = new TreeMap();  // Note that (not (a b c)) will be stored as (a b c)
@@ -105,7 +110,7 @@ public class STP extends InferenceEngine {
         }
 
         clausifyFormulas();
-        System.out.println("INFO in STP(): formulas: " + formulas);
+        System.out.println("INFO in STP(): clausified formulas: " + formulas);
         buildIndexes();
     }
     
@@ -132,7 +137,15 @@ public class STP extends InferenceEngine {
         while (it.hasNext()) {
             Formula f = (Formula) it.next();
             f = f.clausify();
-            newFormulas.add(f);
+            if (f.car().equals("and")) {
+                ArrayList<Formula> al = f.separateConjunctions();
+                for (int i = 0; i < al.size(); i++) {
+                    Formula f2 = (Formula) al.get(i);
+                    newFormulas.add(f2);
+                }
+            }
+            else
+                newFormulas.add(f);
             //System.out.println("INFO in STP.clausifyFormulas(): " + f);
         }
         formulas = newFormulas;
@@ -193,27 +206,32 @@ public class STP extends InferenceEngine {
             c.read(c.cdr());
         }
     }
-    
+
+
     /** *************************************************************
      */
-    private void buildIndexes() {
+    private void indexOneFormula(Formula f) {
 
-        Iterator<Formula> it = formulas.iterator();
-        while (it.hasNext()) {
-            Formula f = (Formula) it.next();
-            ArrayList<String> terms = f.collectTerms();                // count the appearances of terms
-            Iterator it2 = terms.iterator();
-            while (it2.hasNext()) {
-                String s = (String) it2.next();
-                if (termCounts.keySet().contains(s)) {
-                    Integer i = (Integer) termCounts.get(s);
-                    termCounts.put(s,new Integer(i.intValue() + 1));
-                }
-                else
-                    termCounts.put(s,new Integer(1));
+        ArrayList<String> terms = f.collectTerms();                // count the appearances of terms
+        Iterator it2 = terms.iterator();
+        while (it2.hasNext()) {
+            String s = (String) it2.next();
+            if (termCounts.keySet().contains(s)) {
+                Integer i = (Integer) termCounts.get(s);
+                termCounts.put(s,new Integer(i.intValue() + 1));
             }
+            else
+                termCounts.put(s,new Integer(1));
+        }
 
-            Formula fclause = f.clausify();
+        Formula fclause = f.clausify();
+        ArrayList<Formula> clauseList = new ArrayList();
+        if (fclause.car().equals("and"))
+            clauseList = fclause.separateConjunctions();
+        else
+            clauseList.add(fclause);                  // a formula that is not a conjunction will result in a clauseList of one element
+        for (int i = 0; i < clauseList.size(); i++) {
+            fclause = (Formula) clauseList.get(i);
             Formula clauses = new Formula();
             if (fclause.isSimpleClause() || fclause.isSimpleNegatedClause()) 
                 clauses.read(fclause.theFormula);
@@ -245,151 +263,19 @@ public class STP extends InferenceEngine {
                     clauses.read(clauses.cdr());
             }
         }
+    }
+
+    /** *************************************************************
+     */
+    private void buildIndexes() {
+
+        Iterator<Formula> it = formulas.iterator();
+        while (it.hasNext()) {
+            Formula f = (Formula) it.next();
+            indexOneFormula(f);
+        }
        // System.out.println("INFO in STP.buildIndexes(): negTermPointers: " + negTermPointers);
        // System.out.println("INFO in STP.buildIndexes(): posTermPointers: " + posTermPointers);
-    }
-
-    /** *************************************************************
-     *  Assumes that query is a simple clause.
-     *  @param negated says whether the query was originally
-     *                 negated.  If so, the negation must have been
-     *                 removed before invoking this method.
-     *  @return a unification Map of variable names and values.
-     */
-    private TreeMap<String, String> resolve(Formula candidate, Formula query, boolean negated) {
-
-        System.out.println("INFO is STP.resolve(): Attempting resolution of " + candidate + " with ");
-        if (negated) System.out.print("negated ");
-        System.out.println(query);
-        TreeMap<String, String> result = new TreeMap();
-        if (!query.isSimpleClause()) 
-            return result;
-        if (query.theFormula.indexOf("?") == 1)    // predicate variable
-            return result;       
-        else {
-            if (candidate.isSimpleClause()) 
-                return candidate.unify(query);
-            else {
-                Formula newCandidate = new Formula();
-                newCandidate.theFormula = candidate.theFormula;
-                if (newCandidate.car().equals("or")) {
-                    newCandidate.read(newCandidate.cdr());
-                    Formula clause = new Formula();
-                    while (!newCandidate.empty()) {
-                        clause.read(newCandidate.car());
-                        if ((!negated && clause.car().equals("not")) ||
-                            (negated && !clause.car().equals("not"))) {
-                            if (clause.car().equals("not")) {
-                                clause.read(clause.cdr());   // remove the enclosing
-                                clause.read(clause.car());   // (not ...)
-                            }
-                            result = clause.unify(query);
-                            if (result != null && result.keySet().size() > 0) 
-                                return result;
-                        }
-                        newCandidate.read(newCandidate.cdr());
-                    }
-                }
-                else {
-                    System.out.println("Error is STP.resolve(): complex formula not in CNF: " + candidate);
-                    return result;
-                }
-            }
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     *  Remove a clause that is part of another Formula.  This is
-     *  typically done when a clause unifies with its negation in
-     *  another Formula.  Both Fomulas should be in their original
-     *  form - i.e. if "removal" is a negated clause to be unified
-     *  with a positive clause in "source", then "removed" should be
-     *  negated when passed to this routine.
-     *  This routine assumes that resolution has already been found
-     *  between "source" and "removal", and that "removal" is a
-     *  simple or simple negated clause.  It also assumes that the
-     *  variable substitutions have occured after unification, so
-     *  that the clauses to be resolved are syntactically identical.
-     *  If there's only one clause after removal, then the routine
-     *  will remove the enclosing "or".
-     */
-    private Formula removeClause(Formula source, Formula removal) {
-
-        System.out.println("INFO in STP.removeClause(): " + removal.theFormula + " from " + source.theFormula);
-        Formula result = new Formula();
-        Formula source2 = new Formula();
-
-        boolean negatedRemoval = removal.car().equals("not");
-        Formula removal2 = new Formula();
-        if (negatedRemoval) {
-            removal2.read(removal.cdr());
-            removal2.read(removal2.car());  // remove the "not" from "removal", if present
-            if (source.isSimpleClause()) {  // two simple and opposite clauses resolve to the empty list
-                result.read("()");
-                return result;
-            }
-        }
-        else {
-            removal2.read(removal.theFormula);
-            if (source.isSimpleNegatedClause()) { // two simple and opposite clauses resolve to the empty list
-                result.read("()");
-                return result;
-            }
-        }
-        if (!source.car().equals("or")) {
-            System.out.println("Error in STP.removeClause(): formula not in CNF: " + source);
-            return result;
-        }
-        source2.read(source.cdr());     // remove the initial "or"
-        while (!source2.empty()) {
-            boolean match = false;
-            Formula clause = new Formula();
-            clause.read(source2.car());     // get the first clause 
-            System.out.println("INFO in STP.removeClause(): clause: " + clause);
-            source2.read(source2.cdr());    // remove that clause from source2
-            if ((clause.car().equals("not") && !negatedRemoval) ||
-                (!clause.car().equals("not") && negatedRemoval)) {
-                Formula newClause = new Formula();
-                if (clause.car().equals("not")) {
-                    newClause.read(clause.cdr());
-                    newClause.read(newClause.car()); // remove the "not"
-                }
-                else
-                    newClause.read(clause.theFormula);
-
-                System.out.println("INFO in STP.removeClause(): checking for match between: \n" + removal2.theFormula + 
-                                   " and \n" + newClause.theFormula);
-                //System.out.println("Compare: " + newClause.theFormula.compareTo(removal2.theFormula));
-                //System.out.println("Bytes1: " + newClause.theFormula.getBytes());
-                //System.out.println("Bytes2: " + removal2.theFormula.getBytes());
-                if (newClause.theFormula.equals(removal2.theFormula)) {
-                    match = true;
-                    System.out.println("Match!");
-                }
-            }
-            if (!match) {
-                if (result.theFormula == null || result.theFormula.length() < 1 ||
-                    (!result.empty() && !result.car().equals("or"))) {
-                    if (result.theFormula == null || result.theFormula.length() < 1 ||
-                        result.empty()) 
-                        result.theFormula = clause.theFormula;
-                    else
-                        result.read("(or " + result.theFormula + " " + clause.theFormula + ")");
-                }
-                else {
-                    if (result.empty())                    
-                        result.read(clause.theFormula);
-                    else {
-                        clause.theFormula = "(" + clause.theFormula + ")";
-                        result = result.append(clause);
-                    }
-                }
-            }
-        }
-
-        System.out.println("INFO in STP.removeClause(): result: " + result);
-        return result;
     }
 
     /** *************************************************************
@@ -404,6 +290,12 @@ public class STP extends InferenceEngine {
         public String toString() {
             return String.valueOf(intval) + "\n" + form.toString();
         }
+        public boolean equals(AnotherAVP avp) {
+            return form.equals(avp.form);
+        }
+        public int hashCode() {
+            return form.hashCode();
+        }
         public int compareTo(Object avp) throws ClassCastException {
 
             if (!avp.getClass().getName().equalsIgnoreCase("com.articulate.sigma.STP$AnotherAVP")) 
@@ -415,15 +307,16 @@ public class STP extends InferenceEngine {
     }
 
     /** *************************************************************
-     *  Collect Formulas, ranked by the number of terms they cover
-     *  from the supplied ArrayList.
+     *  Collect Formulas, ranked by string length (better would be
+     *  number of clauses)
      *  @param negated indicates whether to select only those
      *                 Formulas in which the terms appear in negated
      *                 clauses, or vice versa
      */
-    private ArrayList<AnotherAVP> collectCandidates(ArrayList<String> terms, boolean negated) {
+    private ArrayList<AnotherAVP> collectCandidates(ArrayList<String> terms, String negated) {
 
-        System.out.println("INFO in STP.collectCandidates(): " + terms);
+        //System.out.println("INFO in STP.collectCandidates(): " + terms);
+        //System.out.println("INFO in STP.collectCandidates(): negated " + negated);
         TreeMap<Formula, Integer> tm = new TreeMap();
         ArrayList result = new ArrayList();
         Iterator it = terms.iterator();
@@ -431,10 +324,23 @@ public class STP extends InferenceEngine {
             String term = (String) it.next();
             if (!Formula.LOGICAL_OPERATORS.contains(term) && !Formula.isVariable(term)) {
                 ArrayList<Formula> pointers = null;
-                if (negated) 
+                if (negated.equals("true")) 
                     pointers = (ArrayList) posTermPointers.get(term);
-                else
+                else if (negated.equals("false")) 
                     pointers = (ArrayList) negTermPointers.get(term);
+                else if (negated.equals("both")) {
+                    pointers = (ArrayList) posTermPointers.get(term);
+                    ArrayList<Formula> morePointers = (ArrayList) negTermPointers.get(term);
+                    if (pointers != null) {
+                        if (morePointers != null) 
+                            pointers.addAll(morePointers);                        
+                    }
+                    else
+                        pointers = morePointers;
+                    //System.out.println("INFO in STP.collectCandidates(): pointers " + pointers);
+                }
+                else
+                    System.out.println("Error in STP.collectCandidates(): negated must be true, false or both " + negated);
                 if (pointers != null) {
                     for (int i = 0; i < pointers.size(); i ++) {
                         Formula f = (Formula) pointers.get(i);
@@ -455,7 +361,8 @@ public class STP extends InferenceEngine {
             Formula f = (Formula) it.next();
             Integer num = (Integer) tm.get(f);
             AnotherAVP avp = new AnotherAVP();
-            avp.intval = num.intValue();
+            //avp.intval = num.intValue();
+            avp.intval = 10000-f.theFormula.length();   // sort by smallest size axiom is best (first)
             avp.form = f;
             result.add(avp);
         }
@@ -466,148 +373,78 @@ public class STP extends InferenceEngine {
     }
 
     /** *************************************************************
-     *  Find support for a single clause
-     *  @return an ArrayList of Formulas that consitute support for
-     *          the clause.  Return an empty ArrayList if no proof
-     *          is found.
-     */
-    private ArrayList<Formula> proveClauseLit(Formula f, boolean negated) {
-
-        System.out.println("INFO in STP.proveClauseLit(): " + f + " negated:" + negated);
-        ArrayList<Formula> result = new ArrayList();
-        Formula fnew = new Formula();
-        if (negated) {
-            fnew.read(f.cdr());    // remove the "not"
-            fnew.read(fnew.car()); // remove the remaining extract parentheses
-                                    
-            if (posLits.keySet().contains(f.theFormula)) {
-                Formula exactMatch = (Formula) posLits.get(fnew.theFormula);
-                result.add(exactMatch);
-                return result;
-            }
-        }
-        else {
-            fnew.read(f.theFormula);
-            if (negLits.keySet().contains(f.theFormula)) {
-                Formula exactMatch = (Formula) negLits.get(f.theFormula);
-                result.add(exactMatch);
-                return result;
-            }
-        }
-        ArrayList<String> al = fnew.collectTerms();
-        ArrayList<AnotherAVP> candidates = collectCandidates(al,negated);
-
-        System.out.println("INFO in STP.proveClauseLit(): candidate unifiers: " + candidates);
-        Iterator it = candidates.iterator();
-        while (it.hasNext()) {
-            AnotherAVP avp = (AnotherAVP) it.next();
-            Formula candidate = avp.form;
-            if (candidate.car().equals("not")) {
-                System.out.println("Error in STP.proveClauseLit(): retrieved a negative " +
-                                   "literal candidate unifier: " + candidate + " for " + f);
-            }
-            else {
-                Formula f3 = new Formula();
-                f3.read(fnew.theFormula);
-                TreeMap<String, String> m = resolve(candidate,fnew,negated);
-                if (m != null && m.keySet().size() > 0) {
-                    Formula newCandidate = new Formula();
-                    newCandidate.read(candidate.theFormula);
-                    //System.out.println("INFO in STP.proveClauseNegLit(): before substitution1: " + newCandidate.theFormula);
-                    newCandidate = newCandidate.substitute(m);
-                    //System.out.println("INFO in STP.proveClauseNegLit(): after substitution1: " + newCandidate.theFormula);
-                    //System.out.println("INFO in STP.proveClauseNegLit(): before substitution2: " + f3.theFormula);
-                    f3 = f3.substitute(m);
-                    //System.out.println("INFO in STP.proveClauseNegLit(): after substitution2: " + f3.theFormula);
-                    f3.theFormula = "(not " + f3.theFormula + ")";
-                    //System.out.println("INFO in STP.proveClauseNegLit(): after read: " + f3.theFormula);
-                    newCandidate = removeClause(newCandidate,f3);  
-                    if (!newCandidate.empty()) {
-                        ArrayList<Formula> newResult = null;
-                        if (!current.contains(newCandidate.theFormula))                         
-                            newResult = prove(newCandidate);
-                        if (newResult != null && newResult.size() > 0) {
-                            result.add(candidate);
-                            result.addAll(newResult);
-                            return result;
-                        }
-                    }
-                    else {
-                        result.add(candidate);
-                        return result;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     *  Find support for a single clause
-     *  @return an ArrayList of Formulas that consitute support for
-     *          the clause.  Return an empty ArrayList if no proof
-     *          is found.
-     */
-    private ArrayList<Formula> proveClause(Formula f) {
-
-        System.out.println("INFO in STP.proveClause(): " + f);
-        ArrayList<Formula> result = new ArrayList();
-        if (f.isSimpleClause())
-            return proveClauseLit(f,false);        
-        else if (f.isSimpleNegatedClause()) 
-            return proveClauseLit(f,true);
-        else 
-            System.out.println("Error in STP.proveClause(): Not a simple clause: " + f);
-        return null;
-    }
-
-    /** *************************************************************
      *  Find support for a formula
      *  @return an ArrayList of Formulas that consitute support for
      *          the clause.  Return an empty ArrayList if no proof
      *          is found.
      */
-    private ArrayList<Formula> prove(Formula f) {
-
-        String norm = Formula.normalizeVariables(f.theFormula); // Don't try to prove if we've already
-        if (lemmas.keySet().contains(norm))                     // succeeded or failed on this formula.
-            return (ArrayList<Formula>) lemmas.get(norm);
-        if (failed.contains(f.theFormula)) 
-            return null;
+    private ArrayList<Formula> prove() {
 
         ArrayList<Formula> result = new ArrayList();
-        System.out.println("INFO in STP.prove(): " + f);
-        current.add(f.theFormula);
-        if (f.isSimpleClause() || f.isSimpleNegatedClause()) 
-            return proveClause(f);
-        else {
-            String orTerm = f.car();
-            Formula clauses = new Formula();  
-            clauses.read(Formula.normalizeVariables(f.theFormula));
-            while (!clauses.empty()) {
-                Formula c = new Formula();
-                c.read(clauses.theFormula);
-                norm = Formula.normalizeVariables(c.theFormula);
-                ArrayList<Formula> res = null;
-                if (!current.contains(c.theFormula))                 
-                    res = prove(c);
-                if (res != null && res.size() > 0) {
-                    System.out.println("INFO in STP.prove(): Successfully proved " + c);
-                    result.addAll(res);
-                    lemmas.put(norm,res);
-                    if (current.contains(norm)) 
-                        current.remove(norm);
+        while (TBU.size() > 0) {
+            System.out.println("\n\nINFO in STP.prove(): TBU: " + TBU);
+            //System.out.println("INFO in STP.prove(): lemmas: " + lemmas);
+            AnotherAVP avp = (AnotherAVP) TBU.remove(0);
+            //if (!lemmas.containsKey(form)) {
+            String norm = Formula.normalizeVariables(avp.form.theFormula); 
+
+            //System.out.println("INFO in STP.prove(): attempting to prove: " + avp.form);
+            Formula f = new Formula();
+            f.read(norm);
+
+            ArrayList<String> al = f.collectTerms();
+            ArrayList<AnotherAVP> candidates = null;
+            if (f.isSimpleClause()) 
+                candidates = collectCandidates(al,"false");                
+            else if (f.isSimpleNegatedClause()) 
+                candidates = collectCandidates(al,"true");                
+            else
+                candidates = collectCandidates(al,"both");                
+
+            if (candidates != null && candidates.size() > 0) {
+                for (int i = 0; i < candidates.size(); i++) {
+                    AnotherAVP avpCan = (AnotherAVP) candidates.get(i);
+                    Formula candidate = avpCan.form;
+                    //System.out.println("INFO in STP.prove(): checking candidate:\n" + candidate);
+                    Formula resultForm = new Formula();
+                    TreeMap mappings = f.resolve(candidate,resultForm);
+                    if (resultForm != null && resultForm.empty()) {
+                        ArrayList support = new ArrayList();
+                        if (lemmas.get(avpCan.form.theFormula) != null) 
+                            support.addAll((ArrayList) lemmas.get(avpCan.form));
+                        if (lemmas.get(f.theFormula) != null) 
+                            support.addAll((ArrayList) lemmas.get(f.theFormula));
+                        support.add(f);
+                        support.add(avpCan.form);
+                        return support;
+                    }
+                    if (mappings != null && mappings.keySet().size() > 0) {
+                        System.out.println("\nINFO in STP.prove(): resolve result:\n" + resultForm);
+                        System.out.println("for candidate\n" + candidate + "\n with formula\n " + avp.form);
+                        ArrayList support = new ArrayList();
+                        if (lemmas.get(avpCan.form.theFormula) != null) 
+                            support.addAll((ArrayList) lemmas.get(avpCan.form));
+                        if (lemmas.get(f.theFormula) != null) 
+                            support.addAll((ArrayList) lemmas.get(f.theFormula));
+                        support.add(f);
+                        support.add(avpCan.form);
+                        lemmas.put(resultForm.theFormula,support);
+                        AnotherAVP avpNew = new AnotherAVP();
+                        if (!formulas.contains(resultForm) && !TBU.contains(avpNew)) {
+                            avpNew.form = resultForm;
+                            avpNew.intval = 10000-resultForm.theFormula.length();
+                            TBU.add(avpNew);
+                            Collections.sort(TBU);
+                        }
+                    }
+                    //else
+                        //System.out.println("INFO in STP.prove(): candidate did not resolve\n" + candidate);                    
                 }
-                else {
-                    failed.add(Formula.normalizeVariables(c.theFormula));
-                    if (current.contains(norm)) 
-                        current.remove(norm);
-                }
-                clauses.read(clauses.cdr());
             }
+            //indexOneFormula(f);       // all lemmas must be added to the knowledge base for completeness
+            //formulas.add(f);
+            //}
         }
-        if (result.size() > 0) 
-            lemmas.put(f.theFormula,result);        
         return result;
     }
 
@@ -628,23 +465,29 @@ public class STP extends InferenceEngine {
         negQuery.read("(not " + formula + ")");
         negQuery = negQuery.clausify();     // negation will be pushed in
         System.out.println("INFO in STP.submitQuery(): clausified query: " + negQuery);
-        if (negQuery.car().equals("or"))         
-            negQuery.read(negQuery.cdr());  // remove the initial "or"
-        while (!negQuery.empty()) {
-            String clause = null;
-            if (negQuery.isSimpleClause() || negQuery.isSimpleNegatedClause())
-                clause = negQuery.theFormula;
-            else
-                clause = negQuery.car();
-            clause = Formula.normalizeVariables(clause);
-            System.out.println("INFO in STP.submitQuery(): clause: " + clause);
-            Formula c = new Formula();
-            c.read(clause);
-            ArrayList<Formula> res = prove(c);
-            if (res != null && res.size() > 0) 
-                return "Success! " + res.toString();      // success if any clause in the disjunction is proven
-            negQuery.read(negQuery.cdr());
+        AnotherAVP avp = null;
+        if (negQuery.car().equals("and")) {
+            ArrayList<Formula> al = negQuery.separateConjunctions();
+            for (int i = 0; i < al.size(); i++) {
+                Formula f2 = (Formula) al.get(i);
+                avp = new AnotherAVP();
+                avp.form = f2;
+                avp.intval = f2.theFormula.length();
+                TBU.add(avp);
+                Collections.sort(TBU);
+                System.out.println("INFO in STP.submitQuery(): adding to TBU: " + avp);
+            }
         }
+        else {
+            avp = new AnotherAVP();
+            avp.form = negQuery;
+            avp.intval = negQuery.theFormula.length();
+            TBU.add(avp);
+            Collections.sort(TBU);
+        }
+        ArrayList<Formula> res = prove();
+        if (res != null && res.size() > 0) 
+            return "Success! " + res.toString();      // success if any clause in the disjunction is proven        
         return "fail";          // getting here means each clause failed to be proven
     }
 
@@ -681,16 +524,86 @@ public class STP extends InferenceEngine {
 
     /** *************************************************************
      */
+    public static void tq1Abbrev() {
+
+        ArrayList al = new ArrayList();
+        al.add("(=> (i ?X290 C) (exists (?X12) (m ?X12 ?X290)))");
+        al.add("(s O C)");
+        al.add("(i SOC SOC)");
+        al.add("(i Org1-1 O)");
+        al.add("(=> (s ?X403 ?X404) (and (i ?X403 SOC) (i ?X404 SOC)))");
+        al.add("(=> (and (i ?X403 SOC) (i ?X404 SOC)) " +
+               "(=> (and (s ?X403 ?X404) (i ?X405 ?X403)) (i ?X405 ?X404)))");
+        Formula query = new Formula();
+        query.read("(exists (?MEMBER) (m ?MEMBER Org1-1))");
+        STP stp = new STP(al);
+        System.out.println(stp.submitQuery(query.theFormula,0,0)); 
+
+        /*
+(or
+  (not (instance ?X3 Collection))
+  (member (SkFn 1 ?X3) ?X3)), 
+
+(subclass Organization Collection), 
+
+(or
+  (instance ?X6 SetOrClass)
+  (not (subclass ?X7 ?X6))), 
+
+(or
+  (instance ?X8 SetOrClass)
+  (not (subclass ?X8 ?X9))), 
+
+(or
+  (not (instance ?X13 SetOrClass))
+  (not (instance ?X14 SetOrClass))
+  (not (subclass ?X13 ?X14))
+  (not (instance ?X15 ?X13))
+  (instance ?X15 ?X14))
+
+query:
+(not (member ?X33 Org1-1))
+
+(not (instance Org1-1 Collection))
+
+(or
+  (not (instance ?X13 SetOrClass))
+  (not (instance Collection SetOrClass))
+  (not (subclass ?X13 Collection))
+  (not (instance Org1-1 ?X13)))
+
+
+        */
+    }
+
+    /** *************************************************************
+     */
     public static void tq1() {
 
         ArrayList al = new ArrayList();
         al.add("(=> (instance ?X290 Collection) (exists (?X12) (member ?X12 ?X290)))");
         al.add("(subclass Organization Collection)");
+        al.add("(instance SetOrClass SetOrClass)");
+        al.add("(instance Org1-1 Organization)");
         al.add("(=> (subclass ?X403 ?X404) (and (instance ?X403 SetOrClass) (instance ?X404 SetOrClass)))");
         al.add("(=> (and (instance ?X403 SetOrClass) (instance ?X404 SetOrClass)) " +
                "(=> (and (subclass ?X403 ?X404) (instance ?X405 ?X403)) (instance ?X405 ?X404)))");
         Formula query = new Formula();
         query.read("(exists (?MEMBER) (member ?MEMBER Org1-1))");
+        STP stp = new STP(al);
+        System.out.println(stp.submitQuery(query.theFormula,0,0)); 
+    }
+
+    /** *************************************************************
+     */
+    public static void tq2() {
+
+        ArrayList al = new ArrayList();
+        al.add("(=> (p ?X) (q ?X))");
+        al.add("(=> (or (q ?X) (r ?X)) (t ?X))");
+        al.add("(p a)");
+        Formula query = new Formula();
+        query.read("(or (t a) (r a))");
         STP stp = new STP(al);
         System.out.println(stp.submitQuery(query.theFormula,0,0)); 
     }
@@ -744,6 +657,7 @@ public class STP extends InferenceEngine {
         System.out.println(stp.submitQuery(query.theFormula,0,0)); 
     */
         //tq1();
+        //tq2();
         rnTest();
 /**
          ArrayList al = new ArrayList();
