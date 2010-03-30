@@ -785,7 +785,9 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Test whether the String is an empty formula.
+     * Test whether the String is an empty formula.  Not to be
+     * confused with a null string or empty string.  There must be
+     * parentheses with nothing or whitespace in the middle.
      */
     public static boolean empty(String s) {
         return (listP(s) && s.matches("\\(\\s*\\)"));
@@ -1029,6 +1031,27 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * If equals is overridedden, hashCode must use the same
+     * "significant" fields.
+     */
+    public int hashCode() {
+
+        String thisString = normalizeVariables(this.theFormula).trim();
+        return (thisString.hashCode());
+    }
+    
+    /** ***************************************************************
+     * Test if the contents of the formula are equal to the
+     * argument. Normalize all variables.
+     */
+    public boolean equals(Formula f) {
+
+        String thisString = normalizeVariables(this.theFormula).trim();
+        String argString = normalizeVariables(f.theFormula).trim();
+        return (thisString.equals(argString));
+    }
+    
+    /** ***************************************************************
      * Test if the contents of the formula are equal to the String argument.
      * Normalize all variables.
      */
@@ -1199,9 +1222,10 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      *  Attempt to unify one formula with another. @return a Map of
-     *  variable substitutions if successful, null if not.
-     *  Algorithm is after Russell and Norvig's AI: A Modern
-     *  Approach p303.
+     *  variable substitutions if successful, null if not. If two
+     *  formulas are identical the result will be an empty (but not
+     *  null) TreeMap. Algorithm is after Russell and Norvig's AI: A
+     *  Modern Approach p303.
      */
     public TreeMap<String, String> unify(Formula f) {
 
@@ -1209,9 +1233,231 @@ public class Formula implements Comparable {
         //                   " with " + f.theFormula);
         TreeMap result = new TreeMap();
         result = unifyInternal(f.theFormula,this.theFormula,result);
-        if (result == null || result.keySet().size() < 1) 
+        if (result == null ) 
             result = null;
         return result;
+    }
+
+    /** ***************************************************************
+     *  Append a clause to a (potentially empty) list of clauses.
+     *  append () and (foo A B) yields (foo A B)
+     *  append (foo A B) and (bar B C) yields
+     *  (or (foo A B) (bar B C))
+     *  append (or (foo A B) (bar B C)) and
+     *    (baz D E) yields (or (foo A B) (bar B C) (baz D E))
+     */
+    public Formula appendClauseInCNF(Formula f) {
+
+        //System.out.println("INFO in Formula.appendClauseInCNF(): appending \n" + this + "\n and \n" + f); 
+        if (f == null) {
+            System.out.println("Error in Formula.appendClauseInCNF(): null formula"); 
+            return null;
+        }
+        if (f.empty()) 
+            return this;
+        if (this.empty()) 
+            return f;
+        if (this.atom()) {
+            System.out.println("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: " + this); 
+            return null;
+        }
+        if (f.atom()) {
+            System.out.println("Error in Formula.appendClauseInCNF(): formula to append not in CNF: " + f); 
+            return null;
+        }
+        Formula thisNew = new Formula();
+        Formula fnew = new Formula();
+        if (isSimpleClause() || isSimpleNegatedClause()) 
+            thisNew.read("(" + this.theFormula + ")");
+        else {
+            if (!this.car().equals("or")) {
+                System.out.println("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: " + this); 
+                return null;
+            }
+            thisNew.read(this.cdr());   // remove the "or"
+        }
+        if (f.isSimpleClause() || f.isSimpleNegatedClause()) 
+            fnew.read("(" + f.theFormula + ")");
+        else {
+            if (!f.car().equals("or")) {
+                System.out.println("Error in Formula.appendClauseInCNF(): formula to append not in CNF: " + f); 
+                return null;
+            }
+            fnew.read(f.cdr());   // remove the "or"
+        }
+        fnew.theFormula = fnew.theFormula;
+        thisNew = thisNew.append(fnew);
+        thisNew.theFormula = "(or " + thisNew.theFormula.substring(1);
+        return thisNew;
+    }
+
+    /** ***************************************************************
+     *  Attempt to resolve one formula with another. @return a
+     *  TreeMap of (possibly empty) variable substitutions if
+     *  successful, null if not. Return Formula "result" as a side
+     *  effect, that is the result of the substition (which could be
+     *  the empty list), null if not.
+     */
+    public TreeMap<String, String> resolve(Formula f, Formula result) {
+
+        Formula accumulator = new Formula();
+        //System.out.println("INFO in Formula.resolve(): Attempting to resolve : \n" + this + 
+        //                   "\n with \n" + f);
+        if (f.empty() || this.empty()) {
+            System.out.println("Error in Formula.resolve() attempt to resolve with empty list");
+            return null;
+        }
+        Formula thisFormula = new Formula();
+        thisFormula.read(theFormula);
+        Formula argFormula = new Formula();
+        argFormula.read(f.theFormula);
+        TreeMap mapping = new TreeMap();
+        if ((this.isSimpleClause() && f.isSimpleNegatedClause()) ||
+            (this.isSimpleNegatedClause() && f.isSimpleClause())) {
+            //System.out.println("INFO in Formula.resolve(): both simple clauses");
+            if (this.isSimpleNegatedClause()) {
+                //System.out.println("INFO in Formula.resolve(): this (or fnew).isSimpleNegatedClause(): \n" + this);
+                thisFormula.read(thisFormula.cdr());
+                thisFormula.read(thisFormula.car());
+                //System.out.println("INFO in Formula.resolve(): thisFormula: \n" + thisFormula);
+            }
+            if (f.isSimpleNegatedClause()) {
+                //System.out.println("INFO in Formula.resolve(): f (or f2).isSimpleNegatedClause(): \n" + f);
+                argFormula.read(argFormula.cdr());
+                argFormula.read(argFormula.car());
+            }
+            mapping = thisFormula.unify(argFormula);
+            if (mapping == null) 
+                result.theFormula = null;            
+            else
+                result.theFormula = "()";
+            //System.out.println("INFO in Formula.resolve(): result: " + result);
+            //System.out.println("INFO in Formula.resolve(): mapping: " + mapping);            
+            if (result.theFormula != null)         
+                result.theFormula = result.toCanonicalClausalForm().theFormula;
+            return mapping;
+        }
+        else {
+            if ((this.isSimpleClause() && f.isSimpleClause()) ||
+                (this.isSimpleNegatedClause() && f.isSimpleNegatedClause())) {
+                return null;
+            }
+            if (this.isSimpleClause() || this.isSimpleNegatedClause()) {
+                if (!argFormula.car().equals("or")) {
+                    System.out.println("Error in Formula.resolve() (this is simple): The non-simple clause not in CNF: \n" + argFormula);
+                    return null;
+                }
+                argFormula.read(argFormula.cdr());  // remove the initial "or"
+                accumulator.theFormula = "()";     // holds clauses that have been tried and not unified            
+                while (!argFormula.empty()) {
+                    Formula clause = new Formula();
+                    clause.read(argFormula.car());
+                    //System.out.println("INFO in Formula.resolve() (loop 1): checking clause: \n" + clause);
+                    //if (result != null)                     
+                    //    System.out.println("INFO in Formula.resolve(): result so far: \n" + accumulator);
+                    argFormula.read(argFormula.cdr());
+                    Formula newResult = new Formula();
+                    mapping = thisFormula.resolve(clause,newResult); // if it succeeds, newResult will be () so ignore
+                    if (mapping != null && mapping.keySet().size() > 0) {
+                        //System.out.println("INFO in Formula.resolve() (returning loop 1): \n" + newResult);
+                        //System.out.println("INFO in Formula.resolve() argFormula: \n" + argFormula);
+                        if (!argFormula.empty() && !argFormula.isSimpleClause() && !argFormula.isSimpleNegatedClause()) {
+                             if (!empty(argFormula.cdr()))
+                                 argFormula.read("(or " + argFormula.theFormula.substring(1));   
+                             else
+                                 argFormula.read(argFormula.car());
+                        }
+                        accumulator = accumulator.appendClauseInCNF(argFormula);
+                        accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
+                        result.theFormula = accumulator.theFormula;
+
+                        //System.out.println("INFO in Formula.resolve(): result: " + result);
+                        if (result.theFormula != null)         
+                            result.theFormula = result.toCanonicalClausalForm().theFormula;
+                        return mapping;
+                    }
+                    else 
+                        accumulator = accumulator.appendClauseInCNF(clause);                    
+                }
+            }
+            else {
+                if (argFormula.isSimpleClause() || argFormula.isSimpleNegatedClause()) {
+                    if (!this.car().equals("or")) {
+                        System.out.println("Error in Formula.resolve() (f2 is simple): The non-simple clause not in CNF: " + this);
+                        return null;
+                    }
+                    thisFormula.read(thisFormula.cdr());// remove the initial "or"
+                    accumulator.theFormula = "()";
+                    while (!thisFormula.empty()) {
+                        Formula clause = new Formula();
+                        clause.read(thisFormula.car());
+                        //System.out.println("INFO in Formula.resolve() (loop 2): checking clause: \n" + clause);
+                        thisFormula.read(thisFormula.cdr());
+                        Formula newResult = new Formula();
+                        mapping = argFormula.resolve(clause,newResult);
+                        //System.out.println("INFO in Formula.resolve() (loop 2): return mapping: \n" + mapping);
+                        if (mapping != null && mapping.keySet().size() > 0) {
+                            //System.out.println("INFO in Formula.resolve() (returning loop 2): newResult: \n" + newResult);
+                            if (!thisFormula.empty() && !thisFormula.isSimpleClause() && !thisFormula.isSimpleNegatedClause()) {
+                                if (!empty(thisFormula.cdr()))
+                                    thisFormula.read("(or " + thisFormula.theFormula.substring(1));   
+                                else
+                                    thisFormula.read(thisFormula.car());
+                            }
+                            accumulator = accumulator.appendClauseInCNF(thisFormula);
+                            accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
+                            result.theFormula = accumulator.theFormula;
+                            //System.out.println("INFO in Formula.resolve(): result: " + result);
+                            if (result.theFormula != null)         
+                                result.theFormula = result.toCanonicalClausalForm().theFormula;
+                            return mapping;
+                        }
+                        else 
+                            accumulator = accumulator.appendClauseInCNF(clause);                        
+                    }
+                }
+                else {                                      // both formulas are not a simple clause
+                    Formula newResult = new Formula();
+                    //System.out.println("INFO in Formula.resolve() (before loop 3): looping through argFormula's clauses: \n" + argFormula);
+                    argFormula.read(argFormula.cdr());    // remove the initial "or"
+                    accumulator.theFormula = "()";
+                    while (!argFormula.empty()) {
+                        //System.out.println("INFO in Formula.resolve() (loop 3): here 1: ");
+                        Formula clause = new Formula();
+                        clause.read(argFormula.car());
+                        //System.out.println("INFO in Formula.resolve() (loop 3): checking clause: \n" + clause);
+                        argFormula.read(argFormula.cdr());
+                        TreeMap newMapping = thisFormula.resolve(clause,newResult);
+                        //System.out.println("INFO in Formula.resolve() (returning loop 3): mapping: " + newMapping);
+                        //System.out.println("INFO in Formula.resolve() (returning loop 3): argFormula: \n" + argFormula);
+                        //System.out.println("INFO in Formula.resolve() (returning loop 3): accumulator: \n" + accumulator);
+                        if (newMapping != null && newMapping.keySet().size() > 0) {
+                            mapping.putAll(newMapping);  // could still be a problem if a mapping overwrites another...
+                            //System.out.println("INFO in Formula.resolve() (returning loop 3): newResult: \n" + newResult);
+                            //accumulator = accumulator.appendClauseInCNF(argFormula);
+                            accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
+                            argFormula.theFormula = (argFormula.substitute(mapping)).theFormula;
+                            thisFormula.theFormula = new String(newResult.theFormula);
+                        }
+                        else {
+                            //System.out.println("INFO in Formula.resolve() (loop 3): here 2: ");
+                            //System.out.println("INFO in Formula.resolve(): accumulator: \n" + accumulator);
+                            //System.out.println("INFO in Formula.resolve(): clause: \n" + clause);
+                            accumulator = accumulator.appendClauseInCNF(clause); 
+                            //System.out.println("INFO in Formula.resolve(): accumulator after: \n" + accumulator);
+                        }
+                        //System.out.println("INFO in Formula.resolve() (loop 3): here 3: ");
+                        result.theFormula = accumulator.theFormula;
+                        //System.out.println("INFO in Formula.resolve() (loop 3): here 4: ");
+                    }
+                    result.theFormula = new String(result.appendClauseInCNF(thisFormula).theFormula);
+                }
+            }
+        }
+        //System.out.println("INFO in Formula.resolve(): result: " + result);
+        if (result.theFormula != null)         
+            result.theFormula = result.toCanonicalClausalForm().theFormula;
+        return mapping;
     }
 
     /** ***************************************************************
@@ -2218,14 +2464,14 @@ public class Formula implements Comparable {
      */
     public boolean isSimpleClause() {
 
-        //System.out.println("INFO in Formula.isSimpleClause(): " + this);
+        // System.out.println("INFO in Formula.isSimpleClause(): " + this);
         Formula f = new Formula();
         f.read(theFormula);
         while (!f.empty()) {
             if (listP(f.car())) {
                 Formula f2 = new Formula();
                 f2.read(f.car());
-                if (!Formula.isFunction(f.car())) 
+                if (!Formula.isFunction(f2.car())) 
                     return false;
                 else if (!f2.isSimpleClause()) 
                     return false;
@@ -4169,6 +4415,9 @@ public class Formula implements Comparable {
      * @param eolChars - the proper character for end of line.
      */
     public String format(String hyperlink, String indentChars, String eolChars) {
+
+        if (this.theFormula == null) 
+            return "";        
         String result = this.theFormula;
         try {
             if (isNonEmptyString(this.theFormula)) {
@@ -4408,6 +4657,9 @@ public class Formula implements Comparable {
                 System.out.println("  st.nval == " + st.nval);
             }
             result = translateWord_1(st, hasArguments);
+            if (result.equals("$true__m") || result.equals("$false__m")) {
+                result = "'" + result + "'";
+            }
         }
         catch (Exception ex) {
             System.out.println("Error in Formula.translateWord(" + st.toString() 
@@ -5796,6 +6048,27 @@ public class Formula implements Comparable {
      * generate unique Skolem terms.
      */
     private static int SKOLEM_INDEX = 0;
+
+    /** ***************************************************************
+     *  Turn a conjunction into an ArrayList of separate statements
+     */
+    public ArrayList<Formula> separateConjunctions() {
+
+        if (!car().equals("and")) {
+            System.out.println("Error Formula.separateConjunctions(): not a conjunction " + this);
+            return null;
+        }
+        ArrayList<Formula> result = new ArrayList();
+        Formula temp = new Formula();
+        temp.read(this.cdr());
+        while (!temp.empty()) {
+            Formula clause = new Formula();
+            clause.read(temp.car());
+            result.add(clause);
+            temp.read(temp.cdr());
+        }
+        return result;
+    }
 
     /** ***************************************************************
      * This method converts the SUO-KIF Formula to a version of
@@ -7666,22 +7939,22 @@ public class Formula implements Comparable {
         return;
     }
 
-
     /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
 
         Formula f1 = new Formula();
+        Formula f2 = new Formula();
+        Formula f3 = new Formula();
+        /**
         f1.read("(=> (attribute ?Agent Investor) (exists (?Investing) (agent ?Investing ?Agent)))");
         System.out.println(f1);
         System.out.println(f1.clausify());
-        Formula f2 = new Formula();
         f2.read("(attribute Bob Investor)");
         TreeMap tm = f1.unify(f2);
         if (tm != null) 
             System.out.println(f1.substitute(tm));
-        Formula f3 = new Formula();
         f3.read("(attribute ?X Investor)");
         tm = f3.unify(f2);
         System.out.println(tm);
@@ -7702,11 +7975,76 @@ public class Formula implements Comparable {
         System.out.println(f1.isSimpleNegatedClause());
 
         System.out.println(f1.append(f3));
+ * */
 
-        f1.read("(exists (?MEMBER) (member ?MEMBER Org1-1))");
-        System.out.println(f1.clausify());
-        f1.read("(=> (instance ?X290 Collection) (exists (?X12) (member ?X12 ?X290)))");
-        System.out.println(f1.clausify());
+        //f1.read("(not (and (exists (?MEMBER) (member ?MEMBER Org1-1)) (instance Org1-1 Foo))");
+        //f1.read("(not (attribute ?VAR1 Criminal))");
+        //f2.read("(or (not (attribute ?X5 American)) (not (instance ?X6 Weapon)) (not (instance ?X7 Nation)) " +
+        //        "(not (attribute ?X7 Hostile)) (not (instance ?X8 Selling)) (not (agent ?X8 ?X5)) (not (patient ?X8 ?X6)) " +
+        //        "(not (recipient ?X8 ?X7)) (attribute ?X5 Criminal))");    
+        f1.read("(or (not (attribute ?VAR1 American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?VAR4 Selling)) (not (agent ?VAR4 ?VAR1)) (not (patient ?VAR4 ?VAR2)) (not (recipient ?VAR4 ?VAR3)))");
+        // (or 
+        //   (not 
+        //     (attribute ?VAR1 American)) 
+        //   (not 
+        //     (instance ?VAR2 Weapon)) 
+        //   (not 
+        //     (instance ?VAR3 Nation)) 
+        //   (not 
+        //     (attribute ?VAR3 Hostile)) 
+        //   (not 
+        //     (instance ?VAR4 Selling)) 
+        //   (not 
+        //     (agent ?VAR4 ?VAR1)) 
+        //   (not 
+        //     (patient ?VAR4 ?VAR2)) 
+        //   (not 
+        //     (recipient ?VAR4 ?VAR3)))
+        //f2.read("(or (agent ?X15 West) (not (possesses Nono ?X16)) (not (instance ?X16 Missile)))");
+        //f1 = f1.clausify();
+        //f2.read("(=> (instance ?X290 Collection) (exists (?X12) (and (instance ?X290 Foo) (member ?X12 ?X290))))");
+        //System.out.println(f2.toNegAndPosLitsWithRenameInfo());
+        //f2 = f2.clausify();
+        //System.out.println(f2);
+        //f3.read("(member (SkFn 1 ?X290) ?X290))");
+        //System.out.println(f3.isSimpleClause());
+        //Formula result = new Formula();
+        //TreeMap mappings = f1.resolve(f2,result);
+        //System.out.println(mappings);
+        //System.out.println(result);
+        //f1.read("(not (p a))");
+        //f2.read("(not (p a))");
+        //System.out.println(f1.unify(f2));
+        //f1.read("(not (q a))");
+        //f2.read("(not (p a))");
+        //System.out.println(f1.unify(f2));
+
+        //f1.read("(s O C)");
+        //f2.read("(or (not (s ?X7 C)) (not (s O C)))");
+        //Formula newResult = new Formula();
+        //System.out.println(f1.resolve(f2,newResult));
+        //System.out.println(newResult);
+
+        f1.read("(or (not (possesses Nono ?X16)) (not (instance ?X16 Missile)) (not (attribute West American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?X15 Selling)) (not (patient ?X15 ?VAR2)) (not (recipient ?X15 ?VAR3))) ");
+        System.out.println(f1.toCanonicalClausalForm());
+/*               
+        f1.read("()");
+        f2.read("()");
+        System.out.println(f1.appendClauseInCNF(f2));
+        f2.read("(foo A B)");
+        System.out.println(f1.appendClauseInCNF(f2));   // yields (foo A B)
+        f1.read("(foo A B)");
+        f2.read("(bar B C)");
+        System.out.println(f1.appendClauseInCNF(f2));   // yields (or (foo A B) (bar B C))
+        f1.read("(or (foo A B) (not (bar B C)))");
+        f2.read("(not (baz D E))");
+        System.out.println(f2.appendClauseInCNF(f1));   // yields (or (not (baz D E)) (foo A B) (not (bar B C)))
+        System.out.println(f1.appendClauseInCNF(f2));   // yields (or (foo A B) (not (bar B C)) (not baz D E)))
+        f1.read("(or (foo A B) (bar B C))");
+        f2.read("(or (baz D E) (bop F G))");
+        System.out.println(f1.appendClauseInCNF(f2));   // yields (or (foo A B) (bar B C) (baz D E) (bop F G))
+*/
+        /**
         f1.read("(member (SkFn 1 ?X3) ?X3)");
         f3.read("(member ?VAR1 Org1-1)");
         tm = f1.unify(f3);
@@ -7719,6 +8057,7 @@ public class Formula implements Comparable {
         System.out.println(f1);
         System.out.println(f3);
         System.out.println(f1.unify(f3));
+         * */
 
     }
 
