@@ -5869,7 +5869,7 @@ public class KB {
                                         "dollar_plus").replaceAll("[$]minus",
                                                                   "dollar_minus");
                         //----Don't output ""ed ''ed and numbers
-                        if (theTPTPFormula.indexOf('\'') >= 0 
+                        if (theTPTPFormula.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") 
                             || theTPTPFormula.indexOf('"') >= 0 
                             || theTPTPFormula.matches(".*[(,]-?[0-9].*")) {
                             pr.print("%FOL ");
