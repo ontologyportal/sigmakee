@@ -131,14 +131,12 @@ public class Vampire extends InferenceEngine {
 
         try {
             String execPathname = KBmanager.getMgr().getPref("inferenceEngine");
-
             if (!StringUtil.isNonEmptyString(execPathname)) {
                 error = "No pathname has been set for \"inferenceEngine\"";
                 System.out.println("Error in Vampire.getNewInstanceWithFormulas(): " + error);
                 KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                             + "\n<br/>" + error + "\n<br/>");
             }
-
             File vampireExecutable = null;
             if (error == null) {
                 vampireExecutable = new File(execPathname);
@@ -149,16 +147,12 @@ public class Vampire extends InferenceEngine {
                                                 + "\n<br/>" + error + "\n<br/>");
                 }
             }
-
             if (error == null) {
-
                 File vampireDirectory = vampireExecutable.getParentFile();
-
                 System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): executable == " 
                                    + vampireExecutable.getCanonicalPath());
                 System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): directory == " 
                                    + vampireDirectory.getCanonicalPath());
-
                 // It should only ever be necessary to write this file once.
                 File initFile = new File(vampireDirectory, "init-v.kif");
                 if (!initFile.exists()) {
@@ -171,13 +165,9 @@ public class Vampire extends InferenceEngine {
                     catch (Exception e1) {
                     }
                 }
-
                 System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): "
-                                   + "Starting vampire as " 
-                                   + vampireExecutable.getCanonicalPath() 
-                                   + " " 
-                                   + initFile.getCanonicalPath());
-        
+                                   + "Starting vampire as " + vampireExecutable.getCanonicalPath() 
+                                   + " " + initFile.getCanonicalPath());
                 Vampire vprInst = new Vampire(vampireExecutable, initFile);
                 if (vprInst instanceof Vampire) {
                     Iterator it = formulaSource.iterator();
@@ -190,29 +180,20 @@ public class Vampire extends InferenceEngine {
                         while (it.hasNext()) {
                             formStr = (String) it.next();
                             response = vprInst.assertFormula(formStr);
-                            if (!(response.indexOf("Formula has been added") >= 0)) {
-                                badFormulas.add(formStr);
-                            }
-                            else {
-                                goodCount++ ;
-                            }
+                            if (!(response.indexOf("Formula has been added") >= 0)) 
+                                badFormulas.add(formStr);                            
+                            else 
+                                goodCount++ ;                            
                         }
                         long duration = (System.currentTimeMillis() - start);
 
-                        System.out.println(goodCount 
-                                           + " formulas asserted to " 
-                                           + vprInst 
-                                           + " in " 
-                                           + (duration / 1000.0) 
-                                           + " seconds");
+                        System.out.println(goodCount + " formulas asserted to " + vprInst 
+                                           + " in " + (duration / 1000.0) + " seconds");
                         if (!badFormulas.isEmpty()) {
                             int bc = badFormulas.size();
                             Iterator it2 = badFormulas.iterator();
                             System.out.println("INFO in Vampire.getNewInstanceWithFormulas(): "
-                                               + bc
-                                               + " FORMULA"
-                                               + ((bc == 1) ? "" : "S")
-                                               + " REJECTED ");
+                                               + bc + " FORMULA" + ((bc == 1) ? "" : "S") + " REJECTED ");
                             int badCount = 1;
                             String badStr = null;
                             String mgrErrStr = KBmanager.getMgr().getError();
@@ -223,12 +204,8 @@ public class Vampire extends InferenceEngine {
                             }
                             KBmanager.getMgr().setError(mgrErrStr);
                         }
-            
-                        if (goodCount > 0) {
-
-                            // If we've made it this far, we have a usable Vampire instance.
-                            vpr = vprInst;
-                        }
+                        if (goodCount > 0)                             
+                            vpr = vprInst;     // If we've made it this far, we have a usable Vampire instance.                   
                     }
                 }
             }
@@ -289,6 +266,7 @@ public class Vampire extends InferenceEngine {
      * @throws IOException should not normally be thrown
      */
     public String assertFormula(String formula) throws IOException {
+
         String result = "";
         try {
             StringBuilder assertion = new StringBuilder();
@@ -302,16 +280,12 @@ public class Vampire extends InferenceEngine {
             _writer.flush();
             for (;;) {
                 String line = _reader.readLine();
-                if (line.indexOf("Error:") != -1) {
-                    throw new IOException(line);
-                }
-
+                if (line.indexOf("Error:") != -1) 
+                    throw new IOException(line);                
                 // System.out.println("INFO Vampire.assertFormula(): Response: " + line);
-
                 result += line + "\n";
-                if (line.indexOf("</assertionResponse>") != -1) {
-                    break;
-                }
+                if (line.indexOf("</assertionResponse>") != -1) 
+                    break;                
             }
         }
         catch (Exception ex) {
@@ -329,9 +303,8 @@ public class Vampire extends InferenceEngine {
      *
      * @throws IOException should not normally be thrown
      */
-    public void terminate () 
-        throws IOException           
-    {
+    public void terminate () throws IOException {
+
         System.out.println();
         System.out.println("TERMINATING " + this);
         try {
@@ -356,21 +329,13 @@ public class Vampire extends InferenceEngine {
      * @return answer to the query (in the XML syntax)
      * @throws IOException should not normally be thrown
      */
-    public String submitQuery (String formula,int timeLimit,int bindingsLimit) 
-        throws IOException
-    {
-        String result = "";
+    public String submitQuery (String formula, int timeLimit, int bindingsLimit) throws IOException {
 
-        String query = ("<query timeLimit='" 
-                        + timeLimit 
-                        + "' bindingsLimit='" 
-                        + bindingsLimit 
-                        + "'> " 
-                        + formula 
-                        + " </query>\n");
+        String result = "";
+        String query = ("<query timeLimit='" + timeLimit + "' bindingsLimit='" + bindingsLimit 
+                        + "'> " + formula + " </query>\n");
         
         System.out.println("INFO in Vampire.submitQuery(): " + query);
-
         try {
             _writer.write(query);
             _writer.flush();
@@ -381,10 +346,8 @@ public class Vampire extends InferenceEngine {
         }
         for (;;) {
             String line = _reader.readLine();
-
-            if (line.indexOf("Error:") != -1) {
-                throw new IOException(line);
-            }
+            if (line.indexOf("Error:") != -1) 
+                throw new IOException(line);            
             result += line + "\n";
             if ((line.indexOf("</queryResponse>") != -1) ||      // result is ok.
                 (line.indexOf("</assertionResponse>") != -1))  { // result is syntax error.
@@ -406,9 +369,8 @@ public class Vampire extends InferenceEngine {
      *   <li>terminate Vampire.</li>
      *</ol>
      */
-    public static void main (String[] args)
-        throws Exception
-    {
+    public static void main (String[] args) throws Exception {
+
         String initialDatabase = "SUMO-v.kif";
         Vampire vampire = Vampire.getNewInstance(initialDatabase);
         System.out.print(vampire.submitQuery("(holds instance ?X Relation)",5,2));
