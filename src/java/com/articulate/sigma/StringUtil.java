@@ -1105,6 +1105,13 @@ public class StringUtil {
         return result;
     }
 
+    /** *******************************************************************
+     *  Convenience method with default line length of 70
+     */
+    public static String wordWrap(String input) {
+        return StringUtil.wordWrap(input,70);
+    }
+
     /** ***************************************************************** 
      */
     public static void main(String args[]) {
