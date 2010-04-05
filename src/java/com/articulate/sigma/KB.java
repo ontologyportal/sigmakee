@@ -37,8 +37,7 @@ public class KB {
     public String name;                       
 
     /** An ArrayList of Strings that are the full
-     * canonical pathnames of the files that comprise the KB.
-     */
+     * canonical pathnames of the files that comprise the KB. */
     public ArrayList constituents = new ArrayList();
 
     /** The natural language in which axiom paraphrases should be presented. */
@@ -1559,6 +1558,7 @@ public class KB {
      * @return void
      */
     public void buildRelationCaches() {
+
         buildRelationCaches(true);
         return;
     }
@@ -1570,18 +1570,13 @@ public class KB {
     private void cacheGroundAssertions() {
 
         System.out.println("ENTER KB.cacheGroundAssertions()");
-
         // System.out.println("formulas == " + formulas.toString());
-
         try {
             long t1 = System.currentTimeMillis();
             List symmetric = getCachedSymmetricRelationNames();
             List reflexive = getCachedReflexiveRelationNames();
             Set subInverses = new HashSet(getTermsViaPredicateSubsumption("subrelation", 
-                                                                          2, 
-                                                                          "inverse",
-                                                                          1,
-                                                                          true));
+                                                                          2, "inverse", 1,true));
             subInverses.add("inverse");
             System.out.println("  subInverses == " + subInverses);
 
@@ -1598,23 +1593,18 @@ public class KB {
             int total = 0;
             int count = -1;
             while (it.hasNext()) {                   
-
                 count = 0;
                 relation = (String) it.next();
                 forms = ask("arg", 0, relation);
                 // System.out.println(forms.size() + " " + relation + " assertions retrieved");
-
                 if (forms != null) {
-
                     // System.out.print(relation);
-
                     c1 = getRelationCache(relation, 1, 2);
                     c2 = getRelationCache(relation, 2, 1);
                     inv1 = (subInverses.contains(relation)
                             ? getRelationCache("inverse", 1, 2)
                             : null);
                     boolean isSubInverse = (inv1 != null);
-
                     /*
                       if (relation.equals("inverse")) {
                       System.out.println("");
@@ -1625,7 +1615,6 @@ public class KB {
                       System.out.println("  inv1 == " + inv1);
                       }
                     */
-
                     formsIt = forms.iterator();
                     while (formsIt.hasNext()) {
                         formula = (Formula) formsIt.next();
@@ -1637,10 +1626,8 @@ public class KB {
 
                             if (StringUtil.isNonEmptyString(arg1) 
                                 && StringUtil.isNonEmptyString(arg2)) {
-
                                 count += addRelationCacheEntry(c1, arg1, arg2);
                                 count += addRelationCacheEntry(c2, arg2, arg1);
-
                                 // Special cases.
                                 if (getCacheReflexiveAssertions()
                                     && reflexive.contains(relation)) {
@@ -1649,11 +1636,8 @@ public class KB {
                                     count += addRelationCacheEntry(c2, arg1, arg1);
                                     count += addRelationCacheEntry(c2, arg2, arg2);
                                 }
-
-                                if (symmetric.contains(relation)) {
-                                    count += addRelationCacheEntry(c1, arg2, arg1);
-                                }
-
+                                if (symmetric.contains(relation)) 
+                                    count += addRelationCacheEntry(c1, arg2, arg1);                                
                                 if (isSubInverse) {
                                     count += addRelationCacheEntry(c1, arg2, arg1);
                                     count += addRelationCacheEntry(inv1, arg1, arg2);
@@ -1670,12 +1654,10 @@ public class KB {
                     List partitions = ask("arg", 0, "partition");
                     List decompositions = ask("arg", 0, "disjointDecomposition");
                     forms = new ArrayList();
-                    if (partitions != null) {
-                        forms.addAll(partitions);
-                    }
-                    if (decompositions != null) {
-                        forms.addAll(decompositions);
-                    }
+                    if (partitions != null) 
+                        forms.addAll(partitions);                   
+                    if (decompositions != null) 
+                        forms.addAll(decompositions);                    
                     c1 = getRelationCache(relation, 1, 2);
                     List arglist = null;
                     formsIt = forms.iterator();
@@ -1719,6 +1701,7 @@ public class KB {
      * closures can be computed.
      */
     private void cacheGroundAssertionsAndPredSubsumptionEntailments() {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER KB.cacheGroundAssertionsAndPredSubsumptionEntailments()");
         // System.out.println("formulas == " + formulas.toString());
@@ -1742,29 +1725,19 @@ public class KB {
                 relation = (String) it.next();
                 relationSet.clear();
                 relationSet.addAll(getTermsViaPredicateSubsumption("subrelation", 
-                                                                   2, 
-                                                                   relation,
-                                                                   1,
-                                                                   true));
+                                                                   2, relation, 1, true));
                 relationSet.add(relation);
-
                 // System.out.println("  " + relationSet);
-
                 formulae.clear();
                 for (Iterator itr = relationSet.iterator(); itr.hasNext();) {
                     forms = ask("arg", 0, (String) itr.next());
                     if (forms != null) formulae.addAll(forms);
                 }
-
                 // System.out.println(forms.size() + " " + relation + " assertions retrieved");
-
                 if (!formulae.isEmpty()) {
-
                     // System.out.print(relation);
-
                     c1 = getRelationCache(relation, 1, 2);
                     c2 = getRelationCache(relation, 2, 1);
-
                     for (Iterator itf = formulae.iterator(); itf.hasNext();) {
                         f = (Formula) itf.next();
                         if ((f.theFormula.indexOf("(",2) == -1) 
@@ -2733,33 +2706,23 @@ public class KB {
      * @return an ArrayList of terms (SUO-KIF constants), or an
      * empy ArrayList if no terms can be retrieved
      */
-    public ArrayList<String> getTransitiveClosureViaPredicateSubsumption(String relation, 
-                                                                         int idxArgnum, 
-                                                                         String idxTerm,
-                                                                         int targetArgnum,
+    public ArrayList<String> getTransitiveClosureViaPredicateSubsumption(String relation, int idxArgnum, 
+                                                                         String idxTerm, int targetArgnum,
                                                                          boolean useInverses) {
         ArrayList<String> ans = new ArrayList<String>();
         try {
             Set<String> reduced = new TreeSet<String>();
             Set<String> accumulator = 
-                new TreeSet<String>(getTermsViaPredicateSubsumption(relation, 
-                                                                    idxArgnum, 
-                                                                    idxTerm,
-                                                                    targetArgnum,
-                                                                    useInverses));
+                new TreeSet<String>(getTermsViaPredicateSubsumption(relation, idxArgnum, idxTerm,
+                                                                    targetArgnum, useInverses));
             ArrayList<String> working = new ArrayList<String>();
             while (!accumulator.isEmpty()) {
                 reduced.addAll(accumulator);
                 working.clear();
                 working.addAll(accumulator);
                 accumulator.clear();
-                for (String term : working) {
-                    accumulator.addAll(getTermsViaPredicateSubsumption(relation, 
-                                                                       idxArgnum, 
-                                                                       term,
-                                                                       targetArgnum,
-                                                                       useInverses));
-                }
+                for (String term : working) 
+                    accumulator.addAll(getTermsViaPredicateSubsumption(relation,idxArgnum,term,targetArgnum,useInverses));                
             }
             ans.addAll(reduced);
         }
@@ -2800,7 +2763,6 @@ public class KB {
                         if (pathname != null) {
                             newFormula.sourceFile = pathname;
                         }
-
                         boolean found = false;
                         for (int j = 0; j < oldFormulas.size(); j++) {
                             Formula oldFormula = (Formula) oldFormulas.get(j);
@@ -2944,7 +2906,6 @@ public class KB {
     public String tell(String input) {
 
         System.out.println("ENTER KB.tell(" + input + ")");
-
         String result = "The formula could not be added";
         try {
             KBmanager mgr = KBmanager.getMgr();
@@ -3089,14 +3050,10 @@ public class KB {
     public String ask(String suoKifFormula, int timeout, int maxAnswers) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER " + this.name + ".ask(" 
-                           + suoKifFormula + ", " 
-                           + timeout + ", " 
+        System.out.println("ENTER " + this.name + ".ask(" + suoKifFormula + ", " + timeout + ", " 
                            + maxAnswers + ")");
-
         String result = "";
         try {
-
             // Start by assuming that the ask is futile.
             result = ("<queryResponse>" + getLineSeparator()
                       + "  <answer result=\"no\" number=\"0\"> </answer>" + getLineSeparator()
@@ -3107,32 +3064,20 @@ public class KB {
                 Formula query = new Formula();
                 query.read(suoKifFormula);
                 ArrayList processedStmts = query.preProcess(true, this);
-
                 System.out.println("  processedStmts == " + processedStmts);
-
                 //if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof Vampire)) {
-                if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof InferenceEngine)) {
-                    result = 
-                        this.inferenceEngine
-                        .submitQuery(((Formula)processedStmts.get(0)).theFormula,
-                                     timeout,
-                                     maxAnswers);
-                }
+                if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof InferenceEngine)) 
+                    result = this.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);                
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        System.out.println("EXIT " + this.name + ".ask(" 
-                           + suoKifFormula + ", " 
-                           + timeout + ", " 
-                           + maxAnswers + ")");
+        System.out.println("EXIT " + this.name + ".ask(" + suoKifFormula + ", " 
+                           + timeout + ", " + maxAnswers + ")");
         System.out.println("  result == " + result);
-        System.out.println("  " 
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
+        System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                            + " seconds elapsed time");
-
         return result;
     }
 
@@ -3157,18 +3102,12 @@ public class KB {
      */
     public String askEngine(String suoKifFormula, int timeout, int maxAnswers, InferenceEngine engine) {
 
-        System.out.println("ENTER KB.askEngine(" 
-                           + suoKifFormula + ", " 
-                           + timeout + ", " 
-                           + maxAnswers + ", " 
-                           + engine + ")");
-
+        System.out.println("ENTER KB.askEngine(" + suoKifFormula + ", " + timeout + ", " 
+                           + maxAnswers + ", " + engine + ")");
         String result = "";
         try {
-
             // Start by assuming that the ask is futile.
             result = "<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n<summary proofs=\"0\"/>\n</queryResponse>\n";
-
             if (Formula.isNonEmptyString(suoKifFormula)) {
                 Formula query = new Formula();
                 query.read(suoKifFormula);
@@ -3188,13 +3127,8 @@ public class KB {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        System.out.println("EXIT KB.askEngine(" 
-                           + suoKifFormula + ", " 
-                           + timeout + ", " 
-                           + maxAnswers + ", " 
-                           + engine + ")");
-
+        System.out.println("EXIT KB.askEngine(" + suoKifFormula + ", " + timeout + ", " 
+                           + maxAnswers + ", " + engine + ")");
         return result;
     }
 
@@ -3218,13 +3152,43 @@ public class KB {
     public String askSInE(String suoKifFormula, int timeout, int maxAnswers) {
 
         String result = "";
-
         try {
-            InferenceEngine.EngineFactory factory=SInE.getFactory();
-            InferenceEngine engine=createInferenceEngine(factory);
-
+            InferenceEngine.EngineFactory factory = SInE.getFactory();
+            InferenceEngine engine = createInferenceEngine(factory);
             result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
+            if (engine != null)
+                engine.terminate();                
+        } 
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
 
+    /** *************************************************************
+     * Submits a query to the STP inference engine.  Returns an XML
+     * formatted String that contains the response of the inference
+     * engine.  It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @param timeout The number of seconds after which the underlying inference
+     * engine should give up. (Time taken by axiom selection doesn't count.)
+     *
+     * @param maxAnswers The maximum number of answers (binding sets)
+     * the inference engine should return.
+     *
+     * @return A String indicating the status of the ask operation.
+     */
+    public String askSTP(String suoKifFormula, int timeout, int maxAnswers) {
+
+        String result = "";
+        try {
+            InferenceEngine.EngineFactory factory = STP.getFactory();
+            InferenceEngine engine = createInferenceEngine(factory);
+            result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
             if (engine != null)
                 engine.terminate();                
         } 
@@ -3254,10 +3218,9 @@ public class KB {
      */
     public String askLEO(String suoKifFormula, int timeout, int maxAnswers, String flag) {
 
-	    String result = "";
+	String result = "";
 	    
-        try {
-	    
+        try {	    
 	    String LeoExecutable = "/Users/christophbenzmueller/leo/trunk/bin/leo";
 	    String LeoInput = "/tmp/prob.p";
 	    String LeoProblem;
@@ -3266,7 +3229,6 @@ public class KB {
 	    File LeoExecutableFile = new File(LeoExecutable);
 	    File LeoInputFile = new File(LeoInput);
 	    FileWriter LeoInputFileW = new FileWriter(LeoInput);
-
 
             //InferenceEngine.EngineFactory factory=SInE.getFactory();
             //InferenceEngine engine=createInferenceEngine(factory);
@@ -3347,7 +3309,6 @@ public class KB {
 		selectedFormulas.add(newF);
 	    }
 	    
-
 	    System.out.println("/n  selectedFormulas = " +  selFs.toString());
 
 	    THF thf = new THF();
@@ -3367,8 +3328,6 @@ public class KB {
 	    
 	    System.out.println(LeoOutput);
 
-	    
-
 	    if (LeoOutput.contains("SZS status Theorem")) {
 		result = "Answer 1. yes"
 		    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>") 
@@ -3379,14 +3338,12 @@ public class KB {
 		    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>") 
 		    + "<br> <br>" + LeoOutput.replaceAll("\\n","<br>");
 	    }
-
             //if (engine != null)
 	    //  engine.terminate();                
         } 
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
         return result;
     }
 
@@ -5188,12 +5145,10 @@ public class KB {
                 TreeSet forms = preProcess(formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = Formula.isNonEmptyString(filename);
-                if (vFileSaved) {
-                    System.out.println("INFO in KB.createInferenceEngine(): " + forms.size() + " formulas saved to " + filename);
-                }
-                else {
-                    System.out.println("INFO in KB.createInferenceEngine(): new -v.kif file not written");
-                }
+                if (vFileSaved)
+                    System.out.println("INFO in KB.createInferenceEngine(): " + forms.size() + " formulas saved to " + filename);                
+                else 
+                    System.out.println("INFO in KB.createInferenceEngine(): new -v.kif file not written");                
 
                 if (vFileSaved) {
                     System.out.println("INFO in KB.createInferenceEngine(): getting new inference engine");
