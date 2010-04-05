@@ -326,13 +326,15 @@ public class OWLtranslator {
             String text = se.getText();
             text = processStringForKIFOutput(text);
             if (parentTerm != null && text != null) 
-                pw.println(DB.wordWrap(indent + "(documentation " + parentTerm + " EnglishLanguage \"" + text + "\")",70));
+                pw.println(DB.wordWrap(indent + "(documentation " + parentTerm + " EnglishLanguage \"" + 
+                                       text + "\")",70));
         }
         else if (tag.equals("rdfs:label")) {
             String text = se.getText();
             text = processStringForKIFOutput(text);
             if (parentTerm != null && text != null) 
-                pw.println(DB.wordWrap(indent + "(termFormat EnglishLanguage " + parentTerm + " \"" + text + "\")",70));
+                pw.println(DB.wordWrap(indent + "(termFormat EnglishLanguage " + parentTerm + " \"" + 
+                                       text + "\")",70));
         }
         else if (tag.equals("owl:inverseOf")) {
             ArrayList children = se.getChildElements();
@@ -632,7 +634,8 @@ public class OWLtranslator {
                 if (lang.equals("EnglishLanguage")) 
                     langString = " xml:lang=\"en\"";
                 if (documentation != null) 
-                    pw.println("  <owl:comment" + langString + ">" + processDoc(documentation) + "</owl:comment>");
+                    pw.println("  <owl:comment" + langString + ">" + 
+                               StringUtil.wordWrap(processDoc(documentation)) + "</owl:comment>");
             }
         }
     }
@@ -716,6 +719,7 @@ public class OWLtranslator {
     private void writeInstances(PrintWriter pw, String term, ArrayList instances) {
 
         pw.println("<owl:Thing rdf:ID=\"" + term + "\">");
+        pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
         for (int i = 0; i < instances.size(); i++) {
             Formula form = (Formula) instances.get(i);
             String parent = form.getArgument(2);
@@ -732,6 +736,10 @@ public class OWLtranslator {
                !rel.equals("documentation") && 
                !rel.equals("subrelation") && kb.childOf(rel,"BinaryRelation")) { 
                 String range = form.getArgument(2);
+                if (range == null || range == "" ) {
+                    System.out.println("Error in OWLtranslator.writeInstance(): missing range in statement: " + form);
+                    continue;
+                }
                 if (Formula.listP(range)) 
                     range = instantiateFunction(range);
                 if (range.charAt(0) == '"' && range.charAt(range.length()-1) == '"') {
@@ -771,6 +779,7 @@ public class OWLtranslator {
             pw.println("<owl:Class rdf:about=\"" + term + "\">");
         else
             pw.println("<owl:Class rdf:ID=\"" + term + "\">");
+        pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
         for (int i = 0; i < classes.size(); i++) {
             Formula form = (Formula) classes.get(i);
             String parent = form.getArgument(2);
