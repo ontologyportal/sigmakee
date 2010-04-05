@@ -199,6 +199,7 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     String resultVampire = null;        
     String resultSoTPTP = null;        
     String resultSInE = null;    
+    String resultSTP = null;    
     String resultLeo = null;    
 
     String lineHtml =
@@ -220,26 +221,30 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
                     throw(new IOException("Row variables not allowed in query: " + stmt));
 		        resultVampire = kb.ask( stmt, timeout, maxAnswers );
             }
-
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("STP")) {
+                if (stmt.indexOf('@') != -1)
+                    throw(new IOException("Row variables not allowed in query: " + stmt));
+		        resultSTP = kb.askSTP( stmt, timeout, maxAnswers );
+            }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SInE")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
                 resultSInE = kb.askSInE( stmt, timeout, maxAnswers );
             }
-	    if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoSine")) {
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoSine")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoSine" );
+                resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoSine" );
             }	
-	    if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoLocal")) {
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoLocal")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoLocal" );
+                resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoLocal" );
             }
-	    if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoGlobal")) {
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoGlobal")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoGlobal" );
+                resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoGlobal" );
             }	
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
                 if (stmt.indexOf('@') != -1)
@@ -293,6 +298,9 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SInE" <% if (chosenEngine.equals("SInE")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     SInE (+Vampire) (experimental)<BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP" <% if (chosenEngine.equals("STP")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'">
+    STP (experimental)<BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (chosenEngine.equals("LeoSine")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II with SInE (experimental)<BR>
@@ -385,6 +393,12 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
             out.println(HTMLformatter.formatProofResult(resultVampire,stmt,stmt,lineHtml,kbName,language ));       
+    }
+    if (chosenEngine.equals("STP")) {
+        if ((resultSTP != null) && (resultSTP.indexOf("Syntax error detected") != -1))         
+            out.println("<font color='red'>A syntax error was detected in your input.</font>");
+        else 
+            out.println(HTMLformatter.formatProofResult(resultSTP,stmt,stmt,lineHtml,kbName,language ));       
     }
     if ((chosenEngine.equals("SoTPTP")) && (resultSoTPTP != null))
         out.print(resultSoTPTP);
