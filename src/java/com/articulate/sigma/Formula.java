@@ -1300,9 +1300,10 @@ public class Formula implements Comparable {
      */
     public TreeMap<String, String> resolve(Formula f, Formula result) {
 
+        boolean _RESOLVE_DEBUG = false;
+
         Formula accumulator = new Formula();
-        //System.out.println("INFO in Formula.resolve(): Attempting to resolve : \n" + this + 
-        //                   "\n with \n" + f);
+        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): Attempting to resolve : \n" + this + "\n with \n" + f);
         if (f.empty() || this.empty()) {
             System.out.println("Error in Formula.resolve() attempt to resolve with empty list");
             return null;
@@ -1314,15 +1315,15 @@ public class Formula implements Comparable {
         TreeMap mapping = new TreeMap();
         if ((this.isSimpleClause() && f.isSimpleNegatedClause()) ||
             (this.isSimpleNegatedClause() && f.isSimpleClause())) {
-            //System.out.println("INFO in Formula.resolve(): both simple clauses");
+            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): both simple clauses");
             if (this.isSimpleNegatedClause()) {
-                //System.out.println("INFO in Formula.resolve(): this (or fnew).isSimpleNegatedClause(): \n" + this);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): this (or fnew).isSimpleNegatedClause(): \n" + this);
                 thisFormula.read(thisFormula.cdr());
                 thisFormula.read(thisFormula.car());
-                //System.out.println("INFO in Formula.resolve(): thisFormula: \n" + thisFormula);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): thisFormula: \n" + thisFormula);
             }
             if (f.isSimpleNegatedClause()) {
-                //System.out.println("INFO in Formula.resolve(): f (or f2).isSimpleNegatedClause(): \n" + f);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): f (or f2).isSimpleNegatedClause(): \n" + f);
                 argFormula.read(argFormula.cdr());
                 argFormula.read(argFormula.car());
             }
@@ -1331,8 +1332,8 @@ public class Formula implements Comparable {
                 result.theFormula = null;            
             else
                 result.theFormula = "()";
-            //System.out.println("INFO in Formula.resolve(): result: " + result);
-            //System.out.println("INFO in Formula.resolve(): mapping: " + mapping);            
+            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
+            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): mapping: " + mapping);            
             if (result.theFormula != null)         
                 result.theFormula = result.toCanonicalClausalForm().theFormula;
             return mapping;
@@ -1352,15 +1353,15 @@ public class Formula implements Comparable {
                 while (!argFormula.empty()) {
                     Formula clause = new Formula();
                     clause.read(argFormula.car());
-                    //System.out.println("INFO in Formula.resolve() (loop 1): checking clause: \n" + clause);
-                    //if (result != null)                     
-                    //    System.out.println("INFO in Formula.resolve(): result so far: \n" + accumulator);
+                    if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 1): checking clause: \n" + clause);
+                    if (result != null)                     
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result so far: \n" + accumulator);
                     argFormula.read(argFormula.cdr());
                     Formula newResult = new Formula();
                     mapping = thisFormula.resolve(clause,newResult); // if it succeeds, newResult will be () so ignore
-                    if (mapping != null && mapping.keySet().size() > 0) {
-                        //System.out.println("INFO in Formula.resolve() (returning loop 1): \n" + newResult);
-                        //System.out.println("INFO in Formula.resolve() argFormula: \n" + argFormula);
+                    if (mapping != null ) {  //&& mapping.keySet().size() > 0
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 1): \n" + newResult);
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() argFormula: \n" + argFormula);
                         if (!argFormula.empty() && !argFormula.isSimpleClause() && !argFormula.isSimpleNegatedClause()) {
                              if (!empty(argFormula.cdr()))
                                  argFormula.read("(or " + argFormula.theFormula.substring(1));   
@@ -1371,7 +1372,7 @@ public class Formula implements Comparable {
                         accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
                         result.theFormula = accumulator.theFormula;
 
-                        //System.out.println("INFO in Formula.resolve(): result: " + result);
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
                         if (result.theFormula != null)         
                             result.theFormula = result.toCanonicalClausalForm().theFormula;
                         return mapping;
@@ -1391,13 +1392,13 @@ public class Formula implements Comparable {
                     while (!thisFormula.empty()) {
                         Formula clause = new Formula();
                         clause.read(thisFormula.car());
-                        //System.out.println("INFO in Formula.resolve() (loop 2): checking clause: \n" + clause);
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 2): checking clause: \n" + clause);
                         thisFormula.read(thisFormula.cdr());
                         Formula newResult = new Formula();
                         mapping = argFormula.resolve(clause,newResult);
-                        //System.out.println("INFO in Formula.resolve() (loop 2): return mapping: \n" + mapping);
-                        if (mapping != null && mapping.keySet().size() > 0) {
-                            //System.out.println("INFO in Formula.resolve() (returning loop 2): newResult: \n" + newResult);
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 2): return mapping: \n" + mapping);
+                        if (mapping != null) {   //  && mapping.keySet().size() > 0
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 2): newResult: \n" + newResult);
                             if (!thisFormula.empty() && !thisFormula.isSimpleClause() && !thisFormula.isSimpleNegatedClause()) {
                                 if (!empty(thisFormula.cdr()))
                                     thisFormula.read("(or " + thisFormula.theFormula.substring(1));   
@@ -1407,7 +1408,7 @@ public class Formula implements Comparable {
                             accumulator = accumulator.appendClauseInCNF(thisFormula);
                             accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
                             result.theFormula = accumulator.theFormula;
-                            //System.out.println("INFO in Formula.resolve(): result: " + result);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
                             if (result.theFormula != null)         
                                 result.theFormula = result.toCanonicalClausalForm().theFormula;
                             return mapping;
@@ -1418,43 +1419,43 @@ public class Formula implements Comparable {
                 }
                 else {                                      // both formulas are not a simple clause
                     Formula newResult = new Formula();
-                    //System.out.println("INFO in Formula.resolve() (before loop 3): looping through argFormula's clauses: \n" + argFormula);
+                    if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (before loop 3): looping through argFormula's clauses: \n" + argFormula);
                     argFormula.read(argFormula.cdr());    // remove the initial "or"
                     accumulator.theFormula = "()";
                     while (!argFormula.empty()) {
-                        //System.out.println("INFO in Formula.resolve() (loop 3): here 1: ");
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 1: ");
                         Formula clause = new Formula();
                         clause.read(argFormula.car());
-                        //System.out.println("INFO in Formula.resolve() (loop 3): checking clause: \n" + clause);
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): checking clause: \n" + clause);
                         argFormula.read(argFormula.cdr());
                         TreeMap newMapping = thisFormula.resolve(clause,newResult);
-                        //System.out.println("INFO in Formula.resolve() (returning loop 3): mapping: " + newMapping);
-                        //System.out.println("INFO in Formula.resolve() (returning loop 3): argFormula: \n" + argFormula);
-                        //System.out.println("INFO in Formula.resolve() (returning loop 3): accumulator: \n" + accumulator);
-                        if (newMapping != null && newMapping.keySet().size() > 0) {
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): mapping: " + newMapping);
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): argFormula: \n" + argFormula);
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): accumulator: \n" + accumulator);
+                        if (newMapping != null) {  // && newMapping.keySet().size() > 0
                             mapping.putAll(newMapping);  // could still be a problem if a mapping overwrites another...
-                            //System.out.println("INFO in Formula.resolve() (returning loop 3): newResult: \n" + newResult);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): newResult: \n" + newResult);
                             //accumulator = accumulator.appendClauseInCNF(argFormula);
                             accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
                             argFormula.theFormula = (argFormula.substitute(mapping)).theFormula;
                             thisFormula.theFormula = new String(newResult.theFormula);
                         }
                         else {
-                            //System.out.println("INFO in Formula.resolve() (loop 3): here 2: ");
-                            //System.out.println("INFO in Formula.resolve(): accumulator: \n" + accumulator);
-                            //System.out.println("INFO in Formula.resolve(): clause: \n" + clause);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 2: ");
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): accumulator: \n" + accumulator);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): clause: \n" + clause);
                             accumulator = accumulator.appendClauseInCNF(clause); 
-                            //System.out.println("INFO in Formula.resolve(): accumulator after: \n" + accumulator);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): accumulator after: \n" + accumulator);
                         }
-                        //System.out.println("INFO in Formula.resolve() (loop 3): here 3: ");
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 3: ");
                         result.theFormula = accumulator.theFormula;
-                        //System.out.println("INFO in Formula.resolve() (loop 3): here 4: ");
+                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 4: ");
                     }
                     result.theFormula = new String(result.appendClauseInCNF(thisFormula).theFormula);
                 }
             }
         }
-        //System.out.println("INFO in Formula.resolve(): result: " + result);
+        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
         if (result.theFormula != null)         
             result.theFormula = result.toCanonicalClausalForm().theFormula;
         return mapping;
@@ -8025,8 +8026,19 @@ public class Formula implements Comparable {
         //System.out.println(f1.resolve(f2,newResult));
         //System.out.println(newResult);
 
-        f1.read("(or (not (possesses Nono ?X16)) (not (instance ?X16 Missile)) (not (attribute West American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?X15 Selling)) (not (patient ?X15 ?VAR2)) (not (recipient ?X15 ?VAR3))) ");
-        System.out.println(f1.toCanonicalClausalForm());
+        //f1.read("(or (not (possesses Nono ?X16)) (not (instance ?X16 Missile)) (not (attribute West American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?X15 Selling)) (not (patient ?X15 ?VAR2)) (not (recipient ?X15 ?VAR3))) ");
+        //System.out.println(f1.toCanonicalClausalForm());
+
+        /*
+        f1.read("(not (enemies Nono America))");
+        f2.read("(enemies Nono America)");
+        System.out.println(f1.resolve(f2,f3));
+        System.out.println(f3);
+        f1.read("(or (not (agent ?VAR1 West)) (not (enemies Nono America)) (not (instance ?VAR1 Selling)) " +
+                "(not (instance ?VAR2 Weapon)) (not (patient ?VAR1 ?VAR2)) (not (recipient ?VAR1 Nono)))");
+        System.out.println(f1.resolve(f2,f3));
+        System.out.println(f3); */
+
 /*               
         f1.read("()");
         f2.read("()");
