@@ -52,17 +52,22 @@ public class STP extends InferenceEngine {
     }
 
     /** ***************************************************************
-     * Convert to a String.
      */
     public static class STPEngineFactory extends EngineFactory {
 
+        @Override
         public InferenceEngine createWithFormulas(Iterable<String> formulaSource) {  
             return new STP(formulaSource);
         }
 
+        @Override
         public InferenceEngine createFromKBFile(String kbFileName) {
             return STP.getNewInstance(kbFileName);
         }
+    }
+
+    public static EngineFactory getFactory() {
+        return new STPEngineFactory();
     }
 
     /** *************************************************************
@@ -76,7 +81,7 @@ public class STP extends InferenceEngine {
             kbFile = new File(kbFileName);
             if (!kbFile.exists() ) {
                 error = ("The file " + kbFileName + " does not exist");
-                System.out.println("INFO in STP(): " + error);
+                System.out.println("Error in STP(): " + error);
                 KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                              + "\n<br/>" + error + "\n<br/>");
             }
@@ -110,7 +115,7 @@ public class STP extends InferenceEngine {
         }
 
         clausifyFormulas();
-        System.out.println("INFO in STP(): clausified formulas: " + formulas);
+        //System.out.println("INFO in STP(): clausified formulas: " + formulas);
         buildIndexes();
     }
     
@@ -368,7 +373,7 @@ public class STP extends InferenceEngine {
         }
         Collections.sort(result);
 
-        System.out.println("INFO in STP.collectCandidates(): result " + result);
+        //System.out.println("INFO in STP.collectCandidates(): result " + result);
         return result;
     }
 
@@ -380,9 +385,10 @@ public class STP extends InferenceEngine {
      */
     private ArrayList<Formula> prove() {
 
+        boolean _PROVE_DEBUG = false;
         ArrayList<Formula> result = new ArrayList();
         while (TBU.size() > 0) {
-            System.out.println("\n\nINFO in STP.prove(): TBU: " + TBU);
+            if (_PROVE_DEBUG) System.out.println("\n\nINFO in STP.prove(): TBU: " + TBU.get(0));
             //System.out.println("INFO in STP.prove(): lemmas: " + lemmas);
             AnotherAVP avp = (AnotherAVP) TBU.remove(0);
             //if (!lemmas.containsKey(form)) {
@@ -405,7 +411,7 @@ public class STP extends InferenceEngine {
                 for (int i = 0; i < candidates.size(); i++) {
                     AnotherAVP avpCan = (AnotherAVP) candidates.get(i);
                     Formula candidate = avpCan.form;
-                    //System.out.println("INFO in STP.prove(): checking candidate:\n" + candidate);
+                    if (_PROVE_DEBUG) System.out.println("INFO in STP.prove(): checking candidate:\n" + candidate);
                     Formula resultForm = new Formula();
                     TreeMap mappings = f.resolve(candidate,resultForm);
                     if (resultForm != null && resultForm.empty()) {
@@ -418,9 +424,9 @@ public class STP extends InferenceEngine {
                         support.add(avpCan.form);
                         return support;
                     }
-                    if (mappings != null && mappings.keySet().size() > 0) {
-                        System.out.println("\nINFO in STP.prove(): resolve result:\n" + resultForm);
-                        System.out.println("for candidate\n" + candidate + "\n with formula\n " + avp.form);
+                    if (mappings != null) {  // && mappings.keySet().size() > 0
+                        if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): resolve result:\n" + resultForm);
+                        if (_PROVE_DEBUG) System.out.println("for candidate\n" + candidate + "\n with formula\n " + avp.form);
                         ArrayList support = new ArrayList();
                         if (lemmas.get(avpCan.form.theFormula) != null) 
                             support.addAll((ArrayList) lemmas.get(avpCan.form));
@@ -449,6 +455,56 @@ public class STP extends InferenceEngine {
     }
 
     /** *************************************************************
+     */
+    public String formatResult (ArrayList<Formula> proof) {
+        /*
+    * <queryResponse>
+    *   <answer=yes/no number ='#'>
+    *     <bindingSet type='definite/disjunctive'>
+    *       <binding>
+    *         <var name='' value=''>
+    *       </binding>
+    *     </bindingSet>
+    *     <proof>
+    *       <proofStep>
+    *         <premises>
+    *           <premise>
+    *             <clause/formula number='#'>
+    *               KIF formula
+    *             </clause>
+    *           </premise>
+    *         </premises>
+    *         <conclusion> 
+    *           <clause/formula number='#'>
+    *             KIF formula
+    *           </clause>
+    *         </conclusion>
+    *       </proofStep>
+    *     </proof>
+    *   </answer>
+    *   <summary proofs='#'>
+    * </queryResponse>
+        */
+        StringBuffer result = new StringBuffer();
+        if (proof == null) {
+            result.append("<queryResponse><answer=no number='0'></answer></queryResponse>");
+        }
+        else {
+            result.append("<queryResponse><answer=no number='1'>");
+            result.append("<proof>");
+            result.append("<bindingSet type='definite'><binding><var name='' value=''></binding></bindingSet>");
+            for (int i = 0; i < proof.size(); i++) {
+                Formula f = (Formula) proof.get(i);
+                result.append("<proofStep><premises><clause number='0'></clause></premise>");
+                result.append("<conclusion><formula number='" + String.valueOf(i) + "'>" + f.theFormula + "</clause></conclusions>");
+                result.append("</proofStep>");
+            }
+            result.append("</proof></answer></queryResponse>");
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
      * Submit a query.
      *
      * @param formula query in the KIF syntax (not negated)
@@ -464,7 +520,7 @@ public class STP extends InferenceEngine {
         Formula negQuery = new Formula();
         negQuery.read("(not " + formula + ")");
         negQuery = negQuery.clausify();     // negation will be pushed in
-        System.out.println("INFO in STP.submitQuery(): clausified query: " + negQuery);
+        //System.out.println("INFO in STP.submitQuery(): clausified query: " + negQuery);
         AnotherAVP avp = null;
         if (negQuery.car().equals("and")) {
             ArrayList<Formula> al = negQuery.separateConjunctions();
@@ -475,7 +531,7 @@ public class STP extends InferenceEngine {
                 avp.intval = f2.theFormula.length();
                 TBU.add(avp);
                 Collections.sort(TBU);
-                System.out.println("INFO in STP.submitQuery(): adding to TBU: " + avp);
+                //System.out.println("INFO in STP.submitQuery(): adding to TBU: " + avp);
             }
         }
         else {
@@ -485,10 +541,8 @@ public class STP extends InferenceEngine {
             TBU.add(avp);
             Collections.sort(TBU);
         }
-        ArrayList<Formula> res = prove();
-        if (res != null && res.size() > 0) 
-            return "Success! " + res.toString();      // success if any clause in the disjunction is proven        
-        return "fail";          // getting here means each clause failed to be proven
+        ArrayList<Formula> res = prove(); 
+        return formatResult(res);       
     }
 
     /** *************************************************************
@@ -499,9 +553,11 @@ public class STP extends InferenceEngine {
      * @throws IOException should not normally be thrown
      */
     @Override
-    public String assertFormula(String formula) throws IOException {
+    public String assertFormula(String form) throws IOException {
 
-        //formulas.add(formula);
+        Formula f = new Formula();
+        f.read(form);
+        formulas.add(f);
         //Formulas asserted through this method will always be used.
         
         return null;
