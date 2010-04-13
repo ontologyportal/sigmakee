@@ -432,7 +432,6 @@ public class Formula implements Comparable {
         try {
             if (this.listP()) {
                 if (this.empty()) {
-
                     // NS: Clean this up someday. 
                     ans = "";  // this.theFormula;
                 }
@@ -498,6 +497,7 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             System.out.println("ERROR in Formula.car(" + this + "): " + ex.getMessage());
+            return null;
             // ex.printStackTrace();
         }
         return ans;
@@ -585,6 +585,7 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             System.out.println("ERROR in Formula.cdr(" + this + "): " + ex.getMessage());
+            return null;
             // ex.printStackTrace();
         }
         return ans;
@@ -1492,12 +1493,12 @@ public class Formula implements Comparable {
      * @return An ArrayList containing two ArrayLists, each of which
      * could be empty
      */
-    public ArrayList<ArrayList> collectVariables() {
+    public ArrayList<ArrayList<String>> collectVariables() {
         /*
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER Formula.collectVariables()");
         */
-        ArrayList<ArrayList> ans = new ArrayList<ArrayList>();
+        ArrayList<ArrayList<String>> ans = new ArrayList<ArrayList<String>>();
         ans.add(new ArrayList());
         ans.add(new ArrayList());
         try {
@@ -1629,6 +1630,10 @@ public class Formula implements Comparable {
     public ArrayList<String> collectTerms() {
 
         ArrayList<String> result = new ArrayList();
+        if (this.theFormula == null || this.theFormula == "") {
+            System.out.println("Error in Formula.collectTerms(): formula : " + this);
+            return null;
+        }
         if (this.empty()) 
             return result;
         if (this.atom()) 
@@ -1636,7 +1641,7 @@ public class Formula implements Comparable {
         else {
             Formula f = new Formula();
             f.read(theFormula);
-            while (!f.empty()) {
+            while (!f.empty() && f.theFormula != null && f.theFormula != "") {
                 Formula f2 = new Formula();
                 f2.read(f.car());
                 result.addAll(f2.collectTerms());
@@ -1658,9 +1663,9 @@ public class Formula implements Comparable {
         String result = this.theFormula;
         try {
             String arg0 = this.car();
-            ArrayList<ArrayList> vpair = collectVariables();
-            ArrayList quantVariables = vpair.get(0);
-            ArrayList unquantVariables = vpair.get(1);
+            ArrayList<ArrayList<String>> vpair = collectVariables();
+            ArrayList<String> quantVariables = vpair.get(0);
+            ArrayList<String> unquantVariables = vpair.get(1);
 
             if (!unquantVariables.isEmpty()) {   // Quantify all the unquantified variables
                 StringBuilder sb = new StringBuilder();
@@ -2420,6 +2425,13 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Test whether the formula is a variable
+     */
+    public  boolean isVariable() {
+        return isVariable(theFormula);
+    }
+
+    /** ***************************************************************
      * Returns true only if this Formula, explicitly quantified or
      * not, starts with "=>" or "<=>", else returns false.  It would
      * be better to test for the occurrence of at least one positive
@@ -2605,6 +2617,30 @@ public class Formula implements Comparable {
     public static boolean isMathFunction(String term) {
 
         return (isNonEmptyString(term) && MATH_FUNCTIONS.contains(term));
+    }
+
+    /** ***************************************************************
+     * Returns true if formula has variable, else returns false.
+     */
+    public static boolean isGround(String form) {
+
+        if (form.indexOf("\"") < 0) 
+            return (form.indexOf("?") < 0 && form.indexOf("@") < 0);
+        boolean inQuote = false;
+        for (int i = 0; i < form.length(); i++) {
+            if (form.charAt(i) == '"') 
+                inQuote = !inQuote;
+            if ((form.charAt(i) == '?' || form.charAt(i) == '@') && !inQuote) 
+                return false;
+        }
+        return true;
+    }
+
+    /** ***************************************************************
+     * Returns true if formula has variable, else returns false.
+     */
+    public boolean isGround() {
+        return isGround(theFormula);
     }
 
     /** ***************************************************************
@@ -6673,15 +6709,8 @@ public class Formula implements Comparable {
                     thirdF.read(third);
                     String newThird = thirdF.equivalencesOut().theFormula;
            
-                    theNewFormula = ("(and (=> "
-                                     + newSecond
-                                     + " "
-                                     + newThird
-                                     + ") (=> "
-                                     + newThird
-                                     + " "
-                                     + newSecond
-                                     + "))");
+                    theNewFormula = ("(and (=> " + newSecond + " " + newThird
+                                     + ") (=> " + newThird + " " + newSecond + "))");
                 }
                 else {
                     theNewFormula = this.cdrAsFormula().equivalencesOut().cons(head).theFormula;
@@ -6754,20 +6783,19 @@ public class Formula implements Comparable {
      * narrowest scope, and no occurrences of '(not (not ...))'.
      */
     private Formula negationsIn() {
+
         Formula f = this;
         Formula ans = negationsIn_1();
 
         // Here we repeatedly apply negationsIn_1() until there are no
         // more changes.
         while (!f.theFormula.equals(ans.theFormula)) {     
-
             /*
               System.out.println();
               System.out.println("f.theFormula == " + f.theFormula);
               System.out.println("ans.theFormula == " + ans.theFormula);
               System.out.println();
             */
-
             f = ans;
             ans = f.negationsIn_1();
         }
@@ -6786,6 +6814,7 @@ public class Formula implements Comparable {
      * narrowest scope, and no occurrences of '(not (not ...))'.
      */
     private Formula negationsIn_1() {  
+
         // System.out.println("INFO in negationsIn_1(" + theFormula + ")");
         try {
             if (this.listP()) {
@@ -6868,6 +6897,7 @@ public class Formula implements Comparable {
      *
      */
     private Formula listAll(String before, String after) {
+
         Formula ans = this;
         String theNewFormula = null;
         if (this.listP()) {
@@ -6901,6 +6931,7 @@ public class Formula implements Comparable {
      * @return An int value between 0 and Integer.MAX_VALUE inclusive.
      */
     private static int incVarIndex() {
+
         int oldVal = VAR_INDEX;
         if (oldVal == Integer.MAX_VALUE) {
             VAR_INDEX = 0;
@@ -6919,6 +6950,7 @@ public class Formula implements Comparable {
      * @return An int value between 0 and Integer.MAX_VALUE inclusive.
      */
     private static int incSkolemIndex() {
+
         int oldVal = SKOLEM_INDEX;
         if (oldVal == Integer.MAX_VALUE) {
             SKOLEM_INDEX = 0;
@@ -6938,6 +6970,7 @@ public class Formula implements Comparable {
      * @return A new SUO-KIF variable.
      */
     private static String newVar(String prefix) {
+
         String base = VX;
         String varIdx = Integer.toString(incVarIndex());
         if (isNonEmptyString(prefix)) {
@@ -6999,15 +7032,44 @@ public class Formula implements Comparable {
             Formula f1 = new Formula();
             f1.read(this.car());
             // System.out.println("car: " + f1.theFormula);
-            if (f1.listP()) {
-                newFormula = newFormula.cons(f1.rename(term2,term1));
-            }
+            if (f1.listP()) 
+                newFormula = newFormula.cons(f1.rename(term2,term1));            
             else
                 newFormula = newFormula.append(f1.rename(term2,term1));
             Formula f2 = new Formula();
             f2.read(this.cdr());
             // System.out.println("cdr: " + f2);
             newFormula = newFormula.append(f2.rename(term2,term1));
+        }
+        //System.out.println("Return: " + newFormula.theFormula);
+        return newFormula;
+    }
+
+    /** ***************************************************************
+     *  Replace v with term
+     */
+    public Formula replaceVar(String v, String term) {
+
+        // System.out.println("Formula.replaceVar(): " + this.theFormula);
+        Formula newFormula = new Formula();
+        newFormula.read("()");
+        if (isVariable()) {
+            if (theFormula.equals(v)) 
+                theFormula = term;
+            return this;
+        }
+        if (!empty()) {
+            Formula f1 = new Formula();
+            f1.read(this.car());
+            // System.out.println("car: " + f1.theFormula);
+            if (f1.listP())
+                newFormula = newFormula.cons(f1.replaceVar(v,term));            
+            else
+                newFormula = newFormula.append(f1.replaceVar(v,term));
+            Formula f2 = new Formula();
+            f2.read(this.cdr());
+            // System.out.println("cdr: " + f2);
+            newFormula = newFormula.append(f2.replaceVar(v,term));
         }
         //System.out.println("Return: " + newFormula.theFormula);
         return newFormula;
@@ -7047,6 +7109,31 @@ public class Formula implements Comparable {
         return newFormula;
     }
 
+    /** **************************************************************
+     *  Counter for instantiateVariables() to make sure generated
+     *  symbols are unique.
+     */
+    private static int _GENSYM_COUNTER = 0;
+
+    /** **************************************************************
+     *  Create constants to fill variables.
+     */
+    public Formula instantiateVariables() {
+
+        Formula f = renameVariables();
+        ArrayList<ArrayList<String>> varList = f.collectVariables();
+        TreeMap<String,String> vars = new TreeMap<String,String>();
+        ArrayList<String> al = (ArrayList<String>) varList.get(0);
+        al.addAll((ArrayList<String>) varList.get(1));
+        for (int i = 0; i < al.size(); i++) {
+            String s = (String) al.get(i);
+            _GENSYM_COUNTER++;
+            String value = "GenSym" + String.valueOf(_GENSYM_COUNTER);
+            vars.put(s,value);
+        }
+        return f.instantiateVariables(vars);
+    }
+
     /** ***************************************************************
      * This method returns a new Formula in which all variables have
      * been renamed to ensure uniqueness.
@@ -7057,6 +7144,7 @@ public class Formula implements Comparable {
      * @return A new SUO-KIF Formula with all variables renamed.
      */
     private Formula renameVariables() {
+
         HashMap topLevelVars = new HashMap();
         HashMap scopedRenames = new HashMap();
         HashMap allRenames = new HashMap();
@@ -7166,6 +7254,7 @@ public class Formula implements Comparable {
      * atomic constant.
      */
     private String newSkolemTerm(TreeSet vars) {
+
         String ans = SK_PREF;
         int idx = incSkolemIndex();
         if ((vars != null) && !vars.isEmpty()) {
@@ -7263,11 +7352,8 @@ public class Formula implements Comparable {
                     String arg2 = this.caddr();
                     Formula arg2F = new Formula();
                     arg2F.read(arg2);
-                    String theNewFormula = ("(forall " 
-                                            + varList 
-                                            + " " 
-                                            + arg2F.existentialsOut(evSubs, 
-                                                                    iUQVs, 
+                    String theNewFormula = ("(forall " + varList + " " 
+                                            + arg2F.existentialsOut(evSubs, iUQVs, 
                                                                     newScopedUQVs).theFormula 
                                             + ")");
                     this.read(theNewFormula);
