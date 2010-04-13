@@ -163,6 +163,7 @@ public class LanguageFormatter {
      * term format string to all other atoms.
      */
     private static String processAtom(String atom, Map termMap, String language) {
+
         String result = atom;
         String unquoted = StringUtil.removeEnclosingQuotes(atom);
         boolean isNumber = false;
@@ -228,7 +229,7 @@ public class LanguageFormatter {
 
 
         //System.out.println("INFO in LanguageFormatter.nlStmtPara(): stmt: " + stmt);
-	if (StringUtil.emptyString(stmt)) {
+	if (Formula.empty(stmt)) {
 	    System.out.println("Error in LanguageFormatter.nlStmtPara(): stmt is empty");
 	    return "";
 	}
@@ -836,12 +837,9 @@ public class LanguageFormatter {
 			    if (lbi < slen) { lb = strFormat.substring(lbi, (lbi + 1)); }
 			}
 			String AND = getKeyword("and",lang);
-			if (StringUtil.emptyString(AND)) {
-			    AND = "+";
-			}
-
+			if (StringUtil.emptyString(AND)) 
+			    AND = "+";			
                         // System.out.println("  delim == " + delim);
-
 			int nAdded = 0;
 			boolean addAll = (nArgsSet == 0);
 			int nToAdd = (addAll ? (argsToPrint.length - 1) : nArgsSet);
@@ -898,9 +896,7 @@ public class LanguageFormatter {
 	}
         /*
           System.out.println("EXIT LanguageFormatter.expandStar(\""
-          + f.theFormula + "\", \""
-          + strFormat + "\", \""
-          + lang + "\")");
+          + f.theFormula + "\", \"" + strFormat + "\", \"" + lang + "\")");
           System.out.println("  => \"" + result + "\"");
         */
 	return result;
@@ -919,29 +915,20 @@ public class LanguageFormatter {
      * @param termMap the set of NL statements for terms that will be passed to nlStmtPara.
      * @param language the natural language in which the paraphrase should be generated.
      */
-    public static String htmlParaphrase(String href,
-                                        String stmt,
-                                        Map phraseMap,
-                                        Map termMap, 
-                                        KB kb, 
-                                        String language) {
+    public static String htmlParaphrase(String href, String stmt, Map phraseMap,
+                                        Map termMap, KB kb, String language) {
 
         /*
         System.out.println("ENTER LanguageFormatter.htmlParaphrase("
-                           + href + ", "
-                           + stmt + ", "
+                           + href + ", " + stmt + ", "
                            + "[phraseMap with " + phraseMap.size() + " entries], "
                            + "[termMap with " + termMap.size() + " entries], "
-                           + kb.name + ", "
-                           + language + ")");
+                           + kb.name + ", " + language + ")");
         */
-
         String nlFormat = "";
         try {
             String template = nlStmtPara(stmt, false, kb, phraseMap, termMap, language, 1);
-
             // System.out.println("  > template 1 == " + template);
-
             if (StringUtil.isNonEmptyString(template)) {
                 String anchorStart = ("<a href=\"" + href + "&term=");
                 Formula f = new Formula();
@@ -950,9 +937,7 @@ public class LanguageFormatter {
                 HashMap varMap = f.computeVariableTypes(kb);
                 if ((varMap != null) && !varMap.isEmpty())
                     template = variableReplace(template, varMap, kb, language);
-
                 // System.out.println("  > template 2 == " + template);
-
                 StringBuilder sb = new StringBuilder(template);
                 int sblen = sb.length();
                 String titok = "&%";
@@ -968,13 +953,9 @@ public class LanguageFormatter {
                 int dj = -1;
                 int dk = -1;
                 int dl = -1;
-
-                // The indexed positions:
-                // 
-                //   &%termNameString$"termDisplayString"
-                //
+                // The indexed positions:                
+                //   &%termNameString$"termDisplayString"                
                 //   ti tj           di dj              dk dl
-
                 while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
                     prevti = ti;
                     tj = (ti + titoklen);
