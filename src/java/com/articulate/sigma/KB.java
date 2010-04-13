@@ -3218,8 +3218,7 @@ public class KB {
      */
     public String askLEO(String suoKifFormula, int timeout, int maxAnswers, String flag) {
 
-	String result = "";
-	    
+	String result = "";	   
         try {	    
 	    String LeoExecutable = "/Users/christophbenzmueller/leo/trunk/bin/leo";
 	    String LeoInput = "/tmp/prob.p";
@@ -3229,12 +3228,9 @@ public class KB {
 	    File LeoExecutableFile = new File(LeoExecutable);
 	    File LeoInputFile = new File(LeoInput);
 	    FileWriter LeoInputFileW = new FileWriter(LeoInput);
-
             //InferenceEngine.EngineFactory factory=SInE.getFactory();
             //InferenceEngine engine=createInferenceEngine(factory);
-
-            // result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
-	    
+            // result = askEngine(suoKifFormula, timeout, maxAnswers, engine);	    
 	    /*
 	    result =
 		("<queryResponse>" + getLineSeparator()
@@ -3242,8 +3238,7 @@ public class KB {
 		 + "  </answer>" + getLineSeparator()
 		 + "  <summary proofs=\"0\"/>" + getLineSeparator()
 		 + "</queryResponse>" + getLineSeparator());
-	    */
-	   
+	    */	   
 	    List<Formula> selectedQuery = new ArrayList<Formula>();
 	    Formula newQ = new Formula();
 	    newQ.read(suoKifFormula);
@@ -3268,9 +3263,7 @@ public class KB {
 		    Formula entry = (Formula) it.next();
 		    selFs.add(entry.toString());
 		}
-	    }
-		
-	    
+	    }			    
 	    // add user asserted formulas
 	    try {
                 File dir = new File(this.kbDir);
@@ -3800,10 +3793,7 @@ public class KB {
     public String addConstituent(String filename, boolean buildCachesP, boolean loadVampireP) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER KB.addConstituent(" 
-                           + filename + ", " 
-                           + buildCachesP + ", " 
-                           + loadVampireP + ")");
+        System.out.println("ENTER KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
 
         StringBuilder result = new StringBuilder();
         try {
@@ -3823,13 +3813,9 @@ public class KB {
             ArrayList newList;
             Formula f;
 
-            if (constituents.contains(canonicalPath)) return ("Error: " 
-                                                              + canonicalPath 
-                                                              + " already loaded.");
-            System.out.println("INFO in KB.addConstituent(" 
-                               + filename + ", " 
-                               + buildCachesP + ", " 
-                               + loadVampireP + ")");
+            if (constituents.contains(canonicalPath)) 
+                return ("Error: " + canonicalPath + " already loaded.");
+            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
             System.out.println("  Adding " + canonicalPath);
             try { 
                 file.readFile(canonicalPath);
@@ -3844,14 +3830,8 @@ public class KB {
                 return result.toString();
             }
 
-            System.out.println("INFO in KB.addConstituent(" 
-                               + filename + ", " 
-                               + buildCachesP + ", " 
-                               + loadVampireP + ")");
-            System.out.println("  Parsed file " 
-                               + canonicalPath + " containing " 
-                               + file.formulas.keySet().size()
-                               + " KIF expressions");
+            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
+            System.out.println("  Parsed file " + canonicalPath + " containing " + file.formulas.keySet().size() + " KIF expressions");
             it = file.formulas.keySet().iterator();
             int count = 0;
             while (it.hasNext()) {                
@@ -3887,30 +3867,17 @@ public class KB {
                 }
             }
             System.out.println("x");
-
             synchronized (this.getTerms()) {
                 this.getTerms().addAll(file.terms);
             }
-
-            if (!constituents.contains(canonicalPath)) {
-                constituents.add(canonicalPath);
-            }
-
-            System.out.println("INFO in KB.addConstituent(" 
-                               + filename + ", " 
-                               + buildCachesP + ", " 
-                               + loadVampireP + ")");
-            System.out.println("  File " 
-                               + canonicalPath + " loaded in "
-                               + ((System.currentTimeMillis() - t1) / 1000.0) 
-                               + " seconds");
-
+            if (!constituents.contains(canonicalPath)) 
+                constituents.add(canonicalPath);            
+            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
+            System.out.println("  File " + canonicalPath + " loaded in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
             // Clear the formatMap and termFormatMap for this KB.
             clearFormatMaps();
-
             if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) 
                 buildRelationCaches();            
-
             if (loadVampireP) 
                 loadVampire();            
         }
@@ -3919,10 +3886,7 @@ public class KB {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KB.addConstituent(" 
-                           + filename + ", " 
-                           + buildCachesP + ", " 
-                           + loadVampireP + ")");
+        System.out.println("EXIT KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
         return result.toString();
     }
 
@@ -5133,27 +5097,27 @@ public class KB {
      * @param factory Factory object used to create new InferenceEngine.
      * @return InferenceEngine object with all constituents loaded.
      */
-    public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory)
-    {
-    	InferenceEngine res=null;
+    public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory) {
 
+        System.out.println("INFO in KB.createInferenceEngine(): Factory name: " + factory.getClass().getName());
+    	InferenceEngine res = null;
         try {
             if (!formulaMap.isEmpty()) {
-
                 System.out.println("INFO in KB.createInferenceEngine(): preprocessing " + formulaMap.size() + " formulas");
-
-                TreeSet forms = preProcess(formulaMap.keySet());
+                TreeSet<String> forms = preProcess(formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = Formula.isNonEmptyString(filename);
                 if (vFileSaved)
                     System.out.println("INFO in KB.createInferenceEngine(): " + forms.size() + " formulas saved to " + filename);                
                 else 
                     System.out.println("INFO in KB.createInferenceEngine(): new -v.kif file not written");                
-
-                if (vFileSaved) {
+                if (vFileSaved && !factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory")) {
                     System.out.println("INFO in KB.createInferenceEngine(): getting new inference engine");
                     res = factory.createFromKBFile(filename);
                     System.out.println("INFO in KB.createInferenceEngine(): created " + res);        
+                }
+                if (factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory")) {
+                    res = factory.createWithFormulas(forms);
                 }
             }
         }
@@ -5168,59 +5132,42 @@ public class KB {
      *  Starts Vampire and collects, preprocesses and loads all of the
      *  constituents into it.
      */
-
     public void loadVampire() {
 
         // System.out.println("INFO in KB.loadVampire()");
-
         KBmanager mgr = KBmanager.getMgr();
         try {
             if (!formulaMap.isEmpty()) {
-
-                System.out.println("INFO in KB.loadVampire(): preprocessing " 
-                                   + formulaMap.size() 
-                                   + " formulae");
-
+                System.out.println("INFO in KB.loadVampire(): preprocessing " + formulaMap.size() + " formulae");
                 TreeSet forms = preProcess(formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = StringUtil.isNonEmptyString(filename);
-                if (vFileSaved) {
-                    System.out.println("INFO in KB.loadVampire(): " 
-                                       + forms.size() 
-                                       + " formulae saved to " 
-                                       + filename);
-                }
-                else {
-                    System.out.println("INFO in KB.loadVampire(): new -v.kif file not written");
-                }
+                if (vFileSaved) 
+                    System.out.println("INFO in KB.loadVampire(): " + forms.size() + " formulae saved to " + filename);                
+                else 
+                    System.out.println("INFO in KB.loadVampire(): new -v.kif file not written");                
 
                 if (inferenceEngine instanceof InferenceEngine) {
                     System.out.println("INFO in KB.loadVampire(): terminating inference engine");
                     long t1 = System.currentTimeMillis();
                     inferenceEngine.terminate();
                     System.out.println("INFO in KB.loadVampire(): inference engine terminated in "
-                                       + ((System.currentTimeMillis() - t1) / 1000.0)
-                                       + " seconds");
+                                       + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
                 }
-
                 inferenceEngine = null;
-
                 if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")) && vFileSaved) {
                     System.out.println("INFO in KB.loadVampire(): getting new inference engine");
                     inferenceEngine = Vampire.getNewInstance(filename);
                 }
-                System.out.println("INFO in KB.loadVampire(): inferenceEngine == " 
-                                   + inferenceEngine);        
+                System.out.println("INFO in KB.loadVampire(): inferenceEngine == " + inferenceEngine);        
             }
         }
         catch (Exception e) {
             System.out.println("Error in KB.loadVampire(): " + e.getMessage());
             e.printStackTrace();
         }
-        if (!(inferenceEngine instanceof InferenceEngine)) {
-            mgr.setError(mgr.getError()
-                         + "\n<br/>No local inference engine is available\n<br/>");
-        }
+        if (!(inferenceEngine instanceof InferenceEngine)) 
+            mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");        
         return;
     }
 
@@ -6242,7 +6189,7 @@ public class KB {
 
 
         System.out.println("INFO in KB.instantiateFormula(): " + pre);
-        ArrayList<ArrayList> al = pre.collectVariables();
+        ArrayList<ArrayList<String>> al = pre.collectVariables();
         ArrayList<String> vars = new ArrayList();
         vars.addAll((ArrayList) al.get(0));
         vars.addAll((ArrayList) al.get(1));
