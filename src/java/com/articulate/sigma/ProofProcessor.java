@@ -134,40 +134,56 @@ public class ProofProcessor {
         BasicXMLelement proof;
         /** An ArrayList of BasicXMLelements */
         ArrayList queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
+
          /** An ArrayList of ProofSteps */
         ArrayList proofSteps = new ArrayList();
         BasicXMLelement answer = (BasicXMLelement) queryResponseElements.get(answerNum);
 
+        //System.out.println("INFO in ProofProcessor.getProofSteps(): answer: " + answer.tagname);
         if (!((String) answer.attributes.get("result")).equalsIgnoreCase("no")) {
             BasicXMLelement bindingOrProof = (BasicXMLelement) answer.subelements.get(0);
             if (bindingOrProof.tagname.equalsIgnoreCase("proof")) 
                 proof = bindingOrProof;            // No binding set if query is for a true/false answer
             else
                 proof = (BasicXMLelement) answer.subelements.get(1);
+
+            //System.out.println("INFO in ProofProcessor.getProofSteps(): proof: " + proof.tagname);
             ArrayList steps = proof.subelements;
 
             for (int i = 0; i < steps.size(); i++) {
                 BasicXMLelement step = (BasicXMLelement) steps.get(i);
+                //System.out.println("INFO in ProofProcessor.getProofSteps(): step: " + step.tagname);
                 BasicXMLelement premises = (BasicXMLelement) step.subelements.get(0);
+                //System.out.println("INFO in ProofProcessor.getProofSteps(): premises: " + premises.tagname);
                 BasicXMLelement conclusion = (BasicXMLelement) step.subelements.get(1);
+                //System.out.println("INFO in ProofProcessor.getProofSteps(): conclusion: " + conclusion.tagname);
                 BasicXMLelement conclusionFormula = (BasicXMLelement) conclusion.subelements.get(0);
+                //System.out.println("INFO in ProofProcessor.getProofSteps(): conclusionFormula: " + conclusionFormula.tagname);
                 ProofStep processedStep = new ProofStep();
                 processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
                 processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
                 processedStep.axiom = removeAnswerClause(processedStep.axiom);
+                //System.out.println("INFO in ProofProcessor.getProofSteps(): processedStep.axiom: " + processedStep.axiom);
                 //----If there is a conclusion role, record
                 if (conclusion.subelements.size() > 1) {
                     BasicXMLelement conclusionRole = (BasicXMLelement) conclusion.subelements.get(1);
+                    //System.out.println("INFO in ProofProcessor.getProofSteps(): conclusionRole: " + conclusionRole.tagname);
                     if (conclusionRole.attributes.containsKey("type")) 
                             processedStep.formulaRole = (String) conclusionRole.attributes.get("type");                        
                 }
-                if (conclusionFormula.attributes.containsKey("number"))
+                if (conclusionFormula.attributes.containsKey("number")) {
                     processedStep.number = new Integer(Integer.parseInt((String) conclusionFormula.attributes.get("number")));
+                    //System.out.println("INFO in ProofProcessor.getProofSteps(): step number: " + processedStep.number);
+                }
                 for (int j = 0; j < premises.subelements.size(); j++) {
                     BasicXMLelement premise = (BasicXMLelement) premises.subelements.get(j);
+                    //System.out.println("INFO in ProofProcessor.getProofSteps(): premise: " + premise.tagname);
                     BasicXMLelement formula = (BasicXMLelement) premise.subelements.get(0);
+                    //System.out.println("INFO in ProofProcessor.getProofSteps(): formula: " + formula.tagname);
                     Integer premiseNum = new Integer(Integer.parseInt((String) formula.attributes.get("number"),10));
-                    processedStep.premises.add((Integer) premiseNum);
+                    //System.out.println("INFO in ProofProcessor.getProofSteps(): premiseNum: " + premiseNum);
+                    processedStep.premises.add(premiseNum);
+                    //System.out.println("INFO in ProofProcessor.getProofSteps(): premises: " + processedStep.premises);
                 }
                 proofSteps.add(processedStep);
             }
