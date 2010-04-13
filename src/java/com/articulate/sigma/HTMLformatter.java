@@ -93,6 +93,7 @@ public class HTMLformatter {
                                           String kbName, 
                                           String language) {
 
+        // System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
         StringBuilder result = new StringBuilder();
         Formula f = new Formula();
         KB kb = KBmanager.getMgr().getKB(kbName);
@@ -114,6 +115,8 @@ public class HTMLformatter {
         else
             result.append("<td valign=\"top\" width=\"50%\">" + f.htmlFormat(kbHref) + "</td>");
         result.append("<td valign=\"top\" width=\"10%\">");
+
+        // System.out.println("Info in HTMLformatter.proofTableFormat(): premises : " + step.premises);
         for (int i = 0; i < step.premises.size(); i++) {
             Integer stepNum = (Integer) step.premises.get(i);
             result.append(stepNum.toString() + " ");            
@@ -622,20 +625,20 @@ public class HTMLformatter {
     public static String formatProofResult(String result, String stmt, String processedStmt, 
                                            String lineHtml, String kbName, String language, int answerOffset) {
 
-	// System.out.println( "INFO in HTMLformatter.formatProofResult(): " + result );
+	//System.out.println( "INFO in HTMLformatter.formatProofResult(): " + result );
         StringBuilder html = new StringBuilder();
         if (result != null && result.toString().length() > 0) {
             BasicXMLparser res = new BasicXMLparser(result.toString());
 
-            // System.out.print("INFO in AskTell.jsp: Number of XML elements: ");
-            // System.out.println(res.elements.size());
+            //System.out.print("INFO in HTMLformatter.formatProofResult(): Number of XML elements: ");
+            //System.out.println(res.elements.size());
             ProofProcessor pp = new ProofProcessor(res.elements);
             for (int i = 0; i < pp.numAnswers(); i++) {
                 ArrayList proofSteps = pp.getProofSteps(i);
                 proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
 
-                // System.out.print("Proof steps: ");
-                // System.out.println(proofSteps.size());
+                //System.out.print("Proof steps: ");
+                //System.out.println(proofSteps.size());
                 if (i != 0) 
                     html = html.append(lineHtml + "\n");
                 html = html.append("Answer " + "\n");
@@ -644,8 +647,8 @@ public class HTMLformatter {
                 if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
                     html = html.append("<p><table width=\"95%\">" + "\n");
                     for (int j = 0; j < proofSteps.size(); j++) {
-                        // System.out.print("Printing proof step: ");
-                        // System.out.println(j);
+                        //System.out.print("Printing proof step: ");
+                        //System.out.println(j);
                         if (j % 2 == 1) 
                             html = html.append("<tr bgcolor=#EEEEEE>" + "\n");
                         else
@@ -654,7 +657,7 @@ public class HTMLformatter {
                         html = html.append(j+1);
                         html = html.append(". </td>" + "\n");
                         html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language) + "\n");                       
-                        // System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       			
+                        //System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));                       			
                         html = html.append("</tr>\n" + "\n");
                     }
                     html = html.append("</table>" + "\n");
