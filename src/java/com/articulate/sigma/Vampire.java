@@ -23,10 +23,10 @@ import com.articulate.sigma.SInE.SInEFactory;
  * and returns XML output.  Input forms are either <query optionalArgs>KIF formula</query>
  * or <assertion>KIF formula</assertion>.  Results of queries have the following form:
  * <queryResponse>
- *   <answer=yes/no number ='#'>
- *     <bindingSet type='definite/disjunctive'>
+ *   <answer result='yes'/'no' number ='#'>
+ *     <bindingSet type='definite'/'disjunctive'>
  *       <binding>
- *         <var name='' value=''>
+ *         <var name='' value=''/>
  *       </binding>
  *     </bindingSet>
  *     <proof>
@@ -46,7 +46,7 @@ import com.articulate.sigma.SInE.SInEFactory;
  *       </proofStep>
  *     </proof>
  *   </answer>
- *   <summary proofs='#'>
+ *   <summary proofs='#'/>
  * </queryResponse>
  * 
  * Note that if the result of a query is not a variable binding, then the <bindingSet>
@@ -112,11 +112,11 @@ public class Vampire extends InferenceEngine {
                 kif.readFile( kbFile.getCanonicalPath() );
                 Iterable formulaSource = kif.formulaSet;
                 
-                vpr=getNewInstanceWithFormulas(formulaSource);
+                vpr = getNewInstanceWithFormulas(formulaSource);
             }
         }
-        catch ( Exception ex ) {
-            System.out.println( ex.getMessage() );
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
         return vpr;
@@ -241,7 +241,6 @@ public class Vampire extends InferenceEngine {
     private Vampire (File executable, File kbFile) throws IOException {
 
         _vampire = Runtime.getRuntime().exec(executable.getCanonicalPath() + " " + kbFile.getCanonicalPath());
-
         _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()));
 
