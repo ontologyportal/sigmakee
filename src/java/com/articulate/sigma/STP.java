@@ -23,11 +23,34 @@ import com.sun.org.apache.bcel.internal.generic.NEW;
  */
 public class STP extends InferenceEngine {
 
+    /** Randomly instantiate formulas in order to create proofs
+     *  to use as tests. */
+    boolean _PROOF_GENERATION = false;
+
+    boolean _PROVE_DEBUG = false;
+
+    /** Assigns an ID to proof steps */
+    int _FORMULA_COUNTER = 0;
+
+    /** seeded random number generator */
+    Random random = new Random(1);
+
+    /** A counter to indicate when to instantiate a formula in
+     *  test creation. */
+    int proofCounter = 0;
+
+    /** A constant to indicate when to instantiate a formula in
+     *  test creation. */
+    static final int proofCounterInterval = 2;
+
      /** The knowledge base */
     ArrayList<Formula> formulas = new ArrayList();
 
-    /** Previously solved lemmas that is used to prevent cycles  */
+    /** Previously solved lemmas that is used to save the proof */
     TreeMap<String, ArrayList<Formula>> lemmas = new TreeMap();
+
+    /** individual deduction steps, indexed by conclusion */
+    TreeMap<String, ArrayList<Formula>> deductions = new TreeMap();
 
     /** To Be Used - also has a list of axioms used to derive the
      *  clause. */
@@ -115,7 +138,7 @@ public class STP extends InferenceEngine {
         }
 
         clausifyFormulas();
-        //System.out.println("INFO in STP(): clausified formulas: " + formulas);
+        // System.out.println("INFO in STP(): clausified formulas: " + formulas);
         buildIndexes();
     }
     
@@ -134,24 +157,70 @@ public class STP extends InferenceEngine {
     }
 
     /** *************************************************************
+     *  Utility debugging method. Prints the contents of
+     *  TreeMap<String, ArrayList<Formula>> deductions
+     */
+    private void printDeductions() {
+
+        System.out.println("\nINFO in printDeductions(): ");
+        System.out.println(deductions.keySet().size() + " deductions");
+        Iterator it = deductions.keySet().iterator();
+        while (it.hasNext()) {       
+            String s = (String) it.next();
+            Formula d = new Formula();
+            d.read(s);
+            System.out.println(d);
+            System.out.println("support:");
+            ArrayList<Formula> support = (ArrayList) deductions.get(s);
+            if (support != null) {
+                for (int i = 0; i < support.size(); i++) {
+                    Formula f = (Formula) support.get(i);
+                    System.out.println(f);
+                }
+            }
+            System.out.println("-------------------");
+        }
+        System.out.println();
+    }
+
+    /** *************************************************************
      */
     private void clausifyFormulas() {
 
         ArrayList<Formula> newFormulas = new ArrayList();
         Iterator<Formula> it = formulas.iterator();
         while (it.hasNext()) {
-            Formula f = (Formula) it.next();
-            f = f.clausify();
+            Formula fold = (Formula) it.next();
+            // System.out.println("INFO in STP.clausifyFormulas(): to clausify: " + fold);
+            addToDeductions(null,null,fold,false);
+            Formula f = fold.clausify();
             if (f.car().equals("and")) {
                 ArrayList<Formula> al = f.separateConjunctions();
                 for (int i = 0; i < al.size(); i++) {
                     Formula f2 = (Formula) al.get(i);
+                    f2 = f2.toCanonicalClausalForm();
                     newFormulas.add(f2);
+                    ArrayList support = new ArrayList();
+                    support.add(fold);
+                    lemmas.put(f2.theFormula,support);
+                    // System.out.println("INFO in STP.clausifyFormulas(): after clausification: " + f2);
+                    addToDeductions(fold,null,f2,false);
                 }
             }
-            else
+            else {
+                ArrayList support = new ArrayList();
+                support.add(fold);
+                Formula fnew = f.toCanonicalClausalForm();
+                lemmas.put(fnew.theFormula,support);
                 newFormulas.add(f);
-            //System.out.println("INFO in STP.clausifyFormulas(): " + f);
+                if (fold.theFormula.equals(fnew.theFormula)) 
+                    addToDeductions(null,null,fnew,false);         // clausification didn't change the formula
+                else {
+                    addToDeductions(fold,null,fnew,false);
+                    // System.out.println("INFO in STP.clausifyFormulas(): added clausify deduction: " + fold + " : " + fnew);
+                }
+                // System.out.println("INFO in STP.clausifyFormulas(): after clausification: " + fnew);
+            }
         }
         formulas = newFormulas;
     }
@@ -217,6 +286,14 @@ public class STP extends InferenceEngine {
      */
     private void indexOneFormula(Formula f) {
 
+        if (f == null || f.theFormula == null || f.theFormula == "") {
+            System.out.println("Error in STP.indexOneFormula(): null formula");
+            return;
+        }
+        if (f.theFormula.contains("`")) {
+            return;
+        }
+        //System.out.println("INFO in STP.indexOneFormula(): " + f);
         ArrayList<String> terms = f.collectTerms();                // count the appearances of terms
         Iterator it2 = terms.iterator();
         while (it2.hasNext()) {
@@ -281,6 +358,26 @@ public class STP extends InferenceEngine {
         }
        // System.out.println("INFO in STP.buildIndexes(): negTermPointers: " + negTermPointers);
        // System.out.println("INFO in STP.buildIndexes(): posTermPointers: " + posTermPointers);
+    }
+
+    /** *************************************************************
+     *  Extract one clause from a CNF formula
+     */
+    private Formula extractRandomClause(Formula f) {
+
+        if (f == null || f.empty() || f.isSimpleClause() || f.isSimpleNegatedClause() || !f.car().equals("or")) {
+            System.out.println("Error in STP.extractRandomClause(): bad formula: " + f);
+            return null;
+        }
+        Formula fnew = new Formula();
+        fnew.read(f.cdr());
+        ArrayList<String> clauses = new ArrayList();
+        while (!fnew.empty()) {
+            clauses.add(fnew.car());
+            fnew.read(fnew.cdr());
+        }
+        fnew.read((String) clauses.get(random.nextInt(clauses.size())));
+        return fnew;
     }
 
     /** *************************************************************
@@ -377,6 +474,124 @@ public class STP extends InferenceEngine {
         return result;
     }
 
+
+    /** *************************************************************
+     *  Instantiate a formula, or, randomly, just the negation of a
+     *  clause from the formula, or negate a ground formula
+     */
+    private Formula findInstantiation(Formula f) {
+
+        if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): checking instantiations:\n" + proofCounter);
+        Formula instantiationCandidate = null;
+        proofCounter++;
+        if (f.isSimpleClause() || f.isSimpleNegatedClause()) {
+            if (!f.isGround()) {
+                instantiationCandidate = f.instantiateVariables();                            
+            }
+            else {
+                if (random.nextInt(10) == 1) {
+                    Formula fnew = new Formula();
+                    if (f.isSimpleClause()) 
+                        fnew.read("(not " + f.theFormula + ")");
+                    else {      // formula is negated
+                        fnew.read(f.cdr());
+                        fnew.read(fnew.car());
+                    }
+                    if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): asserting ground formula (1):\n" + fnew);
+                    return fnew;
+                }
+            }
+        }
+        if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): f:\n" + f);
+        if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): instantiationCandidate:\n" + instantiationCandidate);
+        if ((proofCounter > proofCounterInterval) && instantiationCandidate != null && 
+            !instantiationCandidate.isGround()) {
+            if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): adding instantiated formula:\n" + instantiationCandidate);
+            proofCounter = 0;
+            return instantiationCandidate;
+        }
+        else if ((proofCounter > proofCounterInterval) && instantiationCandidate == null) {
+            if (random.nextInt(2) == 0) {
+                Formula clause = null;
+                if (!f.isGround())
+                    clause = extractRandomClause(f);
+                if (clause != null && !clause.isGround()) {
+                    instantiationCandidate = clause.instantiateVariables();
+                    if (!clause.car().equals("not")) 
+                        instantiationCandidate.read("(not " + instantiationCandidate.theFormula + ")");
+                    else {
+                        instantiationCandidate.read(instantiationCandidate.cdr());
+                        instantiationCandidate.read(instantiationCandidate.car());
+                    }
+                    if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): adding instantiated clause:\n" + instantiationCandidate);
+                    proofCounter = 0;
+                    return instantiationCandidate;
+                }
+                if (clause != null && clause.isGround() && random.nextInt(10) == 0) {
+                    Formula fnew = new Formula();
+                    if (clause.isSimpleClause()) 
+                        fnew.read("(not " + clause.theFormula + ")");
+                    else {      // formula is negated
+                        fnew.read(clause.cdr());
+                        fnew.read(fnew.car());
+                    }
+                    if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): asserting ground formula (2):\n" + fnew);
+                    return fnew;
+                }
+            }
+            else {
+                if (!f.isGround()) {
+                    instantiationCandidate = f.instantiateVariables();
+                    if (_PROVE_DEBUG) System.out.println("\nINFO in STP.prove(): adding instantiated candidate:\n" + instantiationCandidate);
+                    proofCounter = 0;
+                    return instantiationCandidate;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** *************************************************************
+     *  Record a single successful resolution, (or assertion used in
+     *  the proof) indexed by conclusion.
+     */
+    private void addToDeductions(Formula f1, Formula f2, Formula con, boolean sortClauses) {
+
+ //       if (f1 == null & f2 == null) 
+ //           return;
+
+        Formula newcon = new Formula();
+        Formula f1new = new Formula();
+        Formula f2new = new Formula();
+        newcon.read(Formula.normalizeVariables(con.theFormula));
+        if (sortClauses) 
+            newcon = newcon.toCanonicalClausalForm();
+        ArrayList twoSupports = new ArrayList();
+        if (f1 != null) {        
+            f1new.read(Formula.normalizeVariables(f1.theFormula));
+            if (sortClauses) 
+                f1new = f1new.toCanonicalClausalForm();
+            twoSupports.add(f1new);
+            if (deductions.get(f1new.theFormula) == null) 
+                deductions.put(f1new.theFormula,null);
+        }
+        if (f2 != null) {
+            f2new.read(Formula.normalizeVariables(f2.theFormula));
+            if (sortClauses) 
+                f2new = f2new.toCanonicalClausalForm();
+            twoSupports.add(f2new);
+            if (deductions.get(f2new.theFormula) == null) 
+                deductions.put(f2new.theFormula,null);
+        }
+        deductions.put(newcon.theFormula,twoSupports);
+        System.out.println("INFO in STP.addToDeductions()");
+        System.out.println("conclusion: " + newcon);
+        if (f1 != null)         
+            System.out.println("premise 1: " + f1new);
+        if (f2 != null)         
+            System.out.println("premise 2: " + f2new);
+    }
+
     /** *************************************************************
      *  Find support for a formula
      *  @return an ArrayList of Formulas that consitute support for
@@ -385,7 +600,6 @@ public class STP extends InferenceEngine {
      */
     private ArrayList<Formula> prove() {
 
-        boolean _PROVE_DEBUG = false;
         ArrayList<Formula> result = new ArrayList();
         while (TBU.size() > 0) {
             if (_PROVE_DEBUG) System.out.println("\n\nINFO in STP.prove(): TBU: " + TBU.get(0));
@@ -414,14 +628,15 @@ public class STP extends InferenceEngine {
                     if (_PROVE_DEBUG) System.out.println("INFO in STP.prove(): checking candidate:\n" + candidate);
                     Formula resultForm = new Formula();
                     TreeMap mappings = f.resolve(candidate,resultForm);
-                    if (resultForm != null && resultForm.empty()) {
+                    if (resultForm != null && resultForm.empty()) {  // Successful resolution! Result is empty list
                         ArrayList support = new ArrayList();
                         if (lemmas.get(avpCan.form.theFormula) != null) 
-                            support.addAll((ArrayList) lemmas.get(avpCan.form));
+                            support.addAll((ArrayList) lemmas.get(avpCan.form.theFormula));
                         if (lemmas.get(f.theFormula) != null) 
                             support.addAll((ArrayList) lemmas.get(f.theFormula));
                         support.add(f);
                         support.add(avpCan.form);
+                        addToDeductions(f,candidate,resultForm,true);
                         return support;
                     }
                     if (mappings != null) {  // && mappings.keySet().size() > 0
@@ -429,22 +644,38 @@ public class STP extends InferenceEngine {
                         if (_PROVE_DEBUG) System.out.println("for candidate\n" + candidate + "\n with formula\n " + avp.form);
                         ArrayList support = new ArrayList();
                         if (lemmas.get(avpCan.form.theFormula) != null) 
-                            support.addAll((ArrayList) lemmas.get(avpCan.form));
+                            support.addAll((ArrayList) lemmas.get(avpCan.form.theFormula));
                         if (lemmas.get(f.theFormula) != null) 
                             support.addAll((ArrayList) lemmas.get(f.theFormula));
                         support.add(f);
                         support.add(avpCan.form);
                         lemmas.put(resultForm.theFormula,support);
                         AnotherAVP avpNew = new AnotherAVP();
-                        if (!formulas.contains(resultForm) && !TBU.contains(avpNew)) {
+                        if (!formulas.contains(resultForm)) {
                             avpNew.form = resultForm;
                             avpNew.intval = 10000-resultForm.theFormula.length();
-                            TBU.add(avpNew);
-                            Collections.sort(TBU);
+                            if (!TBU.contains(avpNew)) {
+                                addToDeductions(f,candidate,resultForm,true);
+                                TBU.add(avpNew);
+                                Collections.sort(TBU);
+                            }
                         }
                     }
                     //else
                         //System.out.println("INFO in STP.prove(): candidate did not resolve\n" + candidate);                    
+                }
+                if (_PROOF_GENERATION) {
+                    Formula fnew = findInstantiation(f);
+                    if (fnew != null && !formulas.contains(fnew)) {
+                        AnotherAVP avpNew = new AnotherAVP();
+                        avpNew.form = fnew;
+                        avpNew.intval = 10000-fnew.theFormula.length();
+                        if (!TBU.contains(avpNew)) {
+                            //addToDeductions(f,candidate,resultForm);
+                            TBU.add(avpNew);
+                            Collections.sort(TBU);
+                        }
+                    }
                 }
             }
             //indexOneFormula(f);       // all lemmas must be added to the knowledge base for completeness
@@ -455,52 +686,98 @@ public class STP extends InferenceEngine {
     }
 
     /** *************************************************************
+     *  @param f is the formula of the proof step to be printed
+     *  @param formIds are all the formulas used in the proof
+     *  @param alreadyPrinted is a list of the Integer ids (the
+     *                        index from the formIds ArrayList) of
+     *                        formulas that have already been
+     *                        printed in the proof.
      */
-    public String formatResult (ArrayList<Formula> proof) {
-        /*
-    * <queryResponse>
-    *   <answer=yes/no number ='#'>
-    *     <bindingSet type='definite/disjunctive'>
-    *       <binding>
-    *         <var name='' value=''>
-    *       </binding>
-    *     </bindingSet>
-    *     <proof>
-    *       <proofStep>
-    *         <premises>
-    *           <premise>
-    *             <clause/formula number='#'>
-    *               KIF formula
-    *             </clause>
-    *           </premise>
-    *         </premises>
-    *         <conclusion> 
-    *           <clause/formula number='#'>
-    *             KIF formula
-    *           </clause>
-    *         </conclusion>
-    *       </proofStep>
-    *     </proof>
-    *   </answer>
-    *   <summary proofs='#'>
-    * </queryResponse>
-        */
+    private String formatResultRecurse (Formula f, ArrayList<String> formIds, ArrayList<Integer> alreadyPrinted) {
+
+        if (alreadyPrinted.contains(formIds.indexOf(f.theFormula))) 
+            return null;
+        alreadyPrinted.add(new Integer(formIds.indexOf(f.theFormula)));
+        System.out.println("INFO in STP.formatResultRecurse(): alreadyPrinted: " + alreadyPrinted);
+        System.out.println("INFO in STP.formatResultRecurse(): checking formula: " + f);
+        System.out.println("INFO in STP.formatResultRecurse(): this formula id: " + formIds.indexOf(f.theFormula));
+
         StringBuffer result = new StringBuffer();
-        if (proof == null) {
-            result.append("<queryResponse><answer=no number='0'></answer></queryResponse>");
+        ArrayList<Formula> support = (ArrayList) deductions.get(f.theFormula);
+        System.out.println("INFO in STP.formatResultRecurse(): support: " + support);
+        if (support != null && support.size() > 0) {
+            Formula f1 = (Formula) support.get(0);
+            System.out.println("INFO in STP.formatResultRecurse(): internal checking formula: " + f1);
+            Formula f2 = null;
+            if (support.size() > 1) {
+                f2 = (Formula) support.get(1);
+                System.out.println("INFO in STP.formatResultRecurse(): internal checking formula 2: " + f2);
+            }
+            System.out.println("INFO in STP.formatResultRecurse(): recursing on formula 1: " + f1);
+            String f1result = formatResultRecurse(f1,formIds,alreadyPrinted);
+            if (f1result != null) 
+                result.append(f1result);
+            if (f2 != null) {
+                System.out.println("INFO in STP.formatResultRecurse(): recursing on formula 2: " + f2);
+                String f2result = formatResultRecurse(f2,formIds,alreadyPrinted);
+                if (f2result != null) 
+                    result.append(f2result); 
+            }
+            result.append("<proofStep>\n");
+            result.append("<premises>\n");
+            if (f1 != null) {
+                if (formIds.indexOf(f1.theFormula) < 0) 
+                    formIds.add(f1.theFormula);
+                result.append("<premise>\n<formula number='" + formIds.indexOf(f1.theFormula) + "'>\n");
+                result.append(f1.theFormula + "\n");
+                result.append("</formula>\n</premise>\n");
+            }
+            if (f2 != null) {
+                if (formIds.indexOf(f2.theFormula) < 0) 
+                    formIds.add(f2.theFormula);
+                result.append("<premise>\n<formula number='" + formIds.indexOf(f2.theFormula) + "'>\n");
+                result.append(f2.theFormula + "\n");
+                result.append("</formula>\n</premise>\n");
+            }
+            result.append("</premises>\n");
         }
         else {
-            result.append("<queryResponse><answer=no number='1'>");
-            result.append("<proof>");
-            result.append("<bindingSet type='definite'><binding><var name='' value=''></binding></bindingSet>");
-            for (int i = 0; i < proof.size(); i++) {
-                Formula f = (Formula) proof.get(i);
-                result.append("<proofStep><premises><clause number='0'></clause></premise>");
-                result.append("<conclusion><formula number='" + String.valueOf(i) + "'>" + f.theFormula + "</clause></conclusions>");
-                result.append("</proofStep>");
-            }
-            result.append("</proof></answer></queryResponse>");
+            result.append("<proofStep>\n");
+            result.append("<premises>\n");
+            result.append("</premises>\n");
         }
+        if (formIds.indexOf(f.theFormula) < 0) 
+            formIds.add(f.theFormula);        
+        result.append("<conclusion>\n<formula number='" + formIds.indexOf(f.theFormula) + "'>\n" + f.theFormula + "\n</formula>\n</conclusion>\n");
+        result.append("</proofStep>\n");
+
+        System.out.println(result);
+        return result.toString();
+    }
+
+    /** *************************************************************
+     */
+    public String formatResultNew (boolean ground) {
+
+        System.out.println("INFO in STP.formatResultNew(): ");
+        printDeductions();
+        ArrayList<Integer> alreadyPrinted = new ArrayList();
+        ArrayList<String> formIds = new ArrayList();
+        formIds.addAll(deductions.keySet());
+        StringBuffer result = new StringBuffer();
+        if (!deductions.containsKey("()")) {
+            result.append("<queryResponse>\n<answer result='no' number='0'>\n</answer>\n</queryResponse>\n");
+        }
+        else {
+            result.append("<queryResponse>\n<answer result='yes' number='1'>\n");
+            result.append("<bindingSet type='definite'>\n<binding>yes<var name='' value=''/>\n</binding>\n</bindingSet>\n");
+            result.append("<proof>\n");
+            Formula f = new Formula();
+            f.read("()");
+            result.append(formatResultRecurse(f,formIds,alreadyPrinted));
+            result.append("</proof>\n</answer>\n<summary proofs='1'/>\n</queryResponse>\n");
+        }
+        System.out.println("INFO in STP.formatResult(): " + result.toString());
         return result.toString();
     }
 
@@ -516,11 +793,23 @@ public class STP extends InferenceEngine {
     @Override
     public String submitQuery (String formula,int timeLimit,int bindingsLimit) {
 
+        boolean ground = false;
         ArrayList result = new ArrayList();
         Formula negQuery = new Formula();
+        String rawNegQuery = "(not " + formula + ")";
+        if (negQuery.isGround()) {
+            ground = true;
+        }
         negQuery.read("(not " + formula + ")");
         negQuery = negQuery.clausify();     // negation will be pushed in
-        //System.out.println("INFO in STP.submitQuery(): clausified query: " + negQuery);
+        if (negQuery.theFormula.equals(rawNegQuery)) 
+            addToDeductions(null,null,negQuery,true);
+        else {
+            Formula originalQuery = new Formula();
+            originalQuery.read("(not " + formula + ")");
+            addToDeductions(originalQuery,null,negQuery,true);
+        }
+        System.out.println("INFO in STP.submitQuery(): clausified query: " + negQuery);
         AnotherAVP avp = null;
         if (negQuery.car().equals("and")) {
             ArrayList<Formula> al = negQuery.separateConjunctions();
@@ -531,7 +820,7 @@ public class STP extends InferenceEngine {
                 avp.intval = f2.theFormula.length();
                 TBU.add(avp);
                 Collections.sort(TBU);
-                //System.out.println("INFO in STP.submitQuery(): adding to TBU: " + avp);
+                System.out.println("INFO in STP.submitQuery(): adding to TBU: " + avp);
             }
         }
         else {
@@ -542,7 +831,9 @@ public class STP extends InferenceEngine {
             Collections.sort(TBU);
         }
         ArrayList<Formula> res = prove(); 
-        return formatResult(res);       
+        System.out.println("INFO in STP.submitQuery(): " + deductions);
+        // return res.toString();
+        return formatResultNew(ground);       
     }
 
     /** *************************************************************
@@ -681,7 +972,7 @@ query:
         al.add("(=> (enemies ?X America) (attribute ?X Hostile))");
         al.add("(attribute West American)");
         al.add("(instance Nono Nation)");
-        al.add("(enemies Nono America)");
+        // al.add("(enemies Nono America)");
         al.add("(instance America Nation)");
         Formula query = new Formula();
         query.read("(attribute ?X Criminal)");
@@ -695,7 +986,7 @@ query:
             System.out.println(f);
         }
         STP stp = new STP(al);
-        System.out.println(stp.submitQuery(query.theFormula,0,0)); 
+        System.out.println("Result: " + stp.submitQuery(query.theFormula,0,0)); 
     }
 
     /** ***************************************************************
