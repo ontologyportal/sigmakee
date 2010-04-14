@@ -68,7 +68,7 @@ public class ProofProcessor {
 	    }
 	}
 
-        System.out.println("INFO in ProofProcessor().equalsAnswer: answer: " + result.toString() + " expected answer: " + expectedAnswer);
+        // System.out.println("INFO in ProofProcessor().equalsAnswer: answer: " + result.toString() + " expected answer: " + expectedAnswer);
         return result.toString().equalsIgnoreCase(expectedAnswer);
     }
 
