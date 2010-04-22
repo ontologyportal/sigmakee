@@ -2029,43 +2029,40 @@ public class KB {
     }
 
     /** *************************************************************
-     * Returns an ArrayList of Formulas in which the two terms
+     * @return an ArrayList of Formulas in which the two terms
      * provided appear in the indicated argument positions.  If there
      * are no Formula(s) matching the given terms and respective
      * argument positions, return an empty ArrayList.  Iterate
      * through the smallest list of results.
-     *
-     * @return ArrayList
      */
-    public ArrayList askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
+    public ArrayList<Formula> askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
 
        ArrayList<Formula> result = new ArrayList<Formula>();
-        try {
-            if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)) {
-                ArrayList partial1 = ask("arg", argnum1, term1);
-                ArrayList partial2 = ask("arg", argnum2, term2);
-                ArrayList partial = partial1;
-                int arg = argnum2;
-                String term = term2;
-                if (partial1.size() > partial2.size()) {
-                    partial = partial2;
-                    arg = argnum1;
-                    term = term1;
-                }
-                Formula f = null;
-                int plen = partial.size();
-                for (int i = 0; i < plen; i++) {
-                    f = (Formula) partial.get(i);
-                    if (f.getArgument(arg).equals(term)) {
-                        result.add(f);
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
+       try {
+           if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)) {
+               ArrayList partial1 = ask("arg", argnum1, term1);
+               ArrayList partial2 = ask("arg", argnum2, term2);
+               ArrayList partial = partial1;
+               int arg = argnum2;
+               String term = term2;
+               if (partial1.size() > partial2.size()) {
+                   partial = partial2;
+                   arg = argnum1;
+                   term = term1;
+               }
+               Formula f = null;
+               int plen = partial.size();
+               for (int i = 0; i < plen; i++) {
+                   f = (Formula) partial.get(i);
+                   if (f.getArgument(arg).equals(term))
+                       result.add(f);                   
+               }
+           }
+       }
+       catch (Exception ex) {
+           ex.printStackTrace();
+       }
+       return result;
     }
 
     /** *************************************************************
@@ -5184,6 +5181,23 @@ public class KB {
     };
 
     /** ***************************************************************
+     */
+    private void printPreProcessTimers(long[] ppTimers, TreeSet newTreeSet, long dur) {
+
+        System.out.println("INFO in KB.preProcess()");
+        System.out.println("  " + (dur / 1000.0) + " seconds total to produce " + newTreeSet.size() + " formulas");
+        System.out.println("    " + (ppTimers[1] / 1000.0) + " seconds instantiating predicate variables");
+        System.out.println("    " + (ppTimers[2] / 1000.0) + " seconds expanding row variables");
+        System.out.println("      " + (ppTimers[3] / 1000.0) + " seconds in Formula.getRowVarExpansionRange()");
+        System.out.println("        " + (ppTimers[4] / 1000.0) + " seconds in Formula.toNegAndPosLitsWithRenameInfo()");
+        System.out.println("      " + (ppTimers[5] / 1000.0) + " seconds in Formula.adjustExpansionCount()");
+        System.out.println("    " + (ppTimers[0] / 1000.0) + " seconds adding type predicates");
+        System.out.println("      " + (ppTimers[7] / 1000.0) + " seconds making quantifiers explicit");
+        System.out.println("      " + (ppTimers[8] / 1000.0) + " seconds inserting type restrictions");
+        System.out.println("    " + (ppTimers[6] / 1000.0) + " seconds in Formula.preProcessRecurse()");
+    }
+
+    /** ***************************************************************
      * Preprocess the knowledge base to work with Vampire.  This includes "holds"
      * prefixing, ticking nested formulas, expanding row variables, and
      * translating mathematical relation operators.
@@ -5192,16 +5206,12 @@ public class KB {
     public TreeSet preProcess(Set forms) {
 
         System.out.println("ENTER KB.preProcess()");
-
         TreeSet newTreeSet = new TreeSet();
         try {
             KBmanager mgr = KBmanager.getMgr();
-            for (int i = 0 ; i < ppTimers.length ; i++) {
-                ppTimers[i] = 0L;
-            }
-            
+            for (int i = 0 ; i < ppTimers.length ; i++) 
+                ppTimers[i] = 0L;                 
             resetSortalTypeCache();
-
             boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
             long t1 = System.currentTimeMillis();
             String form = null;
@@ -5214,16 +5224,12 @@ public class KB {
             long t_prevTotal = 0L;
             long t_total = 0L;
             for (it = forms.iterator(); it.hasNext(); numberProcessed++) {
-
                 long t_start = System.currentTimeMillis();
-
                 form = (String) it.next();
                 f = (Formula) formulaMap.get(form);
                 // newFormula = new Formula();
                 // newFormula.theFormula = new String(f.theFormula);
-
                 // System.out.println("preProcess " + newFormula);
-
                 // processed = newFormula.preProcess(false,this);   // not queries
                 processed = f.preProcess(false, this);   // not queries
 
@@ -5232,12 +5238,8 @@ public class KB {
                         f.tptpParse(false, this, processed);   // not a query
                     }
                     catch (ParseException pe) {
-                        String er = ("Error in KB.preProcess(): " 
-                                     + pe.getMessage() 
-                                     + " at line " 
-                                     + f.startLine
-                                     + " in file "
-                                     + f.sourceFile);
+                        String er = ("Error in KB.preProcess(): " + pe.getMessage() + " at line " 
+                                     + f.startLine + " in file " + f.sourceFile);
                         mgr.setError(mgr.getError() + "\n<br/>" + er + "\n<br/>");
                         System.out.println(er);
                     }
@@ -5260,9 +5262,7 @@ public class KB {
                     t_prevTotal = t_total;
                 }
                 if (t_elapsed > 3000) {
-                    System.out.println("DEBUG: "
-                                       + (t_elapsed / 1000.0)
-                                       + " seconds to process form:");
+                    System.out.println("DEBUG: " + (t_elapsed / 1000.0) + " seconds to process form:");
                     System.out.println("  f == " + f.toString());
                     System.out.println("  processed == " 
                                        + (processed.isEmpty()
@@ -5275,43 +5275,9 @@ public class KB {
                 }
             }
             long dur = (System.currentTimeMillis() - t1);
-            System.out.println("INFO in KB.preProcess()");
-            System.out.println("  "
-                               + (dur / 1000.0)
-                               + " seconds total to produce "
-                               + newTreeSet.size()
-                               + " formulas");
-            System.out.println("    "
-                               + (ppTimers[1] / 1000.0)
-                               + " seconds instantiating predicate variables");
-            System.out.println("    "
-                               + (ppTimers[2] / 1000.0)
-                               + " seconds expanding row variables");
-            System.out.println("      "
-                               + (ppTimers[3] / 1000.0)
-                               + " seconds in Formula.getRowVarExpansionRange()");
-            System.out.println("        "
-                               + (ppTimers[4] / 1000.0)
-                               + " seconds in Formula.toNegAndPosLitsWithRenameInfo()");
-            System.out.println("      "
-                               + (ppTimers[5] / 1000.0)
-                               + " seconds in Formula.adjustExpansionCount()");
-            System.out.println("    "
-                               + (ppTimers[0] / 1000.0)
-                               + " seconds adding type predicates");
-            System.out.println("      "
-                               + (ppTimers[7] / 1000.0)
-                               + " seconds making quantifiers explicit");
-            System.out.println("      "
-                               + (ppTimers[8] / 1000.0)
-                               + " seconds inserting type restrictions");
-            System.out.println("    "
-                               + (ppTimers[6] / 1000.0)
-                               + " seconds in Formula.preProcessRecurse()");
-            for (int i = 0 ; i < ppTimers.length ; i++) {
-                ppTimers[i] = 0L;
-            }
-
+            printPreProcessTimers(ppTimers,newTreeSet,dur);
+            for (int i = 0 ; i < ppTimers.length ; i++) 
+                ppTimers[i] = 0L;            
             if (tptpParseP) {
                 int goodCount = 0;
                 int badCount = 0;
@@ -5320,48 +5286,36 @@ public class KB {
                     f = (Formula) it.next();
                     if (f.getTheTptpFormulas().isEmpty()) {
                         badCount++;
-                        if (badCount < 11) {
-                            badList.add(f);
-                        }
+                        if (badCount < 11) 
+                            badList.add(f);                        
                     }
                     else {
                         goodCount++;
-                        if (goodCount < 10) {
-                            System.out.println("Sample TPTP translation: " 
-                                               + f.getTheTptpFormulas().get(0));
-                        }
+                        if (goodCount < 10) 
+                            System.out.println("Sample TPTP translation: " + f.getTheTptpFormulas().get(0));                        
                     }
                 }
                 System.out.println("INFO in KB.preProcess(): TPTP translation succeeded for "
-                                   + goodCount
-                                   + " formula"
-                                   + ((goodCount == 1) ? "" : "s"));
+                                   + goodCount + " formula" + ((goodCount == 1) ? "" : "s"));
                 boolean someAreBad = (badCount > 0);
                 System.out.println("INFO in KB.preProcess(): TPTP translation failed for "
-                                   + badCount
-                                   + " formula"
-                                   + ((badCount == 1) ? "" : "s")
-                                   + (someAreBad ? ":" : ""));
+                                   + badCount + " formula" + ((badCount == 1) ? "" : "s") + (someAreBad ? ":" : ""));
                 if (someAreBad) {
                     it = badList.iterator();
                     for (int i = 1 ; it.hasNext() ; i++) {
                         f = (Formula) it.next();
                         System.out.println("[" + i + "]: " + f);
                     }
-                    if (badCount > 10) {
-                        System.out.println("  " + (badCount - 10) + " more ...");
-                    }
+                    if (badCount > 10)
+                        System.out.println("  " + (badCount - 10) + " more ...");                    
                 }
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
-        }
-     
+        }    
         clearSortalTypeCache();
-
         System.out.println("EXIT KB.preProcess()");
-
         return newTreeSet;
     }
 
@@ -5405,9 +5359,8 @@ public class KB {
 
             System.out.println("INFO in KB.writePrologFile(): Writing " + file.getCanonicalPath());
 
-            if ((WordNet.wn != null) && WordNet.wn.wordFrequencies.isEmpty()) {
-                WordNet.wn.readWordFrequencies();
-            }
+            if ((WordNet.wn != null) && WordNet.wn.wordFrequencies.isEmpty()) 
+                WordNet.wn.readWordFrequencies();            
             pr = new PrintWriter(new FileWriter(file));
             pr.println("% Copyright (c) 2006-2009 Articulate Software Incorporated");
             pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
@@ -5457,6 +5410,7 @@ public class KB {
      * successfully translated.
      */
     public int tptpParse() {
+
         int goodCount = 0;
         try {
             int badCount = 0;
@@ -5468,45 +5422,37 @@ public class KB {
                 f.tptpParse(false, this);
                 if (f.getTheTptpFormulas().isEmpty()) {
                     badCount++;
-                    if (badList.size() < 11) {
-                        badList.add(f);
-                    }
+                    if (badList.size() < 11) 
+                        badList.add(f);                    
                 }
-                else {
-                    goodCount++;
-                }
+                else 
+                    goodCount++;                
             }
             System.out.println("INFO in KB.tptpParse(): TPTP translation succeeded for "
-                               + goodCount
-                               + " formula"
-                               + ((goodCount == 1) ? "" : "s"));
+                               + goodCount + " formula" + ((goodCount == 1) ? "" : "s"));
             boolean someAreBad = (badCount > 0);
             System.out.println("INFO in KB.tptpParse(): TPTP translation failed for "
-                               + badCount
-                               + " formula"
-                               + ((badCount == 1) ? "" : "s")
-                               + (someAreBad ? ":" : ""));
+                               + badCount + " formula" + ((badCount == 1) ? "" : "s") + (someAreBad ? ":" : ""));
             if (someAreBad) {
                 it = badList.iterator();
                 for (int i = 1 ; it.hasNext() ; i++) {
                     f = (Formula) it.next();
                     System.out.println("[" + i + "]: " + f);
                 }
-                if (badCount > 10) {
-                    System.out.println("  " + (badCount - 10) + " more ...");
-                }
+                if (badCount > 10) 
+                    System.out.println("  " + (badCount - 10) + " more ...");                
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
-        }
-                
+        }               
         return goodCount;
     }
 
     /** *************************************************************
      */
     public String copyFile (String fileName) {
+
         String outputPath = "";
         FileReader in = null;
         FileWriter out = null;
@@ -5541,6 +5487,7 @@ public class KB {
     /** *************************************************************
      */
     public void addToFile (String fileName, ArrayList<String> axioms, String conjecture) {
+
         DataOutputStream out = null;
         try {
             boolean append = true;
@@ -5548,9 +5495,8 @@ public class KB {
             out = new DataOutputStream(file);
             // add axioms
             if (axioms != null) {
-                for (String axiom : axioms) {
-                    out.writeBytes(axiom);
-                }
+                for (String axiom : axioms) 
+                    out.writeBytes(axiom);                
                 out.flush();        
             }
             // add conjecture
@@ -5564,15 +5510,43 @@ public class KB {
         }
         finally {
             try {
-                if (out != null) {
-                    out.close();
-                }
+                if (out != null)
+                    out.close();                
             }
             catch (Exception ioe) {
                 ioe.printStackTrace();
             }
         }
         return;
+    }
+
+    /** ***************************************************************
+     * @param kb - The KB used to compute variable arity relations.
+     * @param relationMap is a Map of String keys and values where
+     *                    the key is the renamed relation and the
+     *                    value is the original name.  
+     */
+    protected void printVariableArityRelationContent(PrintWriter pr, TreeMap<String,String> relationMap, 
+                                                     String sanitizedKBName, int axiomIndex, boolean onlyPlainFOL) {
+
+        Iterator it = relationMap.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            String value = (String) relationMap.get(key);
+            ArrayList result = ask("arg",1,value);
+            if (result != null) {
+                for (int i = 0; i < result.size(); i++) {
+                    Formula f = (Formula) result.get(i);
+                    String s = f.theFormula.replace(value,key);
+                    if (onlyPlainFOL)                   
+                        pr.println("%FOL fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                                   ",axiom,(" + Formula.tptpParseSUOKIFString(s) + ")).");
+                    else
+                        pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                                   ",axiom,(" + Formula.tptpParseSUOKIFString(s) + ")).");
+                }
+            }
+        }
     }
 
     /** *************************************************************
@@ -5612,21 +5586,11 @@ public class KB {
      *
      * @param fileName - the full pathname of the file to write
      */
-    public String writeTPTPFile(String fileName,
-                                Formula conjecture, 
-                                boolean onlyPlainFOL, 
-                                String reasoner,
-                                boolean isQuestion,
-                                PrintWriter pw) {
+    public String writeTPTPFile(String fileName, Formula conjecture, boolean onlyPlainFOL, 
+                                String reasoner, boolean isQuestion, PrintWriter pw) {
 
-        System.out.println("ENTER KB.writeTPTPFile(" 
-                           + fileName + ", " 
-                           + conjecture + ", " 
-                           + onlyPlainFOL + ", " 
-                           + reasoner + ", "
-                           + isQuestion + ", "
-                           + pw + ")");
-
+        System.out.println("ENTER KB.writeTPTPFile(" + fileName + ", " + conjecture + ", " 
+                           + onlyPlainFOL + ", " + reasoner + ", " + isQuestion + ", " + pw + ")");
         String result = null;
         PrintWriter pr = null;
         Formula f = null;
@@ -5638,38 +5602,32 @@ public class KB {
             String theTPTPFormula;
             boolean sanitizedFormula;
             boolean commentedFormula;
-
+            TreeMap relationMap = new TreeMap(); // A Map of varaible arity relations keyed by new name
             String sanitizedKBName = name.replaceAll("\\W","_");
-
             //----If file name is a directory, create filename therein
             if (fileName == null) {
                 outputFile = File.createTempFile(sanitizedKBName, ".p", null);
                 //----Delete temp file when program exits.
                 outputFile.deleteOnExit();
-            } else {
-                outputFile = new File(fileName);
-            }
+            } 
+            else 
+                outputFile = new File(fileName);            
             String canonicalPath = outputFile.getCanonicalPath();
-
             System.out.println("INFO in KB.writeTPTPFile(): Writing " + canonicalPath);
-
-            if (pw instanceof PrintWriter) {
-                pr = pw;
-            }
-            else {
-                pr = new PrintWriter(new FileWriter(outputFile));
-            }
-
+            if (pw instanceof PrintWriter) 
+                pr = pw;            
+            else 
+                pr = new PrintWriter(new FileWriter(outputFile));           
             // If a PrintWriter object is passed in, we suppress this
             // copyright notice and assume that such a notice will be
             // provided somewhere is the wider calling context.
             if (pw == null) {
-                pr.println("% Copyright 2009 Articulate Software Incorporated");
+                pr.println("% Copyright 2010 Articulate Software Incorporated");
+                pr.println("% www.ontologyportal.org www.articulatesoftware.com");
                 pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
                 pr.println("% This is a translation to TPTP of KB " + sanitizedKBName);
                 pr.println("");
             }
-
             orderedFormulae = new TreeSet(new Comparator() {
                     public int compare(Object o1, Object o2) {
                         Formula f1 = (Formula) o1;
@@ -5686,11 +5644,9 @@ public class KB {
                         return fileCompare;
                     } });
             orderedFormulae.addAll(formulaMap.values());
-
             // if (onlyPlainFOL) {
             resetSortalTypeCache();
             // }
-
             List tptpFormulas = null;
             String oldSourceFile = "";
             String sourceFile = "";
@@ -5704,31 +5660,20 @@ public class KB {
                 // if (!sourceFile.equals(oldSourceFile)) 
                 //     axiomIndex = 1;
                 if (!sourceFile.equals(oldSourceFile)) {
-                    System.out.println("WARNING in KB.writeTPTPFile(" 
-                                       + fileName + ", " 
-                                       + conjecture + ", " 
-                                       + onlyPlainFOL + ", " 
-                                       + reasoner + ", "
-                                       + isQuestion + ", "
-                                       + pw + ")");
+                    System.out.println("WARNING in KB.writeTPTPFile(" + fileName + ", " + conjecture + ", " 
+                                       + onlyPlainFOL + ", " + reasoner + ", " + isQuestion + ", " + pw + ")");
                     System.out.println("  Source file has changed to " + sourceFile);
                 }
                 oldSourceFile = sourceFile;
-
-                // System.out.println("");
-                // System.out.println("  f == " + f);
-
+                // System.out.println("\n  f == " + f);
                 tptpFormulas = f.getTheTptpFormulas();
-
                 // System.out.println("  1 : tptpFormulas == " + tptpFormulas);
-
                 //----If we are writing "sanitized" tptp, aka onlyPlainFOL,
                 //----here we rename all VariableArityRelations so that each
                 //----relation name has a numeric suffix corresponding to the
                 //----number of the relation's arguments.  This is required
                 //----for some provers, such as E and EP.
-                if (onlyPlainFOL 
-                    && !tptpFormulas.isEmpty() 
+                if (onlyPlainFOL && !tptpFormulas.isEmpty() 
                     && !mgr.getPref("holdsPrefix").equalsIgnoreCase("yes") 
                     && f.containsVariableArityRelation(this)) {
 
@@ -5741,21 +5686,17 @@ public class KB {
                         Formula f2 = null;
                         for (Iterator procit = processed.iterator(); procit.hasNext();) {
                             f2 = (Formula) procit.next();
-                            withRelnRenames.add(f2.renameVariableArityRelations(this));
+                            withRelnRenames.add(f2.renameVariableArityRelations(this,relationMap));
                         }
                         tmpF.tptpParse(false, this, withRelnRenames);
                         tptpFormulas = tmpF.getTheTptpFormulas();
-
                         // System.out.println("  2 : tptpFormulas == " + tptpFormulas);
                         // System.out.println("");
-
                     }
                 }
                 for (Iterator tptpIt = tptpFormulas.iterator(); tptpIt.hasNext();) {
                     theTPTPFormula = (String) tptpIt.next();
-
                     // System.out.println("  theTPTPFormula == " + theTPTPFormula);
-
                     commentedFormula = false;
                     if (onlyPlainFOL) {
                         //----Remove interpretations of arithmetic
@@ -5790,8 +5731,7 @@ public class KB {
                     }
                     pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
                                ",axiom,(" + theTPTPFormula + ")).");
-                    // pr.println("fof(kb_" + sourceFile + "_" + axiomIndex++ +
-                    //            ",axiom,(" + theTPTPFormula + ")).");
+                    // pr.println("fof(kb_" + sourceFile + "_" + axiomIndex++ + ",axiom,(" + theTPTPFormula + ")).");
                     // if (commentedFormula) {
                     pr.println();
                     // }
@@ -5802,9 +5742,9 @@ public class KB {
                     System.out.println("INFO in KB.writeTPTPFile(): No TPTP formula for\n" + f);
                 }
             }
+            printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex,onlyPlainFOL);
             //----Print conjecture if one has been supplied
-            if (conjecture != null) {
-                    
+            if (conjecture != null) {                    
                 // conjecture.getTheTptpFormulas() should return a
                 // List containing only one String, so the iteration
                 // below is probably unnecessary.  I don't know if the
@@ -5836,15 +5776,8 @@ public class KB {
                 ioe.printStackTrace();
             }
         }
-
-        System.out.println("EXIT KB.writeTPTPFile(" 
-                           + fileName + ", " 
-                           + conjecture + ", " 
-                           + onlyPlainFOL + ", " 
-                           + reasoner + ", "
-                           + isQuestion + ", "
-                           + pw + ")");
-
+        System.out.println("EXIT KB.writeTPTPFile(" + fileName + ", " + conjecture + ", " + onlyPlainFOL + ", " 
+                           + reasoner + ", " + isQuestion + ", " + pw + ")");
         return result;
     }
 
