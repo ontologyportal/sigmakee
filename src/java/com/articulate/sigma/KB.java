@@ -3197,6 +3197,40 @@ public class KB {
     }
 
     /** *************************************************************
+     * Submits a query to the STP2 inference engine.  Returns an XML
+     * formatted String that contains the response of the inference
+     * engine.  It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @param timeout The number of seconds after which the underlying inference
+     * engine should give up. (Time taken by axiom selection doesn't count.)
+     *
+     * @param maxAnswers The maximum number of answers (binding sets)
+     * the inference engine should return.
+     *
+     * @return A String indicating the status of the ask operation.
+     */
+    public String askSTP2(String suoKifFormula, int timeout, int maxAnswers) {
+
+        String result = "";
+        try {
+            InferenceEngine.EngineFactory factory = STP2.getFactory();
+            InferenceEngine engine = createInferenceEngine(factory);
+            result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
+            if (engine != null)
+                engine.terminate();                
+        } 
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return result;
+    }
+
+    /** *************************************************************
      * Submits a query to the LEO inference engine.  Returns an XML
      * formatted String that contains the response of the inference
      * engine.  It should be in the form
@@ -5713,8 +5747,8 @@ public class KB {
                                                                   "dollar_minus");
                         //----Don't output ""ed ''ed and numbers
                         if (theTPTPFormula.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") 
-                            || theTPTPFormula.indexOf('"') >= 0 
-                            || theTPTPFormula.matches(".*[(,]-?[0-9].*")) {
+                            || theTPTPFormula.indexOf('"') >= 0) {                         
+                           // || theTPTPFormula.matches(".*[(,]-?[0-9].*"))                        
                             pr.print("%FOL ");
                             commentedFormula = true;
                         }
