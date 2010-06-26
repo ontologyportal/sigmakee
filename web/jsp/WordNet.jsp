@@ -49,7 +49,7 @@
 <P>This tool relates English terms to concepts from the
    <a href="http://www.ontologyportal.org">SUMO</a>
    ontology by means of mappings to
-   <a href="http://www.cogsci.princeton.edu/~wn/">WordNet</a> synsets.
+   <a href="http://wordnet.princeton.edu">WordNet</a> synsets.
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <form action="WordNet.jsp" method="GET">
