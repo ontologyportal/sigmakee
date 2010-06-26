@@ -644,6 +644,7 @@ public class OWLtranslator {
      */
     private void writeYAGOMapping(PrintWriter pw, String term) {
 
+        System.out.println("INFO in OWLtranslator.writeYAGOMapping(): writing term: " + term);
         String YAGO = (String) SUMOYAGOMap.get(term);
         if (YAGO != null) {        
             pw.println("  <owl:sameAs rdf:resource=\"http://dbpedia.org/resource/" + YAGO + "\" />");
@@ -849,10 +850,13 @@ public class OWLtranslator {
         FileReader r = null;
         LineNumberReader lr = null;
         try {
-            File f = new File("yago-sumo-mappings.txt");
+            System.out.println("INFO in OWLtranslator.readTAGOSUMOMappings()");
+            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            File f = new File(kbDir + File.separator + "yago-sumo-mappings.txt");
             if (!f.canRead()) {
                 System.out.println( "INFO in readYAGOSUMOMappings(): " 
-                                    + "The mappings file does not exist" );
+                                    + "The mappings file " +
+                                    kbDir + File.separator + "yago-sumo-mappings.txt does not exist" );
                 return;
             }
             r = new FileReader(f);
@@ -900,13 +904,14 @@ public class OWLtranslator {
         PrintWriter pw = null; 
 
         try {
+            System.out.println("INFO in OWLtranslator.write(): writing " + filename);
             readYAGOSUMOMappings();
             kb = KBmanager.getMgr().getKB(kbName);
             fw = new FileWriter(filename);
             pw = new PrintWriter(fw);
  
             pw.println("<rdf:RDF");
-            pw.println("xmlns=\"http://www.ontologyportal.org/SUMO.owl\"");
+            pw.println("xmlns=\"http://www.ontologyportal.org/SUMO.owl#\"");
             pw.println("xmlns:rdf =\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
             pw.println("xmlns:wn=\"http://www.ontologyportal.org/WordNet.owl#\"");
             pw.println("xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"");
@@ -1267,11 +1272,12 @@ public class OWLtranslator {
         PrintWriter pw = null; 
 
         try {
+            System.out.println("INFO in OWLtranslator.writeWordNet(): writing " + filename);
             fw = new FileWriter(filename);
             pw = new PrintWriter(fw);
 
             pw.println("<rdf:RDF");
-            pw.println("xmlns=\"http://www.ontologyportal.org/WordNet.owl\"");
+            pw.println("xmlns=\"http://www.ontologyportal.org/WordNet.owl#\"");
             pw.println("xmlns:rdf =\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
             pw.println("xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"");
             pw.println("xmlns:owl =\"http://www.w3.org/2002/07/owl#\">");
