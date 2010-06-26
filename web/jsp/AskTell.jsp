@@ -200,6 +200,7 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     String resultSoTPTP = null;        
     String resultSInE = null;    
     String resultSTP = null;    
+    String resultSTP2 = null;    
     String resultLeo = null;    
 
     String lineHtml =
@@ -225,6 +226,11 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
 		        resultSTP = kb.askSTP( stmt, timeout, maxAnswers );
+            }
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("STP2")) {
+                if (stmt.indexOf('@') != -1)
+                    throw(new IOException("Row variables not allowed in query: " + stmt));
+		        resultSTP2 = kb.askSTP2( stmt, timeout, maxAnswers );
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SInE")) {
                 if (stmt.indexOf('@') != -1)
@@ -301,6 +307,9 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP" <% if (chosenEngine.equals("STP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     STP (experimental)<BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP2" <% if (chosenEngine.equals("STP2")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'">
+    STP2 (experimental)<BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (chosenEngine.equals("LeoSine")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II with SInE (experimental)<BR>
@@ -399,6 +408,12 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
             out.println(HTMLformatter.formatProofResult(resultSTP,stmt,stmt,lineHtml,kbName,language ));       
+    }
+    if (chosenEngine.equals("STP2")) {
+        if ((resultSTP2 != null) && (resultSTP2.indexOf("Syntax error detected") != -1))         
+            out.println("<font color='red'>A syntax error was detected in your input.</font>");
+        else 
+            out.println(HTMLformatter.formatProofResult(resultSTP2,stmt,stmt,lineHtml,kbName,language ));       
     }
     if ((chosenEngine.equals("SoTPTP")) && (resultSoTPTP != null))
         out.print(resultSoTPTP);
