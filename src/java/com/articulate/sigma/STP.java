@@ -559,7 +559,6 @@ public class STP extends InferenceEngine {
 
  //       if (f1 == null & f2 == null) 
  //           return;
-
         Formula newcon = new Formula();
         Formula f1new = new Formula();
         Formula f2new = new Formula();
@@ -602,7 +601,8 @@ public class STP extends InferenceEngine {
 
         ArrayList<Formula> result = new ArrayList();
         while (TBU.size() > 0) {
-            if (_PROVE_DEBUG) System.out.println("\n\nINFO in STP.prove(): TBU: " + TBU.get(0));
+            if (_PROVE_DEBUG) System.out.println("\n\nINFO in STP.prove(): TBU: " + TBU);
+            System.out.println("\nTBU length: " + TBU.size());
             //System.out.println("INFO in STP.prove(): lemmas: " + lemmas);
             AnotherAVP avp = (AnotherAVP) TBU.remove(0);
             //if (!lemmas.containsKey(form)) {
@@ -964,15 +964,15 @@ query:
         al.add("(=> (and (attribute ?X American) (instance ?Y Weapon) (instance ?Z Nation) " +
                         "(attribute ?Z Hostile) (instance ?S Selling) (agent ?S ?X) (patient ?S ?Y) (recipient ?S ?Z))" +
                    "(attribute ?X Criminal))");
-        al.add("(possesses Nono M1-Missile)");
+        al.add("(possesses Aardvark M1-Missile)");
         al.add("(instance M1-Missile Missile)");
-        al.add("(=> (and (possesses Nono ?X) (instance ?X Missile))"+
-                   "(and (instance ?S Selling) (agent ?S West) (patient ?S ?X) (recipient ?S Nono)))");
+        al.add("(=> (and (possesses Aardvark ?X) (instance ?X Missile))"+
+                   "(and (instance ?S Selling) (agent ?S West) (patient ?S ?X) (recipient ?S Aardvark)))");
         al.add("(=> (instance ?X Missile) (instance ?X Weapon))");
         al.add("(=> (enemies ?X America) (attribute ?X Hostile))");
         al.add("(attribute West American)");
-        al.add("(instance Nono Nation)");
-        // al.add("(enemies Nono America)");
+        al.add("(instance Aardvark Nation)");
+        al.add("(enemies Aardvark America)");
         al.add("(instance America Nation)");
         Formula query = new Formula();
         query.read("(attribute ?X Criminal)");
@@ -1003,6 +1003,19 @@ query:
         STP stp = new STP(al);
         System.out.println(stp.submitQuery(query.theFormula,0,0)); 
     */
+/*
+        Formula query = new Formula();
+        Formula negQuery = new Formula();
+        query.read("(exists (?MEMBER) (member ?MEMBER Org1-1))");
+        negQuery.read("(not " + query.theFormula + ")");
+        negQuery = negQuery.clausify();     // negation will be pushed in
+        System.out.println("STP.main() result: " + negQuery);
+
+        CNFFormula cnf = new CNFFormula();
+        cnf.read(negQuery.theFormula);
+        System.out.println("STP.main() result for cnf: " + cnf);         
+         */
+        //tq1Abbrev();
         //tq1();
         //tq2();
         rnTest();
