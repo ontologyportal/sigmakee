@@ -1226,7 +1226,11 @@ public class Formula implements Comparable {
      *  variable substitutions if successful, null if not. If two
      *  formulas are identical the result will be an empty (but not
      *  null) TreeMap. Algorithm is after Russell and Norvig's AI: A
-     *  Modern Approach p303.
+     *  Modern Approach p303. But R&N's algorithm assumes that
+     *  variables are within the same scope, which is not the case
+     *  when unifying clauses in resolution.  This needs to be
+     *  corrected by renaming variables so each clause does not
+     *  duplicate names from the other.
      */
     public TreeMap<String, String> unify(Formula f) {
 
@@ -2570,10 +2574,13 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Returns true if formula has variable, else returns false.
+     * Returns true if formula is a valid formula with no variables,
+     * else returns false.
      */
     public static boolean isGround(String form) {
 
+        if (form == null || form == "") 
+            return false;
         if (form.indexOf("\"") < 0) 
             return (form.indexOf("?") < 0 && form.indexOf("@") < 0);
         boolean inQuote = false;
@@ -7832,11 +7839,31 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * A test method.
      */
+    public static void resolveTest3() {
+
+        Formula newResult = new Formula();
+        Formula cnf1 = new Formula();
+        Formula cnf2 = new Formula();
+
+        cnf1.read("(or (attribute ?VAR2 Criminal) (not (recipient ?VAR1 ?VAR3)) (not (patient ?VAR1 ?VAR4)) (not (instance ?VAR4 Weapon)) " +
+                  "(not (instance ?VAR3 Nation)) (not (instance ?VAR1 Selling)) (not (agent ?VAR1 ?VAR2)) (not (attribute ?VAR3 Hostile)) " +
+                  "(not (attribute ?VAR2 American)))");
+        cnf2.read("(or (not (recipient ?VAR5 ?VAR3)) (not (patient ?VAR5 ?VAR4)) (not (instance ?VAR5 Selling)) (not (instance ?VAR4 Weapon)) " +
+                  "(not (instance ?VAR3 Nation)) (not (agent ?VAR5 ?VAR2)) (not (attribute ?VAR3 Hostile)) (not (attribute ?VAR2 American)))");
+
+        System.out.println("INFO in CNFFormula.main(): resolution result mapping: " + cnf1.resolve(cnf2,newResult));
+        System.out.println("INFO in CNFFormula.main(): resolution result: " + newResult);
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
     public static void main(String[] args) {
 
-        Formula f1 = new Formula();
-        Formula f2 = new Formula();
-        Formula f3 = new Formula();
+        Formula.resolveTest3();
+        //Formula f1 = new Formula();
+        //Formula f2 = new Formula();
+        //Formula f3 = new Formula();
         /**
         f1.read("(=> (attribute ?Agent Investor) (exists (?Investing) (agent ?Investing ?Agent)))");
         System.out.println(f1);
@@ -7872,7 +7899,7 @@ public class Formula implements Comparable {
         //f2.read("(or (not (attribute ?X5 American)) (not (instance ?X6 Weapon)) (not (instance ?X7 Nation)) " +
         //        "(not (attribute ?X7 Hostile)) (not (instance ?X8 Selling)) (not (agent ?X8 ?X5)) (not (patient ?X8 ?X6)) " +
         //        "(not (recipient ?X8 ?X7)) (attribute ?X5 Criminal))");    
-        f1.read("(or (not (attribute ?VAR1 American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?VAR4 Selling)) (not (agent ?VAR4 ?VAR1)) (not (patient ?VAR4 ?VAR2)) (not (recipient ?VAR4 ?VAR3)))");
+        //f1.read("(or (not (attribute ?VAR1 American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?VAR4 Selling)) (not (agent ?VAR4 ?VAR1)) (not (patient ?VAR4 ?VAR2)) (not (recipient ?VAR4 ?VAR3)))");
         // (or 
         //   (not 
         //     (attribute ?VAR1 American)) 
