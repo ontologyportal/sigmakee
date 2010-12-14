@@ -710,7 +710,7 @@ public class PictureEditor {
    */
   private void createLog() {
     try {
-      File story = new File("C:\\inference\\story.txt");
+      File story = new File("story.txt");
       story.createNewFile();
       ReadWriteTextFile logWriter = new ReadWriteTextFile();
       logWriter.setContents(story, log);
