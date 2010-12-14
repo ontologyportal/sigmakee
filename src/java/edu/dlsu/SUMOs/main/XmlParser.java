@@ -1,4 +1,4 @@
-package main;
+package edu.dlsu.SUMOs.main;
 
 import java.awt.List;
 import java.io.File;
@@ -8,8 +8,9 @@ import java.util.ArrayList;
 
 import javax.swing.JOptionPane;
 
-import util.ReadWriteTextFile;
-import util.Xml;
+import edu.dlsu.SUMOs.util.ReadWriteTextFile;
+import edu.dlsu.SUMOs.util.Xml;
+
 
 public class XmlParser {
 

@@ -1,4 +1,4 @@
-package main;
+package edu.dlsu.SUMOs.main;
 
 import java.awt.Dialog;
 import java.awt.List;
@@ -17,16 +17,17 @@ import java.util.StringTokenizer;
 import javax.print.attribute.standard.Finishings;
 import javax.swing.JOptionPane;
 
-import obj.Input;
-import obj.Instance;
-import obj.Rule;
 
-import util.DateUtils;
-import util.ReadWriteTextFile;
-import util.Xml;
 
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.Vampire;
+
+import edu.dlsu.SUMOs.obj.Input;
+import edu.dlsu.SUMOs.obj.Instance;
+import edu.dlsu.SUMOs.obj.Rule;
+import edu.dlsu.SUMOs.util.DateUtils;
+import edu.dlsu.SUMOs.util.ReadWriteTextFile;
+import edu.dlsu.SUMOs.util.Xml;
 
 public class PictureEditor {
 
@@ -86,7 +87,7 @@ public class PictureEditor {
   private ArrayList<String> phaseKnowledge;
   private String phase;
   private ArrayList<String> omissibleKnowledge;
-  private String DATABASE = "C:\\inference\\SUMO-v.kif";
+  private String DATABASE = System.getenv("SIGMA_HOME")+"\\inference\\SUMO-v.kif";
   private String result;
   private ArrayList<String> resettableAttributes;
   private ArrayList<String> resettableKnowledge;
@@ -108,7 +109,7 @@ public class PictureEditor {
   
   public PictureEditor(final Input input) {
     try {  
-      System.out.println("**********Picture Editor v0.3**********");
+      System.out.println("**********Picture Editor v0.4**********");
       initializeSettings();
       initializeStory(input);
       initializeTime(input);
@@ -638,7 +639,7 @@ public class PictureEditor {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    
+//    System.out.println(System.getenv("SIGMA_HOME"));
     KBmanager.getMgr().initializeOnce();
     vampire = Vampire.getNewInstance(DATABASE);
     

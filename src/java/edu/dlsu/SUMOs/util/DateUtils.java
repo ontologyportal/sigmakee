@@ -1,4 +1,4 @@
-package util;
+package edu.dlsu.SUMOs.util;
 
 import java.util.Calendar;
 import java.text.SimpleDateFormat;

@@ -1,4 +1,4 @@
-package util;
+package edu.dlsu.SUMOs.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

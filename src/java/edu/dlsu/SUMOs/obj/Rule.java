@@ -1,4 +1,4 @@
-package obj;
+package edu.dlsu.SUMOs.obj;
 
 public class Rule {
 
