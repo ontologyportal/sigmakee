@@ -29,9 +29,11 @@ public class KB {
 
     private static boolean DEBUG = false;
 
-    /** The inference engine process for this KB. */
-    //public Vampire inferenceEngine;                 
+    /** The inference engine process for this KB. Deprecated.   */
     public InferenceEngine inferenceEngine;  
+
+    /** The collection of inference engines for this KB. */
+    public TreeMap<String, InferenceEngine> engineMap = new TreeMap();
 
     /** The name of the knowledge base. */
     public String name;                       
@@ -131,6 +133,52 @@ public class KB {
      *  instantiateFormula() are unique. */
     private int gensym = 0;
 
+    /** *************************************************************
+     * Constructor which takes the name of the KB and the location
+     * where KBs preprocessed for Vampire should be placed.
+     */
+    public KB(String n, String dir) {
+
+        name = n;
+        kbDir = dir;
+        try {
+            KBmanager mgr = KBmanager.getMgr();
+            if (mgr != null) { 
+                // initRelationCaches();
+                String loadCelt = mgr.getPref("loadCELT");
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
+                    celt = new CELT();
+                }
+            }
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in KB(): " + ioe.getMessage());
+            celt = null;
+        }
+    }
+
+    /** *************************************************************
+     * Constructor 
+     */
+    public KB(String n) {
+       
+        name = n;
+        try {
+            KBmanager mgr = KBmanager.getMgr();
+            kbDir = mgr.getPref("kbDir");
+            if (mgr != null) { 
+                // initRelationCaches();
+                String loadCelt = mgr.getPref("loadCELT");
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
+                    celt = new CELT();
+                }
+            }
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in KB(): " + ioe.getMessage());
+            celt = null;
+        }
+    }
 
     /** ************************************************************
      * Returns a synchronized SortedSet of Strings, which are all
@@ -334,30 +382,6 @@ public class KB {
             clearSortalTypeCache();
         }
         return;
-    }
-
-    /** *************************************************************
-     * Constructor which takes the name of the KB and the location
-     * where KBs preprocessed for Vampire should be placed.
-     */
-    public KB(String n, String dir) {
-
-        name = n;
-        kbDir = dir;
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            if (mgr != null) { 
-                // initRelationCaches();
-                String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
-                    celt = new CELT();
-                }
-            }
-        }
-        catch (IOException ioe) {
-            System.out.println("Error in KB(): " + ioe.getMessage());
-            celt = null;
-        }
     }
 
     /** *************************************************************
@@ -2900,6 +2924,32 @@ public class KB {
      *
      * @return A String indicating the status of the tell operation.
      */
+    public String tellSTP2(String input) {
+
+        STP2 stp2 = (STP2) engineMap.get("STP2");  
+
+        String result = null; 
+        try {
+            result = stp2.assertFormula(input);
+        } catch (IOException ioe) {
+            System.out.println("Error in KB.tellSTP2(): " + ioe.getMessage());
+            ioe.printStackTrace();
+            return "<assertionResponse>" + ioe.getMessage() + "</assertionResponse>";
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     * Adds a formula to the knowledge base.  Returns an XML formatted
+     * String that contains the response of the inference engine.  It
+     * should be of the form "<assertionResponse>...</assertionResponse>"
+     * where the body should be " Formula has been added to the session 
+     * database" if all went well.
+     *
+     * @param input The String representation of a SUO-KIF Formula.
+     *
+     * @return A String indicating the status of the tell operation.
+     */
     public String tell(String input) {
 
         System.out.println("ENTER KB.tell(" + input + ")");
@@ -3183,8 +3233,12 @@ public class KB {
 
         String result = "";
         try {
-            InferenceEngine.EngineFactory factory = STP.getFactory();
-            InferenceEngine engine = createInferenceEngine(factory);
+            InferenceEngine engine = engineMap.get("STP");
+            if (engine == null) {
+                InferenceEngine.EngineFactory factory = STP.getFactory();
+                engine = createInferenceEngine(factory);
+                engineMap.put("STP",engine);
+            }
             result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
             if (engine != null)
                 engine.terminate();                
@@ -3217,8 +3271,14 @@ public class KB {
 
         String result = "";
         try {
-            InferenceEngine.EngineFactory factory = STP2.getFactory();
-            InferenceEngine engine = createInferenceEngine(factory);
+            InferenceEngine engine = null;
+            if (!engineMap.containsKey("STP2")) {
+                InferenceEngine.EngineFactory factory = STP2.getFactory();
+                engine = createInferenceEngine(factory);
+                engineMap.put("STP2",engine);
+            }
+            else
+                engine = (InferenceEngine) engineMap.get("STP2");
             result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
             if (engine != null)
                 engine.terminate();                
@@ -3783,6 +3843,11 @@ public class KB {
      */
     public void deleteUserAssertions() {
 
+        if (engineMap.containsKey("STP2")) {
+            System.out.println("INFO in KB.deleteUserAssertions: Deleting STP2 contents.");
+            STP2 stp2 = (STP2) engineMap.get("STP2");
+            stp2.clear();
+        }
         String cname = null;
         for (int i = 0 ; i < constituents.size() ; i++) {
             cname = (String) constituents.get(i);
@@ -6165,7 +6230,7 @@ public class KB {
         for (int i = 0; i < vars.size(); i++) 
             m.put((String) vars.get(i),"gensym" + (new Integer(gensym++)).toString()); 
         System.out.println(m);
-        pre = pre.instantiateVariables(m);
+        pre = pre.substituteVariables(m);
         assertions.add(pre);
     }
 
