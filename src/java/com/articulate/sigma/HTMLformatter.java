@@ -364,14 +364,9 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
-    public static String browserSectionFormatLimit(String term, 
-                                                   String header, 
-                                                   KB kb, 
-                                                   String language, 
-                                                   int start, 
-                                                   int limit, 
-                                                   int arg, 
-                                                   String type) {
+    public static String browserSectionFormatLimit(String term, String header, KB kb, 
+                                                   String language, int start, int limit, 
+                                                   int arg, String type) {
 
         ArrayList forms = kb.ask(type,arg,term);
         StringBuilder show = new StringBuilder();
@@ -386,18 +381,13 @@ public class HTMLformatter {
             show.append("<table width=\"95%\">");
             if (forms.size() < localLimit) 
                 localLimit = forms.size();
-            else {
+            else 
                 limitString = ("<tr><td><br></td></tr><tr><td>Display limited to " 
-                               + limit
-                               + " items. " 
+                               + limit + " items. " 
                                + "<a href=\"BrowseExtra.jsp?term=" + term 
-                               + "&kb=" + kb.name 
-                               + "&start=" + (start+limit)
-                               + "&arg=" + arg
-                               + "&type=" + type + "\">Show next " 
-                               + limit
-                               + "</a></td></tr>\n");
-            }
+                               + "&kb=" + kb.name + "&start=" + (start+limit)
+                               + "&arg=" + arg + "&type=" + type + "\">Show next " 
+                               + limit + "</a></td></tr>\n");            
 
             boolean isArabic = (language.matches(".*(?i)arabic.*")
                                 || language.equalsIgnoreCase("ar"));
@@ -425,12 +415,10 @@ public class HTMLformatter {
                     show.append("</td>\n<td width=\"40%\" valign=\"top\">");
                     String pph = null;
                     if (!Formula.DOC_PREDICATES.contains(arg0))
-                        pph = LanguageFormatter.htmlParaphrase(kbHref,
-                                                               f.theFormula,
+                        pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,
                                                                kb.getFormatMap(language), 
                                                                kb.getTermFormatMap(language), 
-                                                               kb, 
-                                                               language);
+                                                               kb, language);
         	    if (StringUtil.emptyString(pph)) 
                         pph = "";                     
                     else if (isArabic)
