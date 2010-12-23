@@ -57,6 +57,7 @@ public class KBmanager {
     private boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
+    public boolean initializing = false;
 
     /** ***************************************************************
      * Set an error string for file loading.
@@ -268,18 +269,16 @@ public class KBmanager {
      * empty configuration file if none exists.
      */
     private SimpleElement readConfiguration(String configDirPath) {
-        System.out.println("ENTER KBmanager.readConfiguration(" 
-                           + configDirPath
-                           + ")"); 
+
+        System.out.println("ENTER KBmanager.readConfiguration(" + configDirPath + ")"); 
         SimpleElement configuration = null;
         BufferedReader br = null;
         try {
             String kbDirStr = configDirPath;
             if (StringUtil.emptyString(kbDirStr)) {
                 kbDirStr = (String) preferences.get("kbDir");
-                if (StringUtil.emptyString(kbDirStr)) {
-                    kbDirStr = System.getProperty("user.dir");
-                }
+                if (StringUtil.emptyString(kbDirStr)) 
+                    kbDirStr = System.getProperty("user.dir");                
             }
             File kbDir = new File(kbDirStr);
             if (!kbDir.exists()) {
@@ -314,29 +313,21 @@ public class KBmanager {
             configuration = sdp.parse(br);
         }
         catch (Exception ex) {
-            System.out.println("ERROR in KBmanager.readConfiguration("
-                               + configDirPath
-                               + "):\n"
-                               + "  Exception parsing configuration file \n" 
-                               + ex.getMessage());
+            System.out.println("ERROR in KBmanager.readConfiguration(" + configDirPath
+                               + "):\n" + "  Exception parsing configuration file \n" + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
             try {
-                if (br != null) {
-                    br.close();
-                }
+                if (br != null) 
+                    br.close();                
             }
             catch (Exception ex2) {
                 ex2.printStackTrace();
             }
         }
-
-        System.out.println("EXIT KBmanager.readConfiguration(" 
-                           + configDirPath
-                           + ")");
+        System.out.println("EXIT KBmanager.readConfiguration(" + configDirPath + ")");
         System.out.println("  > configuration == \n" + configuration); 
-
         return configuration;
     }
 
@@ -369,39 +360,35 @@ public class KBmanager {
      * from the directory, reinitialization is forced.
      */
     public synchronized void initializeOnce(String configFileDir) {
+
         try {
-            System.out.println("ENTER KBmanager.initializeOnce("
-                               + configFileDir
-                               + ")");
+            initializing = true;
+            System.out.println("ENTER KBmanager.initializeOnce(" + configFileDir + ")");
             System.out.println("  initialized == " + initialized);
             if (!initialized || StringUtil.isNonEmptyString(configFileDir)) {
                 setDefaultAttributes();
                 SimpleElement configuration = readConfiguration(configFileDir);
-                if (configuration == null) {
-                    throw new Exception("Error reading configuration file");
-                }
+                if (configuration == null) 
+                    throw new Exception("Error reading configuration file");                
                 // System.out.println( "configuration == " + configuration );
                 String result = fromXML(configuration);
-                if (StringUtil.isNonEmptyString(result)) {
-                    error = result;
-                }
+                if (StringUtil.isNonEmptyString(result)) 
+                    error = result;                
                 String kbDir = (String) preferences.get("kbDir");
                 System.out.println("  kbDir == " + kbDir);
                 LanguageFormatter.readKeywordMap(kbDir);
+                WordNet.wn.initOnce();
             }
         }
         catch (Exception ex) {
-                System.out.println("ERROR in KBmanager.initializeOnce("
-                                   + configFileDir
-                                   + ")");
-                System.out.println("  > " + ex.getMessage());
-                ex.printStackTrace();
+            System.out.println("ERROR in KBmanager.initializeOnce(" + configFileDir + ")");
+            System.out.println("  > " + ex.getMessage());
+            ex.printStackTrace();
         }
         initialized = true;
+        initializing = false;
         System.out.println("  initialized == " + initialized);
-        System.out.println("EXIT KBmanager.initializeOnce("
-                           + configFileDir
-                           + ")");
+        System.out.println("EXIT KBmanager.initializeOnce(" + configFileDir + ")");
         return;
     }
 
@@ -411,8 +398,7 @@ public class KBmanager {
      */
     public static String escapeFilename(String fname) {
 
-        StringBuilder newstring = new StringBuilder("");
-        
+        StringBuilder newstring = new StringBuilder("");        
         for (int i = 0; i < fname.length(); i++) {
             if (fname.charAt(i) == 92 && fname.charAt(i+1) != 92) 
                 newstring = newstring.append("\\\\");
