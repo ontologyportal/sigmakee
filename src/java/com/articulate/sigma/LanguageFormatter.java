@@ -37,6 +37,10 @@ public class LanguageFormatter {
     private static String getKeyword(String englishWord, String language) {
 
 	String ans = "";
+        if (keywordMap == null) {
+            System.out.println("Error in LanguageFormatter.getKeyword(): keyword map is null");
+            return ans;
+        }
 	HashMap hm = (HashMap) keywordMap.get(englishWord);
 	if (hm != null) {
 	    String tmp = (String) hm.get(language);
