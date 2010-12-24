@@ -3,7 +3,7 @@ package com.articulate.sigma;
 import java.util.*;
 import java.io.*;
 
-/** This code is copyright Articulate Software (c) 2004.  
+/** This code is copyright Articulate Software (c) 2010.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
 in any writings, briefings, publications, presentations, or 
@@ -12,13 +12,16 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico. See also sigmakee.sourceforge.net
 */
 
 /** Read and write OWL format from Sigma data structures.
  */
 public class OWLtranslator {
 
+    public static OWLtranslator ot = new OWLtranslator();
+
+    public static boolean initNeeded = true;
     private KB kb;
 
     /** Relations in SUMO that have a corresponding relation in
@@ -104,6 +107,8 @@ public class OWLtranslator {
     /** Keys are SUMO term name Strings, values are YAGO/DBPedia
      *  term name Strings. */
     private HashMap SUMOYAGOMap = new HashMap();
+    private TreeMap axiomMap = new TreeMap();
+    private static String termPrefix = "http://sigma.ontologyportal.org:4010/OWL.jsp";
 
     /** ***************************************************************
      */
@@ -172,7 +177,7 @@ public class OWLtranslator {
                 Formula f2 = (Formula) ranges.get(0);
                 range = f2.getArgument(2);
                 pw.println("<owl:Thing rdf:ID=\"" + term + "\">");
-                pw.println("  <rdf:type rdf:resource=\"#" + range + "\"/>");
+                pw.println("  <rdf:type rdf:resource=\"sg:" + range + "\"/>");
                 pw.println("  <rdfs:comment>A term generated automatically in the " +
                            "translation from SUO-KIF to OWL to replace the functional " +
                            "term " + functionTerm + " that connect be directly " +
@@ -186,7 +191,7 @@ public class OWLtranslator {
                     Formula f2 = (Formula) subranges.get(0);
                     range = f2.getArgument(2);
                     pw.println("<owl:Class rdf:about=\"" + term + "\">");
-                    pw.println("  <rdfs:subClassOf rdf:resource=\"#" + range + "\"/>");
+                    pw.println("  <rdfs:subClassOf rdf:resource=\"sg:" + range + "\"/>");
                     pw.println("  <rdfs:comment>A term generated automatically in the "+
                                "translation from SUO-KIF to OWL to replace the functional "+
                                "term " + functionTerm + " that connect be directly "+
@@ -550,13 +555,13 @@ public class OWLtranslator {
         for (int i = 0; i < al.size(); i++) {
             Formula f = (Formula) al.get(i);
             String st = f.createID();
-            pw.println("  <axiom rdf:resource=\"#axiom" + st + "\"/>");
+            pw.println("  <kbd:axiom rdf:resource=\"sg:axiom-" + st + "\"/>");
         }
         al = kb.ask("cons",0,term);
         for (int i = 0; i < al.size(); i++) {
             Formula f = (Formula) al.get(i);
             String st = f.createID();
-            pw.println("  <axiom rdf:resource=\"#axiom" + st + "\"/>");
+            pw.println("  <kbd:axiom rdf:resource=\"sg:axiom-" + st + "\"/>");
         }
         //pw.println("  <fullDefinition rdf:datatype=\"xsd:anyURI\">" + 
         //           "http://sigma.ontologyportal.org:4010/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=" +
@@ -592,7 +597,22 @@ public class OWLtranslator {
                       case ']': rel = "antiInstanceRelation"; break;
                     }
                 }
-                pw.println("  <" + rel + " rdf:resource=\"wn#WN30-" + synset + "\"/>");
+                pw.println("  <wnd:" + rel + " rdf:resource=\"sg:WN30-" + synset + "\"/>");
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
+    private void createAxiomMap() {
+
+        axiomMap = new TreeMap<String,Formula>();
+        Iterator it = kb.formulaMap.values().iterator();
+        while (it.hasNext()) {
+            Formula f = (Formula) it.next();
+            if (f.isRule()) {
+                axiomMap.put("axiom-" + f.createID(),f);            
+                //System.out.println("INFO in OWLtranslator.createAxiomMap(): key: " + "axiom-" + f.createID());
             }
         }
     }
@@ -611,13 +631,34 @@ public class OWLtranslator {
                 form = form.replaceAll("<=>","iff");
                 form = form.replaceAll("=>","implies");
                 form = processDoc(form);
-                pw.println("<owl:Thing rdf:ID=\"axiom" + f.createID() + "\">");
+                pw.println("<owl:Thing rdf:ID=\"axiom-" + f.createID() + "\">");
                 pw.println("  <rdfs:comment xml:lang=\"en\">A SUO-KIF axiom that may not be directly expressible in OWL. " +
                            "See www.ontologyportal.org for the original SUO-KIF source.\n " + 
                            form + "</rdfs:comment>");
                 pw.println("</owl:Thing>");
             }
         }
+    }
+
+    /** ***************************************************************
+     */
+    private void writeOneAxiom(PrintWriter pw, String id) {
+
+        //System.out.println("INFO in OWLtranslator.writeOneAxiom(): write axiom ID: " + id);        
+        Formula f = (Formula) axiomMap.get(id);
+        if (f != null && f.isRule()) {
+            String form = f.toString();
+            form = form.replaceAll("<=>","iff");
+            form = form.replaceAll("=>","implies");
+            form = processDoc(form);
+            pw.println("<owl:Thing rdf:ID=\"" + id + "\">");
+            pw.println("  <rdfs:comment xml:lang=\"en\">A SUO-KIF axiom that may not be directly expressible in OWL. " +
+                       "See www.ontologyportal.org for the original SUO-KIF source.\n " + 
+                       form + "</rdfs:comment>");
+            pw.println("</owl:Thing>");
+        }        
+        else 
+            System.out.println("Error in OWLtranslator.writeOneAxiom(): null or non-axiom for ID: " + id);        
     }
 
     /** ***************************************************************
@@ -644,7 +685,7 @@ public class OWLtranslator {
      */
     private void writeYAGOMapping(PrintWriter pw, String term) {
 
-        System.out.println("INFO in OWLtranslator.writeYAGOMapping(): writing term: " + term);
+        //System.out.println("INFO in OWLtranslator.writeYAGOMapping(): writing term: " + term);
         String YAGO = (String) SUMOYAGOMap.get(term);
         if (YAGO != null) {        
             pw.println("  <owl:sameAs rdf:resource=\"http://dbpedia.org/resource/" + YAGO + "\" />");
@@ -675,9 +716,9 @@ public class OWLtranslator {
                 String arg = form.getArgument(2);
                 String argType = form.getArgument(3);
                 if (arg.equals("1") && Formula.atom(argType)) 
-                    pw.println("  <rdfs:domain rdf:resource=\"#" + argType + "\" />");
+                    pw.println("  <rdfs:domain rdf:resource=\"sg:" + argType + "\" />");
                 if (arg.equals("2") && Formula.atom(argType)) 
-                    pw.println("  <rdfs:range rdf:resource=\"#" + argType + "\" />");
+                    pw.println("  <rdfs:range rdf:resource=\"sg:" + argType + "\" />");
             }
         }
 
@@ -686,7 +727,7 @@ public class OWLtranslator {
             Formula form = (Formula) ranges.get(0);
             String argType = form.getArgument(2);
             if (Formula.atom(argType))                 
-                pw.println("  <rdfs:range rdf:resource=\"#" + argType + "\" />");
+                pw.println("  <rdfs:range rdf:resource=\"sg:" + argType + "\" />");
         }
 
         ArrayList inverses = kb.askWithRestriction(0,"inverse",1,term);  // inverse expressions for term.
@@ -694,14 +735,14 @@ public class OWLtranslator {
             Formula form = (Formula) inverses.get(0);
             String arg = form.getArgument(2);
             if (Formula.atom(arg))                 
-                pw.println("  <owl:inverseOf rdf:resource=\"#" + arg + "\" />");
+                pw.println("  <owl:inverseOf rdf:resource=\"sg:" + arg + "\" />");
         }
 
         if (subs.size() > 0) {
             for (int i = 0; i < subs.size(); i++) {
                 Formula form = (Formula) subs.get(i);
                 String superProp = form.getArgument(2);
-                pw.println("  <owl:subPropertyOf rdf:resource=\"#" + superProp + "\" />");
+                pw.println("  <owl:subPropertyOf rdf:resource=\"sg:" + superProp + "\" />");
             }
         }
 
@@ -725,7 +766,7 @@ public class OWLtranslator {
             Formula form = (Formula) instances.get(i);
             String parent = form.getArgument(2);
             if (Formula.atom(parent)) 
-                pw.println("  <rdf:type rdf:resource=\"#" + parent + "\"/>");
+                pw.println("  <rdf:type rdf:resource=\"sg:" + parent + "\"/>");
         }
         writeDocumentation(pw,term);
 
@@ -746,19 +787,19 @@ public class OWLtranslator {
                 if (range.charAt(0) == '"' && range.charAt(range.length()-1) == '"') {
                     range = removeQuotes(range);
                     if (range.startsWith("http://")) 
-                        pw.println("  <" + rel + " rdf:datatype=\"xsd:anyURI\">" + 
-                                   range + "</" + rel + ">");
+                        pw.println("  <sg:" + rel + " rdf:datatype=\"xsd:anyURI\">" + 
+                                   range + "</sg:" + rel + ">");
 
                     else
-                        pw.println("  <" + rel + " rdf:datatype=\"xsd:string\">" + 
-                                   range + "</" + rel + ">");
+                        pw.println("  <sg:" + rel + " rdf:datatype=\"xsd:string\">" + 
+                                   range + "</sg:" + rel + ">");
                 }
                 else if (((range.charAt(0) == '-' && Character.isDigit(range.charAt(1))) ||
                          (Character.isDigit(range.charAt(0)))) && range.indexOf(".") < 0)
-                    pw.println("  <" + rel + " rdf:datatype=\"xsd:integer\">" + 
-                               range + "</" + rel + ">");                  
+                    pw.println("  <sg:" + rel + " rdf:datatype=\"xsd:integer\">" + 
+                               range + "</sg:" + rel + ">");                  
                 else
-                    pw.println("  <" + rel + " rdf:resource=\"#" + range + "\" />");
+                    pw.println("  <sg:" + rel + " rdf:resource=\"sg:" + range + "\" />");
             }
         }
         
@@ -785,7 +826,7 @@ public class OWLtranslator {
             Formula form = (Formula) classes.get(i);
             String parent = form.getArgument(2);
             if (Formula.atom(parent)) 
-                pw.println("  <rdfs:subClassOf rdf:resource=\"#" + parent + "\"/>");
+                pw.println("  <rdfs:subClassOf rdf:resource=\"sg:" + parent + "\"/>");
         }
         writeDocumentation(pw,term);
 
@@ -800,26 +841,26 @@ public class OWLtranslator {
                  if (Formula.listP(range)) 
                      range = instantiateFunction(range);
                  if (rel.equals("disjoint")) 
-                     pw.println("  <owl:disjointWith rdf:resource=\"#" + range + "\" />");
+                     pw.println("  <owl:disjointWith rdf:resource=\"sg:" + range + "\" />");
                  else if (rel.equals("synonymousExternalConcept")) {                     
                      // since argument order is reversed between OWL and SUMO, this must be handled below
                  }
                  else if (range.charAt(0) == '"' && range.charAt(range.length()-1) == '"') {
                      range = removeQuotes(range);
                      if (range.startsWith("http://")) 
-                         pw.println("  <" + rel + " rdf:datatype=\"xsd:anyURI\">" + 
-                                    range + "</" + rel + ">");
+                         pw.println("  <sg:" + rel + " rdf:datatype=\"xsd:anyURI\">" + 
+                                    range + "</sg:" + rel + ">");
 
                      else
-                         pw.println("  <" + rel + " rdf:datatype=\"xsd:string\">" + 
-                                    range + "</" + rel + ">");
+                         pw.println("  <sg:" + rel + " rdf:datatype=\"xsd:string\">" + 
+                                    range + "</sg:" + rel + ">");
                  }
                  else if (((range.charAt(0) == '-' && Character.isDigit(range.charAt(1))) ||
                           (Character.isDigit(range.charAt(0)))) && range.indexOf(".") < 0)
-                     pw.println("  <" + rel + " rdf:datatype=\"xsd:integer\">" + 
-                                range + "</" + rel + ">");                  
+                     pw.println("  <sg:" + rel + " rdf:datatype=\"xsd:integer\">" + 
+                                range + "</sg:" + rel + ">");                  
                  else
-                     pw.println("  <" + rel + " rdf:resource=\"#" + range + "\" />");
+                     pw.println("  <sg:" + rel + " rdf:resource=\"sg:" + range + "\" />");
              }
         }
         ArrayList syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
@@ -850,7 +891,7 @@ public class OWLtranslator {
         FileReader r = null;
         LineNumberReader lr = null;
         try {
-            System.out.println("INFO in OWLtranslator.readTAGOSUMOMappings()");
+            System.out.println("INFO in OWLtranslator.readYAGOSUMOMappings()");
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             File f = new File(kbDir + File.separator + "yago-sumo-mappings.txt");
             if (!f.canRead()) {
@@ -896,79 +937,75 @@ public class OWLtranslator {
     }
 
     /** ***************************************************************
+     * Write OWL file header.
+     */
+    private void writeKBHeader(PrintWriter pw) {
+
+        pw.println("<rdf:RDF");
+        pw.println("xmlns=\"http://www.ontologyportal.org/SUMO.owl#\"");
+        pw.println("xmlns:sg =\"http://sigma.ontologyportal.org:4010/sigma/OWL.jsp?term=#\"");
+        pw.println("xmlns:rdf =\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
+        pw.println("xmlns:wnd=\"http://www.ontologyportal.org/WNDefs.owl#\"");
+        pw.println("xmlns:kbd=\"http://www.ontologyportal.org/KBDefs.owl#\"");
+        pw.println("xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"");
+        pw.println("xmlns:owl =\"http://www.w3.org/2002/07/owl#\">");
+
+        pw.println("<owl:Ontology rdf:about=\"SUMO\">");
+        pw.println("<rdfs:comment xml:lang=\"en\">A provisional and necessarily lossy translation to OWL.  Please see");
+        pw.println("www.ontologyportal.org for the original KIF, which is the authoritative");
+        pw.println("source.  This software is released under the GNU Public License"); 
+        pw.println("www.gnu.org.</rdfs:comment>");
+
+        Date d = new Date();
+        pw.println("<rdfs:comment xml:lang=\"en\">Produced on date: " + d.toString() + "</rdfs:comment>");
+        pw.println("</owl:Ontology>");
+    }
+
+    /** ***************************************************************
      * Write OWL format.
      */
- public void write(String kbName, String filename) throws IOException {
+     public void writeSUMOTerm(PrintWriter pw, String term) {
 
-        FileWriter fw = null;
-        PrintWriter pw = null; 
+         if (kb.childOf(term,"BinaryRelation") && kb.isInstance(term)) 
+             writeRelations(pw,term);                
+         if (Character.isUpperCase(term.charAt(0)) &&
+             !kb.childOf(term,"Function")) {
+             ArrayList instances = kb.askWithRestriction(0,"instance",1,term);  // Instance expressions for term.
+             ArrayList classes = kb.askWithRestriction(0,"subclass",1,term);    // Class expressions for term.
+             String documentation = null;
+             Formula form;
+             if (instances.size() > 0 && !kb.childOf(term,"BinaryRelation"))
+                 writeInstances(pw,term,instances);   
+             boolean isInstance = false;
+             if (classes.size() > 0) {
+                 if (instances.size() > 0) 
+                     isInstance = true;
+                 writeClasses(pw,term,classes,isInstance); 
+                 isInstance = false;
+             }
+         }
+     }
 
-        try {
-            System.out.println("INFO in OWLtranslator.write(): writing " + filename);
-            readYAGOSUMOMappings();
-            kb = KBmanager.getMgr().getKB(kbName);
-            fw = new FileWriter(filename);
-            pw = new PrintWriter(fw);
- 
-            pw.println("<rdf:RDF");
-            pw.println("xmlns=\"http://www.ontologyportal.org/SUMO.owl#\"");
-            pw.println("xmlns:rdf =\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-            pw.println("xmlns:wn=\"http://www.ontologyportal.org/WordNet.owl#\"");
-            pw.println("xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"");
-            pw.println("xmlns:owl =\"http://www.w3.org/2002/07/owl#\">");
+    /** ***************************************************************
+     * Write OWL format.
+     */
+     public void writeKB() throws IOException {
 
-            pw.println("<owl:Ontology rdf:about=\"SUMO\">");
-            pw.println("<rdfs:comment xml:lang=\"en\">A provisional and necessarily lossy translation to OWL.  Please see");
-            pw.println("www.ontologyportal.org for the original KIF, which is the authoritative");
-            pw.println("source.  This software is released under the GNU Public License"); 
-            pw.println("www.gnu.org.</rdfs:comment>");
+         String filename = kb.name + ".owl";
+         System.out.println("INFO in OWLtranslator.write(): writing " + filename);
+         readYAGOSUMOMappings();
+         FileWriter fw = new FileWriter(filename);
+         PrintWriter pw = new PrintWriter(fw);
+         writeKBHeader(pw);
 
-            Date d = new Date();
-            pw.println("<rdfs:comment xml:lang=\"en\">Produced on date: " + d.toString() + "</rdfs:comment>");
-            pw.println("</owl:Ontology>");
-            Set<String> kbterms = kb.getTerms();
-            synchronized (kbterms) {
-                for (String term : kbterms) {
-                    if (kb.childOf(term,"BinaryRelation") && kb.isInstance(term)) 
-                        writeRelations(pw,term);                
-                    if (Character.isUpperCase(term.charAt(0)) &&
-                        !kb.childOf(term,"Function")) {
-                        ArrayList instances = kb.askWithRestriction(0,"instance",1,term);  // Instance expressions for term.
-                        ArrayList classes = kb.askWithRestriction(0,"subclass",1,term);    // Class expressions for term.
-                        String documentation = null;
-                        Formula form;
-                        if (instances.size() > 0 && !kb.childOf(term,"BinaryRelation"))
-                            writeInstances(pw,term,instances);   
-                        boolean isInstance = false;
-                        if (classes.size() > 0) {
-                            if (instances.size() > 0) 
-                                isInstance = true;
-                            writeClasses(pw,term,classes,isInstance); 
-                            isInstance = false;
-                        }
-                    }
-                }
-            }
-            defineFunctionalTerms(pw);
-            writeAxioms(pw);
-            pw.println("</rdf:RDF>");
-        }
-        catch (java.io.IOException e) {
-            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
-        }
-        finally {
-            try {
-                if (pw != null) {
-                    pw.flush();
-                    pw.close();
-                }
-                if (fw != null) {
-                    fw.close();
-                }
-            }
-            catch (Exception ioe) {
-            }
-        }
+         Set<String> kbterms = kb.getTerms();
+         synchronized (kbterms) {
+             for (String term : kbterms) 
+                 writeSUMOTerm(pw,term);
+         }
+         defineFunctionalTerms(pw);
+         writeAxioms(pw);
+         pw.println("</rdf:RDF>");
     }
 
     /** ***************************************************************
@@ -1141,43 +1178,47 @@ public class OWLtranslator {
      * Write OWL format for SUMO-WordNet mappings.
      * @param synset is a POS prefixed synset number
      */
-    private void writeWordNetSynset(PrintWriter pw, String synset) throws IOException {
+    private void writeWordNetSynset(PrintWriter pw, String synset) {
 
+        if (synset.startsWith("WN30-")) 
+            synset = synset.substring(5);
         ArrayList al = (ArrayList) WordNet.wn.synsetsToWords.get(synset);
-        pw.println("<owl:Thing rdf:ID=\"WN30-" + synset + "\">");
-        String parent = "Noun";
-        switch (synset.charAt(0)) {
-          case '1': parent = "NounSynset"; break;
-          case '2': parent = "VerbSynset"; break;
-          case '3': parent = "AdjectiveSynset"; break;
-          case '4': parent = "AdverbSynset"; break;
-        }
-        pw.println("  <rdf:type rdf:resource=\"#" + parent + "\"/>");
-        if (al.size() > 0) 
-            pw.println("  <rdfs:label>" + ((String) al.get(0)) + "</rdfs:label>");
-        for (int i = 0; i < al.size(); i++) {
-            String word = (String) al.get(i);
-            String wordAsID = StringToKIFid(word);
-            pw.println("  <word rdf:resource=\"#WN30Word-" + wordAsID + "\"/>");
-        }
-        String doc = null;
-        switch (synset.charAt(0)) {
-          case '1': doc = (String) WordNet.wn.nounDocumentationHash.get(synset.substring(1)); break;
-          case '2': doc = (String) WordNet.wn.verbDocumentationHash.get(synset.substring(1)); break;
-          case '3': doc = (String) WordNet.wn.adjectiveDocumentationHash.get(synset.substring(1)); break;
-          case '4': doc = (String) WordNet.wn.adverbDocumentationHash.get(synset.substring(1)); break;
-        }
-        doc = processStringForXMLOutput(doc);
-        pw.println("  <rdfs:comment xml:lang=\"en\">" + doc + "</rdfs:comment>");
-        al = (ArrayList) WordNet.wn.relations.get(synset);
         if (al != null) {
-            for (int i = 0; i < al.size(); i++) {
-                AVPair avp = (AVPair) al.get(i);
-                String rel = StringToKIFid(avp.attribute);
-                pw.println("  <" + rel + " rdf:resource=\"#WN30-" + avp.value + "\"/>");
+            pw.println("<owl:Thing rdf:ID=\"WN30-" + synset + "\">");
+            String parent = "Noun";
+            switch (synset.charAt(0)) {
+              case '1': parent = "NounSynset"; break;
+              case '2': parent = "VerbSynset"; break;
+              case '3': parent = "AdjectiveSynset"; break;
+              case '4': parent = "AdverbSynset"; break;
             }
+            pw.println("  <rdf:type rdf:resource=\"wnd:" + parent + "\"/>");
+            if (al.size() > 0) 
+                pw.println("  <rdfs:label>" + ((String) al.get(0)) + "</rdfs:label>");
+            for (int i = 0; i < al.size(); i++) {
+                String word = (String) al.get(i);
+                String wordAsID = StringToKIFid(word);
+                pw.println("  <wnd:word rdf:resource=\"sg:WN30Word-" + wordAsID + "\"/>");
+            }
+            String doc = null;
+            switch (synset.charAt(0)) {
+              case '1': doc = (String) WordNet.wn.nounDocumentationHash.get(synset.substring(1)); break;
+              case '2': doc = (String) WordNet.wn.verbDocumentationHash.get(synset.substring(1)); break;
+              case '3': doc = (String) WordNet.wn.adjectiveDocumentationHash.get(synset.substring(1)); break;
+              case '4': doc = (String) WordNet.wn.adverbDocumentationHash.get(synset.substring(1)); break;
+            }
+            doc = processStringForXMLOutput(doc);
+            pw.println("  <rdfs:comment xml:lang=\"en\">" + doc + "</rdfs:comment>");
+            al = (ArrayList) WordNet.wn.relations.get(synset);
+            if (al != null) {
+                for (int i = 0; i < al.size(); i++) {
+                    AVPair avp = (AVPair) al.get(i);
+                    String rel = StringToKIFid(avp.attribute);
+                    pw.println("  <wnd:" + rel + " rdf:resource=\"sg:WN30-" + avp.value + "\"/>");
+                }
+            }
+            pw.println("</owl:Thing>");
         }
-        pw.println("</owl:Thing>");
     }
 
 
@@ -1190,7 +1231,7 @@ public class OWLtranslator {
             String plural = (String) it.next();
             String singular = (String) WordNet.wn.exceptionNounHash.get(plural);
             pw.println("<owl:Thing rdf:ID=\"" + plural + "\">");
-            pw.println("  <singular>" + singular + "</singular>");
+            pw.println("  <wnd:singular>" + singular + "</wnd:singular>");
             pw.println("  <rdf:type rdf:resource=\"#Word\"/>");
             pw.println("  <rdfs:label xml:lang=\"en\">" + singular + "</rdfs:label>");
             pw.println("  <rdfs:comment xml:lang=\"en\">\"" + singular + "\", is the singular form" +
@@ -1202,7 +1243,7 @@ public class OWLtranslator {
             String past = (String) it.next();
             String infinitive = (String) WordNet.wn.exceptionVerbHash.get(past);
             pw.println("<owl:Thing rdf:ID=\"" + past + "\">");
-            pw.println("  <infinitive>" + infinitive + "</infinitive>");
+            pw.println("  <wnd:infinitive>" + infinitive + "</wnd:infinitive>");
             pw.println("  <rdf:type rdf:resource=\"#Word\"/>");
             pw.println("  <rdfs:label xml:lang=\"en\">" + past + "</rdfs:label>");
             pw.println("  <rdfs:comment xml:lang=\"en\">\"" + past + "\", is the irregular past tense form" +
@@ -1213,25 +1254,32 @@ public class OWLtranslator {
 
     /** ***************************************************************
      */
+    private void writeOneWordToSenses(PrintWriter pw, String word) {
+
+        String wordAsID = StringToKIFid(word);
+        pw.println("<owl:Thing rdf:ID=\"WN30Word-" + wordAsID + "\">");
+        pw.println("  <rdf:type rdf:resource=\"#Word\"/>");
+        pw.println("  <rdfs:label xml:lang=\"en\">" + word + "</rdfs:label>");
+        String wordOrPhrase = "word";
+        if (word.indexOf("_") != -1) 
+            wordOrPhrase = "phrase";
+        pw.println("  <rdfs:comment xml:lang=\"en\">The English " + wordOrPhrase + " \"" + word + "\".</rdfs:comment>");
+        ArrayList senses = (ArrayList) WordNet.wn.wordsToSenses.get(word);
+        for (int i = 0; i < senses.size(); i++) {
+            String sense = (String) senses.get(i);
+            pw.println("  <wnd:senseKey rdf:resource=\"#WN30WordSense-" + sense + "\"/>");
+        }
+        pw.println("</owl:Thing>");
+    }
+
+    /** ***************************************************************
+     */
     private void writeWordsToSenses(PrintWriter pw) throws IOException {
 
         Iterator it = WordNet.wn.wordsToSenses.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
-            String wordAsID = StringToKIFid(word);
-            pw.println("<owl:Thing rdf:ID=\"WN30Word-" + wordAsID + "\">");
-            pw.println("  <rdf:type rdf:resource=\"#Word\"/>");
-            pw.println("  <rdfs:label xml:lang=\"en\">" + word + "</rdfs:label>");
-            String wordOrPhrase = "word";
-            if (word.indexOf("_") != -1) 
-                wordOrPhrase = "phrase";
-            pw.println("  <rdfs:comment xml:lang=\"en\">The English " + wordOrPhrase + " \"" + word + "\".</rdfs:comment>");
-            ArrayList senses = (ArrayList) WordNet.wn.wordsToSenses.get(word);
-            for (int i = 0; i < senses.size(); i++) {
-                String sense = (String) senses.get(i);
-                pw.println("  <senseKey rdf:resource=\"#WN30WordSense-" + sense + "\"/>");
-            }
-            pw.println("</owl:Thing>");
+            writeOneWordToSenses(pw,word);
         }
     }
 
@@ -1250,13 +1298,13 @@ public class OWLtranslator {
             String pos = WordNetUtilities.getPOSfromKey(sense);
             String word = WordNetUtilities.getWordFromKey(sense);
             String posNum = WordNetUtilities.posLettersToNumber(pos);
-            pw.println("  <synset rdf:resource=\"#WN30-" + posNum + synset + "\"/>");
+            pw.println("  <wnd:synset rdf:resource=\"sg:WN30-" + posNum + synset + "\"/>");
             if (posNum.equals("2")) {
                 ArrayList frames = (ArrayList) WordNet.wn.verbFrames.get(synset + "-" + word);
                 if (frames != null) {
                     for (int i = 0; i < frames.size(); i++) {
                         String frame = (String) frames.get(i);
-                        pw.println("  <verbFrame rdf:resource=\"#WN30VerbFrame-" + frame + "\"/>");
+                        pw.println("  <wnd:verbFrame rdf:resource=\"#WN30VerbFrame-" + frame + "\"/>");
                     }
                 }
             }
@@ -1265,57 +1313,161 @@ public class OWLtranslator {
     }
 
     /** ***************************************************************
+     */
+    private void writeWordNetHeader(PrintWriter pw) {
+
+        pw.println("<rdf:RDF");
+        pw.println("xmlns=\"http://www.ontologyportal.org/WordNet.owl#\"");
+        pw.println("xmlns:sg  =\"http://sigma.ontologyportal.org:4010/sigma/OWL.jsp?term=#\"");
+        pw.println("xmlns:wnd =\"http://www.ontologyportal.org/WNDefs.owl#\"");
+        pw.println("xmlns:kbd =\"http://www.ontologyportal.org/KBDefs.owl#\"");
+        pw.println("xmlns:rdf =\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
+        pw.println("xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"");
+        pw.println("xmlns:owl =\"http://www.w3.org/2002/07/owl#\">");
+
+        pw.println("<owl:Ontology rdf:about=\"WordNet\">");
+        pw.println("<rdfs:comment xml:lang=\"en\">An expression of the Princeton WordNet " +
+                   "( http://wordnet.princeton.edu ) " +
+                   "in OWL.  Use is subject to the Princeton WordNet license at " +
+                   "http://wordnet.princeton.edu/wordnet/license/</rdfs:comment>");
+        Date d = new Date();
+        pw.println("<rdfs:comment xml:lang=\"en\">Produced on date: " + d.toString() + "</rdfs:comment>");
+        pw.println("</owl:Ontology>");
+    }
+
+    /** ***************************************************************
      * Write OWL format for SUMO-WordNet mappings.
      */
-    public void writeWordNet(String filename) throws IOException {
+    public void writeWordNet(PrintWriter pw) throws IOException {
+
+        System.out.println("INFO in OWLtranslator.writeWordNet()");
+
+        writeWordNetHeader(pw);
+        writeWordNetRelationDefinitions(pw);
+        writeWordNetClassDefinitions(pw);
+          // Get POS-prefixed synsets.
+        Iterator it = WordNet.wn.synsetsToWords.keySet().iterator();
+        while (it.hasNext()) {
+            String synset = (String) it.next();
+            writeWordNetSynset(pw,synset);
+        }
+        writeWordNetExceptions(pw);
+        writeVerbFrames(pw);
+        writeWordsToSenses(pw);
+        writeSenseIndex(pw);
+        pw.println("</rdf:RDF>");
+    }
+
+    /** ***************************************************************
+     * Write OWL format for a SUMO or WordNet term.
+     */
+    public void writeTerm(PrintWriter pw, String term) {
+
+        if (term.startsWith("WN30")) {
+            writeWordNetHeader(pw);
+            if (term.startsWith("WN30-")) 
+                writeWordNetSynset(pw,term);
+            else if (term.startsWith("WN30Word-")) 
+                writeOneWordToSenses(pw,term);
+            else if (term.startsWith("WN30WordSense-")) 
+                writeOneWordToSenses(pw,term);
+        }
+        else {
+            writeKBHeader(pw);
+            if (term.startsWith("axiom-"))
+                writeOneAxiom(pw,term);
+            else
+                writeSUMOTerm(pw,term);                 
+        }
+        pw.println("</rdf:RDF>");
+        pw.flush();
+    }
+
+    /** ***************************************************************
+     * Write OWL format.
+     */
+    public void writeSUMOOWLDefs(PrintWriter pw) {
+
+        pw.println("<owl:ObjectProperty rdf:ID=\"axiom\">");
+        pw.println("  <rdfs:domain rdf:resource=\"sg:Entity\" />");          
+        pw.println("  <rdfs:range rdf:resource=\"rdfs:string\"/>");
+        pw.println("  <rdfs:label xml:lang=\"en\">axiom</rdfs:label>");
+        pw.println("  <rdfs:comment xml:lang=\"en\">A relation between a term\n" +
+                   "and a SUO-KIF axiom that defines (in part) the meaning of the term.</rdfs:comment>");
+        pw.println("</owl:ObjectProperty>");
+    }
+
+    /** ***************************************************************
+     * Write OWL format.
+     */
+    public void writeDefsAsFiles() {
+
         FileWriter fw = null;
-        PrintWriter pw = null; 
-
+        PrintWriter pw = null;
+        termPrefix = "";
         try {
-            System.out.println("INFO in OWLtranslator.writeWordNet(): writing " + filename);
-            fw = new FileWriter(filename);
+            fw = new FileWriter("KBDefs.owl");
             pw = new PrintWriter(fw);
-
             pw.println("<rdf:RDF");
-            pw.println("xmlns=\"http://www.ontologyportal.org/WordNet.owl#\"");
+            pw.println("xmlns=\"http://www.ontologyportal.org/WKBDefs.owl#\"");
+            pw.println("xmlns:sg =\"http://sigma.ontologyportal.org:4010/sigma/OWL.jsp?term=#\"");
             pw.println("xmlns:rdf =\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
+            pw.println("xmlns:wnd=\"http://www.ontologyportal.org/WNDefs.owl#\"");
+            pw.println("xmlns:kbd=\"http://www.ontologyportal.org/KBDefs.owl#\"");
             pw.println("xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"");
             pw.println("xmlns:owl =\"http://www.w3.org/2002/07/owl#\">");
-
+            pw.println("<owl:Ontology rdf:about=\"SUMO\">");
+            pw.println("<rdfs:comment xml:lang=\"en\">A provisional and necessarily lossy translation to OWL.  Please see");
+            pw.println("www.ontologyportal.org for the original KIF, which is the authoritative");
+            pw.println("source.  This software is released under the GNU Public License");
+            pw.println("www.gnu.org.</rdfs:comment>");
+            Date d = new Date();
+            pw.println("<rdfs:comment xml:lang=\"en\">Produced on date: " + d.toString() + "</rdfs:comment>");
+            pw.println("</owl:Ontology>");
+            writeSUMOOWLDefs(pw);
+            pw.println("</rdf:RDF>");
+            pw.flush();
+            fw.close();
+            fw = new FileWriter("WNDefs.owl");
+            pw = new PrintWriter(fw);
+            pw.println("<rdf:RDF");
+            pw.println("xmlns=\"http://www.ontologyportal.org/WNDefs.owl#\"");
+            pw.println("xmlns:sg =\"http://sigma.ontologyportal.org:4010/sigma/OWL.jsp?term=#\"");
+            pw.println("xmlns:rdf =\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
+            pw.println("xmlns:wnd=\"http://www.ontologyportal.org/WNDefs.owl#\"");
+            pw.println("xmlns:kbd=\"http://www.ontologyportal.org/KBDefs.owl#\"");
+            pw.println("xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"");
+            pw.println("xmlns:owl =\"http://www.w3.org/2002/07/owl#\">");
             pw.println("<owl:Ontology rdf:about=\"WordNet\">");
             pw.println("<rdfs:comment xml:lang=\"en\">An expression of the Princeton WordNet " +
                        "( http://wordnet.princeton.edu ) " +
                        "in OWL.  Use is subject to the Princeton WordNet license at " +
                        "http://wordnet.princeton.edu/wordnet/license/</rdfs:comment>");
-            Date d = new Date();
             pw.println("<rdfs:comment xml:lang=\"en\">Produced on date: " + d.toString() + "</rdfs:comment>");
             pw.println("</owl:Ontology>");
-
-            writeWordNetRelationDefinitions(pw);
-            writeWordNetClassDefinitions(pw);
-              // Get POS-prefixed synsets.
-            Iterator it = WordNet.wn.synsetsToWords.keySet().iterator();
-            while (it.hasNext()) {
-                String synset = (String) it.next();
-                writeWordNetSynset(pw,synset);
-            }
             writeWordNetExceptions(pw);
+            writeWordNetRelationDefinitions(pw);
             writeVerbFrames(pw);
-            writeWordsToSenses(pw);
-            writeSenseIndex(pw);
+            writeWordNetClassDefinitions(pw);
             pw.println("</rdf:RDF>");
+            pw.flush();
+            fw.close();
+        } catch (Exception e ) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
-        catch (java.io.IOException e) {
-            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
-        }
-        finally {
-            if (pw != null) {
-                pw.flush();
-                pw.close();
-            }
-            if (fw != null) {
-                fw.close();
-            }
+    }
+
+    /** ***************************************************************
+     */
+    public static void initOnce() {
+   
+        if (initNeeded == true) {
+            initNeeded = false;
+            ot.writeDefsAsFiles();
+            ot.kb = KBmanager.getMgr().getKB("SUMO");
+            ot.createAxiomMap();
+            ot.readYAGOSUMOMappings();
         }
     }
 
@@ -1325,13 +1477,21 @@ public class OWLtranslator {
     public static void main(String args[]) {
 
         OWLtranslator ot = new OWLtranslator();
-        String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
 
         try {
             KBmanager.getMgr().initializeOnce();
-            ot.write("SUMO","SUMOfull.owl");
-            WordNet.wn.initOnce();
-            ot.writeWordNet("WordNet.owl");
+            ot.kb = KBmanager.getMgr().getKB("SUMO");
+            ot.createAxiomMap();
+            ot.writeDefsAsFiles();
+            ot.readYAGOSUMOMappings();
+            PrintWriter pw = new PrintWriter(System.out);
+            pw.flush();
+            ot.writeTerm(pw,"WN30-100019613");
+            pw.flush();
+            ot.writeTerm(pw,"Object");
+            pw.flush();
+            ot.writeTerm(pw,"axiom-N226655687Merge.kif");
+            pw.flush();
         } catch (Exception e ) {
             System.out.println(e.getMessage());
             e.printStackTrace();
