@@ -61,6 +61,10 @@ public class TaxoModel {
 
         String key = kbName + ":" + nodeName;
         TaxoNode n = (TaxoNode) nodeMap.get(key);
+        if (n == null) {
+            System.out.println("Error in TaxoModel.collapseParentNodes(): Bad key: " + key);
+            return;
+        }
         for (int i = 0; i < n.parents.size(); i++) {
             TaxoNode parent = (TaxoNode) n.parents.get(i);
             collapseParentNodes(parent.name);
@@ -81,6 +85,10 @@ public class TaxoModel {
 
         String key = kbName + ":" + nodeName;
         TaxoNode n = (TaxoNode) nodeMap.get(key);
+        if (n == null) {
+            System.out.println("Error in TaxoModel.expandParentNodes(): Bad key: " + key);
+            return;
+        }
         n.parents = new ArrayList();
         rootList.clear();  // = new HashMap();
         KB kb = KBmanager.getMgr().getKB(kbName);
@@ -111,6 +119,10 @@ public class TaxoModel {
 
         String key = kbName + ":" + nodeName;
         TaxoNode n = (TaxoNode) nodeMap.get(key);
+        if (n == null) {
+            System.out.println("Error in TaxoModel.collapseNode(): Bad key: " + key);
+            return;
+        }
         n.childrenExpanded = false;
         if (n.oneChild != null) {
             collapseNode(n.oneChild.name);
@@ -136,6 +148,10 @@ public class TaxoModel {
 
         String key = kbName + ":" + nodeName;
         TaxoNode n = (TaxoNode) nodeMap.get(key);
+        if (n == null) {
+            System.out.println("Error in TaxoModel.expandNode(): Bad key: " + key);
+            return;
+        }
         n.childrenExpanded = true;
         n.oneChild = null;
         n.children = new ArrayList();
