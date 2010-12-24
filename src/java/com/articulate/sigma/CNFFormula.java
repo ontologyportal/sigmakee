@@ -17,8 +17,6 @@ package com.articulate.sigma;
 import java.io.*;
 import java.util.*;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
 /** ***************************************************************
  * A single formula in conjunctive normal form (CNF), which is
  * actually a set of (possibly negated) clauses surrounded by an
@@ -30,20 +28,34 @@ public class CNFFormula implements Comparable {
     public static TreeMap<Integer, String> intToTermMap = new TreeMap();
     public Formula sourceFormula = null;
     public TreeSet<CNFClause> clauses = new TreeSet();
+
+    /* All the functional terms that are in this formula.
+       Key numbering starts at 101. */
+    public TreeMap<Integer, CNFClause> functions = new TreeMap();
+
     /* The String representation of this formula */
     public String stringRep = null;
+
+    /** *************************************************************
+     */
+    public CNFFormula() {
+    }
 
     /** *************************************************************
      *  Create an instance of this class from a Formula in CNF
      */
     public CNFFormula(Formula f) {
 
+        boolean _CREATE_DEBUG = false;
+
+        if (_CREATE_DEBUG) System.out.println("INFO in CNFFormula(): creating formula from: \n" + f);
         Formula fnew = new Formula();
         fnew.read(f.theFormula);
         sourceFormula = f;
-        TreeMap varMap = new TreeMap();
+        TreeMap<String, Integer> varMap = new TreeMap();
         if (f.isSimpleClause() || f.isSimpleNegatedClause()) {
-            CNFClause c = new CNFClause(f,varMap);
+            CNFClause c = new CNFClause(f,varMap,functions);
+            if (_CREATE_DEBUG) System.out.println("INFO in CNFFormula(): functions: " + printFunctions());
             clauses.add(c);
         }
         else {
@@ -55,10 +67,16 @@ public class CNFFormula implements Comparable {
             while (!fnew.empty() && fnew.car() != null) {
                 Formula clause = new Formula();
                 clause.read(fnew.car());
-                clauses.add(new CNFClause(clause,varMap));
+                if (_CREATE_DEBUG) System.out.println("INFO in CNFFormula(): creating clause from: \n" + clause);
+                if (_CREATE_DEBUG) System.out.println("INFO in CNFFormula(): clauses size: " + clauses.size());
+                clauses.add(new CNFClause(clause,varMap,this.functions));
+                if (_CREATE_DEBUG) System.out.println("INFO in CNFFormula(): functions: " + printFunctions());
                 fnew.read(fnew.cdr());
             }
         }
+
+        if (_CREATE_DEBUG) System.out.println("INFO in CNFFormula(): Finished creating formula from: \n" + f +
+                           "\n" + this.asIntegerList());
     }
     
     /** *************************************************************
@@ -71,22 +89,24 @@ public class CNFFormula implements Comparable {
         f.read(s);
         CNFFormula cnf = new CNFFormula(f);
         clauses = cnf.clauses;
+        functions = cnf.functions;
         sourceFormula = cnf.sourceFormula;
         stringRep = null;
     }
 
     /** *************************************************************
      *  A convenience routine for creating a CNFFormula.  It assumes
-     *  the a clausified version of the parameter yields a single
+     *  that a clausified version of the parameter yields a single
      *  formula.
      */
     public void readNonCNF(String s) {
 
         Formula f = new Formula();
         f.read(s);
-        f.read(f.clausify().theFormula);
+        f.read(Clausifier.clausify(f).theFormula);
         CNFFormula cnf = new CNFFormula(f);
         clauses = cnf.clauses;
+        functions = cnf.functions;
         sourceFormula = cnf.sourceFormula;
         stringRep = null;
     }
@@ -136,9 +156,10 @@ public class CNFFormula implements Comparable {
      *  A convenience routine that makes sure the cached string
      *  representation is erased when the formula changes.
      */
-    public void addClause(CNFClause c) {
+    public void addClause(CNFClause c, CNFFormula f) {
 
         clauses.add(c);
+        functions.putAll(f.functions);
         stringRep = null;
     }
 
@@ -146,15 +167,21 @@ public class CNFFormula implements Comparable {
      *  A convenience routine that makes sure the cached string
      *  representation is erased when the formula changes.
      */
-    public void addAllClauses(TreeSet<CNFClause> al) {
+    public void addAllClauses(CNFFormula f) {
 
-        clauses.addAll(al);
+        clauses.addAll(f.clauses);
+        functions.putAll(f.functions);
         stringRep = null;
     }
 
     /** *************************************************************
+     *  A convenience routine that makes sure the cached string
+     *  representation is erased when the formula changes.
      */
-    public CNFFormula() {
+    public void addAllFunctions(TreeMap<Integer, CNFClause> functions) {
+
+        functions.putAll(functions);
+        stringRep = null;
     }
 
     /** ***************************************************************
@@ -174,7 +201,7 @@ public class CNFFormula implements Comparable {
         Iterator it = clauses.iterator();
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
-            result = result + c.size();
+            result = result + c.size(functions);
         }
         return result;
     }
@@ -183,20 +210,112 @@ public class CNFFormula implements Comparable {
      */
     public boolean equals(CNFFormula f) {
 
-        if (clauses.size() != f.clauses.size()) 
+        boolean _EQUALS_DEBUG = false;
+
+        if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): this:\n" + this + "\n f:\n" + f);
+        if (clauses.size() != f.clauses.size()) {
+            if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): not equal - non-equal number of clauses");
             return false;
+        }
         CNFFormula f1 = this.deepCopy();
         CNFFormula f2 = f.deepCopy();
+
+        if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): first f1:\n" + f1 + "\n f2:\n" + f2);
+        if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): as lists:\n" + f1.asIntegerList() + "\n f2:\n" + f2.asIntegerList());
         f1 = f1.normalizeVariables();
         f2 = f2.normalizeVariables();
-        //System.out.println("INFO in CNFFormula.equals(): f1:\n" + f1 + "\n f2:\n" + f2);
+        f2 = f1.unifyFunctionScope(f2);
+        if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): after normalize f1:\n" + f1 + "\n f2:\n" + f2);
+        if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): as lists:\n" + f1.asIntegerList() + "\n f2:\n" + f2.asIntegerList());
         Iterator it = f1.clauses.iterator();
         while (it.hasNext()) {
             CNFClause clause = (CNFClause) it.next();
-            if (!f2.clauses.contains(clause)) 
+            if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): checking clause \n" + clause.toString(f1.functions));
+            boolean found = false;
+            Iterator it2 = f2.clauses.iterator();
+            while (it2.hasNext()) {
+                CNFClause c2 = (CNFClause) it2.next();
+                if (clause.deepEquals(c2,f1.functions,f2.functions)) 
+                    found = true;
+            }
+            if (!found) {
+                if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): clause \n" + clause.toString(f1.functions) +
+                                   "\nnot found in \n" + f2);
                 return false;
+            }
         }
+        if (_EQUALS_DEBUG) System.out.println("INFO in CNFFormula.equals(): equal");
         return true;
+    }
+
+    /** ***************************************************************
+     *  Utility debugging method to print all functions, whether
+     *  used or not.
+     */
+    public static String printFunctions(TreeMap<Integer, CNFClause> functions) {
+
+        if (functions == null) {
+            System.out.println("Error in CNFFormula.printFunctions(): function list is null");
+            return "";
+        }
+        StringBuffer result = new StringBuffer();
+        Iterator it = functions.keySet().iterator();
+        while (it.hasNext()) {
+            Integer key = (Integer) it.next();
+            CNFClause cnf = (CNFClause) functions.get(key);
+            if (cnf == null) 
+                result.append(key + ":null");
+            else
+                result.append(key + ":" + cnf.toString(functions));
+        }
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     *  Collect all the indices of functions actually referenced in
+     *  the formula.
+     */
+    public ArrayList<Integer> collectFunctionIndices() {
+
+        ArrayList<Integer> result = new ArrayList();
+        Iterator it = clauses.iterator();
+        while (it.hasNext()) {
+            CNFClause c = (CNFClause) it.next();
+            result.addAll(c.collectFunctionIndices());
+        }
+
+        Iterator it2 = functions.keySet().iterator();
+        while (it2.hasNext()) {
+            Integer key = (Integer) it2.next();
+            CNFClause c = (CNFClause) functions.get(key);
+            result.addAll(c.collectFunctionIndices());
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     *  Remove any function whose index doesn't appear in the
+     *  formula.
+     */
+    public void removeUnusedFunctions() {
+
+        ArrayList<Integer> indices = collectFunctionIndices();
+        TreeSet<Integer> keys = new TreeSet(functions.keySet());
+        Iterator it = keys.iterator();
+        while (it.hasNext()) {
+            Integer i = (Integer) it.next();
+            if (!indices.contains(i)) 
+                functions.remove(i);            
+        }
+    }
+
+    /** ***************************************************************
+     *  Utility debugging method to print all functions, whether
+     *  used or not.
+     */
+    public String printFunctions() {
+
+        return CNFFormula.printFunctions(functions);
     }
 
     /** ***************************************************************
@@ -205,8 +324,11 @@ public class CNFFormula implements Comparable {
     public String toStringFormat(boolean format) {
 
         //System.out.println("INFO in CNFFormula.toStringFormat(): format: " + format);
+        //System.out.println("INFO in CNFFormula.toStringFormat(): functions: " + printFunctions());
         if (stringRep != null) 
             return stringRep;
+        if (empty()) 
+            return "()";
         int indent = 0;
         StringBuffer result = new StringBuffer();
         if (clauses.size() > 1) {
@@ -234,14 +356,48 @@ public class CNFFormula implements Comparable {
             CNFClause clause = (CNFClause) it.next();
             //System.out.println("INFO in CNFFormula.toStringFormat(): format(2): " + format);
             if (format)             
-                result.append(clause.toStringFormat(true,indent));
+                result.append(clause.toStringFormat(true,indent,this.functions,0));
             else
-                result.append(clause.toStringFormat(false,0));
+                result.append(clause.toStringFormat(false,0,this.functions,0));
         }
         if (clauses.size() > 1) 
             result.append(")");        
         stringRep = result.toString();
         return stringRep;
+    }
+
+    /** ***************************************************************
+     * Convert to a String of integer indexes.
+     */
+    public String asIntegerList() {
+
+        //System.out.println("INFO in CNFFormula.toStringFormat(): format: " + format);
+        //System.out.println("INFO in CNFFormula.toStringFormat(): functions: " + printFunctions());
+        int indent = 0;
+        StringBuffer result = new StringBuffer();
+        if (clauses.size() > 1) {
+            result.append("(or");                     
+            //if (format) 
+            //    result.append("true");
+            //else
+            //    result.append("false");                        
+                result.append("\n");
+            indent = 2;
+        }
+        Iterator it = clauses.iterator();
+        int clauseNum = 0;
+        while (it.hasNext()) {
+            //if (clauseNum != 0) {            
+            //    result.append("\n");
+            //}
+            clauseNum++;
+            CNFClause clause = (CNFClause) it.next();
+            //System.out.println("INFO in CNFFormula.toStringFormat(): format(2): " + format);             
+            result.append(clause.asIntegerList(indent,this.functions));
+        }
+        if (clauses.size() > 1) 
+            result.append(")");        
+        return result.toString();
     }
 
     /** ***************************************************************
@@ -252,7 +408,7 @@ public class CNFFormula implements Comparable {
     }
 
     /** ***************************************************************
-     * Perform a copy as a side effect
+     * Perform a copy as a side effect from the parameter to this.
      */
     public void copy(CNFFormula f) {
 
@@ -262,6 +418,12 @@ public class CNFFormula implements Comparable {
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
             clauses.add(c.deepCopy());
+        }
+        Iterator it2 = f.functions.keySet().iterator();
+        while (it2.hasNext()) {
+            Integer key = (Integer) it2.next();
+            CNFClause c = (CNFClause) f.functions.get(key);
+            functions.put(key,c.deepCopy());
         }
         sourceFormula = f.sourceFormula;
         stringRep = f.stringRep;
@@ -277,32 +439,41 @@ public class CNFFormula implements Comparable {
     }
 
     /** ***************************************************************
-     *  The empty list in this data structure is a clause list with
-     *  a non-null first clause that has an argument list of 0
-     *  length.
-     */
-    public boolean empty() {
-
-        if (clauses == null || clauses.size() < 1 || firstClause() == null) 
-            return false;
-        return firstClause().numArgs == 0;
-    }
-
-    /** ***************************************************************
      * Copy
      */
     public CNFFormula deepCopy(CNFFormula f) {
 
         CNFFormula result = new CNFFormula();
 
-        Iterator it = clauses.iterator();
+        Iterator it = f.clauses.iterator();
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
             result.clauses.add(c.deepCopy());
         }
+        if (f.functions != null) {
+            Iterator it2 = f.functions.keySet().iterator();
+            while (it2.hasNext()) {
+                Integer key = (Integer) it2.next();
+                CNFClause c = (CNFClause) f.functions.get(key);
+                result.functions.put(key,c.deepCopy());
+            }
+        }
         result.sourceFormula = f.sourceFormula;
         result.stringRep = f.stringRep;
         return result;
+    }
+
+    /** ***************************************************************
+     *  The empty list in this data structure is an empty clause
+     *  list.
+     */
+    public boolean empty() {
+
+        //System.out.println("INFO in CNFFormula.empty(): " + this);
+        if (clauses != null && clauses.size() < 1) 
+            return true;
+        else
+            return false;
     }
 
     /** ***************************************************************
@@ -326,7 +497,7 @@ public class CNFFormula implements Comparable {
         Iterator it = clauses.iterator();
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
-            if (!c.isGround()) 
+            if (!c.isGround(functions)) 
                 return false;            
         }
         return true;
@@ -356,6 +527,8 @@ public class CNFFormula implements Comparable {
      */
     public ArrayList<Integer> collectVariables() {
 
+        //System.out.println("INFO in CNFFormula.collectVariables(): " + this);
+        //System.out.println("INFO in CNFFormula.collectVariables(): functions: " + printFunctions());
         ArrayList<Integer> result = new ArrayList();
         Iterator it = clauses.iterator();
         while (it.hasNext()) {
@@ -368,6 +541,21 @@ public class CNFFormula implements Comparable {
                     result.add(num);
             }
         }
+
+        //System.out.println("INFO in CNFFormula.collectVariables(): collecting from functions" + printFunctions());
+        Iterator it2 = functions.keySet().iterator();
+        while (it2.hasNext()) {
+            Integer key = (Integer) it2.next();
+            CNFClause c = (CNFClause) functions.get(key);
+            ArrayList<Integer> cRes = c.collectVariables();
+            Iterator it3 = cRes.iterator();
+            while (it3.hasNext()) {
+                Integer num = (Integer) it3.next();
+                if (!result.contains(num)) 
+                    result.add(num);
+            }
+        }
+        //System.out.println("INFO in CNFFormula.collectVariables(): var:" + result);
         return result;
     }
 
@@ -380,7 +568,13 @@ public class CNFFormula implements Comparable {
         Iterator it = clauses.iterator();
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
-            result.addAll(c.collectTerms());
+            result.addAll(c.collectTerms(functions));
+        }
+        Iterator it2 = functions.keySet().iterator();
+        while (it2.hasNext()) {
+            Integer key = (Integer) it2.next();
+            CNFClause c = (CNFClause) functions.get(key);
+            result.addAll(c.collectTerms(functions));
         }
         return result;
     }
@@ -399,17 +593,40 @@ public class CNFFormula implements Comparable {
     }
 
     /** **************************************************************
-     *  Renumber variables according to the parameter
+     *  Instantiate variables according to the parameter
      */
-    public CNFFormula renumberVariables(TreeMap<Integer,Integer> varMap) {
+    public CNFFormula substituteVariables(TreeMap<Integer,Integer> varMap) {
 
+        System.out.println("Error in CNFFormula.substituteVariables(): deprecated");
+
+        System.out.println("INFO in CNFFormula.substituteVariables(): this as list:\n" + this.asIntegerList());
+        System.out.println("INFO in CNFFormula.substituteVariables(): intToTermMap " + intToTermMap);
+        System.out.println("INFO in CNFFormula.substituteVariables(): this " + this.toString() +
+                           " with map " + varMap);
         CNFFormula result = new CNFFormula();
         Iterator it = clauses.iterator();
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
-            result.clauses.add(c.renumberVariables(varMap));
+            result.clauses.add(c.substituteVariables(varMap));
+        }
+
+        System.out.println(result.asIntegerList());
+        TreeSet temp = new TreeSet(functions.keySet());
+        Iterator it2 = temp.iterator();
+        while (it2.hasNext()) {
+            Integer key = (Integer) it2.next();
+            CNFClause c = (CNFClause) functions.get(key);
+            CNFClause cnew = c.substituteVariables(varMap);
+            System.out.println("INFO in CNFFormula.substituteVariables(): Replaced\n" + c.asIntegerList(null) +
+                               "\n with \n" + cnew.asIntegerList(null) + "\n at " + key);
+            result.functions.put(key,cnew);
+            System.out.println(result.asIntegerList());
         }
         result.sourceFormula = sourceFormula;
+        result.stringRep = null; // string representation has changed
+
+        System.out.println("INFO in CNFFormula.substituteVariables(): result\n" + result);
+        System.out.println(result.asIntegerList());
         return result;
     }
 
@@ -419,17 +636,24 @@ public class CNFFormula implements Comparable {
      */
     public CNFFormula normalizeVariables() {
 
+        //System.out.println("INFO in CNFFormula.normalizeVariables(): " + this);
         int counter = 0;
         ArrayList<Integer> varList = collectVariables();
-        //System.out.println("INFO in CNFFormula.normalizeVariables(): varaibles : " + varList);
+        //System.out.println("INFO in CNFFormula.normalizeVariables(): variables : " + varList);
         TreeMap<Integer,Integer> vars = new TreeMap<Integer,Integer>();
+        boolean renumbered = false;
         for (int i = 0; i < varList.size(); i++) {
             Integer varNum = (Integer) varList.get(i);
             counter++;
             vars.put(varNum,new Integer(counter));
+            if (varNum.intValue() != counter) 
+                renumbered = true;
         }
         //System.out.println("INFO in CNFFormula.normalizeVariables(): Attempting to renumber : " + this + " with " + vars);
-        return renumberVariables(vars);
+        if (renumbered) 
+            return substitute(vars);
+        else
+            return this;
     }
 
     /** **************************************************************
@@ -452,7 +676,7 @@ public class CNFFormula implements Comparable {
     /** **************************************************************
      *  Makes the values of a map into the keys and vice versa
      */
-    public TreeMap<Integer,Integer> reverseMapping(TreeMap<Integer,Integer> m) {
+    public static TreeMap<Integer,Integer> reverseMapping(TreeMap<Integer,Integer> m) {
 
         TreeMap<Integer,Integer> newM = new TreeMap();      // result to be returned
         Iterator it = m.keySet().iterator();
@@ -465,6 +689,63 @@ public class CNFFormula implements Comparable {
     }
 
     /** ***************************************************************
+     *  Alter clauses so that their function indexes have shared scope,
+     *  which in effect means that they are different.  This will be
+     *  largely unaltered, but will have the functions from the
+     *  argument included (although not referenced) in its
+     *  function list.
+     */
+    public CNFFormula unifyFunctionScope(CNFFormula f) {
+
+        boolean _SCOPE_DEBUG = false;
+
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyFunctionScope(): before: \n" + this + " and \n" + f); 
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyFunctionScope(): before: \n" + this.asIntegerList() + 
+                                             " and \n" + f.asIntegerList()); 
+        CNFFormula result = new CNFFormula();        
+        result.clauses.addAll(f.clauses);
+        int c1FuncSize = this.functions.keySet().size();     // start renumber functions
+        int c2FuncSize = f.functions.keySet().size();
+        if (c1FuncSize > 0 && c2FuncSize > 0) {     
+            TreeMap<Integer, Integer> funcMap = new TreeMap();
+                // Since we can't remove the old {key,value} pairs while
+                // iterating through them we add the new pairs to a new list
+                // then clear the old one, and add them.
+            TreeMap<Integer, CNFClause> tempFunctions = new TreeMap();
+            Iterator it = f.functions.keySet().iterator();
+            while (it.hasNext()) {
+                Integer key = (Integer) it.next();
+                CNFClause value = (CNFClause) f.functions.get(key);
+                int newKey = CNFClause.FUNCSTARTINDEX;
+                while (this.functions.keySet().contains(new Integer(newKey)) || 
+                       f.functions.keySet().contains(new Integer(newKey)) || 
+                       tempFunctions.keySet().contains(new Integer(newKey))) 
+                    newKey++;                
+                tempFunctions.put(new Integer(newKey),value);
+                funcMap.put(key,new Integer(newKey));
+                if (_SCOPE_DEBUG) System.out.println("INFO in CNFFormula.unifyFunctionScope(): renumbering key : " + 
+                                                     key + " as " + newKey + " for " + value.toString(f.functions)); 
+            }
+            result.functions.clear();
+            result.functions.putAll(tempFunctions);           
+            result = result.substitute(funcMap);
+        }
+        else 
+            result.functions.putAll(f.functions);        
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyFunctionScope(): middle: \n" + this.asIntegerList() + 
+                                             " and \n" + result.asIntegerList()); 
+        if (c2FuncSize > 0)
+            this.functions.putAll(result.functions);            
+        if (c1FuncSize > 0)
+            result.functions.putAll(this.functions);        // end renumber functions
+        result.stringRep = null; // formula has changed
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyFunctionScope(): after: \n" + this.asIntegerList() + 
+                                             " and \n" + result.asIntegerList()); 
+        result.stringRep = null; // formula has changed
+        return result;
+    }
+
+    /** ***************************************************************
      *  Alter formulas so that their variable indexes have shared
      *  scope, which in effect means that they are different.  For
      *  example, given (p ?V1 a) and (p c ?V1) the second formula
@@ -474,122 +755,135 @@ public class CNFFormula implements Comparable {
      *  @return the argument with its variable numbering altered if
      *          necessary
      */
-    public CNFFormula unifyScope(CNFFormula c2) {
+    public CNFFormula unifyVariableScope(CNFFormula c2) {
 
-        //System.out.println("INFO in CNFClause.unifyScope(): before: \n" + this + " and \n" + c2); 
-        //System.out.println("c1 func size: " + c1.functions.size());
-        //System.out.println("c2 func size: " + c2.functions.size());
+        boolean _SCOPE_DEBUG = false;
+
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyVariableScope(): before: \n" + this + " and \n" + c2); 
 
         ArrayList<Integer> varList1 = this.collectVariables();
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyVariableScope(): varlist1: " + varList1); 
         ArrayList<Integer> varList2 = c2.collectVariables();
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyVariableScope(): varlist2: " + varList2); 
         TreeMap<Integer, Integer> varMap = new TreeMap();
         for (int i = 0; i < varList2.size(); i++) {                 // renumber variables
             Integer varNew = (Integer) varList2.get(i);
-            while (varList1.contains(varNew)) 
+            while (varList1.contains(varNew) || varList2.contains(varNew)) 
                 varNew = new Integer(varNew.intValue() + 1);            
             varMap.put((Integer) varList2.get(i),varNew);
             varList1.add(varNew);
         }
         CNFFormula c2new = c2.deepCopy();
-        //System.out.println("INFO in CNFClause.unifyScope(): varmap:\n" + varMap); 
-        c2new = c2new.renumberVariables(varMap);
-        //System.out.println("INFO in CNFClause.unifyScope(): middle : " + c1new + " and " + c2new); 
-        //System.out.println("INFO in CNFClause.unifyScope(): middle : " + c1new.asIntegerList() + " and " + c2new.asIntegerList()); 
-        //System.out.println("INFO in CNFClause.unifyScope(): after:\n" + this + " and\n" + c2new); 
-        //System.out.println("INFO in CNFClause.unifyScope(): after : " + c1new.asIntegerList() + " and " + c2new.asIntegerList()); 
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyVariableScope(): varmap:\n" + varMap); 
+        c2new = c2new.substitute(varMap);
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyVariableScope(): middle : " + c2new + " and " + c2new); 
+        if (_SCOPE_DEBUG) System.out.println("INFO in CNFClause.unifyVariableScope(): after:\n" + this + " and\n" + c2new); 
 
-        //System.out.println("c1new func size: " + c1new.functions.size());
-        //System.out.println("c2new func size: " + c2new.functions.size());
+        c2new.stringRep = null; // formula has changed
         return c2new;
     }
 
     /** ***************************************************************
-     *  Variable indexes have a scope local to their formulas.  When
-     *  a unification occurs, if one variable unifies with another,
-     *  we need to ensure the formula doesn't already have another
-     *  variable with the same index.  For example, say we have
-     *  (or (p ?X1 m) (r ?X1 ?X2)) and (not (p ?X2 m)).  If we then
-     *  map ?X1 to ?X2 we'll wind up with (r ?X2 ?X2) after
-     *  resolution, which is not correct.
-     */
-    public TreeMap<Integer,Integer> renumberVariableReplacements(TreeMap<Integer,Integer> m) {
-
-        return m;
-        /*
-        //System.out.println("INFO in CNFFormula.renumberVariableReplacements(): " + m);
-        ArrayList<Integer> varList = collectVariables();
-        TreeMap<Integer,Integer> newM = new TreeMap();      // result to be returned
-        TreeMap<Integer,Integer> valueMap = new TreeMap();  // temporary mapping from old to new indexes, just changed ones
-        Iterator it = m.keySet().iterator();
-        while (it.hasNext()) {
-            Integer key = (Integer) it.next();
-            Integer oldValue = (Integer) m.get(key);
-            if (valueMap.keySet().contains(oldValue))       // A revised mapping already exists
-                newM.put(key,(Integer) valueMap.get(oldValue));
-            else {
-                if (varList.contains(oldValue)) {           // There's a clash, renumbering needed.
-                    Integer newValue = new Integer(oldValue.intValue());
-                    while (varList.contains(newValue) || m.keySet().contains(newValue)) 
-                        newValue = new Integer(newValue.intValue() + 1);
-                    varList.add(newValue);
-                    valueMap.put(oldValue,newValue);
-                    newM.put(key,newValue);
-                }
-                else {                                      // There's no clash, just transfer to the new map
-                    newM.put(key,oldValue);
-                }
-            }                            
-        }
-        //System.out.println("INFO in CNFFormula.renumberVariableReplacements(): new: " + newM);
-        return newM;
-
-        */
-    }
-
-    /** ***************************************************************
      *  Replace variables with a value as given by the map argument.
-     *  If the replacement value is also a variable, make sure it's
-     *  one that doesn't clash with an existing variable index.
      */
     public CNFFormula instantiateVariables(TreeMap<Integer,Integer> m) {
 
-        //System.out.println("INFO in CNFFormula.instantiateVariables(): " + this);
-        //System.out.println(m);        
-        TreeMap<Integer,Integer> newmap = renumberVariableReplacements(m);
+        System.out.println("INFO in CNFFormula.instantiateVariables(): " + this);
+        System.out.println(m);        
+        TreeMap<Integer,Integer> newmap = m;
         CNFFormula newFormula = new CNFFormula();
         Iterator it = clauses.iterator();
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
-            //System.out.println("INFO in CNFFormula.instantiateVariables(): before instantiating clause: " + c);
-            newFormula.clauses.add(c.instantiateVariables(newmap,null));
-            //System.out.println("INFO in CNFFormula.instantiateVariables(): after, newFormula " + newFormula);
+            System.out.println("INFO in CNFFormula.instantiateVariables(): before instantiating clause: " + c.toString(functions));
+            newFormula.clauses.add(c.instantiateVariables(newmap,functions,true));
+            System.out.println("INFO in CNFFormula.instantiateVariables(): after, newFormula " + newFormula);
         }
         newFormula.sourceFormula = sourceFormula;
-        //System.out.println("INFO in CNFFormula.instantiateVariables(): " + newFormula);
+        newFormula.stringRep = null;
+        System.out.println("INFO in CNFFormula.instantiateVariables(): " + newFormula);
         return newFormula;
     }
 
-    /** ***************************************************************
-     *  @param result is a formula with a single clause that may
-     *                contain functions that need to be substituted.
+    /** ************************************************************
      */
-    public CNFFormula substituteInternal(TreeMap<Integer,Integer> m, CNFFormula form) {
+    private CNFFormula substituteInternal(TreeMap<Integer,Integer> m) {
 
-        //System.out.println("INFO in CNFFormula.instantiateVariables(): " + this);
-        //System.out.println(m);        
+        //System.out.println("INFO in CNFFormula.substituteInternal(): Replacing vars in " + this +
+        //                   " as per " + m);
+        //System.out.println(" with functions from " + printFunctions());       
         CNFFormula newFormula = new CNFFormula();
         Iterator it = clauses.iterator();
         while (it.hasNext()) {
             CNFClause c = (CNFClause) it.next();
-            //System.out.println("INFO in CNFFormula.substituteInternal(): before instantiating clause: " + c);
-            if (form != null) 
-                newFormula.clauses.add(c.instantiateVariables(m,form.firstClause()));
-            else
-                newFormula.clauses.add(c.instantiateVariables(m,null));
-            //System.out.println("INFO in CNFFormula.instantiateVariables(): after, newFormula " + newFormula);
+            //System.out.println("INFO in CNFFormula.substituteInternal(): before instantiating clause: " + 
+            //                   c.toString(functions));
+            newFormula.clauses.add(c.instantiateVariables(m,functions,true));
+            newFormula.functions.putAll(functions);
+            //System.out.println("INFO in CNFFormula.substituteInternal(): after, newFormula " + 
+            //                   newFormula);
+        }
+
+        TreeSet temp = new TreeSet(functions.keySet());
+        Iterator it2 = temp.iterator();
+        while (it2.hasNext()) {
+            Integer key = (Integer) it2.next();
+            CNFClause c = (CNFClause) functions.remove(key);
+            //System.out.println("INFO in CNFFormula.substituteInternal(): before instantiating function: " + 
+            //                   c.toString(functions));
+            newFormula.functions.put(key,c.instantiateVariables(m,functions,true));
+            //System.out.println("INFO in CNFFormula.substituteInternal(): after, newFormula " + 
+            //                   newFormula);
         }
         newFormula.sourceFormula = sourceFormula;
-        //System.out.println("INFO in CNFFormula.instantiateVariables(): " + newFormula);
+        //System.out.println("INFO in CNFFormula.substituteInternal(): " + newFormula);
+        return newFormula;
+    }
+
+    /** ************************************************************
+     */
+    public CNFFormula substitute(TreeMap<Integer,Integer> m) {
+
+        boolean _SUB_DEBUG = false;
+        if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.substitute(): Replacing elements in \n" + this +
+                           "\n as integer list \n" + this.asIntegerList() +
+                           " as per " + m);
+        if (_SUB_DEBUG) System.out.println(" with functions from " + printFunctions());       
+        CNFFormula newFormula = new CNFFormula();
+        Iterator it = clauses.iterator();
+        while (it.hasNext()) {
+            CNFClause c = (CNFClause) it.next();
+            if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.substitute(): before substituting clause: " + 
+                               c.toString(functions) + "\n as integer list \n" + c.asIntegerList(null));
+            newFormula.clauses.add(c.substitute(m));
+            //newFormula.functions.putAll(functions);
+            newFormula.stringRep = null;
+            if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.substitute(): after, newFormula \n" + 
+                               newFormula + "\n as integer list \n" + newFormula.asIntegerList());
+        }
+        if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.substitute(): done with clauses, before substituting functions");
+        TreeSet temp = new TreeSet(functions.keySet());
+        Iterator it2 = temp.iterator();
+        while (it2.hasNext()) {
+            Integer key = (Integer) it2.next();
+            Integer newkey = null;
+            if (m.keySet().contains(key)) 
+                newkey = m.get(key);
+            else
+                newkey = key;
+            //CNFClause c = (CNFClause) functions.remove(key);
+            CNFClause c = (CNFClause) functions.get(key);
+            if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.substitute(): before instantiating function: " + 
+                               c.toString(functions));
+            newFormula.functions.put(newkey,c.substitute(m));
+            newFormula.stringRep = null;
+            if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.substitute(): after, newFormula " + 
+                              newFormula);
+        }
+        newFormula.stringRep = null;
+        newFormula.sourceFormula = sourceFormula;
+        if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.substitute(): \n" + 
+                               newFormula + "\n as integer list \n" + newFormula.asIntegerList());
         return newFormula;
     }
 
@@ -598,26 +892,41 @@ public class CNFFormula implements Comparable {
      *  varname wherever it appears in the formula.  This is
      *  iterative, since values can themselves contain varnames.
      *  The substitution is a side effect on the formula, as well as
-     *  the formula being returned.
+     *  the formula being returned.  This should contain all
+     *  functions that need to be substituted, including those that
+     *  do not appear in the formula before substitution.
      *  @return the formula with substitions (as well as in a side
      *          effect)
-     *  @param form is a formula with a single clause that may
-     *                contain functions that need to be substituted.
+     *  @param m is the mapping from variables to values.  When the
+     *           values are functions, they are numbered as per
+     *           variable form, which should only be one clause.
      */
-    public CNFFormula substitute(TreeMap<Integer,Integer> m, CNFFormula form) {
+    public CNFFormula substituteOld(TreeMap<Integer,Integer> m) {
 
         //System.out.println("INFO in CNFFormula.substitute(): Replacing vars in " + this +
         //                   " as per " + m);
+        //System.out.println(" with functions from " + printFunctions());
         CNFFormula newForm = null;
         CNFFormula result = null;
-        TreeMap<Integer,Integer> newMap = renumberVariableReplacements(m);
+        TreeMap<Integer,Integer> newMap = m;
+        //System.out.println("here 0 ");
         while (newForm == null || !newForm.equals(this)) {
             newForm = this.deepCopy();
-            result = substituteInternal(newMap,form);
+            //System.out.println("INFO in CNFFormula.substitute(): newForm " + newForm);
+            //System.out.println("INFO in CNFFormula.substitute(): newForm functions: " + newForm.printFunctions());
+            //System.out.println("here 1 ");
+            result = substitute(newMap);
             //System.out.println("INFO in CNFFormula.substitute(): Result " + result);
+            //System.out.println("INFO in CNFFormula.substitute(): Result functions: " + result.printFunctions());
             clauses = result.deepCopy().clauses;
+            //System.out.println("here 2 ");
+            functions = result.functions;
+            //System.out.println("here 3 ");
         }
+        //System.out.println("here 4 ");
         stringRep = null;  // Formula has changed, so removed the cached string rep
+        //System.out.println("here 5 ");
+        //System.out.println("INFO in CNFFormula.substitute(): Returning " + this);
         return this;
     }
 
@@ -625,9 +934,10 @@ public class CNFFormula implements Comparable {
      *  Check to see that either every key in the map is a variable
      *  from cArg, or the value is a variable from cArg
      */
-    public boolean isSubsumingMap(TreeMap<Integer,Integer> m, CNFClause cArg) {
+    public boolean isSubsumingMap(TreeMap<Integer,Integer> m, CNFClause cArg, TreeMap<Integer, CNFClause> cFunctions) {
 
-        ArrayList<Integer> al = cArg.collectVariables();
+        //System.out.println("INFO in CNFFormula.subsumedBy(): checking this:\n" + this + "\nagainst form:\n" + cArg);
+        ArrayList<Integer> al = cArg.collectVariables(cFunctions);
         Iterator it = m.keySet().iterator();
         while (it.hasNext()) {
             Integer key = (Integer) it.next();
@@ -650,8 +960,13 @@ public class CNFFormula implements Comparable {
      */
     public boolean subsumedBy(CNFFormula form) {
 
+        boolean _SUB_DEBUG = false;
+
+        if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): checking this:\n" + this + "\nagainst form:\n" + form);
+        if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): checking this:\n" + this.asIntegerList() + 
+                                           "\nagainst form:\n" + form.asIntegerList());
         if (form.clauses.size() < 1 || this.clauses.size() < 1) {
-            System.out.println("Error in CNFFormula.subsumes() attempt to resolve with empty list");
+            System.out.println("Error in CNFFormula.subsumedBy() attempt to resolve with empty list");
             if (form.clauses.size() > 0) 
                 System.out.println("argument: \n" + form);
             if (clauses.size() > 0) 
@@ -659,24 +974,33 @@ public class CNFFormula implements Comparable {
             return false;
         }
         if (form.clauses.size() > this.clauses.size()) {
-            //System.out.println("INFO in CNFFormula.subsumes() argument has more clauses than this");
+            if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy() argument has more clauses than this");
             return false;
         }
         CNFFormula thisFormula = this.deepCopy();
         CNFFormula argFormula = form.deepCopy();
-        argFormula = thisFormula.unifyScope(argFormula);
+        argFormula = thisFormula.unifyVariableScope(argFormula);
+        argFormula = thisFormula.unifyFunctionScope(argFormula);
 
+        if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): after, checking this:\n" + thisFormula + "\nagainst form:\n" + argFormula);
+        if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): after, checking this:\n" + thisFormula.asIntegerList() + 
+                                           "\nagainst form:\n" + argFormula.asIntegerList());
         while (argFormula.clauses.size() > 0) {
             CNFClause cArg = argFormula.firstClause().deepCopy();
+            if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): cArg:\n" + cArg.toString(argFormula.functions));
             argFormula.removeClause(cArg);           
             boolean matched = false;
             while (thisFormula.clauses.size() > 0) {
                 CNFClause cThis = thisFormula.firstClause().deepCopy();
+                if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): cThis:\n" + cThis.toString(thisFormula.functions));
                 thisFormula.removeClause(cThis);           
+                if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): here 1");
                 if (cThis.negated == cArg.negated) {
-                    TreeMap<Integer,Integer> map = cArg.unify(cThis);  // see whether arg subsumes this
-                    if (map != null && isSubsumingMap(map,cArg))
+                    TreeMap<Integer,Integer> map = cArg.unify(cThis,argFormula.functions,thisFormula.functions);  // see whether arg subsumes this
+                    if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): here 2");
+                    if (map != null && isSubsumingMap(map,cArg,argFormula.functions))
                         matched = true;
+                    if (_SUB_DEBUG) System.out.println("INFO in CNFFormula.subsumedBy(): here 3");
                 }
             }
             if (matched == false) 
@@ -689,10 +1013,11 @@ public class CNFFormula implements Comparable {
      *  A convenience routine that allows resolve() to be called
      *  with a clause argument, rather than a formula.
      */
-    private TreeMap<Integer, Integer> resolve(CNFClause c, CNFFormula result) {
+    private TreeMap<Integer, Integer> resolve(CNFClause c, TreeMap<Integer, CNFClause> functions, CNFFormula result) {
 
         CNFFormula f = new CNFFormula();
         f.clauses.add(c);
+        f.functions = functions;
         return resolve(f,result);
     }
 
@@ -700,17 +1025,21 @@ public class CNFFormula implements Comparable {
      *  @return a null mapping if resolution fails or if successful
      *  and complete resolution returns a non-null mapping 
      */
-    private TreeMap<Integer, Integer> simpleResolve(CNFClause f, CNFFormula result) {
+    private TreeMap<Integer, Integer> simpleResolve(CNFClause f, TreeMap<Integer, CNFClause> functions,
+                                                    CNFFormula result) {
 
         boolean _RESOLVE_DEBUG = false;
-
-        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): Attempting to resolve : \n" + this + "\n with \n" + f);
+        TreeMap<Integer, CNFClause> argFunctions = new TreeMap(functions);
+        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): Attempting to resolve : \n" + 
+                                               this + "\n with \n" + f.toString(functions));
+        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): functions : \n" + 
+                                               printFunctions(argFunctions));
         if (f.numArgs < 1 || this.clauses.size() < 1) {
             System.out.println("Error in CNFFormula.simpleResolve() attempt to resolve with empty list");
             if (f.numArgs > 0) 
-                System.out.println("argument: \n" + f);
+                System.out.println("argument: \n" + f.toString(functions));
             if (clauses.size() > 0) 
-                System.out.println("this: \n" + this);            
+                System.out.println("this: \n" + this);
             return null;
         }
         if (this.clauses.size() > 1) {
@@ -719,7 +1048,8 @@ public class CNFFormula implements Comparable {
         }
         
         if (!f.opposites(firstClause())) {
-            System.out.println("Error in CNFFormula.simpleResolve() not opposites: \n" + firstClause() + "\n and \n" + f);
+            System.out.println("Error in CNFFormula.simpleResolve() not opposites: \n" + firstClause() 
+                               + "\n and \n" + f);
             return null;
         }
         
@@ -730,19 +1060,20 @@ public class CNFFormula implements Comparable {
         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): both simple clauses");
         CNFClause thisClause = (CNFClause) this.clauses.first();
         CNFClause argClause = f.deepCopy();
-        mapping = thisClause.unify(argClause);
+        mapping = thisClause.unify(argClause,this.functions,argFunctions);
+
+        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): functions (2): \n" + 
+                                               printFunctions(argFunctions));
         if (mapping == null) 
             result = null;                      // failed resolution returns a null mapping, successful and complete resolution returns a non-null mapping
         else {
-            CNFClause c = new CNFClause();
-            c.functions = thisClause.functions;  // any unification over functions must return the functions
-            result.clauses = new TreeSet();
-            result.clauses.add(c);
+            result.functions = this.functions;  // any unification over functions must return the functions
         }
         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): result: \n" + result);
         if (_RESOLVE_DEBUG && result != null) System.out.println("INFO in CNFFormula.simpleResolve(): successful resolution");
-        if (result != null && result.firstClause() != null && result.firstClause().functions != null) 
-            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): number of functions: " + result.firstClause().functions.size());
+        if (result != null && result.clauses.size() > 0 && result.firstClause() != null && result.functions != null) 
+            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): number of functions: " + 
+                                                   result.functions.size());
         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.simpleResolve(): mapping: " + mapping);            
         return mapping;
     }
@@ -781,55 +1112,62 @@ public class CNFFormula implements Comparable {
         while (thisFormula.clauses.size() > 0) {
             CNFClause clause = thisFormula.firstClause().deepCopy();
             thisFormula.removeClause(clause);
-            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve(): checking clause: \n" + clause +
+            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve(): checking clause: \n" + 
+                                                   clause.toString(thisFormula.functions) +
                                                    " with \n" + argFormula);
             if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() this: \n" + this);
+            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() thisFormula: \n" + thisFormula +
+                                                   "\n" + thisFormula.asIntegerList());
             // if (result != null && _RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve(): result so far: \n" + accumulator);
             // CNFFormula newResult = new CNFFormula();
             if (clause.opposites(argFormula.firstClause())) 
-                mapping = argFormula.simpleResolve(clause,result); 
+                mapping = argFormula.simpleResolve(clause,thisFormula.functions,result); 
             else
                 mapping = null;
 
-            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() this: \n" + this);
-            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 2: checked clause: \n" + clause +
+            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() this: \n" + this +
+                                                   "\n" + this.asIntegerList());
+            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() thisFormula: \n" + thisFormula +
+                                                   "\n" + thisFormula.asIntegerList());
+            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 2: checked clause: \n" + clause.toString(thisFormula.functions) +
                                                    " with \n" + argFormula);
             if (mapping != null) {  //&& mapping.keySet().size() > 0
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve(): returning: \n" + result);
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() argFormula: \n" + argFormula);
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() accumulator: \n" + accumulator);
-                if (result.firstClause() != null && result.firstClause().functions != null 
-                    && _RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() result functions: \n" + result.firstClause().functions);
-                if (thisFormula.clauses != null && _RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() remaining clauses: \n" + thisFormula.clauses);
-                accumulator.addAllClauses(thisFormula.clauses);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() result functions: \n" + result.printFunctions());
+                if (thisFormula.clauses != null && _RESOLVE_DEBUG) 
+                    System.out.println("INFO in CNFFormula.resolve() remaining clauses: \n" + thisFormula);
+                accumulator.addAllClauses(thisFormula);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() accumulator after adding clauses: \n" + accumulator +
+                                                       "\n" + accumulator.asIntegerList());
 
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() this: \n" + this);
-                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 3: checked clause: \n" + clause +
-                                                       " with \n" + argFormula);
-                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() accumulator after adding clauses: \n" + accumulator);
-                if (accumulator.firstClause() != null && accumulator.firstClause().functions != null 
-                    && _RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() accumulator functions: \n" + accumulator.firstClause().functions);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 3: checked clause: \n" + 
+                                                       clause.toString(thisFormula.functions) + "\n with \n" + argFormula);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() here");
+                if (accumulator.firstClause() != null && accumulator.functions != null 
+                    && _RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() accumulator functions: \n" + accumulator.printFunctions());
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() mapping: " + mapping);
-                accumulator.substitute(mapping,result);
+                accumulator.addAllFunctions(result.functions);
+                accumulator = accumulator.substitute(mapping);
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() accumulator after substitution: \n" + accumulator);
                 //accumulator.substitute(reverseMapping(mapping));
                 accumulator = accumulator.deepCopy();
-
-                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 4: checked clause: \n" + clause +
-                                                       " with \n" + argFormula);
+                if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 4: checked clause: \n" + 
+                                                       clause.toString(thisFormula.functions) + "\n with \n" + argFormula);
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() accumulator after copy: \n" + accumulator);
                 result.copy(accumulator);
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve(): result: \n" + result);
                 return mapping;
             }
             else
-                accumulator.addClause(clause);      
+                accumulator.addClause(clause,thisFormula);      
 
             if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() this: \n" + this);
-            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 5: checked clause: \n" + clause +
-                                                   " with \n" + argFormula);
+            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.resolve() 5: checked clause: \n" + 
+                                                   clause.toString(thisFormula.functions) + " with \n" + argFormula);
         }
-
         return mapping;
     }
 
@@ -855,22 +1193,37 @@ public class CNFFormula implements Comparable {
         boolean _RESOLVE_DEBUG = false;
 
         CNFFormula accumulator = new CNFFormula();
-        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): Attempting to resolve : \n" + this + "\n with \n" + f);
+        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): Attempting to resolve, this: \n" + 
+                                               this + "\n with argument f:\n" + f);
+        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): Attempting to resolve, this: \n" + 
+                                               this.asIntegerList() + "\n with argument f:\n" + f.asIntegerList());
         if (f.clauses.size() < 1 || this.clauses.size() < 1) {
             System.out.println("Error in CNFFormula.hyperResolve() attempt to resolve with empty list");
             return null;
         }
         CNFFormula thisFormula = new CNFFormula();
-        thisFormula = this.deepCopy();
         CNFFormula argFormula = new CNFFormula();
-        //argFormula = f.deepCopy();
-        argFormula = this.unifyScope(f);  // ensure there are no variables clashes between this and f
-
-        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): After unification of scope: \n" + thisFormula + "\n with \n" + argFormula);
+        argFormula = f.deepCopy();
+        thisFormula = this.deepCopy();
         TreeMap mapping = new TreeMap();
+        boolean noMapping = true;
+        argFormula = thisFormula.unifyVariableScope(argFormula);  // Ensure there are no variables clashes between this and f
+        if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): After unification of variable scope, thisFormula: \n" + 
+                                               thisFormula + "\n with argFormula:\n" + argFormula);
+        argFormula = thisFormula.unifyFunctionScope(argFormula);  // Ensure different functions have different indexes and same are same
+        if (_RESOLVE_DEBUG) 
+            System.out.println("INFO in CNFFormula.hyperResolve(): After unification of function scope, thisFormula: \n" + 
+                               thisFormula + "\n with \n" + argFormula);
+        if (_RESOLVE_DEBUG) 
+            System.out.println("INFO in CNFFormula.hyperResolve(): After unification of function scope, argFormula: \n" + 
+                               thisFormula.asIntegerList() + "\n with \n" + argFormula.asIntegerList());
+
         if ((thisFormula.clauses.size() == 1 && argFormula.clauses.size() == 1) &&
              thisFormula.firstClause().opposites(argFormula.firstClause())) {                       
-            return simpleResolve(argFormula.firstClause(),result);
+            mapping = simpleResolve(argFormula.firstClause(),thisFormula.functions,result);
+            if (result != null) 
+                result.removeUnusedFunctions();
+            return mapping;
         }
         else {
             if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): not both simple clauses");
@@ -879,11 +1232,19 @@ public class CNFFormula implements Comparable {
                 if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): not opposite clauses.");            
                 return null;            
             }
-            if (argFormula.clauses.size() == 1) 
-                return thisFormula.resolve(argFormula,result);            
+            if (argFormula.clauses.size() == 1) {
+                mapping = thisFormula.resolve(argFormula,result); 
+                if (result != null) 
+                    result.removeUnusedFunctions();
+                return mapping;
+            }
             else {
-                if (clauses.size() == 1) 
-                    return argFormula.resolve(thisFormula,result);                
+                if (clauses.size() == 1) {
+                    mapping = argFormula.resolve(thisFormula,result);   
+                    if (result != null) 
+                        result.removeUnusedFunctions();
+                    return mapping;
+                }
                 else {                                      // both formulas are not a simple clause
                     if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): neither is a simple clause");
                     CNFFormula newResult = new CNFFormula();
@@ -894,8 +1255,8 @@ public class CNFFormula implements Comparable {
                         argFormula.removeClause(clause);
                         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (loop 3): here 1: ");
                         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (loop 3): checking clause: \n" + 
-                                                               clause + " with \n" + thisFormula);
-                        TreeMap newMapping = thisFormula.resolve(clause,newResult);
+                                                               clause.toString(argFormula.functions) + "\n with \n" + thisFormula);
+                        TreeMap newMapping = thisFormula.resolve(clause,argFormula.functions,newResult);
                         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): mapping: " + newMapping);
                         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): argFormula: \n" + argFormula);
                         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): thisFormula: \n" + thisFormula);
@@ -903,18 +1264,29 @@ public class CNFFormula implements Comparable {
                         if (newMapping != null) {  // && newMapping.keySet().size() > 0  // resolution succeeded
                             mapping.putAll(newMapping);  // could still be a problem if a mapping overwrites another...
                             if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): newResult: \n" + newResult);
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): adding clauses to accumulator: \n" + newResult.clauses);
-                            //accumulator = accumulator.appendClauseInCNF(argFormula);
-                            accumulator.addAllClauses(newResult.clauses);
-                            accumulator.substitute(mapping,null);
-                            argFormula.substitute(mapping,null);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): adding clauses to accumulator: \n" + 
+                                                                   newResult.toString());
+                            accumulator.addAllClauses(newResult);
+                            accumulator.addAllFunctions(newResult.functions);                            
+                            accumulator = accumulator.substitute(mapping);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() argFormula (before function add): \n" + argFormula);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() argFormula (before function add): \n" + argFormula.asIntegerList());
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() newResult function: \n" + printFunctions(newResult.functions));
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() newResult: \n" + newResult.asIntegerList());
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() mapping: \n" + mapping);
+                            argFormula.addAllFunctions(newResult.functions);
+                            argFormula = argFormula.substitute(mapping);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): argFormula (after function add): \n" + argFormula);
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (returning loop 3): argFormula (after function add): \n" + argFormula.asIntegerList());
                             thisFormula = newResult.deepCopy();
+                            noMapping = false;
                         }
                         else {
                             if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (loop 3): here 2: ");
                             if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): accumulator: \n" + accumulator);
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): adding clause to accumulator: \n" + clause);
-                            accumulator.addClause(clause); 
+                            if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): adding clause to accumulator: \n" + 
+                                                                   clause.toString(argFormula.functions));
+                            accumulator.addClause(clause,argFormula); 
                             if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): accumulator after: \n" + accumulator);
                         }
                         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (loop 3): here 3: ");
@@ -923,15 +1295,15 @@ public class CNFFormula implements Comparable {
                         result.copy(accumulator);
                         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve() (loop 3): here 4: ");
                     }
-                    result.addAllClauses(argFormula.clauses);
+                    result.addAllClauses(argFormula);
                 }
             }
         }
         if (_RESOLVE_DEBUG) System.out.println("INFO in CNFFormula.hyperResolve(): result(4): \n" + result);
-        if (mapping != null && mapping.size() < 1 && !result.empty()) {
+        if ((mapping != null && mapping.size() < 1 && !result.empty()) || noMapping) 
             mapping = null;
-            result = null;
-        }
+        if (result != null) 
+            result.removeUnusedFunctions();
         return mapping;
     }
 
@@ -952,6 +1324,7 @@ public class CNFFormula implements Comparable {
         System.out.println("INFO in CNFFormula.subsumeTest1(): cnf1: " + cnf1);
         System.out.println("INFO in CNFFormula.subsumeTest1(): cnf2: " + cnf2);
         System.out.println("INFO in CNFFormula.subsumeTest1(): result: " + cnf1.subsumedBy(cnf2));
+        System.out.println("INFO in CNFFormula.subsumeTest1(): should be true");
     }
 
     /** ***************************************************************
@@ -971,6 +1344,7 @@ public class CNFFormula implements Comparable {
         System.out.println("INFO in CNFFormula.subsumeTest2(): cnf1: " + cnf1);
         System.out.println("INFO in CNFFormula.subsumeTest2(): cnf2: " + cnf2);
         System.out.println("INFO in CNFFormula.subsumeTest2(): result: " + cnf1.subsumedBy(cnf2));
+        System.out.println("INFO in CNFFormula.subsumeTest2(): should be true");
     }
 
     /** ***************************************************************
@@ -990,6 +1364,7 @@ public class CNFFormula implements Comparable {
         System.out.println("INFO in CNFFormula.subsumeTest3(): cnf1: " + cnf1);
         System.out.println("INFO in CNFFormula.subsumeTest3(): cnf2: " + cnf2);
         System.out.println("INFO in CNFFormula.subsumeTest3(): result: " + cnf1.subsumedBy(cnf2));
+        System.out.println("INFO in CNFFormula.subsumeTest3(): should be false");
     }
 
     /** ***************************************************************
@@ -1069,7 +1444,7 @@ public class CNFFormula implements Comparable {
 
         System.out.println("INFO in CNFFormula.unifyScopeTest(): cnf1: " + cnf1);
         System.out.println("INFO in CNFFormula.unifyScopeTest(): cnf2: " + cnf2);
-        System.out.println("INFO in CNFFormula.unifyScopeTest(): cnf2 result: " + cnf1.unifyScope(cnf2));
+        System.out.println("INFO in CNFFormula.unifyScopeTest(): cnf2 result: " + cnf1.unifyVariableScope(cnf2));
 
     }
 
@@ -1179,7 +1554,156 @@ public class CNFFormula implements Comparable {
         else
             System.out.println("Result: \n " + newResult + "\n not equal to target result: \n" + target);
     }
-    
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void resolveTest7() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.resolveTest7()");
+        CNFFormula newResult = new CNFFormula();
+        CNFFormula cnf1 = new CNFFormula();
+        CNFFormula cnf2 = new CNFFormula();
+        cnf1.read("(equal (ListOrderFn (ListFn ?VAR1 ?VAR2) (ListLengthFn (ListFn ?VAR1 ?VAR2))) ?VAR2)");
+        cnf2.read("(not (equal (ImmediateFamilyFn ?VAR1) Org1-1))");
+        System.out.println("INFO in CNFFormula.resolveTest7(): resolution result mapping (should be null): " + cnf1.hyperResolve(cnf2,newResult));
+        System.out.println("INFO in CNFFormula.resolveTest7(): resolution result: " + newResult);
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void resolveTest8() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.resolveTest8()");
+        CNFFormula newResult = new CNFFormula();
+        CNFFormula cnf1 = new CNFFormula();
+        CNFFormula cnf2 = new CNFFormula();
+        System.out.println("INFO in CNFFormula.resolveTest8(): here 1");
+        cnf1.read("(not (equal (ImmediateFamilyFn ?VAR1) Org1-1))");
+        System.out.println("INFO in CNFFormula.resolveTest8(): here 2");
+        cnf2.read("(or (equal ?VAR2 ?VAR3) (not (equal (SuccessorFn ?VAR2) (SuccessorFn ?VAR3))))");
+        System.out.println("INFO in CNFFormula.resolveTest8(): here 3");
+        System.out.println("INFO in CNFFormula.resolveTest8(): resolution result mapping: " + cnf1.hyperResolve(cnf2,newResult));
+        System.out.println("INFO in CNFFormula.resolveTest8(): resolution result: " + newResult);
+
+        CNFFormula target = new CNFFormula();
+        target.read("(not (equal (SuccessorFn (ImmediateFamilyFn ?VAR1)) (SuccessorFn Org1-1)))");
+
+        if (newResult.equals(target)) 
+            System.out.println("Successful test");
+        else
+            System.out.println("Result: \n " + newResult + "\n not equal to target result: \n" + target);       
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void resolveTest9() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.resolveTest9()");
+        CNFFormula newResult = new CNFFormula();
+        CNFFormula cnf1 = new CNFFormula();
+        CNFFormula cnf2 = new CNFFormula();
+        System.out.println("INFO in CNFFormula.resolveTest9(): here 1");
+        cnf1.read("(or (not (graphPart Org1-1 ?VAR1)) (not (instance Org1-1 GraphArc)) (not (instance ?VAR1 GraphPath)) " +
+                  "(not (equal (InitialNodeFn Org1-1) ?VAR2)))");
+        System.out.println("INFO in CNFFormula.resolveTest9(): here 2");
+        cnf2.read("(or (before NegativeInfinity ?VAR1) (equal ?VAR1 NegativeInfinity) " +
+                  "(not (instance ?VAR1 TimePoint)))");
+        System.out.println("INFO in CNFFormula.resolveTest9(): here 3");
+        System.out.println("INFO in CNFFormula.resolveTest9(): resolution result mapping: " + cnf1.hyperResolve(cnf2,newResult));
+        System.out.println("INFO in CNFFormula.resolveTest9(): resolution result: " + newResult);
+
+        CNFFormula target = new CNFFormula();
+        target.read("(or (before NegativeInfinity (InitialNodeFn Org1-1)) " +
+                    "(not (instance Org1-1 GraphArc)) (not (instance (InitialNodeFn Org1-1) TimePoint)) " +
+                    "(not (instance ?VAR1 GraphPath)) (not (graphPart Org1-1 ?VAR1)))");        
+        if (newResult.equals(target)) 
+            System.out.println("Successful test");
+        else
+           System.out.println("Result: \n" + newResult + "\n not equal to target result: \n" + target);          
+    }
+   
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void resolveTest10() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.resolveTest10()");
+        CNFFormula newResult = new CNFFormula();
+        CNFFormula cnf1 = new CNFFormula();
+        CNFFormula cnf2 = new CNFFormula();
+        cnf1.read("(or (not (subclass RealNumber Collection)) (not (subclass RealNumber NonnegativeRealNumber)) " +
+                  "(not (equal Org1-1 ?VAR1)) (not (instance Org1-1 RealNumber)) " +
+                  "(not (instance NonnegativeRealNumber SetOrClass)) (not (instance ?VAR1 NonnegativeRealNumber)))");
+        cnf2.read("(or (equal ?VAR3 (SubtractionFn 0 ?VAR4)) (instance ?VAR4 NonnegativeRealNumber) " +
+                  "(not (equal (AbsoluteValueFn ?VAR4) ?VAR3)) (not (instance ?VAR4 RealNumber)) " +
+                  "(not (instance ?VAR3 RealNumber)) (not (instance ?VAR3 NonnegativeRealNumber)))");
+        System.out.println("INFO in CNFFormula.resolveTest10(): resolution result mapping: " + cnf1.hyperResolve(cnf2,newResult));
+        System.out.println("INFO in CNFFormula.resolveTest10(): resolution result: " + newResult);
+    }
+   
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void createTest() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.createTest()");
+        CNFFormula cnf1 = new CNFFormula();
+        System.out.println("INFO in CNFFormula.createTest(): here 1");
+        cnf1.read("(or (not (graphPart Org1-1 ?VAR1)) (not (instance Org1-1 GraphArc)) (not (instance ?VAR1 GraphPath)) " +
+                  "(not (equal (InitialNodeFn Org1-1) ?VAR2)))");
+        System.out.println("INFO in CNFFormula.createTest(): here 2");
+    }
+   
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void createTest2() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.createTest2()");
+        CNFFormula cnf1 = new CNFFormula();
+        System.out.println("INFO in CNFFormula.createTest2(): here 1");
+        cnf1.read("(not (equal (SuccessorFn (ImmediateFamilyFn ?VAR1)) (SuccessorFn ?VAR3)))");
+        System.out.println("INFO in CNFFormula.createTest(): here 2");
+    }
+   
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void createTest3() {
+
+        CNFFormula f = new CNFFormula();
+        //f.read("(forall (?ROW1 ?ITEM) (equal (ListOrderFn (ListFn ?ROW1 ?ITEM) (ListLengthFn (ListFn ?ROW1 ?ITEM))) ?ITEM))");
+        f.read("(equal (ListOrderFn (ListFn ?ROW1 ?ITEM) (ListLengthFn (ListFn ?ROW1 ?ITEM))) ?ITEM)");
+        System.out.println("INFO in CNFFormula.createTest3(): formula: " + f);
+        System.out.println("INFO in CNFFormula.createTest3(): formula: " + f.asIntegerList());
+        System.out.println("INFO in CNFFormula.createTest3(): term map: " + CNFFormula.termMap);
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void createTest4() {
+
+        Formula f = new Formula();
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.createTest4()");
+        f.read("(=> (and (i ?X403 SOC) (i ?X404 SOC)) " +
+               "(=> (and (s ?X403 ?X404) (i ?X405 ?X403)) (i ?X405 ?X404)))");
+        System.out.println("INFO in CNFFormula.createTest4(): formula: \n" + f);
+        CNFFormula cnf1 = new CNFFormula(Clausifier.clausify(f));
+        System.out.println("INFO in CNFFormula.createTest4(): formula: \n" + cnf1);
+    }
+
     /** ***************************************************************
      * A test method.
      */
@@ -1217,7 +1741,64 @@ public class CNFFormula implements Comparable {
         valueMap.put(new Integer(6),new Integer(3));
         valueMap.put(new Integer(9),new Integer(4));
         System.out.println("INFO in CNFFormula.testVarReplace(): valueMap: " + valueMap);
-        System.out.println("INFO in CNFFormula.testVarReplace(): reumbered: " + cnf1.renumberVariableReplacements(valueMap));
+        System.out.println("INFO in CNFFormula.testVarReplace(): reumbered: " + valueMap);
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void equalityTest() {
+
+        System.out.println("---------------------------------");
+        CNFFormula cnf1 = new CNFFormula();
+        cnf1.read("(or (before NegativeInfinity (InitialNodeFn Org1-1)) (not (instance Org1-1 GraphArc)) " +
+                  "(not (instance (InitialNodeFn Org1-1) TimePoint)) (not (instance ?VAR1 GraphPath)) " +
+                  "(not (graphPart Org1-1 ?VAR1)))");
+        System.out.println("INFO in CNFFormula.equalityTest(): cnf1: " + cnf1);
+        CNFFormula cnf2 = new CNFFormula();
+        cnf2.read("(or (before NegativeInfinity (InitialNodeFn Org1-1)) (not (instance Org1-1 GraphArc)) " +
+                  "(not (instance (InitialNodeFn Org1-1) TimePoint)) (not (instance ?VAR1 GraphPath)) " +
+                  "(not (graphPart Org1-1 ?VAR1)))");
+        TreeMap<Integer,Integer> valueMap = new TreeMap();  // temporary mapping from old to new indexes, just changed ones
+        System.out.println("INFO in CNFFormula.equalityTest(): cnf2: " + cnf2);
+        System.out.println("INFO in CNFFormula.equalityTest(): equal?: " + cnf2.equals(cnf1));
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void oppositesTest1() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.oppositesTest1()");
+        CNFFormula newResult = new CNFFormula();
+        CNFFormula cnf1 = new CNFFormula();
+        CNFFormula cnf2 = new CNFFormula();
+        cnf1.read("(or (agent ?VAR4 West) (not (instance ?VAR6 Missile)) (not (possesses Nono ?VAR6)))");
+        cnf2.read("(or (instance ?VAR1 Weapon) (not (instance ?VAR1 Missile)))");
+        System.out.println("INFO in CNFFormula2.resolveTest10(): oppositesTest1 result mapping: " + cnf1.hyperResolve(cnf2,newResult));
+        System.out.println("INFO in CNFFormula2.resolveTest10(): oppositesTest1 result (should be null): " + newResult);
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void speedTest() {
+
+        System.out.println("---------------------------------");
+        System.out.println("INFO in CNFFormula.speedTest()");
+        long t_start = System.currentTimeMillis();
+        long t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
+        for (int i = 0; i < 10000; i++) {
+            resolveTest3();
+            resolveTest4();
+            resolveTest6();
+            resolveTest7();
+            resolveTest8();
+            resolveTest9();
+        }
+        t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
+        System.out.println("INFO in CNFFormula.speedTest(): t_elapsed: " + t_elapsed);
     }
 
     /** ***************************************************************
@@ -1246,20 +1827,29 @@ public class CNFFormula implements Comparable {
         System.out.println(f);
         cf = new CNFFormula(f);
         System.out.println("Formula: \n" + cf); */
-
+        speedTest();
         //resolveTest1();
         //resolveTest2();
         //unifyScopeTest();
         //resolveTest3();
         //resolveTest4();
         //resolveTest5();
-        resolveTest6();
+        //resolveTest6();
+        //resolveTest7();
+        //resolveTest8();
+        //resolveTest9();
+        //resolveTest10();
+        //createTest();
+        //createTest2();
+        //createTest3();
+        //createTest4();
         //testVarReplace();
         //normVarTest();
-
+        //equalityTest();
         //subsumeTest1();
         //subsumeTest2();
         //subsumeTest3();
+        //oppositesTest1();
 
     }
 }
