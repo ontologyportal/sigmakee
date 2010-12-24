@@ -61,6 +61,24 @@ public class WNdiagnostics {
     }
 
     /** *****************************************************************
+     * @return an ArrayList of Strings which are terms that don't
+     * have a corresponding synset
+     */
+    public static ArrayList nonRelationTermsWithoutSynsets() {
+
+        ArrayList result = new ArrayList();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        Iterator it = kb.terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (!WordNet.wn.SUMOHash.containsKey(term) & !Formula.isFunction(term) && 
+                Character.isUpperCase(term.charAt(0)))
+                result.add(term);            
+        }
+        return result;
+    }
+
+    /** *****************************************************************
      * @return an ArrayList of Strings which are WordNet synsets that have
      * an identified term but that doesn't exist in the currently loaded
      * knowledge base
@@ -261,5 +279,20 @@ public class WNdiagnostics {
         return result;
     }       
              
+    /** ***************************************************************
+     *  A main method, used only for testing.  It should not be called
+     *  during normal operation.
+     */
+    public static void main (String[] args) {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        WordNet.wn.initOnce();
+        System.out.println(nonRelationTermsWithoutSynsets());
+    }
+
 }
 
