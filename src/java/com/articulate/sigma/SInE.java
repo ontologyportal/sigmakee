@@ -105,10 +105,9 @@ public class SInE extends InferenceEngine {
     
     /** *************************************************************
      */
-    private SInE(String kbFileName) throws Exception {
+    private SInE(String kbFileName, EngineFactory ef) throws Exception {
 
-        underlyingEngineFactory = Vampire.getFactory();
-            
+        underlyingEngineFactory = ef;
         formSymbols = new Hashtable<String, Set<String>>();
         formulas = new ArrayList<String>();
         mandatoryFormulas = new ArrayList<String>();
@@ -138,7 +137,13 @@ public class SInE extends InferenceEngine {
             }
         }
     }
-    
+
+    /** *************************************************************
+     */
+    private SInE(String kbFileName) throws Exception {
+         new SInE(kbFileName,Vampire.getFactory());
+    }
+
     /** *************************************************************
      */
     public SInE(Iterable<String> formulaSource) { 
