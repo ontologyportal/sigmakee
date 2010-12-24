@@ -17,8 +17,6 @@ package com.articulate.sigma;
 import java.io.*;
 import java.util.*;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
 /** ***************************************************************
  * The Sigma theorem prover. A simple resolution prover in Java.
  */
@@ -28,7 +26,7 @@ public class STP2 extends InferenceEngine {
      *  to use as tests. */
     boolean _PROOF_GENERATION = false;
 
-    boolean _PROVE_DEBUG = true;
+    boolean _PROVE_DEBUG = false;
 
     /** Assigns an ID to proof steps */
     int _FORMULA_COUNTER = 0;
@@ -50,18 +48,12 @@ public class STP2 extends InferenceEngine {
      /** Keys are CNF formula strings. */
     TreeMap<String, CNFFormula> formulaMap = new TreeMap();
 
-    /** Previously solved lemmas that is used to save the proof. Keys are CNF formula strings. */
-    TreeMap<String, ArrayList<CNFFormula>> lemmas = new TreeMap();
-
     /** individual deduction steps, indexed by conclusion. Keys are CNF formula strings. */
     TreeMap<String, ArrayList<CNFFormula>> deductions = new TreeMap();
 
     /** To Be Used - also has a list of axioms used to derive the
      *  clause. */
     ArrayList<FormulaRating> TBU = new ArrayList();
-
-    //TreeSet<String> current = new TreeSet();
-    //TreeSet<String> failed = new TreeSet();
 
     public static int _GENSYM_COUNTER = 0;
 
@@ -112,7 +104,11 @@ public class STP2 extends InferenceEngine {
      */
     private STP2(String kbFileName) throws Exception {
     
-        String error = null;               
+        String error = null; 
+        if (kbFileName == null) {
+            error = "No file name. Empty inference engine created.";
+            System.out.println(error);
+        }
         long t_start = System.currentTimeMillis();
 
         File kbFile = null;
@@ -127,22 +123,32 @@ public class STP2 extends InferenceEngine {
         }
         
         if (error == null) {
-            KIF kif = new KIF();
-            kif.setParseMode(KIF.RELAXED_PARSE_MODE);
-            kif.readFile(kbFileName);
+            System.out.println("INFO in STP2(): Starting clausification with file: " + kbFileName);
+            KB kb = new KB(kbFileName);
+            kb.addConstituent(kbFileName);
+            //kb.addConstituent(kbFileName);
+            //KIF kif = new KIF();
+            //kif.setParseMode(KIF.RELAXED_PARSE_MODE);
+            //kif.readFile(kbFileName);
 
-            Iterator it = kif.formulas.values().iterator();
+            //Iterator it = kif.formulas.values().iterator();
+            Iterator it = kb.formulaMap.values().iterator();
+            int counter = 0;
+            //System.out.println("INFO in STP2(): Formulas: " + kb.formulaMap.values().size());
             while (it.hasNext()) {
-                ArrayList<Formula> al = (ArrayList) it.next();
-                for (int i = 0; i < al.size(); i++) {
-                    Formula f = (Formula) al.get(i);
-                    if (f.theFormula.indexOf('`') < 0) {
-                        ArrayList<CNFFormula> cnfForms = clausifyFormula(f);
+                Formula f = (Formula) it.next();
+                ArrayList<Formula> processedForms = f.preProcess(false,kb);
+                for (int j = 0; j < processedForms.size(); j++) {
+                    Formula f2 = (Formula) processedForms.get(j);
+                    if (f2.theFormula.indexOf('`') < 0) {
+                        //System.out.println("INFO in STP2(): Clausifying: " + f2);
+                        ArrayList<CNFFormula> cnfForms = clausifyFormula(f2);
                         formulas.addAll(cnfForms);
                     }
-                }
+                    if (counter++ % 100 == 0) System.out.print(".");
+                }               
             }
-            System.out.print("INFO in STP2(): Done clausification in ");
+            System.out.println("\nINFO in STP2(): Done clausification in ");
             long t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
             System.out.println(t_elapsed + " seconds.");            
         }
@@ -150,7 +156,6 @@ public class STP2 extends InferenceEngine {
     }    
 
     /** *************************************************************
-     *  Formulas must already have been pre-processed.
      *  Backquoted clauses, signifying higher-order formulas, are
      *  rejected.
      */
@@ -166,7 +171,7 @@ public class STP2 extends InferenceEngine {
                 formulas.addAll(cnfForms);
             }
         }
-        // System.out.println("INFO in STP(): clausified formulas: " + formulas);
+        System.out.println("INFO in STP(): clausified formulas: " + formulas);
         buildIndexes();
     }
     
@@ -223,26 +228,26 @@ public class STP2 extends InferenceEngine {
         ArrayList<CNFFormula> newFormulas = new ArrayList();
 
         Formula fold = forig;
-        //System.out.println("INFO in STP2.clausifyFormulas(): to clausify: " + fold);
+        //System.out.println("INFO in STP2.clausifyFormula(): to clausify: " + fold);
         //addToDeductions(null,null,fold,false);
-        Formula f = fold.clausify();
+        Formula f = Clausifier.clausify(fold);
+        //Formula f = fold.clausify();
         if (f.car().equals("and")) {
-            ArrayList<Formula> al = f.separateConjunctions();
+            ArrayList<Formula> al = Clausifier.separateConjunctions(f);
             for (int i = 0; i < al.size(); i++) {
                 Formula f2 = (Formula) al.get(i);
-                f2 = f2.toCanonicalClausalForm();
+                f2 = Clausifier.toCanonicalClausalForm(f2);
                 CNFFormula cnf = new CNFFormula(f2);
                 newFormulas.add(cnf);
-                // System.out.println("INFO in STP2.clausifyFormulas(): after clausification: " + f2);
+                //System.out.println("INFO in STP2.clausifyFormula(): after clausification: " + f2);
                 addToDeductions(null,null,cnf);
             }
         }
         else {
-            CNFFormula fnew = new CNFFormula(f.toCanonicalClausalForm());
+            CNFFormula fnew = new CNFFormula(Clausifier.toCanonicalClausalForm(f));
             newFormulas.add(fnew);
             addToDeductions(null,null,fnew);
-                // System.out.println("INFO in STP2.clausifyFormulas(): added clausify deduction: " + fold + " : " + fnew);            
-            // System.out.println("INFO in STP2.clausifyFormulas(): after clausification: " + fnew);
+            //System.out.println("INFO in STP2.clausifyFormula(): after clausification: " + fnew);
         }        
         return newFormulas;
     }
@@ -396,6 +401,12 @@ public class STP2 extends InferenceEngine {
         return result;
     }
 
+    /** *************************************************************
+     */
+    private CNFFormula getRandomFormula() {
+
+        return (CNFFormula) formulas.get(random.nextInt(formulas.size()));
+    }
 
     /** *************************************************************
      *  Instantiate a formula, or, randomly, just the negation of a
@@ -415,7 +426,7 @@ public class STP2 extends InferenceEngine {
                     CNFClause c = f.firstClause();
                     c.negated = !c.negated;
                     CNFFormula fnew = new CNFFormula();
-                    fnew.addClause(c);
+                    fnew.addClause(c,f);
                     if (_PROVE_DEBUG) System.out.println("\nINFO in STP2.prove(): asserting ground formula (1):\n" + fnew);
                     return fnew;
                 }
@@ -434,17 +445,17 @@ public class STP2 extends InferenceEngine {
                 CNFClause clause = null;
                 if (!f.isGround())
                     clause = extractRandomClause(f);
-                if (clause != null && !clause.isGround()) {
-                    instantiationCandidate.addClause(clause.instantiateVariables());
+                if (clause != null && !clause.isGround(f.functions)) {
+                    instantiationCandidate.addClause(clause.generateVariableValues(f.functions),f);
                     clause.negated = !clause.negated;
                     if (_PROVE_DEBUG) System.out.println("\nINFO in STP2.prove(): adding instantiated clause:\n" + instantiationCandidate);
                     proofCounter = 0;
                     return instantiationCandidate;
                 }
-                if (clause != null && clause.isGround() && random.nextInt(10) == 0) {
+                if (clause != null && clause.isGround(f.functions) && random.nextInt(10) == 0) {
                     clause.negated = !clause.negated;
                     CNFFormula fnew = new CNFFormula();
-                    fnew.addClause(clause);
+                    fnew.addClause(clause,f);
                     if (_PROVE_DEBUG) System.out.println("\nINFO in STP2.prove(): asserting ground formula (2):\n" + clause);
                     return fnew;
                 }
@@ -491,12 +502,12 @@ public class STP2 extends InferenceEngine {
                 deductions.put(f2new.toString().trim(),null);
         }
         deductions.put(newcon.toString().trim(),twoSupports);
-        //System.out.println("INFO in STP2.addToDeductions()");
-        //System.out.println("conclusion: " + newcon);
-        //if (f1 != null)         
-        //    System.out.println("premise 1: " + f1new);
-        //if (f2 != null)         
-        //    System.out.println("premise 2: " + f2new);
+        System.out.println("INFO in STP2.addToDeductions()");
+        System.out.println("conclusion: " + newcon);
+        if (f1 != null)         
+            System.out.println("premise 1: " + f1new);
+        if (f2 != null)         
+            System.out.println("premise 2: " + f2new);
     }
 
     /** *************************************************************
@@ -509,19 +520,19 @@ public class STP2 extends InferenceEngine {
     private boolean subsumedByKB(CNFFormula form) {
 
         ArrayList<CNFFormula> removeList = new ArrayList();
-        //if (_PROVE_DEBUG) System.out.println("INFO in STP2.subsumedByKB(): Checking if \n" + form + "\n would be subsumed by KB of" + 
-        //                   formulas.size() + " entries");
+        if (_PROVE_DEBUG) System.out.println("INFO in STP2.subsumedByKB(): Checking if \n" + form + "\n would be subsumed by KB of" + 
+                           formulas.size() + " entries");
         Iterator it = formulas.iterator();
         while (it.hasNext()) {
             CNFFormula kbForm = (CNFFormula) it.next();
-            //if (_PROVE_DEBUG) System.out.println("INFO in STP2.subsumedByKB(): Checking against\n" + kbForm);
+            if (_PROVE_DEBUG) System.out.println("INFO in STP2.subsumedByKB(): Checking against\n" + kbForm);
             if (form.subsumedBy(kbForm)) {
-                if (_PROVE_DEBUG) System.out.println("INFO in STP2.subsumedByKB(): new formula \n" + form + "\n is subsumed by KB formula\n" + kbForm);
+                System.out.println("INFO in STP2.subsumedByKB(): new formula \n" + form + "\n is subsumed by KB formula\n" + kbForm);
                 STP2.subsumptions++;
                 return true;            
             }
             if (kbForm.subsumedBy(form)) {
-                if (_PROVE_DEBUG) System.out.println("INFO in STP2.subsumedByKB(): KB formula \n" + kbForm + "\n is subsumed by new formula\n" + form);
+                System.out.println("INFO in STP2.subsumedByKB(): KB formula \n" + kbForm + "\n is subsumed by new formula\n" + form);
                 STP2.subsumptions++;
                 removeList.add(kbForm);
             }
@@ -552,12 +563,15 @@ public class STP2 extends InferenceEngine {
      *          the clause.  Return an empty ArrayList if no proof
      *          is found.
      */
-    private ArrayList<CNFFormula> prove(int secondsLimit) {
+    private void prove(int secondsLimit) {
 
+        boolean _BASIC_STATUS = false;
+
+        System.out.println("INFO in STP2.prove(): timeout limit: " + secondsLimit);
         long t_start = System.currentTimeMillis();
-        ArrayList<CNFFormula> result = new ArrayList();
+        long t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
         while (TBU.size() > 0) {
-            if (_PROVE_DEBUG) System.out.println("\n\nINFO in STP2.prove(): TBU: " + TBU);
+            //if (_PROVE_DEBUG) System.out.println("\n\nINFO in STP2.prove(): TBU: " + TBU);
             if (_PROVE_DEBUG) System.out.println("\nTBU length: " + TBU.size());
             //System.out.println("INFO in STP2.prove(): lemmas: " + lemmas);
             FormulaRating avp = getFromTBU();
@@ -587,29 +601,15 @@ public class STP2 extends InferenceEngine {
                     TreeMap mappings = f.hyperResolve(candidate,resultForm);
                     STP2.resolutionsAttempted++;
                     if (resultForm != null && mappings != null && resultForm.empty()) {  // Successful resolution! Result is empty list
-                        if (_PROVE_DEBUG) System.out.println("\nINFO in STP2.prove(): sucessful resolution:" + resultForm);
+                        if (_PROVE_DEBUG || _BASIC_STATUS) System.out.println("\nINFO in STP2.prove(): sucessful resolution:" + resultForm + 
+                                                             "\n from \n" + f + "\nand\n" + candidate);
                         if (_PROVE_DEBUG && resultForm.toString().equals("()")) System.out.println("\nINFO in STP2.prove(): valid empty set result");
-                        ArrayList support = new ArrayList();
-                        if (lemmas.get(avpCan.form.toString()) != null) 
-                            support.addAll((ArrayList) lemmas.get(avpCan.form.toString()));
-                        if (lemmas.get(f.toString()) != null) 
-                            support.addAll((ArrayList) lemmas.get(f.toString()));
-                        support.add(f);
-                        support.add(avpCan.form);
                         addToDeductions(f,candidate,resultForm);
-                        return support;
+                        return;
                     }
                     if (mappings != null) {  // && mappings.keySet().size() > 0
-                        if (_PROVE_DEBUG) System.out.println("\nINFO in STP2.prove(): resolve result:\n" + resultForm);
-                        if (_PROVE_DEBUG) System.out.println("for candidate\n" + candidate + "\n with formula\n " + f);
-                        ArrayList support = new ArrayList();
-                        if (lemmas.get(avpCan.form.toString()) != null) 
-                            support.addAll((ArrayList) lemmas.get(avpCan.form.toString()));
-                        if (lemmas.get(f.toString()) != null) 
-                            support.addAll((ArrayList) lemmas.get(f.toString()));
-                        support.add(f);
-                        support.add(avpCan.form);
-                        lemmas.put(resultForm.toString(),support);
+                        if (_PROVE_DEBUG || _BASIC_STATUS) System.out.println("\nINFO in STP2.prove(): resolve result:\n" + resultForm);
+                        if (_PROVE_DEBUG || _BASIC_STATUS) System.out.println("for candidate\n" + candidate + "\n with formula\n " + f);
                         FormulaRating avpNew = new FormulaRating();
                         if (!formulas.contains(resultForm)) {
                             resultForm.normalizeVariables();
@@ -622,13 +622,20 @@ public class STP2 extends InferenceEngine {
                                 TBU.add(avpNew);
                                 Collections.sort(TBU);
                             }
+
                         }
                     }
-                    else
-                        if (_PROVE_DEBUG) System.out.println("INFO in STP2.prove(): candidate that did not resolve:\n" + candidate +
-                                           "\n with formula: \n" + f);                    
+                    else {
+                        //if (_PROVE_DEBUG) System.out.println("INFO in STP2.prove(): candidate that did not resolve:\n" + candidate +
+                        //                   "\n with formula: \n" + f);      
+                    }
+                    t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
+                    if (t_elapsed > secondsLimit) {
+                        System.out.println("INFO in STP2.prove(): Timeout before answer found (in checking candidate formulas.");
+                        return;
+                    }
                 }
-                if (_PROOF_GENERATION) {
+                if (_PROOF_GENERATION && (TBU.size() == 0 || t_elapsed > (secondsLimit * 0.75))) {
                     CNFFormula fnew = findInstantiation(f);
                     if (fnew != null && !formulas.contains(fnew)) {
                         FormulaRating avpNew = new FormulaRating();
@@ -647,11 +654,13 @@ public class STP2 extends InferenceEngine {
             formulas.add(f); 
             if (STP2.resolutionsAttempted % 10 == 0) System.out.print(".");
 
-            long t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
-            if (t_elapsed > secondsLimit)
-                return new ArrayList();            
+            t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
+            System.out.println("INFO in STP2.prove(): t_elapsed: " + t_elapsed);
+            if (t_elapsed > secondsLimit) {
+                System.out.println("INFO in STP2.prove(): Timeout before answer found (in TBU loop).");
+                return;
+            }
         }
-        return result;
     }
 
     /** *************************************************************
@@ -747,14 +756,15 @@ public class STP2 extends InferenceEngine {
                 result.put(form.toString().trim(),support);
                 //System.out.println("INFO in STP2.getDeductionsRecurse(): internal checking formula 2: " + f2);
             }
-            //System.out.println("INFO in STP2.getDeductionsRecurse(): recursing on formula 1: " + f1);
-            result.putAll(getDeductionsRecurse(f1));
-            if (f2 != null) {
+            if (f1 != null && !f1.toString().equals("()")) {
+                //System.out.println("INFO in STP2.getDeductionsRecurse(): recursing on formula 1: " + f1);
+                result.putAll(getDeductionsRecurse(f1));
+            }
+            if (f2 != null && !f2.toString().equals("()")) {
                 //System.out.println("INFO in STP2.getDeductionsRecurse(): recursing on formula 2: " + f2);
                 result.putAll(getDeductionsRecurse(f2));
             }
         }
-
         //System.out.println("INFO in STP2.getDeductionsRecurse(): result: " + result);
         return result;
     }
@@ -814,7 +824,7 @@ public class STP2 extends InferenceEngine {
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): form (argNew): \n" + form);
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): f1: \n" + f1);
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): f2: \n" + f2);
-                    CNFFormula f2new = form.unifyScope(f2);
+                    CNFFormula f2new = form.unifyVariableScope(f2);
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): f2new: \n" + f2new);
                     nextForm = f2new.deepCopy();
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): nextForm: \n" + nextForm);
@@ -824,7 +834,7 @@ public class STP2 extends InferenceEngine {
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): form (argNew): \n" + form);
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): f1: \n" + f1);
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): f2: \n" + f2);
-                    CNFFormula f1new = form.unifyScope(f1);
+                    CNFFormula f1new = form.unifyVariableScope(f1);
                     //System.out.println("INFO in STP2.extractAnswerVarsRecurse(): f1new: \n" + f1new);
                     nextForm = f1new.deepCopy();
                     map = form.hyperResolve(f1new,resolveResult);
@@ -892,15 +902,20 @@ public class STP2 extends InferenceEngine {
                 System.out.println("Error in STP2.formatVariableBindings(): key is not variable: " + key);
                 return null;
             }
+            String binding = null;
             Integer value = (Integer) valueMap.get(key);
-            if (!CNFClause.isConstant(value)) {
-                System.out.println("Error in STP2.formatVariableBindings(): value is not constant: " + value);
-                return null;
+            if (CNFClause.isFunction(value)) 
+                binding = "function";
+            else {
+                if (CNFClause.isVariable(value)) 
+                    binding = "?VAR" + String.valueOf(value);                
+                else
+                    binding = (String) CNFFormula.intToTermMap.get(value);
             }
             result.append("<binding>\n<var name='");
             result.append("?VAR" + key);            
             result.append("' value='");
-            result.append((String) CNFFormula.intToTermMap.get(value));
+            result.append(binding);
             result.append("'/>\n</binding>\n");
         }
         return result.toString();
@@ -923,11 +938,11 @@ public class STP2 extends InferenceEngine {
 
         StringBuffer result = new StringBuffer();
         if (!deductions.containsKey("()")) {
-            //System.out.println("INFO in STP2.formatResultNew(): no empty clause in result");
+            System.out.println("INFO in STP2.formatResultNew(): no empty clause in result");
             result.append("<queryResponse>\n<answer result='no' number='0'>\n</answer>\n</queryResponse>\n");
         }
         else {
-            //System.out.println("INFO in STP2.formatResultNew(): successful resolution: empty clause in result");
+            System.out.println("INFO in STP2.formatResultNew(): successful resolution: empty clause in result");
             result.append("<queryResponse>\n<answer result='yes' number='1'>\n");
             if (ground) 
                 result.append("<bindingSet type='definite'>\n<binding>yes<var name='' value=''/>\n</binding>\n</bindingSet>\n");
@@ -959,12 +974,16 @@ public class STP2 extends InferenceEngine {
     @Override
     public String submitQuery (String formula, int timeLimit, int bindingsLimit) {
 
+        System.out.println("INFO in STP2.submitQuery(): query: " + formula);
+        System.out.println("INFO in STP2.submitQuery(): formulas: " + formulas.size());
+        //System.out.println("INFO in STP2.submitQuery(): formulas: " + formulas);
+        System.out.println("INFO in STP2.submitQuery(): deductions: " + deductions.keySet().size());
         ArrayList result = new ArrayList();
         Formula negQuery = new Formula();
         Formula rawNegQuery = new Formula();
         rawNegQuery.read("(not " + formula + ")");
         negQuery.read("(not " + formula + ")");
-        negQuery = negQuery.clausify();     // negation will be pushed in
+        negQuery = Clausifier.clausify(negQuery);     // negation will be pushed in
         if (negQuery.equals(rawNegQuery)) {
             CNFFormula cnf = new CNFFormula();
             cnf.read(negQuery.theFormula);
@@ -977,10 +996,12 @@ public class STP2 extends InferenceEngine {
             cnf.read(negQuery.theFormula);
             addToDeductions(originalQuery,null,cnf);
         }
-        //System.out.println("INFO in STP2.submitQuery(): clausified query: " + negQuery);
+        System.out.println("INFO in STP2.submitQuery(): clausified query: " + negQuery);
         FormulaRating avp = null;
         if (negQuery.car().equals("and")) {
-            ArrayList<Formula> al = negQuery.separateConjunctions();
+
+            System.out.println("INFO in STP2.submitQuery(): conjunctive query, ignore previous non-CNF errors.");
+            ArrayList<Formula> al = Clausifier.separateConjunctions(negQuery);
             for (int i = 0; i < al.size(); i++) {
                 Formula f2 = (Formula) al.get(i);
                 avp = new FormulaRating();
@@ -1002,12 +1023,13 @@ public class STP2 extends InferenceEngine {
         }
 
         long t_start = System.currentTimeMillis();
-        ArrayList<CNFFormula> res = prove(timeLimit); 
+        // ArrayList<CNFFormula> res = prove(timeLimit); 
+        prove(timeLimit); 
         //System.out.println("INFO in STP2.submitQuery(): deductions: \n" + deductions);
         // return res.toString();
         System.out.println("=============================");
         long t_elapsed = (System.currentTimeMillis() - t_start) / 1000;
-        System.out.println(t_elapsed + " seconds.");            
+        System.out.println(t_elapsed + " seconds. " + timeLimit + " seconds time limit.");            
         System.out.println("INFO in STP2.submitQuery(): deductions made:       " + STP2.deductionsMade);
         System.out.println("INFO in STP2.submitQuery(): resolutions attempted: " + STP2.resolutionsAttempted);
         System.out.println("INFO in STP2.submitQuery(): subsumptions:          " + STP2.subsumptions);
@@ -1018,7 +1040,40 @@ public class STP2 extends InferenceEngine {
     }
 
     /** *************************************************************
-     * Add an assertion.
+     *  Removes all formulas added by previous deductions.
+     */
+    public void clear() {
+
+        System.out.println("INFO in STP2.clear()");
+        deductions = new TreeMap();
+        TBU = new ArrayList();
+        negLits = new TreeMap();  // Note that (not (a b c)) will be stored as (a b c)
+        posLits = new TreeMap();  // Appearance of positive clauses
+        termCounts = new TreeMap();    // Key is term index, value is the count of appearances
+        posTermPointers = new TreeMap(); // appearance of a term in a positive literal
+        negTermPointers = new TreeMap(); // appearance of a term in a negative literal
+        ArrayList<CNFFormula> newFormulas = new ArrayList();
+        TreeMap<String, CNFFormula> newFormulaMap = new TreeMap();
+        Iterator it = formulas.iterator();
+        while (it.hasNext()) {
+            CNFFormula cnf = (CNFFormula) it.next();
+            if (cnf.sourceFormula != null) {
+                newFormulas.add(cnf);
+                newFormulaMap.put(cnf.toString(),cnf);
+                indexOneFormula(cnf);
+            }
+        }
+        formulas = newFormulas;
+        formulaMap = newFormulaMap;
+
+        /** Statistics */
+        deductionsMade = 0;
+        resolutionsAttempted = 0;
+        subsumptions = 0;
+    }
+
+    /** *************************************************************
+     * Add an assertion.  This method will clausify and index it.
      *
      * @param formula asserted formula in the KIF syntax
      * @return answer to the assertion (in the XML syntax)
@@ -1029,10 +1084,15 @@ public class STP2 extends InferenceEngine {
 
         Formula f = new Formula();
         f.read(form);
-        formulas.add(new CNFFormula(f));
-        //Formulas asserted through this method will always be used.
-        
-        return null;
+        ArrayList<CNFFormula> cnfForms = clausifyFormula(f);
+        if (cnfForms == null) 
+            return ("<assertionResponse>Error in clausification</assertionResponse>");        
+        for (int i = 0; i < cnfForms.size(); i++) {
+            CNFFormula cnf = (CNFFormula) cnfForms.get(i);
+            indexOneFormula(cnf);
+            formulas.add(cnf);
+        }
+        return ("<assertionResponse>ok</assertionResponse>");
     }
     
     /** *************************************************************
@@ -1052,6 +1112,27 @@ public class STP2 extends InferenceEngine {
 
     /** *************************************************************
      */
+    public static void generateTestProblem() {
+
+        ArrayList<String> al = new ArrayList();
+        STP2 stp = null;
+        try {
+            stp = new STP2("/home/apease/Sigma/KBs/Merge.kif");
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        stp.random = new Random(2);
+        stp._PROOF_GENERATION = true;
+        CNFFormula f = stp.getRandomFormula();
+        System.out.println("---------------------------------------");
+        System.out.println("INFO in STP2.generateTestProblem(): Starting generation from query: " + f);
+        stp.submitQuery(f.toString(),60,0); 
+    }
+
+    /** *************************************************************
+     */
     public static void tq1Abbrev() {
 
         ArrayList<String> al = new ArrayList();
@@ -1066,7 +1147,7 @@ public class STP2 extends InferenceEngine {
         // query.readNonCNF("(exists (?MEMBER) (m ?MEMBER Org1-1))");
         query.readNonCNF("(m ?MEMBER Org1-1)");
         STP2 stp2 = new STP2(al);
-        System.out.println(stp2.submitQuery(query.toString(),0,0)); 
+        System.out.println(stp2.submitQuery(query.toString(),10,0)); 
 
         /*
 (or
@@ -1100,16 +1181,62 @@ query:
   (not (instance Collection SetOrClass))
   (not (subclass ?X13 Collection))
   (not (instance Org1-1 ?X13)))
-
-
         */
+    }
+
+    /** *************************************************************
+     */
+    public static void tq1back() {
+
+        ArrayList<String> al = new ArrayList();
+        CNFFormula query = new CNFFormula();
+        query.readNonCNF("(member ?MEMBER Org1-1)");
+        STP2 stp = null;
+        try {
+            stp = new STP2("/home/apease/Sigma/KBs/tqBackground.kif");
+            stp.assertFormula("(=> (instance ?X290 Collection) (exists (?X12) (member ?X12 ?X290)))");
+            stp.assertFormula("(subclass Organization Collection)");
+            stp.assertFormula("(instance SetOrClass SetOrClass)");
+            stp.assertFormula("(instance Org1-1 Organization)");
+            stp.assertFormula("(=> (subclass ?X403 ?X404) (and (instance ?X403 SetOrClass) (instance ?X404 SetOrClass)))");
+            stp.assertFormula("(=> (and (instance ?X403 SetOrClass) (instance ?X404 SetOrClass)) " +
+                   "(=> (and (subclass ?X403 ?X404) (instance ?X405 ?X403)) (instance ?X405 ?X404)))");
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        stp.submitQuery(query.sourceFormula.theFormula,60,0); 
+    }
+
+    /** *************************************************************
+     */
+    public static void tq1SUMO() {
+
+        ArrayList<String> al = new ArrayList();
+        CNFFormula query = new CNFFormula();
+        query.readNonCNF("(member ?MEMBER Org1-1)");
+        STP2 stp = null;
+        try {
+            stp = new STP2("/home/apease/Sigma/KBs/Merge.kif");
+            stp.assertFormula("(=> (instance ?X290 Collection) (exists (?X12) (member ?X12 ?X290)))");
+            stp.assertFormula("(subclass Organization Collection)");
+            stp.assertFormula("(instance SetOrClass SetOrClass)");
+            stp.assertFormula("(instance Org1-1 Organization)");
+            stp.assertFormula("(=> (subclass ?X403 ?X404) (and (instance ?X403 SetOrClass) (instance ?X404 SetOrClass)))");
+            stp.assertFormula("(=> (and (instance ?X403 SetOrClass) (instance ?X404 SetOrClass)) " +
+                   "(=> (and (subclass ?X403 ?X404) (instance ?X405 ?X403)) (instance ?X405 ?X404)))");
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        stp.submitQuery(query.sourceFormula.theFormula,60,0); 
     }
 
     /** *************************************************************
      */
     public static void tq1() {
 
-        ArrayList al = new ArrayList();
+        ArrayList<String> al = new ArrayList();
         al.add("(=> (instance ?X290 Collection) (exists (?X12) (member ?X12 ?X290)))");
         al.add("(subclass Organization Collection)");
         al.add("(instance SetOrClass SetOrClass)");
@@ -1118,9 +1245,9 @@ query:
         al.add("(=> (and (instance ?X403 SetOrClass) (instance ?X404 SetOrClass)) " +
                "(=> (and (subclass ?X403 ?X404) (instance ?X405 ?X403)) (instance ?X405 ?X404)))");
         CNFFormula query = new CNFFormula();
-        query.readNonCNF("(exists (?MEMBER) (member ?MEMBER Org1-1))");
+        query.readNonCNF("(member ?MEMBER Org1-1)");
         STP2 stp = new STP2(al);
-        System.out.println(stp.submitQuery(query.sourceFormula.theFormula,0,0)); 
+        stp.submitQuery(query.sourceFormula.theFormula,60,0); 
     }
 
     /** *************************************************************
@@ -1134,7 +1261,28 @@ query:
         CNFFormula query = new CNFFormula();
         query.read("(or (t a) (r a))");
         STP2 stp = new STP2(al);
-        System.out.println(stp.submitQuery(query.sourceFormula.theFormula,0,0)); 
+        System.out.println("INFO in STP2.tq2()");
+        stp.submitQuery(query.sourceFormula.theFormula,30,0); 
+    }
+
+    /** *************************************************************
+     */
+    public static void tq12back() {
+
+        ArrayList<String> al = new ArrayList();
+        CNFFormula query = new CNFFormula();
+        query.readNonCNF("(instance Organism12-1 Organism)");
+        STP2 stp = null;
+        try {
+            stp = new STP2("/home/apease/Sigma/KBs/tqBackground.kif");
+            stp.assertFormula("(instance Organism12-1 Object)");
+            stp.assertFormula("(attribute Organism12-1 Living)");
+            stp.assertFormula("(=> (attribute ?X Living) (instance ?X Organism))");
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        stp.submitQuery(query.sourceFormula.theFormula,60,0); 
     }
 
     /** *************************************************************
@@ -1146,7 +1294,7 @@ query:
         CNFFormula query = new CNFFormula();
         query.readNonCNF("(and (not (or a b)) (or a (not b)) (or (not a) b) (or (not a) (not b)))");
         STP2 stp = new STP2(al);
-        System.out.println(stp.submitQuery(query.sourceFormula.theFormula,0,0)); 
+        System.out.println(stp.submitQuery(query.sourceFormula.theFormula,30,0)); 
     }
 
     /** *************************************************************
@@ -1181,7 +1329,8 @@ query:
         }
         STP2 stp = new STP2(al);
         System.out.println("Query: " + query.sourceFormula); 
-        System.out.println("Result: " + stp.submitQuery(query.sourceFormula.theFormula,0,0)); 
+        System.out.println("Result: ");
+        stp.submitQuery(query.sourceFormula.theFormula,10,0); 
     }
 
     /** ***************************************************************
@@ -1200,6 +1349,9 @@ query:
     */
         //tq1Abbrev();
         //tq1();
+        //tq1back();
+        //tq12back();
+        //generateTestProblem();
         //tq2();
         // factorizationTest();
         rnTest();

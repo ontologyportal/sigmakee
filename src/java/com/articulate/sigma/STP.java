@@ -16,8 +16,6 @@ package com.articulate.sigma;
 import java.io.*;
 import java.util.*;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
 /** ***************************************************************
  * The Sigma theorem prover. A simple resolution prover in Java.
  */
@@ -193,12 +191,12 @@ public class STP extends InferenceEngine {
             Formula fold = (Formula) it.next();
             // System.out.println("INFO in STP.clausifyFormulas(): to clausify: " + fold);
             addToDeductions(null,null,fold,false);
-            Formula f = fold.clausify();
+            Formula f = Clausifier.clausify(fold);
             if (f.car().equals("and")) {
-                ArrayList<Formula> al = f.separateConjunctions();
+                ArrayList<Formula> al = Clausifier.separateConjunctions(f);
                 for (int i = 0; i < al.size(); i++) {
                     Formula f2 = (Formula) al.get(i);
-                    f2 = f2.toCanonicalClausalForm();
+                    f2 = Clausifier.toCanonicalClausalForm(f2);
                     newFormulas.add(f2);
                     ArrayList support = new ArrayList();
                     support.add(fold);
@@ -210,7 +208,7 @@ public class STP extends InferenceEngine {
             else {
                 ArrayList support = new ArrayList();
                 support.add(fold);
-                Formula fnew = f.toCanonicalClausalForm();
+                Formula fnew = Clausifier.toCanonicalClausalForm(f);
                 lemmas.put(fnew.theFormula,support);
                 newFormulas.add(f);
                 if (fold.theFormula.equals(fnew.theFormula)) 
@@ -306,10 +304,10 @@ public class STP extends InferenceEngine {
                 termCounts.put(s,new Integer(1));
         }
 
-        Formula fclause = f.clausify();
+        Formula fclause = Clausifier.clausify(f);
         ArrayList<Formula> clauseList = new ArrayList();
         if (fclause.car().equals("and"))
-            clauseList = fclause.separateConjunctions();
+            clauseList = Clausifier.separateConjunctions(fclause);
         else
             clauseList.add(fclause);                  // a formula that is not a conjunction will result in a clauseList of one element
         for (int i = 0; i < clauseList.size(); i++) {
@@ -329,7 +327,7 @@ public class STP extends InferenceEngine {
                     clause = clauses.theFormula;
                     clauses.theFormula = "()";
                 }
-                clause = Formula.normalizeVariables(clause);
+                clause = Clausifier.normalizeVariables(clause);
                 Formula c = new Formula();
                 c.read(clause);
                 String negP = c.car();
@@ -562,22 +560,22 @@ public class STP extends InferenceEngine {
         Formula newcon = new Formula();
         Formula f1new = new Formula();
         Formula f2new = new Formula();
-        newcon.read(Formula.normalizeVariables(con.theFormula));
+        newcon.read(Clausifier.normalizeVariables(con.theFormula));
         if (sortClauses) 
-            newcon = newcon.toCanonicalClausalForm();
+            newcon = Clausifier.toCanonicalClausalForm(newcon);
         ArrayList twoSupports = new ArrayList();
         if (f1 != null) {        
-            f1new.read(Formula.normalizeVariables(f1.theFormula));
+            f1new.read(Clausifier.normalizeVariables(f1.theFormula));
             if (sortClauses) 
-                f1new = f1new.toCanonicalClausalForm();
+                f1new = Clausifier.toCanonicalClausalForm(f1new);
             twoSupports.add(f1new);
             if (deductions.get(f1new.theFormula) == null) 
                 deductions.put(f1new.theFormula,null);
         }
         if (f2 != null) {
-            f2new.read(Formula.normalizeVariables(f2.theFormula));
+            f2new.read(Clausifier.normalizeVariables(f2.theFormula));
             if (sortClauses) 
-                f2new = f2new.toCanonicalClausalForm();
+                f2new = Clausifier.toCanonicalClausalForm(f2new);
             twoSupports.add(f2new);
             if (deductions.get(f2new.theFormula) == null) 
                 deductions.put(f2new.theFormula,null);
@@ -606,7 +604,7 @@ public class STP extends InferenceEngine {
             //System.out.println("INFO in STP.prove(): lemmas: " + lemmas);
             AnotherAVP avp = (AnotherAVP) TBU.remove(0);
             //if (!lemmas.containsKey(form)) {
-            String norm = Formula.normalizeVariables(avp.form.theFormula); 
+            String norm = Clausifier.normalizeVariables(avp.form.theFormula); 
 
             //System.out.println("INFO in STP.prove(): attempting to prove: " + avp.form);
             Formula f = new Formula();
@@ -801,7 +799,7 @@ public class STP extends InferenceEngine {
             ground = true;
         }
         negQuery.read("(not " + formula + ")");
-        negQuery = negQuery.clausify();     // negation will be pushed in
+        negQuery = Clausifier.clausify(negQuery);     // negation will be pushed in
         if (negQuery.theFormula.equals(rawNegQuery)) 
             addToDeductions(null,null,negQuery,true);
         else {
@@ -812,7 +810,7 @@ public class STP extends InferenceEngine {
         System.out.println("INFO in STP.submitQuery(): clausified query: " + negQuery);
         AnotherAVP avp = null;
         if (negQuery.car().equals("and")) {
-            ArrayList<Formula> al = negQuery.separateConjunctions();
+            ArrayList<Formula> al = Clausifier.separateConjunctions(negQuery);
             for (int i = 0; i < al.size(); i++) {
                 Formula f2 = (Formula) al.get(i);
                 avp = new AnotherAVP();
