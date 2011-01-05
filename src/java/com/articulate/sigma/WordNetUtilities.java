@@ -871,6 +871,32 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     *  A utility to extract meronym relations as relations between
+     *  SUMO terms.
+    */
+    public static void extractMeronyms() {
+
+        Iterator it = WordNet.wn.relations.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            ArrayList al = (ArrayList) WordNet.wn.relations.get(key);
+            for (int i = 0; i < al.size(); i++) {
+                AVPair avp = (AVPair) al.get(i);
+                if (avp.attribute.equals("member meronym") ||
+                    avp.attribute.equals("substance meronym") ||
+                    avp.attribute.equals("part meronym")) {
+                    String value = avp.value;
+                    String SUMO1 = WordNet.wn.getSUMOMapping(key);
+                    String SUMO2 = WordNet.wn.getSUMOMapping(value);
+                    if (SUMO1 != null && SUMO2 != null && SUMO1.endsWith("=") && SUMO2.endsWith("=")) 
+                        System.out.println("(" + avp.attribute + " " + SUMO2.substring(2,SUMO2.length()-1) + 
+                                           " " + SUMO1.substring(2,SUMO1.length()-1) + ")");                    
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
     *  A main method, used only for testing.  It should not be called
     *  during normal operation.
     */
@@ -879,8 +905,9 @@ public class WordNetUtilities {
    //    try {
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
-            WordNetUtilities wnu = new WordNetUtilities();
-            wnu.imageNetLinks();
+            extractMeronyms();
+            //WordNetUtilities wnu = new WordNetUtilities();
+            //wnu.imageNetLinks();
    //     }
    //     catch (IOException ioe) {
     //        System.out.println("Error in WordNet.main(): IOException: " + ioe.getMessage());
