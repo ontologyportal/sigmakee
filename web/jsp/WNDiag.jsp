@@ -97,29 +97,31 @@ else {
 
     if (!synsetsWithoutTerms.isEmpty()) {
         show.setLength(0);
+        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><p>");
         show.append(HTMLformatter.synsetList(synsetsWithoutTerms,kbHref));
         out.println("<br><b>&nbsp;Error: synsetsWithoutTerms</b>");
-        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>");
         out.println(show.toString() + "<br>");
     }
 
     if (!synsetsWithoutFoundTerms.isEmpty()) {
         show.setLength(0);
+        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><p>");
         show.append(HTMLformatter.synsetList(synsetsWithoutFoundTerms,kbHref));
         out.println("<br><b>&nbsp;Error: synsetsWithoutFoundTerms</b>");
-        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>");
         out.println(show.toString() + "<br>");
     }
 
     if (!nonMatchingTaxonomy.isEmpty()) {
         show.setLength(0);
+        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><p>");
         for (int i = 0; i < nonMatchingTaxonomy.size(); i++) {
             show.append((String) nonMatchingTaxonomy.get(i));
         }
         out.println("<br><b>&nbsp;Error: nonMatchingTaxonomy</b>");
-        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><br><br>");
         out.println(show.toString() + "<br>");
     }
+
+    out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><p>");
 }
 
 %>
