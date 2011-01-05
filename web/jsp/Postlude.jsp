@@ -4,6 +4,6 @@
 </table><BR>
 <small><a href="http://sigmakee.sourceforge.net">Sigma web home</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="http://www.ontologyportal.org">SUMO web home</a></small><br>
-<small>Sigma version 2.8.1b (>= 2010/04/23) is <a href="http://www.gnu.org/copyleft/gpl.html">open source software</a> 
+<small>Sigma version 2.8.2b (>= 2010/12/21) is <a href="http://www.gnu.org/copyleft/gpl.html">open source software</a> 
 produced by <a href="http://www.articulatesoftware.com">Articulate Software</a> and its partners</small><p>
 
