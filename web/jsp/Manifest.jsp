@@ -101,11 +101,12 @@ August 9, Acapulco, Mexico.
         }
         else if (saveAs.equalsIgnoreCase("OWL")) {
             OWLtranslator owltrans = new OWLtranslator();
+            ot.kb = KBmanager.getMgr().getKB(kbName);
             File owlFile = new File(kbDirFile, (saveFile + ".owl"));
             String ofcp = null;
             try {
                 ofcp = owlFile.getCanonicalPath();
-                owltrans.write(kbName, ofcp);
+                owltrans.writeKB(ofcp);
             }
             catch (Exception ofe) {
                 ofe.printStackTrace();
