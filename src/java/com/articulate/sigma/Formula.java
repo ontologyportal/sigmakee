@@ -160,7 +160,7 @@ public class Formula implements Comparable {
      * predicate variable instantiation and row variable expansion
      * might cause theFormula to expand to several TPTP formulas.
      */
-    private ArrayList theTptpFormulas = null;
+    private ArrayList<String> theTptpFormulas = null;
 
     /** ***************************************************************
      * Returns an ArrayList of the TPTP formulas (Strings) that
@@ -169,7 +169,7 @@ public class Formula implements Comparable {
      * @return An ArrayList of Strings, or an empty ArrayList if no
      * translations have been created or entered.
      */
-    public ArrayList getTheTptpFormulas() {
+    public ArrayList<String> getTheTptpFormulas() {
 
         if (theTptpFormulas == null) 
             theTptpFormulas = new ArrayList();                            
@@ -4416,10 +4416,8 @@ public class Formula implements Comparable {
             return "";        
         String result = this.theFormula;
         try {
-            if (isNonEmptyString(this.theFormula)) {
-                this.theFormula = this.theFormula.trim();
-            }
-
+            if (isNonEmptyString(this.theFormula)) 
+                this.theFormula = this.theFormula.trim();            
             String legalTermChars = "-:";
             String varStartChars = "?@";
             String quantifiers = "forall|exists";
@@ -4537,6 +4535,102 @@ public class Formula implements Comparable {
             ex.printStackTrace();
         }
         return result;
+    }
+
+    /** ***************************************************************
+     *  Remove enclosing meta-information from a TPTP axiom.
+     */
+    private static String extractTPTPaxiom(String t) {
+
+        return t.substring(1,t.length()-1).trim();
+    }
+
+    /** ***************************************************************
+     *  Remove enclosing meta-information from a TPTP axiom.
+     */
+    private static String removeTPTPSuffix(String t) {
+
+        if (t.endsWith("__m") || t.endsWith("__t"))         
+            return t.substring(0,t.length()-3);
+        else
+            return t;
+    }
+
+    /** ***************************************************************
+     * Format a formula for either text or HTML presentation by inserting
+     * the proper hyperlink code, characters for indentation and end of line.
+     * A standard LISP-style pretty printing is employed where an open
+     * parenthesis triggers a new line and added indentation.
+     *
+     * @param hyperlink - the URL to be referenced to a hyperlinked term.
+     * @param indentChars - the proper characters for indenting text.
+     * @param eolChars - the proper character for end of line.
+     */
+    public String htmlTPTPFormat(String hyperlink) {
+
+        String indentChars = "  ";
+        String eolChars = "\n";
+
+        System.out.println("INFO in Formula.htmlTPTPFormat(): " + this.toString());
+        System.out.println("INFO in Formula.htmlTPTPFormat(): theTptpFormulas.size()" + theTptpFormulas.size());
+        if (theTptpFormulas == null) 
+            return "";        
+        StringBuffer result = new StringBuffer();
+        for (int j = 0; j < theTptpFormulas.size(); j++) {   
+            String formString = theTptpFormulas.get(j);
+            if (!StringUtil.emptyString(formString)) {
+                System.out.println("INFO in Formula.htmlTPTPFormat(): TPTP formula: " + formString);
+                formString = formString.trim();
+            }
+            else {
+                System.out.println("Error in Formula.htmlTPTPFormat(): empty TPTP formula: " + formString);
+                continue;
+            }
+            formString = extractTPTPaxiom(formString);
+            boolean inComment = false;
+            boolean inToken = false;
+            StringBuffer token = new StringBuffer();
+
+            int flen = formString.length();
+            char ch = '0';   // char at i
+            for (int i = 0; i < flen; i++) {
+                // System.out.println("INFO in format(): " + formatted.toString());
+                ch = formString.charAt(i);
+                if (inComment) {     // In a comment
+                    result.append(ch);
+                    if (ch == '\'') 
+                        inComment = false;
+                }
+                else {
+                    if (inToken) {
+                        if (!Character.isJavaIdentifierPart(ch)) {
+                            inToken = false;
+                            String tokenNoSuffix = removeTPTPSuffix(token.toString());
+                            result.append("<a href=\"" + hyperlink + "&term=" + tokenNoSuffix + "\">s__" + token.toString() + "</a>");
+                            token = new StringBuffer();
+                            result.append(ch);
+                        }
+                        else
+                            token.append(ch);
+                    }
+                    else if (ch == '\'') {
+                        inComment = true;
+                        result.append(ch);
+                    }
+                    else {
+                        if (formString.substring(i).startsWith("s__")) {
+                            inToken = true;
+                            i = i + 2;
+                        }
+                        else
+                            result.append(ch);
+                    }
+                }
+            }
+            if (theTptpFormulas.size() > 1 && j > theTptpFormulas.size()-3) 
+                result.append("<P>\n");                
+        }
+        return result.toString();
     }
 
     /** ***************************************************************
@@ -6275,12 +6369,17 @@ public class Formula implements Comparable {
      */
     public static void main(String[] args) {
 
-        Formula.resolveTest3();
-        Formula.unifyTest1();
-        Formula.unifyTest2();
-        Formula.unifyTest3();
-        Formula.unifyTest4();
-        Formula.unifyTest5();
+        Formula f = new Formula();
+        f.theTptpFormulas = new ArrayList();
+        f.theTptpFormulas.add("fof(kb_ArabicCulture_20,axiom,(( s__subclass(s__Hajj,s__Translocation) ))).");
+        //String s = "%FOL fof(kb_ArabicCulture_23,axiom,(( (! [V__P] : (s__instance(V__P,s__Agent) => ((s__attribute(V__P,s__Muslim) & s__capability(s__Hajj,s__agent__m,V__P)) => s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation)))) ))).";
+        System.out.println(f.htmlTPTPFormat("http://sigma.ontologyportal.org:4040/sigma?kb=SUMO&term="));
+        //Formula.resolveTest3();
+        //Formula.unifyTest1();
+        //Formula.unifyTest2();
+        //Formula.unifyTest3();
+        //Formula.unifyTest4();
+        //Formula.unifyTest5();
         //Formula f1 = new Formula();
         //Formula f2 = new Formula();
         //Formula f3 = new Formula();

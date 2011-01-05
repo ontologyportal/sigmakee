@@ -146,6 +146,7 @@ public class KBmanager {
             preferences.put("holdsPrefix","no");  
             preferences.put("cache","no");
             preferences.put("TPTP","yes");  
+            preferences.put("TPTPDisplay","no");  
             preferences.put("userBrowserLimit","25");
             preferences.put("adminBrowserLimit","200");
             preferences.put("port","8080");            

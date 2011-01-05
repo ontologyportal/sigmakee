@@ -391,6 +391,7 @@ public class HTMLformatter {
 
             boolean isArabic = (language.matches(".*(?i)arabic.*")
                                 || language.equalsIgnoreCase("ar"));
+            System.out.println("INFO in HTMLformatter.browserSectionFormatLimit(): localLimit" + localLimit);
             for (int i = start; i < localLimit; i++) {
                 Formula f = (Formula) forms.get(i);
 
@@ -398,7 +399,11 @@ public class HTMLformatter {
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
                     String arg0 = f.getArgument(0);
                     show.append("<tr><td width=\"50%\" valign=\"top\">");
-                    String formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
+                    String formattedFormula = null;
+                    if (KBmanager.getMgr().getPref("TPTPDisplay").equals("yes"))
+                        formattedFormula =  f.htmlTPTPFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
+                    else
+                        formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                     if (Formula.DOC_PREDICATES.contains(arg0))
                         show.append(kb.formatDocumentation(kbHref,formattedFormula,language));
                     else

@@ -181,6 +181,17 @@ if ( iePref == null ) { iePref = ""; }
           TPTP = "yes";
   }
 
+  String TPTPDisplay = request.getParameter("TPTPDisplay");
+  if (TPTPDisplay != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("TPTPDisplay",TPTPDisplay);
+  }
+  else {
+      TPTP = KBmanager.getMgr().getPref("TPTP");
+      if (TPTP == null)
+          TPTP = "yes";
+  }
+
   String typePrefix = request.getParameter("typePrefix");
   if (typePrefix != null) {
       changed = true;
@@ -500,6 +511,21 @@ if (StringUtil.isNonEmptyString(overwrite) &&
 		    out.print("checked=yes"); 
 		%> > no
 	    : Perform TPTP translation</label><P>
+	</li>
+
+	<li>
+	    <label for="TPTPDisplay">  
+	    <INPUT type="radio" name="TPTPDisplay" value="yes" <%   // default to no TPTPDisplay
+		if (KBmanager.getMgr().getPref("TPTPDisplay") != null &&
+		    KBmanager.getMgr().getPref("TPTPDisplay").equalsIgnoreCase("yes")) 
+		    out.print("checked=no"); 
+		%> > yes</input> 
+	    <INPUT type="radio" name="TPTPDisplay" value="no" <% 
+		if (KBmanager.getMgr().getPref("TPTPDisplay") == null ||
+		    KBmanager.getMgr().getPref("TPTPDisplay").equalsIgnoreCase("no")) 
+		    out.print("checked=yes"); 
+		%> > no
+	    : Display TPTP translation</label><P>
 	</li>
       </ol>
 
