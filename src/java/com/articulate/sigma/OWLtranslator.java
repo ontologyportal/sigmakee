@@ -991,7 +991,15 @@ public class OWLtranslator {
      */
      public void writeKB() throws IOException {
 
-         String filename = kb.name + ".owl";
+         writeKB("");
+    }
+
+    /** ***************************************************************
+     * Write OWL format.
+     */
+     public void writeKB(String path) throws IOException {
+
+         String filename = path + File.separator + kb.name + ".owl";
          System.out.println("INFO in OWLtranslator.write(): writing " + filename);
          readYAGOSUMOMappings();
          FileWriter fw = new FileWriter(filename);
