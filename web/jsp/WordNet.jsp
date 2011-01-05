@@ -89,7 +89,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
-  WordNet.initOnce();
+  //WordNet.initOnce();
   KB kb = KBmanager.getMgr().getKB(kbname);
   if (writeProlog != null) 
       WordNet.wn.writeProlog(kb);
