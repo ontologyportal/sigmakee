@@ -18,6 +18,7 @@
   userPages.add("Graph.jsp");
   userPages.add("KBs.jsp");
   userPages.add("Manifest.jsp");
+  userPages.add("OWL.jsp");
   userPages.add("SimpleBrowse.jsp");
   userPages.add("TreeView.jsp");
   userPages.add("WordNet.jsp");
@@ -45,6 +46,10 @@ if (StringUtil.emptyString(userName) || StringUtil.emptyString(userRole)) {
     return;
 }
 
+if (mgr.initializing) {
+    response.sendRedirect("init.jsp");
+    return;
+}
 // System.out.println("ENTER Prelude.jsp");
 // System.out.println("    userName == " + userName);
 // System.out.println("    userRole == " + userRole);
