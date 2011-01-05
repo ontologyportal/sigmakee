@@ -18,9 +18,8 @@ August 9, Acapulco, Mexico.
 
 // General Setup:
   String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) {
-    hostname = "localhost";
-  }
+  if (hostname == null) 
+      hostname = "localhost";  
 
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
 
@@ -40,17 +39,16 @@ August 9, Acapulco, Mexico.
 //----Determine Location
   String location = request.getParameter("systemOnTPTP");  
   if (location == null) {
-    if (tptpWorldExists) { 
-      location = "local";
-    } else if (builtInExists) {
-      location = "local";
-    } else {
-      location = "remote";
-    }
+      if (tptpWorldExists) { 
+          location = "local";
+      } else if (builtInExists) {
+          location = "local";
+      } else {
+          location = "remote";
+      }
   }
 
 %>
-
 
 <HTML>
 <HEAD>
@@ -61,36 +59,40 @@ August 9, Acapulco, Mexico.
 %>
   <script type="text/javascript">//<![CDATA[
     var tstp_dump;
+
     function openSoTSTP (dump) {
-      var tstp_url = 'http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTSTP';
-      var tstp_browser = window.open(tstp_url, '_blank');
-      tstp_dump = dump;
+        var tstp_url = 'http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTSTP';
+        var tstp_browser = window.open(tstp_url, '_blank');
+        tstp_dump = dump;
     }
+
     function getTSTPDump () {
-      return tstp_dump;
+        return tstp_dump;
     }
+
 <% if (tptpWorldExists && location.equals("local")) { %>
-    var current_location = "Local";
+        var current_location = "Local";
 <% } else if (builtInExists && location.equals("local")) { %>
-    var current_location = "BuiltIn";
+        var current_location = "BuiltIn";
 <% } else { %>
-    var current_location = "Remote";
+        var current_location = "Remote";
 <% } %>
+
 //----Toggle to either the local/builtin/remote list by showing new and hiding current
     function toggleList (location) {
-      if (current_location == location) {
-        return;
-      }
-      var obj;
-      obj = window.document.getElementById("systemList" + current_location);
-      if (obj) {
-        obj.setAttribute("style","display:none");
-      }
-      current_location = location;
-      obj = window.document.getElementById("systemList" + location);
-      if (obj) {
-        obj.setAttribute("style","display:inline");
-      }
+         if (current_location == location) {
+             return;
+         }
+         var obj;
+         obj = window.document.getElementById("systemList" + current_location);
+         if (obj) {
+             obj.setAttribute("style","display:none");
+         }
+         current_location = location;
+         obj = window.document.getElementById("systemList" + location);
+         if (obj) {
+             obj.setAttribute("style","display:inline");
+         }
     }
   //]]></script>
 
@@ -117,17 +119,16 @@ August 9, Acapulco, Mexico.
     int timeout = 30;
 
     if (chosenEngine == null) {
-      if (kb.inferenceEngine == null) 
-        chosenEngine = "SoTPTP";
-      else
-        chosenEngine = "Vampire";
+        if (kb.inferenceEngine == null) 
+            chosenEngine = "SoTPTP";
+        else
+            chosenEngine = "Vampire";
     }
  
     if (request.getParameter("maxAnswers") != null) 
         maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
     if (request.getParameter("timeout") != null)
         timeout= Integer.parseInt(request.getParameter("timeout"));
-    
     if ((kbName == null) || kbName.equals("")) {
         System.out.println("Error: No knowledge base specified");
         return;
@@ -137,48 +138,47 @@ August 9, Acapulco, Mexico.
   String systemChosenLocal = request.getParameter("systemChosenLocal");
   String systemChosenRemote = request.getParameter("systemChosenRemote");
   String systemChosenBuiltIn = request.getParameter("systemChosenBuiltIn");
-  if (systemChosenLocal == null) {
-    systemChosenLocal = defaultSystemLocal;
-  }
-  if (systemChosenRemote == null) {
-    systemChosenRemote = defaultSystemRemote;
-  }
-  if (systemChosenBuiltIn == null) {
-    systemChosenBuiltIn = defaultSystemBuiltIn;
-  }
+  if (systemChosenLocal == null) 
+      systemChosenLocal = defaultSystemLocal;
+  
+  if (systemChosenRemote == null) 
+      systemChosenRemote = defaultSystemRemote;
+  
+  if (systemChosenBuiltIn == null) 
+      systemChosenBuiltIn = defaultSystemBuiltIn;
+  
 
   String tstpFormat = request.getParameter("tstpFormat");
   String systemChosen;
 
-  if (systemChosenLocal == null) {
-    systemChosenLocal = defaultSystemLocal;
-  }
-  if (systemChosenRemote == null) {
-    systemChosenRemote = defaultSystemRemote;
-  }
-  if (systemChosenBuiltIn == null) {
-    systemChosenBuiltIn = defaultSystemBuiltIn;
-  }
+  if (systemChosenLocal == null) 
+      systemChosenLocal = defaultSystemLocal;
+  
+  if (systemChosenRemote == null) 
+      systemChosenRemote = defaultSystemRemote;
+  
+  if (systemChosenBuiltIn == null) 
+      systemChosenBuiltIn = defaultSystemBuiltIn;
+  
 
   if (location.equals("local")) {
-    if (tptpWorldExists) { 
-      systemChosen = systemChosenLocal;
-    } else {
-      systemChosen = systemChosenBuiltIn;
-    }
-  } else {
-    systemChosen = systemChosenRemote;
-  }
+      if (tptpWorldExists)  
+          systemChosen = systemChosenLocal;
+      else 
+          systemChosen = systemChosenBuiltIn;      
+  } 
+  else 
+      systemChosen = systemChosenRemote;
+  
 
-  if (tstpFormat == null) {
-    tstpFormat = "";
-  }
-
+  if (tstpFormat == null) 
+      tstpFormat = "";
+  
     String resultVampire = null;        
     String resultSoTPTP = null;        
 
-    String lineHtml =
-      "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+    String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'>" +
+                      "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
 
 %>
 
@@ -206,6 +206,7 @@ August 9, Acapulco, Mexico.
       </TR>
     </TABLE><br>
     
+    Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     Choose an inference engine for testing:<BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (chosenEngine.equals("Vampire")) {%>CHECKED<%}%>
@@ -216,23 +217,25 @@ August 9, Acapulco, Mexico.
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
     LEO-II <BR>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP2" <% if (chosenEngine.equals("STP2")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'"
+    <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
+    STP2 <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
-
 <%
 //----System selection
 %>
-  <DIV ID="SoTPTPControl" <% if (chosenEngine.equals("Vampire") || chosenEngine.equals("LEO")) {%>style="display:none;"<%}%>>
+  <DIV ID="SoTPTPControl" <% if (chosenEngine.equals("Vampire") || chosenEngine.equals("LEO") || chosenEngine.equals("STP2")) {%>style="display:none;"<%}%>>
     <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
 <% if (location.equals("local")) { out.print(" CHECKED"); } %>
-<% if (tptpWorldExists) {
-     out.println("onClick=\"javascript:toggleList('Local');\"");
-   } else {
-     out.println("onClick=\"javascript:toggleList('BuiltIn');\"");     
-   }
+<% if (tptpWorldExists) 
+       out.println("onClick=\"javascript:toggleList('Local');\"");
+   else 
+       out.println("onClick=\"javascript:toggleList('BuiltIn');\"");        
 %>
   >Local 
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
@@ -244,30 +247,27 @@ August 9, Acapulco, Mexico.
   String params;
   //----Create atp drop down list for local
   if (tptpWorldExists) {
-    if (location.equals("local")) {
-      params = "ID=systemListLocal style='display:inline'";
-    } else {
-      params = "ID=systemListLocal style='display:none'";
-    }
-    out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
-                                         systemListLocal, params)); 
+      if (location.equals("local")) 
+          params = "ID=systemListLocal style='display:inline'";
+      else 
+          params = "ID=systemListLocal style='display:none'";      
+      out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
+                                           systemListLocal, params)); 
   }
   //----Create atp drop down list for builtin
   if (builtInExists && !tptpWorldExists) {
-    if (location.equals("local")) {
-      params = "ID=systemListBuiltIn style='display:inline'";
-    } else {
-      params = "ID=systemListBuiltIn style='display:none'";
-    }
-    out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
-                                         systemListBuiltIn, params));
+      if (location.equals("local")) 
+          params = "ID=systemListBuiltIn style='display:inline'";
+      else 
+          params = "ID=systemListBuiltIn style='display:none'";      
+      out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
+                                           systemListBuiltIn, params));
   }
   //----Create atp drop down list for remote
-  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) {
-    params = "ID=systemListRemote style='display:inline'";
-  } else {
-    params = "ID=systemListRemote style='display:none'";
-  }
+  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) 
+      params = "ID=systemListRemote style='display:inline'";
+  else 
+      params = "ID=systemListRemote style='display:none'";    
   out.println(HTMLformatter.createMenu("systemChosenRemote",systemChosenRemote,
                                        systemListRemote, params));
 %>
@@ -276,7 +276,6 @@ August 9, Acapulco, Mexico.
 <%
 //----End System selection
 %>
-
     <INPUT type="submit" name="request" value="Test"><br><br>
     <INPUT TYPE="hidden" NAME="test" VALUE="inference">
 </FORM>
@@ -295,7 +294,11 @@ August 9, Acapulco, Mexico.
           req != null && req.equalsIgnoreCase("test")) {
           if (chosenEngine.equalsIgnoreCase("Vampire")) {
               out.println("(Testing Vampire-KIF)<br>");
-              sb = sb.append(InferenceTestSuite.test(kb));
+              sb = sb.append(InferenceTestSuite.test(kb, "KIF-Vampire", timeout));
+          }          
+          if (chosenEngine.equalsIgnoreCase("STP2")) {
+              out.println("(Testing STP2)<br>");
+              sb = sb.append(InferenceTestSuite.test(kb, "STP2", timeout));
           }          
           if (chosenEngine.equalsIgnoreCase("LEO")) {
               out.println("(Testing LEO)<br>");
@@ -314,7 +317,7 @@ August 9, Acapulco, Mexico.
                   out.println("(Testing remote SystemOnTPTP)<br>");
                   location="remote";
               }
-              sb = sb.append(InferenceTestSuite.test(kb, systemChosen, out, location));
+              sb = sb.append(InferenceTestSuite.test(kb, systemChosen, timeout, location));
           }          
       }
       if (test != null && test.equalsIgnoreCase("english")) 
