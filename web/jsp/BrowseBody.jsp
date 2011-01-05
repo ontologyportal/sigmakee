@@ -21,12 +21,12 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  term = request.getParameter("term");
 
  kbName = request.getParameter("kb");
- if (StringUtil.isNonEmptyString(kbName)) {
+ if (kbName != null && StringUtil.isNonEmptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
      if (kb != null)
          TaxoModel.kbName = kbName;
  }
- if (kb == null)
+ else
      response.sendRedirect("login.html");
  language = request.getParameter("lang");
  language = HTMLformatter.processLanguage(language,kb);
@@ -34,17 +34,17 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
  String hostname = KBmanager.getMgr().getPref("hostname");
  if (hostname == null)
-    hostname = "localhost";
+     hostname = "localhost";
  String port = KBmanager.getMgr().getPref("port");
  if (port == null)
-    port = "8080";
+     port = "8080";
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&kb=" + kbName;
 
  if (kb != null && StringUtil.emptyString(term))        // Show statistics only when no term is specified.
-    show.append(HTMLformatter.showStatistics(kb));
+     show.append(HTMLformatter.showStatistics(kb));
  else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term 
     show.append(HTMLformatter.showNeighborTerms(kb,term));
-    WordNet.initOnce();
+    //WordNet.initOnce();
     TreeMap tm = WordNet.wn.getSensesFromWord(term);
     if (tm != null) {
         show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
@@ -89,7 +89,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          }
          show.append(HTMLformatter.showPictures(kb,term));
          show.append("</td>");
-         WordNet.initOnce();
+         //WordNet.initOnce();
          TreeMap tm = WordNet.wn.getWordsFromTerm(term);
          if (tm != null) {
              show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
@@ -141,6 +141,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
                  "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
      show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
                  "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
-                 "&term=" + term + "\">Show simplified definition (with tree view)</a></small><br>\n");
+                 "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
+     show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
+                 "kb=" + kbName + "&term=" + term + "\">Show OWL translation</small><p>\n");
  }
 %>
