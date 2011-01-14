@@ -25,10 +25,10 @@ public class BasicXMLelement {
      /** The name of the tag */
     public String tagname = null;
      /** The attributes of the tag in key=value form */
-    public HashMap attributes = new HashMap();
+    public HashMap<String,String> attributes = new HashMap<String,String>();
      /** Any subelements of the tag, meaning any other
       *  tags that are nested within this one. */
-    public ArrayList subelements = new ArrayList();
+    public ArrayList<BasicXMLelement> subelements = new ArrayList<BasicXMLelement>();
      /** The contents between the start and end of this tag */
     public String contents = "";
 
@@ -43,14 +43,14 @@ public class BasicXMLelement {
         Iterator it = attributes.keySet().iterator();
         while (it.hasNext()) {
             String key = (String) it.next();
-            String value = (String) attributes.get(key);
+            String value = attributes.get(key);
             result = result.append(" " + key + "='" + value + "'");
         }
         result = result.append(">");
         if (contents != null)
             result = result.append(contents);
         for (int i = 0; i < subelements.size(); i++) {
-            BasicXMLelement el = (BasicXMLelement) subelements.get(i);
+            BasicXMLelement el = subelements.get(i);
             result = result.append(el.toString());
         }
         result = result.append("</" + tagname + ">\n");

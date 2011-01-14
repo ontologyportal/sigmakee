@@ -29,7 +29,7 @@ import java.text.*;
 public class BasicXMLparser {
 
      /** An ArrayList of BasicXMLelement(s). */
-    public ArrayList elements = new ArrayList();
+    public ArrayList<BasicXMLelement> elements = new ArrayList<BasicXMLelement>();
 
     /** ***************************************************************
      * Constructor that parses an XML-formatted string, with one tag per
@@ -169,7 +169,7 @@ public class BasicXMLparser {
 
         StringBuffer result = new StringBuffer();
         for (int i = 0; i < elements.size(); i++) {
-            BasicXMLelement element = (BasicXMLelement) elements.get(i);
+            BasicXMLelement element = elements.get(i);
             result = result.append(element.toString());
         }
         return result.toString();
