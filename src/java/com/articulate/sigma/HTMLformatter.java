@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
+/* This code is copyright Articulate Software (c) 2003-2011.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -10,7 +10,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
 import java.util.*;
@@ -33,6 +33,9 @@ public class HTMLformatter {
     // set by BrowseBody.jsp or SimpleBrowseBody.jsp
     public static String language = "EnglishLanguage"; 
 
+    public static ArrayList<String> availableFormalLanguages = 
+        new ArrayList(Arrays.asList("SUO-KIF","TPTP"));
+
     /** *************************************************************
      *  Create the HTML for the labeled divider between the sections
      *  of the term display.  Each section displays a sorted list of
@@ -40,6 +43,7 @@ public class HTMLformatter {
      *  position.
      */
     public static String htmlDivider(String label) {
+
         String result = "";
         try {
             StringBuilder sb = new StringBuilder();
@@ -88,10 +92,7 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
-    public static String proofTableFormat(String query, 
-                                          ProofStep step, 
-                                          String kbName, 
-                                          String language) {
+    public static String proofTableFormat(String query, ProofStep step, String kbName, String language) {
 
         // System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
         StringBuilder result = new StringBuilder();
@@ -155,22 +156,22 @@ public class HTMLformatter {
 
     /** *************************************************************
      */
-    public static String processLanguage(String lang, KB kb) {
+    public static String processFormalLanguage(String flang) {
 
-        if (kb == null || !kb.availableLanguages().contains(lang)) 
-            lang = "EnglishLanguage";        
-        if (StringUtil.isNonEmptyString(lang)) {
-            HTMLformatter.language = lang;  
+        if (!StringUtil.isNonEmptyString(flang) || !availableFormalLanguages.contains(flang)) 
+            return "SUO-KIF";   
+        else
+            return flang;
+    }
+
+    /** *************************************************************
+     */
+    public static String processNaturalLanguage(String lang, KB kb) {
+
+        if (kb == null || !kb.availableLanguages().contains(lang) || !StringUtil.isNonEmptyString(lang)) 
+            return "EnglishLanguage";   
+        else
             return lang;
-        }
-        else {
-            if (StringUtil.isNonEmptyString(HTMLformatter.language)) 
-                return HTMLformatter.language;     
-            else {
-                HTMLformatter.language = lang;
-                return "EnglishLanguage";
-            }
-        }
     }
 
     /** *************************************************************
@@ -259,8 +260,6 @@ public class HTMLformatter {
         String markup = "";
         try {
             StringBuilder show = new StringBuilder();
-
-            // For a term that is not present in the KB.
             ArrayList relations = kb.getNearestRelations(term); 
             ArrayList nonRelations = kb.getNearestNonRelations(term);
             String termAbove = kb.getAlphaBefore(term,15);
@@ -272,38 +271,25 @@ public class HTMLformatter {
             show.append("</b></FONT><br><br>");
             show.append("<table><tr><td>");
             show.append("<table>");
-            show.append("<tr><td><i><a href=\""+ kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</a>" + "</i></td></tr>\n");
+            show.append("<tr><td><i><a href=\"" + kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</a>" + "</i></td></tr>\n");
             for (int i = 0; i < 30; i++) {
                 String relation = (String) relations.get(i);
-                String relationName = DocGen.getInstance(kb.name).showTermName(kb,
-                                                                               relation,
-                                                                               language);
+                String relationName = DocGen.getInstance(kb.name).showTermName(kb,relation,language);
                 String nonRelation = (String) nonRelations.get(i);
-                String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb,
-                                                                                  nonRelation,
-                                                                                  language);
+                String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb,nonRelation,language);
                 if (relation != "" || nonRelation != "") {
-                    if (i == 14) {
-                        show.append("<tr>\n");
-                        show.append("  <td><a href=\""+ kbHref +"&term=");
-                        show.append(   relation + "\">" + relationName + "</a>" + "</td><td>&nbsp;&nbsp;</td>\n");
-                        show.append("  <td><a href=\""+ kbHref +"&term=");
-                        show.append(   nonRelation + "\">" + nonRelationName + "</a>" + "</td>\n");
-                        show.append("</tr>\n");
-                        show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></td><td>&nbsp;&nbsp;</td>\n");
-                        show.append("<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>\n");
-                    }
-                    else {
-                        show.append("<tr>\n");
-                        show.append("  <td><a href=\""+ kbHref +"&term=");
-                        show.append(   relation + "\">" + relationName + "</a>" + "</td><td>&nbsp;&nbsp;</td>\n");
-                        show.append("  <td><a href=\""+ kbHref +"&term=");
-                        show.append(   nonRelation + "\">" + nonRelationName + "</a>" + "</td>\n");
-                        show.append("</tr>\n");
-                    }
-                }
+                    show.append("<tr>\n");
+                    show.append("  <td><a href=\"" + kbHref +"&term=");
+                    show.append(   relation + "\">" + relation + " (" + relationName + ")</a>" + "</td><td>&nbsp;&nbsp;</td>\n");
+                    show.append("  <td><a href=\"" + kbHref +"&term=");
+                    show.append(   nonRelation + "\">" + nonRelation + " (" + nonRelationName + ")</a>" + "</td>\n");
+                    show.append("</tr>\n");
+                    if (i == 14) 
+                        show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></td><td>&nbsp;&nbsp;</td>\n" +
+                        			"<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>\n");                    
+                 }
             }
-            show.append("<tr><td><i><a href=\""+ kbHref +"&term=" + termBelow + "*\">next " + 25 + "</a>" + "</i></td></tr>\n");
+            show.append("<tr><td><i><a href=\"" + kbHref + "&term=" + termBelow + "*\">next " + 25 + "</a>" + "</i></td></tr>\n");
             show.append("</table></td>");
             markup = show.toString();
         }
@@ -365,9 +351,11 @@ public class HTMLformatter {
      *  Create the HTML for a section of the Sigma term browser page.
      */
     public static String browserSectionFormatLimit(String term, String header, KB kb, 
-                                                   String language, int start, int limit, 
+                                                   String language, String flang, int start, int limit, 
                                                    int arg, String type) {
-
+    	
+        System.out.println("INFO in HTMLformatter.browserSectionFormatLimit(): flang" + flang);
+    	 
         ArrayList forms = kb.ask(type,arg,term);
         StringBuilder show = new StringBuilder();
         String limitString = "";
@@ -384,14 +372,14 @@ public class HTMLformatter {
             else 
                 limitString = ("<tr><td><br></td></tr><tr><td>Display limited to " 
                                + limit + " items. " 
-                               + "<a href=\"BrowseExtra.jsp?term=" + term 
+                               + "<a href=\"BrowseExtra.jsp?term=" + term + "&lang=" + language + "&flang=" + flang
                                + "&kb=" + kb.name + "&start=" + (start+limit)
                                + "&arg=" + arg + "&type=" + type + "\">Show next " 
                                + limit + "</a></td></tr>\n");            
 
             boolean isArabic = (language.matches(".*(?i)arabic.*")
                                 || language.equalsIgnoreCase("ar"));
-            System.out.println("INFO in HTMLformatter.browserSectionFormatLimit(): localLimit" + localLimit);
+            //System.out.println("INFO in HTMLformatter.browserSectionFormatLimit(): localLimit" + localLimit);
             for (int i = start; i < localLimit; i++) {
                 Formula f = (Formula) forms.get(i);
 
@@ -400,8 +388,8 @@ public class HTMLformatter {
                     String arg0 = f.getArgument(0);
                     show.append("<tr><td width=\"50%\" valign=\"top\">");
                     String formattedFormula = null;
-                    if (KBmanager.getMgr().getPref("TPTPDisplay").equals("yes"))
-                        formattedFormula =  f.htmlTPTPFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
+                    if (flang.equals("TPTP"))
+                        formattedFormula =  TPTPutil.htmlTPTPFormat(f,kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                     else
                         formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                     if (Formula.DOC_PREDICATES.contains(arg0))
@@ -410,7 +398,6 @@ public class HTMLformatter {
                         show.append(formattedFormula);
                     File srcfile = new File(f.sourceFile);
                     String sourceFilename = srcfile.getName();
-                    // f.sourceFile.substring(f.sourceFile.lastIndexOf(File.separator) + 1);
                     show.append("<a href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
                     if (StringUtil.isNonEmptyString(sourceFilename)) {
                         show.append(sourceFilename);
@@ -443,9 +430,9 @@ public class HTMLformatter {
      *  Create the HTML for a section of the Sigma term browser page.
      */
     public static String browserSectionFormat(String term, String header, 
-                                              KB kb, String language, int arg, String type) {
+                                              KB kb, String language, String flang, int arg, String type) {
 
-        return browserSectionFormatLimit(term, header,kb, language, 0, 50, arg,type);
+        return browserSectionFormatLimit(term, header,kb, language, flang, 0, 50, arg,type);
     }
 
     /** *************************************************************
