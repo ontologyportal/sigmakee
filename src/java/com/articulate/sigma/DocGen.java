@@ -58,7 +58,6 @@ public class DocGen {
         return bitValue;
     }
 
-
     protected static final String SP2 = "  ";
 
     /** *************************************************************
@@ -89,10 +88,11 @@ public class DocGen {
         return inst;
     }
 
+    /** *************************************************************
+     */
     public static DocGen getInstance(String compositeKey) {
 
         // System.out.println("ENTER DocGen.getInstance(" + compositeKey + ")");
-
         DocGen inst = null;
         try {
             KBmanager mgr = KBmanager.getMgr();
@@ -133,6 +133,8 @@ public class DocGen {
         return inst;
     }
 
+    /** *************************************************************
+     */
     public static DocGen getInstance(KB kb, String ontology) {
         // System.out.println("ENTER DocGen.getInstance(" + kb.name + ", " + ontology + ")");
         DocGen inst = null;
@@ -190,8 +192,6 @@ public class DocGen {
      * Sets to 0 the int value that represents the bit values used to
      * guide aspects of the document generation process for this
      * DocGen instance.
-     *
-     * @return void
      */
     public void clearDocGenControlBits() {
         docGenControlBits = 0;
@@ -497,9 +497,8 @@ public class DocGen {
                             // candidates is not empty, we just grab a
                             // candidate and try it.
                             it = candidates.iterator();
-                            if (it.hasNext()) {
-                                onto = (String) it.next();
-                            }
+                            if (it.hasNext()) 
+                                onto = (String) it.next();                            
                         }
                     }
                 }
@@ -603,9 +602,7 @@ public class DocGen {
 
     /** The document footer text to be used for HTML generation */
     protected String footerText = "";
-
-    // ("Produced by <a href=\"http://www.articulatesoftware.com\"> "
-    //                          + "Articulate Software</a> and its partners");
+    //"Produced by <a href=\"http://www.articulatesoftware.com\"> " + "Articulate Software</a> and its partners";
 
     /** *************************************************************
      * Sets the footer text String to be used during HTML document
