@@ -22,7 +22,7 @@ public class OWLtranslator {
     public static OWLtranslator ot = new OWLtranslator();
 
     public static boolean initNeeded = true;
-    private KB kb;
+    public KB kb;
 
     /** Relations in SUMO that have a corresponding relation in
      *  OWL and therefore require special treatment. */
