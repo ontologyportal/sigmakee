@@ -33,14 +33,14 @@ public class KB {
     public InferenceEngine inferenceEngine;  
 
     /** The collection of inference engines for this KB. */
-    public TreeMap<String, InferenceEngine> engineMap = new TreeMap();
+    public TreeMap<String, InferenceEngine> engineMap = new TreeMap<String, InferenceEngine>();
 
     /** The name of the knowledge base. */
     public String name;                       
 
     /** An ArrayList of Strings that are the full
      * canonical pathnames of the files that comprise the KB. */
-    public ArrayList constituents = new ArrayList();
+    public ArrayList<String> constituents = new ArrayList<String>();
 
     /** The natural language in which axiom paraphrases should be presented. */
     public String language = "EnglishLanguage";    
@@ -62,7 +62,7 @@ public class KB {
     private static final long MAX_CACHE_SIZE = 1000000;
 
     /** A List of the names of cached transitive relations. */
-    private List cachedTransitiveRelationNames = Arrays.asList("subclass", 
+    private List<String> cachedTransitiveRelationNames = Arrays.asList("subclass", 
                                                                "subset",
                                                                "subrelation", 
                                                                "subAttribute", 
@@ -73,7 +73,7 @@ public class KB {
                                                                "geopoliticalSubdivision");
 
     /** A List of the names of cached reflexive relations. */
-    private List cachedReflexiveRelationNames = Arrays.asList("subclass", 
+    private List<String> cachedReflexiveRelationNames = Arrays.asList("subclass", 
                                                               "subset",
                                                               "subrelation", 
                                                               "subAttribute", 
@@ -82,7 +82,7 @@ public class KB {
                                                               "subProcess");
 
     /** A List of the names of cached relations. */
-    private List cachedRelationNames = Arrays.asList("instance", "disjoint");
+    private List<String> cachedRelationNames = Arrays.asList("instance", "disjoint");
 
     /** An ArrayList of RelationCache objects. */
     private ArrayList relationCaches = new ArrayList();
@@ -225,7 +225,7 @@ public class KB {
     private ArrayList getCachedRelationNames() {
         ArrayList relationNames = new ArrayList();
         try {
-            Set reduced = new LinkedHashSet(cachedRelationNames);
+        	LinkedHashSet<String> reduced = new LinkedHashSet<String>(cachedRelationNames);
             reduced.addAll(getCachedTransitiveRelationNames());
             reduced.addAll(getCachedSymmetricRelationNames());
             relationNames.addAll(reduced);
