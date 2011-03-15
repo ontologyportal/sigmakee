@@ -251,37 +251,56 @@ public class ProofProcessor {
     }
 
     /** ***************************************************************
-    *  A main method, used only for testing.  It should not be called
-    *  during normal operation.
-    */
-    public static void main (String[] args) {
+     *  A method used only for testing.  It should not be called
+     *  during normal operation.
+     */
+     public static void test (String[] args) {
 
-       try {
-           FileReader r = new FileReader(args[0]);
-           LineNumberReader lr = new LineNumberReader(r);
-           String line;
-           StringBuffer result = new StringBuffer();
-           while ((line = lr.readLine()) != null) {
-               result.append(line + "\n");
-//DEBUG System.out.println(line);
-           }
+        try {
+            FileReader r = new FileReader(args[0]);
+            LineNumberReader lr = new LineNumberReader(r);
+            String line;
+            StringBuffer result = new StringBuffer();
+            while ((line = lr.readLine()) != null) {
+                result.append(line + "\n");
+ //DEBUG System.out.println(line);
+            }
 
-           BasicXMLparser res = new BasicXMLparser(result.toString());
-           result = new StringBuffer();
-           ProofProcessor pp = new ProofProcessor(res.elements);
-           for (int i = 0; i < pp.numAnswers(); i++) {
-               ArrayList proofSteps = pp.getProofSteps(i);
-               proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
-               if (i != 0) 
-                   result.append("\n");               
-               result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i) + "\n");
-               if (!pp.returnAnswer(i).equalsIgnoreCase("no")) 
-                   result.append(tptpProof(proofSteps));               
-           }
-           System.out.println(result.toString());
-        }
-        catch (IOException ioe) {
-            System.out.println("Error in ProofProcessor.main(): IOException: " + ioe.getMessage());
-        }     
-    }
+            BasicXMLparser res = new BasicXMLparser(result.toString());
+            result = new StringBuffer();
+            ProofProcessor pp = new ProofProcessor(res.elements);
+            for (int i = 0; i < pp.numAnswers(); i++) {
+                ArrayList proofSteps = pp.getProofSteps(i);
+                proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
+                if (i != 0) 
+                    result.append("\n");               
+                result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i) + "\n");
+                if (!pp.returnAnswer(i).equalsIgnoreCase("no")) 
+                    result.append(tptpProof(proofSteps));               
+            }
+            System.out.println(result.toString());
+         }
+         catch (IOException ioe) {
+             System.out.println("Error in ProofProcessor.main(): IOException: " + ioe.getMessage());
+         }     
+     }   
+     
+     /** ***************************************************************
+      *  A main method, used only for testing.  It should not be called
+      *  during normal operation.
+      */
+      public static void main (String[] args) {
+
+          try {
+              KBmanager.getMgr().initializeOnce();
+              KB kb = KBmanager.getMgr().getKB("SUMO");
+              String stmt = "(subclass ?X Entity)";
+              String result = kb.ask(stmt, 30, 3);
+              result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n","SUMO","EnglishLanguage");
+              System.out.println(result);
+          } catch (Exception ex) {
+              System.out.println(ex.getMessage());
+          }
+
+      }
 }
