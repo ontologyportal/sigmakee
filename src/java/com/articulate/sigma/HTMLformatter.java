@@ -34,7 +34,7 @@ public class HTMLformatter {
     public static String language = "EnglishLanguage"; 
 
     public static ArrayList<String> availableFormalLanguages = 
-        new ArrayList(Arrays.asList("SUO-KIF","TPTP"));
+        new ArrayList(Arrays.asList("SUO-KIF","TPTP","traditionalLogic","OWL"));
 
     /** *************************************************************
      *  Create the HTML for the labeled divider between the sections
@@ -353,14 +353,15 @@ public class HTMLformatter {
     public static String browserSectionFormatLimit(String term, String header, KB kb, 
                                                    String language, String flang, int start, int limit, 
                                                    int arg, String type) {
-    	
-        System.out.println("INFO in HTMLformatter.browserSectionFormatLimit(): flang" + flang);
-    	 
+    	    	 
         ArrayList forms = kb.ask(type,arg,term);
         StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
-
+        boolean traditionalLogic = false;
+        
+        if (flang.equals("traditionalLogic"))
+        	traditionalLogic = true;
         if (forms != null && !KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes")) 
             forms = TaxoModel.removeCached(forms);
         if (forms != null && !forms.isEmpty()) {
@@ -388,8 +389,8 @@ public class HTMLformatter {
                     String arg0 = f.getArgument(0);
                     show.append("<tr><td width=\"50%\" valign=\"top\">");
                     String formattedFormula = null;
-                    if (flang.equals("TPTP"))
-                        formattedFormula =  TPTPutil.htmlTPTPFormat(f,kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
+                    if (flang.equals("TPTP") || flang.equals("traditionalLogic"))
+                        formattedFormula = TPTPutil.htmlTPTPFormat(f,kbHref,traditionalLogic) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                     else
                         formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                     if (Formula.DOC_PREDICATES.contains(arg0))
@@ -599,7 +600,7 @@ public class HTMLformatter {
      */
     public static String formatProofResult(String result, String stmt, String processedStmt, 
                                            String lineHtml, String kbName, String language) {
-	return formatProofResult(result, stmt, processedStmt, lineHtml, kbName, language, 1);
+    	return formatProofResult(result, stmt, processedStmt, lineHtml, kbName, language, 1);
     }
 
     public static String formatProofResult(String result, String stmt, String processedStmt, 
@@ -616,6 +617,9 @@ public class HTMLformatter {
             for (int i = 0; i < pp.numAnswers(); i++) {
                 ArrayList proofSteps = pp.getProofSteps(i);
                 proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
+                System.out.println(proofSteps);
+                proofSteps = new ArrayList(ProofStep.removeDuplicates(proofSteps));
+                System.out.println(proofSteps);
 
                 //System.out.print("Proof steps: ");
                 //System.out.println(proofSteps.size());
