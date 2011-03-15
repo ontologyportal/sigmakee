@@ -1,11 +1,10 @@
 package com.articulate.sigma;
 import java.util.*;
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
+/** This code is copyright Articulate Software (c) 2003.  
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
+in any writings, briefings, publications, presentations, or 
 other representations of any software which incorporates, builds on, or uses this 
 code.  Please cite the following article in any publication with references:
 
@@ -188,16 +187,8 @@ public class TaxoModel {
 
     /** ***************************************************************
      */
-    public static String toHTML(String simple) {
+    public static String toHTML(String kbHref) {
 
-        String hostname = KBmanager.getMgr().getPref("hostname");
-        if (hostname == null)
-           hostname = "localhost";
-        String port = KBmanager.getMgr().getPref("port");
-        if (port == null)
-           port = "8080";
-        kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
-            "&simple=" + simple + "&term=";
         StringBuffer sb = new StringBuffer();
         Object[] objArr = rootList.values().toArray();
         for (int i = 0; i < objArr.length; i++) {
