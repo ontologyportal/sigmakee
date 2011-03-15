@@ -49,7 +49,7 @@ public class ProofStep {
      * starting at 1.  Update the ArrayList of premises so that they
      * reflect the renumbering.
      */
-    public static ArrayList normalizeProofStepNumbers(ArrayList proofSteps) {
+    public static ArrayList<ProofStep> normalizeProofStepNumbers(ArrayList<ProofStep> proofSteps) {
 
         // old number, new number
         HashMap<Integer,Integer> numberingMap = new HashMap();
@@ -69,7 +69,7 @@ public class ProofStep {
                 numberingMap.put(oldIndex,new Integer(newIndex++));
             }
             for (int j = 0; j < ps.premises.size(); j++) {
-                Integer premiseNum = ps.premises.get(j).intValue();
+                Integer premiseNum = ps.premises.get(j);
                 //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): old premise num: " + premiseNum);
                 Integer newNumber = null;
                 if (numberingMap.get(premiseNum) != null) 
@@ -83,6 +83,51 @@ public class ProofStep {
             }
         }
         return proofSteps;
+    }
+
+    /** ***************************************************************
+     * Take an ArrayList of ProofSteps and renumber them consecutively
+     * starting at 1.  Update the ArrayList of premises so that they
+     * reflect the renumbering.
+     */
+    public static ArrayList<ProofStep> removeDuplicates(ArrayList<ProofStep> proofSteps) {
+
+        // old number, new number
+        HashMap<Integer,Integer> numberingMap = new HashMap<Integer,Integer>();
+        HashMap<String,Integer> formulaMap = new HashMap<String,Integer>();
+        ArrayList<ProofStep> newProofSteps = new ArrayList<ProofStep>();
+        
+        for (int i = 0; i < proofSteps.size(); i++) {
+            ProofStep ps = (ProofStep) proofSteps.get(i);
+            Integer index = new Integer(ps.number);
+            String s = Clausifier.normalizeVariables(ps.axiom);
+            if (formulaMap.keySet().contains(s)) {
+            	Integer fNum = (Integer) formulaMap.get(s); 
+            	numberingMap.put(index,fNum);
+            }
+            else {
+            	formulaMap.put(s,index);
+                Integer newIndex = index;
+                if (numberingMap.keySet().contains(index))
+                	newIndex = (Integer) numberingMap.get(index);
+                ProofStep psNew = new ProofStep();
+                psNew.formulaRole = ps.formulaRole;
+                psNew.formulaType = ps.formulaType;
+                psNew.axiom = s;
+                psNew.number = newIndex;
+                for (int j = 0; j < ps.premises.size(); j++) {
+                    Integer premiseNum = ps.premises.get(j);
+                    Integer newNumber = null;
+                    if (numberingMap.get(premiseNum) != null) 
+                        newNumber = new Integer((Integer) numberingMap.get(premiseNum));
+                    else 
+                        newNumber = new Integer(premiseNum);                
+                    psNew.premises.set(j,newNumber);                    
+                }
+                newProofSteps.add(psNew);
+            }
+        }
+        return newProofSteps;
     }
 
     /** ***************************************************************
