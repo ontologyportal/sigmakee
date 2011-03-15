@@ -1188,6 +1188,7 @@ public class OWLtranslator {
      */
     private void writeWordNetSynset(PrintWriter pw, String synset) {
 
+    	System.out.println("INFO in OWLtranslator.writeWordNetSynset(): " + synset);
         if (synset.startsWith("WN30-")) 
             synset = synset.substring(5);
         ArrayList al = (ArrayList) WordNet.wn.synsetsToWords.get(synset);
@@ -1273,10 +1274,14 @@ public class OWLtranslator {
             wordOrPhrase = "phrase";
         pw.println("  <rdfs:comment xml:lang=\"en\">The English " + wordOrPhrase + " \"" + word + "\".</rdfs:comment>");
         ArrayList senses = (ArrayList) WordNet.wn.wordsToSenses.get(word);
-        for (int i = 0; i < senses.size(); i++) {
-            String sense = (String) senses.get(i);
-            pw.println("  <wnd:senseKey rdf:resource=\"#WN30WordSense-" + sense + "\"/>");
+        if (senses != null) {
+        	for (int i = 0; i < senses.size(); i++) {
+        		String sense = (String) senses.get(i);
+        		pw.println("  <wnd:senseKey rdf:resource=\"#WN30WordSense-" + sense + "\"/>");
+        	}
         }
+        else
+        	System.out.println("Error in OWLtranslator.writeOneWordToSenses(): no senses for word: " + word);
         pw.println("</owl:Thing>");
     }
 
@@ -1371,14 +1376,18 @@ public class OWLtranslator {
      */
     public void writeTerm(PrintWriter pw, String term) {
 
+    	if (kb == null) {
+    		System.out.println("Error in OWLtranslator.writeTerm(): no KB");
+    		return;
+    	}
         if (term.startsWith("WN30")) {
             writeWordNetHeader(pw);
             if (term.startsWith("WN30-")) 
                 writeWordNetSynset(pw,term);
             else if (term.startsWith("WN30Word-")) 
-                writeOneWordToSenses(pw,term);
+                writeOneWordToSenses(pw,term.substring(9));
             else if (term.startsWith("WN30WordSense-")) 
-                writeOneWordToSenses(pw,term);
+                writeOneWordToSenses(pw,term.substring(14));
         }
         else {
             writeKBHeader(pw);
@@ -1468,12 +1477,14 @@ public class OWLtranslator {
 
     /** ***************************************************************
      */
-    public static void initOnce() {
+    public static void initOnce(String kbName) {
    
+    	if (ot.kb == null || !kbName.equals(ot.kb.name))
+    		initNeeded = true;
         if (initNeeded == true) {
             initNeeded = false;
             ot.writeDefsAsFiles();
-            ot.kb = KBmanager.getMgr().getKB("SUMO");
+            ot.kb = KBmanager.getMgr().getKB(kbName);
             ot.createAxiomMap();
             ot.readYAGOSUMOMappings();
         }
