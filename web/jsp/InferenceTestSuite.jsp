@@ -1,8 +1,6 @@
-
 <%@ include file="Prelude.jsp" %>
 
 <%
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -13,16 +11,9 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
-*/
-
-// General Setup:
-  String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) 
-      hostname = "localhost";  
-
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+*/ 
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
-
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
   String BuiltInDir = KBmanager.getMgr().getPref("systemsDir");
   String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
@@ -103,10 +94,6 @@ August 9, Acapulco, Mexico.
     StringBuffer status = new StringBuffer();
     ArrayList processedStmts = null;
 
-    String kbName = request.getParameter("kb");
-    KB kb = KBmanager.getMgr().getKB(kbName);
-    String language = request.getParameter("lang");
-    language = HTMLformatter.processLanguage(language,kb);
     String req = request.getParameter("request");
     String chosenEngine = request.getParameter("inferenceEngine");
 
@@ -147,7 +134,6 @@ August 9, Acapulco, Mexico.
   if (systemChosenBuiltIn == null) 
       systemChosenBuiltIn = defaultSystemBuiltIn;
   
-
   String tstpFormat = request.getParameter("tstpFormat");
   String systemChosen;
 
@@ -179,7 +165,6 @@ August 9, Acapulco, Mexico.
 
     String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'>" +
                       "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-
 %>
 
 <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF>
@@ -323,7 +308,6 @@ August 9, Acapulco, Mexico.
       if (test != null && test.equalsIgnoreCase("english")) 
           sb = sb.append(CELTTestSuite.test(kb));
   }
-
 %>
 
 <%

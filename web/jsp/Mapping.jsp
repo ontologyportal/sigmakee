@@ -92,8 +92,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             out.println("var termSize = new Array();");
             while (iter.hasNext()) {
                 String name = (String) iter.next();
-                KB kb = KBmanager.getMgr().getKB(name);
-                int count = kb.terms.size();
+                KB kbx = KBmanager.getMgr().getKB(name);
+                int count = kbx.terms.size();
                 out.println("termSize[\"" + name + "\"] = " + count + ";");
             }
         %>
@@ -127,12 +127,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     }
     System.out.println("INFO in Mapping.jsp");
     String prefUserName = KBmanager.getMgr().getPref("userName");
-    String hostname = KBmanager.getMgr().getPref("hostname");
-    if (StringUtil.emptyString(hostname))
-        hostname = "localhost";
-    String port = KBmanager.getMgr().getPref("port");
-    if (StringUtil.emptyString(port))
-        port = "8080";
     String matchMethod = request.getParameter("matchMethod");
     if (matchMethod == null) 
         matchMethod = "Substring";

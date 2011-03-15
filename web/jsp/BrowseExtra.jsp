@@ -23,9 +23,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
  StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
- String kbName = null;   // Name of the knowledge base
- KB kb = null;   // The knowledge base object.
- String formattedFormula = null;
+  String formattedFormula = null;
  int start = 0;
  String startString = request.getParameter("start");
  if (Formula.isNonEmptyString(startString))
@@ -36,28 +34,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
      arg = Integer.decode(argString).intValue();
  String type = request.getParameter("type");
  String term = request.getParameter("term");
- String language = request.getParameter("lang");
- if (!Formula.isNonEmptyString(language))
-   language = HTMLformatter.language;
- else
-   HTMLformatter.language = language;
- kbName = request.getParameter("kb");
- if (Formula.isNonEmptyString(kbName)) {
-     kb = KBmanager.getMgr().getKB(kbName);
-     if (kb != null)
-         TaxoModel.kbName = kbName;
- }
- if (kb == null)
-     response.sendRedirect("login.html");
  Map theMap = null;     // Map of natural language format strings.
 
- String hostname = KBmanager.getMgr().getPref("hostname");
- if (hostname == null)
-    hostname = "localhost";
- String port = KBmanager.getMgr().getPref("port");
- if (port == null)
-    port = "8080";
- HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp" + "?lang=" + language + "&kb=" + kbName;
+ HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp" + "?lang=" + language + "?flang=" + flang + "&kb=" + kbName;
 
  if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
@@ -99,7 +78,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
         KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
         limit = 200;
     }
-    show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, language,start,limit,arg,type));
+    show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, language,flang,start,limit,arg,type));
  }
 %>
 <%=show.toString() %><BR>

@@ -10,17 +10,8 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-   //System.out.println("INFO in SystemOnTPTP.jsp");
-
-  String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) {
-    hostname = "localhost";
-  }
-
-
-//-----------------------------------------------------------------------------
 //----Check if Builtin Systems exist
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
   String systemsInfo = systemsDir + "/SystemInfo";
@@ -34,7 +25,6 @@ August 9, Acapulco, Mexico.
     defaultSystemBuiltIn = "EP---0.999";
   }        
 
-
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
   String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
   InterfaceTPTP.init();
@@ -44,8 +34,6 @@ August 9, Acapulco, Mexico.
   String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
   boolean tptpWorldExists = InterfaceTPTP.tptpWorldExists;
 
-
-
 //---keep until debugged
   String SoTPTP = TPTPWorld + "/SystemExecution/SystemOnTPTP";
   String responseLine;
@@ -53,33 +41,15 @@ August 9, Acapulco, Mexico.
     "http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTPTPFormReply";
   BufferedReader reader;
 
-
-
-
-//-----------------------------------------------------------------------------
 //----Code for building the query part
-
-  String kbName = request.getParameter("kb");
-  KB kb;
-  if (kbName == null) {
-    kb = null;
-  } else {
-    kb = KBmanager.getMgr().getKB(kbName);
-  }
-  String language = request.getParameter("lang");
-  language = HTMLformatter.processLanguage(language,kb);
   String stmt = request.getParameter("stmt");
   int maxAnswers = 1;
   int timeout = 30;
-//  Iterator systemIterator;
-//  String systemName;
-
 
 //---SystemOnTPTP request parameters
   String systemChosenLocal = request.getParameter("systemChosenLocal");
   String systemChosenRemote = request.getParameter("systemChosenRemote");
   String systemChosenBuiltIn = request.getParameter("systemChosenBuiltIn");
-
 
   String quietFlag = request.getParameter("quietFlag");
   String location = request.getParameter("systemOnTPTP");  
@@ -87,24 +57,18 @@ August 9, Acapulco, Mexico.
   String sanitize = request.getParameter("sanitize");
   String systemChosen;
 
-  if (request.getParameter("maxAnswers") != null) {
-    maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
-  }
-  if (request.getParameter("timeout") != null) {
-    timeout = Integer.parseInt(request.getParameter("timeout"));
-  }
-  if (quietFlag == null) {
-    quietFlag = "hyperlinkedKIF";
-  }
-  if (systemChosenLocal == null) {
-    systemChosenLocal = defaultSystemLocal;
-  }
-  if (systemChosenRemote == null) {
-    systemChosenRemote = defaultSystemRemote;
-  }
-  if (systemChosenBuiltIn == null) {
-    systemChosenBuiltIn = defaultSystemBuiltIn;
-  }
+  if (request.getParameter("maxAnswers") != null) 
+    maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));  
+  if (request.getParameter("timeout") != null) 
+    timeout = Integer.parseInt(request.getParameter("timeout"));  
+  if (quietFlag == null) 
+    quietFlag = "hyperlinkedKIF";  
+  if (systemChosenLocal == null) 
+    systemChosenLocal = defaultSystemLocal;  
+  if (systemChosenRemote == null) 
+    systemChosenRemote = defaultSystemRemote; 
+  if (systemChosenBuiltIn == null) 
+    systemChosenBuiltIn = defaultSystemBuiltIn;  
   if (location == null) {
     if (tptpWorldExists) { 
       location = "local";
@@ -202,8 +166,6 @@ August 9, Acapulco, Mexico.
   <IMG SRC='pixmaps/1pixel.gif' WIDTH=1 HEIGHT=1 BORDER=0><BR>
   <TEXTAREA ROWS=5 COLS=70" NAME="stmt"><%=stmt%></TEXTAREA><BR>
 
-
-
   <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
 <% if (location.equals("local")) { out.print(" CHECKED"); } %>
@@ -223,41 +185,31 @@ August 9, Acapulco, Mexico.
   String params;
   //----Create atp drop down list for local
   if (tptpWorldExists) {
-    if (location.equals("local")) {
+    if (location.equals("local")) 
       params = "ID=systemListLocal style='display:inline'";
-    } else {
-      params = "ID=systemListLocal style='display:none'";
-    }
+    else 
+      params = "ID=systemListLocal style='display:none'";    
     out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
                                          systemListLocal, params)); 
   }
   //----Create atp drop down list for builtin
   if (builtInExists && !tptpWorldExists) {
-    if (location.equals("local")) {
+    if (location.equals("local")) 
       params = "ID=systemListBuiltIn style='display:inline'";
-    } else {
-      params = "ID=systemListBuiltIn style='display:none'";
-    }
+    else 
+      params = "ID=systemListBuiltIn style='display:none'";    
     out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
                                          systemListBuiltIn, params));
   }
   //----Create atp drop down list for remote
-  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) {
+  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) 
     params = "ID=systemListRemote style='display:inline'";
-  } else {
-    params = "ID=systemListRemote style='display:none'";
-  }
+  else 
+    params = "ID=systemListRemote style='display:none'";  
   out.println(HTMLformatter.createMenu("systemChosenRemote",systemChosenRemote,
                                        systemListRemote, params));
 %>
   <BR>
-
-
-
-
-
-
-
 
   Maximum answers: <INPUT TYPE=TEXT SIZE=3 NAME="maxAnswers" VALUE="<%=maxAnswers%>">
   Query time limit:<INPUT TYPE=TEXT SIZE=3 NAME="timeout" VALUE="<%=timeout%>">

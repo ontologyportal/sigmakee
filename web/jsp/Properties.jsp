@@ -37,12 +37,12 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-  boolean changed = false;
+boolean changed = false;
 
 boolean ieChanged = false;
-  String inferenceEngine = request.getParameter("inferenceEngine");
+String inferenceEngine = request.getParameter("inferenceEngine");
 String iePref = KBmanager.getMgr().getPref("inferenceEngine");
 if ( iePref == null ) { iePref = ""; }
   if (inferenceEngine != null) {
@@ -79,28 +79,6 @@ if ( iePref == null ) { iePref = ""; }
       prolog = KBmanager.getMgr().getPref("prolog");
       if (prolog == null)
           prolog = "";
-  }
-
-  String hostname = request.getParameter("hostname");
-  if (hostname != null) {
-      changed = true;
-      KBmanager.getMgr().setPref("hostname",hostname);
-  }
-  else {
-      hostname = KBmanager.getMgr().getPref("hostname");
-      if (hostname == null)
-          hostname = "localhost";
-  }
-
-  String port = request.getParameter("port");
-  if (port != null) {
-      changed = true;
-      KBmanager.getMgr().setPref("port",port);
-  }
-  else {
-      port = KBmanager.getMgr().getPref("port");
-      if (port == null)
-          port = "8080";
   }
 
   String sumokbname = request.getParameter("sumokbname");
@@ -363,7 +341,6 @@ if ( (kbNames != null) && !(kbNames.isEmpty()) ) {
 	}
     }
 }
-
 %>
 
 <FORM method="POST" ACTION="Properties.jsp">

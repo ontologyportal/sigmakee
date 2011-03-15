@@ -12,7 +12,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 
 /** This jsp page handles listing the files which comprise a knowledge base,
@@ -24,7 +24,6 @@ August 9, Acapulco, Mexico.
     delete - a constituent to be deleted from the KB.
 */
 
-    String kbName = request.getParameter("kb");
     String kbDir = KBmanager.getMgr().getPref("kbDir");
     File kbDirFile = new File(kbDir);
     String saveAs = request.getParameter("saveAs");
@@ -32,7 +31,13 @@ August 9, Acapulco, Mexico.
     String saveFile = request.getParameter("saveFile");
     String delete = request.getParameter("delete");
     String result = "";
-    KB kb = KBmanager.getMgr().getKB(kbName);
+
+    if (KBmanager.getMgr().getPref("userRole") == null || !KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { 
+    	saveAs = null;
+    	saveFile = null;
+    	constituent = null;
+    	delete = null;
+    }
 
     if ((kb == null) || StringUtil.emptyString(kbName))
         response.sendRedirect("KBs.jsp");  // That KB does not exist  
@@ -77,36 +82,14 @@ August 9, Acapulco, Mexico.
                       : "Could not write a TPTP file");
             // KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
         }
-        else if (saveAs.equalsIgnoreCase("Turtle")) {
-            System.out.println("INFO in Manifest.jsp: generating Turtle file");
-            String fname = saveFile;
-            if (StringUtil.emptyString(fname)) 
-                fname = kb.name;
-            String ttldir = KBmanager.getMgr().getPref("kbDir");
-            File ttlDirFile = new File(ttldir);
-            File ttlFile = new File(ttlDirFile, (fname + ".ttl"));
-            String ttlCanonicalPath = null;
-            String ttlResult = null;
-            try {
-                ttlCanonicalPath = ttlFile.getCanonicalPath();
-                ttlResult = OntXDocGen.writeTurtleFile(kb, ttlFile);
-            }
-            catch (Exception ttlex) {
-                ttlex.printStackTrace();
-            }
-            result = ((StringUtil.isNonEmptyString(ttlResult) && ttlFile.canRead())
-                      ? ("Wrote the Turtle file " + ttlCanonicalPath)
-                      : "Could not write a Turtle file");
-            // KBmanager.getMgr().setError(KBmanager.getMgr().getError() + ttlMsg);
-        }
         else if (saveAs.equalsIgnoreCase("OWL")) {
-            OWLtranslator owltrans = new OWLtranslator();
+            OWLtranslator ot = new OWLtranslator();
             ot.kb = KBmanager.getMgr().getKB(kbName);
             File owlFile = new File(kbDirFile, (saveFile + ".owl"));
             String ofcp = null;
             try {
                 ofcp = owlFile.getCanonicalPath();
-                owltrans.writeKB(ofcp);
+                ot.writeKB(ofcp);
             }
             catch (Exception ofe) {
                 ofe.printStackTrace();
@@ -261,7 +244,6 @@ August 9, Acapulco, Mexico.
             <option value="KIF">KIF
             <option value="TPTP">TPTP
             <option value="tptpFOL">TPTP FOL
-            <option value="Turtle">Turtle
         </select>
     </FORM>
 

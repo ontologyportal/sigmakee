@@ -1,11 +1,9 @@
-
 <%@ include file="Prelude.jsp" %>
 <html>                                             
 <head><title> Knowledge base Browser </title></head>
 <body BGCOLOR="#FFFFFF">
 
 <%
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -16,30 +14,14 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-
   StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
   String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
-  String kbName = null;   // Name of the knowledge base
-  KB kb = null;   // The knowledge base object.
   String formattedFormula = null;
-
-  String language = request.getParameter("lang");
-  kbName = request.getParameter("kb");
-  kb = KBmanager.getMgr().getKB(kbName);
-  language = HTMLformatter.processLanguage(language,kb);
   Map theMap = null;
-
-  String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) 
-     hostname = "localhost";
-  String port = KBmanager.getMgr().getPref("port");
-  if (port == null)
-      port = "8080";
   kbHref = "http://" + hostname + ":" + port + "/sigma/WordNet.jsp?lang=" + language + "&kb=" + kbName;
-
   try {
        WordNet.initOnce();
   }
@@ -76,7 +58,6 @@ August 9, Acapulco, Mexico.
     </table>
     <br>
 </form>
-
 <br>
 
 <%
@@ -90,9 +71,8 @@ boolean isError = !(synsetsWithoutTerms.isEmpty() &&
                     synsetsWithoutFoundTerms.isEmpty() &&
                     nonMatchingTaxonomy.isEmpty());
 
-if (!isError) {
+if (!isError) 
     out.println("<br><b>&nbsp;No errors found</b>");
-}
 else {
 
     if (!synsetsWithoutTerms.isEmpty()) {
@@ -120,7 +100,6 @@ else {
         out.println("<br><b>&nbsp;Error: nonMatchingTaxonomy</b>");
         out.println(show.toString() + "<br>");
     }
-
     out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><p>");
 }
 

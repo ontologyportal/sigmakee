@@ -11,7 +11,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 
   // KBmanager mgr = KBmanager.getMgr();
@@ -24,7 +24,6 @@ August 9, Acapulco, Mexico.
       File kbDirFile = new File(kbDir);
       System.out.println("INFO in AddConstituent.jsp: KB dir: " + kbDir);
       MultipartParser mpp = null;
-      String kbName = "";
       int postSize = Integer.MAX_VALUE;
       Part requestPart = null;
       String fileName = "";
@@ -113,7 +112,7 @@ August 9, Acapulco, Mexico.
           else {
               if (mgr.getKB(kbName) == null) 
                   mgr.addKB(kbName);
-              KB kb = mgr.getKB(kbName);
+              kb = mgr.getKB(kbName);
               // Remove the constituent, if it is already present.
               for (ListIterator lit = kb.constituents.listIterator(); lit.hasNext();) {
                   String constituent = (String) lit.next();

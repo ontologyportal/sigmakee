@@ -19,31 +19,23 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-
   String sigmaHome = System.getenv("SIGMA_HOME");
   if (StringUtil.emptyString(sigmaHome))
       sigmaHome = "SIGMA_HOME";
   String kbDir = KBmanager.getMgr().getPref("kbDir");
   File kbDirFile = new File(kbDir);
-  String kbName = "";
   String namespace = "";
-  String language = "";
   String term = "";
   String relation = "";
   String ontology = "";
-// String header = "";
-// String footer = "";
   String filename = "";
   String action = "";
   String status = "";
-  KB kb = null;
 
   if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
        response.sendRedirect("KBs.jsp");     
   }
   else {
-      if (StringUtil.emptyString(kbName)) 
-          kbName = request.getParameter("kb");
       namespace = request.getParameter("namespace");
       if (namespace == null) 
           namespace = "";
@@ -58,15 +50,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
               }
           }
       }
-      if (StringUtil.isNonEmptyString(kbName))
-          kb = KBmanager.getMgr().getKB(kbName);
-      language = request.getParameter("lang");
       ontology = request.getParameter("ontology");
       if (StringUtil.emptyString(ontology) || ontology.equalsIgnoreCase("null"))
           ontology = "";
-
-      // NS - 2009-12-21
-      // Temporarily removed the header and footer type-in regions.
 
       term = request.getParameter("term");
       relation = request.getParameter("relation");
@@ -74,10 +60,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       action = request.getParameter("action");
       if (StringUtil.emptyString(action) || action.equalsIgnoreCase("null")) 
           action = "";
-      language = HTMLformatter.processLanguage(language, kb);
       if (StringUtil.isNonEmptyString(action)) {
           if (kb != null) {
-              if (action.equalsIgnoreCase("generateDocs")
+              /* if (action.equalsIgnoreCase("generateDocs")
                   || action.equalsIgnoreCase("generateSingle")) {
                   if (ontology == null) ontology = "";
                   String formatType = "dd";
@@ -96,7 +81,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                                                           null,   // was header
                                                           null);  // was footer
               }
-              else if (action.equals("dotGraph")) {
+              else*/ if (action.equals("dotGraph")) {
                   Graph g = new Graph();
                   g.createDotGraph(kb, term, relation, filename);
               }
@@ -140,43 +125,19 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
 	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
-<!--
-<hr class="rowdiv" />
-<p>
--->
 
 <%
                if (action.equalsIgnoreCase("generateDocs") 
                    || action.equalsIgnoreCase("generateSingle")) {
                    if (StringUtil.isNonEmptyString(status)) {
-                       if (!status.trim().startsWith("Error")) {
-                           out.println("HTML files have been written to " + status);
-                       }
-                       else {
-                           out.println(status);
-                       }
+                       if (!status.trim().startsWith("Error")) 
+                           out.println("HTML files have been written to " + status);                       
+                       else 
+                           out.println(status);                       
                        out.println("<br><br>");
                    }
                }
 %>
-
-    <b>Generate HTML</b><P>
-    <table>
-        <tr><td align="right">KB:&nbsp;</td><td><input type="text" name="kb" size="25" value="<%=kb.name%>"></td></tr>
-        <tr><td align="right">Ontology:&nbsp;</td><td><input type="text" name="ontology" size="25" value="<%=ontology%>"></td></tr>
-
-                     <!-- NS - 2009-12-21 - Temporarily removed the header and footer type-in areas -->
-
-        <tr><td align="right"><input type="submit" name="action" value="generateDocs">&nbsp;&nbsp;</td><td>Generate all HTML pages for the KB</td></tr>
-        <tr><td align="right"><input type="submit" name="action" value="generateSingle">&nbsp;&nbsp;</td><td>Generate a single HTML page for the KB</td></tr>
-    </table><p>
-
-    <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
-	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
-<!--
-<hr class="rowdiv" />
-<p>
--->
     <b>Create dotted graph format (for <a href="www.graphviz.org">GraphViz</a>)</b><P>
     <table>
         <tr><td align="right">Term:&nbsp;</td><td><input type="text" name="term" size=20 value=""></td></tr>
@@ -189,10 +150,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
 	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
-<!--
-<hr class="rowdiv" />
-<p>
--->
 
 <b>Generate KIF from a DIF (.dif) or CSV (.csv) file</b>
 <p>

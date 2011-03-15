@@ -24,15 +24,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  * up       = <name>   - a node that should have its parents displayed (not yet implemented)
  * down     = <name>   - a node that should not have its parents displayed (not yet implemented)
  * */
-
- String kbName = request.getParameter("kb");
- if (StringUtil.isNonEmptyString(kbName)) {
-     TaxoModel.kbName = kbName;
- }
- else {
-     kbName = "";
- }
- String language = null;
+ TaxoModel.kbName = kbName;
 
  String contract = request.getParameter("contract");
  if (StringUtil.isNonEmptyString(contract)) 
@@ -46,6 +38,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  String down = request.getParameter("down");
  if (StringUtil.isNonEmptyString(down)) 
      TaxoModel.collapseParentNodes(down);
+ 
+ String simple = request.getParameter("simple");
+ String kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
+ "&simple=" + simple + "&lang=" + language + "&flang=" + flang + "&term=";
 
  String term = request.getParameter("term");
  if (!StringUtil.isNonEmptyString(term)) 
@@ -55,9 +51,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   <TITLE>TreeView Knowledge Base Browser - <%=term%></TITLE>
 <%
   StringBuffer show = null;
-  KB kb = null;
   String parentPage = "TreeView.jsp";
-  String simple = request.getParameter("simple");
+  
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
     <%@ include file="SimpleBrowseBody.jsp" %>
@@ -87,7 +82,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 <table border=0 width='100%' height='100%'>
     <tr>
         <td height='100%' valign=top>
-            <% out.print(TaxoModel.toHTML(simple)); %><p>
+            <% out.print(TaxoModel.toHTML(kbHref)); %><p>
         </td>
         <td valign="top" width="1" BGCOLOR='#A8BACF'>
           <IMG SRC='pixmaps/1pixel.gif' width=1 border=0>

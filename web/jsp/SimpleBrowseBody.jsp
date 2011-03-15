@@ -1,6 +1,5 @@
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
+/* This code is copyright Articulate Software (c) 2003-2011.  
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
 and Teknowledge in any writings, briefings, publications, presentations, or
@@ -11,35 +10,14 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-
  show = new StringBuffer();       // Variable to contain the HTML page generated.
- kbName = null;   // Name of the knowledge base
- kb = null;   // The knowledge base object.
  String formattedFormula = null;
-
- kbName = request.getParameter("kb");
- kb = null;
- if (StringUtil.isNonEmptyString(kbName)) {
-     kb = KBmanager.getMgr().getKB(kbName);
-     if (kb != null) 
-         TaxoModel.kbName = kbName;     
- }
- if (kb == null)
-     response.sendRedirect("login.html");
  term = request.getParameter("term");
- language = request.getParameter("lang");
- language = HTMLformatter.processLanguage(language,kb);
  
  if (kb != null && kb.containsTerm(term))
     show.append("<title>Sigma KEE - " + term + "</title></HEAD>\n<BODY BGCOLOR=\"#FFFFFF\">\n");
  Map theMap = null;     // Map of natural language format strings.
 
- String hostname = KBmanager.getMgr().getPref("hostname");
- if (hostname == null)
-    hostname = "localhost";
- String port = KBmanager.getMgr().getPref("port");
- if (port == null)
-    port = "8080";
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&simple=yes&kb=" + kbName;
 
  if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
@@ -96,12 +74,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     if (StringUtil.emptyString(defaultNS))
         defaultNS = language;
     TreeMap alphaList = gen.getAlphaList(kb); // tfm
-    if (DocGen.isComposite(kb,term)) {
-        show.append(DocGen.getInstance(kb.name).createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));
-    }
-    else {
-        show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));
-    }
+    if (DocGen.isComposite(kb,term)) 
+        show.append(DocGen.getInstance(kb.name).createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));    
+    else 
+        show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));    
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");

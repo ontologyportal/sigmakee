@@ -7,7 +7,7 @@
 </HEAD>
 <%
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
+/** This code is copyright Articulate Software (c) 2003-2011.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -17,21 +17,16 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
     System.out.println("INFO in CELT.jsp");
     String result = null;        
     StringBuffer sbStatus = new StringBuffer();
 
-    String hostname = KBmanager.getMgr().getPref("hostname");
-    if (hostname == null)
-        hostname = "localhost";
-    String kbName = request.getParameter("kb");
-    String language = request.getParameter("lang");
-    language = HTMLformatter.processLanguage(language,kb);
+
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
-    String href = "Browse.jsp?kb=" + kbName + "&lang=" + language + "&term=";
+    String href = "Browse.jsp?kb=" + kbName + "&lang=" + language + "&flang=" + flang + "&term=";
     boolean english = false;
 
     int maxAnswers = 1;

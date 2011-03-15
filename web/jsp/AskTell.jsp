@@ -1,7 +1,7 @@
 <%@include file="Prelude.jsp" %>
 
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
+/** This code is copyright Articulate Software (c) 2003-2011.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -11,12 +11,9 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 
-  String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) 
-    hostname = "localhost";  
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
 
 //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
@@ -83,23 +80,15 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
     }
   //]]></script>
 
-
 </HEAD>
 <%
     System.out.println("INFO in AskTell.jsp");
     StringBuffer status = new StringBuffer();
     ArrayList processedStmts = null;
 
-    String kbName = request.getParameter("kb");
-    KB kb = KBmanager.getMgr().getKB(kbName);
-    String language = request.getParameter("lang");
-    language = HTMLformatter.processLanguage(language,kb);
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String chosenEngine = request.getParameter("inferenceEngine");
-
-//unused:    String href = "Browse.jsp?kb=" + kbName + "&lang=" + language + "&term=";
-
     boolean syntaxError = false;
     boolean english = false;
     String englishStatement = null;
@@ -211,46 +200,43 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula();
                 statement.theFormula = stmt;
-                String port = KBmanager.getMgr().getPref("port");
-                if ((port == null) || port.equals(""))
-                    port = "8080";
                 String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("Vampire")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		        resultVampire = kb.ask( stmt, timeout, maxAnswers );
+		        resultVampire = kb.ask(stmt,timeout,maxAnswers);
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("STP")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		        resultSTP = kb.askSTP( stmt, timeout, maxAnswers );
+		        resultSTP = kb.askSTP(stmt,timeout,maxAnswers);
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("STP2")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		        resultSTP2 = kb.askSTP2( stmt, timeout, maxAnswers );
+		        resultSTP2 = kb.askSTP2(stmt,timeout,maxAnswers);
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SInE")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-                resultSInE = kb.askSInE( stmt, timeout, maxAnswers );
+                resultSInE = kb.askSInE(stmt,timeout,maxAnswers);
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoSine")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-                resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoSine" );
+                resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoSine");
             }	
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoLocal")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-                resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoLocal" );
+                resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoLocal");
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoGlobal")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-                resultLeo = kb.askLEO( stmt, timeout, maxAnswers, "LeoGlobal" );
+                resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoGlobal");
             }	
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
                 if (stmt.indexOf('@') != -1)

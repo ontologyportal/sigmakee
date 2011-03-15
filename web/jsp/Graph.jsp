@@ -20,40 +20,18 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-      System.out.println("request == " + request.toString());
+  System.out.println("request == " + request.toString());
 
-/*
- // Get the values of all request parameters
-    java.util.Enumeration enum = request.getParameterNames();
-    for (; enum.hasMoreElements(); ) {
-        // Get the name of the request parameter
-        name = (String) enum.nextElement();
-        System.out.println("  name == " + name);
-
-        // Get the value of the request parameter
-        value = request.getParameter(name);
-        System.out.println("  value == " + value);
-*/
-
-        // If the request parameter can appear more than once in the query string, get all values
-        String[] values = request.getParameterValues("columns");
-if (values != null) {
-        for (int i = 0; i < values.length; i++) {
-            System.out.println("  value[" + i + "] == " + values[i]);
-        }
-}
-//  }
+  // If the request parameter can appear more than once in the query string, get all values
+  String[] values = request.getParameterValues("columns");
+  if (values != null) {
+      for (int i = 0; i < values.length; i++) {
+          System.out.println("  value[" + i + "] == " + values[i]);
+      }
+  }
 
   Graph g = new Graph();
-  String kbName = request.getParameter("kb");
-  KB kb = null;
-  if (kbName == null || KBmanager.getMgr().getKB(kbName) == null) 
-      System.out.println(" no such knowledge base " + kbName);
-  else
-      kb = KBmanager.getMgr().getKB(kbName);
   String view = "text";
-  String language = request.getParameter("lang");
-  language = HTMLformatter.processLanguage(language,kb);
   String relation = request.getParameter("relation");
   if (relation == null) relation = "subclass";
   String term = request.getParameter("term");

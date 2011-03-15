@@ -12,33 +12,12 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
-
  show = new StringBuffer();       // Variable to contain the HTML page generated.
- kbName = null;   // Name of the knowledge base
- kb = null;   // The knowledge base object.
  String formattedFormula = null;
-
  term = request.getParameter("term");
-
- kbName = request.getParameter("kb");
- if (kbName != null && StringUtil.isNonEmptyString(kbName)) {
-     kb = KBmanager.getMgr().getKB(kbName);
-     if (kb != null)
-         TaxoModel.kbName = kbName;
- }
- else
-     response.sendRedirect("login.html");
- language = request.getParameter("lang");
- language = HTMLformatter.processLanguage(language,kb);
  Map theMap = null;     // Map of natural language format strings.
 
- String hostname = KBmanager.getMgr().getPref("hostname");
- if (hostname == null)
-     hostname = "localhost";
- String port = KBmanager.getMgr().getPref("port");
- if (port == null)
-     port = "8080";
- HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&kb=" + kbName;
+ HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
 
  if (kb != null && StringUtil.emptyString(term))        // Show statistics only when no term is specified.
      show.append(HTMLformatter.showStatistics(kb));
@@ -78,15 +57,13 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          if (tfm != null)
              tfmValue = (String) tfm.get(term);
          if (tfmValue != null) {
-             if (isArabic) {
-                 tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
-             }
+             if (isArabic) 
+                 tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";             
              show.append("(" + tfmValue + ")");
          }
-         else {
+         else 
              System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
-                                term + "\" in language " + language);	   
-         }
+                                term + "\" in language " + language);	            
          show.append(HTMLformatter.showPictures(kb,term));
          show.append("</td>");
          //WordNet.initOnce();
@@ -97,9 +74,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
              show.append(WordNetUtilities.formatWords(tm,kbName));
              show.append("</small></td>");
          }
-         else {
-             System.out.println("INFO in BrowseBody.jsp: No synsets for term " + term);
-         }
+         else 
+             System.out.println("INFO in BrowseBody.jsp: No synsets for term " + term);         
          show.append("</tr></table>\n");
      }
      show.append ("</b></font></td></tr></table>\n");
@@ -109,40 +85,46 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
          limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
      }
-     // show.append(HTMLformatter.showFormulasLimit(kb,term,0,limit));
-
+	 
      for (int arg = 1; arg < 6; arg++) {
          String argHeader = ("appearance as argument number " + arg);
-         show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,0,limit,arg,"arg"));
+         show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,flang,0,limit,arg,"arg"));
      }
 
      //forms = kb.ask("ant",0,term);
-     show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,0,limit,0,"ant"));
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,flang,0,limit,0,"ant"));
 
      //forms = kb.ask("cons",0,term);
-     show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, language,0,limit,0,"cons"));
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, language,flang,0,limit,0,"cons"));
 
      //forms = kb.ask("stmt",0,term);
-     show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,0,limit,0,"stmt"));
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,flang,0,limit,0,"stmt"));
 
      //forms = kb.ask("arg",0,term);
-     show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,0,limit,0,"arg"));
+     show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,flang,0,limit,0,"arg"));
 
      show.append("<p><table align=\"left\" width=\"50%\"><tr><td bgcolor=\"#A8BACF\">" +
                  "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr>" +
                  "</table><br>\n");
      if (!parentPage.equals("TreeView.jsp")) 
          show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
-                     "?lang=" + language + "&kb=" + kbName + 
+                     "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + 
                      "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
     
      show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/SimpleBrowse.jsp" + 
-                 "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
+                 "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" + 
                  "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
      show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
-                 "?lang=" + language + "&kb=" + kbName + "&simple=yes" + 
+                 "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" + 
                  "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
+     /** if (flang.equals("SUO-KIF"))
+     	show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/Browse.jsp?" + 
+        	        "kb=" + kbName + "&term=" + term + "&flang=TPTP" + "&lang=" + language + "\">Show TPTP translation</small><p>\n");     
+     if (flang.equals("TPTP"))
+     	show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/Browse.jsp?" + 
+        	        "kb=" + kbName + "&term=" + term + "&flang=SUO-KIF" + "&lang=" + language + "\">Show SUO-KIF original</small><p>\n");     
      show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
                  "kb=" + kbName + "&term=" + term + "\">Show OWL translation</small><p>\n");
+	 */                 
  }
 %>

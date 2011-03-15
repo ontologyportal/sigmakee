@@ -52,6 +52,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
               <% if (kb != null) { %>
               <b>Language:&nbsp;</b><%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %>
               <% } %>
+              <P><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>              
           </td>
       </tr>
   </table>
@@ -65,16 +66,21 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
           <td align="left" valign="top">
               <input type="submit" value="Show">
           </td>
-        <input type="hidden" name="simple" value=<%=simple%>><br> 
+        <br> 
       </tr>
       <tr>
           <td><img src="pixmaps/1pixel.gif" height="3"></td>
       </tr>
 </form>
+
 <!-- show WordNet search input -->
 <form method="GET" action="WordNet.jsp">
   <tr>
       <td align="right"><b>English Word:&nbsp;</b></td>
+        <input type="hidden" name="simple" value=<%=simple%>>
+        <input type="hidden" name="kb" value=<%=kbName%>>
+        <input type="hidden" name="lang" value=<%=language%>>
+        <input type="hidden" name="flang" value=<%=flang%>>      
       <td align="left" valign="top">
           <input type="text" size="27" name="word">
           <img src="pixmaps/1pixel.gif" width="3"></td>

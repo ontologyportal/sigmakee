@@ -15,33 +15,16 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-
   StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
   String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
-  String kbName = null;   // Name of the knowledge base
-  KB kb = null;   // The knowledge base object.
   String formattedFormula = null;
-
-  String language = request.getParameter("lang");
-  language = HTMLformatter.processLanguage(language,kb);
-  kbName = request.getParameter("kb");
-  kb = KBmanager.getMgr().getKB(kbName);
   Map theMap = null;
-
   HttpSession hsObj = request.getSession();             
   hsObj.setMaxInactiveInterval(-1);
-
-  String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) 
-     hostname = "localhost";
-  String port = KBmanager.getMgr().getPref("port");
-  if (port == null)
-      port = "8080";
-  kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
-
+  kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
 %>
 
 <FORM action="CCheck.jsp">

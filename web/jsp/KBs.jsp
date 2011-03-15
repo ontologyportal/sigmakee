@@ -10,9 +10,8 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-
     out.println("<html>");
     out.println("  <head>");
     out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
@@ -55,7 +54,6 @@ August 9, Acapulco, Mexico.
 
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
     KBmanager.getMgr().initializeOnce();
-
 %>
 
 <%
@@ -141,17 +139,7 @@ August 9, Acapulco, Mexico.
     }
 */
 %>
-
-<%
-    String hostname = KBmanager.getMgr().getPref("hostname");
-    if (StringUtil.emptyString(hostname))
-        hostname = "localhost";
-    String port = KBmanager.getMgr().getPref("port");
-    if (StringUtil.emptyString(port))
-        port = "8080";
-%>
-
-			
+	
 <table width="95%" cellspacing="0" cellpadding="0">
     <tr>
         <td valign="top">
@@ -177,11 +165,9 @@ August 9, Acapulco, Mexico.
 
 <%
   Iterator kbNames = null;
-  String kbName = request.getParameter("kb");
   String remove = request.getParameter("remove");  // Delete the given KB
-if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) && remove.equalsIgnoreCase("true"))
+  if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) && remove.equalsIgnoreCase("true"))
       KBmanager.getMgr().removeKB(kbName);
-
 
   if (KBmanager.getMgr().getKBnames() != null && !KBmanager.getMgr().getKBnames().isEmpty()) {
       System.out.println(KBmanager.getMgr().getKBnames().size());
@@ -213,9 +199,7 @@ if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) &
               defaultKB = kbName2;
               first = false;
           }
-          KB kb = (KB) KBmanager.getMgr().getKB(kbName2);
-          String language = HTMLformatter.language;
-          language = HTMLformatter.processLanguage(language,kb);
+          kb = (KB) KBmanager.getMgr().getKB(kbName2);
           HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language;
 %>
           <TR VALIGN="center" <%= odd==false? "bgcolor=#eeeeee":""%>>
@@ -234,23 +218,14 @@ if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) &
           out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + language + "\">Graph</A></TD>");    
 
           if (isAdministrator) {
-
               out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
-
-              if (kb.inferenceEngine != null) {
-                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "\">Consistency Check</A></TD>"); 
-              }
-
+              if (kb.inferenceEngine != null) 
+                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "\">Consistency Check</A></TD>");               
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + language + "\">Inference Tests</A></TD>");
-
-              if (kb.celt != null) {
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + language + "\">CELT Tests</A></TD>");
-              }
-
+              if (kb.celt != null) 
+                  out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + language + "\">CELT Tests</A></TD>");              
               out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName2 + "&lang=" + language + "\">WordNet Check</A></TD>");
-
               out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName2 + "\">Ask/Tell</A>&nbsp;</TD>");
-
               out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName2 + "\">Remove</A></TD></TR>");
           }
       }
@@ -300,7 +275,7 @@ if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) &
       boolean kbErrorsFound = false;
       while (kbNames.hasNext()) {
          kbName3 = (String) kbNames.next();
-         KB kb = (KB) KBmanager.getMgr().getKB(kbName3);
+         kb = (KB) KBmanager.getMgr().getKB(kbName3);
          if (!kb.errors.isEmpty()) {
              out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
              kbErrorsFound = true;

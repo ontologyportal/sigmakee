@@ -33,11 +33,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 <%
  String parentPage = "SimpleBrowse.jsp";
- String kbName = "";
- String language = "";
  StringBuffer show = null;
  String simple = "yes";
- KB kb = null;
 %>
 
 <%@ include file="SimpleBrowseBody.jsp" %>

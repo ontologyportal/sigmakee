@@ -26,28 +26,12 @@ August 9, Acapulco, Mexico.
   long t0 = System.currentTimeMillis();
   long t1 = t0;
   long t2 = t0;
-
   String kbHref = null;
-  String kbName = null;   // Name of the knowledge base
-  KB kb = null;   // The knowledge base object.
   String formattedFormula = null;
-
-  String language = request.getParameter("lang");
-  language = HTMLformatter.processLanguage(language,kb);
-  kbName = request.getParameter("kb");
-  kb = KBmanager.getMgr().getKB(kbName);
   Map theMap = null;
 
-  String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null) 
-     hostname = "localhost";
-  String port = KBmanager.getMgr().getPref("port");
-  if (port == null)
-      port = "8080";
-  kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
-
+  kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
 %>
-
 <form action="Diag.jsp">
     <table width="95%" cellspacing="0" cellpadding="0">
         <tr>
@@ -98,10 +82,7 @@ August 9, Acapulco, Mexico.
                      + " seconds collecting children of disjoint parents");
   out.println("<br>");
   out.println(HTMLformatter.htmlDivider("Error: Terms with disjoint parents"));
-// out.println("<br>");
-// out.println("<br>");
   out.println(HTMLformatter.termList(disjoint,kbHref));
-// out.println("<br>");
 
   // Terms without documentation
   t1 = System.currentTimeMillis();
@@ -111,10 +92,8 @@ August 9, Acapulco, Mexico.
                      + " seconds collecting terms without documentation");
   out.println("<br>");
   out.println(HTMLformatter.htmlDivider("Warning: Terms without documentation"));
-// out.println("<br>");
-// out.println("<br>");
   out.println(HTMLformatter.termList(termsWithoutDoc,kbHref));
-// out.println("<br>");
+
 
   // Terms with multiple documentation
   t1 = System.currentTimeMillis();
@@ -124,10 +103,7 @@ August 9, Acapulco, Mexico.
                      + " seconds collecting terms with multiple documentation");
   out.println("<br>");
   out.println(HTMLformatter.htmlDivider("Warning: Terms with multiple documentation"));
-// out.println("<br>");
-// out.println("<br>");
   out.println(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
-// out.println("<br>");
 
   // Members (instances) of a parent class that are not also members
   // of one of the subclasses that constitute the exhaustive
@@ -140,9 +116,7 @@ August 9, Acapulco, Mexico.
   out.println("<br>");
   out.println(HTMLformatter.htmlDivider("Warning: Instances of a partitioned class that are not instances of one of the class's partitioning subclasses"));
   out.println("<br>");
-// out.println("<br>");
   out.println(HTMLformatter.termList(termsMissingFromPartition,kbHref));
-// out.println("<br>");
 
   // Terms that do not occur in any rules
   t1 = System.currentTimeMillis();
@@ -152,10 +126,7 @@ August 9, Acapulco, Mexico.
                      + " seconds collecting terms without rules");
   out.println("<br>");
   out.println(HTMLformatter.htmlDivider("Warning: Terms that do not appear in any rules"));
-// out.println("<br>");
-// out.println("<br>");
   out.println(HTMLformatter.termList(norule,kbHref));
-// out.println("<br>");
 
   // Formulae with extraneous quantifiers
   t1 = System.currentTimeMillis();
@@ -175,19 +146,14 @@ August 9, Acapulco, Mexico.
           out.println("<br><br>");
       }
   }
-
   // Files with mutual dependencies
   t1 = System.currentTimeMillis();
   out.println("<br>");
   out.println(HTMLformatter.htmlDivider("Warning: Files with mutual dependencies"));
-// out.println("<br>");
-// out.println("<br>");
   out.println(Diagnostics.printTermDependency(kb,kbHref));
-// out.println("<br>");
 
   System.out.println("  > " + ((System.currentTimeMillis() - t0) / 1000.0) 
                      + " seconds to run all diagnostics");
-
 %>
 
 <%@ include file="Postlude.jsp" %>

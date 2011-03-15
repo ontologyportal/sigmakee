@@ -20,10 +20,14 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  * kb       = <name>   - the name of the knowledge base
  * lang     = <lang>   - the name of the language used to display axiom paraphrases
  * */
-
  String term = request.getParameter("term");
  if (!Formula.isNonEmptyString(term))
      term = "";
+ if (flang.equals("OWL")) {
+    response.sendRedirect("http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
+                 "kb=" + kbName + "&term=" + term);
+    return;
+}
 %>
 <html>
 <head><title>Knowledge base Browser - <%=term%></title></head>
@@ -31,12 +35,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 <%
  String parentPage = "Browse.jsp";
-
  String simple = "no";
- String kbName = "";
- String language = "";
  StringBuffer show = null;
- KB kb = null;
 %>
 
 <%@ include file="BrowseBody.jsp"%>
