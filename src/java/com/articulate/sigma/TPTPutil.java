@@ -45,7 +45,7 @@ public class TPTPutil {
      * @param indentChars - the proper characters for indenting text.
      * @param eolChars - the proper character for end of line.
      */
-    public static String htmlTPTPFormat(Formula f, String hyperlink) {
+    public static String htmlTPTPFormat(Formula f, String hyperlink, boolean traditionalLogic) {
 
         String indentChars = "  ";
         String eolChars = "\n";
@@ -105,16 +105,41 @@ public class TPTPutil {
                         result.append(ch);
                     }
                     else if (ch == ':') {
-                        result.append(ch);
+                    	if (!traditionalLogic)
+                    		result.append(ch);
                         result.append(returnAndIndent(level));
                     }
+                    else if (ch == '!') {
+                    	if (!traditionalLogic)
+                    		result.append(ch);
+                    	else
+                    		result.append("&forall;");
+                    }
+                    else if (ch == '?') {
+                    	if (!traditionalLogic)
+                    		result.append(ch);
+                       	else
+                    		result.append("&exist;");
+                    }
                     else if (ch == '&') {
-                        result.append(ch);
+                    	if (traditionalLogic)
+                    		result.append("&and;");
+                    	else
+                    		result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (ch == '|') {
-                        result.append(ch);
+                    	if (traditionalLogic)
+                    		result.append("&or;");
+                    	else
+                    		result.append(ch);
                         result.append(returnAndIndent(level));
+                    }
+                    else if (ch == '~') {
+                    	if (traditionalLogic)
+                    		result.append("&not;");
+                    	else
+                    		result.append(ch);
                     }
                     else if (ch == ')') {
                         level--;
@@ -125,7 +150,10 @@ public class TPTPutil {
                     }
                     else if (formString.substring(i).startsWith("=>")) {
                         i++;
-                        result.append("=&gt;");
+                        if (traditionalLogic)
+                        	result.append("&rArr;");
+                        else
+                        	result.append("=&gt;");
                         result.append(returnAndIndent(level));
                     }
                     else {
@@ -151,7 +179,7 @@ public class TPTPutil {
         //f.theTptpFormulas.add("fof(kb_ArabicCulture_20,axiom,(( s__subclass(s__Hajj,s__Translocation) ))).");
         f.theTptpFormulas.add("(! [V__P] : (s__instance(V__P,s__Agent) => ((s__attribute(V__P,s__Muslim) & s__capability(s__Hajj,s__agent__m,V__P)) => " +
         		"s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation))))");
-        System.out.println(TPTPutil.htmlTPTPFormat(f,"http://sigma.ontologyportal.org:4040/sigma?kb=SUMO&term="));
+        System.out.println(TPTPutil.htmlTPTPFormat(f,"http://sigma.ontologyportal.org:4040/sigma?kb=SUMO&term=",false));
 	}
 
 }
