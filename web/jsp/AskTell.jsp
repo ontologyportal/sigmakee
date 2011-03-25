@@ -59,24 +59,25 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       return tstp_dump;
     }
 <% if (tptpWorldExists && location.equals("local")) { %>
-    var current_location = "Local";
+       var current_location = "Local";
 <% } else if (builtInExists && location.equals("local")) { %>
-    var current_location = "BuiltIn";
+       var current_location = "BuiltIn";
 <% } else { %>
-    var current_location = "Remote";
+       var current_location = "Remote";
 <% } %>
 //----Toggle to either the local/builtin/remote list by showing new and hiding current
     function toggleList (location) {
-      if (current_location == location) 
-        return;      
-      var obj;
-      obj = window.document.getElementById("systemList" + current_location);
-      if (obj) 
-        obj.setAttribute("style","display:none");      
-      current_location = location;
-      obj = window.document.getElementById("systemList" + location);
-      if (obj) 
-        obj.setAttribute("style","display:inline");      
+        
+        if (current_location == location) 
+            return;      
+        var obj;
+        obj = window.document.getElementById("systemList" + current_location);
+        if (obj) 
+            obj.setAttribute("style","display:none");      
+        current_location = location;
+        obj = window.document.getElementById("systemList" + location);
+        if (obj) 
+            obj.setAttribute("style","display:inline");      
     }
   //]]></script>
 
@@ -285,7 +286,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     Choose an inference engine:<BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (chosenEngine.equals("Vampire")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
+    <% if (kb.inferenceEngine == null) { %> DISABLED <% } %> >
     Vampire <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SInE" <% if (chosenEngine.equals("SInE")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
