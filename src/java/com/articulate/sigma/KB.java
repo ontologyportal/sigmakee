@@ -348,7 +348,6 @@ public class KB {
      */
     protected void clearSortalTypeCache() {
         try {
-
             System.out.println("INFO in KB.clearSortalTypeCache()");
             System.out.println("  Clearing " + getSortalTypeCache().size() + " entries");
             Object obj = null;
@@ -1006,6 +1005,7 @@ public class KB {
      * should be called only after the subclass cache has been built.
      */    
     private void cacheRelnsWithRelnArgs() {
+    	
         long t1 = System.currentTimeMillis();
         StringBuilder trace = new StringBuilder("ENTER KB.cacheRelnsWithRelnArgs()");
         trace.append(getLineSeparator());
@@ -1103,9 +1103,9 @@ public class KB {
     /** *************************************************************
      * Returns a boolean[] if the input relation has at least one
      * argument that must be filled by a relation name.
-     * 
      */    
     protected boolean[] getRelnArgSignature(String relation) {
+    	
         if (relnsWithRelnArgs != null) {
             return (boolean[]) relnsWithRelnArgs.get(relation);
         }
@@ -2101,6 +2101,9 @@ public class KB {
                                             int argnum2, String term2,
                                             int argnum3, String term3) {
 
+    	//System.out.println("INFO in KB.askWithTwoRestrictions(): " + argnum1 + " " + term1 + " " +
+    	//		argnum2 + " " + term2 + " " +
+    	//		argnum3 + " " + term3);
         ArrayList result = new ArrayList();
         if (StringUtil.isNonEmptyString(term1)
             && StringUtil.isNonEmptyString(term2)
@@ -2111,6 +2114,8 @@ public class KB {
             ArrayList partial1 = ask("arg",argnum1,term1);
             ArrayList partial2 = ask("arg",argnum2,term2);
             ArrayList partial3 = ask("arg",argnum3,term3);
+            //System.out.println("INFO in KB.askWithTwoRestrictions():" + partial1.size() + " " + 
+            //		partial2.size() + " " + partial3.size() + " ");
             int arga = -1;
             String terma = "";
             int argb = -1;
@@ -4365,6 +4370,7 @@ public class KB {
      * @return A Set of SUO-KIF class names, which could be empty.
      */
     private Set getAllSuperClasses(Set classNames) {
+    	
         Set ans = new HashSet();
         try {
             if ((classNames instanceof Set) && !(classNames.isEmpty())) {
@@ -4412,6 +4418,7 @@ public class KB {
      * empty.
      */
     public Set getAllSubClassesWithPredicateSubsumption(String className) {
+    	
         Set ans = new TreeSet();
         try {
             if (StringUtil.isNonEmptyString(className)) {
@@ -4787,7 +4794,8 @@ public class KB {
      *
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
-    protected TreeSet getAllInstances(Set classNames) {
+    protected TreeSet<String> getAllInstances(Set classNames) {
+    	
         // System.out.println("ENTER KB.getAllInstances(" + classNames + ")");
         TreeSet ans = new TreeSet();
         try {
@@ -4815,7 +4823,7 @@ public class KB {
      *
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
-    public TreeSet getAllInstances(String className) {
+    public TreeSet<String> getAllInstances(String className) {
         if (StringUtil.isNonEmptyString(className)) {
             TreeSet input = new TreeSet();
             input.add(className);
