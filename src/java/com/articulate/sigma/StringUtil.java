@@ -534,6 +534,40 @@ public class StringUtil {
         }
         return ans;
     }
+    /** ***************************************************************
+     */
+    public static String allCapsToSUMOID(String str) {
+    	
+    	if (emptyString(str)) {
+    		System.out.println("Error in StringUtil.allCapsToSUMOID(): str is null");
+    		return "";
+    	}
+    	StringBuffer sb = new StringBuffer();
+    	boolean under = false;
+    	for (int i = 0; i < str.length(); i++) { 
+    		if (str.charAt(i) == '_') 
+    			under = true;
+    		else {
+        		if (under || i == 0)
+        			sb.append(str.charAt(i));
+        		else
+        			sb.append(Character.toLowerCase(str.charAt(i)));
+        		under = false;
+    		}
+    	}
+        return sb.toString();
+    }
+
+    /** ***************************************************************
+     */
+    public static String asSUMORelationID(String str) {
+
+       	if (emptyString(str)) {
+    		System.out.println("Error in StringUtil.asSUMORelationID(): str is null");
+    		return "";
+    	}
+        return Character.toLowerCase(str.charAt(0)) + str.substring(1);
+    }
 
     /** ***************************************************************
      * @param str A String
