@@ -309,7 +309,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
-
 <%
 //----System selection
 %>
@@ -388,19 +387,19 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         if ((resultVampire != null) && (resultVampire.indexOf("Syntax error detected") != -1))         
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
-            out.println(HTMLformatter.formatProofResult(resultVampire,stmt,stmt,lineHtml,kbName,language ));       
+            out.println(HTMLformatter.formatProofResult(resultVampire,stmt,stmt,lineHtml,kbName,language));       
     }
     if (chosenEngine.equals("STP")) {
         if ((resultSTP != null) && (resultSTP.indexOf("Syntax error detected") != -1))         
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
-            out.println(HTMLformatter.formatProofResult(resultSTP,stmt,stmt,lineHtml,kbName,language ));       
+            out.println(HTMLformatter.formatProofResult(resultSTP,stmt,stmt,lineHtml,kbName,language));       
     }
     if (chosenEngine.equals("STP2")) {
         if ((resultSTP2 != null) && (resultSTP2.indexOf("Syntax error detected") != -1))         
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
-            out.println(HTMLformatter.formatProofResult(resultSTP2,stmt,stmt,lineHtml,kbName,language ));       
+            out.println(HTMLformatter.formatProofResult(resultSTP2,stmt,stmt,lineHtml,kbName,language));       
     }
     if ((chosenEngine.equals("SoTPTP")) && (resultSoTPTP != null))
         out.print(resultSoTPTP);
@@ -409,7 +408,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         if ((resultSInE != null) && (resultSInE.indexOf("Syntax error detected") != -1)) 
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
-            out.println(HTMLformatter.formatProofResult(resultSInE,stmt,stmt,lineHtml,kbName,language ));
+            out.println(HTMLformatter.formatProofResult(resultSInE,stmt,stmt,lineHtml,kbName,language));
     }
     if (chosenEngine.equals("LeoSine") || chosenEngine.equals("LeoLocal") || chosenEngine.equals("LeoGlobal")) {
         if ((resultLeo != null) && (resultLeo.indexOf("Syntax error detected") != -1)) 
