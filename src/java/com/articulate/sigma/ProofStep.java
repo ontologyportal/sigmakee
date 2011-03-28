@@ -92,40 +92,59 @@ public class ProofStep {
      */
     public static ArrayList<ProofStep> removeDuplicates(ArrayList<ProofStep> proofSteps) {
 
+    	System.out.println("INFO in ProofSteps.removeDuplicates()");
         // old number, new number
         HashMap<Integer,Integer> numberingMap = new HashMap<Integer,Integer>();
-        HashMap<String,Integer> formulaMap = new HashMap<String,Integer>();
-        ArrayList<ProofStep> newProofSteps = new ArrayList<ProofStep>();
         
+        // formula string, proof step number
+        HashMap<String,Integer> formulaMap = new HashMap<String,Integer>();
+        
+        // proof step number, proof step
+        HashMap<Integer,ProofStep> reverseFormulaMap = new HashMap<Integer,ProofStep>();
+        
+        ArrayList<ProofStep> newProofSteps = new ArrayList<ProofStep>();
+        ArrayList<ProofStep> dedupedProofSteps = new ArrayList<ProofStep>();
+        
+        int counter = 1;
         for (int i = 0; i < proofSteps.size(); i++) {
             ProofStep ps = (ProofStep) proofSteps.get(i);
             Integer index = new Integer(ps.number);
+            reverseFormulaMap.put(index,ps);
             String s = Clausifier.normalizeVariables(ps.axiom);
-            if (formulaMap.keySet().contains(s)) {
-            	Integer fNum = (Integer) formulaMap.get(s); 
+            if (formulaMap.keySet().contains(s)) {              // If the step is a duplicate, relate the current step number
+            	Integer fNum = (Integer) formulaMap.get(s);     // to the existing number of the formula 
             	numberingMap.put(index,fNum);
             }
             else {
-            	formulaMap.put(s,index);
-                Integer newIndex = index;
-                if (numberingMap.keySet().contains(index))
-                	newIndex = (Integer) numberingMap.get(index);
-                ProofStep psNew = new ProofStep();
-                psNew.formulaRole = ps.formulaRole;
-                psNew.formulaType = ps.formulaType;
-                psNew.axiom = s;
-                psNew.number = newIndex;
-                for (int j = 0; j < ps.premises.size(); j++) {
-                    Integer premiseNum = ps.premises.get(j);
-                    Integer newNumber = null;
-                    if (numberingMap.get(premiseNum) != null) 
-                        newNumber = new Integer((Integer) numberingMap.get(premiseNum));
-                    else 
-                        newNumber = new Integer(premiseNum);                
-                    psNew.premises.set(j,newNumber);                    
-                }
-                newProofSteps.add(psNew);
+            	numberingMap.put(index,counter);
+            	formulaMap.put(s,counter);
+            	counter++;
+            	dedupedProofSteps.add(ps);
             }
+        }
+        for (int i = 0; i < dedupedProofSteps.size(); i++) { 
+            ProofStep ps = (ProofStep) dedupedProofSteps.get(i);            
+        	Integer newIndex = new Integer(ps.number);
+        	if (numberingMap.keySet().contains(newIndex))
+        		newIndex = (Integer) numberingMap.get(newIndex);
+        	ProofStep psNew = new ProofStep();
+        	psNew.formulaRole = ps.formulaRole;
+        	psNew.formulaType = ps.formulaType;
+            String s = Clausifier.normalizeVariables(ps.axiom);
+        	psNew.axiom = s;
+        	psNew.number = newIndex;
+        	ArrayList<Integer> newPremises = new ArrayList();        	   
+        	for (int j = 0; j < ps.premises.size(); j++) {
+        		Integer premiseNum = ps.premises.get(j);
+        		Integer newNumber = null;
+        		if (numberingMap.get(premiseNum) != null) 
+        			newNumber = new Integer((Integer) numberingMap.get(premiseNum));
+        		else 
+        			newNumber = new Integer(premiseNum);                
+        		newPremises.add(newNumber);                    
+        	}
+        	psNew.premises = newPremises;
+        	newProofSteps.add(psNew);            
         }
         return newProofSteps;
     }
