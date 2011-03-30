@@ -1145,6 +1145,37 @@ public class StringUtil {
     public static String wordWrap(String input) {
         return StringUtil.wordWrap(input,70);
     }
+    
+    /** *******************************************************************
+     *  Convert any arbitrary string to a valid KIF id.  There is no guarantee that
+     *  it is unique however, since the current KB isn't inspected.
+     */
+    public static String stringToKIF(String input, boolean upcaseFirst) {
+    	
+    	if (StringUtil.emptyString(input))
+    		return null;
+    	StringBuffer result = new StringBuffer();
+		if (Character.isJavaIdentifierStart(input.charAt(0)))
+			if (upcaseFirst)
+				result.append(Character.toUpperCase(input.charAt(0)));
+			else
+				result.append(Character.toLowerCase(input.charAt(0)));				
+		else
+			if (upcaseFirst)
+				result.append("I_");
+			else
+				result.append("r_");		
+    	for (int i = 1; i < input.length(); i++) {
+    		if (input.charAt(i) != ' ') {
+    	   		if (Character.isJavaIdentifierPart(input.charAt(i)))
+        			result.append(input.charAt(i));
+        		else
+        			result.append("x");   			
+    		}
+ 
+    	}
+        return result.toString();
+    }
 
     /** ***************************************************************** 
      */
