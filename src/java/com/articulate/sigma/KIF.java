@@ -114,13 +114,8 @@ public class KIF {
 
     /** ***************************************************************
      */
-    private void display(StreamTokenizer_s st,
-                         boolean inRule,
-                         boolean inAntecedent,
-                         boolean inConsequent,
-                         int argumentNum,
-                         int parenLevel,
-                         String key) {
+    private void display(StreamTokenizer_s st, boolean inRule, boolean inAntecedent,
+                         boolean inConsequent, int argumentNum, int parenLevel, String key) {
 
         System.out.print (inRule);
         System.out.print ("\t");
@@ -154,18 +149,10 @@ public class KIF {
     protected Set parse(Reader r) {
 
         // System.out.println("ENTER KIF.parse(" + r + ")");
-
-        int mode = this.getParseMode();
-        
-        /*
-          System.out.println("INFO in KIF.parse()");
-          System.out.println("  filename == " + this.getFilename());
-          System.out.println("  parseMode == "
-          + ((mode == RELAXED_PARSE_MODE) 
-          ? "RELAXED_PARSE_MODE" 
-          : "NORMAL_PARSE_MODE"));
-        */
-
+        int mode = this.getParseMode();                
+        //  System.out.println("INFO in KIF.parse()");
+        //  System.out.println("  filename == " + this.getFilename());
+        //  System.out.println("  parseMode == " + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));        
         String key = null;
         StringBuilder expression = new StringBuilder();
         StreamTokenizer_s st;
@@ -215,19 +202,13 @@ public class KIF {
                         // has already been generated, otherwise report
                         // error
                         if (!keySet.isEmpty() || (expression.length() > 0)) {
-                            //System.out.print("INFO in KIF.parse():
-                            //Parsing Error:"); System.out.println(new
-                            //Integer(lineStart +
-                            //totalLinesForComments).toString());
-                            errStr = (errStart 
-                                      + ": possible missed closing parenthesis near line "  
-                                      + f.startLine);
+                            //System.out.print("INFO in KIF.parse(): Parsing Error:"); System.out.println(new Integer(lineStart + totalLinesForComments).toString());
+                            errStr = (errStart + ": possible missed closing parenthesis near line " + f.startLine);
                             System.out.println("\n" + errStr + "\n");
                             System.out.println("st.sval == " + st.sval);
                             int elen = expression.length();
                             if (elen > 300)
-                                System.out.println("expression == ... " 
-                                                   + expression.substring(elen - 300));
+                                System.out.println("expression == ... " + expression.substring(elen - 300));
                             else 
                                 System.out.println("expression == " + expression.toString());
                             throw new ParseException(errStr, f.startLine);
@@ -243,8 +224,7 @@ public class KIF {
                 }
                 else if (isEOL) 
                     isEOL = false;                                    
-                // Turn off isEOL if a non-space token encountered                
-              
+                // Turn off isEOL if a non-space token encountered                              
                 if (st.ttype==40) {                                   
                     // open paren
                     if (parenLevel == 0) {
@@ -275,20 +255,14 @@ public class KIF {
                         // The end of the statement...
                         fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.theFormula = (StringUtil.replaceDateTime(fstr)).intern();
-
                         // if (f.theFormula.startsWith("(contentRegex")) {
                         //      System.out.println("  formula == " + f.theFormula);
                         //  }
-
                         //f.tptpParse(false,null);   // not a query
                         if (formulaSet.contains(f.theFormula)) {
-                            /*
-                            String warning = ("Duplicate formula at line " 
-                                              + f.startLine + " of " 
-                                              + f.sourceFile + ": " + expression);
+                            //String warning = ("Duplicate formula at line " + f.startLine + " of " + f.sourceFile + ": " + expression);
                             // lineStart + totalLinesForComments + expression;
-                            warningSet.add(warning);
-                            */
+                            // warningSet.add(warning);                            
                             duplicateCount++;
                         }
                         // Check argument validity ONLY if we are in
@@ -301,15 +275,12 @@ public class KIF {
                             if (StringUtil.emptyString(validArgs))
                                 validArgs = f.badQuantification();                      
                             if (StringUtil.isNonEmptyString(validArgs)) {
-                                errStr = (errStart 
-                                          + ": Invalid number of arguments near line " 
-                                          + f.startLine);
+                                errStr = (errStart + ": Invalid number of arguments near line " + f.startLine);
                                 System.out.println("\n" + errStr + "\n");
                                 System.out.println("st.sval == " + st.sval);
                                 int elen = expression.length();
                                 if (elen > 300)
-                                    System.out.println("expression == ... " 
-                                                       + expression.substring(elen - 300));
+                                    System.out.println("expression == ... " + expression.substring(elen - 300));
                                 else 
                                     System.out.println("expression == " + expression.toString());
                                 throw new ParseException(errStr, f.startLine);  
@@ -350,15 +321,12 @@ public class KIF {
                         keySet.clear();
                     }
                     else if (parenLevel < 0) {
-                        errStr = (errStart
-                                  + ": Extra closing parenthesis found near line " 
-                                  + f.startLine);
+                        errStr = (errStart + ": Extra closing parenthesis found near line " + f.startLine);
                         System.out.println("\n" + errStr + "\n");
                         System.out.println("st.sval == " + st.sval);
                         int elen = expression.length();
                         if (elen > 300)
-                            System.out.println("expression == ... " 
-                                               + expression.substring(elen - 300));
+                            System.out.println("expression == ... " + expression.substring(elen - 300));
                         else 
                             System.out.println("expression == " + expression.toString());
                         throw new ParseException(errStr, f.startLine);
@@ -366,29 +334,23 @@ public class KIF {
                 }
                 else if (st.ttype==34) {                                      // " - it's a string
                     //System.out.println("INFO in KIF.parse()");
-                    //System.out.println(st.sval);
-                    
+                    //System.out.println(st.sval);                    
                     st.sval = StringUtil.escapeQuoteChars(st.sval);
                     // st.sval = st.sval.replace("\"","\\\"");
-
                     // if (st.sval.contains("W[")) {
                     //   System.out.println("  st.sval == " + st.sval);
                     // }
-
                     //System.out.println(st.sval);
                     if (lastVal != 40)           // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
                     com = st.sval;
-
                     // if (com.contains("[")) {
                     //     System.out.println("  com == \"" + com + "\"");
                     // }
-
                     totalLinesForComments += countChar(com,(char)0X0A);
                     expression.append(com);
                     expression.append("\"");
-
                     if (parenLevel < 2)   // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
                 }
@@ -415,19 +377,14 @@ public class KIF {
                         expression.append(" ");
                     expression.append(String.valueOf(st.sval));
                     if (expression.length() > 64000) {
-                        //System.out.print("Error in KIF.parse(): Parsing
-                        //error: Sentence Over 64000 characters.");
-                        //System.out.println(new Integer(lineStart +
-                        //totalLinesForComments).toString());
-                        errStr = (errStart 
-                                  + ": Sentence over 64000 characters new line " 
-                                  + f.startLine);
+                        //System.out.print("Error in KIF.parse(): Parsing error: Sentence Over 64000 characters.");
+                        //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
+                        errStr = (errStart + ": Sentence over 64000 characters new line " + f.startLine);
                         System.out.println("\n" + errStr + "\n");
                         System.out.println("st.sval == " + st.sval);
                         int elen = expression.length();
                         if (elen > 300)
-                            System.out.println("expression == ... " 
-                                               + expression.substring(elen - 300));
+                            System.out.println("expression == ... " + expression.substring(elen - 300));
                         else 
                             System.out.println("expression == " + expression.toString());
                         throw new ParseException(errStr, f.startLine);                      
@@ -443,25 +400,21 @@ public class KIF {
                     }                                        // the statement is reached.
                 } 
                 else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) { 
-                    // AB: 5/2007
-                    // allow '`' in relaxed parse mode.
+                    // AB: 5/2007 - allow '`' in relaxed parse mode.
                     expression.append(" `");
                     // expression.append("`");
                 }
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
                     key = null;
                     // System.out.println( "st.ttype == " + st.ttype );
-                    //System.out.print("Error in KIF.parse(): Parsing
-                    //Error: Illegal character at line: ");
-                    //System.out.println(new Integer(lineStart +
-                    //totalLinesForComments).toString());
+                    //System.out.print("Error in KIF.parse(): Parsing Error: Illegal character at line: ");
+                    //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
                     errStr = (errStart + ": Illegal character near line " + f.startLine);
                     System.out.println("\n" + errStr + "\n");
                     System.out.println("st.sval == " + st.sval);
                     int elen = expression.length();
                     if (elen > 300)
-                        System.out.println("expression == ... " 
-                                           + expression.substring(elen - 300));
+                        System.out.println("expression == ... " + expression.substring(elen - 300));
                     else 
                         System.out.println("expression == " + expression.toString());
                     throw new ParseException(errStr, f.startLine);                      
@@ -473,8 +426,7 @@ public class KIF {
                 System.out.println("st.sval == " + st.sval);
                 int elen = expression.length();
                 if (elen > 300)
-                    System.out.println("expression == ... " 
-                                       + expression.substring(elen - 300));
+                    System.out.println("expression == ... " + expression.substring(elen - 300));
                 else 
                     System.out.println("expression == " + expression.toString());
                 throw new ParseException(errStr, f.startLine);            
@@ -487,14 +439,9 @@ public class KIF {
         }
         // System.out.println( "x" );
         if (duplicateCount > 0) {
-            warningSet.add("WARNING in KIF.parse(Reader): "
-                           + duplicateCount
-                           + " duplicate statement"
-                           + ((duplicateCount > 1) ? "s " : " ")
-                           + "detected in "
-                           + (StringUtil.emptyString(filename)
-                              ? " the input file"
-                              : filename));
+            warningSet.add("WARNING in KIF.parse(Reader): " + duplicateCount + " duplicate statement"
+                           + ((duplicateCount > 1) ? "s " : " ") + "detected in " + (StringUtil.emptyString(filename)
+                              ? " the input file" : filename));
         }
         if (!warningSet.isEmpty()) {
             Iterator it = warningSet.iterator();
@@ -529,11 +476,8 @@ public class KIF {
      * @param parenLevel - if the paren level is > 1 then the term appears nested
      *             in a statement and the argument number is ignored.
      */
-    private String createKey (String sval,
-                              boolean inAntecedent,
-                              boolean inConsequent,
-                              int argumentNum,
-                              int parenLevel) {
+    private String createKey (String sval, boolean inAntecedent, boolean inConsequent,
+                              int argumentNum, int parenLevel) {
 
         if (sval == null) { sval="null";}
         String key = new String("");
@@ -756,6 +700,7 @@ public class KIF {
      * Test method for this class.  
      */
     public static void main(String[] args) throws IOException {
+    	
         // tptpOutputTest(args[0]);
         String exp = "(documentation foo \"(written by Claude François).\")";
         System.out.println(exp);
