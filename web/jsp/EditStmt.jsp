@@ -24,17 +24,17 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
 System.out.println("ENTER EditStmt.jsp");
   String formID = request.getParameter("formID");
 System.out.println("  formID == " + formID);
-  String kbName = request.getParameter("kb");
-System.out.println("  kbName == " + kbName);
+  String KBName = request.getParameter("kb");
+System.out.println("  kbName == " + KBName);
   String text = request.getParameter("text");
 System.out.println("  text == " + text);
-  KB kb = KBmanager.getMgr().getKB(kbName);
-System.out.println("  kb == " + kb.name);
-  Formula form = kb.getFormulaByKey(formID);
+  KB kbEdit = KBmanager.getMgr().getKB(KBName);
+System.out.println("  kb == " + kbEdit.name);
+  Formula form = kbEdit.getFormulaByKey(formID);
 System.out.println("  form == " + form);
 if ((form != null) && StringUtil.isNonEmptyString(text)) {
       form.theFormula = text;
-      kb.rehashFormula(form,formID);
+      kbEdit.rehashFormula(form,formID);
       formID = form.createID();
   }
 %>

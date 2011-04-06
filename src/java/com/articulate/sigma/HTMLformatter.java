@@ -399,7 +399,6 @@ public class HTMLformatter {
                         show.append(formattedFormula);
                     File srcfile = new File(f.sourceFile);
                     String sourceFilename = srcfile.getName();
-                    show.append("<a href=\"EditStmt.jsp?formID=" + f.createID() + "&kb=" + kb.name + "\">");
                     if (StringUtil.isNonEmptyString(sourceFilename)) {
                         show.append(sourceFilename);
                         show.append(" " + f.startLine + "-" + f.endLine);
