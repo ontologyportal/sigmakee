@@ -21,4 +21,9 @@ public class AVPair implements Comparable {
                                          + avp.getClass().getName());
         return attribute.compareTo(((AVPair) avp).attribute);
     }
+    
+    public String toString() {
+    	
+    	return "[" + attribute + "," + value + "]";
+    }
 }
