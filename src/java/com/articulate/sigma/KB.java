@@ -1377,7 +1377,20 @@ public class KB {
             ex.printStackTrace();
         }
         return ans;
-    }
+    }   
+    
+    /** *************************************************************
+     * Returns true if i is c, is an instance of c, or is subclass of c, 
+     * else returns false.
+    *
+    * @param i A String denoting an instance.
+    * @param c A String denoting a Class.
+    * @return true or false.
+    */
+   public boolean isChildOf(String i, String c) {
+       	   
+       return i.equals(c) || isInstanceOf(i,c) || isSubclass(i,c);
+   }
 
     /** *************************************************************
      * Returns true if i is an instance of c in any loaded KB, else
