@@ -1,5 +1,5 @@
 /** This code is copyrighted by Rearden Commerce (c) 2011.  It is
-released under the GNU Public License &lt;http://www.gnu.org/copyleft/gpl.html&gt;.  
+released under the GNU Public License &lt;http://www.gnu.org/copyleft/gpl.html&gt;.
 
 Users of this code also consent, by use of this code, to credit
 Articulate Software in any writings, briefings, publications,
@@ -22,13 +22,13 @@ import java.util.regex.*;
 public class EditGUI {
 
 	ArrayList terms = new ArrayList();
-	
+
     /** *************************************************************
 	*/
 	public void readConfig() {
 
 		LineNumberReader lnr = null;
-	 
+
 	   	try {
 	   		File fin  = new File("config.txt");
 	   		FileReader fr = new FileReader(fin);
@@ -42,7 +42,7 @@ public class EditGUI {
 	   		}
 	   	}
 	   	catch (IOException ioe) {
-	   		System.out.println("File error: " + ioe.getMessage());      
+	   		System.out.println("File error: " + ioe.getMessage());
 	   	}
         finally {
             try {
@@ -53,22 +53,22 @@ public class EditGUI {
             }
         }
 	}
-	
+
 	/** *************************************************************
 	*/
 	public String genRelPage(KB kb, String rel) {
-		
+
 		StringBuffer sb = new StringBuffer();
 
 		// get classes or instances that apply for each argument
 		return sb.toString();
 	}
-	
+
 	/** *************************************************************
 	 * Get and print all instances of a class
 	*/
 	public static String printInstances(KB kb, String className) {
-		
+
 		StringBuffer sb = new StringBuffer();
 
 		TreeSet ts = kb.getAllInstances(className);
@@ -80,28 +80,63 @@ public class EditGUI {
 		}
 		return sb.toString();
 	}
-	
+
 	/** *************************************************************
-	 * get parent classes of term
+	 * Get the all parent classes of term.  Return the full transitive closure
+	 * of instance and subclass through the subclass relation all the way
+	 * to the root term of the hierarchy.
+	 * @return an ArrayList of term strings
 	*/
-	public static ArrayList<String> genParentList(KB kb, String term) {
-				
+	public static ArrayList<String> genAllParentList(KB kb, String term) {
+
+		ArrayList<String> parents = new ArrayList<String>();
+		HashSet<String> immedParents = new HashSet<String>();
+		ArrayList<Formula> res = kb.askWithRestriction(0,"instance",1,term);
+		for (int i = 0; i < res.size(); i++) {
+			Formula f = res.get(i);
+			immedParents.add(f.getArgument(2));
+		}
+		res = kb.askWithRestriction(0,"subclass",1,term);
+		for (int i = 0; i < res.size(); i++) {
+			Formula f = res.get(i);
+			immedParents.add(f.getArgument(2));
+		}
+		parents.addAll(kb.getAllSuperClasses(immedParents));
+		return parents;
+	}
+
+	/** *************************************************************
+	 * Get the just the immediate parent classes of a term
+	 * @return an ArrayList of term strings
+	*/
+	public static ArrayList<String> genImmedParentList(KB kb, String term) {
+
 		ArrayList<String> parents = new ArrayList<String>();
 		ArrayList<Formula> res = kb.askWithRestriction(0,"instance",1,term);
 		for (int i = 0; i < res.size(); i++) {
 			Formula f = res.get(i);
 			parents.add(f.getArgument(2));
 		}
+		res = kb.askWithRestriction(0,"subclass",1,term);
+		for (int i = 0; i < res.size(); i++) {
+			Formula f = res.get(i);
+			parents.add(f.getArgument(2));
+		}
 		return parents;
 	}
-	
+
 	/** *************************************************************
+	 * Collect a set of relations in which the type of given term is an argument instance type,
+	 * and collect the set of possible argument fillers.
+	 * @return a map of relation name keys and array values, where each element of
+	 * the array is a particular argument, and consists of an array of possible
+	 * string values.
 	*/
 	public static HashMap<String,ArrayList<ArrayList<String>>> genInstList(KB kb, String term) {
-		
+
 		HashMap<String,ArrayList<ArrayList<String>>> result = new HashMap<String,ArrayList<ArrayList<String>>>();
-		
-		ArrayList<String> parents = genParentList(kb,term);
+
+		ArrayList<String> parents = genAllParentList(kb,term);
 		// get relations that apply
 		ArrayList<String> relations = new ArrayList<String>();
 		for (int i = 0; i < parents.size(); i++) {
@@ -111,10 +146,10 @@ public class EditGUI {
 			//		  "(domain ?X ?Y " + parent + ")");
 			for (int k = 0; k < res.size(); k++) {
 				Formula f = res.get(k);
-				relations.add(f.getArgument(1));					
-			}					
+				relations.add(f.getArgument(1));
+			}
 		}
-		
+
 		// get the arity of each relation
 		HashMap<String,Integer> arity = new HashMap<String,Integer>();
 		for (int i = 0; i < relations.size(); i++) {
@@ -122,7 +157,7 @@ public class EditGUI {
 			int a = kb.getValence(r);
 			arity.put(r,new Integer(a));
 		}
-		
+
 		for (int i = 0; i < relations.size(); i++) {
 			String r = relations.get(i);
 			ArrayList al = new ArrayList();
@@ -130,51 +165,182 @@ public class EditGUI {
             int a = arity.get(r).intValue();
             for (int j = 1; j <= a; j++) {
             	ArrayList al2 = new ArrayList();
-            	String className = kb.getArgType(r,j);
-            	al2.addAll(kb.getAllInstances(className));
+            	String className = kb.getArgTypeClass(r,j);
+            	if (className.endsWith("+"))
+                	al2.addAll(kb.getAllSubClasses(className.substring(0,className.length()-1)));
+            	else
+            		al2.addAll(kb.getAllInstances(className));
             	al.add(al2);
-            }            
+            }
 		}
 		return result;
 	}
-	
+
 	/** *************************************************************
+	 * Collect a set of relations in which the type of given term is an argument subclass,
+	 * and collect the set of possible argument fillers.
+	 * @return a map of relation name keys and array values, where each element of
+	 * the array is a particular argument, and consists of an array of possible
+	 * string values.
+	*/
+	public static HashMap<String,ArrayList<ArrayList<String>>> genClassList(KB kb, String term) {
+
+		HashMap<String,ArrayList<ArrayList<String>>> result = new HashMap<String,ArrayList<ArrayList<String>>>();
+
+		ArrayList<String> parents = genAllParentList(kb,term);
+		// get relations that apply
+		ArrayList<String> relations = new ArrayList<String>();
+		for (int i = 0; i < parents.size(); i++) {
+			String parent = parents.get(i);
+			ArrayList<Formula> res = kb.askWithRestriction(0,"domainSubclass",3,parent);
+			//sb.append(";; res = " + Integer.toString(res.size()) + " for " +
+			//		  "(domain ?X ?Y " + parent + ")");
+			for (int k = 0; k < res.size(); k++) {
+				Formula f = res.get(k);
+				relations.add(f.getArgument(1));
+			}
+		}
+
+		// get the arity of each relation
+		HashMap<String,Integer> arity = new HashMap<String,Integer>();
+		for (int i = 0; i < relations.size(); i++) {
+			String r = relations.get(i);
+			int a = kb.getValence(r);
+			arity.put(r,new Integer(a));
+		}
+
+		for (int i = 0; i < relations.size(); i++) {
+			String r = relations.get(i);
+			ArrayList al = new ArrayList();
+			result.put(r,al);
+            int a = arity.get(r).intValue();
+            for (int j = 1; j <= a; j++) {
+            	ArrayList al2 = new ArrayList();
+            	String className = kb.getArgTypeClass(r,j);
+            	if (className.endsWith("+"))
+                	al2.addAll(kb.getAllSubClasses(className.substring(0,className.length()-1)));
+            	else
+            		al2.addAll(kb.getAllInstances(className));
+            	al.add(al2);
+            }
+		}
+		return result;
+	}
+
+	/** *************************************************************
+	 * Generate fields for an HTML form that allow a user to assert
+	 * statements by using menus to set parameters that are arguments
+	 * to relations.
 	*/
 	public static String genInstPage(KB kb, String term, String kbHref) {
 
 		StringBuffer sb = new StringBuffer();
 		HashMap<String,ArrayList<ArrayList<String>>> instList = EditGUI.genInstList(kb,term);
-		ArrayList<String> parents = genParentList(kb,term);
+		ArrayList<String> parents = genAllParentList(kb,term);
 
 		// show the instance and its class
-		sb.append("<font size=+3><a href=\"" + kbHref + term + "\">" + term + "</a></font>:");
+		sb.append("Instance relations for: <font size=+3><a href=\"" + kbHref + term + "\">" + term + "</a></font>:");
 		for (int i = 0; i < parents.size(); i++) {
 			String parent = parents.get(i);
 			sb.append("<a href=\"" + kbHref + parent + "\">" + parent + "</a>,");
 		}
 		sb.append("<P>\n");
-		
+
+		sb.append("<table>\n");
+		sb.append("<tr><td><b>relation</b></td><td><b>arguments</b></td><td><b>assert?</b></td></tr>\n");
 		// get relevant relations and their argument types
 		Iterator it = instList.keySet().iterator();
 		while (it.hasNext()) {
 			String relation = (String) it.next();
-			sb.append(relation + ":");
+			sb.append("<tr><td><a href=\"" + kbHref + relation + "\">" + relation + "</a>:</td><td>");
 			ArrayList<ArrayList<String>> arguments = instList.get(relation);
             for (int i = 0; i < arguments.size(); i++) {
             	ArrayList<String> fillers = arguments.get(i);
-           		sb.append(HTMLformatter.createMenu(relation + "--" + Integer.toString(i),"", fillers, ""));
+    			if (fillers.size() < 1)
+    				sb.append("<input type=\"text\" name=\"" + relation + "--" + Integer.toString(i) + "\" >");
+    			else
+    				sb.append(HTMLformatter.createMenu(relation + "--" + Integer.toString(i),"", fillers, ""));
             }
-            sb.append("<P>\n");
+            sb.append("</td><td><input type=\"checkbox\" name=\"checkbox-" + relation +
+            		"\" value=\"checkbox-" + relation + "\" /></td></tr>\n");
 		}
+		sb.append("</table>\n");
 		// for each relation, get other class and instances that apply
 		return sb.toString();
 	}
-					
+
+	/** *************************************************************
+	*/
+	public static String genClassPage(KB kb, String term, String kbHref) {
+
+		StringBuffer sb = new StringBuffer();
+		HashMap<String,ArrayList<ArrayList<String>>> instList = EditGUI.genClassList(kb,term);
+		ArrayList<String> parents = genAllParentList(kb,term);
+
+		// show the instance and its class
+		sb.append("Class relations for: <font size=+3><a href=\"" + kbHref + term + "\">" + term + "</a></font>:");
+		for (int i = 0; i < parents.size(); i++) {
+			String parent = parents.get(i);
+			sb.append("<a href=\"" + kbHref + parent + "\">" + parent + "</a>,");
+		}
+		sb.append("<P>\n");
+
+		sb.append("<table>\n");
+		sb.append("<tr><td><b>relation</td><td>arguments</b></td><td><b>assert?</b></td></tr>\n");
+		// get relevant relations and their argument types
+		Iterator it = instList.keySet().iterator();
+		while (it.hasNext()) {
+			String relation = (String) it.next();
+			sb.append("<tr><td><a href=\"" + kbHref + relation + "\">" + relation + "</a>:</td><td>");
+			ArrayList<ArrayList<String>> arguments = instList.get(relation);
+            for (int i = 0; i < arguments.size(); i++) {
+            	ArrayList<String> fillers = arguments.get(i);
+    			if (fillers.size() < 1)
+    				sb.append("<input type=\"text\" name=\"" + relation + "--" + Integer.toString(i) + "\" >");
+    			else
+    				sb.append(HTMLformatter.createMenu(relation + "--" + Integer.toString(i),"", fillers, ""));
+            }
+            sb.append("</td><td><input type=\"checkbox\" name=\"checkbox-" + relation +
+            		"\" value=\"checkbox-" + relation + "\" /></td></tr>\n");
+		}
+		sb.append("</table>\n");
+		// for each relation, get other class and instances that apply
+		return sb.toString();
+	}
+
+	/** *************************************************************
+	 * Interpret a map as a key relation name and ArrayList of values as arguments.
+	 * @return a String status message that includes a hyperlinked presentation of each
+	 * formula that is successfully asserted.
+	*/
+	public static String assertFacts(KB kb, TreeMap<String, ArrayList<String>> cbset, String kbHref) {
+
+		System.out.println("INFO in EditGUI.assertFacts(): cbset: "+ cbset);
+		StringBuffer status = new StringBuffer();
+		Iterator it = cbset.keySet().iterator();
+		while (it.hasNext()) {
+			String rel = (String) it.next();
+			StringBuffer sb = new StringBuffer();
+			sb.append("(" + rel);
+			ArrayList<String> al = cbset.get(rel);
+			for (int i = 0; i < al.size(); i++) {
+				String val = al.get(i);
+				sb.append(" " + val);
+			}
+			sb.append(")");
+			Formula f = new Formula();
+			f.read(sb.toString());
+			status.append(f.htmlFormat(kbHref) + "<P>\n");
+			status.append(kb.tell(sb.toString())  + "<P>\n");
+		}
+		return status.toString();
+	}
+
     /** *************************************************************
      * A test method.
      */
     public static void main (String args[]) {
-    	
+
         try {
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
