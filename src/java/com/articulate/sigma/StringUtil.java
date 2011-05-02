@@ -267,7 +267,7 @@ public class StringUtil {
             String encoded = toBase64(input, charset);
             MessageDigest md = MessageDigest.getInstance("SHA");
             md.update(encoded.getBytes(charset));
-            byte[] raw = md.digest(); 
+            byte[] raw = md.digest();
             encrypted = new String(raw, charset);
         }
         catch (Exception e) {
@@ -292,7 +292,7 @@ public class StringUtil {
      */
     public static boolean emptyString(Object s) {
 
-        return ((s == null) 
+        return ((s == null)
                 || ((s instanceof String)
                     && s.equals("")));
     }
@@ -537,15 +537,15 @@ public class StringUtil {
     /** ***************************************************************
      */
     public static String allCapsToSUMOID(String str) {
-    	
+
     	if (emptyString(str)) {
     		System.out.println("Error in StringUtil.allCapsToSUMOID(): str is null");
     		return "";
     	}
     	StringBuffer sb = new StringBuffer();
     	boolean under = false;
-    	for (int i = 0; i < str.length(); i++) { 
-    		if (str.charAt(i) == '_') 
+    	for (int i = 0; i < str.length(); i++) {
+    		if (str.charAt(i) == '_')
     			under = true;
     		else {
         		if (under || i == 0)
@@ -809,7 +809,7 @@ public class StringUtil {
      * @param newTerm A String to replace terms matching oldPattern
      *
      * @param tree A String representing a SUO-KIF Formula (list)
-     * 
+     *
      * @return A new tree (String), with all occurrences of terms
      * matching oldPattern replaced by newTerm
      */
@@ -987,7 +987,7 @@ public class StringUtil {
 
         String ans = term;
         if (isNonEmptyString(term) && !StringUtil.isUri(term)) {
-            ans = term.replaceFirst(getW3cNamespaceDelimiter(), 
+            ans = term.replaceFirst(getW3cNamespaceDelimiter(),
                                     getKifNamespaceDelimiter());
         }
         return ans;
@@ -999,7 +999,7 @@ public class StringUtil {
 
         String ans = term;
         if (isNonEmptyString(term) && !StringUtil.isUri(term)) {
-            ans = term.replaceFirst(getKifNamespaceDelimiter(), 
+            ans = term.replaceFirst(getKifNamespaceDelimiter(),
                                     getW3cNamespaceDelimiter());
         }
         return ans;
@@ -1045,14 +1045,14 @@ public class StringUtil {
     private static String LOCAL_REF_BASE_NAME = "LocalRef";
 
     /** ***************************************************************
-     * 
+     *
      */
     public static String getLocalReferenceBaseName() {
         return LOCAL_REF_BASE_NAME;
     }
 
     /** ***************************************************************
-     * 
+     *
      */
     public static void setLocalReferenceBaseName(String basename) {
         LOCAL_REF_BASE_NAME = basename;
@@ -1145,13 +1145,13 @@ public class StringUtil {
     public static String wordWrap(String input) {
         return StringUtil.wordWrap(input,70);
     }
-    
+
     /** *******************************************************************
      *  Convert any arbitrary string to a valid KIF id.  There is no guarantee that
      *  it is unique however, since the current KB isn't inspected.
      */
     public static String stringToKIF(String input, boolean upcaseFirst) {
-    	
+
     	if (StringUtil.emptyString(input))
     		return null;
     	StringBuffer result = new StringBuffer();
@@ -1159,25 +1159,25 @@ public class StringUtil {
 			if (upcaseFirst)
 				result.append(Character.toUpperCase(input.charAt(0)));
 			else
-				result.append(Character.toLowerCase(input.charAt(0)));				
+				result.append(Character.toLowerCase(input.charAt(0)));
 		else
 			if (upcaseFirst)
 				result.append("I_");
 			else
-				result.append("r_");		
+				result.append("r_");
     	for (int i = 1; i < input.length(); i++) {
     		if (input.charAt(i) != ' ') {
-    	   		if (Character.isJavaIdentifierPart(input.charAt(i)))
+    	   		if (Character.isJavaIdentifierPart(input.charAt(i)) && input.charAt(i) != '$')
         			result.append(input.charAt(i));
         		else
-        			result.append("x");   			
+        			result.append("x");
     		}
- 
+
     	}
         return result.toString();
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static void main(String args[]) {
 
