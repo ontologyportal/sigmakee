@@ -5137,6 +5137,7 @@ public class Formula implements Comparable {
      * instantiations can be generated.
      */
     public ArrayList instantiatePredVars(KB kb) {
+
         ArrayList ans = new ArrayList();
         try {
             if (this.listP()) {
@@ -5169,9 +5170,8 @@ public class Formula implements Comparable {
                             varQueryTuples = (List) it1.next();
                             substTuples = computeSubstitutionTuples(kb, varQueryTuples);
                             if ((substTuples instanceof List) && !substTuples.isEmpty()) {
-                                if (substForms.isEmpty()) {
+                                if (substForms.isEmpty())
                                     substForms.add(substTuples);
-                                }
                                 else {
                                     int stSize = substTuples.size();
                                     int iSize = -1;
@@ -5183,16 +5183,14 @@ public class Formula implements Comparable {
                                             substForms.add(i, substTuples);
                                             break;
                                         }
-                                        if (i == sfLast) {
+                                        if (i == sfLast)
                                             substForms.add(substTuples);
-                                        }
                                     }
                                 }
                             }
                         }
 
                         if (!substForms.isEmpty()) {
-
                             // Try to simplify the Formula.
                             Formula f = this;
                             it1 = substForms.iterator();
@@ -5224,9 +5222,7 @@ public class Formula implements Comparable {
                             it1 = substForms.iterator();
                             while (it1.hasNext()) {
                                 substTuples = (List) it1.next();
-
                                 if ((substTuples instanceof List) && !substTuples.isEmpty()) {
-
                                     // Iterate over all ground lits ...
 
                                     // Remove litsToRemove, which we have
@@ -5254,13 +5250,10 @@ public class Formula implements Comparable {
                                             for (i = 0 ; i < varTuple.size() ; i++) {
                                                 var = (String) varTuple.get(i);
                                                 if (isVariable(var)) {
-
                                                     term = (String) groundLit.get(i);
-
                                                     // Don't replace variables that
                                                     // are explicitly quantified.
                                                     if (!quantVars.contains(var)) {
-
                                                         List patternStrings =
                                                             Arrays.asList("(\\W*\\()(\\s*holds\\s+\\" + var + ")(\\W+)",
                                                                           // "(\\W*\\()(\\s*\\" + var + ")(\\W+)",
@@ -5268,9 +5261,8 @@ public class Formula implements Comparable {
                                                                           );
                                                         int pslen = patternStrings.size();
                                                         List patterns = new ArrayList();
-                                                        for (int j = 0; j < pslen; j++) {
+                                                        for (int j = 0; j < pslen; j++)
                                                             patterns.add(Pattern.compile((String)(patternStrings.get(j))));
-                                                        }
                                                         int plen = patterns.size();
                                                         Pattern p = null;
                                                         Matcher m = null;
@@ -5315,6 +5307,7 @@ public class Formula implements Comparable {
      * @return An int.
      */
     private static int getVarCount(List queryLiteral) {
+
         int ans = 0;
         if (queryLiteral instanceof List) {
             String term = null;
@@ -5346,7 +5339,6 @@ public class Formula implements Comparable {
     private static ArrayList computeSubstitutionTuples(KB kb, List queryLits) {
 
         // System.out.println("ENTER computeSubstitutionTuples(" + kb + ", " + queryLits + ")");
-
         ArrayList result = new ArrayList();
         try {
             if ((kb instanceof KB)
@@ -5354,7 +5346,6 @@ public class Formula implements Comparable {
                 && !queryLits.isEmpty()) {
 
                 String idxVar = (String) queryLits.get(0);
-
                 int i = 0;
                 int j = 0;
 
@@ -5379,12 +5370,10 @@ public class Formula implements Comparable {
                 List ql = null;
                 for (Iterator iql = tmplist.iterator(); iql.hasNext();) {
                     ql = (List) iql.next();
-                    if (((String)(ql.get(0))).equals("instance")) {
+                    if (((String)(ql.get(0))).equals("instance"))
                         ioLits.add(ql);
-                    }
-                    else {
+                    else
                         sortedQLits.add(ql);
-                    }
                 }
                 sortedQLits.addAll(ioLits);
 
@@ -5426,9 +5415,7 @@ public class Formula implements Comparable {
                     // System.out.println(ql + " accumulator == " + accumulator);
 
                     if (satisfiable) {
-
                         simplificationLits.add(ql);
-
                         if (keyLit == null) {
                             keyLit = ql;
                             answers = KB.formulasToArrayLists(accumulator);
@@ -5516,7 +5503,6 @@ public class Formula implements Comparable {
     private ArrayList prepareIndexedQueryLiterals(KB kb, Map varTypeMap) {
 
         // System.out.println("ENTER prepareIndexedQueryLiterals(" + this + ")");
-
         ArrayList ans = new ArrayList();
         try {
             Map varsWithTypes = ((varTypeMap instanceof Map)
@@ -5525,13 +5511,10 @@ public class Formula implements Comparable {
             // System.out.println("  varsWithTypes == " + varsWithTypes);
 
             if (!varsWithTypes.isEmpty()) {
-
                 String yOrN = (String) varsWithTypes.get("arg0");
-
                 // If the formula doesn't contain any arg0 pred vars, do
                 // nothing.
                 if (isNonEmptyString(yOrN) && yOrN.equalsIgnoreCase("yes")) {
-
                     // Try to simplify the formula.
                     ArrayList varWithTypes = null;
                     ArrayList indexedQueryLits = null;
@@ -5580,15 +5563,13 @@ public class Formula implements Comparable {
     protected HashMap gatherPredVars(KB kb) {
 
         // System.out.println("ENTER gatherPredVars(" +  this + ")");
-
         HashMap ans = new HashMap();
         try {
             if (isNonEmptyString(this.theFormula)) {
                 List accumulator = new ArrayList();
                 List working = new ArrayList();
-                if (this.listP() && !this.empty()) {
+                if (this.listP() && !this.empty())
                     accumulator.add(this);
-                }
                 Iterator it = null;
                 while (!accumulator.isEmpty()) {
                     working.clear();
@@ -5611,18 +5592,16 @@ public class Formula implements Comparable {
 
                                 Formula newF = new Formula();
                                 newF.read(arg2);
-                                if (f.listP() && !f.empty()) {
+                                if (f.listP() && !f.empty())
                                     accumulator.add(newF);
-                                }
                             }
                             else {
                                 System.out.println("INFO in Formula.gatherPredVars(" + this + ")");
                                 System.out.println("Is this malformed? " + f.theFormula);
                             }
                         }
-                        else if (arg0.equals("holds")) {
+                        else if (arg0.equals("holds"))
                             accumulator.add(f.cdrAsFormula());
-                        }
                         else if (isVariable(arg0)) {
                             vals = (ArrayList) ans.get(arg0);
                             if (vals == null) {
@@ -5652,16 +5631,14 @@ public class Formula implements Comparable {
                                         vals.add(argN);
                                     }
                                     argType = kb.getArgType(arg0, j);
-                                    if (!((argType == null) || vals.contains(argType))) {
+                                    if (!((argType == null) || vals.contains(argType)))
                                         vals.add(argType);
-                                    }
                                 }
                                 else {
                                     argF = new Formula();
                                     argF.read(argN);
-                                    if (argF.listP() && !argF.empty()) {
+                                    if (argF.listP() && !argF.empty())
                                         accumulator.add(argF);
-                                    }
                                 }
                             }
                         }
@@ -5672,10 +5649,8 @@ public class Formula implements Comparable {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
         // System.out.println("INFO in gatherPredVars(" +  this + ")");
         // System.out.println("  -> " + ans);
-
         return ans;
     }
 
@@ -5945,7 +5920,6 @@ public class Formula implements Comparable {
         }
         return ans;
     }
-
 
     ///////////////////////////////////////////////////////
     /*
