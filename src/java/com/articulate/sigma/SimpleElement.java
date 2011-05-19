@@ -19,13 +19,13 @@ public class SimpleElement {
 
     private String tagName;
     private String text;
-    private HashMap attributes;
-    private ArrayList childElements;
+    private HashMap<String,String> attributes;
+    private ArrayList<SimpleElement> childElements;
 
     public SimpleElement(String tagName) {
         this.tagName = tagName;
-        attributes = new HashMap();
-        childElements = new ArrayList();
+        attributes = new HashMap<String,String>();
+        childElements = new ArrayList<SimpleElement>();
     }
 
     public String getTagName() {
@@ -55,13 +55,13 @@ public class SimpleElement {
     public String getAttribute(String name) {
 
         String attribute = (String) attributes.get(name);
-        if (attribute != null && attribute != "") 
+        if (attribute != null && attribute != "")
             return SimpleDOMParser.convertToReservedCharacters(attribute);
         else
             return attribute;
     }
 
-    public Set getAttributeNames() {
+    public Set<String> getAttributeNames() {
         return attributes.keySet();
     }
 
@@ -76,10 +76,25 @@ public class SimpleElement {
         childElements.add(element);
     }
 
-    public ArrayList getChildElements() {
+    public ArrayList<SimpleElement> getChildElements() {
         return childElements;
     }
-    
+
+    /** *****************************************************************
+     * @return the first child with the given tag name, null if none
+     */
+     public SimpleElement getChildByFirstTag(String tag) {
+
+         if (childElements == null | childElements.size() < 1)
+             return null;
+         for (int i = 0; i < childElements.size(); i++) {
+             SimpleElement se = childElements.get(i);
+             if (se.tagName.equals(tag))
+                 return se;
+         }
+         return null;
+     }
+
     /** *****************************************************************
     */
     public String toString(int indent, boolean forFile) {
@@ -96,23 +111,23 @@ public class SimpleElement {
         while (it.hasNext()) {
             String attName = (String) it.next();
             String value = getAttribute(attName);
-            if (forFile) 
+            if (forFile)
                 value = SimpleDOMParser.convertFromReservedCharacters(value);
             result.append(attName + "=\"" + value + "\" ");
         }
         ArrayList children = getChildElements();
-        if (children.size() == 0 && (getText() == null || getText().equals("null"))) 
+        if (children.size() == 0 && (getText() == null || getText().equals("null")))
             result.append("/>\n");
         else {
             result.append(">\n");
             if (getText() != null && getText() != "" && !getText().equals("null")) {
-                if (forFile) 
+                if (forFile)
                     result.append(SimpleDOMParser.convertFromReservedCharacters(getText()));
                 else
                     result.append(getText() );
             }
-            if (getText() != null && getText() != "") 
-                result.append("\n");            
+            if (getText() != null && getText() != "")
+                result.append("\n");
             for (int i = 0; i < children.size(); i++) {
                 SimpleElement element = (SimpleElement) children.get(i);
                 result.append(element.toString(indent+1,forFile));
