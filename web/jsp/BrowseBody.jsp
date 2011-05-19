@@ -69,6 +69,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
              show.append(" [<a href=\"http://" + hostname + ":" + port + "/sigma/InstFiller.jsp?lang=" + language +
         	    	 "&flang=" + flang + "&kb=" + kbName + "&term=" + term + "\">assert facts</a>]<br>");
          }
+         show.append(HTMLformatter.showMap(kb,term));
          show.append(HTMLformatter.showPictures(kb,term));
          show.append("</td>");
          //WordNet.initOnce();
