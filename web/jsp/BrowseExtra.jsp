@@ -21,7 +21,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
   @param term is the term name to display
   @param lang is the language in which to generate paraphrases
 */
+%>
 
+<%
  StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String formattedFormula = null;
  int start = 0;

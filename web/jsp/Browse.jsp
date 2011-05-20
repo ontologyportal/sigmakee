@@ -21,8 +21,14 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  * lang     = <lang>   - the name of the language used to display axiom paraphrases
  * */
  String term = request.getParameter("term");
+ String nonRelTerm = request.getParameter("nonrelation");
+ String relTerm = request.getParameter("relation");
  if (!Formula.isNonEmptyString(term))
      term = "";
+ if (!Formula.isNonEmptyString(nonRelTerm))
+ 	nonRelTerm = "";
+ if (!Formula.isNonEmptyString(relTerm))
+    relTerm = "";
  if (flang.equals("OWL")) {
     response.sendRedirect("http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
                  "kb=" + kbName + "&term=" + term);

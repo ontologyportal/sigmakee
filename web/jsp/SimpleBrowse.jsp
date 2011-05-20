@@ -2,8 +2,16 @@
 <html>
 <%
  String term = request.getParameter("term");
+ String nonRelTerm = request.getParameter("nonrelation");
+ String relTerm = request.getParameter("relation");
+ 
  if (!Formula.isNonEmptyString(term))
      term = "";
+ if (!Formula.isNonEmptyString(nonRelTerm))
+ 	nonRelTerm = "";
+ if (!Formula.isNonEmptyString(relTerm))
+    relTerm = "";
+
 %>
 <HEAD><!-- link rel="stylesheet" type="text/css" href="simple.css" /-->
     <TITLE>Simple Knowledge base Browser - <%=term%></TITLE></HEAD>

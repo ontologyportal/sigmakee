@@ -281,43 +281,47 @@ public class HTMLformatter {
         return show.toString();
     }
 
+    public static String showNeighborTerms(KB kb, String term) {
+    	return HTMLformatter.showNeighborTerms(kb, term, term);
+    }
+
     /** *************************************************************
      *  Show alphabetic list of neighbor terms
      */
-    public static String showNeighborTerms(KB kb, String term) {
+    public static String showNeighborTerms(KB kb, String nonRelTerm, String relTerm) {
         String markup = "";
         try {
             StringBuilder show = new StringBuilder();
-            ArrayList relations = kb.getNearestRelations(term);
-            ArrayList nonRelations = kb.getNearestNonRelations(term);
-            String termAbove = kb.getAlphaBefore(term,15);
-            String termBelow = kb.getAlphaAfter(term,15);
-            String lowcaseTerm = Character.toLowerCase(term.charAt(0)) + term.substring(1);
-            show.append(" <FONT face='Arial,helvetica' size=+3> <b> ");
-            if (term != null)
-                show.append(term);
-            show.append("</b></FONT><br><br>");
+            ArrayList relations = kb.getNearestRelations(relTerm); 
+            ArrayList nonRelations = kb.getNearestNonRelations(nonRelTerm);
+            String lowcaseTerm = Character.toLowerCase(nonRelTerm.charAt(0)) + nonRelTerm.substring(1);
+            String uppercaseTerm = Character.toUpperCase(relTerm.charAt(0)) + relTerm.substring(1);
             show.append("<table><tr><td>");
             show.append("<table>");
-            show.append("<tr><td><i><a href=\"" + kbHref +"&term=" + termAbove + "*\">previous " + 25 + "</a>" + "</i></td></tr>\n");
+            show.append("<tr><td><FONT face='Arial,helvetica' size=+3> <b> " + relTerm + "</b></FONT></td>");
+            show.append("<td><FONT face='Arial,helvetica' size=+3> <b> " + nonRelTerm + "</b></FONT></td></tr>\n<br><br>");
             for (int i = 0; i < 30; i++) {
                 String relation = (String) relations.get(i);
                 String relationName = DocGen.getInstance(kb.name).showTermName(kb,relation,language);
                 String nonRelation = (String) nonRelations.get(i);
                 String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb,nonRelation,language);
                 if (relation != "" || nonRelation != "") {
+                	if (i == 0)
+                		show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(0) + "&relation=" + relations.get(0) + "\">previous " + 25 + "</a>" + "</i></td></tr>\n");
+
                     show.append("<tr>\n");
                     show.append("  <td><a href=\"" + kbHref +"&term=");
-                    show.append(   relation + "\">" + relation + " (" + relationName + ")</a>" + "</td><td>&nbsp;&nbsp;</td>\n");
+                    show.append(   relation + "\">" + relation + " (" + relationName + ")</a>" + "</td>");
                     show.append("  <td><a href=\"" + kbHref +"&term=");
-                    show.append(   nonRelation + "\">" + nonRelation + " (" + nonRelationName + ")</a>" + "</td>\n");
+                    show.append(   nonRelation + "\">" + nonRelation + " (" + nonRelationName + ")</a>" + "</td>");
                     show.append("</tr>\n");
-                    if (i == 14)
-                        show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + term + " </FONT></td><td>&nbsp;&nbsp;</td>\n" +
-                                "<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>\n");
-                }
+                    if (i == 14) 
+                        show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + uppercaseTerm + " </FONT></td>" +
+                        			"<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>"); 
+                    if (i == 29)
+                        show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(29) + "&relation=" + relations.get(29) + "\">next " + 25 + "</a>" + "</i></td></tr>\n");
+                 }
             }
-            show.append("<tr><td><i><a href=\"" + kbHref + "&term=" + termBelow + "*\">next " + 25 + "</a>" + "</i></td></tr>\n");
             show.append("</table></td>");
             markup = show.toString();
         }
@@ -327,6 +331,7 @@ public class HTMLformatter {
         return markup;
     }
 
+      
     /** *************************************************************
      *  Show a hyperlinked list of term mappings from WordNet.
      */

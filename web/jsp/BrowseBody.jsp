@@ -15,13 +15,15 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  show = new StringBuffer();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
  term = request.getParameter("term");
+ nonRelTerm = request.getParameter("nonrelation");
+ relTerm = request.getParameter("relation");
  Map theMap = null;     // Map of natural language format strings.
 
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
 
- if (kb != null && StringUtil.emptyString(term))        // Show statistics only when no term is specified.
+ if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm))        // Show statistics only when no term is specified.
      show.append(HTMLformatter.showStatistics(kb));
- else if (kb != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term
+ else if (kb != null && term != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term
     show.append(HTMLformatter.showNeighborTerms(kb,term));
     //WordNet.initOnce();
     TreeMap tm = WordNet.wn.getSensesFromWord(term);
@@ -31,6 +33,10 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
         show.append(WordNetUtilities.formatWordsList(tm,kbName));
         show.append("</small></td>");
     }
+    show.append("</td></table>");
+ }
+ else if ((kb != null) && (term == null) && (nonRelTerm != null) && (relTerm != null)) {
+    show.append(HTMLformatter.showNeighborTerms(kb,nonRelTerm, relTerm));
     show.append("</td></table>");
  }
  else if ((kb != null) && (term != null) && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in
