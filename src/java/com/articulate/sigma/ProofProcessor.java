@@ -16,11 +16,21 @@ August 9, Acapulco, Mexico.
 import java.util.*;
 import java.io.*;
 import java.text.ParseException;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+
+import java.util.regex.*;
 
 /** Process results from the Vampire inference engine.
  */
 public class ProofProcessor {
 
+	
+	private static Logger LOGGER;
+	private static FileHandler file;
+	
      /** An ArrayList of BasicXMLelement (s). */
     private ArrayList xml = null;
 
@@ -33,6 +43,12 @@ public class ProofProcessor {
         xml = new ArrayList(xmlInput);
         //System.out.print("INFO in ProofProcessor(): Number of XML elements is: ");
         //System.out.println(xmlInput.size());
+        
+        LOGGER = Logger.getLogger("SIGMA_LOGGER");
+
+        LOGGER.finest("-----------ProofProcessor Created-----------");
+        LOGGER.finest("XML INPUT: " + xmlInput.toString());
+        LOGGER.finest("------------------------------------");
     }
     
     /** ***************************************************************
@@ -71,13 +87,19 @@ public class ProofProcessor {
         // System.out.println("INFO in ProofProcessor().equalsAnswer: answer: " + result.toString() + " expected answer: " + expectedAnswer);
         return result.toString().equalsIgnoreCase(expectedAnswer);
     }
-
+    
+    public String returnAnswer(int answerNum) {
+    	return returnAnswer(answerNum, "");
+    }
+    
     /** ***************************************************************
      * Return the variable name and binding for the given answer.
      */
-    public String returnAnswer(int answerNum) {
+    public String returnAnswer(int answerNum, String query) {
 
+    	LOGGER.finest("---------- RETURN ANSWER -----------");
         StringBuffer result = new StringBuffer();
+        ArrayList<String> skolemTypes = new ArrayList<String>();
          /** An ArrayList of BasicXMLelements */
         ArrayList queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
         BasicXMLelement answer = (BasicXMLelement) queryResponseElements.get(answerNum);
@@ -95,15 +117,209 @@ public class ProofProcessor {
                 BasicXMLelement variableBinding = (BasicXMLelement) binding.subelements.get(j);
                 String variable = (String) variableBinding.attributes.get("name");
                 String value = (String) variableBinding.attributes.get("value");
+
+                //see if a skolem function is present in the value (skolem functions are labeled sk[0-9]+
+                if(value.matches(".*?sk[0-9]+.*?")) {
+                	LOGGER.finest("SKOLEM FUNCTION found!");
+                	String skolemType = findSkolemType(answerNum, value, query, variable);
+                	if (skolemType != ""){
+                		skolemTypes.add("; " + value + " is of type " + skolemType);
+                	}
+                }
+
                 result = result.append(variable + " = " + value);
                 if (j < binding.subelements.size()-1) 
-                    result = result.append("&nbsp;&nbsp;");
+                    result = result.append(",  ");
             }
             if (i < bindingSet.subelements.size()-1) 
                 result = result.append(" , ");
+            while(skolemTypes.size() > 0) {
+            	result = result.append(skolemTypes.get(0));
+            	skolemTypes.remove(0);
+            }
+            result.append(";");
         }
+        
+        LOGGER.finest("returned answer: " + result.toString());
         return result.toString();
     }
+
+    //looks for skolem function from proofsteps if query is not given
+    private ArrayList<String> returnSkolemStmt(String skolem, ArrayList proofSteps) {
+    	// two types of skolem functions:
+    	// one with arguments, for instance: (sk0 Human123) or
+    	// one without, for example: sk2
+    	// need to find either of these in the proofs to see what relationship it goes into
+    	
+    	if (skolem.startsWith("(") && skolem.endsWith(")")) 
+    		skolem = skolem.substring(1, skolem.length()-1);
+    	LOGGER.finest("skolem value: " + skolem);
+    	skolem = skolem.split(" ")[0];
+    	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
+    	Matcher match;
+
+    	ArrayList<String> matches = new ArrayList<String>();
+    	for (int i=0; i<proofSteps.size(); i++) {
+    		ProofStep step = (ProofStep) proofSteps.get(i);
+	  		match = pattern.matcher(step.axiom);
+	   		LOGGER.finest("axiom: " + step.axiom);
+			while (match.find()) {
+				LOGGER.finest("--- match found from axiom ---");
+				for(int j=1; j<=match.groupCount(); j++) {
+					if(!matches.contains(match.group(j)))
+						matches.add(match.group(j));
+				}
+		   	}
+    	}    	    	
+
+    	LOGGER.finest("returnSkolemStmt matches: " + matches);
+
+    	if(matches.size()>0)
+    		return matches;
+
+    	return null;
+    }
+    
+    //looks for skolem variable if a query string is given
+    private ArrayList<String> returnSkolemStmt(String query, String variable) {
+    	if (query != "") {
+    		query = query.replaceAll("\\" + variable, "_SKOLEM");
+    		LOGGER.finest("returnSkolemStmt VARIABLE: " + variable);
+    		LOGGER.finest("returnSkolemStmt QUERY: " + query);
+    		Pattern pattern = Pattern.compile("(\\([^\\(\\)]*?_SKOLEM[^\\)\\(]*?\\))");
+    		Matcher match = pattern.matcher(query);
+
+    		while (match.find()) {
+    			ArrayList<String> matches = new ArrayList<String>();
+    			LOGGER.finest("groupMatch: " + match.groupCount());
+    			for (int i=1; i<=match.groupCount(); i++) {
+    				LOGGER.finest("returnSkolemStmt match: " + match.group(i));
+    				if(!matches.contains(match.group(i)))
+    					matches.add(match.group(i));
+    			}
+    			
+    	    	LOGGER.finest("returnSkolemStmt matches: " + matches);
+    			return matches;   		
+    		}
+    	}
+    	
+    	return null;
+    }
+
+    /** *********************************************************************************
+     * 
+     * @param answerNum The nth answer in the result set
+     * @param value The value in the bindingSet being analyzed
+     * @return
+     */
+    private String findSkolemType(int answerNum, String value, String query, String variable) {    	
+    	ArrayList<ProofStep> proofSteps = getProofSteps(answerNum); 
+    	ArrayList<String> skolemRelationArr;
+    	// try and look for the skolem function in the proofSteps and determine the 
+    	// relation statement it appears in
+    	if (query == "")
+    		skolemRelationArr = returnSkolemStmt(value, proofSteps);
+    	else
+    		skolemRelationArr = returnSkolemStmt(query, variable);
+
+    	LOGGER.finest("---------- FIND SKOLEM TYPE ------------");
+    	
+    	if (skolemRelationArr != null) {   		
+    		for(int j=0; j<skolemRelationArr.size(); j++) {
+    			String skolemRelation = skolemRelationArr.get(j);
+	        	skolemRelation = skolemRelation.substring(1, skolemRelation.length()-1);
+	
+	        	// prepare skolem function to have the form sk0 .+? or sk0 (for skolem functions that don't have an argument)
+	        	// because value from answer contains an instance and not necessarily a variable
+	        	String skolem = value;
+	        	if(skolem.startsWith("(") && skolem.endsWith(")"))
+	        			skolem = value.substring(1, value.length()-1);
+	        	skolem = skolem.split(" ")[0];
+	        	               	       	
+	           	// remove skolem and replace with temp variable
+	        	skolemRelation = skolemRelation.replaceAll("\\("+ skolem + " [^\\)]+?\\)", "_SKOLEM");
+	        	skolemRelation = skolemRelation.replaceAll(skolem, "_SKOLEM");
+	        	// remove all other skolem functions in the skolemRelation (if present) and replace with temp variable
+	        	skolemRelation = skolemRelation.replaceAll("\\(.+?\\)", "?TEMP");
+	        	LOGGER.finest("skolemRelation: " + skolemRelation);
+
+	        	if(skolemRelation.matches("instance\\s_SKOLEM\\s[^\\s]+")) {
+	        		String[] arguments = skolemRelation.split(" ");
+	        		return arguments[arguments.length-1];
+	        	}
+	        	
+			    // assemble regex for skolemRelation
+	      	    String[] skolemArguments = skolemRelation.split(" ");
+			    StringBuffer regexStmt = new StringBuffer();
+			    		    
+			    for (int i=0; i < skolemArguments.length; i++) {
+			    	if (skolemArguments[i].equals("_SKOLEM")) {
+			    		regexStmt.append("([^\\s\\(\\)]+) ");
+			    	}
+			    	else if (skolemArguments[i].startsWith("?") || i!=0) {
+			    		regexStmt.append("[^\\s\\(\\)]+ ");
+			    	}
+			    	else {
+			    		regexStmt.append(skolemArguments[i] + " ");
+			    	}
+			    }
+			    	
+			    regexStmt.deleteCharAt(regexStmt.length()-1);
+			    regexStmt.insert(0, "\\(");
+			    regexStmt.insert(regexStmt.length(), "\\)");
+			    	
+			    // resulting regexStmt from something like (relationshipName ?X0 _SKOLEM)
+			    // should be \\(relationshipName [^\\s\\(\\)]+ ([^\\s\\(\\)]+)\\)
+			    LOGGER.finest("Regex Statement: " + regexStmt.toString());
+			    	
+			    Pattern pattern = Pattern.compile(regexStmt.toString());
+			    Matcher match;
+			    
+			    // look for the presence of above pattern in each of the proof steps
+			    for(int i=0; i<proofSteps.size(); i++){
+			    	ProofStep proof = (ProofStep)proofSteps.get(i);
+			    	String varName = "";
+			    	
+			    	LOGGER.finest("axiom: " + proof.axiom);
+		    		match = pattern.matcher(proof.axiom);
+		    		
+		    		boolean varNameFound = false;
+		
+		    		// if it is found, extract the variable name being used
+		    		// and then see if an (instance ?VARNAME ?CLASS) relationship can be found
+		    		// that defines the class membership of varName
+		    		while (match.find()) {
+		    			LOGGER.finest("found " + match.groupCount() + " relationship statements in proof!");
+		    			int k = 1;
+		    			while(k <= match.groupCount() && !varNameFound) {
+		    				varName = match.group(k);
+		    				LOGGER.finest("candidate varname: " + varName);
+		    				if (varName.startsWith("?"))
+		    					varNameFound = true;
+		    				k++;
+		    			
+			    			if(varNameFound) {
+				      			LOGGER.finest("varname: " + varName);
+				      			String regexString = ".*?\\(instance \\" + varName + " ([^\\s\\)]+)\\).*?";
+				      			Pattern varPattern = Pattern.compile(regexString);
+				      			match = varPattern.matcher(proof.axiom);
+					    		if(match.find()) {
+					    			LOGGER.finest("match is found!");
+					    			if (match.group(1) != null)
+					    				return match.group(1);	    
+					    			else varNameFound = false;					    		
+					    		}
+					    		else varNameFound = false;
+				    		}
+		    			}
+		    		}
+			    }
+		    }
+    	}
+    	return "cannot be determined.";
+    }
+       
+
 
     /** ***************************************************************
      * Remove the $answer clause that Vampire returns, including any
@@ -111,8 +327,14 @@ public class ProofProcessor {
      */
     private String removeAnswerClause(String st) {
 
-        if (st.indexOf("$answer") == -1) 
-            return st;
+    	LOGGER.finest("---- removeAnswerClause----");
+        if (st.indexOf("$answer") == -1)
+        	return st;
+        
+       	// clean the substring with "answer" in it
+        st = st.replaceAll("\\(\\$answer\\s[\\(sk[0-9]+\\s[^\\)]+?\\)|[^\\(\\)]+?]+?\\)", "");
+
+        /**
         st = st.trim();
         if (st.indexOf("$answer") == 1)
             return st.substring(9,st.length()-1);
@@ -121,8 +343,33 @@ public class ProofProcessor {
             int end = st.indexOf(")",answer);
             st = st.substring(0,answer-1) + st.substring(end+2,st.length());
             return st.substring(3,st.length());
-        }
-        return st;
+        } **/
+    	
+        //count number of nested statements if statement starts with (or
+        //if nested statements is more than 2, keep or. If it is exactly 2 --
+        //which means it's just (or plus one other statement, remove or.
+
+        if(st.substring(0,3).equalsIgnoreCase("(or")){
+        	boolean done = false;
+
+	        String substr = st.substring(4, st.length()-1);
+	        while(!done) {
+	        	String statement = " SUMO-AXIOM";
+	        	substr = substr.replaceAll("\\([^\\(|^\\)]+\\)", statement);
+	        	substr = substr.replaceAll("\\(not\\s[^\\(|^\\)]+\\)", statement);
+	        	LOGGER.finest("TEST: " + substr);
+	        	if (substr.indexOf("(") == -1) 
+	        		done = true;	        		
+	        }
+	        
+	        substr.trim();	        
+	        if (substr.split(" ").length <= 2) {
+	        	st = st.substring(4, st.length()-1);
+	        }
+        }        
+        LOGGER.finest("st: " + st); 
+        return st; 
+    	
     }
 
     /** ***************************************************************
@@ -131,6 +378,7 @@ public class ProofProcessor {
      */
     public ArrayList getProofSteps(int answerNum) {
         
+    	LOGGER.finest("--------- getProofSteps ---------");
         BasicXMLelement proof;
         /** An ArrayList of BasicXMLelements */
         ArrayList queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
@@ -144,8 +392,9 @@ public class ProofProcessor {
             BasicXMLelement bindingOrProof = (BasicXMLelement) answer.subelements.get(0);
             if (bindingOrProof.tagname.equalsIgnoreCase("proof")) 
                 proof = bindingOrProof;            // No binding set if query is for a true/false answer
-            else
+            else 
                 proof = (BasicXMLelement) answer.subelements.get(1);
+                
 
             //System.out.println("INFO in ProofProcessor.getProofSteps(): proof: " + proof.tagname);
             ArrayList steps = proof.subelements;
@@ -161,8 +410,15 @@ public class ProofProcessor {
                 //System.out.println("INFO in ProofProcessor.getProofSteps(): conclusionFormula: " + conclusionFormula.tagname);
                 ProofStep processedStep = new ProofStep();
                 processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
+                LOGGER.finest("Original axiom: " + conclusionFormula.contents);
                 processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
-                processedStep.axiom = removeAnswerClause(processedStep.axiom);
+                LOGGER.finest("Formula.postProcess: " + processedStep.axiom);
+                
+                if(i == steps.size() - 1) 
+                	processedStep.axiom = processedStep.axiom.replaceAll("\\$answer[\\s|\\n|\\r]+", "");                	
+                else
+                	processedStep.axiom = removeAnswerClause(processedStep.axiom);
+                LOGGER.finest("removeAnswerClause: " + processedStep.axiom);
                 //System.out.println("INFO in ProofProcessor.getProofSteps(): processedStep.axiom: " + processedStep.axiom);
                 //----If there is a conclusion role, record
                 if (conclusion.subelements.size() > 1) {
@@ -185,9 +441,11 @@ public class ProofProcessor {
                     processedStep.premises.add(premiseNum);
                     //System.out.println("INFO in ProofProcessor.getProofSteps(): premises: " + processedStep.premises);
                 }
+                LOGGER.finest("processedStep: " + processedStep);
                 proofSteps.add(processedStep);
             }
         }
+        LOGGER.finest("proofSteps: " + proofSteps);
         return proofSteps;
     }
 
@@ -214,8 +472,9 @@ public class ProofProcessor {
 
         StringBuffer result = new StringBuffer();
         try {
-
+        	LOGGER.finest("--------- tptpProof ---------");
             for (int j = 0; j < proofSteps.size(); j++) {
+            	LOGGER.finest("ProofStep " + j);
                 ProofStep step = (ProofStep) proofSteps.get(j);
                 boolean isLeaf = step.premises.isEmpty() || 
                     (step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
@@ -233,10 +492,13 @@ public class ProofProcessor {
                 //DEBUG System.out.println("===\n" + step.axiom);
 
                 result.append(Formula.tptpParseSUOKIFString(step.axiom));                       
+                LOGGER.finest("    " + step.axiom);
 
                 if (!isLeaf) {
                     result.append(",inference(rule,[],[" + step.premises.get(0));
+                    LOGGER.finest("        ,inference(rule,[],[" + step.premises.get(0));
                     for (int parent = 1; parent < step.premises.size(); parent++) {
+                    	LOGGER.finest("        ," + step.premises.get(parent));
                         result.append("," + step.premises.get(parent));
                     }
                     result.append("])");
@@ -263,7 +525,7 @@ public class ProofProcessor {
             StringBuffer result = new StringBuffer();
             while ((line = lr.readLine()) != null) {
                 result.append(line + "\n");
- //DEBUG System.out.println(line);
+                //DEBUG System.out.println(line);
             }
 
             BasicXMLparser res = new BasicXMLparser(result.toString());
@@ -274,7 +536,7 @@ public class ProofProcessor {
                 proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
                 if (i != 0) 
                     result.append("\n");               
-                result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i) + "\n");
+                result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i,"") + "\n");
                 if (!pp.returnAnswer(i).equalsIgnoreCase("no")) 
                     result.append(tptpProof(proofSteps));               
             }

@@ -19,6 +19,10 @@ import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 import java.util.regex.*;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
 
 /** *****************************************************************
  *  Contains methods for reading, writing knowledge bases and their
@@ -28,7 +32,10 @@ import java.util.regex.*;
 public class KB {
 
     private static boolean DEBUG = false;
-
+	private static Logger logger;
+	private static FileHandler file;
+	
+	
     /** The inference engine process for this KB. Deprecated.   */
     public InferenceEngine inferenceEngine;
 
@@ -150,11 +157,20 @@ public class KB {
                     celt = new CELT();
                 }
             }
+            
+	      	file = new FileHandler("/home/knomorosa/Desktop/SIGMA_LOG.log", 500000, 10);
+	       	file.setFormatter(new SimpleFormatter());
+	        logger = Logger.getLogger("SIGMA_LOGGER");
+	        logger.setLevel(Level.SEVERE);
+	        logger.addHandler(file);
+            
         }
         catch (IOException ioe) {
             System.out.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
+        
+        
     }
 
     /** *************************************************************
@@ -173,6 +189,12 @@ public class KB {
                     celt = new CELT();
                 }
             }
+            
+	      	file = new FileHandler("/home/knomorosa/Desktop/KB.log", 500000, 10);
+	       	file.setFormatter(new SimpleFormatter());
+	        logger = Logger.getLogger(ProofProcessor.class.getName());
+	        logger.setLevel(Level.SEVERE);
+	        logger.addHandler(file);
         }
         catch (IOException ioe) {
             System.out.println("Error in KB(): " + ioe.getMessage());
@@ -2319,6 +2341,7 @@ public class KB {
     public ArrayList ask(String kind, int argnum, String term) {
         ArrayList result = new ArrayList();
         try {
+        	
             String msg = null;
             if (StringUtil.emptyString(term)) {
                 msg = ("Error in KB.ask(\""
@@ -2344,6 +2367,7 @@ public class KB {
             if (tmp != null) {
                 result.addAll(tmp);
             }
+            
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -3106,6 +3130,8 @@ public class KB {
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER " + this.name + ".ask(" + suoKifFormula + ", " + timeout + ", "
                            + maxAnswers + ")");
+        
+        logger.info("query: " + suoKifFormula);
         String result = "";
         try {
             // Start by assuming that the ask is futile.
@@ -3118,10 +3144,12 @@ public class KB {
                 Formula query = new Formula();
                 query.read(suoKifFormula);
                 ArrayList processedStmts = query.preProcess(true, this);
+                logger.info("processedStmts = " + processedStmts);
                 System.out.println("  processedStmts == " + processedStmts);
                 //if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof Vampire)) {
                 if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof InferenceEngine))
                     result = this.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);
+                logger.info("result = " + result);
             }
         }
         catch (Exception ex) {
@@ -3990,6 +4018,8 @@ public class KB {
             ex.printStackTrace();
         }
         System.out.println("EXIT KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
+        logger.finest("formulaMap: " + this.formulaMap);
+        logger.finest("formulas: " + this.formulas);
         return result.toString();
     }
 

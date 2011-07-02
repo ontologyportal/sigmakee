@@ -18,6 +18,11 @@ import java.util.*;
 
 import com.articulate.sigma.InferenceEngine.EngineFactory;
 import com.articulate.sigma.SInE.SInEFactory;
+
+import java.util.*;
+import java.io.*;
+import java.text.ParseException;
+
 /**
  * Class for invoking the KIF version of Vampire from Java. Vampire takes XML input
  * and returns XML output.  Input forms are either <query optionalArgs>KIF formula</query>
@@ -52,16 +57,18 @@ import com.articulate.sigma.SInE.SInEFactory;
  * Note that if the result of a query is not a variable binding, then the <bindingSet>
  * element will be omitted.
  *
+ 
  * @author Andrei Voronkov
  * @since 14/08/2003, Acapulco 
  */
+
 public class Vampire extends InferenceEngine {
 
     private Process _vampire;
     private BufferedReader _reader; 
     private BufferedWriter _writer; 
     private BufferedReader _error; 
-
+    
     public static class VampireFactory extends EngineFactory {
 
         @Override
@@ -254,7 +261,9 @@ public class Vampire extends InferenceEngine {
             if (line.indexOf("Error:") != -1)
                 throw new IOException(line);            
         }
-        _writer = new BufferedWriter(new OutputStreamWriter(_vampire.getOutputStream()));
+        _writer = new BufferedWriter(new OutputStreamWriter(_vampire.getOutputStream()));        
+
+            
     }
     
     /** *************************************************************
@@ -333,7 +342,7 @@ public class Vampire extends InferenceEngine {
         String result = "";
         String query = ("<query timeLimit='" + timeLimit + "' bindingsLimit='" + bindingsLimit 
                         + "'> " + formula + " </query>\n");
-        
+
         System.out.println("INFO in Vampire.submitQuery(): " + query);
         try {
             _writer.write(query);

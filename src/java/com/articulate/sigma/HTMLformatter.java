@@ -651,9 +651,12 @@ public class HTMLformatter {
                 if (i != 0)
                     html = html.append(lineHtml + "\n");
                 html = html.append("Answer " + "\n");
-                html = html.append(i+answerOffset);
-                html = html.append(". " + pp.returnAnswer(i) + "\n");
-                if (!pp.returnAnswer(i).equalsIgnoreCase("no")) {
+                html = html.append(i+answerOffset);                
+                html = html.append(". ");
+                String[] answer = pp.returnAnswer(i, processedStmt).split(";");
+                for(int k=0; k<answer.length; k++) 
+                	html.append(answer[k]+ "<br/>");
+                if (!pp.returnAnswer(i, processedStmt).equalsIgnoreCase("no")) {
                     html = html.append("<p><table width=\"95%\">" + "\n");
                     for (int j = 0; j < proofSteps.size(); j++) {
                         if (j % 2 == 1)
