@@ -158,7 +158,7 @@ public class KB {
                 }
             }
             
-	      	file = new FileHandler("/home/knomorosa/Desktop/SIGMA_LOG.log", 500000, 10);
+	      	file = new FileHandler("SIGMA_LOG.log", 500000, 10);
 	       	file.setFormatter(new SimpleFormatter());
 	        logger = Logger.getLogger("SIGMA_LOGGER");
 	        logger.setLevel(Level.SEVERE);

@@ -66,7 +66,7 @@ public class KIF {
     	logger.setLevel(Level.SEVERE);
     	
     	try {
-    		FileHandler file = new FileHandler("/home/knomorosa/Desktop/KIF_LOG.log", 500000, 10);
+    		FileHandler file = new FileHandler("KIF_LOG.log", 500000, 10);
     		file.setFormatter(new SimpleFormatter());
             logger.addHandler(file);
     	}
