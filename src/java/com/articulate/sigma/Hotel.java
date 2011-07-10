@@ -1,12 +1,19 @@
-/**
- *
+/** This code is copyrighted by Rearden Commerce (c) 2011.  It is
+released under the GNU Public License &lt;http://www.gnu.org/copyleft/gpl.html&gt;."\""
+
+Users of this code also consent, by use of this code, to credit
+Articulate Software in any writings, briefings, publications,
+presentations, or other representations of any software which
+incorporates, builds on, or uses this code.  Please cite the following
+article in any publication with references:
+
+Pease, A., (2003). The Sigma Ontology Development Environment, in Working
+Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
  */
 package com.articulate.sigma;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,69 +70,169 @@ public class Hotel {
       // code, url
     public HashMap<String,String> media = new HashMap<String,String>();
     public ArrayList<String> reviews = new ArrayList<String>();
-    public ArrayList<String> senses = new ArrayList<String>();
-    public ArrayList<String> SUMO = new ArrayList<String>();
+
+      // a map of the sense (or term) and the number of appearances
+    public HashMap<String,Integer> senses = new HashMap<String,Integer>();
+    public HashMap<String,Integer> SUMO = new HashMap<String,Integer>();
+
+      // a numerical assessment against arbitrary labels
+    public TreeMap<String,Float> buckets = new TreeMap<String,Float>();
+    
     public ArrayList<String> feedData = new ArrayList<String>();
+
+      // overall sentiment for the hotel's reviews
+    public int sentiment = 0;
+
+      // Concept key and sentiment value reflecting the sentiment of each sentence
+      // and the concepts in that sentence - an approximate association
+    public HashMap<String,Integer> conceptSentiment = new HashMap<String,Integer>();
+    
+    public HashMap<String,String> values = new HashMap<String,String>();
 
     /** ***************************************************************
      */
     public String asCSV() {
 
         StringBuffer result = new StringBuffer();
+        result.append("\"" + oID + "\",");
         result.append("\"" + name + "\",");
         result.append("\"" + address + "\",");
-        if (!StringUtil.emptyString(address2))
-            result.append("\"" + address2 + "\",");
         result.append("\"" + city + "\",");
         result.append("\"" + stateProv + "\",");
         result.append("\"" + country + "\",");
         result.append("\"" + postCode + "\",");
         result.append("\"" + tel + "\",");
+        //result.append("\"" + sentiment + "\",");
+
         //for (int i = 0; i < senses.size(); i++) {
         //    String sense = senses.get(i);
         //    result.append("\"" + sense + "\",");
         //}
-        for (int i = 0; i < feedData.size(); i++) {
-            String S = feedData.get(i);
-            result.append(S + ",");
+        //for (int i = 0; i < feedData.size(); i++) {
+        //    String S = feedData.get(i);
+        //    result.append(S + ",");
+        //}
+        
+        //Iterator<String> it = SUMO.keySet().iterator();
+        //while (it.hasNext()) {
+        //    String S = it.next();
+        //    result.append("\"" + S + "\",");
+        //}
+        Iterator<String> it = buckets.keySet().iterator();
+        while (it.hasNext()) {
+            String S = it.next();
+            result.append("\"" + buckets.get(S) + "\",");
         }
-        for (int i = 0; i < SUMO.size(); i++) {
-            String S = SUMO.get(i);
-            result.append("\"" + S + "\",");
-            }
-            return result.toString();
-        }
+        return result.toString();
+    }
+    
+    /** ***************************************************************
+     */
+    public static String asCSVHeader() {
 
+        StringBuffer result = new StringBuffer();
+        result.append("id,");
+        result.append("name,");
+        result.append("address,");
+        result.append("city,");
+        result.append("stateProv,");
+        result.append("country,");
+        result.append("postCode,");
+        result.append("tel,");
+        result.append("Business, Child Friendly, Fitness, Romantic, Xtend Stay");        
+        return result.toString();
+    }
+
+    /** ***************************************************************
+     */
+    public String toString() {
+
+        StringBuffer result = new StringBuffer();
+        result.append("name: " + name + "\n");
+        result.append("address: " + address + "\n");
+        if (!StringUtil.emptyString(address2))
+            result.append("address2: " + address2 + "\n");
+        result.append("city: " + city + "\n");
+        result.append("stateProv: " + stateProv + "\n");
+        result.append("country: " + country + "\n");
+
+        Iterator<String> it = reviews.iterator();
+        while (it.hasNext()) {
+            String S = it.next();
+            result.append("\"" + S + "\"\n");
+        }
+        result.append("\n\n");
+        return result.toString();
+    }
 
     /** *************************************************************
      */
-    public static String printAllHotels(ArrayList<Hotel> reviews) {
+    public void addConceptSentiment(HashMap<String,Integer> conceptSent) {
 
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < reviews.size(); i++)
-            sb.append(reviews.get(i).asCSV());
+        Iterator<String> it = conceptSent.keySet().iterator();
+        while (it.hasNext()) {
+            String term = it.next();
+            int val = conceptSent.get(term).intValue();
+            int oldVal = 0;
+            if (conceptSentiment.keySet().contains(term)) {
+                oldVal = conceptSentiment.get(term).intValue();
+                val = val + oldVal;
+            }
+            conceptSentiment.put(term,new Integer(val));
+        }
+    }
+
+    /** *************************************************************
+     */
+    public static String printAllHotels(ArrayList<Hotel> hotels) {
+
+    	System.out.println("INFO in Hotel.printAllHotels(): number: " + hotels.size());
+    	StringBuffer sb = new StringBuffer();
+    	sb.append(asCSVHeader() + "\n");
+    	for (int i = 0; i < hotels.size(); i++)
+    		sb.append(hotels.get(i).asCSV() + "\n");
         return sb.toString();
     }
 
-    /** *******************************************************************
-     * @return a list of lists of Strings which is the original input plus
-     * some extra columns for the weights of several "buckets", indicating
-     * fitness with respect to a particular critereon.
+    /** *************************************************************
      */
-    public static ArrayList<ArrayList<String>> setHotelWeights() {
+    public static void printAllHotelAmenitySentiment(ArrayList<Hotel> hotels) {
+
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < hotels.size(); i++) {
+            Hotel h = hotels.get(i);
+            StringBuffer result = new StringBuffer();
+            result.append("\"" + h.name + "\",");
+            result.append("\"" + h.address + "\",");
+            result.append("\"" + h.city + "\",");
+            result.append("\"" + h.stateProv + "\",");
+            result.append("\"" + h.country + "\",");
+
+            System.out.println(sb.toString());
+        }
+
+    }
+
+    /** *******************************************************************
+     * Read a list of lists of Strings which is the original input plus
+     * some extra columns for the weights of several "buckets", indicating
+     * fitness with respect to a particular criterion.  Result is a side
+     * effect of setting the bucket weights for the hotels.
+     */
+    public static void setHotelWeights(ArrayList<Hotel> hotels) {
 
         ArrayList<ArrayList<String>> rawWeights = DB.readSpreadsheet("OAmenities-weights.csv",null,false);
 
           // amenity key, value map of bucket name key, weight value
         HashMap<String,HashMap<String,String>> weights = new HashMap<String,HashMap<String,String>>();
-        ArrayList<String> buckets = rawWeights.get(0);
+        ArrayList<String> header = rawWeights.get(0);
         //System.out.println("INFO in DB.setHotelWeights(): buckets: " + buckets);
         for (int i = 1; i < rawWeights.size(); i++) {
             ArrayList<String> al = rawWeights.get(i);
             String amenity =  al.get(0).trim();
             HashMap<String,String> amenityValues = new HashMap<String,String>();
-            for (int j = 2; j < buckets.size(); j++) {
-                String bucket = buckets.get(j);
+            for (int j = 2; j < header.size(); j++) {
+                String bucket = header.get(j);
                 String value =  al.get(j);
                 amenityValues.put(bucket,value);
                 //System.out.println("INFO in DB.setHotelWeights(): bucket, value: " + bucket + "," + value);
@@ -134,57 +241,41 @@ public class Hotel {
             weights.put(amenity,amenityValues);
         }
 
-        ArrayList<ArrayList<String>> hotels = DB.readSpreadsheet("O-sample.csv",null,false);
-        ArrayList<String> header = hotels.get(0);
-
-          //hotel ID key, hash map value of bucket name key, string numeric value
-        HashMap<String,HashMap<String,String>> hotelWeights = new HashMap<String,HashMap<String,String>>();
-
-        ArrayList<String> hotelHeader = hotels.get(0);
-        for (int i = 2; i < buckets.size(); i++)
-            hotelHeader.add(buckets.get(i));
-
-        for (int i = 1; i < hotels.size(); i++) {
-            TreeMap<String,Float> values = new TreeMap<String,Float>();  // bucket key and total weight value
-            for (int k = 2; k < buckets.size(); k++)
-                values.put(buckets.get(k),new Float(0));
-            ArrayList<String> al = hotels.get(i);
-            for (int j = 0; j < al.size(); j++) {  // go through all the amenities
-                String amenityValue = al.get(j);
-                String amenity = header.get(j);
-                if (!StringUtil.emptyString(amenity) && amenityValue.equals("Y")) {  // if the value for the amenity is non-empty
-                    //System.out.println("INFO in DB.setHotelWeights(): amenity, amenityValue is non-empty: " + amenity + "," + amenityValue);
-                    if (weights.keySet().contains(amenity)) {  // if the amenity has a weight
-                        //System.out.println("INFO in DB.setHotelWeights(): amenity has a weight: " + amenity);
-                        HashMap<String,String> weightBuckets = weights.get(amenity);
-                        Iterator<String> it = weightBuckets.keySet().iterator();
-                        while (it.hasNext()) {
-                            String bucket = it.next();
-                            //System.out.println("INFO in DB.setHotelWeights(): weight: " + weightBuckets.get(bucket));
-                            //System.out.println("INFO in DB.setHotelWeights(): bucket: " + bucket);
-                            Float currentValue = values.get(bucket);
-                            String bucketValue = weightBuckets.get(bucket);
-                            //System.out.println("INFO in DB.setHotelWeights(): bucketValue: " + bucketValue);
-                            if (!StringUtil.emptyString(bucketValue)) {
-                                Float addValue = Float.parseFloat(bucketValue);
-                                Float newTotal = currentValue.floatValue() + addValue;
-                                values.put(bucket,new Float(newTotal));
+        for (int i = 0; i < hotels.size(); i++) {
+            Hotel h = hotels.get(i);
+            for (int k = 2; k < header.size(); k++)
+                h.buckets.put(header.get(k),new Float(0));
+            Iterator<String> it = h.amenities.keySet().iterator();
+            while (it.hasNext()) {  // go through all the amenities
+                String amenity = it.next();
+                if (!StringUtil.emptyString(amenity)) { 
+                    String amenityValue = h.amenities.get(amenity);
+                    if (amenityValue.equals("Y")) {  // if the value for the amenity is non-empty
+                        //System.out.println("INFO in DB.setHotelWeights(): amenity, amenityValue is non-empty: " + amenity + "," + amenityValue);
+                        if (weights.keySet().contains(amenity)) {  // if the amenity has a weight
+                            //System.out.println("INFO in DB.setHotelWeights(): amenity has a weight: " + amenity);
+                            HashMap<String,String> weightBuckets = weights.get(amenity);
+                            Iterator<String> it2 = weightBuckets.keySet().iterator();
+                            while (it2.hasNext()) {
+                                String bucket = it2.next();
+                                //System.out.println("INFO in DB.setHotelWeights(): weight: " + weightBuckets.get(bucket));
+                                //System.out.println("INFO in DB.setHotelWeights(): bucket: " + bucket);
+                                Float currentValue = h.buckets.get(bucket);
+                                String bucketValue = weightBuckets.get(bucket);
+                                //System.out.println("INFO in DB.setHotelWeights(): bucketValue: " + bucketValue);
+                                if (!StringUtil.emptyString(bucketValue)) {
+                                    Float addValue = Float.parseFloat(bucketValue);
+                                    Float newTotal = currentValue.floatValue() + addValue;
+                                    h.buckets.put(bucket,new Float(newTotal));
+                                }
                             }
                         }
+                        //else
+                            //System.out.println("INFO in DB.setHotelWeights(): weights: " + weights.keySet() + " does not contain amenity: " + amenity);
                     }
-                    //else
-                        //System.out.println("INFO in DB.setHotelWeights(): weights: " + weights.keySet() + " does not contain amenity: " + amenity);
                 }
             }
-            Iterator<String> it = values.keySet().iterator();
-            while (it.hasNext()) {
-                String b = it.next();
-                Float val = values.get(b);
-                al.add("\"" + val.toString() + "\"");
-            }
         }
-
-        return hotels;
     }
 
     /** *******************************************************************
@@ -193,45 +284,10 @@ public class Hotel {
      */
     private static TreeSet<String> hotelColumns = new TreeSet<String>();
 
-
     /** *******************************************************************
      * @param w states whether to write SUMO statements
      */
     public static ArrayList<Hotel> HotelDBImport(boolean w) {
-
-        // 0 NTMHotelID 1 HotelName 2 StreetAddressLine1    3 City  4 Country   5 State 6 StreetAddressPostalCode
-        // 7 ChainName  8 ChainWeb  9 ChainTollFree 10 HotelEMailAddress    11 HotelInternetWebsite
-        // 12 ManagementCompany 13 DialCodeCountry  14 CurrentFaxAreaCode   15 CurrentFaxTelephoneNumber
-        // 16 CurrentLocalAreaCode  17 CurrentLocalTelephoneNumber  18 CurrentTollFreeAreaCode
-        // 19 CurrentTollFreeTelephoneNumber    20 AddIdAmadeus 21 AddIdAmadeus2    22 AddIdAmadeus3
-        // 23 AddIdGalileo  24 AddIdGalileo2    25 AddIdGalileo3    26 AddIdSabre   27 AddIdSabre2  28 AddIdSabre3
-        // 29 AddIdWorldspan    30 AddIdWorldspan2  31 AddIdWorldspan3  32 QtyFloors    33 QtyTotalRms  34 YearBuilt
-        // 35 YearLastRenovated 36 Latitude 37 Longitude    38 AirportLocInd    39 BeachLocInd  40 CityLocInd
-        // 41 ConventionCenterLocInd    42 HighwayLocInd    43 LakeLocInd   44 MountainLocInd   44 RuralAreaLocInd
-        // 46 SuburbLocInd  47 TouristAreaLocInd    48 LocDesc  49 HotelDescription 50 CheckInTime  51 CheckOutTime
-        // 52 AllSuiteTypeInd   53 BedBreakfastTypeInd 54 CondominiumTypeInd    55 ConferenceCenterTypeInd
-        // 56 ExtendedStayTypeInd   57 HotelTypeInd 58 InnTypeInd   59 LodgeTypeInd 60 MotelTypeInd
-        // 61 ResortTypeInd 62 AVEquipmentRentalInd 63 BusinessCenterInd    64 AmenHtlComputerUseInd
-        // 65 AmenHtlFaxGuestInd    66 AmenHtlMtgFacInd 67 AmenHtlPhotoSvcInd   68 AmenHtlSecretarySvcInd
-        // 69 AmenTechTrainCtrInd   70 AmenHtlBabySitInd    71 NearestStreet    72 NearestCity  73 NearestCityDist
-        // 74 NearestCityDistUnit   75 AmenHtlWheelchairPublInd 76 AmenHtlATMInd    77 BarberHairStylistInd
-        // 78 AmenHtlCarRentalInd   79 ComplementaryCoffeeInd   80 ComplementaryTransportationInd
-        // 81 ConciergeServicesInd  82 ConciergeClubFloorInd    83 AmenHtlCribRollawayInd   84 CurrencyExchangeInd
-        // 85 GiftShopInd   86 LaundryRoomInd   87 LaundryDryCleaningServiceInd 88 AmenHtlMultiLingualStaffInd
-        // 89 OnSiteBarLoungeQty    90 OnSiteRestrQty   91 RoomServiceLimitedInd    92 RestrDesc1   93 RestrDesc2
-        // 94 RestrDesc3    95 RestaurantName1  96 RestaurantName2  97 RestrName3   98 RestaurantOnsiteInd1
-        // 99 RestaurantOnsiteInd2  100 RestrOnSiteInd3 101 RestaurantType1 102 RestaurantType2 103 RestrType3
-        // 104 AirConditioningInRoomInd 105 BalconyTerraceInd   106 AmenRmBroadbandInternetInd
-        // 107 AmenRmBroadbandInternetFeeInd    108 CoffeeMakerInd  109 DailyMaidServiceInd 110 VCRInRoomInd
-        // 111 FireplaceInd 112 AmenRmFitnessEqtInd 113 IronInd 114 KitchenKitchenetteInd   115 MicrowaveOvenInd
-        // 116 MiniBarInd   117 NewspaperFreeInd    118 NonSmokingRoomsInd  119 RefrigeratorInd 120 SafeInRoomInd
-        // 121 AmenRmPhoneInd   122 TelephoneVoicemailInd   123 AmenRmTVInd 124 TelevisionCableSatelliteInd
-        // 125 AmenRmWirelessInternetInd    126 AmenRmWirelessInternetFeeInd    127 WhirlpoolInd    128 AmenHtlElecKeyInd
-        // 129 AmenHtlPrkgLitInd    130 AmenHtlSmokeAlarmInd    131 AmenHtlSprinkersInd 132 AmenSurveillanceCameraInd
-        // 133 AmenHtlUniformSecurityInd    134 AmenHtlWomenOnlyFlrInd  135 AmenRecBeachInd 136 AmenRecBikesInd
-        // 137 AmenRecGameRmInd 138 AmenRecGolfInd  139 HealthClubLimitedind    140 AmenRecHealthSpaInd
-        // 141 AmenRecHottubInd 142 AmenRecJoggingInd   143 AmenRecPoolIndoorInd    144 AmenRecPoolOutdoorInd
-        // AmenRecSnowskiInd    AmenRecTennisOutdoorInd ArptCode1   ArptCode2   ArptDir1    ArptDir2    ArptDist1   ArptDist2   ArptDistUnit1   ArptDistUnit2   ArptTime1   ArptTime2   ArptFreeTransInd1   ArptFreeTransInd2   ArptName1   ArptName2   AmenPrkgOnFreeInd   AmenPrkgOnPaidInd   AmenPrkgOnValetInd  ArptNearInd AmenHtlCommonInetBroadInd   AmenHtlCommonInetBroadFeeInd    AmenHtlCommonInetWirelessInd    AmenHtlCommonInetWirelessFeeInd MtgRmBroadbandInternetInd   MtgRmBroadbandInternetFeeInd    MtgRmWirelessInternetInd    MtgRmWirelessInternetFeeInd MtgTotalCapacity    MtgTotalRmSpace MtgTotalRms MtgChtCapBanq1  MtgChtCapBanq2  MtgChtCapBanq3  MtgChtCapBanq4  MtgChtCapClassRm1   MtgChtCapClassRm2   MtgChtCapClassRm3   MtgChtCapClassRm4   MtgChtDimension1    MtgChtDimension2    MtgChtDimension3    MtgChtDimension4    MtgChtName1 MtgChtName2 MtgChtName3 MtgChtName4 MtgChtSize1 MtgChtSize2 MtgChtSize3 MtgChtSize4 CreditCardsAcceptInd    PolicyCancel    PolicyDeposit   PolicyResvHeld  PolicyResvGtyInd    PolicyRestrictions  MealIncAllIncInd    MealIncAPInd    MealIncCPInd    MealIncEPInd    MealIncFBInd    MealIncMAPInd   DiscountCorpInd DiscountGroupInd    RateCalcDblMax  RateCalcDblMin  RateCalcSteMax  RateCalcSteMin  RatesCurrencyCode   RateDailyWklyInd    POIDesc1    POIDesc2    POIDesc3    POIDir1 POIDir2 POIDir3 POIDist1    POIDist2    POIDist3    POIDistUnit1    POIDistUnit2    POIDistUnit3    POIName1    POIName2    POIName3    ImageFileName   DateOfExtract   NTMCrownRating
 
         HashMap<String,String> abbrevs = DB.readStateAbbrevs();
         ArrayList<Hotel> result = new ArrayList<Hotel>();
@@ -402,56 +458,96 @@ public class Hotel {
     }
 
     /** *******************************************************************
-     * Convert a particular XML markup into an array suitable for export to csv file
+     * Collect all possible column names and assign them a number, then sort
+     * on that frequency.  
+     * @result a list of SUMO term names, sorted by frequency
      */
-    public static ArrayList<ArrayList<String>> readHotelXML() {
+    public static ArrayList<String> generateSUMOHeader(ArrayList<Hotel> hotels) {
+    	
+	    TreeMap<String, Integer> columnNumbers = new TreeMap<String, Integer>();
+	    ArrayList<String> result = DB.fill("",hotelColumns.size());
+	    Iterator<Hotel> it = hotels.iterator();
+	    while (it.hasNext()) {
+	    	Hotel h = it.next();
+	    	Iterator<String> it2 = h.SUMO.keySet().iterator();
+	    	while (it2.hasNext()) {
+		        String columnName = it2.next();
+		        Integer value = h.SUMO.get(columnName);
+		        Integer oldValue = columnNumbers.get(columnName);
+		        Integer newValue = new Integer(value.intValue() + oldValue.intValue());
+		        columnNumbers.put(columnName, newValue);
+	    	}
+	    }
+	    TreeSet<String> conceptsUnused = new TreeSet<String>();
+	    conceptsUnused.addAll(columnNumbers.keySet());
+	    while (conceptsUnused.size() > 0) {
+	    	int maxValue = -1;
+	    	String maxConcept = "";
+	    	Iterator<String> it2 = columnNumbers.keySet().iterator();
+	    	while (it2.hasNext()) {
+		    	String columnName = it2.next();
+		    	Integer count = columnNumbers.get(columnName);	 
+		    	if (count.intValue() > maxValue) {
+		    		maxValue = count.intValue();
+		    		maxConcept = columnName;
+		    	}
+		    	result.add(columnName);
+		    	conceptsUnused.remove(columnName);
+	    	}
+	    }
+	    return result;
+    }
+    
+    /** *******************************************************************
+     */
+    public static ArrayList<String> generateSUMOColumns(Hotel h, ArrayList<String> SUMOheader) {
+    	
+    	ArrayList<String> result = DB.fill("",SUMOheader.size());
+        Iterator<String> it = h.SUMO.keySet().iterator();
+        while (it.hasNext()) {  // iterate through the columns
+            String columnName = it.next();
+            Integer cellValue = h.SUMO.get(columnName);
+            result.add(cellValue.toString());
+        }
+        return result;
+    }    
+
+    /** *******************************************************************
+     * Convert a particular XML markup into an array of hotels
+     */
+    public static ArrayList<Hotel> readXMLHotels(String fname) {
 
           // CSV data structure: a list of lines containing list of column cells
-        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
-
-          // CSV precursor - a list of rows, which is a map of column name keys and cell contents values
-        ArrayList<TreeMap<String,String>> lines = new ArrayList<TreeMap<String,String>>();
-
-        String fname = "HotelSample-O.xml";
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setIgnoringElementContentWhitespace(true);
+        ArrayList<Hotel> result = new ArrayList<Hotel>();
         try {
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document dom = db.parse(fname);
-            Element docEle = dom.getDocumentElement();
-            NodeList nl = docEle.getElementsByTagName("hotel");
-            if (nl != null && nl.getLength() > 0) {
-                for (int i = 0; i < nl.getLength(); i++) {
-                    Element el = (Element) nl.item(i);  // a <hotel>
-                    TreeMap<String,String> entry = processOneXMLHotel(el);
-                    lines.add(entry);
-                }
-
-                  // collect all possible column names and assign them a number
-                TreeMap<String,Integer> columnNumbers = new TreeMap<String,Integer>();
-                int count = 0;
-                ArrayList<String> header = DB.fill("",hotelColumns.size());
-                Iterator<String> it = hotelColumns.iterator();
-                while (it.hasNext()) {
-                    String columnName = it.next();
-                    header.set(count,columnName);
-                    columnNumbers.put(columnName,new Integer(count++));
-                }
-                result.add(header);
-
-                  // iterate through all rows
-                for (int i = 0; i < lines.size(); i++) {
-                    TreeMap<String,String> oneHotel = lines.get(i);
-                    Iterator<String> it2 = oneHotel.keySet().iterator();
-                    ArrayList<String> line = DB.fill("",hotelColumns.size());
-                    while (it2.hasNext()) {  // iterate through the columns
-                        String columnName = it2.next();
-                        String cellValue = oneHotel.get(columnName);
-                        Integer colNum = columnNumbers.get(columnName);
-                        line.set(colNum.intValue(),cellValue);
+        	String line = "";
+            FileReader fr = new FileReader(fname);
+            LineNumberReader lr = new LineNumberReader(fr);
+            StringBuffer sb = new StringBuffer();
+            while ((line = lr.readLine()) != null) {
+            	if (line.indexOf("<hotel>") >= 0) {
+            		sb.append(line + "\n");
+                    while ((line = lr.readLine()) != null && line.indexOf("</hotel>") < 0) 
+                    	sb.append(line + "\n");
+                    if (line.indexOf("</hotel>") >= 0) { 
+                    	sb.append(line + "\n");
+                    	//System.out.println("INFO in Hotel.readXMLHotels(): one hotel record:");
+                    	//System.out.println("------------------------------------------------");
+                    	//System.out.println(sb.toString());
+                       	//System.out.println("------------------------------------------------");
+                    	DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			            dbf.setIgnoringElementContentWhitespace(true);
+			            DocumentBuilder db = dbf.newDocumentBuilder();
+			            byte[] bytes = sb.toString().getBytes("US-ASCII");
+			            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);			            
+			            Document dom = db.parse(bais);
+			            Element docEle = dom.getDocumentElement();			            
+	                    Hotel h = processOneXMLHotel(docEle);
+	                    System.out.println("INFO in Hotel.readXMLHotels(): " + h.name);
+	                    result.add(h);			
+	                    sb = new StringBuffer();
                     }
-                    result.add(line);
-                }
+            	}
             }
         }
         catch (Exception e) {
@@ -462,14 +558,15 @@ public class Hotel {
 
         return result;
     }
-
     /** *******************************************************************
+     * @param h is a DOM element for one hotel
+     * @return a Hotel
      */
-    public static TreeMap<String,String> processOneXMLHotel(Element h) {
+    public static Hotel processOneXMLHotel(Element e) {
 
+    	Hotel h = new Hotel();
         int maxString = 30;
-        TreeMap<String,String> values = new TreeMap<String,String>();
-        NodeList features = h.getChildNodes();
+        NodeList features = e.getChildNodes();
         for (int i = 0; i < features.getLength(); i++) {
             if (features.item(i).getNodeType() == Node.ELEMENT_NODE) {
                 Element feature = (Element) features.item(i);
@@ -479,13 +576,18 @@ public class Hotel {
                     for (int j = 0; j < fs.getLength(); j++) {
                         if (fs.item(j).getNodeType() == Node.ELEMENT_NODE) {
                             Element f = (Element) fs.item(j);
-                            String tag = "addr-" + f.getTagName();
-                            String text = f.getTextContent();
-                            if (!StringUtil.emptyString(text) && text.length() > maxString)
-                                text = text.substring(0,maxString);
-                            values.put(tag,text);
-                            // String.format("%03d", count) + "-" +
-                            hotelColumns.add(tag);
+                            if (f.getTagName().equals("line1")) 
+                            	h.address = f.getTextContent();
+                            else if (f.getTagName().equals("city")) 
+                            	h.city = f.getTextContent();
+                            else if (f.getTagName().equals("postal")) 
+                            	h.postCode = f.getTextContent();
+                            else  if (f.getTagName().equals("state")) {
+                            	h.stateProv = f.getAttribute("name");
+                            }
+                            else  if (f.getTagName().equals("country")) {
+                            	h.country = f.getAttribute("name");
+                            }
                         }
                     }
                 }
@@ -496,30 +598,23 @@ public class Hotel {
                             Element amenity = (Element) fs.item(j);
                             Element code = (Element) amenity.getElementsByTagName("code").item(0);
                             if (code != null && code.getTextContent() != null) {
-                                values.put(code.getTextContent(),"Y");
-                                hotelColumns.add(code.getTextContent());
+                                h.amenities.put(code.getTextContent(),"Y");
                             }
                         }
                     }
                 }
-                else if (feature.getTagName().equals("medias")) {
-                    /*
-                    ArrayList<SimpleElement> fs = feature.getChildElements();
-                    for (int j = 0; j < fs.size(); j++) {
-                        SimpleElement media = fs.get(j);
-                        SimpleElement type = media.getChildByFirstTag("type");
-                        SimpleElement url = media.getChildByFirstTag("url");
-                        values.put("media-" + type.getText(),url.getText());
-                        hotelColumns.add("media-" + type.getText());
-                    }
-                    */
-                }
+                else if (feature.getTagName().equals("id")) 
+                	h.oID = feature.getTextContent();    
+                else if (feature.getTagName().equals("name")) 
+                	h.name = feature.getTextContent();    
+                else if (feature.getTagName().equals("phone")) 
+                	h.tel = feature.getTextContent();    
                 else if (feature.getTagName().equals("leadprice")) {
                     NodeList fs = feature.getChildNodes();
                     for (int j = 0; j < fs.getLength(); j++) {
                         if (fs.item(j).getNodeType() == Node.ELEMENT_NODE) {
                             Element f = (Element) fs.item(j);
-                            values.put("leadprice-" + f.getTagName(),f.getTextContent());
+                            h.values.put("leadprice-" + f.getTagName(),f.getTextContent());
                             hotelColumns.add("leadprice-" + f.getTagName());
                         }
                     }
@@ -538,7 +633,7 @@ public class Hotel {
                             if (!StringUtil.emptyString(text) && text.length() > maxString)
                                 text = text.substring(0,maxString);
                             if (type != null && type.getNodeValue() != null) {
-                                values.put(type.getTextContent(),text);
+                                h.values.put(type.getTextContent(),text);
                                 hotelColumns.add(type.getTextContent());
                             }
                         }
@@ -548,58 +643,30 @@ public class Hotel {
                     String text = feature.getTextContent();
                     if (!StringUtil.emptyString(text) && text.length() > maxString)
                         text = text.substring(0,maxString);
-                    values.put(feature.getTagName(),text);
+                    h.values.put(feature.getTagName(),text);
                     hotelColumns.add(feature.getTagName());
                 }
             }
         }
-        return values;
+        return h;
     }
 
     /** *******************************************************************
      */
+    public static int geocodeCount = 0;
+    public static final int geocodeLimit = 100;  // to avoid Google shutting us off
+
+    /** *******************************************************************
+     */
     public static ArrayList<Hotel> readCSVHotels(String fname) {
-
-        // 0 NTMHotelID 1 HotelName 2 StreetAddressLine1    3 City  4 Country   5 State 6 StreetAddressPostalCode
-        // 7 ChainName  8 ChainWeb  9 ChainTollFree 10 HotelEMailAddress    11 HotelInternetWebsite
-        // 12 ManagementCompany 13 DialCodeCountry  14 CurrentFaxAreaCode   15 CurrentFaxTelephoneNumber
-        // 16 CurrentLocalAreaCode  17 CurrentLocalTelephoneNumber  18 CurrentTollFreeAreaCode
-        // 19 CurrentTollFreeTelephoneNumber    20 AddIdAmadeus 21 AddIdAmadeus2    22 AddIdAmadeus3
-        // 23 AddIdGalileo  24 AddIdGalileo2    25 AddIdGalileo3    26 AddIdSabre   27 AddIdSabre2  28 AddIdSabre3
-        // 29 AddIdWorldspan    30 AddIdWorldspan2  31 AddIdWorldspan3  32 QtyFloors    33 QtyTotalRms  34 YearBuilt
-        // 35 YearLastRenovated 36 Latitude 37 Longitude    38 AirportLocInd    39 BeachLocInd  40 CityLocInd
-        // 41 ConventionCenterLocInd    42 HighwayLocInd    43 LakeLocInd   44 MountainLocInd   44 RuralAreaLocInd
-        // 46 SuburbLocInd  47 TouristAreaLocInd    48 LocDesc  49 HotelDescription 50 CheckInTime  51 CheckOutTime
-        // 52 AllSuiteTypeInd   53 BedBreakfastTypeInd 54 CondominiumTypeInd    55 ConferenceCenterTypeInd
-        // 56 ExtendedStayTypeInd   57 HotelTypeInd 58 InnTypeInd   59 LodgeTypeInd 60 MotelTypeInd
-        // 61 ResortTypeInd 62 AVEquipmentRentalInd 63 BusinessCenterInd    64 AmenHtlComputerUseInd
-        // 65 AmenHtlFaxGuestInd    66 AmenHtlMtgFacInd 67 AmenHtlPhotoSvcInd   68 AmenHtlSecretarySvcInd
-        // 69 AmenTechTrainCtrInd   70 AmenHtlBabySitInd    71 NearestStreet    72 NearestCity  73 NearestCityDist
-        // 74 NearestCityDistUnit   75 AmenHtlWheelchairPublInd 76 AmenHtlATMInd    77 BarberHairStylistInd
-        // 78 AmenHtlCarRentalInd   79 ComplementaryCoffeeInd   80 ComplementaryTransportationInd
-        // 81 ConciergeServicesInd  82 ConciergeClubFloorInd    83 AmenHtlCribRollawayInd   84 CurrencyExchangeInd
-        // 85 GiftShopInd   86 LaundryRoomInd   87 LaundryDryCleaningServiceInd 88 AmenHtlMultiLingualStaffInd
-        // 89 OnSiteBarLoungeQty    90 OnSiteRestrQty   91 RoomServiceLimitedInd    92 RestrDesc1   93 RestrDesc2
-        // 94 RestrDesc3    95 RestaurantName1  96 RestaurantName2  97 RestrName3   98 RestaurantOnsiteInd1
-        // 99 RestaurantOnsiteInd2  100 RestrOnSiteInd3 101 RestaurantType1 102 RestaurantType2 103 RestrType3
-        // 104 AirConditioningInRoomInd 105 BalconyTerraceInd   106 AmenRmBroadbandInternetInd
-        // 107 AmenRmBroadbandInternetFeeInd    108 CoffeeMakerInd  109 DailyMaidServiceInd 110 VCRInRoomInd
-        // 111 FireplaceInd 112 AmenRmFitnessEqtInd 113 IronInd 114 KitchenKitchenetteInd   115 MicrowaveOvenInd
-        // 116 MiniBarInd   117 NewspaperFreeInd    118 NonSmokingRoomsInd  119 RefrigeratorInd 120 SafeInRoomInd
-        // 121 AmenRmPhoneInd   122 TelephoneVoicemailInd   123 AmenRmTVInd 124 TelevisionCableSatelliteInd
-        // 125 AmenRmWirelessInternetInd    126 AmenRmWirelessInternetFeeInd    127 WhirlpoolInd    128 AmenHtlElecKeyInd
-        // 129 AmenHtlPrkgLitInd    130 AmenHtlSmokeAlarmInd    131 AmenHtlSprinkersInd 132 AmenSurveillanceCameraInd
-        // 133 AmenHtlUniformSecurityInd    134 AmenHtlWomenOnlyFlrInd  135 AmenRecBeachInd 136 AmenRecBikesInd
-        // 137 AmenRecGameRmInd 138 AmenRecGolfInd  139 HealthClubLimitedind    140 AmenRecHealthSpaInd
-        // 141 AmenRecHottubInd 142 AmenRecJoggingInd   143 AmenRecPoolIndoorInd    144 AmenRecPoolOutdoorInd
-        // AmenRecSnowskiInd    AmenRecTennisOutdoorInd ArptCode1   ArptCode2   ArptDir1    ArptDir2    ArptDist1   ArptDist2   ArptDistUnit1   ArptDistUnit2   ArptTime1   ArptTime2   ArptFreeTransInd1   ArptFreeTransInd2   ArptName1   ArptName2   AmenPrkgOnFreeInd   AmenPrkgOnPaidInd   AmenPrkgOnValetInd  ArptNearInd AmenHtlCommonInetBroadInd   AmenHtlCommonInetBroadFeeInd    AmenHtlCommonInetWirelessInd    AmenHtlCommonInetWirelessFeeInd MtgRmBroadbandInternetInd   MtgRmBroadbandInternetFeeInd    MtgRmWirelessInternetInd    MtgRmWirelessInternetFeeInd MtgTotalCapacity    MtgTotalRmSpace MtgTotalRms MtgChtCapBanq1  MtgChtCapBanq2  MtgChtCapBanq3  MtgChtCapBanq4  MtgChtCapClassRm1   MtgChtCapClassRm2   MtgChtCapClassRm3   MtgChtCapClassRm4   MtgChtDimension1    MtgChtDimension2    MtgChtDimension3    MtgChtDimension4    MtgChtName1 MtgChtName2 MtgChtName3 MtgChtName4 MtgChtSize1 MtgChtSize2 MtgChtSize3 MtgChtSize4 CreditCardsAcceptInd    PolicyCancel    PolicyDeposit   PolicyResvHeld  PolicyResvGtyInd    PolicyRestrictions  MealIncAllIncInd    MealIncAPInd    MealIncCPInd    MealIncEPInd    MealIncFBInd    MealIncMAPInd   DiscountCorpInd DiscountGroupInd    RateCalcDblMax  RateCalcDblMin  RateCalcSteMax  RateCalcSteMin  RatesCurrencyCode   RateDailyWklyInd    POIDesc1    POIDesc2    POIDesc3    POIDir1 POIDir2 POIDir3 POIDist1    POIDist2    POIDist3    POIDistUnit1    POIDistUnit2    POIDistUnit3    POIName1    POIName2    POIName3    ImageFileName   DateOfExtract   NTMCrownRating
-
+ 
         HashMap<String,String> abbrevs = DB.readStateAbbrevs();
         ArrayList<Hotel> result = new ArrayList<Hotel>();
         ArrayList<ArrayList<String>> f = DB.readSpreadsheet(fname,null,false);
         for (int i = 1; i < f.size(); i++) {
             Hotel h = new Hotel();
             ArrayList al = f.get(i);
+            System.out.println(al);
             h.feedData = al;
             String NTMHotelID                = (String) al.get(0);
             h.nID = NTMHotelID;
@@ -607,10 +674,12 @@ public class Hotel {
             h.name = StringUtil.removeEnclosingQuotes(HotelName);
             String hotelAddress              = (String) al.get(2);
             h.address = StringUtil.removeEnclosingQuotes(hotelAddress).trim();
-            String HotelID = StringUtil.stringToKIF(HotelName + NTMHotelID,true);
+            h.nID = StringUtil.stringToKIF(HotelName + NTMHotelID,true);
             String City                      = (String) al.get(3);
+            String Country                   = (String) al.get(4);
+            h.country = new String(Country);
             h.city = new String(City);
-            City = StringUtil.stringToKIF(City,true);
+            //h.city = StringUtil.stringToKIF(h.city,true);
             String State                     = (String) al.get(5);
             State = State.trim();
             if (State.length() > 2 && abbrevs.keySet().contains(State.toUpperCase()))
@@ -619,10 +688,21 @@ public class Hotel {
             String StreetAddressPostalCode   = (String) al.get(6);
             h.postCode = StreetAddressPostalCode;
             result.add(h);
-            String latitude                  = (String) al.get(36);
-            String longitude                 = (String) al.get(37);
-            String[] Landmarks =
-            {"Airport","Beach","City","ConventionCenter","Highway","Lake",
+            h.lat                            = (String) al.get(36);
+            h.lng                            = (String) al.get(37);
+            String addr = h.address + ", " + h.city + ", " + h.stateProv + ", " +
+                          h.country + ", " + h.postCode;
+            /*
+            geocodeCount++;
+            if (geocodeCount < geocodeLimit) {
+                ArrayList<String> latlon = DB.geocode(addr);
+                if (latlon != null) {
+                    h.lat = latlon.get(0);
+                    h.lng = latlon.get(1);
+                }
+            }
+            */
+            String[] Landmarks = {"Airport","Beach","City","ConventionCenter","Highway","Lake",
                     "Mountain","RuralArea","Suburb","TouristArea"};
             for (int j = 0; j < Landmarks.length; j++) {
                 String orient = null;
@@ -635,6 +715,7 @@ public class Hotel {
                 if (field.equals("N"))
                     orient = "Near";
             }
+            h.feedData = al;
         }
         return result;
     }
@@ -642,7 +723,7 @@ public class Hotel {
     /** *************************************************************
      * @param fname has no file extension or directory
      */
-    public static Hotel parseOneHotelFile(String fname) {
+    public static Hotel parseOneHotelReviewFile(String fname) {
 
         Hotel h = new Hotel();
         ArrayList<AVPair> result = new ArrayList<AVPair>();
@@ -715,12 +796,13 @@ public class Hotel {
     }
 
     /** *************************************************************
+     * Read hotel review files
+     * @return an ArrayList of Hotel
      */
-    public static ArrayList<Hotel> parseAllHotelFiles() {
+    public static ArrayList<Hotel> parseAllHotelReviewFiles(String fname) {
 
-        System.out.println("INFO in parseAllHotelFiles()");
+        System.out.println("INFO in parseAllHotelReviewFiles()");
         ArrayList<Hotel> result = new ArrayList<Hotel>();
-        String fname = "hotelonly-SF.txt";
         LineNumberReader lnr = null;
         try {
             File fin  = new File(fname);
@@ -730,7 +812,7 @@ public class Hotel {
                 String line = null;
                 while ((line = lnr.readLine()) != null) {
                     if (!StringUtil.emptyString(line))
-                        result.add(parseOneHotelFile(line));
+                        result.add(parseOneHotelReviewFile(line));
                     if (result.size() % 100 == 0)
                         System.out.print('.');
                 }
@@ -760,6 +842,15 @@ public class Hotel {
         //    System.out.println(feedHotel.asCSV());
         //    System.out.println(reviewsHotel.asCSV());
         //}
+        String feedAddr = feedHotel.name + "," + feedHotel.address + "," +
+                            feedHotel.city + "," + feedHotel.stateProv + "," +
+                            feedHotel.postCode;
+        String reviewAddr = reviewsHotel.name + "," + reviewsHotel.address + "," +
+                          reviewsHotel.city + "," + reviewsHotel.stateProv + "," +
+                          reviewsHotel.postCode;
+        if (DB.geocode(feedAddr).equals(DB.geocode(reviewAddr)))
+            reviewsHotel.feedData = feedHotel.feedData;
+        /*
         if (feedHotel.postCode.equals(reviewsHotel.postCode) &&
             feedHotel.stateProv.equals(reviewsHotel.stateProv) &&
             feedHotel.city.equals(reviewsHotel.city) &&
@@ -770,7 +861,9 @@ public class Hotel {
             reviewsHotel.feedData = feedHotel.feedData;
             //System.out.println("Review: " + reviewsHotel.asCSV());
             //System.out.println();
+
         }
+        */
     }
 
     /** *************************************************************
@@ -787,6 +880,266 @@ public class Hotel {
         }
     }
 
+    /** *************************************************************
+     */
+    public void addAllSenses(HashMap<String,Integer> wnsenses) {
+
+        Iterator<String> it = wnsenses.keySet().iterator();
+        while (it.hasNext()) {
+            String sense = it.next();
+            if (senses.keySet().contains(sense))
+                senses.put(sense,new Integer(wnsenses.get(sense).intValue() + senses.get(sense).intValue()));
+            else
+                senses.put(sense,wnsenses.get(sense));
+        }
+    }
+
+    /** *************************************************************
+     * @param feed is an ArrayList of Hotel containing the raw data
+     * about hotels
+     *
+     * @return a list of hotels expressed as a list of string values
+     * for several fields and then a count of SUMO terms appearing in
+     * the review for the given hotel
+     */
+    public static ArrayList<ArrayList<String>> hotelReviewSUMOasSparseMatrix(ArrayList<Hotel> feed) {
+
+        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+        DB.disambigReviews(feed);
+        DB.SUMOReviews(feed);
+        hotelSentiment(feed);
+        ArrayList<String> hotelAsArray = new ArrayList<String>();
+
+          // a list of attribute value pairs where the count is in
+          // the attribute and the SUMO term is the value
+        ArrayList<AVPair> SUMO = DB.topSUMOInReviews(feed);
+
+        hotelAsArray.add("name");
+        hotelAsArray.add("address");
+        hotelAsArray.add("city");
+        hotelAsArray.add("state/prov");
+        hotelAsArray.add("country");
+        hotelAsArray.add("sentiment");
+        int SUMOColumnLimit = 1000;
+        if (SUMO.size() < SUMOColumnLimit)
+            SUMOColumnLimit = SUMO.size();
+        for (int i = 0; i < SUMOColumnLimit; i++) {
+            AVPair avp = SUMO.get(i);
+            hotelAsArray.add(avp.value);
+        }
+        result.add(hotelAsArray);
+
+        for (int i = 0; i < feed.size(); i++) {
+            Hotel h = feed.get(i);
+            hotelAsArray = new ArrayList<String>();
+            hotelAsArray.add(h.name);
+            hotelAsArray.add(h.address);
+            hotelAsArray.add(h.city);
+            hotelAsArray.add(h.stateProv);
+            hotelAsArray.add(h.country);
+            hotelAsArray.add(String.valueOf(h.sentiment));
+            int count = 0;
+            while (count < SUMOColumnLimit) {
+                AVPair avp = SUMO.get(count);
+                if (h.SUMO.keySet().contains(avp.value))
+                    hotelAsArray.add(h.SUMO.get(avp.value).toString());
+                else
+                    hotelAsArray.add("");
+                count++;
+            }
+            result.add(hotelAsArray);
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     * @param feed is an ArrayList of Hotel containing the raw data
+     * about hotels
+     *
+     * @return a list of hotels expressed as a list of string values
+     * for several fields and then a count of SUMO terms appearing in
+     * the review for the given hotel
+     */
+    public static ArrayList<ArrayList<String>> hotelReviewSUMOSentimentAsSparseMatrix(ArrayList<Hotel> feed) {
+
+        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+        DB.disambigReviews(feed);
+        DB.SUMOReviews(feed);
+        hotelSentiment(feed);
+        ArrayList<String> hotelAsArray = new ArrayList<String>();
+
+          // a list of attribute value pairs where the count is in
+          // the attribute and the SUMO term is the value
+        ArrayList<AVPair> SUMO = DB.topSUMOInReviews(feed);
+        hotelAmenitySentiment(feed);
+
+        hotelAsArray.add("name");
+        hotelAsArray.add("address");
+        hotelAsArray.add("city");
+        hotelAsArray.add("state/prov");
+        hotelAsArray.add("country");
+        int SUMOColumnLimit = 1000;
+        if (SUMO.size() < SUMOColumnLimit)
+            SUMOColumnLimit = SUMO.size();
+        for (int i = 0; i < SUMOColumnLimit; i++) {
+            AVPair avp = SUMO.get(i);
+            hotelAsArray.add(avp.value);
+        }
+        result.add(hotelAsArray);
+
+        for (int i = 0; i < feed.size(); i++) {
+            Hotel h = feed.get(i);
+            hotelAsArray = new ArrayList<String>();
+            hotelAsArray.add(h.name);
+            hotelAsArray.add(h.address);
+            hotelAsArray.add(h.city);
+            hotelAsArray.add(h.stateProv);
+            hotelAsArray.add(h.country);
+            int count = 0;
+            while (count < SUMOColumnLimit) {
+                AVPair avp = SUMO.get(count);
+                if (h.conceptSentiment.keySet().contains(avp.value))
+                    hotelAsArray.add(h.conceptSentiment.get(avp.value).toString());
+                else
+                    hotelAsArray.add("");
+                count++;
+            }
+            result.add(hotelAsArray);
+        }
+        return result;
+    }
+
+    /** *******************************************************************
+     * @param h is a DOM element for one hotel
+     * @return a map of column name and column value
+     */
+    public static Hotel processOneOXMLHotel(Element h) {
+
+        Hotel result = new Hotel();
+        int maxString = 30;
+        TreeMap<String,String> values = new TreeMap<String,String>();
+        NodeList features = h.getChildNodes();
+        for (int i = 0; i < features.getLength(); i++) {
+            if (features.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                Element feature = (Element) features.item(i);
+                //System.out.println(feature.toString());
+                if (feature.getTagName().equals("COUNTRY")) {
+                    String text = feature.getTextContent();
+                    if (!StringUtil.emptyString(text) && text.length() > maxString)
+                        text = text.substring(0,maxString);
+                    result.country = text;
+                }
+                else if (feature.getTagName().equals("CITY")) {
+                    String text = feature.getTextContent();
+                    if (!StringUtil.emptyString(text) && text.length() > maxString)
+                        text = text.substring(0,maxString);
+                    result.city = text;
+                }
+                else if (feature.getTagName().equals("STATE")) {
+                    String text = feature.getTextContent();
+                    if (!StringUtil.emptyString(text) && text.length() > maxString)
+                        text = text.substring(0,maxString);
+                    result.stateProv = text;
+                }
+                else if (feature.getTagName().equals("ADDRESS")) {
+                    String text = feature.getTextContent();
+                    if (!StringUtil.emptyString(text) && text.length() > maxString)
+                        text = text.substring(0,maxString);
+                    result.address = text;
+                }
+                else if (feature.getTagName().equals("Review")) {
+                    NodeList fs = feature.getChildNodes();
+                    for (int j = 0; j < fs.getLength(); j++) {
+                        if (fs.item(j).getNodeType() == Node.ELEMENT_NODE) {
+                            Element reviewFields = (Element) fs.item(j);
+                            if (reviewFields.getTagName().equals("TEXT"))
+                                result.reviews.add(reviewFields.getTextContent());
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     */
+    public static ArrayList<Hotel> readOXMLhotels(String fname) {
+
+        ArrayList<Hotel> hotels = new ArrayList<Hotel>();
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setIgnoringElementContentWhitespace(true);
+        try {
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document dom = db.parse(fname);
+            Element docEle = dom.getDocumentElement();
+            NodeList nl = docEle.getElementsByTagName("Place");
+            if (nl != null && nl.getLength() > 0) {
+                for (int i = 0; i < nl.getLength(); i++) {
+                    Element el = (Element) nl.item(i);  // a <hotel>
+                    String name = el.getAttribute("name");
+                    Hotel h = processOneOXMLHotel(el);
+                    h.name = name;
+                    hotels.add(h);
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("File error reading " + fname + ": " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+        return hotels;
+    }
+    
+    /** *************************************************************
+     */
+    public static void hotelSentiment(ArrayList<Hotel> hotels) {
+
+        ArrayList<Hotel> result = new ArrayList<Hotel>();
+        DB.readSentimentArray();
+        DB.readStopConceptArray();
+        for (int i = 0; i < hotels.size(); i++) {
+            Hotel h = hotels.get(i);
+            //System.out.println("======== " + h.name + " ========");
+            int total = 0;
+            for (int j = 0; j < h.reviews.size(); j++) {
+                String review = h.reviews.get(j);
+                //System.out.println(review);
+                int subtotal = DB.computeSentiment(review);
+                total = total + subtotal;
+                //System.out.println("=== " + subtotal + " ===");
+            }
+            h.sentiment = total;
+            //System.out.println("======== " + total + " ========");
+            //System.out.println();
+            //System.out.println(DB.computeSentiment("This hotel is the most abject failure of a rotten etablishment."));
+            //System.out.println(DB.computeSentiment("This hotel is the most outstanding elyssian paradise."));
+        }
+    }
+
+    /** *************************************************************
+     * Compute concept sentiment and store as a side effect.
+     */
+    public static void hotelAmenitySentiment(ArrayList<Hotel> hotels) {
+
+        WordNet.wn.initOnce();
+        DB.readSentimentArray();
+        DB.readStopConceptArray();
+        for (int i = 0; i < hotels.size(); i++) {
+            Hotel h = hotels.get(i);
+            //System.out.println("======== " + h.name + " ========");
+            int total = 0;
+            for (int j = 0; j < h.reviews.size(); j++) {
+                String review = h.reviews.get(j);
+                //System.out.println(review);
+                HashMap<String,Integer> conceptSent = DB.computeConceptSentiment(review);
+                //System.out.println("=== " + conceptSent + " ===");
+                h.addConceptSentiment(conceptSent);
+            }
+        }
+    }
+    
     /** ***************************************************************
      */
     public static void main(String[] args) {
@@ -798,8 +1151,8 @@ public class Hotel {
 
         /*
         ArrayList<Hotel> feed = HotelDBImport(false);
-        ArrayList<Hotel> reviews = disambigReviews();
-        SUMOReviews(reviews);
+        ArrayList<Hotel> reviews = DB.disambigReviews();
+        DB.SUMOReviews(reviews);
         mergeHotels(feed,reviews);
         for (int i = 0; i < reviews.size(); i++) {
             Hotel h = reviews.get(i);
@@ -807,13 +1160,20 @@ public class Hotel {
                 System.out.println(h.asCSV());
         }
         */
-        System.out.println(DB.writeSpreadsheet(Hotel.setHotelWeights(),true));
 
+        //System.out.println(printAllHotels(readCSVHotels("NHotel-sample.csv")));
+
+    	ArrayList<Hotel> hotels = null;
+    	//hotels = Hotel.readOXMLhotels("OHotel.xml");
+    	hotels = Hotel.readXMLHotels("OHotel.xml");
+    	setHotelWeights(hotels);
+        System.out.println(printAllHotels(hotels));
+        //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(Hotel.parseAllHotelReviewFiles("hotelReviews-US-fileList.txt")),true));
+        //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(Hotel.readOXMLhotels()),true));
+        //System.out.println(Hotel.readOXMLhotels());
         //System.out.println(writeSpreadsheet(HotelXMLtoCSV(),true));
 
         //SUMOReviews(al);
         //System.out.println(printAllHotels(al));
-
     }
-
 }
