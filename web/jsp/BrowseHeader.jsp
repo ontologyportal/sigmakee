@@ -12,6 +12,13 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
+ KBPOS = request.getParameter("KBPOS");
+ term = request.getParameter("term");
+ 
+ if (KBPOS == null && term == null)
+    KBPOS = "1";
+ else if (KBPOS == null && term != null)
+ 	KBPOS = kb.REswitch(term);
 %>
 
 <form action="<%=parentPage%>">
@@ -61,7 +68,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
       <tr>
           <td align="right"><b>KB Term:&nbsp;</b></td>
           <td align="left" valign="top" colspan="2">
-              <input type="text" size="38" name="term" value=<%= "\"" + (term==null?"":term) + "\"" %>>
+              <input type="text" size="38"  name="term" value=<%= "\"" + (term==null?"":term) + "\"" %>>
           </td>
           <td align="left" valign="top">
               <input type="submit" value="Show">
