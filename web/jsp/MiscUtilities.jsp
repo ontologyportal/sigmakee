@@ -138,7 +138,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                    }
                }
 %>
-    <b>Create dotted graph format (for <a href="www.graphviz.org">GraphViz</a>)</b><P>
+    <b>Create dotted graph format (for <a href="http://www.graphviz.org">GraphViz</a>)</b><P>
     <table>
         <tr><td align="right">Term:&nbsp;</td><td><input type="text" name="term" size=20 value=""></td></tr>
         <tr><td align="right">Relation:&nbsp;</td><td><input type="text" name="relation" size=20 value=""></td></tr>
