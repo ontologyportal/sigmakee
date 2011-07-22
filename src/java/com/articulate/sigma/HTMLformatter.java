@@ -307,7 +307,7 @@ public class HTMLformatter {
                 String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb,nonRelation,language);
                 if (relation != "" || nonRelation != "") {
                 	if (i == 0)
-                		show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(0) + "&relation=" + relations.get(0) + "\">previous " + 25 + "</a>" + "</i></td></tr>\n");
+                		show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(0) + "&relation=" + relations.get(0) + "&KBPOS=" + 1 + "\">previous " + 25 + "</a>" + "</i></td></tr>\n");
 
                     show.append("<tr>\n");
                     show.append("  <td><a href=\"" + kbHref +"&term=");
@@ -319,7 +319,7 @@ public class HTMLformatter {
                         show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + uppercaseTerm + " </FONT></td>" +
                         			"<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>"); 
                     if (i == 29)
-                        show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(29) + "&relation=" + relations.get(29) + "\">next " + 25 + "</a>" + "</i></td></tr>\n");
+                        show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(29) + "&relation=" + relations.get(29) + "&KBPOS=" + 1 + "\">next " + 25 + "</a>" + "</i></td></tr>\n");
                  }
             }
             show.append("</table></td>");
@@ -331,6 +331,69 @@ public class HTMLformatter {
         return markup;
     }
 
+    /** *****************************************************
+    * Show list of 30 relation & nonRelation terms that contain a match to the input RE term. The inputed Strings 
+    * relREmatch and nonRelREmatch are the two relation and nonRelation terms respectively that are the first terms
+    * at the top of the list. They are passed into the method to keep track of what 30 terms are being viewed. 
+    */
+
+    public static String showREMatches(KB kb, String relREmatch, String nonRelREmatch, String term) {
+    	
+        String markup = "";
+        try {	
+        	StringBuilder show = new StringBuilder();
+        	ArrayList<String> matchesList = kb.getREMatch(term);
+        	ArrayList<String> relTermsList = kb.getAllRelTerms(matchesList);
+        	ArrayList<String> nonRelTermsList = kb.getAllNonRelTerms(matchesList);
+        	ArrayList<String> largerList = (relTermsList.size()>nonRelTermsList.size())?relTermsList:nonRelTermsList;
+        	ArrayList<String> smallerList = (relTermsList.size()>nonRelTermsList.size())?nonRelTermsList:relTermsList;
+        	int sizeDiff = largerList.size() - smallerList.size();
+        	for (int i = 0; i<sizeDiff ; i++) {				//buffer smaller list
+        		smallerList.add("");
+        	} 
+        	show.append("<table><tr><td>");
+        	show.append("<table>");
+        	show.append("<tr><td><FONT face='Arial,helvetica' size=+3> <b> " + term + "</b></FONT></td>");
+        	show.append("</tr>\n<br><br>");
+        	for (String t : largerList) {
+        		if (t.equals((largerList==relTermsList?relREmatch:nonRelREmatch))) {		//keeps track of which term is at the top
+        			int matchIndex = largerList.indexOf(t);      //matchIndex is the index of an REmatch in the larger list
+        			int listLength = largerList.size();          //listLength is the the larger count of either relMatches or nonRelMatches
+        			int finalIndex = (listLength>(matchIndex + 29) ? (matchIndex + 30) : listLength);    //finalIndex is 1 + the index of the final match that will be displayed
+        			//If there are at least 30 more matches after REmatch, then finalIndex=matchIndex+30, otherwise finalIndex = listLength
+        			for (int i=matchIndex;i<finalIndex;i++) {
+        				if (i==matchIndex && i!=0)     //if there are other matches before REmatch, previous 30 should be linked at the top of the page
+        					show.append("<tr><td><i><a href=\"" + kbHref + "&relREmatch=" + relTermsList.get(matchIndex-29) + "&nonRelREmatch=" + nonRelTermsList.get(matchIndex-29) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">previous " + 30 + "</a>" + "</i></td></tr>\n");
+        				show.append("<tr>\n");
+        				if (nonRelTermsList.get(i) == "") 
+        					show.append("    <td><b> " + " " + "</b></td>");
+        				else {
+        					show.append("    <td><a href=\"" + kbHref +"&term=");
+        					show.append(   nonRelTermsList.get(i) + "\">" + nonRelTermsList.get(i) + "</a>" + "</td>");
+        				}
+        				if (relTermsList.get(i) == "") 
+        					show.append("    <td><b> " + " " + "</b></td>");
+        				else {
+        					show.append("    <td><a href=\"" + kbHref +"&term=");
+        					show.append(   relTermsList.get(i) + "\">" + relTermsList.get(i) + "</a>" + "</td>");
+        				}
+        				show.append("</tr>\n");
+        				if (i==(finalIndex - 1) && listLength>(matchIndex + 30)) {
+        					int nextCount = (listLength>finalIndex+29)?30:(listLength-finalIndex+1);
+        					show.append("<tr><td><i><a href=\"" + kbHref +"&relREmatch=" + relTermsList.get(i) + "&nonRelREmatch=" + nonRelTermsList.get(i) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">next " + nextCount + "</a>" + "</i></td></tr>\n");
+        				}
+        			}
+        			show.append("</table></td>");
+        			markup = show.toString();
+        			break;
+        		}
+        	}
+        }
+        catch (Exception ex) {
+        		ex.printStackTrace();
+        }
+        return markup;
+    }
       
     /** *************************************************************
      *  Show a hyperlinked list of term mappings from WordNet.
@@ -469,11 +532,24 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
-     *  Change spaces to "%20"
+     *  Change spaces to "%20" along with many other URL codes. (for passing regex expressions through hyperlinks)
      */
     public static String encodeForURL(String s) {
+    	
+    	s = s.replaceAll(" ","%20");
+    	s = s.replaceAll("\\!","%21");
+    	s = s.replaceAll("\\$","%24");
+    	s = s.replaceAll("\\(","%28");
+    	s = s.replaceAll("\\)","%29");
+    	s = s.replaceAll("\\*","%2A");
+    	s = s.replaceAll("\\+","%2B");
+    	s = s.replaceAll("\\.","%2E");
+    	s = s.replaceAll("\\?","%3F");
+    	s = s.replaceAll("\\[","%5B");
+    	s = s.replaceAll("\\]","%5D");
+    	s = s.replaceAll("\\^","%5E");
 
-        return s.replaceAll(" ","%20");
+        return s;
     }
 
     /** *************************************************************
