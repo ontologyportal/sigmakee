@@ -18,12 +18,21 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  nonRelTerm = request.getParameter("nonrelation");
  relTerm = request.getParameter("relation");
  Map theMap = null;     // Map of natural language format strings.
+ KBPOS = request.getParameter("KBPOS");
+ relREmatch = request.getParameter("relREmatch");
+ nonRelREmatch = request.getParameter("nonRelREmatch");
+
+ if (KBPOS == null && term == null)
+    KBPOS = "1";
+ else if (KBPOS == null && term != null)
+ 	KBPOS = kb.REswitch(term);
+ 
 
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
 
- if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm))        // Show statistics only when no term is specified.
-     show.append(HTMLformatter.showStatistics(kb));
- else if (kb != null && term != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors of a term
+ if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm) && StringUtil.emptyString(relREmatch))        // Show statistics only when no term is specified.
+    show.append(HTMLformatter.showStatistics(kb));
+ else if (kb != null && term != null && !kb.containsTerm(term) && KBPOS.equals("1")) {           // Show the alphabetic neighbors of a term
     show.append(HTMLformatter.showNeighborTerms(kb,term));
     //WordNet.initOnce();
     TreeMap tm = WordNet.wn.getSensesFromWord(term);
@@ -35,11 +44,13 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     }
     show.append("</td></table>");
  }
- else if ((kb != null) && (term == null) && (nonRelTerm != null) && (relTerm != null)) {
+ else if ((kb != null) && (term == null) && (nonRelTerm != null) && (relTerm != null) && KBPOS.equals("1")) {
     show.append(HTMLformatter.showNeighborTerms(kb,nonRelTerm, relTerm));
     show.append("</td></table>");
  }
  else if ((kb != null) && (term != null) && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in
+     term = kb.simplifyTerm(term);
+     
      show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
      show.append("<table width=\"95%\"><tr><td width=\"50%\"><font face=\"Arial,helvetica\" size=\"+3\"><b>");
 
@@ -139,4 +150,18 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
                  "kb=" + kbName + "&term=" + term + "\">Show OWL translation</small><p>\n");
 	 */
  }
+ else if (kb != null && term != null && kb.containsRE(term) && KBPOS.equals("2") && relREmatch == null) {
+ 	ArrayList<String> matches = kb.getREMatch(term);
+ 	ArrayList<String> relMatches = kb.getAllRelTerms(matches);
+ 	ArrayList<String> nonRelMatches = kb.getAllNonRelTerms(matches);
+ 	relREmatch = relMatches.size()>0?relMatches.get(0):"";
+ 	nonRelREmatch = nonRelMatches.size()>0?nonRelMatches.get(0):"";
+ 	show.append(HTMLformatter.showREMatches(kb, relREmatch, nonRelREmatch, term));
+ }
+ else if (kb != null && term != null && kb.containsRE(term) && KBPOS.equals("2") && relREmatch != null) 
+ 	show.append(HTMLformatter.showREMatches(kb, relREmatch, nonRelREmatch, term));
+ 
+ else if (kb != null && term != null && !kb.containsRE(term) && KBPOS.equals("2") && relREmatch == null) 
+  	show.append("<b>No Matches Could Be Found </b>");
+
 %>

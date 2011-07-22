@@ -23,8 +23,16 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  String term = request.getParameter("term");
  String nonRelTerm = request.getParameter("nonrelation");
  String relTerm = request.getParameter("relation");
+ String relREmatch = request.getParameter("relREmatch");
+ String nonRelREmatch = request.getParameter("nonRelREmatch");
+ String KBPOS = request.getParameter("KBPOS");
+
+ if (!Formula.isNonEmptyString(relREmatch))
+  	relREmatch = "";
+ if (!Formula.isNonEmptyString(nonRelREmatch))
+ 	nonRelREmatch = "";
  if (!Formula.isNonEmptyString(term))
-     term = "";
+    term = "";
  if (!Formula.isNonEmptyString(nonRelTerm))
  	nonRelTerm = "";
  if (!Formula.isNonEmptyString(relTerm))
@@ -33,7 +41,11 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     response.sendRedirect("http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
                  "kb=" + kbName + "&term=" + term);
     return;
-}
+ }
+ if (KBPOS == null && term == null)
+    KBPOS = "1";
+ else if (KBPOS == null && term != null)
+ 	KBPOS = kb.REswitch(term);
 %>
 <html>
 <head><title>Knowledge base Browser - <%=term%></title></head>
