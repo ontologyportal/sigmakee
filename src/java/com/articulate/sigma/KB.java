@@ -208,6 +208,106 @@ public class KB {
     public SortedSet<String> getTerms() {
         return this.terms;
     }
+    
+    /** ***************************************************
+    *Return ArrayList of all nonrelTerms in an ArrayList
+    *
+    *@return An ArrayList of nonrelTerms
+    */
+    public ArrayList<String> getAllNonRelTerms(ArrayList list) {
+    	
+    	ArrayList<String> nonRelTerms = new ArrayList();
+    	Iterator<String> itr = list.iterator();
+        while(itr.hasNext()) {
+        	String t = itr.next();
+        	if (Character.isUpperCase(t.charAt(0))) 
+       			nonRelTerms.add(t);
+        }
+       	return nonRelTerms;
+    }
+    
+    /** ******************************************************
+    *Return ArrayList of all relTerms in an ArrayList
+    *
+    *@return An ArrayList of relTerms
+    */
+    public ArrayList<String> getAllRelTerms(ArrayList list) {
+    	
+    	ArrayList<String> relTerms = new ArrayList();
+    	Iterator<String> itr = list.iterator();
+        while(itr.hasNext()) {
+        	String t = itr.next();
+        	if (Character.isLowerCase(t.charAt(0))) 
+        		relTerms.add(t);
+        }
+        return relTerms;
+    }
+    
+    /** **************************************************
+     * REswitch determines if a String is a RegEx or not based on its use of RE metacharacters. "1"=nonRE, "2"=RE
+     * 
+     * @param term A String
+     * @return "1" or "2" 
+     */
+    public String REswitch(String term) {
+    	
+    	if (term.contains("(")||term.contains("[")||term.contains("{")||term.contains("\\")||term.contains("^")||term.contains("$")||
+    			term.contains("|")||term.contains("}")||term.contains("]")||term.contains(")")||term.contains("?")||term.contains("*")||
+    			term.contains("+")) 
+    		return "2";
+    	return "1";
+    }
+    
+    /** *************************************************
+     * Only called in BrowseBody.jsp when a single match is found. Purpose is to simplify a RegEx to its only matching term
+     * 
+     * @param term a String
+     * @return modified term a String
+     */
+    public String simplifyTerm(String term) {
+    	
+    	if (getREMatch(term.intern()).size()==1) 
+    		return getREMatch(term.intern()).get(0);
+    	return term;
+    }
+
+    /** **************************************************
+    *Takes a term (interpreted as a Regular Expression) and returns true
+    *if any term in the KB has a match with the RE.
+    *
+    *@param term A String
+    *@return true or false.
+    */
+    public boolean containsRE(String term) {
+    	
+    	return (getREMatch(term).size()>0 ? true : false);  
+    }  
+
+    /** **************************************************
+    *Takes a term (interpreted as a Regular Expression) and returns an ArrayList
+    *containing every term in the KB that has a match with the RE.
+    *
+    *@param term A String
+    *@return An ArrayList of terms that have a match to term
+    */
+    public ArrayList<String> getREMatch(String term) {
+    	try {
+    		Pattern p = Pattern.compile(term);
+    		ArrayList<String> matchesList = new ArrayList();
+    		Iterator<String> itr = getTerms().iterator();
+    		while(itr.hasNext()) {
+    			String t = itr.next();
+    			Matcher m = p.matcher(t);
+    			if (m.matches()) 
+    				matchesList.add(t);
+    		}
+    		return matchesList;
+    	} catch (PatternSyntaxException ex) {
+    		ArrayList<String> err = new ArrayList();
+    		err.add("Invalid Input");
+    		return err;
+    	}
+    }
 
     /** ************************************************************
      *  Sets the synchronized SortedSet of all the terms in the
@@ -3473,8 +3573,15 @@ public class KB {
      * @return true or false.
      */
     public boolean containsTerm(String term) {
+    	
+    	if (getTerms().contains(term.intern())) {
+    		return true;
+    	}
+    	else if (getREMatch(term.intern()).size()==1) {
+    		return true;
+    	}
 
-        return getTerms().contains(term.intern());
+        return false;
     }
 
     /** ***************************************************************
