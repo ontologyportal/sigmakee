@@ -16,10 +16,10 @@ August 9, Acapulco, Mexico.
 import java.util.*;
 import java.io.*;
 import java.text.ParseException;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
+//import java.util.logging.Logger;
+//import java.util.logging.SimpleFormatter;
+//import java.util.logging.FileHandler;
+//import java.util.logging.Level;
 
 import java.util.regex.*;
 
@@ -28,8 +28,8 @@ import java.util.regex.*;
 public class ProofProcessor {
 
 	
-	private static Logger LOGGER;
-	private static FileHandler file;
+	//private static Logger LOGGER;
+	//private static FileHandler file;
 	
      /** An ArrayList of BasicXMLelement (s). */
     private ArrayList xml = null;
@@ -44,11 +44,11 @@ public class ProofProcessor {
         //System.out.print("INFO in ProofProcessor(): Number of XML elements is: ");
         //System.out.println(xmlInput.size());
         
-        LOGGER = Logger.getLogger("SIGMA_LOGGER");
+        //LOGGER = Logger.getLogger("SIGMA_LOGGER");
 
-        LOGGER.finest("-----------ProofProcessor Created-----------");
-        LOGGER.finest("XML INPUT: " + xmlInput.toString());
-        LOGGER.finest("------------------------------------");
+        //LOGGER.finest("-----------ProofProcessor Created-----------");
+        //LOGGER.finest("XML INPUT: " + xmlInput.toString());
+        //LOGGER.finest("------------------------------------");
     }
     
     /** ***************************************************************
@@ -97,7 +97,7 @@ public class ProofProcessor {
      */
     public String returnAnswer(int answerNum, String query) {
 
-    	LOGGER.finest("---------- RETURN ANSWER -----------");
+    	//LOGGER.finest("---------- RETURN ANSWER -----------");
         StringBuffer result = new StringBuffer();
         ArrayList<String> skolemTypes = new ArrayList<String>();
          /** An ArrayList of BasicXMLelements */
@@ -120,7 +120,7 @@ public class ProofProcessor {
 
                 //see if a skolem function is present in the value (skolem functions are labeled sk[0-9]+
                 if(value.matches(".*?sk[0-9]+.*?")) {
-                	LOGGER.finest("SKOLEM FUNCTION found!");
+                	//LOGGER.finest("SKOLEM FUNCTION found!");
                 	String skolemType = findSkolemType(answerNum, value, query, variable);
                 	if (skolemType != ""){
                 		skolemTypes.add("; " + value + " is of type " + skolemType);
@@ -140,7 +140,7 @@ public class ProofProcessor {
             result.append(";");
         }
         
-        LOGGER.finest("returned answer: " + result.toString());
+        //LOGGER.finest("returned answer: " + result.toString());
         return result.toString();
     }
 
@@ -153,7 +153,7 @@ public class ProofProcessor {
     	
     	if (skolem.startsWith("(") && skolem.endsWith(")")) 
     		skolem = skolem.substring(1, skolem.length()-1);
-    	LOGGER.finest("skolem value: " + skolem);
+    	//LOGGER.finest("skolem value: " + skolem);
     	skolem = skolem.split(" ")[0];
     	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
     	Matcher match;
@@ -162,9 +162,9 @@ public class ProofProcessor {
     	for (int i=0; i<proofSteps.size(); i++) {
     		ProofStep step = (ProofStep) proofSteps.get(i);
 	  		match = pattern.matcher(step.axiom);
-	   		LOGGER.finest("axiom: " + step.axiom);
+	   		//LOGGER.finest("axiom: " + step.axiom);
 			while (match.find()) {
-				LOGGER.finest("--- match found from axiom ---");
+				//LOGGER.finest("--- match found from axiom ---");
 				for(int j=1; j<=match.groupCount(); j++) {
 					if(!matches.contains(match.group(j)))
 						matches.add(match.group(j));
@@ -172,7 +172,7 @@ public class ProofProcessor {
 		   	}
     	}    	    	
 
-    	LOGGER.finest("returnSkolemStmt matches: " + matches);
+    	//LOGGER.finest("returnSkolemStmt matches: " + matches);
 
     	if(matches.size()>0)
     		return matches;
@@ -184,21 +184,21 @@ public class ProofProcessor {
     private ArrayList<String> returnSkolemStmt(String query, String variable) {
     	if (query != "") {
     		query = query.replaceAll("\\" + variable, "_SKOLEM");
-    		LOGGER.finest("returnSkolemStmt VARIABLE: " + variable);
-    		LOGGER.finest("returnSkolemStmt QUERY: " + query);
+    		//LOGGER.finest("returnSkolemStmt VARIABLE: " + variable);
+    		//LOGGER.finest("returnSkolemStmt QUERY: " + query);
     		Pattern pattern = Pattern.compile("(\\([^\\(\\)]*?_SKOLEM[^\\)\\(]*?\\))");
     		Matcher match = pattern.matcher(query);
 
     		while (match.find()) {
     			ArrayList<String> matches = new ArrayList<String>();
-    			LOGGER.finest("groupMatch: " + match.groupCount());
+    			//LOGGER.finest("groupMatch: " + match.groupCount());
     			for (int i=1; i<=match.groupCount(); i++) {
-    				LOGGER.finest("returnSkolemStmt match: " + match.group(i));
+    				//LOGGER.finest("returnSkolemStmt match: " + match.group(i));
     				if(!matches.contains(match.group(i)))
     					matches.add(match.group(i));
     			}
     			
-    	    	LOGGER.finest("returnSkolemStmt matches: " + matches);
+    	    	//LOGGER.finest("returnSkolemStmt matches: " + matches);
     			return matches;   		
     		}
     	}
@@ -222,7 +222,7 @@ public class ProofProcessor {
     	else
     		skolemRelationArr = returnSkolemStmt(query, variable);
 
-    	LOGGER.finest("---------- FIND SKOLEM TYPE ------------");
+    	//LOGGER.finest("---------- FIND SKOLEM TYPE ------------");
     	
     	if (skolemRelationArr != null) {   		
     		for(int j=0; j<skolemRelationArr.size(); j++) {
@@ -241,7 +241,7 @@ public class ProofProcessor {
 	        	skolemRelation = skolemRelation.replaceAll(skolem, "_SKOLEM");
 	        	// remove all other skolem functions in the skolemRelation (if present) and replace with temp variable
 	        	skolemRelation = skolemRelation.replaceAll("\\(.+?\\)", "?TEMP");
-	        	LOGGER.finest("skolemRelation: " + skolemRelation);
+	        	//LOGGER.finest("skolemRelation: " + skolemRelation);
 
 	        	if(skolemRelation.matches("instance\\s_SKOLEM\\s[^\\s]+")) {
 	        		String[] arguments = skolemRelation.split(" ");
@@ -270,7 +270,7 @@ public class ProofProcessor {
 			    	
 			    // resulting regexStmt from something like (relationshipName ?X0 _SKOLEM)
 			    // should be \\(relationshipName [^\\s\\(\\)]+ ([^\\s\\(\\)]+)\\)
-			    LOGGER.finest("Regex Statement: " + regexStmt.toString());
+			    //LOGGER.finest("Regex Statement: " + regexStmt.toString());
 			    	
 			    Pattern pattern = Pattern.compile(regexStmt.toString());
 			    Matcher match;
@@ -280,7 +280,7 @@ public class ProofProcessor {
 			    	ProofStep proof = (ProofStep)proofSteps.get(i);
 			    	String varName = "";
 			    	
-			    	LOGGER.finest("axiom: " + proof.axiom);
+			    	//LOGGER.finest("axiom: " + proof.axiom);
 		    		match = pattern.matcher(proof.axiom);
 		    		
 		    		boolean varNameFound = false;
@@ -289,22 +289,22 @@ public class ProofProcessor {
 		    		// and then see if an (instance ?VARNAME ?CLASS) relationship can be found
 		    		// that defines the class membership of varName
 		    		while (match.find()) {
-		    			LOGGER.finest("found " + match.groupCount() + " relationship statements in proof!");
+		    			//LOGGER.finest("found " + match.groupCount() + " relationship statements in proof!");
 		    			int k = 1;
 		    			while(k <= match.groupCount() && !varNameFound) {
 		    				varName = match.group(k);
-		    				LOGGER.finest("candidate varname: " + varName);
+		    				//LOGGER.finest("candidate varname: " + varName);
 		    				if (varName.startsWith("?"))
 		    					varNameFound = true;
 		    				k++;
 		    			
 			    			if(varNameFound) {
-				      			LOGGER.finest("varname: " + varName);
+				      			//LOGGER.finest("varname: " + varName);
 				      			String regexString = ".*?\\(instance \\" + varName + " ([^\\s\\)]+)\\).*?";
 				      			Pattern varPattern = Pattern.compile(regexString);
 				      			match = varPattern.matcher(proof.axiom);
 					    		if(match.find()) {
-					    			LOGGER.finest("match is found!");
+					    			//LOGGER.finest("match is found!");
 					    			if (match.group(1) != null)
 					    				return match.group(1);	    
 					    			else varNameFound = false;					    		
@@ -327,7 +327,7 @@ public class ProofProcessor {
      */
     private String removeAnswerClause(String st) {
 
-    	LOGGER.finest("---- removeAnswerClause----");
+    	//LOGGER.finest("---- removeAnswerClause----");
         if (st.indexOf("$answer") == -1)
         	return st;
         
@@ -357,7 +357,7 @@ public class ProofProcessor {
 	        	String statement = " SUMO-AXIOM";
 	        	substr = substr.replaceAll("\\([^\\(|^\\)]+\\)", statement);
 	        	substr = substr.replaceAll("\\(not\\s[^\\(|^\\)]+\\)", statement);
-	        	LOGGER.finest("TEST: " + substr);
+	        	//LOGGER.finest("TEST: " + substr);
 	        	if (substr.indexOf("(") == -1) 
 	        		done = true;	        		
 	        }
@@ -367,7 +367,7 @@ public class ProofProcessor {
 	        	st = st.substring(4, st.length()-1);
 	        }
         }        
-        LOGGER.finest("st: " + st); 
+        //LOGGER.finest("st: " + st); 
         return st; 
     	
     }
@@ -378,7 +378,7 @@ public class ProofProcessor {
      */
     public ArrayList getProofSteps(int answerNum) {
         
-    	LOGGER.finest("--------- getProofSteps ---------");
+    	//LOGGER.finest("--------- getProofSteps ---------");
         BasicXMLelement proof;
         /** An ArrayList of BasicXMLelements */
         ArrayList queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
@@ -410,15 +410,15 @@ public class ProofProcessor {
                 //System.out.println("INFO in ProofProcessor.getProofSteps(): conclusionFormula: " + conclusionFormula.tagname);
                 ProofStep processedStep = new ProofStep();
                 processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
-                LOGGER.finest("Original axiom: " + conclusionFormula.contents);
+                //LOGGER.finest("Original axiom: " + conclusionFormula.contents);
                 processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
-                LOGGER.finest("Formula.postProcess: " + processedStep.axiom);
+                //LOGGER.finest("Formula.postProcess: " + processedStep.axiom);
                 
                 if(i == steps.size() - 1) 
                 	processedStep.axiom = processedStep.axiom.replaceAll("\\$answer[\\s|\\n|\\r]+", "");                	
                 else
                 	processedStep.axiom = removeAnswerClause(processedStep.axiom);
-                LOGGER.finest("removeAnswerClause: " + processedStep.axiom);
+                //LOGGER.finest("removeAnswerClause: " + processedStep.axiom);
                 //System.out.println("INFO in ProofProcessor.getProofSteps(): processedStep.axiom: " + processedStep.axiom);
                 //----If there is a conclusion role, record
                 if (conclusion.subelements.size() > 1) {
@@ -441,11 +441,11 @@ public class ProofProcessor {
                     processedStep.premises.add(premiseNum);
                     //System.out.println("INFO in ProofProcessor.getProofSteps(): premises: " + processedStep.premises);
                 }
-                LOGGER.finest("processedStep: " + processedStep);
+                //LOGGER.finest("processedStep: " + processedStep);
                 proofSteps.add(processedStep);
             }
         }
-        LOGGER.finest("proofSteps: " + proofSteps);
+        //LOGGER.finest("proofSteps: " + proofSteps);
         return proofSteps;
     }
 
@@ -472,9 +472,9 @@ public class ProofProcessor {
 
         StringBuffer result = new StringBuffer();
         try {
-        	LOGGER.finest("--------- tptpProof ---------");
+        	//LOGGER.finest("--------- tptpProof ---------");
             for (int j = 0; j < proofSteps.size(); j++) {
-            	LOGGER.finest("ProofStep " + j);
+            	//LOGGER.finest("ProofStep " + j);
                 ProofStep step = (ProofStep) proofSteps.get(j);
                 boolean isLeaf = step.premises.isEmpty() || 
                     (step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
@@ -492,13 +492,13 @@ public class ProofProcessor {
                 //DEBUG System.out.println("===\n" + step.axiom);
 
                 result.append(Formula.tptpParseSUOKIFString(step.axiom));                       
-                LOGGER.finest("    " + step.axiom);
+                //LOGGER.finest("    " + step.axiom);
 
                 if (!isLeaf) {
                     result.append(",inference(rule,[],[" + step.premises.get(0));
-                    LOGGER.finest("        ,inference(rule,[],[" + step.premises.get(0));
+                    //LOGGER.finest("        ,inference(rule,[],[" + step.premises.get(0));
                     for (int parent = 1; parent < step.premises.size(); parent++) {
-                    	LOGGER.finest("        ," + step.premises.get(parent));
+                    	//LOGGER.finest("        ," + step.premises.get(parent));
                         result.append("," + step.premises.get(parent));
                     }
                     result.append("])");

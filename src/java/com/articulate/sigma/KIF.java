@@ -16,10 +16,10 @@ package com.articulate.sigma;
 import java.io.*;
 import java.util.*;
 import java.text.ParseException;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
+//import java.util.logging.Logger;
+//import java.util.logging.SimpleFormatter;
+//import java.util.logging.FileHandler;
+//import java.util.logging.Level;
 
 /** *****************************************************************
  * A class designed to read a file in SUO-KIF format into memory.
@@ -59,20 +59,20 @@ public class KIF {
 
     /** warnings generated during parsing */
     public TreeSet warningSet = new TreeSet();
-    private Logger logger;
+//    private Logger logger;
     
     public KIF() {
-    	logger = Logger.getLogger("KIF_LOGGER");
-    	logger.setLevel(Level.SEVERE);
+//    	logger = Logger.getLogger("KIF_LOGGER");
+ //   	logger.setLevel(Level.SEVERE);
     	
-    	try {
-    		FileHandler file = new FileHandler("KIF_LOG.log", 500000, 10);
-    		file.setFormatter(new SimpleFormatter());
-            logger.addHandler(file);
-    	}
-    	catch (Exception e) {
-    		logger = Logger.getLogger("SIGMA_LOGGER");
-    	}
+ //   	try {
+ //   		FileHandler file = new FileHandler("KIF_LOG.log", 500000, 10);
+ //   		file.setFormatter(new SimpleFormatter());
+ //           logger.addHandler(file);
+  //  	}
+  //  	catch (Exception e) {
+  //  		logger = Logger.getLogger("SIGMA_LOGGER");
+  //  	}
     	
     }
     
@@ -328,7 +328,7 @@ public class KIF {
                             }
                         }
                         formulaSet.add(f.theFormula);
-                        logger.finest("formulaSet.add(" + f.theFormula + ")");
+//                        logger.finest("formulaSet.add(" + f.theFormula + ")");
 
                         inConsequent = false;
                         inRule = false;
@@ -338,7 +338,7 @@ public class KIF {
                         // start next statement from next line
                         expression = new StringBuilder();
                         // expression.delete(0,expression.length());
-                        logger.finest("keySet: " + keySet);
+//                        logger.finest("keySet: " + keySet);
                         keySet.clear();
                     }
                     else if (parenLevel < 0) {
@@ -474,8 +474,8 @@ public class KIF {
             }
         }
         // System.out.println("EXIT KIF.parse(" + r + ")");
-        logger.finest("formulaSet: " + this.formulaSet);
-        logger.finest("formulas: " + this.formulas);
+        //logger.finest("formulaSet: " + this.formulaSet);
+        //logger.finest("formulas: " + this.formulas);
         return warningSet;
     }
 
