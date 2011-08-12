@@ -19,10 +19,9 @@ import java.io.*;
  /** A trivial structure to hold the elements of a proof step. */
 public class ProofStep {
   
-	public static final String 
-		QUERY = "[Query]",		
-		NEGATED_QUERY = "[Negated Query]",
-		INSTANTIATED_QUERY = "[Instantiated Query]";
+	public static final String QUERY = "[Query]";
+	public static final String NEGATED_QUERY = "[Negated Query]";
+	public static final String INSTANTIATED_QUERY = "[Instantiated Query]";
    
      /** A String of the type clause or formula */
     public String formulaType = null;
