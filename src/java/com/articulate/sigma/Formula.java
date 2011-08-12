@@ -4829,7 +4829,7 @@ public class Formula implements Comparable {
      */
     public static String tptpParseSUOKIFString(String suoString) {
 
-        //  System.out.println("ENTER Formula.tptpParseSUOKIFString(\"" + suoString + "\")");
+        //  System.out.println("INFO in Formula.tptpParseSUOKIFString(\"" + suoString + "\")");
         Formula tempF = new Formula();      // Special case to renam Foo for (instance Foo SetOrClass)
         tempF.read(suoString);              // so a symbol can't be both a class and an instance.
         if (tempF.getArgument(0).equals("instance") &&
@@ -4870,7 +4870,7 @@ public class Formula implements Comparable {
                 st.nextToken();
                 if (st.ttype==40) {         //----Open bracket
                     if (lastWasOpen) {      //----Should not have ((in KIF
-                        System.out.println("ERROR: Double open bracket at " + tptpFormula);
+                        System.out.println("ERROR in Formula.tptpParseSUOKIFString: Double open bracket at " + tptpFormula);
                         throw new ParseException("Parsing error in " + suoString,0);
                     }
                     //----Track nesting of ()s for hol__, so I know when to close the '
@@ -4883,7 +4883,7 @@ public class Formula implements Comparable {
                            (arity = operatorArity(st)) > 0) {
                     //----Operators must be preceded by a (
                     if (!lastWasOpen) {
-                        System.out.println("ERROR: Missing ( before " +
+                        System.out.println("ERROR in Formula.tptpParseSUOKIFString: Missing ( before " +
                                            st.sval + " at " + tptpFormula);
                         return(null);
                     }
@@ -5016,13 +5016,13 @@ public class Formula implements Comparable {
                             translatedFormula += "& ( " + tptpFormula.toString() + " )";
 
                         if ((Integer)(countStack.pop()) != 1)
-                            System.out.println("Error in KIF.tptpParse(): Not one formula");
+                            System.out.println("Error in Formula.tptpParseSUOKIFString(): Not one formula");
                     } else if (parenLevel < 0) {
-                        System.out.print("ERROR: Extra closing bracket at " + tptpFormula.toString());
+                        System.out.print("Error in Formula.tptpParseSUOKIFString(): Extra closing bracket at " + tptpFormula.toString());
                         throw new ParseException("Parsing error in " + suoString,0);
                     }
                 } else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    System.out.println("ERROR: Illegal character '" +
+                    System.out.println("ERROR in Formula.tptpParseSUOKIFString(): Illegal character '" +
                                        (char)st.ttype + "' at " + tptpFormula.toString());
                     throw new ParseException("Parsing error in " + suoString,0);
                 }
@@ -5046,42 +5046,35 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Parse formulae into TPTP format
      */
-    public void tptpParse(boolean query, KB kb, List preProcessedForms)
+    public void tptpParse(boolean query, KB kb, List<Formula> preProcessedForms)
         throws ParseException, IOException {
 
         if (DEBUG)
-            System.out.println("ENTER Formula.tptpParse(" + this + ", "
-                               + query + ", " + kb + ", " + preProcessedForms + ")");
+            System.out.println("INFO in Formula.tptpParse(" + this + ", " + query + ", " + kb + ", " + preProcessedForms + ") : entering");
         try {
             KBmanager mgr = KBmanager.getMgr();
-
             if (kb == null)
                 kb = new KB("",mgr.getPref("kbDir"));
 
             if (!this.isBalancedList()) {
                 String errStr = "Unbalanced parentheses or quotes";
-                System.out.println("Error in Formula.tptpParse(" + this.theFormula + ", "
-                                   + query + ", " + kb.name + ", " + preProcessedForms + ")");
+                System.out.println("Error in Formula.tptpParse(" + this.theFormula + ", " + query + ", " + kb.name + ", " + preProcessedForms + ")");
                 System.out.println("  " + errStr);
-                mgr.setError(mgr.getError() + ("\n<br/>" + errStr + " in " + this.theFormula
-                                + "\n<br/>"));
+                mgr.setError(mgr.getError() + ("\n<br/>" + errStr + " in " + this.theFormula + "\n<br/>"));
                 return;
             }
-
-            List processed = preProcessedForms;
+            List<Formula> processed = preProcessedForms;
             if (processed == null)
                 processed = this.preProcess(query, kb);
-
             if (DEBUG)
                 System.out.println("  processed == " + processed);
             //     System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
             //     System.out.println("  processed == " + processed);
-
             if (processed != null) {
                 this.clearTheTptpFormulas();
                 //----Performs function on each current processed axiom
                 Formula f = null;
-                for (Iterator g = processed.iterator(); g.hasNext();) {
+                for (Iterator<Formula> g = processed.iterator(); g.hasNext();) {
                     f = (Formula) g.next();
                     if (DEBUG)
                         System.out.println("  f == " + f);
@@ -5090,15 +5083,12 @@ public class Formula implements Comparable {
                         this.getTheTptpFormulas().add(tptpStr);
                     }
                 }
-
                 //         System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
                 //         System.out.println("  theTptpFormulas == " + this.getTheTptpFormulas());
-
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in Formula.tptpParse(" + this + ", " + query
-                               + ", " + kb + ", " + preProcessedForms + "): " + ex.getMessage());
+            System.out.println("Error in Formula.tptpParse(" + this + ", " + query + ", " + kb + ", " + preProcessedForms + "): " + ex.getMessage());
             ex.printStackTrace();
             if (ex instanceof ParseException)
                 throw (ParseException) ex;
@@ -5106,8 +5096,7 @@ public class Formula implements Comparable {
                 throw (IOException) ex;
         }
         if (DEBUG)
-            System.out.println("EXIT Formula.tptpParse(" + this + ", " + query
-                               + ", " + kb + ", " + preProcessedForms + ")");
+            System.out.println("INFO in Formula.tptpParse(" + this + ", " + query + ", " + kb + ", " + preProcessedForms + ") : exiting");
         return;
     }
 
