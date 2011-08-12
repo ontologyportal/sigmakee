@@ -81,8 +81,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           }
 
           String errStr = "";
-          if (overwriteP
-              && !existingFile.getCanonicalPath().equalsIgnoreCase(outfile.getCanonicalPath())) {
+          if (overwriteP && !existingFile.getCanonicalPath().equalsIgnoreCase(outfile.getCanonicalPath())) {
               boolean overwriteSucceeded = false;
               try {
                   if (existingFile.delete() && outfile.renameTo(existingFile)) {
@@ -97,11 +96,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                   errStr = "Error: Could not overwrite existing consituent file";
           }
           if (StringUtil.emptyString(errStr)) {
-              if (StringUtil.emptyString(kbName)) {
-                  errStr = "Error: No knowledge base name specified";
-              }
+              if (StringUtil.emptyString(kbName))
+                  errStr = "Error in AddConstituent.jsp: No knowledge base name specified";              
               else if ((outfile == null) || !outfile.canRead()) 
-                  errStr = "Error: The constituent file could not be saved or cannot be read";
+                  errStr = "Error in AddConstituent.jsp: The constituent file could not be saved or cannot be read";
           }
           if (StringUtil.isNonEmptyString(errStr)) {
               mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
