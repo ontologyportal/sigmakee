@@ -1,9 +1,9 @@
 // $ANTLR 2.7.5 (20050128): "tptp.g" -> "TptpParser.java"$
 
-package tptp_parser;
+  package tptp_parser;
 
-import java.util.List;              
-import java.util.LinkedList; 
+  import java.util.List;
+  import java.util.LinkedList;
 
 import antlr.TokenBuffer;
 import antlr.TokenStreamException;
@@ -79,6 +79,7 @@ public TptpParser(ParserSharedInputState state) {
 		
 		String nm;
 		TptpParserOutput.FormulaRole role;
+		TptpParserOutput.ThfFormula thf;
 		TptpParserOutput.FofFormula fof;
 		TptpParserOutput.CnfFormula cnf;
 		TptpParserOutput.Annotations ann;
@@ -88,7 +89,19 @@ public TptpParser(ParserSharedInputState state) {
 		str = LT(1);
 		match(LOWER_WORD);
 		{
-		if (((LA(1)==LPR))&&(str.getText().equals("fof"))) {
+		if (((LA(1)==LPR))&&(str.getText().equals("thf"))) {
+			match(LPR);
+			nm=name(out);
+			match(COMMA);
+			role=formula_role(out);
+			match(COMMA);
+			thf=thf_formula(out);
+			ann=annotations(out);
+			match(RPR);
+			match(DOT);
+			in=out.createThfAnnotated(nm, role, thf, ann, str.getLine());
+		}
+		else if (((LA(1)==LPR))&&(str.getText().equals("fof"))) {
 			match(LPR);
 			nm=name(out);
 			match(COMMA);
@@ -163,6 +176,7 @@ public TptpParser(ParserSharedInputState state) {
 		
 		Token  i = null;
 		Token  u = null;
+		Token  a = null;
 		Token  r = null;
 		
 		{
@@ -172,6 +186,7 @@ public TptpParser(ParserSharedInputState state) {
 			i = LT(1);
 			match(INTEGER);
 			str = new String(i.getText());
+			
 			break;
 		}
 		case UNSIGNED_INTEGER:
@@ -179,6 +194,15 @@ public TptpParser(ParserSharedInputState state) {
 			u = LT(1);
 			match(UNSIGNED_INTEGER);
 			str = new String(u.getText());
+			
+			break;
+		}
+		case RATIONAL:
+		{
+			a = LT(1);
+			match(RATIONAL);
+			str = new String(a.getText());
+			
 			break;
 		}
 		case REAL:
@@ -186,6 +210,7 @@ public TptpParser(ParserSharedInputState state) {
 			r = LT(1);
 			match(REAL);
 			str = new String(r.getText());
+			
 			break;
 		}
 		default:
@@ -216,6 +241,7 @@ public TptpParser(ParserSharedInputState state) {
 			us = LT(1);
 			match(UNSIGNED_INTEGER);
 			str=us.getText();
+			
 			break;
 		}
 		default:
@@ -240,6 +266,7 @@ public TptpParser(ParserSharedInputState state) {
 			lw = LT(1);
 			match(LOWER_WORD);
 			str=lw.getText();
+			
 			break;
 		}
 		case SINGLE_QUOTED:
@@ -247,6 +274,7 @@ public TptpParser(ParserSharedInputState state) {
 			sq = LT(1);
 			match(SINGLE_QUOTED);
 			str=sq.getText();
+			
 			break;
 		}
 		default:
@@ -267,6 +295,7 @@ public TptpParser(ParserSharedInputState state) {
 		adw = LT(1);
 		match(DOLLAR_WORD);
 		str=adw.getText();
+		
 		return str;
 	}
 	
@@ -280,6 +309,76 @@ public TptpParser(ParserSharedInputState state) {
 		asw = LT(1);
 		match(DOLLAR_DOLLAR_WORD);
 		str=asw.getText();
+		
+		return str;
+	}
+	
+	public final String  thf_conn_term(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		String str;
+		
+		
+		switch ( LA(1)) {
+		case AND:
+		{
+			match(AND);
+			str="&";
+			break;
+		}
+		case VLINE:
+		{
+			match(VLINE);
+			str="|";
+			break;
+		}
+		case EQUAL:
+		{
+			match(EQUAL);
+			str="=";
+			break;
+		}
+		case IMPLICATION:
+		{
+			match(IMPLICATION);
+			str="=>";
+			break;
+		}
+		case DISEQUIVALENCE:
+		{
+			match(DISEQUIVALENCE);
+			str="<~>";
+			break;
+		}
+		case NOT_OR:
+		{
+			match(NOT_OR);
+			str="~|";
+			break;
+		}
+		case NOT_AND:
+		{
+			match(NOT_AND);
+			str="~&";
+			break;
+		}
+		case EQUIVALENCE:
+		{
+			match(EQUIVALENCE);
+			str="<=";
+			break;
+		}
+		case REVERSE_IMPLICATION:
+		{
+			match(REVERSE_IMPLICATION);
+			str="<=";
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		return str;
 	}
 	
@@ -290,6 +389,7 @@ public TptpParser(ParserSharedInputState state) {
 		
 		String var;
 		
+		
 		switch ( LA(1)) {
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
@@ -299,6 +399,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case DOLLAR_WORD:
 		case DISTINCT_OBJECT:
@@ -315,6 +416,7 @@ public TptpParser(ParserSharedInputState state) {
 		{
 			var=variable(out);
 			t = out.createVariableTerm(var);
+			
 			break;
 		}
 		default:
@@ -337,19 +439,21 @@ public TptpParser(ParserSharedInputState state) {
 		str=atomic_word(out);
 		{
 		switch ( LA(1)) {
-		case RPR:
-		case COMMA:
 		case AND:
 		case VLINE:
-		case EQUIVALENCE:
 		case IMPLICATION:
-		case REVERSE_IMPLICATION:
 		case DISEQUIVALENCE:
 		case NOT_OR:
 		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		case RPR:
+		case COMMA:
 		case RSB:
+		case SEQUENT:
 		{
 			args = null;
+			
 			break;
 		}
 		case LPR:
@@ -366,6 +470,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		}
 		t = out.createPlainTerm(str, args);
+		
 		return t;
 	}
 	
@@ -383,6 +488,7 @@ public TptpParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		{
 			str=number(out);
@@ -393,6 +499,7 @@ public TptpParser(ParserSharedInputState state) {
 			dq = LT(1);
 			match(DISTINCT_OBJECT);
 			str = dq.getText();
+			
 			break;
 		}
 		case DOLLAR_WORD:
@@ -400,17 +507,18 @@ public TptpParser(ParserSharedInputState state) {
 			str=atomic_defined_word(out);
 			{
 			switch ( LA(1)) {
-			case RPR:
-			case COMMA:
 			case AND:
 			case VLINE:
-			case EQUIVALENCE:
 			case IMPLICATION:
-			case REVERSE_IMPLICATION:
 			case DISEQUIVALENCE:
 			case NOT_OR:
 			case NOT_AND:
+			case EQUIVALENCE:
+			case REVERSE_IMPLICATION:
+			case RPR:
+			case COMMA:
 			case RSB:
+			case SEQUENT:
 			{
 				break;
 			}
@@ -436,6 +544,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		}
 		t = out.createPlainTerm(str, args);
+		
 		return t;
 	}
 	
@@ -451,17 +560,18 @@ public TptpParser(ParserSharedInputState state) {
 		str=atomic_system_word(out);
 		{
 		switch ( LA(1)) {
-		case RPR:
-		case COMMA:
 		case AND:
 		case VLINE:
-		case EQUIVALENCE:
 		case IMPLICATION:
-		case REVERSE_IMPLICATION:
 		case DISEQUIVALENCE:
 		case NOT_OR:
 		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		case RPR:
+		case COMMA:
 		case RSB:
+		case SEQUENT:
 		{
 			args = null;
 			break;
@@ -480,6 +590,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		}
 		t = out.createSystemTerm(str, args);
+		
 		return t;
 	}
 	
@@ -493,6 +604,7 @@ public TptpParser(ParserSharedInputState state) {
 		up = LT(1);
 		match(UPPER_WORD);
 		str = up.getText();
+		
 		return str;
 	}
 	
@@ -503,12 +615,14 @@ public TptpParser(ParserSharedInputState state) {
 		
 		TptpParserOutput.Term t;
 		
+		
 		t=term(out);
 		{
 		switch ( LA(1)) {
 		case RPR:
 		{
 			args = new LinkedList<TptpParserOutput.Term>();
+			
 			break;
 		}
 		case COMMA:
@@ -524,6 +638,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		}
 		args.addFirst(t);
+		
 		return args;
 	}
 	
@@ -545,19 +660,20 @@ public TptpParser(ParserSharedInputState state) {
 			str=atomic_system_word(out);
 			{
 			switch ( LA(1)) {
-			case RPR:
-			case COMMA:
-			case EQUAL:
-			case NOTEQUAL:
 			case AND:
 			case VLINE:
-			case EQUIVALENCE:
+			case EQUAL:
 			case IMPLICATION:
-			case REVERSE_IMPLICATION:
 			case DISEQUIVALENCE:
 			case NOT_OR:
 			case NOT_AND:
+			case EQUIVALENCE:
+			case REVERSE_IMPLICATION:
+			case RPR:
+			case COMMA:
+			case NOTEQUAL:
 			case RSB:
+			case SEQUENT:
 			{
 				args = null;
 				break;
@@ -577,17 +693,18 @@ public TptpParser(ParserSharedInputState state) {
 			}
 			{
 			switch ( LA(1)) {
-			case RPR:
-			case COMMA:
 			case AND:
 			case VLINE:
-			case EQUIVALENCE:
 			case IMPLICATION:
-			case REVERSE_IMPLICATION:
 			case DISEQUIVALENCE:
 			case NOT_OR:
 			case NOT_AND:
+			case EQUIVALENCE:
+			case REVERSE_IMPLICATION:
+			case RPR:
+			case COMMA:
 			case RSB:
+			case SEQUENT:
 			{
 				af = out.createSystemAtom(str, args);
 				break;
@@ -629,6 +746,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case DISTINCT_OBJECT:
 		case UPPER_WORD:
@@ -637,6 +755,7 @@ public TptpParser(ParserSharedInputState state) {
 			switch ( LA(1)) {
 			case INTEGER:
 			case UNSIGNED_INTEGER:
+			case RATIONAL:
 			case REAL:
 			case DISTINCT_OBJECT:
 			{
@@ -644,6 +763,7 @@ public TptpParser(ParserSharedInputState state) {
 				switch ( LA(1)) {
 				case INTEGER:
 				case UNSIGNED_INTEGER:
+				case RATIONAL:
 				case REAL:
 				{
 					str=number(out);
@@ -701,11 +821,13 @@ public TptpParser(ParserSharedInputState state) {
 			break;
 		}
 		default:
-			if (((LA(1)==DOLLAR_WORD))&&(LT(1).getText().equals("$true"))) {
+			if (((LA(1)==DOLLAR_WORD))&&( LT(1).getText().equals("$true")
+    )) {
 				match(DOLLAR_WORD);
 				af = out.builtInTrue();
+				
 			}
-			else if (((LA(1)==DOLLAR_WORD))&&(LT(1).getText().equals("$false"))) {
+			else if (((LA(1)==DOLLAR_WORD))&&( LT(1).getText().equals("$false"))) {
 				match(DOLLAR_WORD);
 				af = out.builtInFalse();
 			}
@@ -731,19 +853,20 @@ public TptpParser(ParserSharedInputState state) {
 				}
 				{
 				switch ( LA(1)) {
-				case RPR:
-				case COMMA:
-				case EQUAL:
-				case NOTEQUAL:
 				case AND:
 				case VLINE:
-				case EQUIVALENCE:
+				case EQUAL:
 				case IMPLICATION:
-				case REVERSE_IMPLICATION:
 				case DISEQUIVALENCE:
 				case NOT_OR:
 				case NOT_AND:
+				case EQUIVALENCE:
+				case REVERSE_IMPLICATION:
+				case RPR:
+				case COMMA:
+				case NOTEQUAL:
 				case RSB:
+				case SEQUENT:
 				{
 					args = null;
 					break;
@@ -763,17 +886,18 @@ public TptpParser(ParserSharedInputState state) {
 				}
 				{
 				switch ( LA(1)) {
-				case RPR:
-				case COMMA:
 				case AND:
 				case VLINE:
-				case EQUIVALENCE:
 				case IMPLICATION:
-				case REVERSE_IMPLICATION:
 				case DISEQUIVALENCE:
 				case NOT_OR:
 				case NOT_AND:
+				case EQUIVALENCE:
+				case REVERSE_IMPLICATION:
+				case RPR:
+				case COMMA:
 				case RSB:
+				case SEQUENT:
 				{
 					af = out.createPlainAtom(str, args);
 					break;
@@ -819,6 +943,878 @@ public TptpParser(ParserSharedInputState state) {
 		return af;
 	}
 	
+	public final TptpParserOutput.ThfFormula  thf_formula(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		TptpParserOutput.BinaryConnective bc;
+		TptpParserOutput.ThfFormula thf_2;
+		
+		
+		thf=thf_unitary_formula(out);
+		{
+		switch ( LA(1)) {
+		case EOF:
+		case RPR:
+		case COMMA:
+		case RSB:
+		{
+			break;
+		}
+		case EQUAL:
+		case IMPLICATION:
+		case DISEQUIVALENCE:
+		case NOT_OR:
+		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		case NOTEQUAL:
+		case SEQUENT:
+		{
+			bc=thf_pair_connective();
+			thf_2=thf_unitary_formula(out);
+			thf = out.createThfBinaryFormula(thf,bc,thf_2);
+			
+			break;
+		}
+		case AND:
+		{
+			{
+			int _cnt34=0;
+			_loop34:
+			do {
+				if ((LA(1)==AND)) {
+					match(AND);
+					thf_2=thf_unitary_formula(out);
+					thf = out.createThfBinaryFormula(thf,
+					TptpParserOutput.BinaryConnective.And,thf_2);
+					
+				}
+				else {
+					if ( _cnt34>=1 ) { break _loop34; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt34++;
+			} while (true);
+			}
+			break;
+		}
+		case VLINE:
+		{
+			{
+			int _cnt36=0;
+			_loop36:
+			do {
+				if ((LA(1)==VLINE)) {
+					match(VLINE);
+					thf_2=thf_unitary_formula(out);
+					thf = out.createThfBinaryFormula(thf,
+					TptpParserOutput.BinaryConnective.Or,thf_2);
+					
+				}
+				else {
+					if ( _cnt36>=1 ) { break _loop36; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt36++;
+			} while (true);
+			}
+			break;
+		}
+		case APPLY:
+		{
+			{
+			int _cnt38=0;
+			_loop38:
+			do {
+				if ((LA(1)==APPLY)) {
+					match(APPLY);
+					thf_2=thf_unitary_formula(out);
+					thf = out.createThfBinaryFormula(thf,
+					TptpParserOutput.BinaryConnective.Apply,thf_2);
+					
+				}
+				else {
+					if ( _cnt38>=1 ) { break _loop38; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt38++;
+			} while (true);
+			}
+			break;
+		}
+		case MAP:
+		{
+			match(MAP);
+			thf=thf_mapping_type(out,thf);
+			break;
+		}
+		case STAR:
+		{
+			{
+			int _cnt40=0;
+			_loop40:
+			do {
+				if ((LA(1)==STAR)) {
+					match(STAR);
+					thf_2=thf_unitary_formula(out);
+					thf = out.createThfBinaryFormula(thf,
+					TptpParserOutput.BinaryConnective.XProd,thf_2);
+					
+				}
+				else {
+					if ( _cnt40>=1 ) { break _loop40; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt40++;
+			} while (true);
+			}
+			break;
+		}
+		case PLUS:
+		{
+			{
+			int _cnt42=0;
+			_loop42:
+			do {
+				if ((LA(1)==PLUS)) {
+					match(PLUS);
+					thf_2=thf_unitary_formula(out);
+					thf = out.createThfBinaryFormula(thf,
+					TptpParserOutput.BinaryConnective.Union,thf_2);
+					
+				}
+				else {
+					if ( _cnt42>=1 ) { break _loop42; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt42++;
+			} while (true);
+			}
+			break;
+		}
+		case SUBTYPE:
+		{
+			{
+			int _cnt44=0;
+			_loop44:
+			do {
+				if ((LA(1)==SUBTYPE)) {
+					match(SUBTYPE);
+					thf_2=thf_unitary_formula(out);
+					thf = out.createThfBinaryFormula(thf,
+					TptpParserOutput.BinaryConnective.Subtype,thf_2);
+					
+				}
+				else {
+					if ( _cnt44>=1 ) { break _loop44; } else {throw new NoViableAltException(LT(1), getFilename());}
+				}
+				
+				_cnt44++;
+			} while (true);
+			}
+			break;
+		}
+		case COLON:
+		{
+			{
+			match(COLON);
+			thf_2=thf_top_level_type(out);
+			thf = out.createThfBinaryFormula(thf,
+			TptpParserOutput.BinaryConnective.Type,thf_2);
+			
+			}
+			break;
+		}
+		case ASSIGN:
+		{
+			{
+			match(ASSIGN);
+			thf_2=thf_formula(out);
+			thf = out.createThfBinaryFormula(thf,
+			TptpParserOutput.BinaryConnective.Assign,thf_2);
+			
+			}
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		return thf;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_unitary_formula(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		
+		switch ( LA(1)) {
+		case ASSIGN:
+		case ALL:
+		case EXIST:
+		case LAMBDA:
+		case BIGPI:
+		case BIGSIGMA:
+		case CHOICE:
+		case DESCRIPTION:
+		{
+			thf=thf_quantified_formula(out);
+			break;
+		}
+		case TILDA:
+		{
+			match(TILDA);
+			thf=thf_atom_or_unary_formula(out,TptpParserOutput.UnaryConnective.Negation);
+			break;
+		}
+		case SMALLPI:
+		{
+			match(SMALLPI);
+			thf=thf_atom_or_unary_formula(out,TptpParserOutput.UnaryConnective.UnaryPi);
+			break;
+		}
+		case SMALLSIGMA:
+		{
+			match(SMALLSIGMA);
+			thf=thf_atom_or_unary_formula(out,TptpParserOutput.UnaryConnective.UnarySigma);
+			break;
+		}
+		case INTEGER:
+		case UNSIGNED_INTEGER:
+		case RATIONAL:
+		case REAL:
+		case LOWER_WORD:
+		case SINGLE_QUOTED:
+		case DOLLAR_WORD:
+		case DOLLAR_DOLLAR_WORD:
+		case AND:
+		case VLINE:
+		case EQUAL:
+		case IMPLICATION:
+		case DISEQUIVALENCE:
+		case NOT_OR:
+		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		case DISTINCT_OBJECT:
+		case UPPER_WORD:
+		{
+			thf=thf_atom(out);
+			break;
+		}
+		case LPR:
+		{
+			match(LPR);
+			thf=thf_formula(out);
+			match(RPR);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		return thf;
+	}
+	
+	public final TptpParserOutput.BinaryConnective  thf_pair_connective() throws RecognitionException, TokenStreamException {
+		TptpParserOutput.BinaryConnective bc;
+		
+		
+		switch ( LA(1)) {
+		case EQUAL:
+		{
+			match(EQUAL);
+			bc = TptpParserOutput.BinaryConnective.Equal;
+			
+			break;
+		}
+		case NOTEQUAL:
+		{
+			match(NOTEQUAL);
+			bc = TptpParserOutput.BinaryConnective.NotEqual;
+			
+			break;
+		}
+		case IMPLICATION:
+		case DISEQUIVALENCE:
+		case NOT_OR:
+		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		case SEQUENT:
+		{
+			bc=binary_connective();
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		return bc;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_mapping_type(
+		TptpParserOutput out,TptpParserOutput.ThfFormula formula
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		TptpParserOutput.ThfFormula rest;
+		
+		
+		thf=thf_unitary_formula(out);
+		{
+		switch ( LA(1)) {
+		case MAP:
+		{
+			match(MAP);
+			rest=thf_mapping_type(out,thf);
+			thf = out.createThfBinaryFormula(formula,
+			TptpParserOutput.BinaryConnective.Map,rest);
+			
+			break;
+		}
+		case EOF:
+		case RPR:
+		case COMMA:
+		case RSB:
+		{
+			thf = out.createThfBinaryFormula(formula,
+			TptpParserOutput.BinaryConnective.Map,thf);
+			
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		return thf;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_top_level_type(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		
+		thf=thf_formula(out);
+		return thf;
+	}
+	
+	public final TptpParserOutput.BinaryConnective  binary_connective() throws RecognitionException, TokenStreamException {
+		TptpParserOutput.BinaryConnective bc;
+		
+		
+		switch ( LA(1)) {
+		case EQUIVALENCE:
+		{
+			match(EQUIVALENCE);
+			bc = TptpParserOutput.BinaryConnective.Equivalence;
+			
+			break;
+		}
+		case IMPLICATION:
+		{
+			match(IMPLICATION);
+			bc = TptpParserOutput.BinaryConnective.Implication;
+			
+			break;
+		}
+		case REVERSE_IMPLICATION:
+		{
+			match(REVERSE_IMPLICATION);
+			bc = TptpParserOutput.BinaryConnective.ReverseImplication;
+			
+			break;
+		}
+		case DISEQUIVALENCE:
+		{
+			match(DISEQUIVALENCE);
+			bc = TptpParserOutput.BinaryConnective.Disequivalence;
+			
+			break;
+		}
+		case NOT_OR:
+		{
+			match(NOT_OR);
+			bc = TptpParserOutput.BinaryConnective.NotOr;
+			
+			break;
+		}
+		case NOT_AND:
+		{
+			match(NOT_AND);
+			bc = TptpParserOutput.BinaryConnective.NotAnd;
+			
+			break;
+		}
+		case SEQUENT:
+		{
+			match(SEQUENT);
+			bc = TptpParserOutput.BinaryConnective.Sequent;
+			
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		return bc;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_quantified_formula(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula quantified;
+		
+		TptpParserOutput.Quantifier q;
+		List<TptpParserOutput.ThfFormula> vars;
+		TptpParserOutput.ThfFormula thf;
+		
+		
+		q=thf_quantifier();
+		match(LSB);
+		vars=thf_variable_list(out);
+		match(RSB);
+		match(COLON);
+		thf=thf_unitary_formula(out);
+		quantified = out.createThfQuantifiedFormula(q, vars, thf);
+		
+		return quantified;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_atom_or_unary_formula(
+		TptpParserOutput out,
+TptpParserOutput.UnaryConnective connective
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		
+		switch ( LA(1)) {
+		case LPR:
+		{
+			match(LPR);
+			thf=thf_formula(out);
+			match(RPR);
+			thf = out.createThfUnaryOf(connective,thf);
+			
+			break;
+		}
+		case EOF:
+		case AND:
+		case VLINE:
+		case EQUAL:
+		case IMPLICATION:
+		case DISEQUIVALENCE:
+		case NOT_OR:
+		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		case RPR:
+		case COMMA:
+		case NOTEQUAL:
+		case APPLY:
+		case MAP:
+		case STAR:
+		case PLUS:
+		case SUBTYPE:
+		case COLON:
+		case ASSIGN:
+		case RSB:
+		case SEQUENT:
+		{
+			thf = out.createThfPlainAtom(connective.toString(), null);
+			
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		return thf;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_atom(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		Token  dq = null;
+		String str;
+		TptpParserOutput.Term t1;
+		TptpParserOutput.Term t2;
+		List<TptpParserOutput.Term> args;
+		
+		
+		switch ( LA(1)) {
+		case DOLLAR_DOLLAR_WORD:
+		{
+			str=atomic_system_word(out);
+			{
+			switch ( LA(1)) {
+			case EOF:
+			case AND:
+			case VLINE:
+			case EQUAL:
+			case IMPLICATION:
+			case DISEQUIVALENCE:
+			case NOT_OR:
+			case NOT_AND:
+			case EQUIVALENCE:
+			case REVERSE_IMPLICATION:
+			case RPR:
+			case COMMA:
+			case NOTEQUAL:
+			case APPLY:
+			case MAP:
+			case STAR:
+			case PLUS:
+			case SUBTYPE:
+			case COLON:
+			case ASSIGN:
+			case RSB:
+			case SEQUENT:
+			{
+				args = null;
+				
+				break;
+			}
+			case LPR:
+			{
+				match(LPR);
+				args=arguments(out);
+				match(RPR);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			thf = out.createThfSystemAtom(str, args);
+			
+			break;
+		}
+		case INTEGER:
+		case UNSIGNED_INTEGER:
+		case RATIONAL:
+		case REAL:
+		case DISTINCT_OBJECT:
+		case UPPER_WORD:
+		{
+			{
+			switch ( LA(1)) {
+			case INTEGER:
+			case UNSIGNED_INTEGER:
+			case RATIONAL:
+			case REAL:
+			case DISTINCT_OBJECT:
+			{
+				{
+				switch ( LA(1)) {
+				case INTEGER:
+				case UNSIGNED_INTEGER:
+				case RATIONAL:
+				case REAL:
+				{
+					str=number(out);
+					break;
+				}
+				case DISTINCT_OBJECT:
+				{
+					dq = LT(1);
+					match(DISTINCT_OBJECT);
+					str = dq.getText();
+					
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				thf = out.createThfPlainAtom(str, null);
+				
+				break;
+			}
+			case UPPER_WORD:
+			{
+				str=variable(out);
+				thf = out.createThfVariableAtom(str);
+				
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case AND:
+		case VLINE:
+		case EQUAL:
+		case IMPLICATION:
+		case DISEQUIVALENCE:
+		case NOT_OR:
+		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		{
+			{
+			str=thf_conn_term(out);
+			thf = out.createThfPlainAtom(str, null);
+			
+			}
+			break;
+		}
+		default:
+			if (((LA(1)==DOLLAR_WORD))&&( LT(1).getText().equals("$true")
+    )) {
+				match(DOLLAR_WORD);
+				thf = out.builtInThfTrue();
+				
+			}
+			else if (((LA(1)==DOLLAR_WORD))&&( LT(1).getText().equals("$false")
+    )) {
+				match(DOLLAR_WORD);
+				thf = out.builtInThfFalse();
+				
+			}
+			else if (((LA(1) >= LOWER_WORD && LA(1) <= DOLLAR_WORD))) {
+				{
+				switch ( LA(1)) {
+				case DOLLAR_WORD:
+				{
+					str=atomic_defined_word(out);
+					break;
+				}
+				case LOWER_WORD:
+				case SINGLE_QUOTED:
+				{
+					str=atomic_word(out);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				{
+				switch ( LA(1)) {
+				case EOF:
+				case AND:
+				case VLINE:
+				case EQUAL:
+				case IMPLICATION:
+				case DISEQUIVALENCE:
+				case NOT_OR:
+				case NOT_AND:
+				case EQUIVALENCE:
+				case REVERSE_IMPLICATION:
+				case RPR:
+				case COMMA:
+				case NOTEQUAL:
+				case APPLY:
+				case MAP:
+				case STAR:
+				case PLUS:
+				case SUBTYPE:
+				case COLON:
+				case ASSIGN:
+				case RSB:
+				case SEQUENT:
+				{
+					args = null;
+					
+					break;
+				}
+				case LPR:
+				{
+					match(LPR);
+					args=arguments(out);
+					match(RPR);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				thf = out.createThfPlainAtom(str, args);
+			}
+		else {
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		return thf;
+	}
+	
+	public final TptpParserOutput.Quantifier  thf_quantifier() throws RecognitionException, TokenStreamException {
+		TptpParserOutput.Quantifier q;
+		
+		
+		switch ( LA(1)) {
+		case ALL:
+		{
+			match(ALL);
+			q = TptpParserOutput.Quantifier.ForAll;
+			
+			break;
+		}
+		case EXIST:
+		{
+			match(EXIST);
+			q = TptpParserOutput.Quantifier.Exists;
+			
+			break;
+		}
+		case LAMBDA:
+		{
+			match(LAMBDA);
+			q = TptpParserOutput.Quantifier.Lambda;
+			
+			break;
+		}
+		case BIGPI:
+		{
+			match(BIGPI);
+			q = TptpParserOutput.Quantifier.QuantifierPi;
+			
+			break;
+		}
+		case BIGSIGMA:
+		{
+			match(BIGSIGMA);
+			q = TptpParserOutput.Quantifier.QuantifierSigma;
+			
+			break;
+		}
+		case ASSIGN:
+		{
+			match(ASSIGN);
+			q = TptpParserOutput.Quantifier.Assign;
+			
+			break;
+		}
+		case CHOICE:
+		{
+			match(CHOICE);
+			q = TptpParserOutput.Quantifier.Choice;
+			
+			break;
+		}
+		case DESCRIPTION:
+		{
+			match(DESCRIPTION);
+			q = TptpParserOutput.Quantifier.Description;
+			
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		return q;
+	}
+	
+	public final LinkedList<TptpParserOutput.ThfFormula>  thf_variable_list(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		LinkedList<TptpParserOutput.ThfFormula> vars;
+		
+		String var;
+		TptpParserOutput.ThfFormula type;
+		TptpParserOutput.ThfFormula onevar;
+		
+		
+		var=variable(out);
+		{
+		switch ( LA(1)) {
+		case COLON:
+		{
+			match(COLON);
+			type=thf_top_level_type(out);
+			onevar = out.createThfVariableAtom(var);
+			onevar = out.createThfBinaryFormula(onevar,
+			TptpParserOutput.BinaryConnective.Type,type);
+			
+			break;
+		}
+		case COMMA:
+		case RSB:
+		{
+			onevar = out.createThfVariableAtom(var);
+			
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case RSB:
+		{
+			vars = new LinkedList<TptpParserOutput.ThfFormula>();
+			
+			break;
+		}
+		case COMMA:
+		{
+			match(COMMA);
+			vars=thf_variable_list(out);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		vars.addLast(onevar);
+		
+		return vars;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_unitary_type(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		
+		thf=thf_unitary_formula(out);
+		return thf;
+	}
+	
+	public final TptpParserOutput.ThfFormula  thf_defn_constant(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		TptpParserOutput.ThfFormula thf;
+		
+		
+		thf=thf_formula(out);
+		return thf;
+	}
+	
 	public final TptpParserOutput.FofFormula  fof_formula(
 		TptpParserOutput out
 	) throws RecognitionException, TokenStreamException {
@@ -836,35 +1832,38 @@ public TptpParser(ParserSharedInputState state) {
 		{
 			break;
 		}
-		case EQUIVALENCE:
 		case IMPLICATION:
-		case REVERSE_IMPLICATION:
 		case DISEQUIVALENCE:
 		case NOT_OR:
 		case NOT_AND:
+		case EQUIVALENCE:
+		case REVERSE_IMPLICATION:
+		case SEQUENT:
 		{
 			bc=binary_connective();
 			fof_2=unitary_formula(out);
 			fof = out.createBinaryFormula(fof, bc, fof_2);
+			
 			break;
 		}
 		case AND:
 		{
 			{
-			int _cnt33=0;
-			_loop33:
+			int _cnt70=0;
+			_loop70:
 			do {
 				if ((LA(1)==AND)) {
 					match(AND);
 					fof_2=unitary_formula(out);
-					fof = out.createBinaryFormula(fof, 
+					fof = out.createBinaryFormula(fof,
 					TptpParserOutput.BinaryConnective.And, fof_2);
+					
 				}
 				else {
-					if ( _cnt33>=1 ) { break _loop33; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt70>=1 ) { break _loop70; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt33++;
+				_cnt70++;
 			} while (true);
 			}
 			break;
@@ -872,20 +1871,21 @@ public TptpParser(ParserSharedInputState state) {
 		case VLINE:
 		{
 			{
-			int _cnt35=0;
-			_loop35:
+			int _cnt72=0;
+			_loop72:
 			do {
 				if ((LA(1)==VLINE)) {
 					match(VLINE);
 					fof_2=unitary_formula(out);
-					fof = out.createBinaryFormula(fof, 
+					fof = out.createBinaryFormula(fof,
 					TptpParserOutput.BinaryConnective.Or, fof_2);
+					
 				}
 				else {
-					if ( _cnt35>=1 ) { break _loop35; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt72>=1 ) { break _loop72; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt35++;
+				_cnt72++;
 			} while (true);
 			}
 			break;
@@ -929,6 +1929,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
@@ -938,7 +1939,7 @@ public TptpParser(ParserSharedInputState state) {
 		case UPPER_WORD:
 		{
 			af=atomic_formula(out, polarity);
-			fof = out.atomAsFormula(af); 
+			fof = out.atomAsFormula(af);
 			if (!polarity[0]) fof = out.createNegationOf(fof);
 			
 			break;
@@ -949,55 +1950,6 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		}
 		return fof;
-	}
-	
-	public final TptpParserOutput.BinaryConnective  binary_connective() throws RecognitionException, TokenStreamException {
-		TptpParserOutput.BinaryConnective bc;
-		
-		
-		switch ( LA(1)) {
-		case EQUIVALENCE:
-		{
-			match(EQUIVALENCE);
-			bc = TptpParserOutput.BinaryConnective.Equivalence;
-			break;
-		}
-		case IMPLICATION:
-		{
-			match(IMPLICATION);
-			bc = TptpParserOutput.BinaryConnective.Implication;
-			break;
-		}
-		case REVERSE_IMPLICATION:
-		{
-			match(REVERSE_IMPLICATION);
-			bc = TptpParserOutput.BinaryConnective.ReverseImplication;
-			break;
-		}
-		case DISEQUIVALENCE:
-		{
-			match(DISEQUIVALENCE);
-			bc = TptpParserOutput.BinaryConnective.Disequivalence;
-			break;
-		}
-		case NOT_OR:
-		{
-			match(NOT_OR);
-			bc = TptpParserOutput.BinaryConnective.NotOr;
-			break;
-		}
-		case NOT_AND:
-		{
-			match(NOT_AND);
-			bc = TptpParserOutput.BinaryConnective.NotAnd;
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		return bc;
 	}
 	
 	public final TptpParserOutput.FofFormula  quantified_formula(
@@ -1105,6 +2057,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
@@ -1172,6 +2125,7 @@ public TptpParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
@@ -1224,7 +2178,7 @@ public TptpParser(ParserSharedInputState state) {
 			lit=tptp_literal(out);
 			lits.add(lit);
 			{
-			_loop52:
+			_loop89:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
@@ -1232,7 +2186,7 @@ public TptpParser(ParserSharedInputState state) {
 					lits.add(lit);
 				}
 				else {
-					break _loop52;
+					break _loop89;
 				}
 				
 			} while (true);
@@ -1301,6 +2255,7 @@ public TptpParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
@@ -1365,8 +2320,8 @@ public TptpParser(ParserSharedInputState state) {
 			switch ( LA(1)) {
 			case RPR:
 			case COMMA:
-			case RSB:
 			case COLON:
+			case RSB:
 			{
 				args = null;
 				break;
@@ -1389,6 +2344,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		{
 			str=number(out);
@@ -1434,6 +2390,7 @@ public TptpParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
@@ -1499,6 +2456,7 @@ public TptpParser(ParserSharedInputState state) {
 		
 		Token  dw = null;
 		
+		TptpParserOutput.ThfFormula thf;
 		TptpParserOutput.FofFormula fof;
 		TptpParserOutput.CnfFormula cnf;
 		TptpParserOutput.Term term;
@@ -1507,7 +2465,13 @@ public TptpParser(ParserSharedInputState state) {
 		dw = LT(1);
 		match(DOLLAR_WORD);
 		{
-		if (((LA(1)==LPR))&&(dw.getText().equals("$fof"))) {
+		if (((LA(1)==LPR))&&(dw.getText().equals("$thf"))) {
+			match(LPR);
+			thf=thf_formula(out);
+			match(RPR);
+			t = out.createGeneralThfFormula(thf);
+		}
+		else if (((LA(1)==LPR))&&(dw.getText().equals("$fof"))) {
 			match(LPR);
 			fof=fof_formula(out);
 			match(RPR);
@@ -1577,11 +2541,13 @@ public TptpParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
 		case DOLLAR_WORD:
 		case DISTINCT_OBJECT:
+		case UPPER_WORD:
 		case LSB:
 		{
 			list=info_items(out);
@@ -1696,8 +2662,8 @@ public TptpParser(ParserSharedInputState state) {
 					break;
 				}
 				case COMMA:
-				case RSB:
 				case COLON:
+				case RSB:
 				{
 					genTerm = out.createGeneralFunction(str,null);
 					break;
@@ -1739,15 +2705,18 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		case INTEGER:
 		case UNSIGNED_INTEGER:
+		case RATIONAL:
 		case REAL:
 		case DOLLAR_WORD:
 		case DISTINCT_OBJECT:
+		case UPPER_WORD:
 		case LSB:
 		{
 			{
 			switch ( LA(1)) {
 			case INTEGER:
 			case UNSIGNED_INTEGER:
+			case RATIONAL:
 			case REAL:
 			{
 				str=number(out);
@@ -1764,6 +2733,12 @@ public TptpParser(ParserSharedInputState state) {
 			case LSB:
 			{
 				genTerm=general_list(out);
+				break;
+			}
+			case UPPER_WORD:
+			{
+				str=variable(out);
+				genTerm = out.createGeneralVariable(str);
 				break;
 			}
 			case DOLLAR_WORD:
@@ -1817,46 +2792,18 @@ public TptpParser(ParserSharedInputState state) {
 		
 		id = LT(1);
 		match(LOWER_WORD);
-		if (id.getText().equals("tau"))      
-		{value = TptpParserOutput.StatusValue.Tau;}
-		else if (id.getText().equals("tac"))
-		{value = TptpParserOutput.StatusValue.Tac;}
-		else if (id.getText().equals("eqv"))
-		{value = TptpParserOutput.StatusValue.Eqv;}
-		else if (id.getText().equals("thm"))
+		if (id.getText().equals("thm"))
 		{value = TptpParserOutput.StatusValue.Thm;}
 		else if (id.getText().equals("sat"))
 		{value = TptpParserOutput.StatusValue.Sat;}
-		else if (id.getText().equals("cax"))
-		{value = TptpParserOutput.StatusValue.Cax;}
-		else if (id.getText().equals("noc"))
-		{value = TptpParserOutput.StatusValue.Noc;}
 		else if (id.getText().equals("csa"))
 		{value = TptpParserOutput.StatusValue.Csa;}
-		else if (id.getText().equals("cth"))
-		{value = TptpParserOutput.StatusValue.Cth;}
-		else if (id.getText().equals("ceq"))
-		{value = TptpParserOutput.StatusValue.Ceq;}
-		else if (id.getText().equals("unc"))
-		{value = TptpParserOutput.StatusValue.Unc;}
 		else if (id.getText().equals("uns"))
 		{value = TptpParserOutput.StatusValue.Uns;}
-		else if (id.getText().equals("sab"))
-		{value = TptpParserOutput.StatusValue.Sab;}
-		else if (id.getText().equals("sam"))
-		{value = TptpParserOutput.StatusValue.Sam;}
-		else if (id.getText().equals("sar"))
-		{value = TptpParserOutput.StatusValue.Sar;}
-		else if (id.getText().equals("sap"))
-		{value = TptpParserOutput.StatusValue.Sap;}
-		else if (id.getText().equals("csp"))
-		{value = TptpParserOutput.StatusValue.Csp;}
-		else if (id.getText().equals("csr"))
-		{value = TptpParserOutput.StatusValue.Csr;}
-		else if (id.getText().equals("csm"))
-		{value = TptpParserOutput.StatusValue.Csm;}
-		else if (id.getText().equals("csb"))
-		{value = TptpParserOutput.StatusValue.Csb;}
+		else if (id.getText().equals("cth"))
+		{value = TptpParserOutput.StatusValue.Cth;}
+		else if (id.getText().equals("esa"))
+		{value = TptpParserOutput.StatusValue.Esa;}
 		else {/* ERROR. Unknown <status value> string */
 		throw new antlr.RecognitionException("unknown status value: '"
 		+ id.getText() + "'",
@@ -1941,76 +2888,106 @@ public TptpParser(ParserSharedInputState state) {
 		String str2;
 		List<TptpParserOutput.InfoItem> usefulInfo;
 		List<TptpParserOutput.ParentInfo> parentList;
-		TptpParserOutput.IntroType introType;
+		/*    TptpParserOutput.IntroType introType; */
+		String introType;
+		LinkedList<TptpParserOutput.Source> listOfSources = null;
 		
 		
 		switch ( LA(1)) {
-		case LOWER_WORD:
-		case SINGLE_QUOTED:
+		case LSB:
 		{
-			str=atomic_word(out);
-			{
-			if (((LA(1)==LPR))&&(str.equals("inference"))) {
-				match(LPR);
-				str=inference_rule(out);
-				match(COMMA);
-				usefulInfo=useful_info(out);
-				match(COMMA);
-				match(LSB);
-				parentList=parent_list(out);
-				match(RSB);
-				match(RPR);
-				s = out.createSourceFromInferenceRecord(
-				str, usefulInfo, parentList);
-				
-			}
-			else if (((LA(1)==LPR))&&(str.equals("introduced"))) {
-				match(LPR);
-				introType=intro_type(out);
-				usefulInfo=optional_info(out);
-				match(RPR);
-				s = out.createInternalSource(introType, usefulInfo);
-			}
-			else if (((LA(1)==LPR))&&(str.equals("file"))) {
-				match(LPR);
-				str=file_name(out);
-				str2=file_info(out);
-				match(RPR);
-				s = out.createSourceFromFile(str, str2);
-			}
-			else if (((LA(1)==LPR))&&(str.equals("creator"))) {
-				match(LPR);
-				str=creator_name(out);
-				usefulInfo=optional_info(out);
-				match(RPR);
-				s = out.createSourceFromCreator(str, usefulInfo);
-			}
-			else if (((LA(1)==LPR))&&(str.equals("theory"))) {
-				match(LPR);
-				str=theory_name(out);
-				usefulInfo=optional_info(out);
-				match(RPR);
-				s = out.createSourceFromTheory(str, usefulInfo);
-			}
-			else if (((_tokenSet_1.member(LA(1))))&&(str.equals("unknown"))) {
-				s = out.createSourceFromName(
-				new String("unknown"));
-			}
-			else if ((_tokenSet_1.member(LA(1)))) {
-				s = out.createSourceFromName(str);
-			}
-			else {
-				throw new NoViableAltException(LT(1), getFilename());
-			}
+			match(LSB);
+			listOfSources=sources(out);
+			match(RSB);
+			s = out.createSourceFromListOfSources(listOfSources);
 			
-			}
 			break;
 		}
 		case UNSIGNED_INTEGER:
+		case LOWER_WORD:
+		case SINGLE_QUOTED:
 		{
-			ui = LT(1);
-			match(UNSIGNED_INTEGER);
-			s = out.createSourceFromName(ui.getText());
+			{
+			switch ( LA(1)) {
+			case LOWER_WORD:
+			case SINGLE_QUOTED:
+			{
+				str=atomic_word(out);
+				{
+				if (((LA(1)==LPR))&&( str.equals("inference"))) {
+					match(LPR);
+					str=inference_rule(out);
+					match(COMMA);
+					usefulInfo=useful_info(out);
+					match(COMMA);
+					match(LSB);
+					parentList=parent_list(out);
+					match(RSB);
+					match(RPR);
+					s = out.createSourceFromInferenceRecord(str,usefulInfo,parentList);
+					
+				}
+				else if (((LA(1)==LPR))&&( str.equals("introduced"))) {
+					match(LPR);
+					introType=intro_type(out);
+					usefulInfo=optional_info(out);
+					match(RPR);
+					s = out.createInternalSource(introType, usefulInfo);
+					
+				}
+				else if (((LA(1)==LPR))&&( str.equals("file"))) {
+					match(LPR);
+					str=file_name(out);
+					str2=file_info(out);
+					match(RPR);
+					s = out.createSourceFromFile(str, str2);
+					
+				}
+				else if (((LA(1)==LPR))&&( str.equals("creator"))) {
+					match(LPR);
+					str=creator_name(out);
+					usefulInfo=optional_info(out);
+					match(RPR);
+					s = out.createSourceFromCreator(str, usefulInfo);
+					
+				}
+				else if (((LA(1)==LPR))&&( str.equals("theory"))) {
+					match(LPR);
+					str=theory_name(out);
+					usefulInfo=optional_info(out);
+					match(RPR);
+					s = out.createSourceFromTheory(str, usefulInfo);
+					
+				}
+				else if (((_tokenSet_1.member(LA(1))))&&( str.equals("unknown"))) {
+					s = out.createSourceFromName(new String("unknown"));
+					
+				}
+				else if ((_tokenSet_1.member(LA(1)))) {
+					s = out.createSourceFromName(str);
+					
+				}
+				else {
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				
+				}
+				break;
+			}
+			case UNSIGNED_INTEGER:
+			{
+				ui = LT(1);
+				match(UNSIGNED_INTEGER);
+				s = out.createSourceFromName(ui.getText());
+				
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 			break;
 		}
 		default:
@@ -2019,6 +2996,39 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		}
 		return s;
+	}
+	
+	public final LinkedList<TptpParserOutput.Source>  sources(
+		TptpParserOutput out
+	) throws RecognitionException, TokenStreamException {
+		LinkedList<TptpParserOutput.Source> list;
+		
+		TptpParserOutput.Source sourceItem;
+		
+		sourceItem=source(out);
+		{
+		switch ( LA(1)) {
+		case RSB:
+		{
+			list = new LinkedList<TptpParserOutput.Source>();
+			
+			break;
+		}
+		case COMMA:
+		{
+			match(COMMA);
+			list=sources(out);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		list.addFirst(sourceItem);
+		
+		return list;
 	}
 	
 	public final String  inference_rule(
@@ -2062,40 +3072,14 @@ public TptpParser(ParserSharedInputState state) {
 		return list;
 	}
 	
-	public final TptpParserOutput.IntroType  intro_type(
+	public final String  intro_type(
 		TptpParserOutput out
 	) throws RecognitionException, TokenStreamException {
-		TptpParserOutput.IntroType type;
+		String str;
 		
-		Token  str = null;
 		
-		str = LT(1);
-		match(LOWER_WORD);
-		{
-		if (((LA(1)==RPR||LA(1)==COMMA))&&(str.getText().equals("definition"))) {
-			type = TptpParserOutput.IntroType.Definition;
-		}
-		else if (((LA(1)==RPR||LA(1)==COMMA))&&(str.getText().equals("axiom_of_choice"))) {
-			type = TptpParserOutput.IntroType.AxiomOfChoice;
-		}
-		else if (((LA(1)==RPR||LA(1)==COMMA))&&(str.getText().equals("tautology"))) {
-			type = TptpParserOutput.IntroType.Tautology;
-		}
-		else if (((LA(1)==RPR||LA(1)==COMMA))&&(str.getText().equals("assumption"))) {
-			type = TptpParserOutput.IntroType.Assumption;
-		}
-		else if ((LA(1)==RPR||LA(1)==COMMA)) {
-			throw new antlr.RecognitionException("unknown intro type: '"
-			+ str.getText() + "'",
-			getFilename(), str.getLine(), str.getColumn());
-			
-		}
-		else {
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		
-		}
-		return type;
+		str=atomic_word(out);
+		return str;
 	}
 	
 	public final String  file_name(
@@ -2180,32 +3164,32 @@ public TptpParser(ParserSharedInputState state) {
 		TptpParserOutput.ParentInfo info;
 		
 		TptpParserOutput.Source src;
-		TptpParserOutput.GeneralTerm parent;
+		TptpParserOutput.GeneralTerm t;
 		
 		
 		src=source(out);
-		parent=parent_details(out);
-		info = out.createParentInfo(src, parent);
+		t=parent_details(out);
+		info = out.createParentInfo(src, t);
 		return info;
 	}
 	
 	public final TptpParserOutput.GeneralTerm  parent_details(
 		TptpParserOutput out
 	) throws RecognitionException, TokenStreamException {
-		TptpParserOutput.GeneralTerm parent;
+		TptpParserOutput.GeneralTerm t;
 		
 		
 		switch ( LA(1)) {
 		case COLON:
 		{
 			match(COLON);
-			parent=general_list(out);
+			t=general_list(out);
 			break;
 		}
 		case COMMA:
 		case RSB:
 		{
-			parent = null;
+			t = null;
 			break;
 		}
 		default:
@@ -2213,7 +3197,7 @@ public TptpParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
-		return parent;
+		return t;
 	}
 	
 	public final List<TptpParserOutput.InfoItem>  intro_info(
@@ -2245,21 +3229,21 @@ public TptpParser(ParserSharedInputState state) {
 	public final List<TptpParserOutput.TptpInput>  tptp_file(
 		TptpParserOutput out
 	) throws RecognitionException, TokenStreamException {
-		List<TptpParserOutput.TptpInput> list 
-                           = new LinkedList<TptpParserOutput.TptpInput>();
+		List<TptpParserOutput.TptpInput> list
+                      = new LinkedList<TptpParserOutput.TptpInput>();
 		
 		TptpParserOutput.TptpInput in;
 		
 		
 		{
-		_loop96:
+		_loop135:
 		do {
 			if ((LA(1)==LOWER_WORD)) {
 				in=tptp_input(out);
 				list.add(in);
 			}
 			else {
-				break _loop96;
+				break _loop135;
 			}
 			
 		} while (true);
@@ -2298,11 +3282,17 @@ public TptpParser(ParserSharedInputState state) {
 		else if (((LA(1)==COMMA))&&(str.getText().equals("conjecture"))) {
 			role = TptpParserOutput.FormulaRole.Conjecture;
 		}
+		else if (((LA(1)==COMMA))&&(str.getText().equals("question"))) {
+			role = TptpParserOutput.FormulaRole.Question;
+		}
 		else if (((LA(1)==COMMA))&&(str.getText().equals("negated_conjecture"))) {
 			role = TptpParserOutput.FormulaRole.NegatedConjecture;
 		}
 		else if (((LA(1)==COMMA))&&(str.getText().equals("plain"))) {
 			role = TptpParserOutput.FormulaRole.Plain;
+		}
+		else if (((LA(1)==COMMA))&&(str.getText().equals("answer"))) {
+			role = TptpParserOutput.FormulaRole.Answer;
 		}
 		else if (((LA(1)==COMMA))&&(str.getText().equals("fi_domain"))) {
 			role = TptpParserOutput.FormulaRole.FiDomain;
@@ -2401,48 +3391,62 @@ public TptpParser(ParserSharedInputState state) {
 		"NULL_TREE_LOOKAHEAD",
 		"INTEGER",
 		"UNSIGNED_INTEGER",
+		"RATIONAL",
 		"REAL",
 		"LOWER_WORD",
 		"SINGLE_QUOTED",
 		"DOLLAR_WORD",
 		"DOLLAR_DOLLAR_WORD",
+		"AND",
+		"VLINE",
+		"EQUAL",
+		"IMPLICATION",
+		"DISEQUIVALENCE",
+		"NOT_OR",
+		"NOT_AND",
+		"EQUIVALENCE",
+		"REVERSE_IMPLICATION",
 		"LPR",
 		"RPR",
 		"COMMA",
 		"DISTINCT_OBJECT",
 		"UPPER_WORD",
-		"EQUAL",
 		"NOTEQUAL",
-		"AND",
-		"VLINE",
-		"EQUIVALENCE",
-		"IMPLICATION",
-		"REVERSE_IMPLICATION",
-		"DISEQUIVALENCE",
-		"NOT_OR",
-		"NOT_AND",
+		"APPLY",
+		"MAP",
+		"STAR",
+		"PLUS",
+		"SUBTYPE",
+		"COLON",
+		"ASSIGN",
 		"TILDA",
+		"SMALLPI",
+		"SMALLSIGMA",
 		"LSB",
 		"RSB",
-		"COLON",
 		"ALL",
 		"EXIST",
+		"LAMBDA",
+		"BIGPI",
+		"BIGSIGMA",
+		"CHOICE",
+		"DESCRIPTION",
+		"SEQUENT",
 		"PLUSPLUS",
 		"MINUSMINUS",
 		"DOT",
 		"ONE_LINE_COMMENT",
 		"MANY_LINE_COMMENT",
-		"STAR",
 		"WHITESPACE"
 	};
 	
 	private static final long[] mk_tokenSet_0() {
-		long[] data = { 805316608L, 0L};
+		long[] data = { 279183360000L, 0L};
 		return data;
 	}
 	public static final BitSet _tokenSet_0 = new BitSet(mk_tokenSet_0());
 	private static final long[] mk_tokenSet_1() {
-		long[] data = { 805318656L, 0L};
+		long[] data = { 279185457152L, 0L};
 		return data;
 	}
 	public static final BitSet _tokenSet_1 = new BitSet(mk_tokenSet_1());

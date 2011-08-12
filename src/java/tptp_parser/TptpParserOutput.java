@@ -32,6 +32,7 @@ public interface TptpParserOutput {
     public static interface TptpInput {
       
       enum Kind {
+          ThfFormula, 
           Formula, 
           Clause,
           Include
@@ -39,6 +40,13 @@ public interface TptpParserOutput {
 
     } // interface TptpInput
     
+    /** Must be implemented by a class representing formula structures
+     *  corresponding to instances of &#60thf formula&#62 in the BNF grammar.
+     */
+    public static interface ThfFormula {
+      // nothing here
+    }; // static interface ThfFormula
+
     /** Must be implemented by a class representing formula structures
      *  corresponding to instances of &#60fof formula&#62 in the BNF grammar.
      */
@@ -52,6 +60,13 @@ public interface TptpParserOutput {
     public static interface CnfFormula {
       // nothing here
     }; // static interface CnfFormula
+
+    /** Must be implemented by a class representing structures
+     *  corresponding to instances of &#60thf atom&#62 in the BNF grammar.
+     */
+    public static interface ThfAtomicFormula {
+      // nothing here
+    }; // static interface ThfAtomicFormula
 
     /** Must be implemented by a class representing structures
      *  corresponding to instances of &#60atomic formula&#62 in the BNF grammar.
@@ -77,6 +92,28 @@ public interface TptpParserOutput {
     
 
 
+    /** Reprsents all unary connectives, both associative (&,|) and nonassociative
+     *  (admissible instances of &#60binary connective&#62).
+     */
+    public static enum UnaryConnective {
+
+      Negation,  // ~
+      UnaryPi,   // !!
+      UnarySigma;  // ??
+      
+      public String toString() {
+          switch (this) 
+          {
+            case Negation: return new String("~");
+            case UnaryPi: return new String("!!");
+            case UnarySigma: return new String("??");
+          };
+          assert false;
+          return null;
+      } // toString()
+
+    }; // enum UnaryConnective
+
     /** Reprsents all binary connectives, both associative (&,|) and nonassociative
      *  (admissible instances of &#60binary connective&#62).
      */
@@ -90,7 +127,21 @@ public interface TptpParserOutput {
       ReverseImplication, /* <= */
       Disequivalence, /* <~> */
       NotOr, /* ~| */
-      NotAnd; /* ~& */
+      NotAnd, /* ~& */
+
+//----For THF
+      Apply, // @
+      Map,   // >
+      Assign,   // :=
+      TupleComma,   // ,
+      Equal, // =
+      NotEqual,  // !=
+      Type,  // :
+      XProd, // *
+      Union, // +
+      Subtype, // <<
+      Sequent, // -->
+      None;  // For controlling printing
 
       public String toString() {
           switch (this) 
@@ -103,6 +154,18 @@ public interface TptpParserOutput {
             case Disequivalence: return new String("<~>");
             case NotOr: return new String("~|");
             case NotAnd: return new String("~&");      
+            case Apply: return new String("@");
+            case Map: return new String(">");
+            case Assign: return new String(":=");
+            case TupleComma: return new String(",");
+            case Equal: return new String("=");
+            case NotEqual: return new String("!=");
+            case Type: return new String(":");
+            case XProd: return new String("*");
+            case Union: return new String("+");
+            case Subtype: return new String("<<");
+            case Sequent: return new String("-->");
+            case None: return new String(" SHOULD NEVER SEE THIS");
           };
           assert false;
           return null;
@@ -115,15 +178,30 @@ public interface TptpParserOutput {
     public static enum Quantifier {
       
       ForAll, /* ! */
-      Exists;  /* ? */
+      Exists,  /* ? */
+      Lambda,  // ^
+      QuantifierPi,  // ^
+      QuantifierSigma,  // ^
+      Assign,   // :=
+      Choice,   // @+
+      Description; // @-
       
       public String toString() {
-          if (this == ForAll) return new String("!");
-          assert (this == Exists);
-          return new String("?");
+          switch (this) {
+            case ForAll: return new String("!");
+            case Exists: return new String("?");
+            case Lambda: return new String("^");
+            case QuantifierPi: return new String("!>");
+            case QuantifierSigma: return new String("?*");
+            case Assign: return new String(":=");
+            case Choice: return new String("@+");
+            case Description: return new String("@-");
+          }
+          assert false;
+          return null;
       }
 
-    }; // enum BinaryConnective
+    }; // enum Quantifier
 
     
     
@@ -136,16 +214,18 @@ public interface TptpParserOutput {
       Axiom, 
       Hypothesis,
       Definition, 
+      Type,
       Assumption, 
       Lemma,
       Theorem,
       Conjecture,
       NegatedConjecture,
+      Question,
       Plain,
+      Answer,
       FiDomain,
       FiFunctors,
       FiPredicates,
-      Type,
       Unknown;
 
       public String toString() {
@@ -153,16 +233,18 @@ public interface TptpParserOutput {
             case Axiom: return "axiom";
             case Hypothesis: return "hypothesis";
             case Definition: return "definition"; 
+            case Type: return "type"; 
             case Assumption: return "assumption"; 
             case Lemma: return "lemma";
             case Theorem: return "theorem";
             case Conjecture: return "conjecture";
             case NegatedConjecture: return "negated_conjecture";
+            case Question: return "question";
             case Plain: return "plain";
+            case Answer: return "answer";
             case FiDomain: return "fi_domain";
             case FiFunctors: return "fi_functors";
             case FiPredicates: return "fi_predicates";
-            case Type: return "type";
             case Unknown: return "unknown";
           };
           assert false;
@@ -223,33 +305,17 @@ public interface TptpParserOutput {
      */
     public static enum StatusValue {
       
-      Tau, Tac, Eqv, Thm, Sat, Cax, Noc, Csa, Cth, Ceq, 
-        Unc, Uns, Sab, Sam, Sar, Sap, Csp, Csr, Csm, Csb;
+      Thm, Sat, Csa, Uns, Cth, Esa;
       
       public String toString() {
           switch (this) 
           {
-            case Tau: return new String("tau");
-            case Tac: return new String("tac");
-            case Eqv: return new String("eqv");
             case Thm: return new String("thm");
             case Sat: return new String("sat");
-            case Cax: return new String("cax");
-            case Noc: return new String("noc");
             case Csa: return new String("csa");
-            case Cth: return new String("cth");
-            case Ceq: return new String("ceq");
-            
-            case Unc: return new String("unc");
             case Uns: return new String("uns");
-            case Sab: return new String("sab");
-            case Sam: return new String("sam");
-            case Sar: return new String("sar");
-            case Sap: return new String("sap");
-            case Csp: return new String("csp");
-            case Csr: return new String("csr");
-            case Csm: return new String("csm");
-            case Csb: return new String("csb");
+            case Cth: return new String("cth");
+            case Esa: return new String("esa");
           };
           assert false;
           return null;
@@ -281,6 +347,23 @@ public interface TptpParserOutput {
      *=================================================================*/
 
 
+    /** A correct implementation must return a TptpInput object representing
+     *  <strong> formula </strong> wrapped in the corresponding annotation.
+     *  @param name != null
+     *  @param role != null 
+     *  @param formula != null
+     *  @param annotations can be null
+     *  @param lineNumber location in the input
+     */
+    public 
+    TptpInput
+    createThfAnnotated(String name,
+                   FormulaRole role,
+                   ThfFormula formula,
+                   Annotations annotations,
+                   int lineNumber);
+
+    
     /** A correct implementation must return a TptpInput object representing
      *  <strong> formula </strong> wrapped in the corresponding annotation.
      *  @param name != null
@@ -334,6 +417,60 @@ public interface TptpParserOutput {
     /*==================================================================
      *          Formulas, clauses, literals and terms.                 *
      *=================================================================*/
+
+    /** A correct implementation must return an object representing
+     *  the binary formula obtained by applying <strong> connective </strong>
+     *  to <strong> lhs </strong> and <strong> rhs </strong>.
+     *  Note that the method must work with conjunction and disjunction,
+     *  as well as with nonassociative connectives.
+     *  @param lhs != null
+     *  @param connective != null 
+     *  @param rhs != null
+     */
+    public 
+    ThfFormula 
+    createThfBinaryFormula(ThfFormula lhs,
+                  BinaryConnective connective,
+                  ThfFormula rhs);
+
+    /** A correct implementation must return an object representing
+     *  the formula obtained by applying the negation connective
+     *  to <strong> formula </strong>.
+     *  @param formula != null
+     */
+    public 
+    ThfFormula
+    createThfUnaryOf(TptpParserOutput.UnaryConnective unary,
+TptpParserOutput.ThfFormula formula);
+    /** A correct implementation must return an object representing
+     *  the formula obtained by applying the quantifier
+     *  <strong> quantifier </strong> to <strong> formula </strong>.
+     *  @param quantifier != null
+     *  @param variableList != null && variableList.iterator().hasNext()
+     *  @param formula != null
+     */
+    public 
+    ThfFormula
+    createThfQuantifiedFormula(Quantifier quantifier,
+                      Iterable<ThfFormula> variableList,
+                      ThfFormula formula);
+
+
+    /** A correct implementation must return an object of the class implementing ThfFormula,
+     *  representing the atomic formula represented by the object
+     *  <strong> atom </strong>. 
+     *  @param atom != null
+     */
+    public ThfFormula atomAsThfFormula(ThfAtomicFormula atom);
+
+    public ThfFormula createThfPlainAtom(String predicate,
+                  Iterable<TptpParserOutput.Term> arguments);
+    public ThfFormula createThfSystemAtom(String predicate,
+                   Iterable<TptpParserOutput.Term> arguments);
+    public ThfFormula builtInThfTrue();
+    public ThfFormula builtInThfFalse();
+    public ThfFormula createThfVariableAtom(String variable);
+
 
     /** A correct implementation must return an object representing
      *  the binary formula obtained by applying <strong> connective </strong>
@@ -516,6 +653,16 @@ public interface TptpParserOutput {
     
     /** A correct implementation must return an object representing
      *  an instance of &#60source&#62 corresponding to 
+     *  a list of &#60sources&#62 with the specified constituents.
+     *  @param listOfSources nonempty
+     */
+    public 
+    Source 
+    createSourceFromListOfSources(Iterable<TptpParserOutput.Source> listOfSources);
+
+
+    /** A correct implementation must return an object representing
+     *  an instance of &#60source&#62 corresponding to 
      *  an instance of &#60inference record&#62 with the specified constituents.
      *  @param inferenceRule != null
      *  @param usefulInfo satisfies 
@@ -536,7 +683,7 @@ public interface TptpParserOutput {
      *  @param introInfo satisfies 
      *                    (usefulInfo == null || usefulInfo.iterator().hasNext())
      */
-    public Source createInternalSource(IntroType introType,
+    public Source createInternalSource(String introType,
                                Iterable<InfoItem> introInfo);
 
     /** A correct implementation must return an object representing
@@ -695,6 +842,12 @@ public interface TptpParserOutput {
      *  a formula
      *  @param formula
      */
+    public GeneralTerm createGeneralThfFormula(ThfFormula formula);
+
+    /** A correct implementation must return an object representing
+     *  a formula
+     *  @param formula
+     */
     public GeneralTerm createGeneralFofFormula(FofFormula formula);
 
     /** A correct implementation must return an object representing
@@ -717,9 +870,12 @@ public interface TptpParserOutput {
     /** A correct implementation must return an object representing
      *  the parent info item with the specified parameters.
      *  @param source != null
-     *  @param parentDetails may or may not be null
+     *  @param parentDetails if nonnull, corresponds to &#60single quoted&#62 
+     *         in the -&#60single quoted&#62 option in the BNF rule for &#60parent details&#62;
+     *         when parentDetails = null, it corresponds to the &#60null&#62 option
+     *         in that rule
      */
-    public ParentInfo createParentInfo(Source source, GeneralTerm parentDetails);
+    public ParentInfo createParentInfo(Source source,GeneralTerm parentDetails);
 
 
 
