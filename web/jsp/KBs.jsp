@@ -215,7 +215,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           }
           out.println("</TD>");          
           out.println("<TD><A href=\"Browse.jsp?kb=" + kbName2 + "&lang=" + language + "\">Browse</A></TD>");                                                      
-          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + language + "\">Graph</A></TD>");    
+          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + language + "\">Graph</A></TD>");  
 
           if (isAdministrator) {
               out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
@@ -268,6 +268,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                   + kbName 
                   + "\">More Output Utilities</a>");
       out.println(" | <a href=\"Mapping.jsp\">Ontology Mappings</a>");
+      out.println(" | <a href=\"WordSense.jsp?lang=" + language + "\">Sense/Sentiment Analysis</a>");  
       out.println("<p>");
 
       kbNames = KBmanager.getMgr().getKBnames().iterator();
