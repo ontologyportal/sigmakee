@@ -98,7 +98,6 @@ public class SInE extends InferenceEngine {
      * 
      * The meaning of strings is following:<br>
      * Map<Symbol, List<Formula>>
-     * 
      */
     Map<String, List<String>> requirements;
     EngineFactory underlyingEngineFactory;
@@ -115,7 +114,7 @@ public class SInE extends InferenceEngine {
         requirements = new Hashtable<String, List<String>>();
     
         String error = null;
-                
+        System.out.println("INFO in SInE(): initializing"); 
         File kbFile = null;
         if (error == null) {
             kbFile = new File(kbFileName);
@@ -141,7 +140,7 @@ public class SInE extends InferenceEngine {
     /** *************************************************************
      */
     private SInE(String kbFileName) throws Exception {
-         new SInE(kbFileName,Vampire.getFactory());
+         this(kbFileName,Vampire.getFactory());
     }
 
     /** *************************************************************
@@ -215,10 +214,10 @@ public class SInE extends InferenceEngine {
     }
       
     /** *************************************************************
-     * Returns all symbols occuring in given formula.
+     * Returns all symbols occurring in given formula.
      * 
      * @param form Formula to get symbols from.
-     * @return Symbols occuring in given formula.
+     * @return Symbols occurring in given formula.
      */
     public Set<String> getSymbols(String form) {
 
@@ -367,7 +366,7 @@ public class SInE extends InferenceEngine {
         String query = args[1];
         System.out.println("% Selecting from " + kbFileName);
 
-        SInE sine = SInE.getNewInstance(kbFileName);	    
+        SInE sine = SInE.getNewInstance(kbFileName);
         Set<String> selectedFormulas = sine.performSelection(query);
         
         for (String form : selectedFormulas) 
