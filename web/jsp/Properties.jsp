@@ -158,6 +158,17 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           TPTP = "yes";
   }
 
+  String testOutputDir = request.getParameter("testOutputDir");
+  if (testOutputDir != null) {
+  	  changed = true;
+  	  KBmanager.getMgr().setPref("testOutputDir", testOutputDir);
+  }
+  else {
+      testOutputDir = KBmanager.getMgr().getPref("testOutputDir");
+      if (testOutputDir == null)
+          testOutputDir = "";
+  }
+  
   String TPTPDisplay = request.getParameter("TPTPDisplay");
   if (TPTPDisplay != null) {
       changed = true;
@@ -256,6 +267,30 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           userBrowserLimit = "25";
   }
 
+  String logDir = request.getParameter("logDir");
+  if (logDir != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("logDir", logDir);
+  }
+  else {
+      logDir = KBmanager.getMgr().getPref("logDir");
+      if (logDir == null)
+          logDir = "";
+  }
+          
+
+  String logLevel = request.getParameter("logLevel");
+  if (logLevel != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("logLevel", logLevel);
+  }
+  else {
+      logLevel = KBmanager.getMgr().getPref("logLevel");
+      if (logLevel == null)
+          logLevel = "warning";
+  }
+          
+          
   if (changed == true) 
       KBmanager.getMgr().writeConfiguration();
 
@@ -359,6 +394,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <label for="inferenceTestDir">
     <INPUT type="text" SIZE=50 name="inferenceTestDir" value=<%=inferenceTestDir %> >
     Directory in which tests for the inference engine are found</label><P>
+    
+    <label for="testOutputDir">
+    <INPUT type="text" SIZE=50 name="testOutputDir" value=<%=testOutputDir %> >
+    Directory in which consistency check output can be found</label><P>
 
     <label for="tptpHomeDir">
     <INPUT type="text" SIZE=50 name="tptpHomeDir" value=<%=tptpHomeDir %> >
@@ -376,6 +415,14 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <INPUT type="text" name="lineNumberCommand" value=<%=lineNumberCommand %> >
     Command line option for text editor to set cursor at a particular line</label><P>
 
+    <label for="logDir">
+    <INPUT type="text" SIZE=50 name="logDir" value=<%=logDir %> >
+    Directory where log files are saved.</label><P>
+
+    <label for="logLevel">
+    <INPUT type="text" name="logLevel" value=<%=logLevel %> >
+    Level of messages to be logged (can be severe, warning, info, config, finest) </label><P>
+	
     <label for="overwrite">                                                   
     <INPUT type="radio" name="overwrite" value="yes" <%  // default is no
     overwrite = mgr.getPref("overwrite");
