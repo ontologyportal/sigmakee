@@ -125,9 +125,8 @@ public class SimpleElement {
                     result.append(SimpleDOMParser.convertFromReservedCharacters(getText()));
                 else
                     result.append(getText() );
-            }
-            if (getText() != null && getText() != "")
                 result.append("\n");
+            }
             for (int i = 0; i < children.size(); i++) {
                 SimpleElement element = (SimpleElement) children.get(i);
                 result.append(element.toString(indent+1,forFile));

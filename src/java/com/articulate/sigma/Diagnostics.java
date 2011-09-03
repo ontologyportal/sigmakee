@@ -22,6 +22,7 @@ import java.text.ParseException;
  */
 public class Diagnostics {
 
+	
     private static List LOG_OPS = Arrays.asList("and","or","not","exists",
                                                 "forall","=>","<=>","holds");
 
@@ -906,4 +907,6 @@ public class Diagnostics {
         //    ioe.printStackTrace();
         //}      
     }
+
+
 }

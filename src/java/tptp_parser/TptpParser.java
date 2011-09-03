@@ -49,8 +49,6 @@ public TptpParser(ParserSharedInputState state) {
 		TptpParserOutput out
 	) throws RecognitionException, TokenStreamException {
 		TptpParserOutput.TptpInput in = null;
-		
-		
 		switch ( LA(1)) {
 		case LOWER_WORD:
 		{
@@ -84,9 +82,9 @@ public TptpParser(ParserSharedInputState state) {
 		TptpParserOutput.CnfFormula cnf;
 		TptpParserOutput.Annotations ann;
 		List<String> formulaSelection;
-		
-		
+
 		str = LT(1);
+		
 		match(LOWER_WORD);
 		{
 		if (((LA(1)==LPR))&&(str.getText().equals("thf"))) {
@@ -106,9 +104,9 @@ public TptpParser(ParserSharedInputState state) {
 			nm=name(out);
 			match(COMMA);
 			role=formula_role(out);
-			match(COMMA);
+			match(COMMA); 
 			fof=fof_formula(out);
-			ann=annotations(out);
+			ann=annotations(out); 
 			match(RPR);
 			match(DOT);
 			in=out.createFofAnnotated(nm, role, fof, ann, str.getLine());
@@ -166,6 +164,7 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		
 		}
+		
 		return in;
 	}
 	
@@ -178,7 +177,7 @@ public TptpParser(ParserSharedInputState state) {
 		Token  u = null;
 		Token  a = null;
 		Token  r = null;
-		
+
 		{
 		switch ( LA(1)) {
 		case INTEGER:
@@ -194,7 +193,6 @@ public TptpParser(ParserSharedInputState state) {
 			u = LT(1);
 			match(UNSIGNED_INTEGER);
 			str = new String(u.getText());
-			
 			break;
 		}
 		case RATIONAL:
@@ -388,8 +386,6 @@ public TptpParser(ParserSharedInputState state) {
 		TptpParserOutput.Term t;
 		
 		String var;
-		
-		
 		switch ( LA(1)) {
 		case LOWER_WORD:
 		case SINGLE_QUOTED:
@@ -482,16 +478,15 @@ public TptpParser(ParserSharedInputState state) {
 		Token  dq = null;
 		String str;
 		List<TptpParserOutput.Term> args = null;
-		
-		
 		{
-		switch ( LA(1)) {
+		switch ( LA(1) ) {
 		case INTEGER:
 		case UNSIGNED_INTEGER:
 		case RATIONAL:
 		case REAL:
 		{
 			str=number(out);
+			
 			break;
 		}
 		case DISTINCT_OBJECT:
@@ -544,7 +539,6 @@ public TptpParser(ParserSharedInputState state) {
 		}
 		}
 		t = out.createPlainTerm(str, args);
-		
 		return t;
 	}
 	
@@ -614,11 +608,10 @@ public TptpParser(ParserSharedInputState state) {
 		LinkedList<TptpParserOutput.Term> args;
 		
 		TptpParserOutput.Term t;
-		
-		
+			
 		t=term(out);
 		{
-		switch ( LA(1)) {
+		switch (LA(1)) {
 		case RPR:
 		{
 			args = new LinkedList<TptpParserOutput.Term>();
@@ -652,7 +645,6 @@ public TptpParser(ParserSharedInputState state) {
 		TptpParserOutput.Term t1;
 		TptpParserOutput.Term t2;
 		List<TptpParserOutput.Term> args;
-		
 		
 		switch ( LA(1)) {
 		case DOLLAR_DOLLAR_WORD:
@@ -1823,8 +1815,9 @@ TptpParserOutput.UnaryConnective connective
 		TptpParserOutput.BinaryConnective bc;
 		TptpParserOutput.FofFormula fof_2;
 		
-		
+
 		fof=unitary_formula(out);
+		
 		{
 		switch ( LA(1)) {
 		case RPR:
@@ -1906,8 +1899,7 @@ TptpParserOutput.UnaryConnective connective
 		
 		boolean[] polarity ={true};
 		TptpParserOutput.AtomicFormula af;
-		
-		
+	
 		switch ( LA(1)) {
 		case ALL:
 		case EXIST:
@@ -2118,9 +2110,7 @@ TptpParserOutput.UnaryConnective connective
 		TptpParserOutput.Literal lit;
 		
 		boolean[] polarity ={true};
-		TptpParserOutput.AtomicFormula af;
-		
-		
+		TptpParserOutput.AtomicFormula af;		
 		{
 		switch ( LA(1)) {
 		case INTEGER:
@@ -2251,7 +2241,7 @@ TptpParserOutput.UnaryConnective connective
 		TptpParserOutput.GeneralTerm t;
 		
 		TptpParserOutput.GeneralTerm gt;
-		
+
 		switch ( LA(1)) {
 		case INTEGER:
 		case UNSIGNED_INTEGER:
@@ -2804,6 +2794,8 @@ TptpParserOutput.UnaryConnective connective
 		{value = TptpParserOutput.StatusValue.Cth;}
 		else if (id.getText().equals("esa"))
 		{value = TptpParserOutput.StatusValue.Esa;}
+		else if (id.getText().equals("unknown"))
+		{value = TptpParserOutput.StatusValue.Unknown;}
 		else {/* ERROR. Unknown <status value> string */
 		throw new antlr.RecognitionException("unknown status value: '"
 		+ id.getText() + "'",
@@ -3036,8 +3028,13 @@ TptpParserOutput.UnaryConnective connective
 	) throws RecognitionException, TokenStreamException {
 		String str;
 		
-		
-		str=atomic_word(out);
+		try {
+			str=atomic_word(out);
+		}
+		catch (Exception ex) {
+			str = "";
+		}
+
 		return str;
 	}
 	

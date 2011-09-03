@@ -583,7 +583,7 @@ public class LanguageFormatter {
      * @param isNegMode whether the statement is negated, and therefore requiring special formatting.
      * @return the paraphrased statement.
      */
-    private static String paraphraseWithFormat(String stmt,boolean isNegMode,KB kb,
+    public static String paraphraseWithFormat(String stmt,boolean isNegMode,KB kb,
                                                Map phraseMap,Map termMap,String language) {
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);

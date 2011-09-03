@@ -14,12 +14,15 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  */
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.*;
 import java.io.*;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
+	private static Logger logger = Logger.getLogger("com.articulate.sigma.HTMLformatter");
     public static String htmlDivider =
         ("<table align=\"left\" width=\"50%\">"
                 + "<tr><td bgcolor=\"#A8BACF\">"
@@ -36,6 +39,7 @@ public class HTMLformatter {
     public static ArrayList<String> availableFormalLanguages =
         new ArrayList(Arrays.asList("SUO-KIF","TPTP","traditionalLogic","OWL"));
 
+    
     /** *************************************************************
      *  Create the HTML for the labeled divider between the sections
      *  of the term display.  Each section displays a sorted list of
@@ -714,13 +718,32 @@ public class HTMLformatter {
     public static String formatProofResult(String result, String stmt, String processedStmt,
             String lineHtml, String kbName, String language, int answerOffset) {
 
-        StringBuilder html = new StringBuilder();
         if (result != null && result.toString().length() > 0) {
+        	logger.finer("result=" + result);
+        	
             BasicXMLparser res = new BasicXMLparser(result.toString());
 
-            ProofProcessor pp = new ProofProcessor(res.elements);
+            if (res != null) {
+            	ArrayList elements = res.elements;
+            	
+          		return formatProofResult(elements, stmt, processedStmt, lineHtml, kbName, language, answerOffset);
+            }
+        }
+        
+        return null;
+    }
+            
+    public static String formatProofResult(ArrayList proof, String stmt, String processedStmt,
+    		String lineHtml, String kbName, String language, int answerOffset) {
+
+        	StringBuilder html = new StringBuilder();
+
+            ProofProcessor pp = new ProofProcessor(proof);
+            logger.finer("PP NumAnswers: " + pp.numAnswers());
+            
             for (int i = 0; i < pp.numAnswers(); i++) {
                 ArrayList proofSteps = pp.getProofSteps(i);
+                logger.finer("proofSteps: " + pp.getProofSteps(i));
                 proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
                 proofSteps = new ArrayList(ProofStep.removeDuplicates(proofSteps));
 
@@ -730,27 +753,156 @@ public class HTMLformatter {
                 html = html.append(i+answerOffset);                
                 html = html.append(". ");
                 String[] answer = pp.returnAnswer(i, processedStmt).split(";");
-                for(int k=0; k<answer.length; k++) 
+                for(int k=0; k<answer.length; k++) {
                 	html.append(answer[k]+ "<br/>");
-                if (!pp.returnAnswer(i, processedStmt).equalsIgnoreCase("no")) {
-                    html = html.append("<p><table width=\"95%\">" + "\n");
-                    for (int j = 0; j < proofSteps.size(); j++) {
-                        if (j % 2 == 1)
-                            html = html.append("<tr bgcolor=#EEEEEE>" + "\n");
-                        else
-                            html = html.append("<tr>" + "\n");
-                        html = html.append("<td valign=\"top\">" + "\n");
-                        html = html.append(j+1);
-                        html = html.append(". </td>" + "\n");
-                        html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language) + "\n");
-                        System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(j), kbName, language));
-                        html = html.append("</tr>\n" + "\n");
-                    }
-                    html = html.append("</table>" + "\n");
-                }
+	                if (!pp.returnAnswer(i, processedStmt).equalsIgnoreCase("no")) {
+	                    html = html.append("<p><table width=\"95%\">" + "\n");
+	                    for (int l = 0; l < proofSteps.size(); l++) {
+	                        if (l % 2 == 1)
+	                            html = html.append("<tr bgcolor=#EEEEEE>" + "\n");
+	                        else
+	                            html = html.append("<tr>" + "\n");
+	                        
+	                        html = html.append("<td valign=\"top\">" + "\n");
+	                        html = html.append(l+1);
+	                        html = html.append(". </td>" + "\n");
+	                        html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language) + "\n");
+	                        System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language));
+	                        html = html.append("</tr>\n" + "\n");
+	                    }
+	                    html = html.append("</table>" + "\n");
+	                }
+	            }
             }
-        }
         return html.toString();
+    }
+    
+    public static String formatConsistencyCheck(String msg, String ccheckResult, 
+    		String language, int page) {
+
+    	if (logger.isLoggable(Level.FINER)) {
+    		String[] params = {"msg = " + msg, "ccheckResult=" + ccheckResult, "language=" + language};
+    		logger.entering("HTMLformatter", "formatConsistencyCheck", params);
+    	}
+    	
+    	StringBuilder html = new StringBuilder();
+    	String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+    	
+    	html.append(msg);
+    	html.append("<br/>");
+    	
+    	if (ccheckResult != null) {
+    		BasicXMLparser res = new BasicXMLparser(ccheckResult);
+
+    		SimpleElement ccheckEntries = null;
+    		String kbName = null;
+
+    		try {
+	    			if (res != null) {	    	    		
+	    				
+		    			ArrayList elements = res.elements;
+		    			ArrayList subElements = ((BasicXMLelement) elements.get(0)).subelements;
+		    			
+		    			for (int i = 0; i < subElements.size(); i++) {
+		    				BasicXMLelement item = (BasicXMLelement) subElements.get(i);
+		    				
+		    				logger.finer("item: " + item);
+		    				logger.finer("item-tagname: " + item.tagname);
+		    				if (item.tagname.equals("kb")) 
+		    					kbName = item.contents;
+		    				else if (item.tagname.equals("entries")) {
+		    					ArrayList entries = ((BasicXMLelement) subElements.get(i)).subelements;
+
+		    					logger.finer("entries: " + entries);
+		    					
+	    	    	    		html.append("<br/><b><u>Consistency Check Results:</u></b><br />");
+		    					
+		    					if (page == 0) {
+		    						String pagelink = "CCheck.jsp?kb=" + kbName + "&lang=" + language + "&page=";
+		    						html.append("<br />");
+		    						html.append("<table width=50% frame='border'>");
+		    						html.append("<tr><td>Query</td><td>Result Type</td><tr>");
+
+		    						for (int j=0; j < entries.size(); j++) {
+			    						ArrayList entry = ((BasicXMLelement) entries.get(j)).subelements;
+			     						String query = null;
+			    						String type = null;
+
+			    						for (int k=0; k < entry.size(); k++) {
+			    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
+				    						
+			    							logger.finer("entryItem: " + entryItem);
+			    							
+			    							if (entryItem.tagname.equals("query")) 
+			    								query = entryItem.contents;
+			    							else if (entryItem.tagname.equals("type"))
+			    								type = entryItem.contents;
+			    						}
+			    						
+			    						int pageNum = j + 1;
+			    						html.append("<tr><td><a href='" + pagelink + pageNum + "'>" + query + "</a></td><td>" + type + "</td></tr>");
+		    						}		    						
+		    						html.append("</table>");
+		    						
+		    						if (entries.size() > 0)
+			    		    			html.append("<br/><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=1'><p>Individual Results&#32;&gt;&gt;</p></a>");
+		    					}		    					
+		    					else if (page >= 1 && page <= entries.size()) {		    						
+		    						int j = page - 1;
+		    						
+		    						ArrayList<BasicXMLelement> entry = ((BasicXMLelement) entries.get(j)).subelements;
+
+		    						logger.finer("entry: " + entry);
+		    						String query = null;
+		    						String type = null;
+	    							String processedQ = null;
+		    						String proof = null;
+	    							
+		    						for (int k=0; k < entry.size(); k++) {
+		    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
+			    						
+		    							logger.finer("entryItem: " + entryItem);
+		    							
+		    							if (entryItem.tagname.equals("query")) 
+		    								query = entryItem.contents;
+		    							else if (entryItem.tagname.equals("type"))
+		    								type = entryItem.contents;
+		    							else if (entryItem.tagname.equals("processedStatement"))
+		    								processedQ = entryItem.contents;
+		    							else if (entryItem.tagname.equals("proof"))
+		    				    			proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
+		    							
+		    						}
+	    							html.append("<br/>Query:  " + query + "<br />");
+		    		    			html.append("Type:  " + type + "<br /><br />");
+		    		    			html.append(proof);
+
+		    		    			html.append(lineHtml);
+		    		    			html.append("<table width=50% frame='void'");
+	    		    				html.append("<tr>");
+	    		    				int before = page - 1;
+	    		    				int after = page + 1;
+		    		    			if (page == 1) 
+		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Result</a></td>");		    		    			
+		    		    			else if (page > 1)
+		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + before + "'>&lt;&lt;&#32;Prev</a></td>");		    		    			
+		    		    			if (after <= entries.size() && page > 1) 
+		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + after + "'>Next&#32;&gt;&gt;</a></td>");		    		    			
+		    		    			html.append("</tr></table>");
+		    					}
+		    				}
+		    			}		    						    			 
+	    			}
+
+    		}
+    		catch (Exception ex) {
+    			logger.warning(ex.getMessage());
+    		}
+       	}    	
+    	
+    	logger.exiting("HTMLformatter", "formatConsistencyCheck", html.toString());
+    	
+    	return html.toString();
     }
 }
 

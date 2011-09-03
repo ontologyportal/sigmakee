@@ -999,21 +999,23 @@ public class OWLtranslator {
      */
      public void writeKB(String path) throws IOException {
 
-         String filename = path + File.separator + kb.name + ".owl";
-         System.out.println("INFO in OWLtranslator.write(): writing " + filename);
+         System.out.println("INFO in OWLtranslator.write(): writing " + path);
          readYAGOSUMOMappings();
-         FileWriter fw = new FileWriter(filename);
+         FileWriter fw = new FileWriter(path);
          PrintWriter pw = new PrintWriter(fw);
          writeKBHeader(pw);
 
          Set<String> kbterms = kb.getTerms();
          synchronized (kbterms) {
-             for (String term : kbterms) 
+             for (String term : kbterms) { 
                  writeSUMOTerm(pw,term);
+             	 pw.flush();
+             }
          }
          defineFunctionalTerms(pw);
          writeAxioms(pw);
          pw.println("</rdf:RDF>");
+         pw.close();
     }
 
     /** ***************************************************************

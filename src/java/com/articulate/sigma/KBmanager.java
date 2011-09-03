@@ -14,8 +14,17 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
 import java.util.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.MemoryHandler;
+import java.util.logging.SimpleFormatter;
 import java.io.*;
 import java.text.*;
+
+import sun.net.www.protocol.https.Handler;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -48,10 +57,13 @@ public class KBmanager {
      * constituent files.
      */    
     public static final int USE_TPTP         = 8;
-
+    private static CCheckManager ccheckManager = new CCheckManager();
+    
     private static KBmanager manager = new KBmanager();
     protected static final String CONFIG_FILE = "config.xml";
 
+    private static Logger logger;
+    private static boolean logInitialized = false;
     private HashMap preferences = new HashMap();
     protected HashMap kbs = new HashMap();
     private boolean initialized = false;
@@ -59,6 +71,14 @@ public class KBmanager {
     private String error = "";
     public boolean initializing = false;
 
+    public KBmanager() {
+    	if (logger == null) {
+    		logger = Logger.getAnonymousLogger();
+    		logger.addHandler(new ConsoleHandler());
+    		logger.setLevel(Level.FINEST);
+    	}
+    }
+    
     /** ***************************************************************
      * Set an error string for file loading.
      */
@@ -90,7 +110,8 @@ public class KBmanager {
      * Set default attribute values if not in the configuration file.
      */
     private void setDefaultAttributes() {
-        System.out.println("ENTER KBmanager.setDefaultAttributes()");
+        logger.entering("KBmanager", "setDefaultAttributes");
+        
         try {
             String sep = File.separator;
             String base = System.getenv("SIGMA_HOME");
@@ -102,9 +123,9 @@ public class KBmanager {
                 tptpHome = System.getProperty("user.dir");
             if (StringUtil.emptyString(systemsHome))
                 systemsHome = System.getProperty("user.dir");
-            System.out.println("  > base == " + base);
+            logger.finer("  > base == " + base);
             String tomcatRoot = System.getenv("CATALINA_HOME");
-            System.out.println("  > CATALINA_HOME == " + tomcatRoot);
+            logger.finer("  > CATALINA_HOME == " + tomcatRoot);
             if (StringUtil.emptyString(tomcatRoot))
                 tomcatRoot = System.getProperty("user.dir");
             File tomcatRootDir = new File(tomcatRoot);
@@ -113,7 +134,9 @@ public class KBmanager {
             File systemsDir = new File(systemsHome);
             File kbDir = new File(baseDir, "KBs");
             File inferenceTestDir = new File(kbDir, "tests");
-
+            File logDir = new File(baseDir, "logs");
+            logDir.mkdirs();
+           
             // The links for the test results files will be broken if
             // they are not put under [Tomcat]/webapps/sigma.
             // Unfortunately, we don't know where [Tomcat] is.
@@ -151,21 +174,113 @@ public class KBmanager {
             preferences.put("adminBrowserLimit","200");
             preferences.put("port","8080");            
             preferences.put("hostname","localhost");  
+            
+            // Default logging things
+            preferences.put("logDir", logDir.getCanonicalPath());
+            preferences.put("logLevel", "warning");
+            
         }
         catch (Exception ex) {
+        	logger.warning("Error in KBmanager.setDefaultAttributes(): " + ex.getStackTrace());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KBmanager.setDefaultAttributes()");
+        logger.exiting("KBmanager", "setDefaultAttributes");
+        logger.info("Default attributes saved to preferences.");
         return;
     }
 
+    public static String performCCheck(KB kb, boolean override, String language, int page) {
+    	String msg = "";
+    	if (ccheckManager.isOngoingCCheck(kb.name))
+    		msg = kb.name + " is currently undergoing checks.  Partial results are available.";
+    	else if (!override && ccheckManager.lastCCheck(kb.name) != null) {
+    		msg = kb.name + " was last checked at " + ccheckManager.lastCCheck(kb.name) + ". Results can be found below. ";
+    		msg = msg + "[<a href=CCheck.jsp?kb=" + kb.name + "&lang=" + language + "&override=true&page=0>Restart Check</a>]";
+    	}
+    	else
+    		msg = ccheckManager.performConsistencyCheck(kb);
+    	
+    	return HTMLformatter.formatConsistencyCheck(msg, ccheckManager.ccheckResults(kb.name), language, page);
+    }
+    	
+    private void preferencesFromXML(SimpleElement configuration) {
+    	if (!configuration.getTagName().equals("configuration")) 
+    		logger.warning("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
+    	else {
+    		for (int i = 0; i < configuration.getChildElements().size(); i++) {
+    			SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
+    			if (element.getTagName().equals("preference")) {
+    				String name = (String) element.getAttribute("name");
+    				String value = (String) element.getAttribute("value");
+    				preferences.put(name,value);
+    			}
+    		}
+    	}
+    	logger.fine("Successfully retrieved preferences from config.xml and stored it in KBmanager.preferences object.");
+    }
+    
+    private String kbsFromXML(SimpleElement configuration) {
+    	StringBuffer result = new StringBuffer();
+    	if (!configuration.getTagName().equals("configuration")) 
+    		logger.warning("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
+    	else {
+    		for (int i = 0; i < configuration.getChildElements().size(); i++) {
+    			SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
+    			if (element.getTagName().equals("kb")) {
+    				String kbName = (String) element.getAttribute("name");
+    				addKB(kbName);
+    				KB kb = getKB(kbName);
+    				List constituentsToAdd = new ArrayList();
+    				boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
+    				for (int j = 0; j < element.getChildElements().size(); j++) {
+    					SimpleElement kbConst = (SimpleElement) element.getChildElements().get(j);
+    					if (!kbConst.getTagName().equals("constituent")) 
+    						logger.warning("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
+    					String filename = (String) kbConst.getAttribute("filename");
+    					if ( Formula.isNonEmptyString(filename) ) {
+    						if ( filename.endsWith(KB._cacheFileSuffix) ) {
+    							if ( useCacheFile ) {
+    								constituentsToAdd.add( filename );
+    							}
+    						}
+    						else {
+    							constituentsToAdd.add( filename );
+    						}
+    					}
+    				}
+    				if ( !(constituentsToAdd.isEmpty()) ) {
+    					Iterator it = constituentsToAdd.iterator();
+    					while ( it.hasNext() ) {
+    						String filename = (String) it.next();
+    						try {                            
+    							result.append(kb.addConstituent(filename, false, false)); 
+    						} 
+    						catch (Exception e1) {
+    							logger.warning("ERROR in KBmanager.kbsFromXML():  " + e1.getMessage());
+    						}
+    					}
+    					kb.buildRelationCaches();
+    					if (useCacheFile) {
+    						result.append(kb.cache());
+    					}
+    					kb.loadVampire();
+    				}
+    			}
+    		}
+    	}
+    	return result.toString();
+
+    }
+    
+    
+    
     /** ***************************************************************
      */
     private String fromXML(SimpleElement configuration) {
 
         StringBuffer result = new StringBuffer();
         if (!configuration.getTagName().equals("configuration")) 
-            System.out.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
+            logger.warning("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
         else {
             for (int i = 0; i < configuration.getChildElements().size(); i++) {
                 SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
@@ -184,7 +299,7 @@ public class KBmanager {
                         for (int j = 0; j < element.getChildElements().size(); j++) {
                             SimpleElement kbConst = (SimpleElement) element.getChildElements().get(j);
                             if (!kbConst.getTagName().equals("constituent")) 
-                                System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
+                                logger.warning("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                             String filename = (String) kbConst.getAttribute("filename");
                             if ( Formula.isNonEmptyString(filename) ) {
                                 if ( filename.endsWith(KB._cacheFileSuffix) ) {
@@ -205,8 +320,7 @@ public class KBmanager {
                                     result.append(kb.addConstituent(filename, false, false)); 
                                 } 
                                 catch (Exception e1) {
-                                    System.out.println("ERROR in KBmanager.fromXML()");
-                                    System.out.println("  " + e1.getMessage());
+                                    logger.warning("ERROR in KBmanager.fromXML() :  " + e1.getMessage());
                                 }
                             }
                             kb.buildRelationCaches();
@@ -217,7 +331,7 @@ public class KBmanager {
                         }
                     }
                     else {
-                        System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
+                        logger.warning("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
                     }
                 }
             }
@@ -270,8 +384,7 @@ public class KBmanager {
      * empty configuration file if none exists.
      */
     private SimpleElement readConfiguration(String configDirPath) {
-
-        System.out.println("ENTER KBmanager.readConfiguration(" + configDirPath + ")"); 
+        logger.entering("KBmanager", "readConfiguration", "configDirPath = " + configDirPath);
         SimpleElement configuration = null;
         BufferedReader br = null;
         try {
@@ -305,16 +418,16 @@ public class KBmanager {
                 else writeConfiguration();
             }
 
-            System.out.println("  >   username == " + username);
-            System.out.println("  >   userrole == " + userrole);
-            System.out.println("  > configFile == " + configFile.getCanonicalPath());
+            logger.finer("  >   username == " + username);
+            logger.finer("  >   userrole == " + userrole);
+            logger.finer("  > configFile == " + configFile.getCanonicalPath());
 
             br = new BufferedReader(new FileReader(configFile));
             SimpleDOMParser sdp = new SimpleDOMParser();
             configuration = sdp.parse(br);
         }
         catch (Exception ex) {
-            System.out.println("ERROR in KBmanager.readConfiguration(" + configDirPath
+            logger.severe("ERROR in KBmanager.readConfiguration(" + configDirPath
                                + "):\n" + "  Exception parsing configuration file \n" + ex.getMessage());
             ex.printStackTrace();
         }
@@ -327,8 +440,7 @@ public class KBmanager {
                 ex2.printStackTrace();
             }
         }
-        System.out.println("EXIT KBmanager.readConfiguration(" + configDirPath + ")");
-        System.out.println("  > configuration == \n" + configuration); 
+        logger.exiting("KBmanager", "readConfiguration", configuration);
         return configuration;
     }
 
@@ -364,32 +476,83 @@ public class KBmanager {
 
         try {
             initializing = true;
-            System.out.println("ENTER KBmanager.initializeOnce(" + configFileDir + ")");
-            System.out.println("  initialized == " + initialized);
-            if (!initialized || StringUtil.isNonEmptyString(configFileDir)) {
+            logger.entering("KBmanager", "initializeOnce", "configFileDir = " + configFileDir);
+            logger.fine("  initialized == " + initialized);
+            if (!initialized || StringUtil.isNonEmptyString(configFileDir)) {	
                 setDefaultAttributes();
                 SimpleElement configuration = readConfiguration(configFileDir);
                 if (configuration == null) 
                     throw new Exception("Error reading configuration file");                
                 // System.out.println( "configuration == " + configuration );
-                String result = fromXML(configuration);
+                preferencesFromXML(configuration);
+                
+                if (!logInitialized) {
+                	Logger packageLogger = Logger.getLogger(this.getClass().getPackage().getName());
+                	            	
+                	String logLevel = preferences.get("logLevel").toString();
+                	
+                	if (logLevel.equals("severe"))
+                		packageLogger.setLevel(Level.SEVERE);
+                	else if (logLevel.equals("info"))
+                		packageLogger.setLevel(Level.INFO);
+                	else if (logLevel.equals("warning"))
+                		packageLogger.setLevel(Level.WARNING);
+                	else if (logLevel.equals("fine"))
+                		packageLogger.setLevel(Level.FINE);
+                	else if (logLevel.equals("finer"))
+                		packageLogger.setLevel(Level.FINER);
+                	else if (logLevel.equals("finest"))
+                		packageLogger.setLevel(Level.FINEST);
+                	else {
+                		packageLogger.setLevel(Level.INFO);
+                		logger.info("Could not determine log level, so set to default INFO level");
+                	}
+                	
+                	String filename = preferences.get("logDir").toString() + File.separator + "SigmaWarning.%g.log";
+                	
+                	FileHandler warningLog = new FileHandler(filename, 52428800, 5);
+                	warningLog.setLevel(Level.INFO);
+                	warningLog.setFormatter(new SimpleFormatter());
+                	packageLogger.addHandler(warningLog);  
+                	
+                	if (packageLogger.getLevel() == Level.FINE || packageLogger.getLevel() == Level.FINER || packageLogger.getLevel() == Level.FINEST || packageLogger.getLevel() == Level.CONFIG) {
+    	            	filename = preferences.get("logDir").toString() + File.separator + "SigmaDebug.%g.log";
+    	            	FileHandler debugLog = new FileHandler(filename, 52428800, 10);
+    	            	debugLog.setLevel(Level.FINEST);
+    	            	debugLog.setFormatter(new SimpleFormatter());
+    	            	packageLogger.addHandler(debugLog);
+                	}
+                	
+                	for(int i = 0; i < logger.getHandlers().length; i++)
+                		logger.getHandlers()[i].flush();
+                		
+                	logger = Logger.getLogger(this.getClass().getName());            
+                	logInitialized = true;
+                	logger.info("Logger initialized with logging level set to: " + packageLogger.getLevel().getName() + ". All log files are saved to: " + preferences.get("logDir") + ". Any previous log statements can be found in the default target of System.err.");
+                }
+
+                String result = kbsFromXML(configuration);
                 if (StringUtil.isNonEmptyString(result)) 
                     error = result;                
                 String kbDir = (String) preferences.get("kbDir");
-                System.out.println("  kbDir == " + kbDir);
+                logger.fine("kbDir = " + kbDir);
                 LanguageFormatter.readKeywordMap(kbDir);
                 WordNet.wn.initOnce();
             }
         }
+
         catch (Exception ex) {
-            System.out.println("ERROR in KBmanager.initializeOnce(" + configFileDir + ")");
-            System.out.println("  > " + ex.getMessage());
+            logger.severe(ex.getMessage());
             ex.printStackTrace();
         }
+        
         initialized = true;
         initializing = false;
-        System.out.println("  initialized == " + initialized);
-        System.out.println("EXIT KBmanager.initializeOnce(" + configFileDir + ")");
+        
+        logger.fine("initialized = " + initialized);
+        logger.info("KBmanager successfully initialized.");
+        logger.exiting("KBmanager", "initializeOnce");
+        
         return;
     }
 
@@ -419,10 +582,13 @@ public class KBmanager {
      */
 
     public void addKB(String name) {
+    	addKB(name, true);        
+    }
 
-        KB kb = new KB(name,(String) preferences.get("kbDir"));
+    public void addKB(String name, boolean isVisible) {
+    	KB kb = new KB(name,(String) preferences.get("kbDir"), isVisible);
         kbs.put(name.intern(),kb); 
-        System.out.println("INFO in KBmanager.addKB: Adding KB: " + name);
+        logger.info("Adding KB: " + name);
     }
 
     /** ***************************************************************
@@ -442,19 +608,19 @@ public class KBmanager {
                 kb.inferenceEngine.terminate();
         }
         catch (Exception ioe) {
-            System.out.println("Error in KBmanager.removeKB(): ");
-            System.out.println("  Error terminating inference engine: " + ioe.getMessage());
+            logger.warning("Error in KBmanager.removeKB(): ");
+            logger.warning("  Error terminating inference engine: " + ioe.getMessage());
         }
         kbs.remove(name);
         try {
             writeConfiguration();
         }
         catch (Exception ioe) {
-            System.out.println("Error in KBmanager.removeKB(): ");
-            System.out.println("  Error writing configuration file: " + ioe.getMessage());
+            logger.warning("Error in KBmanager.removeKB(): ");
+            logger.warning("  Error writing configuration file: " + ioe.getMessage());
         }
 
-        System.out.println("INFO in KBmanager.removeKB: Removing KB: " + name);
+        logger.info("Removing KB: " + name);
     }
 
     /** ***************************************************************
@@ -462,7 +628,7 @@ public class KBmanager {
      * writeConfiguration() on each KB object to write its manifest.
      */
     public void writeConfiguration() throws IOException {
-        System.out.println("ENTER KBmanager.writeConfiguration()");
+        logger.fine("ENTER KBmanager.writeConfiguration()");
         FileWriter fw = null;
         PrintWriter pw = null;
         String dir = (String) preferences.get("kbDir");
@@ -508,9 +674,10 @@ public class KBmanager {
             fw = new FileWriter(file);
             pw = new PrintWriter(fw);
             pw.println(configXML.toFileString());
-            System.out.println("  > wrote " + canonicalPath);
+            logger.info("  > wrote " + canonicalPath);
         }
-        catch (java.io.IOException e) {                                                  
+        catch (java.io.IOException e) {                                                
+        	logger.severe("Error writing file " + canonicalPath + ".\n " + e.getMessage());
             throw new IOException("Error writing file " + canonicalPath + ".\n " + e.getMessage());
         }
         finally {
@@ -521,7 +688,7 @@ public class KBmanager {
                 fw.close();
             }
         }
-        System.out.println("EXIT KBmanager.writeConfiguration()");
+        logger.fine("EXIT KBmanager.writeConfiguration()");
         return;
     }
 
@@ -531,7 +698,7 @@ public class KBmanager {
     public KB getKB(String name) {
 
         if (!kbs.containsKey(name))
-            System.out.println("Error in KBmanager.getKB(): KB " + name + " not found.");
+      		logger.warning("KB " + name + " not found.");
         return (KB) kbs.get(name.intern());
     }
 
@@ -548,6 +715,7 @@ public class KBmanager {
      * Remove the KB that has the given name.
      */       
     public void remove(String name) {
+    	logger.info("Removing KB: " + name);
         kbs.remove(name);
     }
     
@@ -567,21 +735,22 @@ public class KBmanager {
      */
     public static KBmanager newMgr(String username) {
 
-        System.out.println("ENTER KBmanager.newMgr(" + username + ")");
-        System.out.println("  old manager == " + manager);
+    	logger.entering("KBmanager", "newMgr", "username = " + username);
+        logger.info("Old manager == " + manager);
 
         manager = new KBmanager();
         manager.initialized = false;
 
-        System.out.println("  new manager == " + manager);
+        logger.info("New manager == " + manager);
         String userRole = PasswordService.getInstance().getUser(username).getRole();
 
         manager.setPref("userName",username);
         manager.setPref("userRole", userRole);
 
-        System.out.println("  userRole == " + userRole);
-        System.out.println("EXIT KBmanager.newMgr(" + username + ")");
+        logger.fine("UserRole == " + userRole);
 
+        logger.exiting("KBmanager", "newMgr", manager);
+        
         return manager;
     }
     
@@ -589,7 +758,17 @@ public class KBmanager {
      * Get the Set of KB names in this manager.
      */
     public Set getKBnames() {
-        return kbs.keySet();
+    	HashSet names = new HashSet();
+    	
+    	Iterator it = kbs.keySet().iterator();
+        while (it.hasNext()) {
+            String kbName = (String) it.next();
+            KB kb = (KB) getKB(kbName);
+            if (kb.isVisible())
+            	names.add(kbName);
+        }
+
+        return names;
     }
     
     /** ***************************************************************

@@ -305,7 +305,7 @@ public interface TptpParserOutput {
      */
     public static enum StatusValue {
       
-      Thm, Sat, Csa, Uns, Cth, Esa;
+      Thm, Sat, Csa, Uns, Cth, Esa, Unknown;
       
       public String toString() {
           switch (this) 
@@ -316,6 +316,7 @@ public interface TptpParserOutput {
             case Uns: return new String("uns");
             case Cth: return new String("cth");
             case Esa: return new String("esa");
+            case Unknown: return new String("unknown");
           };
           assert false;
           return null;

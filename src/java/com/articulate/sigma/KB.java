@@ -15,14 +15,13 @@ http://sigmakee.sourceforge.net
 
 /*************************************************************************************************/
 package com.articulate.sigma;
+
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 import java.util.regex.*;
-//import java.util.logging.Logger;
-//import java.util.logging.SimpleFormatter;
-//import java.util.logging.FileHandler;
-//import java.util.logging.Level;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** *****************************************************************
  *  Contains methods for reading, writing knowledge bases and their
@@ -32,9 +31,9 @@ import java.util.regex.*;
 public class KB {
 
     private static boolean DEBUG = false;
-//	private static Logger logger;
-//	private static FileHandler file;
-	
+	private static Logger logger;
+
+	private boolean isVisible = true;
 	
     /** The inference engine process for this KB. Deprecated.   */
     public InferenceEngine inferenceEngine;
@@ -158,21 +157,27 @@ public class KB {
                 }
             }
             
-//	      	file = new FileHandler("SIGMA_LOG.log", 500000, 10);
-//	       	file.setFormatter(new SimpleFormatter());
-//	        logger = Logger.getLogger("SIGMA_LOGGER");
-//	        logger.setLevel(Level.SEVERE);
-//	        logger.addHandler(file);
-            
+            logger = Logger.getLogger(this.getClass().getName());
         }
         catch (IOException ioe) {
-            System.out.println("Error in KB(): " + ioe.getMessage());
+            logger.warning("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
         
         
     }
+    
+    public KB(String n, String dir, boolean visibility) {
+    	this(n, dir);
 
+    	isVisible = visibility;    	
+    }
+
+    
+    public boolean isVisible() {
+    	return isVisible;
+    }
+    
     /** *************************************************************
      * Constructor
      */
@@ -190,14 +195,11 @@ public class KB {
                 }
             }
             
-//	      	file = new FileHandler("/home/knomorosa/Desktop/KB.log", 500000, 10);
-//	       	file.setFormatter(new SimpleFormatter());
-//	        logger = Logger.getLogger(ProofProcessor.class.getName());
-//	        logger.setLevel(Level.SEVERE);
-//	        logger.addHandler(file);
+            logger = Logger.getLogger(this.getClass().getName());
+            
         }
         catch (IOException ioe) {
-            System.out.println("Error in KB(): " + ioe.getMessage());
+            logger.warning("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
     }
@@ -470,8 +472,7 @@ public class KB {
      */
     protected void clearSortalTypeCache() {
         try {
-            System.out.println("INFO in KB.clearSortalTypeCache()");
-            System.out.println("  Clearing " + getSortalTypeCache().size() + " entries");
+            logger.info("Clearing " + getSortalTypeCache().size() + " entries");
             Object obj = null;
             for (Iterator it = getSortalTypeCache().values().iterator(); it.hasNext();) {
                 obj = it.next();
@@ -483,6 +484,7 @@ public class KB {
 
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return;
@@ -496,8 +498,7 @@ public class KB {
      */
     protected void resetSortalTypeCache() {
         if (getSortalTypeCache().isEmpty()) {
-            System.out.println("INFO in KB.resetSortalTypeCache()");
-            System.out.println("  KB.getSortalTypeCache() == " + getSortalTypeCache());
+        	logger.info("KB.getSortalTypeCache() == " + getSortalTypeCache());
         }
         else {
             clearSortalTypeCache();
@@ -543,8 +544,7 @@ public class KB {
      */
     protected void initRelationCaches(boolean clearExistingCaches) {
 
-        System.out.println("ENTER KB.initRelationCaches("
-                           + clearExistingCaches + ")");
+    	logger.entering("KB", "initRelationCaches", "clearExistingCaches = " + clearExistingCaches);
 
         Iterator it = null;
         if (clearExistingCaches) {
@@ -583,8 +583,7 @@ public class KB {
         children = getRelationCache("subclass", 2, 1);
         disjoint = getRelationCache("disjoint", 1, 2);
 
-        System.out.println("EXIT KB.initRelationCaches("
-                           + clearExistingCaches + ")");
+        logger.exiting("KB", "initRelationCaches");
 
         return;
     }
@@ -628,6 +627,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -643,7 +643,7 @@ public class KB {
      */
     public String cache() {
 
-        System.out.println("ENTER KB.cache()");
+    	logger.entering("KB", "cache");
         String result = "";
         FileWriter fr = null;
         try {
@@ -674,18 +674,17 @@ public class KB {
                 if (isClosureComputed) {
                     File dir = new File(kbDir);
                     File f = new File(dir, (this.name + _cacheFileSuffix));
-                    System.out.println("INFO in KB.cache()");
-                    System.out.println("  User cache file == " + f.getCanonicalPath());
+                    logger.finer("User cache file == " + f.getCanonicalPath());
                     if (f.exists()) {
-                        System.out.println("  Deleting " + f.getCanonicalPath());
+                        logger.finer("Deleting " + f.getCanonicalPath());
                         f.delete();
                         if (f.exists()) {
-                            System.out.println("  Could not delete " + f.getCanonicalPath());
+                            logger.finer("Could not delete " + f.getCanonicalPath());
                         }
                     }
                     String filename = f.getCanonicalPath();
                     fr = new FileWriter(f, true);
-                    System.out.println("  Appending statements to " + f.getCanonicalPath());
+                    logger.finer("Appending statements to " + f.getCanonicalPath());
                     it = caches.iterator();
                     while (it.hasNext()) {
                         rc = (RelationCache) it.next();
@@ -728,14 +727,14 @@ public class KB {
                         fr = null;
                     }
                     constituents.remove(filename);
-                    System.out.println("INFO in KB.cache()");
-                    System.out.println("  Adding " + filename);
+                    logger.fine("Adding " + filename);
                     result = addConstituent(filename, false, false);
                     KBmanager.getMgr().writeConfiguration();
                 }
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         finally {
@@ -748,7 +747,7 @@ public class KB {
                 ex.printStackTrace();
             }
         }
-        System.out.println("EXIT KB.cache()");
+        logger.exiting("KB", "cache", result);
         return result;
     }
 
@@ -822,10 +821,7 @@ public class KB {
     private void computeTransitiveCacheClosure(String relationName) {
 
         long t1 = System.currentTimeMillis();
-        StringBuilder sb = new StringBuilder("ENTER KB.computeTransitiveCacheClosure(");
-        sb.append(relationName);
-        sb.append(")");
-        sb.append(getLineSeparator());
+        logger.entering("KB", "computerTransitiveCacheClosure", "relationName = " + relationName);
         long count = 0L;
         try {
             if (getCachedTransitiveRelationNames().contains(relationName)) {
@@ -854,9 +850,8 @@ public class KB {
                         while (it1.hasNext()) {
                             keyTerm = (String) it1.next();
                             if (StringUtil.emptyString(keyTerm)) {
-                                System.out.println("Error in KB.computeTransitiveCacheClosure("
-                                                   + relationName + ")");
-                                System.out.println("  keyTerm == "
+                                logger.warning("Error in KB.computeTransitiveCacheClosure("
+                                                   + relationName + ") \n   keyTerm == "
                                                    + ((keyTerm == null) ? null : "\""
                                                       + keyTerm + "\""));
                             }
@@ -937,18 +932,15 @@ public class KB {
         }
 
         if (count > 0) {
-            sb.append("EXIT KB.computeTransitiveCacheClosure(");
-            sb.append(relationName);
-            sb.append(")");
-            sb.append(getLineSeparator());
-            sb.append("  "
-                      + count
+            logger.fine(count
                       + " "
                       + relationName
                       + " entries computed in "
                       + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-            System.out.println(sb.toString());
         }
+        
+        logger.exiting("KB", "computeTransitiveCacheClosure");
+        
         return;
     }
 
@@ -961,8 +953,7 @@ public class KB {
     private void computeInstanceCacheClosure() {
 
         long t1 = System.currentTimeMillis();
-        StringBuilder sb = new StringBuilder("ENTER KB.computeInstanceCacheClosure()");
-        sb.append(getLineSeparator());
+        logger.entering("KB", "computeInstanceCacheClosure");
         long count = 0L;
         try {
             RelationCache ic1 = getRelationCache("instance", 1, 2);
@@ -1018,16 +1009,11 @@ public class KB {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        if (count > 0) {
-            sb.append("EXIT KB.computeInstanceCacheClosure()");
-            sb.append(getLineSeparator());
-            sb.append("  ");
-            sb.append(count);
-            sb.append(" instance entries computed in ");
-            sb.append((System.currentTimeMillis() - t1) / 1000.0);
-            sb.append(" seconds");
-            System.out.println(sb.toString());
-        }
+        if (count > 0) 
+        	logger.info(count + " instance entries computed in " + (System.currentTimeMillis() - t1) / 1000.0 + " seconds");
+        
+        logger.exiting("KB", "computeInstanceCacheClosure");
+        
         return;
     }
 
@@ -1039,7 +1025,8 @@ public class KB {
     private void computeSymmetricCacheClosure(String relationName) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER KB.computeSymmetricCacheClosure(" + relationName + ")");
+        logger.entering("KB", "computeSymmetricCacheClosure", "relationName = " + relationName);
+
         long count = 0L;
         try {
             RelationCache dc1 = getRelationCache(relationName, 1, 2);
@@ -1109,12 +1096,15 @@ public class KB {
             // printDisjointness();
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KB.computeSymmetricCacheClosure(" + relationName + ")");
+        
         if (count > 0L)
-            System.out.println("  " + count + " " + relationName + " entries computed in "
+            logger.info(count + " " + relationName + " entries computed in "
                                + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+        
+        logger.exiting("KB", "computeSymmetricCacheClosure");
         return;
     }
 
@@ -1129,8 +1119,8 @@ public class KB {
     private void cacheRelnsWithRelnArgs() {
 
         long t1 = System.currentTimeMillis();
-        StringBuilder trace = new StringBuilder("ENTER KB.cacheRelnsWithRelnArgs()");
-        trace.append(getLineSeparator());
+        logger.entering("KB", "cacheRelnsWithRelnArgs");
+
         try {
             if (relnsWithRelnArgs == null) {
                 relnsWithRelnArgs = new HashMap();
@@ -1180,8 +1170,8 @@ public class KB {
                                 signature[argPos] = true;
                             }
                             catch (Exception e1) {
-                                System.out.println("Error in KB.cacheRelnsWithRelnArgs():");
-                                System.out.println("  reln == " + reln
+                            	logger.warning( "Error in KB.cacheRelnsWithRelnArgs(): reln == " 
+                            					   + reln
                                                    + ", argPos == " + argPos
                                                    + ", signature == " + signature);
                                 throw e1;
@@ -1206,19 +1196,17 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         int rwraSize = relnsWithRelnArgs.size();
         if (rwraSize > 0) {
-            trace.append("EXIT KB.cacheRelnsWithRelnArgs()");
-            trace.append(getLineSeparator());
-            trace.append("  ");
-            trace.append(rwraSize);
-            trace.append(" relation argument entries computed in ");
-            trace.append((System.currentTimeMillis() - t1) / 1000.0);
-            trace.append(" seconds");
-            System.out.println(trace.toString());
+            logger.info(rwraSize +
+            			" relation argument entries computed in "
+            			+ (System.currentTimeMillis() - t1) / 1000.0
+             			+ " seconds");
         }
+        logger.exiting("KB", "cacheRelnsWithRelnArgs");
         return;
     }
 
@@ -1243,7 +1231,7 @@ public class KB {
     private void cacheRelationValences() {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER KB.cacheRelationValences()");
+        logger.entering("KB", "cacheRelationValences");
 
         try {
             Set relations = getCachedRelationValues("instance", "Relation", 2, 1);
@@ -1292,14 +1280,15 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-
-        System.out.println("EXIT KB.cacheRelationsValences()");
-        System.out.println("  relationValences == " + relationValences.size() + " entries");
-        System.out.println("  "
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds elapsed time");
+        
+        logger.info("RelationValences == " + relationValences.size() + " entries" +
+        			"  " + ((System.currentTimeMillis() - t1) / 1000.0)
+                    + " seconds elapsed time");
+        
+        logger.exiting("KB", "cacheRelationValences");
         return;
     }
 
@@ -1332,6 +1321,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         // System.out.println("EXIT KB.getArgType(" + reln + ", " + argPos + ")");
@@ -1364,6 +1354,7 @@ public class KB {
                 className = argType;
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return className;
@@ -1407,6 +1398,7 @@ public class KB {
                    || isInstanceOf(relnName, "VariableArityRelation"));
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -1433,7 +1425,8 @@ public class KB {
                 }
             }
         }
-        catch (Exception ex) {
+        catch (Exception ex) { 
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return false;
@@ -1444,15 +1437,14 @@ public class KB {
      */
     private void printParents() {
 
-        System.out.println("INFO in printParents():  Printing parents.");
-        System.out.println();
+    	logger.finer("Printing parents");
         Iterator it = parents.keySet().iterator();
         while (it.hasNext()) {
             String parent = (String) it.next();
-            System.out.print(parent + " ");
-            System.out.println((HashSet) parents.get(parent));
+            logger.finer(parent + " " + 
+            		(HashSet) parents.get(parent));
         }
-        System.out.println();
+        
     }
 
     /** *************************************************************
@@ -1460,15 +1452,13 @@ public class KB {
      */
     private void printChildren() {
 
-        System.out.println("INFO in printChildren():  Printing children.");
-        System.out.println();
+        logger.finer("Printing children.");
         Iterator it = children.keySet().iterator();
         while (it.hasNext()) {
             String child = (String) it.next();
-            System.out.print(child + " ");
-            System.out.println((HashSet) children.get(child));
+            logger.finer(child + " " +
+            		(HashSet) children.get(child));
         }
-        System.out.println();
     }
 
     /** *************************************************************
@@ -1476,15 +1466,13 @@ public class KB {
      */
     private void printDisjointness() {
 
-        System.out.println("INFO in printDisjointness():  Printing disjoint.");
-        System.out.println();
+        logger.finer("Printing disjoint.");
         Iterator it = disjoint.keySet().iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
-            System.out.print(term + " is disjoint with ");
-            System.out.println((Set) disjoint.get(term));
+            logger.finer(term + " is disjoint with " + 
+            		(Set) disjoint.get(term));
         }
-        System.out.println();
     }
 
     /** *************************************************************
@@ -1520,6 +1508,7 @@ public class KB {
             // was: getAllInstancesWithPredicateSubsumption(c);
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -1560,6 +1549,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -1596,6 +1586,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -1618,6 +1609,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -1637,8 +1629,8 @@ public class KB {
      */
     public void buildRelationCaches(boolean clearExistingCaches) {
 
-        System.out.println("ENTER KB.buildRelationCaches("
-                           + clearExistingCaches + ")");
+    	logger.entering("KB", "buildRelationCaches", "clearExistingCaches = " + clearExistingCaches);
+
         long t1 = System.currentTimeMillis();
         long totalCacheEntries = 0L;
         int i = -1;
@@ -1688,12 +1680,13 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KB.buildRelationCaches(" + clearExistingCaches + ")");
-        System.out.println("  Caching cycles == " + i);
-        System.out.println("  Cache entries == " + totalCacheEntries);
-        System.out.println("  Total time to build caches: " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+        logger.info("Caching cycles == " + i
+        			+ "\n Cache entries == " + totalCacheEntries
+        			+ "\n Total time to build caches: " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+        logger.exiting("KB", "buildRelationCaches");
         return;
     }
 
@@ -1717,7 +1710,7 @@ public class KB {
      */
     private void cacheGroundAssertions() {
 
-        System.out.println("ENTER KB.cacheGroundAssertions()");
+    	logger.entering("KB", "cacheGroundAssertions");
         // System.out.println("formulas == " + formulas.toString());
         try {
             long t1 = System.currentTimeMillis();
@@ -1726,7 +1719,7 @@ public class KB {
             Set subInverses = new HashSet(getTermsViaPredicateSubsumption("subrelation",
                                                                           2, "inverse", 1,true));
             subInverses.add("inverse");
-            System.out.println("  subInverses == " + subInverses);
+            logger.finer("subInverses == " + subInverses);
 
             String relation = null;
             String arg1 = null;
@@ -1831,16 +1824,18 @@ public class KB {
                         }
                     }
                 }
-                System.out.println("  " + count + " cache entries added for " + relation);
+                logger.finer(count + " cache entries added for " + relation);
                 total += count;
             }
-            System.out.println("  Total: " + total + " cache entries computed in "
+            logger.info("  Total: " + total + " cache entries computed in "
                                + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KB.cacheGroundAssertions()");
+        logger.exiting("KB", "cacheGroundAssertions");
+        
         return;
     }
 
@@ -1851,7 +1846,8 @@ public class KB {
     private void cacheGroundAssertionsAndPredSubsumptionEntailments() {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER KB.cacheGroundAssertionsAndPredSubsumptionEntailments()");
+        logger.entering("KB", "cacheGroundAssertionsAndPredSubsumptionEntailments");
+
         // System.out.println("formulas == " + formulas.toString());
         try {
             List symmetric = getCachedSymmetricRelationNames();
@@ -1954,8 +1950,7 @@ public class KB {
                     }
                 }
                 if (count > 0) {
-                    System.out.println("  "
-                                       + relation
+                    logger.finer(relation
                                        + ": "
                                        + count
                                        + " entries added for "
@@ -1963,13 +1958,14 @@ public class KB {
                     total += count;
                 }
             }
-            System.out.println("  Total: " + total + " new cache entries computed in "
+            logger.info("Total: " + total + " new cache entries computed in "
                                + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KB.cacheGroundAssertionsAndPredSubsumptionEntailments()");
+        logger.exiting("KB", "cacheGroundAssertionsAndPredSubsumptionEntailments");
         return;
     }
 
@@ -1996,6 +1992,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -2022,6 +2019,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -2049,6 +2047,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return b.toString();
@@ -2072,6 +2071,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return f;
@@ -2119,6 +2119,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -2171,6 +2172,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -2208,6 +2210,7 @@ public class KB {
            }
        }
        catch (Exception ex) {
+    	   logger.warning(ex.getStackTrace().toString());
            ex.printStackTrace();
        }
        return result;
@@ -2225,6 +2228,15 @@ public class KB {
                                             int argnum2, String term2,
                                             int argnum3, String term3) {
 
+    	String[] args = new String[6];
+    	args[0] = "argnum1 = " + argnum1;
+    	args[1] = "term1 = " + term1;
+    	args[0] = "argnum2 = " + argnum2;
+    	args[1] = "term2 = " + term2;
+    	args[0] = "argnum3 = " + argnum3;
+    	args[1] = "term3 = " + term3;
+    	
+    	logger.entering("KB", "askWithTwoRestrictions", args);
     	//System.out.println("INFO in KB.askWithTwoRestrictions(): " + argnum1 + " " + term1 + " " +
     	//		argnum2 + " " + term2 + " " +
     	//		argnum3 + " " + term3);
@@ -2323,6 +2335,8 @@ public class KB {
                 }
             }
         }
+        logger.exiting("KB", "askWithTwoRestrictions", result);
+        
         return result;
     }
 
@@ -2350,6 +2364,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
             ans = new ArrayList();
         }
@@ -2378,7 +2393,8 @@ public class KB {
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+        	logger.warning(ex.getMessage());
+            ex.printStackTrace(); 
         }
         return ans;
     }
@@ -2418,6 +2434,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -2441,22 +2458,21 @@ public class KB {
     public ArrayList ask(String kind, int argnum, String term) {
         ArrayList result = new ArrayList();
         try {
-        	
-            String msg = null;
+        	String msg = null;
             if (StringUtil.emptyString(term)) {
                 msg = ("Error in KB.ask(\""
                        + kind + "\", "
                        + argnum + ", \""
                        + term + "\"): "
                        + "search term is null, or an empty string");
-                System.out.println(msg);
+                logger.warning(msg);
                 throw new Exception(msg);
             }
             if (term.length() > 1
                 && term.charAt(0) == '"'
                 && term.charAt(term.length()-1) == '"') {
                 msg = ("Error in KB.ask(): Strings are not indexed.  No results for " + term);
-                System.out.println(msg);
+                logger.warning(msg);
                 throw new Exception(msg);
             }
             List tmp = null;
@@ -2470,6 +2486,7 @@ public class KB {
             
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -2549,6 +2566,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         /*
@@ -2700,6 +2718,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
 
@@ -2814,6 +2833,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
 
@@ -2879,6 +2899,7 @@ public class KB {
             ans.addAll(reduced);
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -2897,7 +2918,11 @@ public class KB {
      * an empty ArrayList.
      */
     private ArrayList merge(KIF kif, String pathname) {
-
+    	if (logger.isLoggable(Level.FINEST)) {
+	    	String[] params =  {"kif = " + kif, "pathname = " + pathname};
+	    	logger.entering("KB", "merge", params);
+	    }
+    	
         ArrayList formulasPresent = new ArrayList();
         try {
             // Add all the terms from the new formula into the KB's current list
@@ -2952,9 +2977,11 @@ public class KB {
                cache();  */     // caching is too slow to perform for just one formula
         }
         catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
+        
+    	logger.exiting("KB", "merge", formulasPresent);	    
         return formulasPresent;
     }
 
@@ -2965,7 +2992,7 @@ public class KB {
      */
     public void rename(String term2, String term1) {
 
-        System.out.println("INFO in KB.rename(): replace " + term2 + " with " + term1);
+        logger.info("Replace " + term2 + " with " + term1);
         TreeSet<Formula> formulas = new TreeSet<Formula>();
         for (int i = 0; i < 7; i++)
             formulas.addAll(ask("arg",i,term2));
@@ -2997,7 +3024,7 @@ public class KB {
             }
         }
         catch (Exception e) {
-            System.out.println("Error writing file " + fname);
+            logger.severe("Error writing file " + fname + ". " + e.getStackTrace());
             e.printStackTrace();
         }
         finally {
@@ -3006,6 +3033,7 @@ public class KB {
                     fr.close();
             }
             catch (Exception e2) {
+            	logger.severe(e2.getStackTrace().toString());
                 e2.printStackTrace();
             }
         }
@@ -3035,7 +3063,7 @@ public class KB {
             flen = file.length();
         }
         catch (java.io.IOException e) {
-            System.out.println("Error writing file " + fname);
+        	logger.severe("Error writing file " + fname + ". " + e.getStackTrace());
         }
         finally {
             if (fr != null)
@@ -3063,7 +3091,7 @@ public class KB {
         try {
             result = stp2.assertFormula(input);
         } catch (IOException ioe) {
-            System.out.println("Error in KB.tellSTP2(): " + ioe.getMessage());
+        	logger.warning(ioe.getStackTrace().toString());
             ioe.printStackTrace();
             return "<assertionResponse>" + ioe.getMessage() + "</assertionResponse>";
         }
@@ -3083,7 +3111,7 @@ public class KB {
      */
     public String tell(String input) {
 
-        System.out.println("ENTER KB.tell(" + input + ")");
+    	logger.entering("KB", "tell", "input = " + input);
         String result = "The formula could not be added";
         try {
             KBmanager mgr = KBmanager.getMgr();
@@ -3124,8 +3152,7 @@ public class KB {
                             parsedFormulas.add(parsedF);
                         }
                     }
-                    System.out.println("INFO in KB.tell()");
-                    System.out.println("  parsedFormulas == " + parsedFormulas);
+                    logger.info("parsedFormulas == " + parsedFormulas);
                     if (go && !parsedFormulas.isEmpty()) {
                         if (!constituents.contains(filename)) {
                             // System.out.println("INFO in KB.tell():
@@ -3164,8 +3191,7 @@ public class KB {
                                 if (!mgr.getPref("TPTP").equalsIgnoreCase("no")) {
                                     parsedF.tptpParse(false, this, processedFormulas);
 
-                                    System.out.println("INFO in KB.tell()");
-                                    System.out.println("  theTptpFormulas == "
+                                    logger.info("theTptpFormulas == " 
                                                        + parsedF.getTheTptpFormulas());
                                 }
                                 // 7. If there is an inference engine, assert the formula to the
@@ -3176,13 +3202,12 @@ public class KB {
                                     Iterator it2 = processedFormulas.iterator();
                                     while (it2.hasNext()) {
                                         processedF = (Formula) it2.next();
-                                        System.out.println("ENTER Vampire.assertFormula("
+                                        logger.info("Asserting formula ("
                                                            + processedF.theFormula
-                                                           + ")");
+                                                           + ") to Vampire.");
                                         ieResult = inferenceEngine.assertFormula(processedF.theFormula);
-                                        System.out.println("EXIT Vampire.assertFormula("
-                                                           + processedF.theFormula + ")");
-                                        System.out.println("  " + ieResult);
+                                        logger.info("Return from Vampire == ("
+                                                           + ieResult + ")");
                                         if (ieResult.indexOf("Formula has been added") < 0) {
                                             allAdded = false;
                                         }
@@ -3196,6 +3221,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
             // System.out.println("Error in KB.tell(): " + ioe.getMessage());
         }
@@ -3203,8 +3229,7 @@ public class KB {
            if (mgr.getPref("cache") != null &&
            mgr.getPref("cache").equalsIgnoreCase("yes"))
            cache();        */   // caching is currently not efficient enough to invoke it after every assertion
-        System.out.println("EXIT KB.tell(" + input + ")");
-        System.out.println("  result == " + result);
+        logger.exiting("KB", "tell", result);
         return result;
     }
 
@@ -3227,11 +3252,13 @@ public class KB {
      */
     public String ask(String suoKifFormula, int timeout, int maxAnswers) {
 
+    	if (logger.isLoggable(Level.FINER)){
+    		String[] params = {"suoKifFormula = " + suoKifFormula, "timeout = " + timeout, "maxAnswers = " + maxAnswers};
+    		logger.entering("KB", "ask", params);
+    	}
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER " + this.name + ".ask(" + suoKifFormula + ", " + timeout + ", "
-                           + maxAnswers + ")");
         
-//        logger.info("query: " + suoKifFormula);
+        logger.info("query == " + suoKifFormula);
         String result = "";
         try {
             // Start by assuming that the ask is futile.
@@ -3244,22 +3271,23 @@ public class KB {
                 Formula query = new Formula();
                 query.read(suoKifFormula);
                 ArrayList processedStmts = query.preProcess(true, this);
-//                logger.info("processedStmts = " + processedStmts);
-                System.out.println("  processedStmts == " + processedStmts);
+                logger.fine("processedStmts == " + processedStmts);
                 //if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof Vampire)) {
                 if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof InferenceEngine))
                     result = this.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);
- //               logger.info("result = " + result);
+                logger.info("result == " + result);
             }
         }
         catch (Exception ex) {
+        	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        System.out.println("EXIT " + this.name + ".ask(" + suoKifFormula + ", "
-                           + timeout + ", " + maxAnswers + ")");
-        System.out.println("  result == " + result);
-        System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds elapsed time");
+        
+        
+        logger.info("Total time: " + ((System.currentTimeMillis() - t1) / 1000.0)
+                           + " seconds elapsed time from start of ASK to end.");
+        logger.exiting("KB", "ask", result);
+
         return result;
     }
 
@@ -3284,8 +3312,11 @@ public class KB {
      */
     public String askEngine(String suoKifFormula, int timeout, int maxAnswers, InferenceEngine engine) {
 
-        System.out.println("ENTER KB.askEngine(" + suoKifFormula + ", " + timeout + ", "
-                           + maxAnswers + ", " + engine + ")");
+    	if (logger.isLoggable(Level.FINER)) {
+    		String[] params = {"suoKifFormula = " + suoKifFormula, "timeout = " + timeout, "maxAnswers = " + maxAnswers, "engine = " + engine};
+    		logger.entering("KB", "askEngine", params);
+    	}
+    	
         String result = "";
         try {
             // Start by assuming that the ask is futile.
@@ -3295,7 +3326,7 @@ public class KB {
                 query.read(suoKifFormula);
                 ArrayList processedStmts = query.preProcess(true, this);
 
-                System.out.println("  processedStmts == " + processedStmts);
+                logger.fine("processedStmts == " + processedStmts);
 
                 if (!processedStmts.isEmpty() && (engine instanceof InferenceEngine)) {
                     result = engine.submitQuery(((Formula)processedStmts.get(0)).theFormula,
@@ -3307,10 +3338,11 @@ public class KB {
             result = result.replaceAll("&gt;",">");
         }
         catch (Exception ex) {
+        	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KB.askEngine(" + suoKifFormula + ", " + timeout + ", "
-                           + maxAnswers + ", " + engine + ")");
+        
+        logger.exiting("KB", "askEngine", result);
         return result;
     }
 
@@ -3342,6 +3374,7 @@ public class KB {
                 engine.terminate();
         }
         catch (Exception ex) {
+        	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -3379,6 +3412,7 @@ public class KB {
                 engine.terminate();
         }
         catch (Exception ex) {
+        	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
 
@@ -3419,6 +3453,7 @@ public class KB {
                 engine.terminate();
         }
         catch (Exception ex) {
+        	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
 
@@ -3471,7 +3506,7 @@ public class KB {
 	    selectedQuery.add(newQ);
 
 	    String kbFileName = "/Users/christophbenzmueller/Sigma/KBs/Merge.kif";
-	    System.out.println("/n kbFileName = " + kbFileName);
+	    logger.fine("kbFileName = " + kbFileName);
 
 	    List<String> selFs = null;
 
@@ -3515,7 +3550,8 @@ public class KB {
 		}
 	    }
 	    catch (IOException ex){
-		ex.printStackTrace();
+	    	logger.severe(ex.getStackTrace().toString());
+	    	ex.printStackTrace();
 	    }
 
 	    List<Formula> selectedFormulas = new ArrayList();
@@ -3528,7 +3564,7 @@ public class KB {
 		selectedFormulas.add(newF);
 	    }
 
-	    System.out.println("/n  selectedFormulas = " +  selFs.toString());
+	    logger.finer("selectedFormulas = " +  selFs.toString());
 
 	    THF thf = new THF();
 	    LeoProblem = thf.KIF2THF(selectedFormulas,selectedQuery,this);
@@ -3536,7 +3572,7 @@ public class KB {
 	    LeoInputFileW.close();
 
 	    String command = LeoExecutableFile.getCanonicalPath() + " -po -t " + timeout + " " + LeoInputFile.getCanonicalPath();
-	    System.out.println("/n  command = " + command);
+	    logger.finer("command = " + command);
 
 	    Process leo = Runtime.getRuntime().exec(command);
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
@@ -3545,7 +3581,7 @@ public class KB {
 	    }
             reader.close();
 
-	    System.out.println(LeoOutput);
+	    logger.finer("LeoOutput == " + LeoOutput);
 
 	    if (LeoOutput.contains("SZS status Theorem")) {
 		result = "Answer 1. yes"
@@ -3561,6 +3597,7 @@ public class KB {
 	    //  engine.terminate();
         }
         catch (Exception ex) {
+        	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -3666,13 +3703,13 @@ public class KB {
                     formulas.put(newID,al);
             }
             else
-                System.out.println("INFO in KB.rehashFormula(): Formula hash collision for: "
+                logger.info("Formula hash collision for: "
                                    + formID
                                    + " and formula "
                                    + f.theFormula);
         }
         else
-            System.out.println("INFO in KB.rehashFormula(): No formula for hash: "
+            logger.info("No formula for hash: "
                                + formID +
                                " and formula "
                                + f.theFormula);
@@ -3738,7 +3775,9 @@ public class KB {
             al.set(k - (i - lower),(String) t[lower]);
         }
         int upper = i-1;
-        System.out.println(t.length);
+        
+        logger.finer("Number of terms in this KB == " + t.length);
+
         while (upper - i < (k-1) && upper < t.length-1) {
             upper++;
             al.set(k + (upper - i),(String) t[upper]);
@@ -3855,8 +3894,7 @@ public class KB {
                 long t1 = System.currentTimeMillis();
                 ArrayList col = askWithRestriction(0,"format",1,lang);
                 if ((col == null) || col.isEmpty()) {
-                    System.out.println("WARNING in KB.loadFormatMaps(): "
-                                       + "No relation format file loaded for language "
+                    logger.warning("No relation format file loaded for language "
                                        + lang);
                 }
                 else {
@@ -3874,8 +3912,7 @@ public class KB {
                 t1 = System.currentTimeMillis();
                 col = askWithRestriction(0,"termFormat",1,lang);
                 if ((col == null) || col.isEmpty()) {
-                    System.out.println("WARNING in KB.loadFormatMaps(): "
-                                       + "No term format file loaded for language: "
+                    logger.warning("No term format file loaded for language: "
                                        + lang);
                 }
                 else {
@@ -3893,6 +3930,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         language = lang;
@@ -3923,6 +3961,7 @@ public class KB {
             loadFormatMapsAttempted.clear();
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return;
@@ -3965,7 +4004,7 @@ public class KB {
      */
     public HashMap getFormatMap(String lang) {
 
-        //System.out.println("ENTER getFormatMap(" + this.name + ", " + lang + ")");
+    	logger.entering("KB", "getFormatMap", "lang = " + lang);
         if (!StringUtil.isNonEmptyString(lang)) {
             lang = "EnglishLanguage";
         }
@@ -3976,7 +4015,8 @@ public class KB {
         if ((langFormatMap == null) || langFormatMap.isEmpty()) {
             loadFormatMaps(lang);
         }
-        // System.out.println("EXIT getFormatMap(" + this.name + ", " + lang + ")");
+        
+        logger.exiting("KB", "getFormatMap", formatMap.get(lang));
         return (HashMap) formatMap.get(lang);
     }
 
@@ -4000,7 +4040,7 @@ public class KB {
                     reload();
                 }
                 catch (IOException ioe) {
-                    System.out.println("Error in KB.deleteUserAssertions: Error writing configuration: " + ioe.getMessage());
+                	logger.warning("Error writing configuration. " + ioe.getMessage());
                 }
             }
         }
@@ -4030,8 +4070,12 @@ public class KB {
      */
     public String addConstituent(String filename, boolean buildCachesP, boolean loadVampireP) {
 
+    	if (logger.isLoggable(Level.FINER)) {
+    		String[] params = {"filename = " + filename, "buildCachesP = " + buildCachesP, "loadVampireP = " + loadVampireP};
+        	logger.entering("KB", "addConstituent", params);
+    	}
+    	
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
 
         StringBuilder result = new StringBuilder();
         try {
@@ -4053,8 +4097,7 @@ public class KB {
 
             if (constituents.contains(canonicalPath))
                 return ("Error: " + canonicalPath + " already loaded.");
-            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
-            System.out.println("  Adding " + canonicalPath);
+            logger.info("Adding " + canonicalPath + " to KB.");
             try {
                 file.readFile(canonicalPath);
                 errors.addAll(file.warningSet);
@@ -4065,11 +4108,11 @@ public class KB {
                     result.append(" at line "
                                   + ((ParseException)ex1).getErrorOffset());
                 result.append(" in file " + canonicalPath);
+                logger.severe(result.toString());
                 return result.toString();
             }
 
-            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
-            System.out.println("  Parsed file " + canonicalPath + " containing " + file.formulas.keySet().size() + " KIF expressions");
+            logger.info("Parsed file " + canonicalPath + " containing " + file.formulas.keySet().size() + " KIF expressions");
             it = file.formulas.keySet().iterator();
             int count = 0;
             while (it.hasNext()) {
@@ -4104,14 +4147,13 @@ public class KB {
                     }
                 }
             }
-            System.out.println("x");
+
             synchronized (this.getTerms()) {
                 this.getTerms().addAll(file.terms);
             }
             if (!constituents.contains(canonicalPath))
                 constituents.add(canonicalPath);
-            System.out.println("INFO in KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
-            System.out.println("  File " + canonicalPath + " loaded in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+            logger.info("File " + canonicalPath + " loaded in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
             // Clear the formatMap and termFormatMap for this KB.
             clearFormatMaps();
             if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix))
@@ -4121,12 +4163,11 @@ public class KB {
         }
         catch (Exception ex) {
             result.append(ex.getMessage());
-            System.out.println(ex.getMessage());
+            logger.severe(result + "; \nStack Trace: " + ex.getStackTrace());
             ex.printStackTrace();
         }
-        System.out.println("EXIT KB.addConstituent(" + filename + ", " + buildCachesP + ", " + loadVampireP + ")");
-//        logger.finest("formulaMap: " + this.formulaMap);
-//        logger.finest("formulas: " + this.formulas);
+        
+        logger.exiting("KB", "addConstituent", result);
         return result.toString();
     }
 
@@ -4135,7 +4176,7 @@ public class KB {
      */
     public String reload() {
 
-        System.out.println("ENTER KB.reload()");
+    	logger.entering("KB", "reload");
         String result = "";
         try {
             StringBuilder sb = new StringBuilder();
@@ -4181,10 +4222,11 @@ public class KB {
             result = sb.toString();
         }
         catch (Exception ex) {
+        	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
 
-        System.out.println("EXIT KB.reload()");
+        logger.exiting("KB", "reload");
         return result;
     }
 
@@ -4221,6 +4263,7 @@ public class KB {
             }
         }
         catch (java.io.IOException e) {
+        	logger.throwing("KB", "writeFile", new IOException("Error writing file " + fname));
             throw new IOException("Error writing file " + fname);
         }
         finally {
@@ -4537,6 +4580,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -4607,6 +4651,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -4682,6 +4727,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         /*
@@ -4782,6 +4828,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -4860,6 +4907,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         /*
@@ -4910,6 +4958,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return ans;
@@ -4954,6 +5003,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         // System.out.println("EXIT KB.getAllInstances(" + classNames + ")");
@@ -5079,6 +5129,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
 
@@ -5131,10 +5182,10 @@ public class KB {
             Iterator it = objList.iterator();
             while (it.hasNext()) {
                 if (StringUtil.isNonEmptyString(label)) {
-                    System.out.println(label + ": " + it.next());
+                	logger.fine(label + ": " + it.next());
                 }
                 else {
-                    System.out.println(it.next());
+                    logger.fine(it.next().toString());
                 }
             }
         }
@@ -5248,10 +5299,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in KB.formatDocumentation("
-                               + href + ", "
-                               + documentation + ", "
-                               + language + ")");
+            logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return formatted;
@@ -5315,13 +5363,14 @@ public class KB {
                         pr.println();
                     }
                     if (!file.exists()) {
+                    	logger.throwing("KB", "writeInferenceEngineFormulas", new Exception("Error writing " + file.getCanonicalPath()));
                         throw new Exception("Error writing " + file.getCanonicalPath());
                     }
                 }
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in KB.writeInferenceEngineFormulas(): " + ex.getMessage());
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         if (pr != null) {
@@ -5329,6 +5378,7 @@ public class KB {
                 pr.close();
             }
             catch (Exception e1) {
+            	logger.warning(e1.getStackTrace().toString());
             }
         }
         if (fr != null) {
@@ -5336,6 +5386,7 @@ public class KB {
                 fr.close();
             }
             catch (Exception e2) {
+            	logger.warning(e2.getStackTrace().toString());
             }
         }
         return filename;
@@ -5349,22 +5400,23 @@ public class KB {
      */
     public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory) {
 
-        System.out.println("INFO in KB.createInferenceEngine(): Factory name: " + factory.getClass().getName());
+    	logger.info("Factory name = " + factory.getClass().getName());
+
     	InferenceEngine res = null;
         try {
             if (!formulaMap.isEmpty()) {
-                System.out.println("INFO in KB.createInferenceEngine(): preprocessing " + formulaMap.size() + " formulas");
+                logger.fine("preprocessing " + formulaMap.size() + " formulas");
                 TreeSet<String> forms = preProcess(formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = Formula.isNonEmptyString(filename);
                 if (vFileSaved)
-                    System.out.println("INFO in KB.createInferenceEngine(): " + forms.size() + " formulas saved to " + filename);
+                    logger.fine(forms.size() + " formulas saved to " + filename);
                 else
-                    System.out.println("INFO in KB.createInferenceEngine(): new -v.kif file not written");
+                	logger.fine("new -v.kif file not written");
                 if (vFileSaved && !factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory")) {
-                    System.out.println("INFO in KB.createInferenceEngine(): getting new inference engine");
+                	logger.fine("getting new inference engine");
                     res = factory.createFromKBFile(filename);
-                    System.out.println("INFO in KB.createInferenceEngine(): created " + res);
+                    logger.fine("created " + res);
                 }
                 if (factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory")) {
                     res = factory.createWithFormulas(forms);
@@ -5372,7 +5424,8 @@ public class KB {
             }
         }
         catch (Exception e) {
-            System.out.println("Error in KB.createInferenceEngine(): " + e.getMessage());
+            logger.warning(e.getMessage());
+            logger.warning("Stack trace = " + e.getStackTrace());
             e.printStackTrace();
         }
         return res;
@@ -5384,36 +5437,38 @@ public class KB {
      */
     public void loadVampire() {
 
+    	logger.entering("KB", "loadVampire");
         // System.out.println("INFO in KB.loadVampire()");
         KBmanager mgr = KBmanager.getMgr();
         try {
             if (!formulaMap.isEmpty()) {
-                System.out.println("INFO in KB.loadVampire(): preprocessing " + formulaMap.size() + " formulae");
+            	logger.fine("preprocessing " + formulaMap.size() + " formulae");
                 TreeSet forms = preProcess(formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = StringUtil.isNonEmptyString(filename);
                 if (vFileSaved)
-                    System.out.println("INFO in KB.loadVampire(): " + forms.size() + " formulae saved to " + filename);
+                	logger.fine(forms.size() + " formulae saved to " + filename);
                 else
-                    System.out.println("INFO in KB.loadVampire(): new -v.kif file not written");
+                	logger.fine("new -v.kif file not written");
 
                 if (inferenceEngine instanceof InferenceEngine) {
-                    System.out.println("INFO in KB.loadVampire(): terminating inference engine");
+                	logger.fine("terminating inference engine");
                     long t1 = System.currentTimeMillis();
                     inferenceEngine.terminate();
-                    System.out.println("INFO in KB.loadVampire(): inference engine terminated in "
+                    logger.fine("inference engine terminated in "
                                        + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
                 }
                 inferenceEngine = null;
                 if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")) && vFileSaved) {
-                    System.out.println("INFO in KB.loadVampire(): getting new inference engine");
+                	logger.fine("getting new inference engine");
                     inferenceEngine = Vampire.getNewInstance(filename);
                 }
-                System.out.println("INFO in KB.loadVampire(): inferenceEngine == " + inferenceEngine);
+                logger.fine("inferenceEngine == " + inferenceEngine);
             }
         }
         catch (Exception e) {
-            System.out.println("Error in KB.loadVampire(): " + e.getMessage());
+            logger.severe(e.getMessage());
+            logger.severe(e.getStackTrace().toString());
             e.printStackTrace();
         }
         if (!(inferenceEngine instanceof InferenceEngine))
@@ -5437,17 +5492,17 @@ public class KB {
      */
     private void printPreProcessTimers(long[] ppTimers, TreeSet newTreeSet, long dur) {
 
-        System.out.println("INFO in KB.preProcess()");
-        System.out.println("  " + (dur / 1000.0) + " seconds total to produce " + newTreeSet.size() + " formulas");
-        System.out.println("    " + (ppTimers[1] / 1000.0) + " seconds instantiating predicate variables");
-        System.out.println("    " + (ppTimers[2] / 1000.0) + " seconds expanding row variables");
-        System.out.println("      " + (ppTimers[3] / 1000.0) + " seconds in Formula.getRowVarExpansionRange()");
-        System.out.println("        " + (ppTimers[4] / 1000.0) + " seconds in Formula.toNegAndPosLitsWithRenameInfo()");
-        System.out.println("      " + (ppTimers[5] / 1000.0) + " seconds in Formula.adjustExpansionCount()");
-        System.out.println("    " + (ppTimers[0] / 1000.0) + " seconds adding type predicates");
-        System.out.println("      " + (ppTimers[7] / 1000.0) + " seconds making quantifiers explicit");
-        System.out.println("      " + (ppTimers[8] / 1000.0) + " seconds inserting type restrictions");
-        System.out.println("    " + (ppTimers[6] / 1000.0) + " seconds in Formula.preProcessRecurse()");
+        logger.info("PreProcess Timers: "
+        			+ "\n " + (dur / 1000.0) + " seconds total to produce " + newTreeSet.size() + " formulas"
+			        + "\n " + (ppTimers[1] / 1000.0) + " seconds instantiating predicate variables"
+			        + "\n " + (ppTimers[2] / 1000.0) + " seconds expanding row variables"
+			        + "\n " + (ppTimers[3] / 1000.0) + " seconds in Formula.getRowVarExpansionRange()"
+			        + "\n " + (ppTimers[4] / 1000.0) + " seconds in Formula.toNegAndPosLitsWithRenameInfo()"
+			        + "\n " + (ppTimers[5] / 1000.0) + " seconds in Formula.adjustExpansionCount()"
+			        + "\n " + (ppTimers[0] / 1000.0) + " seconds adding type predicates"
+			        + "\n " + (ppTimers[7] / 1000.0) + " seconds making quantifiers explicit"
+			        + "\n " + (ppTimers[8] / 1000.0) + " seconds inserting type restrictions"
+			        + "\n " + (ppTimers[6] / 1000.0) + " seconds in Formula.preProcessRecurse()");
     }
 
     /** ***************************************************************
@@ -5458,8 +5513,9 @@ public class KB {
      */
     public TreeSet preProcess(Set forms) {
 
-        System.out.println("ENTER KB.preProcess()");
-        TreeSet newTreeSet = new TreeSet();
+    	logger.entering("KB", "preProcess", forms);
+
+    	TreeSet newTreeSet = new TreeSet();
         try {
             KBmanager mgr = KBmanager.getMgr();
             for (int i = 0 ; i < ppTimers.length ; i++)
@@ -5494,10 +5550,10 @@ public class KB {
                         String er = ("Error in KB.preProcess(): " + pe.getMessage() + " at line "
                                      + f.startLine + " in file " + f.sourceFile);
                         mgr.setError(mgr.getError() + "\n<br/>" + er + "\n<br/>");
-                        System.out.println(er);
+                        logger.warning(er);
                     }
                     catch (IOException ioe) {
-                        System.out.println("Error in KB.preProcess: " + ioe.getMessage());
+                    	logger.warning(ioe.getMessage());
                     }
                 }
 
@@ -5510,14 +5566,14 @@ public class KB {
                 long t_elapsed = (System.currentTimeMillis() - t_start);
                 t_total += t_elapsed;
                 if ((numberProcessed > 0) && ((numberProcessed % 1000) == 0)) {
-                    System.out.println("Formulae per second per last 1000: "
+                    logger.info("Formulae per second per last 1000: "
                                        + (1000.0 / ((t_total - t_prevTotal) / 1000.0)));
                     t_prevTotal = t_total;
                 }
                 if (t_elapsed > 3000) {
-                    System.out.println("DEBUG: " + (t_elapsed / 1000.0) + " seconds to process form:");
-                    System.out.println("  f == " + f.toString());
-                    System.out.println("  processed == "
+                    logger.finer((t_elapsed / 1000.0) + " seconds to process form:"
+                    				+ "\nf == " + f.toString()
+                    				+ "\nprocessed == "
                                        + (processed.isEmpty()
                                           ? "no result forms generated"
                                           : (processed.get(0)
@@ -5545,30 +5601,31 @@ public class KB {
                     else {
                         goodCount++;
                         if (goodCount < 10)
-                            System.out.println("Sample TPTP translation: " + f.getTheTptpFormulas().get(0));
+                            logger.fine("Sample TPTP translation: " + f.getTheTptpFormulas().get(0));
                     }
                 }
-                System.out.println("INFO in KB.preProcess(): TPTP translation succeeded for "
+                logger.fine("TPTP translation succeeded for "
                                    + goodCount + " formula" + ((goodCount == 1) ? "" : "s"));
                 boolean someAreBad = (badCount > 0);
-                System.out.println("INFO in KB.preProcess(): TPTP translation failed for "
+                logger.fine("TPTP translation failed for "
                                    + badCount + " formula" + ((badCount == 1) ? "" : "s") + (someAreBad ? ":" : ""));
                 if (someAreBad) {
                     it = badList.iterator();
                     for (int i = 1 ; it.hasNext() ; i++) {
                         f = (Formula) it.next();
-                        System.out.println("[" + i + "]: " + f);
+                        logger.finer("[" + i + "]: " + f);
                     }
                     if (badCount > 10)
-                        System.out.println("  " + (badCount - 10) + " more ...");
+                        logger.finer("  " + (badCount - 10) + " more ...");
                 }
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         clearSortalTypeCache();
-        System.out.println("EXIT KB.preProcess()");
+        logger.exiting("KB", "preProcess");
         return newTreeSet;
     }
 
@@ -5588,11 +5645,12 @@ public class KB {
                     result = formula.toProlog();
                     if (result != null && result != "")
                         pr.println(result);
-                    if (i % 100 == 1) System.out.print(".");
+//                    if (i % 100 == 1) System.out.print(".");
                 }
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return;
@@ -5609,8 +5667,8 @@ public class KB {
 
         try {
             file = new File(fname);
-
-            System.out.println("INFO in KB.writePrologFile(): Writing " + file.getCanonicalPath());
+            
+            logger.info("Writing " + file.getCanonicalPath());
 
             if ((WordNet.wn != null) && WordNet.wn.wordFrequencies.isEmpty())
                 WordNet.wn.readWordFrequencies();
@@ -5637,14 +5695,15 @@ public class KB {
             result = file.getCanonicalPath();
         }
         catch (Exception e) {
+        	logger.warning(e.getMessage());
             e.printStackTrace();
-            System.out.println("Error in KB.writePrologFile(): " + e.getMessage());
         }
         finally {
             try {
                 if (pr != null) pr.close();
             }
             catch (Exception e1) {
+            	logger.warning(e1.getStackTrace().toString());
                 e1.printStackTrace();
             }
         }
@@ -5681,22 +5740,23 @@ public class KB {
                 else
                     goodCount++;
             }
-            System.out.println("INFO in KB.tptpParse(): TPTP translation succeeded for "
+            logger.fine("TPTP translation succeeded for "
                                + goodCount + " formula" + ((goodCount == 1) ? "" : "s"));
             boolean someAreBad = (badCount > 0);
-            System.out.println("INFO in KB.tptpParse(): TPTP translation failed for "
+            logger.fine("TPTP translation failed for "
                                + badCount + " formula" + ((badCount == 1) ? "" : "s") + (someAreBad ? ":" : ""));
             if (someAreBad) {
                 it = badList.iterator();
                 for (int i = 1 ; it.hasNext() ; i++) {
                     f = (Formula) it.next();
-                    System.out.println("[" + i + "]: " + f);
+                    logger.finer("[" + i + "]: " + f);
                 }
                 if (badCount > 10)
-                    System.out.println("  " + (badCount - 10) + " more ...");
+                    logger.finer("  " + (badCount - 10) + " more ...");
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return goodCount;
@@ -5723,6 +5783,7 @@ public class KB {
                 out.write(c);
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         finally {
@@ -5731,6 +5792,7 @@ public class KB {
                 if (out != null) out.close();
             }
             catch (Exception ieo) {
+            	logger.warning(ieo.getStackTrace().toString());
                 ieo.printStackTrace();
             }
         }
@@ -5759,6 +5821,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
+        	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         finally {
@@ -5767,6 +5830,7 @@ public class KB {
                     out.close();
             }
             catch (Exception ioe) {
+            	logger.warning(ioe.getStackTrace().toString());
                 ioe.printStackTrace();
             }
         }
@@ -5842,9 +5906,13 @@ public class KB {
     public String writeTPTPFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
                                 String reasoner, boolean isQuestion, PrintWriter pw) {
 
-        System.out.println("ENTER KB.writeTPTPFile(" + fileName + ", " + conjecture + ", "
-                           + onlyPlainFOL + ", " + reasoner + ", " + isQuestion + ", " + pw + ")");
-        String result = null;
+    	if (logger.isLoggable(Level.FINER)) {
+    		String[] params = {"fileName = " + fileName, "conjecture = " + conjecture.theFormula, "onlyPlainFOL = " + onlyPlainFOL,
+    					"reasoner =" + reasoner, "isQuestion = " + isQuestion, "PrintWriter = " + pw};
+    		logger.entering("KB", "writeTPTPFile", params);
+    	}
+
+    	String result = null;
         PrintWriter pr = null;
         Formula f = null;
         try {
@@ -5866,7 +5934,7 @@ public class KB {
             else
                 outputFile = new File(fileName);
             String canonicalPath = outputFile.getCanonicalPath();
-            System.out.println("INFO in KB.writeTPTPFile(): Writing " + canonicalPath);
+            logger.info("Writing " + canonicalPath);
             if (pw instanceof PrintWriter)
                 pr = pw;
             else
@@ -5913,9 +5981,7 @@ public class KB {
                 // if (!sourceFile.equals(oldSourceFile))
                 //     axiomIndex = 1;
                 if (!sourceFile.equals(oldSourceFile)) {
-                    System.out.println("WARNING in KB.writeTPTPFile(" + fileName + ", " + conjecture + ", "
-                                       + onlyPlainFOL + ", " + reasoner + ", " + isQuestion + ", " + pw + ")");
-                    System.out.println("  Source file has changed to " + sourceFile);
+                    logger.warning("Source file has changed to " + sourceFile);
                 }
                 oldSourceFile = sourceFile;
                 // System.out.println("\n  f == " + f);
@@ -5989,10 +6055,11 @@ public class KB {
                     pr.println();
                     // }
                 }
+                pr.flush();
                 if (f.getTheTptpFormulas().isEmpty()) {
                     String addErrStr = "No TPTP formula for <br/>" + f.htmlFormat(this);
                     mgr.setError(mgr.getError() + "<br/>\n" + addErrStr + "\n<br/>");
-                    System.out.println("INFO in KB.writeTPTPFile(): No TPTP formula for\n" + f);
+                    logger.info("No TPTP formula for\n" + f);
                 }
             }
             printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex,onlyPlainFOL);
@@ -6015,9 +6082,9 @@ public class KB {
             result = canonicalPath;
         }
         catch (Exception ex) {
-            System.out.println("Error in KB.writeTPTPFile(): " + ex.getMessage());
-            System.out.println("  fileName == " + fileName);
-            System.out.println("  f == " + f);
+        	logger.warning(ex.getMessage()
+        			+ "\nfileName == " + fileName
+            		+ "\nf == " + f);
             ex.printStackTrace();
         }
         finally {
@@ -6026,11 +6093,11 @@ public class KB {
                 if (pr != null) pr.close();
             }
             catch (Exception ioe) {
+            	logger.warning(ioe.getStackTrace().toString());
                 ioe.printStackTrace();
             }
         }
-        System.out.println("EXIT KB.writeTPTPFile(" + fileName + ", " + conjecture + ", " + onlyPlainFOL + ", "
-                           + reasoner + ", " + isQuestion + ", " + pw + ")");
+        logger.exiting("KB", "writeTPTPFile", result);
         return result;
     }
 
@@ -6256,13 +6323,14 @@ public class KB {
             File tptpFile = new File(kbDir, kb.name + ".tptp");
             String fileWritten = kb.writeTPTPFile(tptpFile.getCanonicalPath(), null, false, "none");
             if (StringUtil.isNonEmptyString(fileWritten)) {
-                System.out.println("File written: " + fileWritten);
+                logger.info("File written: " + fileWritten);
             }
             else {
-                System.out.println("Could not write " + tptpFile.getCanonicalPath());
+                logger.warning("Could not write " + tptpFile.getCanonicalPath());
             }
         }
         catch (Exception e) {
+        	logger.warning(e.getStackTrace().toString());
             e.printStackTrace();
         }
         return;
@@ -6278,7 +6346,7 @@ public class KB {
                 String term = (String) it.next();
                 ArrayList al = askWithRestriction(0,"externalImage",1,term);
                 if (al == null || al.size() < 1)
-                    System.out.println(term + ", ");
+                    logger.info(term + " has no picture links.");
             }
         }
     }
@@ -6323,7 +6391,7 @@ public class KB {
                     }
                 }
             } catch (IOException ioe) {
-                System.out.println("Error in KB.generateSemanticNetwork(): error parsing: " + formula);
+                logger.warning("Error parsing: " + formula);
             }
             if (al != null && al.size() > 1 && !predicate.equals("link") &&
                 !predicate.equals("instance") && !predicate.equals("subclass") &&
@@ -6346,7 +6414,7 @@ public class KB {
                                                 // System.out.println(predicate + " " + firstSynset + " " + secondSynset);
                                                 char firstLetter = WordNetUtilities.posNumberToLetter(firstSynset.charAt(0));
                                                 char secondLetter = WordNetUtilities.posNumberToLetter(secondSynset.charAt(0));
-                                                System.out.println("u:ENG-30-" + firstSynset.substring(1) + "-" + firstLetter + " " +
+                                                logger.fine("u:ENG-30-" + firstSynset.substring(1) + "-" + firstLetter + " " +
                                                                    "v:ENG-30-" + secondSynset.substring(1) + "-" + secondLetter);
                                             }
                                         }
@@ -6373,17 +6441,16 @@ public class KB {
      */
     private void instantiateFormula(Formula pre, ArrayList<Formula> assertions) {
 
-
-        System.out.println("INFO in KB.instantiateFormula(): " + pre);
+    	logger.info("pre = " + pre);
         ArrayList<ArrayList<String>> al = pre.collectVariables();
         ArrayList<String> vars = new ArrayList();
         vars.addAll((ArrayList) al.get(0));
         vars.addAll((ArrayList) al.get(1));
-        System.out.println(vars);
+        logger.fine("vars = " + vars);
         TreeMap<String,String> m = new TreeMap();
         for (int i = 0; i < vars.size(); i++)
             m.put((String) vars.get(i),"gensym" + (new Integer(gensym++)).toString());
-        System.out.println(m);
+        logger.fine("m = " + m);
         pre = pre.substituteVariables(m);
         assertions.add(pre);
     }
@@ -6420,8 +6487,7 @@ public class KB {
                 head.add(pre);
         }
         else if (Formula.isLogicalOperator(pred)) {
-            System.out.println("INFO in KB.extractPreconditions(): rejecting formula:");
-            System.out.println(pre.theFormula);
+            logger.info("Rejecting formula = \n" + pre.theFormula);
             instantiateFormula(pre,assertions);
         }
         else {
@@ -6464,7 +6530,7 @@ public class KB {
      */
     private Formula findGroundFormulaInferenceMatch(Formula f) {
 
-        System.out.println("INFO in KB.findGroundFormulaInferenceMatch(): " + f);
+    	logger.entering("KB", "findGroundFormulaInferenceMatch", f);
         if (f.argumentsToArrayList(0) == null)
             return null;
         String arg1 = null;
@@ -6495,6 +6561,7 @@ public class KB {
                 return f2.substitute(m);
             }
         }
+        logger.exiting("KB", "findGroundFormulaInferenceMatch");
         return null;
     }
 
@@ -6504,7 +6571,7 @@ public class KB {
      */
     private ArrayList<String> removeVariablesFromList(ArrayList<String> al) {
 
-        System.out.println("INFO in KB.removeVariablesFromList(): " + al);
+    	logger.entering("KB", "removeVariablesFromList", al);
         ArrayList<String> result = new ArrayList();
         if (al == null)
             return result;
@@ -6513,6 +6580,7 @@ public class KB {
             if (!Formula.isVariable(s) && !result.contains(s))
                 result.add(s);
         }
+        logger.exiting("KB", "removeVariablesFromList", result);
         return result;
     }
 
@@ -6522,18 +6590,19 @@ public class KB {
      */
     private Formula findRuleInferenceMatch(Formula f) {
 
-        System.out.println("INFO in KB.findRuleInferenceMatch(): " + f);
+    	logger.entering("KB", "findRuleInferenceMatch", f);
         ArrayList<String> termList = f.argumentsToArrayList(0);
         termList = removeVariablesFromList(termList);
-        System.out.println("terms: " + termList);
+        logger.fine("terms: " + termList);
+
         if (termList.size() > 0) {
             ArrayList<Formula> rules = ask("cons",0,(String) termList.get(termList.size()-1));
-            System.out.println("Found " + rules.size() + " matching rules");
+            logger.fine("Found " + rules.size() + " matching rules");
             for (int i = 0; i < rules.size(); i++) {
                 Formula f2 = (Formula) rules.get(i);
                 boolean match = true;
                 String consequent = f2.getArgument(2);
-                System.out.println("consequent: " + consequent);
+                logger.fine("consequent: " + consequent);
                 Formula f3 = new Formula();
                 f3.read(consequent);
                 String pred = f3.getArgument(0);
@@ -6547,11 +6616,11 @@ public class KB {
                         }
                     }
                     if (match) {
-                        System.out.println("Attempting to unify rule " + f2);
-                        System.out.println("with " + f);
+                        logger.fine("Attempting to unify rule " + f2
+                        		+ "\n with \n\n" + f);
                         TreeMap m = f.unify(f2);
                         if (m != null) {
-                            System.out.println("Matched rule " + f2);
+                            logger.fine("Matched rule " + f2);
                             return f2;
                         }
                     }
@@ -6559,6 +6628,8 @@ public class KB {
             }
 
         }
+    	logger.exiting("KB", "findRuleInferenceMatch");
+
         return null;
     }
 
@@ -6568,15 +6639,23 @@ public class KB {
      *  formula.
      */
     private Formula findInferenceMatch(Formula f) {
+    	
+    	logger.entering("KB", "findInferenceMatch", f);
 
         System.out.println("INFO in KB.findInferenceMatch(): " + f);
         if (f.isRule())         // exclude rules for now
             return null;
         Formula f2 = findGroundFormulaInferenceMatch(f);
-        if (f2 == null)
-            return findRuleInferenceMatch(f);
-        else
-            return f2;
+        if (f2 == null) {
+            Formula returnFormula = findRuleInferenceMatch(f);
+            logger.exiting("KB", "findInferenceMatch", returnFormula);
+            return returnFormula;
+        }
+        else {
+        	logger.exiting("KB", "findInferenceMatch", f2);
+        	return f2;
+        }
+        
     }
 
     /** *************************************************************
@@ -6615,12 +6694,12 @@ public class KB {
                     }
                     else {
                         Formula match = findInferenceMatch(f2);
-                        System.out.println("match:" + match);
+                        logger.fine("match =" + match);
                         if (match == null) {
                             instantiateFormula(f2,assertions);
                         }
                         else {
-                            System.out.println("Adding match to head");
+                            logger.fine("Adding match to head");
                             if (!newhead.contains(match))
                                 newhead.add(match);
                         }
@@ -6639,10 +6718,10 @@ public class KB {
             head = new ArrayList<Formula>();
             head.addAll(newhead);
 
-            System.out.println("INFO in KB.findProofFromRule(): head:");
+            logger.info("findProofFromRule(): head =");
             for (int j = 0; j < head.size(); j++) {
                 Formula f2 = (Formula) head.get(j);
-                System.out.println(f2);
+                logger.info(f2.theFormula);
             }
         }
     }
@@ -6659,8 +6738,9 @@ public class KB {
      */
     private void generateRandomProof() {
 
-        System.out.println("INFO in KB.generateRandomProof(): starting");
-        int numProofs = 1;
+    	logger.entering("KB", "generateRandomProof");
+
+    	int numProofs = 1;
         ArrayList<Formula> formulaList = new ArrayList<Formula>();
         ArrayList<Formula> rules = new ArrayList<Formula>();
 
@@ -6687,26 +6767,22 @@ public class KB {
                 while (f.isHigherOrder())
                     f = (Formula) rules.get(r.nextInt(rules.size()));
 
-                System.out.println("INFO in KB.generateRandomProof(): start rule:" + f);
+                logger.fine("start rule =" + f);
                 query = new Formula();
                 query.read(f.getArgument(2));
 
                 findProofFromRule(f,head,assertions,numAxioms,axioms);
 
-                System.out.println();
-                System.out.println();
-                System.out.println("INFO in KB.generateRandomProof(): query:");
-                System.out.println(query);
-
-                System.out.println("INFO in KB.generateRandomProof(): axioms:");
+                logger.fine("query =" + query);
+                logger.fine("axioms = ");
                 for (int j = 0; j < axioms.size(); j++) {
                     Formula f2 = (Formula) axioms.get(j);
-                    System.out.println(f2);
+                    logger.fine(f2.theFormula);
                 }
-                System.out.println("INFO in KB.generateRandomProof(): assertions:");
+                logger.fine("assertions = ");
                 for (int j = 0; j < assertions.size(); j++) {
                     Formula f2 = (Formula) assertions.get(j);
-                    System.out.println(f2);
+                    logger.fine(f2.theFormula);
                 }
             }
 
@@ -6736,18 +6812,15 @@ public class KB {
                     for (int j = 0; j < al2.size(); j++) {
                         Formula f2 = (Formula) al2.get(j);
                         String term3 = f2.getArgument(2);
-                        System.out.println(term + "->" + term2 + "->" + term3);
-                        System.out.println(f);
-                        System.out.println(f2);
+                        logger.fine(term + "->" + term2 + "->" + term3 +
+                        			"\nf = "+ f + "\nf2 = " + f2);
                         if (Formula.atom(term3)) {
                             ArrayList<Formula> al3 = askWithRestriction(0,"instance",1,term3);
                             for (int k = 0; k < al3.size(); k++) {
                                 Formula f3 = (Formula) al3.get(k);
                                 String term4 = f3.getArgument(2);
-                                System.out.println(term + "->" + term2 + "->" + term3 + "->" + term4);
-                                System.out.println(f);
-                                System.out.println(f2);
-                                System.out.println(f3);
+                                logger.fine(term + "->" + term2 + "->" + term3 + "->" + term4 +
+                            			"\nf = "+ f + "\nf2 = " + f2 + "\nf3 = " + f3);
                             }
                         }
                     }
@@ -6757,7 +6830,103 @@ public class KB {
         return result;
     }
 
-    /** *************************************************************
+    public void writeDisplayText(String displayFormatPredicate, String displayTermPredicate, String language, String fname) throws IOException {   	
+    	PrintWriter pr = null;
+    	try {
+    		pr = new PrintWriter(new FileWriter(fname, false));
+    		
+    		//get all formulas that have the display predicate as the predicate   		
+    		ArrayList<Formula> formats = this.askWithRestriction(0, displayFormatPredicate, 1, language);
+    		ArrayList<Formula> terms = this.askWithRestriction(0, displayTermPredicate, 1, language);
+    		
+    		HashMap termMap = new HashMap();
+    		
+    		for(int i=0; i < terms.size(); i++) {
+    			Formula term = terms.get(i);
+    			
+    			String key = term.getArgument(2);
+    			String value = term.getArgument(3);
+    			
+    			if (key != "" && value != "") {
+    				termMap.put(key, value);
+    			}
+    		}
+    		
+    		for(int i=0; i < formats.size(); i++) {
+    			Formula format = formats.get(i);
+    			
+    			// This is the current predicate whose format we are keeping track of. 
+    			String key = format.getArgument(2);
+    			String value = format.getArgument(3);
+    			
+    			if (key != "" && value != "") {    			
+	    			// This basically gets all statements that use the current predicate in the 0 position
+	    			ArrayList<Formula> predInstances = this.ask("arg", 0, key);
+					
+	    			for(int j=0; j < predInstances.size(); j++) {
+	    				StringBuilder sb = new StringBuilder();
+	    				String displayText = String.copyValueOf(value.toCharArray());
+	    				
+	    				Formula f = predInstances.get(j);
+
+	    				ArrayList arguments = f.argumentsToArrayList(0);
+	    
+	    				sb.append(key);
+	    				sb.append(",");
+			
+    					// check if each of the arguments for the statements is to be replaced in its
+	    				// format statement.
+	    				for (int k=1; k < arguments.size(); k++) {
+	    					String argName = f.getArgument(k);
+	    					String term = (String) termMap.get(argName);
+	    					term = StringUtil.removeEnclosingQuotes(term);
+	    					String argNum = "%" + String.valueOf(k);
+    					
+	    					// also, add the SUMO Concept that is replaced in the format
+	    					if (displayText.contains(argNum)) {
+	    						sb.append(argName);
+	    						sb.append(",");
+	    						displayText = displayText.replace(argNum, term);		    					
+	    					}    								    						
+	    				} 		    			
+	    				
+	    				sb.append(displayText);	   
+	    				
+	    				
+	    				// resulting line will be something like:
+	    				// <predicate>, <argument_0>, ..., <argument_n>, <display_text>
+	    				// note: argument_0 to argument_n is only placed there if their 
+	    				// termFormat is used in the display_text.
+	    				pr.println(sb.toString());
+	    				
+	    			}	    			
+    			}
+    		}    		
+    		logger.info("Write display text to file done!");
+    		
+    	}
+    	catch (java.io.IOException e) {
+    		logger.warning(e.getStackTrace().toString());
+    		e.printStackTrace();
+    	}
+    	catch (Exception e) {
+    		logger.warning(e.getStackTrace().toString());
+    		e.printStackTrace();
+    	}
+        finally {
+            if (pr != null) {
+                pr.close();
+            }
+        }
+    }
+    
+    private ArrayList<com.articulate.sigma.Formula> askWithRestrictions(int i,
+			String displayFormatPredicate, int j) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/** *************************************************************
      */
     public static void main(String[] args) {
 
@@ -6773,13 +6942,20 @@ public class KB {
         */
 
         try {
+        	System.out.println("Am running it!!!");
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
+            KBmanager.getMgr().addKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            kb.addConstituent("/home/knomorosa/SourceForge/KBs/ReardenLabels.kif");
+            
+            kb.writeDisplayText("reardenFormat", "reardenDisplayFormat", "EnglishLanguage", "/home/knomorosa/Desktop/FileForRama.csv");
+            
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
-        kb.generateSemanticNetwork();
+        
+        //kb.generateSemanticNetwork();
         //kb.generateRandomProof();
         //kb.instanceOfInstanceP();
 

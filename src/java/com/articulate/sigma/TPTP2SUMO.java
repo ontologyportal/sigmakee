@@ -62,7 +62,9 @@ public class TPTP2SUMO {
   public static String convert(BufferedReader reader, ArrayList<Binding> answer, 
                                boolean instantiated) throws Exception {
 
+	  System.out.println("ENTER TPTP2SUMO.convert");
       StringBuffer result = new StringBuffer();
+      
       TPTPParser parser = TPTPParser.parse(reader);
       Hashtable<String,TPTPFormula> ftable = parser.ftable;
       Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;

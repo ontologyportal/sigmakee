@@ -507,7 +507,10 @@ public class SystemOnTPTP {
                 num += result.charAt(i);
             }
         }
-        time = Integer.parseInt(num) + 1;
+        if (num != "")
+        	time = Integer.parseInt(num) + 1;
+        else time = 1;
+        
         return time;
     }
 

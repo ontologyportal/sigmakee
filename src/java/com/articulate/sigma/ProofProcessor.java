@@ -21,6 +21,7 @@ import java.text.ParseException;
 //import java.util.logging.FileHandler;
 //import java.util.logging.Level;
 
+import java.util.logging.Logger;
 import java.util.regex.*;
 
 /** Process results from the Vampire inference engine.
@@ -28,7 +29,7 @@ import java.util.regex.*;
 public class ProofProcessor {
 
 	
-	//private static Logger LOGGER;
+	private static Logger logger;
 	//private static FileHandler file;
 	
      /** An ArrayList of BasicXMLelement (s). */
@@ -40,6 +41,9 @@ public class ProofProcessor {
      */
     public ProofProcessor(ArrayList xmlInput) {
 
+    	if (logger == null)
+    		logger = Logger.getLogger(this.getClass().getName());
+    	    	
         xml = new ArrayList(xmlInput);
         //System.out.print("INFO in ProofProcessor(): Number of XML elements is: ");
         //System.out.println(xmlInput.size());

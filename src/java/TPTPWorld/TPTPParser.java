@@ -51,7 +51,7 @@ public class TPTPParser {
         }
 
         // add parents to tptp formula info
-        Set<String> set = this.ftable.keySet();
+        Set<String> set = this.ftable.keySet();	
         Iterator<String> itr = set.iterator();
         Vector<String> parents = new Vector();
         while (itr.hasNext()) {
@@ -386,8 +386,9 @@ public class TPTPParser {
     }
 
     public static void main (String args[]) throws Exception {
-        TPTPParser.checkArguments(args);
+         TPTPParser.checkArguments(args);
         // assumption: filename is args[0] or "--" for stdin
+       
         BufferedReader reader = TPTPParser.createReader(args[0]);
 
         TreeSet<Symbol> set = TPTPParser.getSymbolList(reader);
@@ -399,6 +400,5 @@ public class TPTPParser {
         }
 
     }
-
-
+    
 }

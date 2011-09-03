@@ -93,22 +93,26 @@ public class AnswerFinder {
             String problem = "";
             TPTPParser parser = TPTPParser.parse(reader);    
             TPTPFormula conjecture = AnswerExtractor.extractVine(parser.ftable);    
+
             // no conjecture = no answers
             if (conjecture == null) {    
                 String errorMsg = "% WARNING: No fof conjecture in proof -> no lemmas -> cannot call one-answer system -> find answers failed";
                 System.out.println(errorMsg);
                 return errorMsg;
             }
+            
+           
             ArrayList<TPTPFormula> lemmas = ProofSummary.getLemmaVine(conjecture);
             // gather problem, to be sent to one-answer system
             problem += conjecture.fofify() + "\n\n";
             for (TPTPFormula lemma : lemmas) {
                 problem += lemma.fofify() + "\n\n";
             }
+            System.out.println("Problem: " + problem);
             ans = findProof(problem, systemsDir);
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            //ex.printStackTrace();
         }
         return ans;
     } 

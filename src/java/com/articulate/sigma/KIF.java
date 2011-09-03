@@ -34,7 +34,7 @@ public class KIF {
      * constraints are enforced.
      */
     public static final int NORMAL_PARSE_MODE = 1;
-
+    public static int count = 0;
     /** ***************************************************************
      * A numeric constant denoting relaxed parse mode, in which fewer
      * syntax constraints are enforced than in NORMAL_PARSE_MODE.
@@ -191,7 +191,7 @@ public class KIF {
         String errStart = ("Parsing error in " + filename);
         String errStr = null;
         int duplicateCount = 0;
-      
+        
         if (r == null) {
             errStr = "No Input Reader Specified";
             warningSet.add(errStr);
@@ -200,6 +200,7 @@ public class KIF {
             return warningSet;
         }
         try {
+        	count++;
             st = new StreamTokenizer_s(r);
             KIF.setupStreamTokenizer(st);
             parenLevel = 0;

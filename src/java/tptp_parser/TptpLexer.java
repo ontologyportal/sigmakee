@@ -57,6 +57,7 @@ tryAgain:
 		int _ttype = Token.INVALID_TYPE;
 		resetText();
 		try {   // for char stream error handling
+
 			try {   // for lexical error handling
 				switch ( LA(1)) {
 				case '%':

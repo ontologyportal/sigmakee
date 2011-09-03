@@ -18,6 +18,7 @@ public class AnswerExtractor {
       String str = itr.next();
       formula = ftable.get(str);
       String type = formula.type; 
+            
       // if not conjecture, skip (only dealing with fof conjectures)
       String name = TPTPParser.getName(formula.item);
       //      System.out.println("type: " + type);
