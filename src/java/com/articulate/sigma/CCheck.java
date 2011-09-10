@@ -78,8 +78,9 @@ public class CCheck implements Runnable {
      * @param query - the statement that caused the error
      * @param testType - whether it is a redundancy or inconsistency
      */
-    private void reportAnswer(String proof, Formula query, String testType, String processedQ) {
-
+    private void reportAnswer(String proof, Formula query, String testType, String processedQ, String sourceFile) {
+    	StringBuffer str = new StringBuffer();
+    	   	
         if (proof.indexOf("Syntax error detected") != -1) {
         	pw.println("    <entry>");
         	pw.println("      <query>");        	
@@ -88,6 +89,10 @@ public class CCheck implements Runnable {
         	pw.println("      <processedStatement>");
         	pw.println("        " + processedQ);
         	pw.println("      </processedStatement>");
+        	pw.println("      <sourceFile>");
+        	if (sourceFile != null)
+        		pw.println("        " + sourceFile);
+        	pw.println("      </sourceFile>");
         	pw.println("      <type>");
         	pw.println("        Syntax error in formula");
         	pw.println("      </type>");
@@ -109,6 +114,10 @@ public class CCheck implements Runnable {
         	pw.println("      <processedStatement>");
         	pw.println("        " + processedQ);
         	pw.println("      </processedStatement>");
+        	pw.println("      <sourceFile>");
+        	if (sourceFile != null)
+        		pw.println("        " + sourceFile);
+        	pw.println("      </sourceFile>");
         	pw.println("      <type>");
         	pw.println("        " + testType);
         	pw.println("      </type>");
@@ -120,7 +129,13 @@ public class CCheck implements Runnable {
         	pw.println("    </entry>");
         }
         
-        pw.flush();
+        try {
+        	pw.flush();
+        	fw.flush();
+        }
+        catch (Exception ex) {
+        	logger.warning(ex.getMessage());
+        }
     }
     
     /**
@@ -150,6 +165,7 @@ public class CCheck implements Runnable {
 				ArrayList processedQueries = query.preProcess(false, kb);
 				
 				String processedQuery = null;
+				String sourceFile = null;
 				Iterator q = processedQueries.iterator();
 
 				logger.finer("processedQuery size = " + processedQueries.size());
@@ -161,14 +177,19 @@ public class CCheck implements Runnable {
 					processedQuery = f.makeQuantifiersExplicit(false);
 					logger.finer("Processed Query = " + processedQuery);
 					
+					sourceFile = f.sourceFile;
+					sourceFile = sourceFile.replace("/", "&#47;");
+
+					logger.finer("Source File = " + sourceFile);
+					
 					proof = empty.ask(processedQuery, timeout, maxAnswers);
-					reportAnswer(proof, query, "Redundancy", processedQuery);
+					reportAnswer(proof, query, "Redundancy", processedQuery, sourceFile);
 					
 					StringBuffer negatedQuery = new StringBuffer();
                     negatedQuery.append("(not " + processedQuery + ")");
                     proof = empty.ask(negatedQuery.toString(),timeout,maxAnswers);
 
-                    reportAnswer(proof, query ,"Inconsistency", processedQuery);   
+                    reportAnswer(proof, query ,"Inconsistency", processedQuery, sourceFile);   
 
 				}				
                 

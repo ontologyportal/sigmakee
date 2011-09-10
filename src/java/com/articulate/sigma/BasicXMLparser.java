@@ -79,7 +79,7 @@ public class BasicXMLparser {
             int tagStart = line.indexOf('<');
             if (tagStart != 0) {                        // It's not a tag
                 element.contents = element.contents + (new String(line.trim()));
-                //System.out.println("INFO in BasicXMLparser.parse: Adding contents: " + line);
+                System.out.println("INFO in BasicXMLparser.parse: Adding contents: " + line);
                 continue;
             }
             if (line.charAt(tagStart+1) == '/') {      // Found a closing tag

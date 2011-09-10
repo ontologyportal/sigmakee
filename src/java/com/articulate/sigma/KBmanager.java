@@ -148,7 +148,11 @@ public class KBmanager {
             preferences.put("kbDir",kbDir.getCanonicalPath());
             preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());  
             preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
-
+            
+            File graphDir = new File(tomcatRootDir, "webapps" + sep + "sigma" + sep + "graph");
+            graphDir.mkdir();
+            preferences.put("graphDir", graphDir.getCanonicalPath());
+          
             // There is no foolproof way to determine the actual
             // inferenceEngine path without asking the user.  But we
             // can make an educated guess.

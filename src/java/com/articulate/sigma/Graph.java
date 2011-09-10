@@ -14,12 +14,20 @@ August 9, Acapulco, Mexico.
 */
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.*;
+
+import javax.imageio.ImageIO;
 
 /** Handle operations for creating a graphical representation of partial
  *  ordering relations.  Supports Graph.jsp.  */
 public class Graph {
 
+	private static Logger logger = null;
     private int graphsize = 0;                     // a limit counter to prevent pathologically large graphs
     public TreeMap columnList = new TreeMap();     // A map of the fields to display in the graph
                                                    // in addition to the indented term name with 
@@ -29,6 +37,9 @@ public class Graph {
      */
     public Graph() {
 
+    	if (logger == null)
+    		logger = Logger.getLogger(this.getClass().getName());
+    	
         columnList.put("documentation","yes");
         columnList.put("direct-children","yes");
         columnList.put("graph","yes");
@@ -187,7 +198,7 @@ public class Graph {
     }
 
     /** *************************************************************
-     * Create a ArrayList with a set of terms comprising a hierarchy
+     * Create an ArrayList with a set of terms comprising a hierarchy
      * Each term String will be prefixed with an appropriate number of
      * indentChars. creatGraphBody() does most of the work.
      *
@@ -299,13 +310,19 @@ public class Graph {
      * @param relation the binary relation that is used to forms the arcs
      *                 in the graph.
      */
-    public void createDotGraph(KB kb, String term, String relation, String fname) throws IOException {
+    public boolean createDotGraph(KB kb, String term, String relation, String fname) throws IOException {
 
-        FileWriter fw = null;
+    	if (logger.isLoggable(Level.FINER)) {
+    		String[] params = {"kb=" + kb, "term=" + term, "relation=" + relation, "fname=" + fname};
+    		logger.entering("Graph", "createDotGraph", params);
+    	}
+
+    	FileWriter fw = null;
         PrintWriter pw = null; 
-        String filename = "";
+        String filename = KBmanager.getMgr().getPref("graphDir") + File.separator + fname;
+        logger.finer("Full filename = " + filename);
         try {
-            fw = new FileWriter(KBmanager.getMgr().getPref("baseDir") + File.separator + fname);
+            fw = new FileWriter(filename + ".dot");
             pw = new PrintWriter(fw);
             HashSet result = new HashSet();
             HashSet start = new HashSet();
@@ -324,17 +341,31 @@ public class Graph {
             pw.println("}");
             pw.close();
             fw.close();
+            logger.info(filename + ".dot created.");
+            
+            String command = "dot " + filename + ".dot -Tgif";
+            logger.finer("command = " + command);
+            
+			Process proc = Runtime.getRuntime().exec(command);
+			BufferedInputStream img = new BufferedInputStream(proc.getInputStream());
+			BufferedInputStream err = new BufferedInputStream(proc.getErrorStream());
+			
+			RenderedImage image = ImageIO.read(img);
+			
+			File file = new File(filename + ".gif");
+			ImageIO.write(image, "gif", file);
+			logger.info(filename + ".gif created.");
+			
+            return true;
         }
         catch (java.io.IOException e) {
             throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
         }
         finally {
-            if (pw != null) {
+            if (pw != null) 
                 pw.close();
-            }
-            if (fw != null) {
-                fw.close();
-            }
+            if (fw != null)
+                fw.close();            
         }
     }
 
@@ -350,26 +381,31 @@ public class Graph {
         while (startSet.size() > 0) {
             Iterator it = startSet.iterator();
             String term = (String) it.next();
+                        
             boolean removed = startSet.remove(term);
             if (!removed) 
                 System.out.println("Error in createDotGraphBody(): " + term + " not removed");
             ArrayList stmts;
-            if (upSearch)
+            String newTerm;
+            if (upSearch) 
                 stmts = kb.askWithRestriction(0,relation,1,term);
-            else
+            else 
                 stmts = kb.askWithRestriction(0,relation,2,term);
+            
             for (int i = 0; i < stmts.size(); i++) {
                 Formula f = (Formula) stmts.get(i);
-                String newTerm;
-                if (upSearch) 
-                    newTerm = f.getArgument(2);
-                else 
-                    newTerm = f.getArgument(1);
-                String s = "  \"" + term + "\" -> \"" + newTerm + "\";";
+                String parent = f.getArgument(2); 
+                String child = f.getArgument(1);         
+               
+                String s = "  \"" + parent + "\" -> \"" + child + "\";";
                 //System.out.println(s);
                 result.add(s);
                 checkedSet.add(term);
-                startSet.add(newTerm);
+                if (upSearch)
+                	startSet.add(parent);
+                else
+                	startSet.add(child);
+                
                 createDotGraphBody(kb,startSet,checkedSet,relation,upSearch,result);
             } 
         }

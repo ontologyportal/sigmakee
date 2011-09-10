@@ -794,7 +794,6 @@ public class HTMLformatter {
     	if (ccheckResult != null) {
     		BasicXMLparser res = new BasicXMLparser(ccheckResult);
 
-    		SimpleElement ccheckEntries = null;
     		String kbName = null;
 
     		try {
@@ -820,13 +819,14 @@ public class HTMLformatter {
 		    					if (page == 0) {
 		    						String pagelink = "CCheck.jsp?kb=" + kbName + "&lang=" + language + "&page=";
 		    						html.append("<br />");
-		    						html.append("<table width=50% frame='border'>");
-		    						html.append("<tr><td>Query</td><td>Result Type</td><tr>");
+		    						html.append("<table width=80% frame='border'>");
+		    						html.append("<tr><td>Query</td><td>Result Type</td><td>Source File</td><tr>");
 
 		    						for (int j=0; j < entries.size(); j++) {
 			    						ArrayList entry = ((BasicXMLelement) entries.get(j)).subelements;
 			     						String query = null;
 			    						String type = null;
+			    						String sourceFile = null;
 
 			    						for (int k=0; k < entry.size(); k++) {
 			    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
@@ -837,10 +837,12 @@ public class HTMLformatter {
 			    								query = entryItem.contents;
 			    							else if (entryItem.tagname.equals("type"))
 			    								type = entryItem.contents;
+			    							else if (entryItem.tagname.equals("sourceFile"))
+			    								sourceFile = entryItem.contents;
 			    						}
 			    						
 			    						int pageNum = j + 1;
-			    						html.append("<tr><td><a href='" + pagelink + pageNum + "'>" + query + "</a></td><td>" + type + "</td></tr>");
+			    						html.append("<tr><td><a href='" + pagelink + pageNum + "'>" + query + "</a></td><td>" + type + "</td><td>" + sourceFile + "</td></tr>");
 		    						}		    						
 		    						html.append("</table>");
 		    						
@@ -857,6 +859,7 @@ public class HTMLformatter {
 		    						String type = null;
 	    							String processedQ = null;
 		    						String proof = null;
+		    						String sourceFile = null;
 	    							
 		    						for (int k=0; k < entry.size(); k++) {
 		    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
@@ -869,24 +872,29 @@ public class HTMLformatter {
 		    								type = entryItem.contents;
 		    							else if (entryItem.tagname.equals("processedStatement"))
 		    								processedQ = entryItem.contents;
+		    							else if (entryItem.tagname.equals("sourceFile"))
+		    								sourceFile = entryItem.contents;
 		    							else if (entryItem.tagname.equals("proof"))
 		    				    			proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
 		    							
 		    						}
 	    							html.append("<br/>Query:  " + query + "<br />");
-		    		    			html.append("Type:  " + type + "<br /><br />");
+		    		    			html.append("Type:  " + type + "<br />");
+		    		    			html.append("Source File: " + sourceFile + "<br /><br />");
 		    		    			html.append(proof);
 
 		    		    			html.append(lineHtml);
-		    		    			html.append("<table width=50% frame='void'");
+		    		    			html.append("<table width=80% frame='void'");
 	    		    				html.append("<tr>");
 	    		    				int before = page - 1;
 	    		    				int after = page + 1;
 		    		    			if (page == 1) 
 		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Result</a></td>");		    		    			
-		    		    			else if (page > 1)
-		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + before + "'>&lt;&lt;&#32;Prev</a></td>");		    		    			
-		    		    			if (after <= entries.size() && page > 1) 
+		    		    			else if (page > 1) {
+		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + before + "'>&lt;&lt;&#32;Prev</a></td>");		    	
+		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Results&#32;&gt;&gt;</a></td>");		    	
+		    		    			}
+		    		    			if (after <= entries.size() && page >= 1) 
 		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + after + "'>Next&#32;&gt;&gt;</a></td>");		    		    			
 		    		    			html.append("</tr></table>");
 		    					}

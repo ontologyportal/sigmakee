@@ -5907,7 +5907,10 @@ public class KB {
                                 String reasoner, boolean isQuestion, PrintWriter pw) {
 
     	if (logger.isLoggable(Level.FINER)) {
-    		String[] params = {"fileName = " + fileName, "conjecture = " + conjecture.theFormula, "onlyPlainFOL = " + onlyPlainFOL,
+    		String form = "";
+    		if (conjecture != null)
+    			form = conjecture.theFormula;
+    		String[] params = {"fileName = " + fileName, "conjecture = " + form, "onlyPlainFOL = " + onlyPlainFOL,
     					"reasoner =" + reasoner, "isQuestion = " + isQuestion, "PrintWriter = " + pw};
     		logger.entering("KB", "writeTPTPFile", params);
     	}
