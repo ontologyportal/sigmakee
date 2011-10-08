@@ -62,9 +62,7 @@ public class TPTP2SUMO {
   public static String convert(BufferedReader reader, ArrayList<Binding> answer, 
                                boolean instantiated) throws Exception {
 
-	  System.out.println("ENTER TPTP2SUMO.convert");
       StringBuffer result = new StringBuffer();
-      
       TPTPParser parser = TPTPParser.parse(reader);
       Hashtable<String,TPTPFormula> ftable = parser.ftable;
       Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
@@ -161,9 +159,19 @@ public class TPTP2SUMO {
   }
 
   /** ***************************************************************
-   * Convert a single annotated TPTP clause to a single XML-wrapped SUMO formula
+   * Convert a single annotated TPTP clause to a single XML-wrapped SUMO formula.
+   * This is the main entry point for this class.
    */
-  private static StringBuffer convertType (TPTPFormula formula, int indent, int indented) {
+  public static StringBuffer convertType (TPTPFormula formula, int indent, int indented) {
+  
+      return convertType(formula,indent,indented,false);
+  }
+  
+  /** ***************************************************************
+   * Convert a single annotated TPTP clause to a single XML-wrapped SUMO formula.
+   * This is the main entry point for this class.
+   */
+  public static StringBuffer convertType (TPTPFormula formula, int indent, int indented, boolean noXML) {
 
       StringBuffer result = new StringBuffer();
       String type = "";
@@ -172,22 +180,20 @@ public class TPTP2SUMO {
       if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
           SimpleTptpParserOutput.AnnotatedFormula AF = (SimpleTptpParserOutput.AnnotatedFormula) item;
           type = "formula";
-          result.append(addIndent(indent-2,indented));
-          result.append("<" + type + " number='" + id + "'>\n");
+          if (!noXML)
+              result.append(addIndent(indent-2,indented) + "<" + type + " number='" + id + "'>\n");
           result.append(convertFormula(AF.getFormula(),indent,indented));
-          result.append("\n");
-          result.append(addIndent(indent-2,indented));
-          result.append("</" + type + ">\n");
+          if (!noXML)
+        	  result.append("\n" + addIndent(indent-2,indented) + "</" + type + ">\n");
       } 
       else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
           SimpleTptpParserOutput.AnnotatedClause AC = (SimpleTptpParserOutput.AnnotatedClause) item;
           type = "clause";
-          result.append(addIndent(indent-2,indented));
-          result.append("<" + type + " number='" + id + "'>\n");
+          if (!noXML)
+              result.append(addIndent(indent-2,indented) + "<" + type + " number='" + id + "'>\n");
           result.append(convertClause(AC.getClause(),indent,indented));
-          result.append("\n");
-          result.append(addIndent(indent-2,indented));
-          result.append("</" + type + ">\n");
+          if (!noXML)
+        	  result.append("\n" + addIndent(indent-2,indented) + "</" + type + ">\n");
       } 
       else 
           result.append("Error: TPTP Formula syntax unknown for converting");      
@@ -301,6 +307,9 @@ public class TPTP2SUMO {
   }
 
   /** ***************************************************************
+   * A term is a variable or function symbol with term arguments.
+   * Variables are symbols with a question mark in SUO-KIF or capitalized symbols
+   * in TPTP.  Constants are functions with arity 0.
    */
   private static String convertTerm (SimpleTptpParserOutput.Formula.Atomic atom) {
 
@@ -323,6 +332,9 @@ public class TPTP2SUMO {
   }
 
   /** ***************************************************************
+   * A formula is a literal or compound formula.
+   * A compound formula consists of  (logical operator formula [formula]*)
+   * (but conforming to arity of logical operators).
    */
   private static StringBuffer convertFormula (SimpleTptpParserOutput.Formula formula, int indent, int indented) {
 
@@ -416,6 +428,8 @@ public class TPTP2SUMO {
   }
 
   /** ***************************************************************
+   * An atom is a predicate symbol with term arguments.
+   * A literal is an atom or negated atom.
    */
   private static StringBuffer convertLiteral (SimpleTptpParserOutput.Literal literal, int indent, int indented) {
   
@@ -439,6 +453,7 @@ public class TPTP2SUMO {
       //String formula = "fof(pel55,conjecture,(killed(X,Z) )). cnf(1,plain,( agatha = butler| hates(agatha,agatha) ),inference(subst,[[X,$fot(X0)]],[pel55])). cnf(6,plain,( a ) , inference(subst,[[X0,$fot(skolemFOFtoCNF_X)],[Z,$fot(a)]],[1]))."; 
       String formula = "fof(pel55_1,axiom,(? [X] : (lives(X) & killed(X,agatha) ) )).fof(pel55,conjecture,(? [X] : killed(X,agatha) )).cnf(0,plain,(killed(skolemFOFtoCNF_X,agatha)), inference(fof_to_cnf,[],[pel55_1])).cnf(1,plain,(~killed(X,agatha)),inference(fof_to_cnf,[],[pel55])).cnf(2,plain,(~killed(skolemFOFtoCNF_X,agatha)),inference(subst,[[X,$fot(skolemFOFtoCNF_X)]],[1])).cnf(3,theorem,($false),inference(resolve,[$cnf(killed(skolemFOFtoCNF_X,agatha))],[0,2])).";
       String clause  = "fof(ax1,axiom,(! [X0] : (~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ! [X1] : (~s__instance(X0,s__SetOrClass) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))))).";
+      String clausal  = "cnf(ax1,axiom,(~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ~s__instance(X0,s__SetOrClass) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))).";
       String inFile;
       FileReader file;
       String kif = "";
@@ -449,9 +464,16 @@ public class TPTP2SUMO {
 	          kif = TPTP2SUMO.convert(file, false);
           }
           else {
-              StringReader reader = new StringReader(clause);
+              StringReader reader = new StringReader(clausal);
               // kif = TPTP2SUMO.convert(reader, false);
-              System.out.println(TPTPParser.parse(new BufferedReader(reader)).Items.get(0));
+              TPTPParser tptpP = TPTPParser.parse(new BufferedReader(reader));
+              System.out.println(tptpP.Items.get(0));
+              Iterator<String> it = tptpP.ftable.keySet().iterator();
+              while (it.hasNext()) {
+            	  String id = it.next();
+            	  TPTPFormula tptpF = tptpP.ftable.get(id);
+            	  System.out.println(convertType(tptpF,0,0));
+              }
           }
 
       } 
@@ -465,3 +487,4 @@ public class TPTP2SUMO {
   }
 
 }
+ 
