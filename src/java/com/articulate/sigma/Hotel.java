@@ -17,6 +17,7 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.text.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,6 +33,7 @@ public class Hotel {
 
     public String oID = "";
     public String nID = "";
+    public String taID = "";
     public String name = "";
     public String address = "";
     public String address2 = "";
@@ -833,6 +835,104 @@ public class Hotel {
         }
         return result;
     }
+    /** *************************************************************
+     */
+    public static Hotel parseOneTHotelReviewFile(String fname) {
+
+        Hotel h = new Hotel();
+        ArrayList<AVPair> result = new ArrayList<AVPair>();
+        String name = "";
+        String review = "";
+        Pattern pMemberReview = Pattern.compile("<span class=\"ic i-quote\">Quote:</span>");
+        Pattern pEndMemberReview = Pattern.compile("</div>");
+        Pattern pName = Pattern.compile("<h1 class='h2 fn' id=\"bCardName\">([^<]+)");
+        Pattern pAddress = Pattern.compile("<span class='adr'>([^<]+)");
+        LineNumberReader lnr = null;
+        try {
+            File fin  = new File(fname);
+            FileReader fr = new FileReader(fin);
+            if (fr != null) {
+                lnr = new LineNumberReader(fr);
+                String line = null;
+                boolean done = false;
+                while ((line = lnr.readLine()) != null) {
+                    line = line.trim();
+                    //System.out.println(line);
+                    Matcher mAddress = pAddress.matcher(line);
+                    Matcher mMemberReview = pMemberReview.matcher(line);
+                    Matcher mName = pName.matcher(line);
+                    if (mName.find())
+                        h.name = mName.group(1);                                       
+                    else if (mMemberReview.find()) {
+                        //System.out.println("found review: " + line);
+                        Matcher mEndMemberReview = pEndMemberReview.matcher(line);
+                        while ((line = lnr.readLine()) != null && !mEndMemberReview.find()) {
+                            mEndMemberReview = pEndMemberReview.matcher(line);
+                            if (!StringUtil.emptyString(line.trim()))
+                            h.reviews.add(line.trim());
+                        }
+                    }
+                    else if (mAddress.find())
+                        DB.parseAddress(h,mAddress.group(1).trim());
+                }
+            }
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in parseOneTHotelReviewFile(): File error reading file " + fname + " : " + ioe.getMessage());
+            return null;
+        }
+        finally {
+            try {
+                if (lnr != null) lnr.close();
+            }
+            catch (Exception e) {
+                System.out.println("Exception in parseOneHotelFile()" + e.getMessage());
+            }
+        }
+        return h;
+    }
+
+    /** *************************************************************
+     * Read hotel review files
+     * @param fname is the directory path where the reviews are
+     * @return an ArrayList of Hotel
+     */
+    public static ArrayList<Hotel> parseAllTHotelReviewFiles(String fname) {
+
+        System.out.println("INFO in parseAllTHotelReviewFiles()");
+        ArrayList<Hotel> result = new ArrayList<Hotel>();
+        LineNumberReader lnr = null;
+        try {
+            File fin  = new File(fname);
+            String[] children = fin.list();
+            if (children == null || children.length == 0) 
+                System.out.println("Error in parseAllTHotelReviewFiles(): dir: " + fname + " does not exist or is empty.");            
+            else {
+                System.out.println("INFO in parseAllTHotelReviewFiles(): " + children.length + " files.");
+                for (int i=0; i<children.length; i++) {
+                    // Get filename of file or directory
+                    String filename = children[i];
+                    if (!StringUtil.emptyString(filename) && filename.startsWith("tvly"))
+                    	result.add(parseOneTHotelReviewFile(fname + File.separator + filename));
+                    if (result.size() % 100 == 0)
+                        System.out.print('.');                    
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in parseAllTHotelReviewFiles(): File error reading " + fname + ": " + e.getMessage());
+            return null;
+        }
+        finally {
+            try {
+                if (lnr != null) lnr.close();
+            }
+            catch (Exception e) {
+                System.out.println("Exception in parseAllHotelFiles()" + e.getMessage());
+            }
+        }
+        return result;
+    }
 
     /** *************************************************************
      */
@@ -963,9 +1063,12 @@ public class Hotel {
     public static ArrayList<ArrayList<String>> hotelReviewSUMOSentimentAsSparseMatrix(ArrayList<Hotel> feed) {
 
         ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+        System.out.println("INFO in Hotel.hotelReviewSUMOSentimentAsSparseMatrix()");
         DB.disambigReviews(feed);
+        System.out.println("INFO in Hotel.hotelReviewSUMOSentimentAsSparseMatrix(): Completed disambigutation");
         DB.SUMOReviews(feed);
         hotelSentiment(feed);
+        System.out.println("INFO in Hotel.hotelReviewSUMOSentimentAsSparseMatrix(): Completed sentiment calculation");
         ArrayList<String> hotelAsArray = new ArrayList<String>();
 
           // a list of attribute value pairs where the count is in
@@ -1093,9 +1196,303 @@ public class Hotel {
     }
     
     /** *************************************************************
+     */  
+    public static int level = 0;
+    
+    /** *************************************************************
+     */     
+    public class JSONElement {
+    
+        String key = ""; // empty key signifies root element
+        String value = "";
+        ArrayList<JSONElement> subelements = new ArrayList<JSONElement>();
+        
+        /** *************************************************************
+         */     
+        public String toString() {
+            
+            StringBuffer sb = new StringBuffer();
+            if (!StringUtil.emptyString(key)) 
+                sb.append(key + ":");            
+            if (!StringUtil.emptyString(value))
+                sb.append(value);  
+            else {
+                if (!StringUtil.emptyString(key)) 
+                    sb.append("[");
+                else
+                    sb.append("{");
+                for (int i = 0; i < subelements.size(); i++) {
+                    sb.append(subelements.get(i).toString());
+                    if (i < subelements.size()-1)
+                        sb.append(",");
+                }
+                if (!StringUtil.emptyString(key)) 
+                    sb.append("]");
+                else
+                    sb.append("}");
+            }
+            return sb.toString();
+        }
+        
+        /** *************************************************************
+         */     
+        public JSONElement getElement(String key) {
+            
+            for (int i = 0; i < subelements.size(); i++) {
+                if (subelements.get(i).key.equals(key)) {
+                    //System.out.println("INFO in Hotel.JSONElement.getElement(): " + subelements.get(i).key);
+                    return subelements.get(i);
+                }
+            }
+            return null;
+        }
+        
+        /** *************************************************************
+         */     
+        public String getElementValue(String key) {
+            
+            JSONElement js = getElement(key);
+            if (js == null)
+                return "";
+            if (!StringUtil.emptyString(js.value))
+                return js.value;                
+            return "";            
+        }
+    }
+    
+    /** *************************************************************
+     * This routine adds keys and values to the parameter.  There are 
+     * three possibilities:
+     * - string key : string value
+     * - string key : integer value
+     * - string key : [list]
+     * 
+     * @return the string index
+     */   
+    public static int parseJSONPair(String s, int ind, JSONElement js) {
+        
+        //System.out.println("INFO in parseJSONPair(): index: " + ind + " " + s.substring(ind));
+        int index = ind;
+        Hotel h = new Hotel();
+        if (s.charAt(index) != '"') {
+            System.out.println("Error in parseJSONPair(): test for quote: Bad character " + s.charAt(index) + " at character " + index);
+            return index;
+        }
+        index++;                            
+        int end = s.indexOf('"',index);
+        String key = s.substring(index,end);        
+        index = end;
+        index++;
+        if (s.charAt(index) != ':') {
+            System.out.println("Error in parseJSONPair(): test for colon: Bad character " + s.charAt(index) + " at character " + index);            
+            System.out.println("INFO in parseJSONPair(): key " + key);
+            return index;
+        }
+        index++;
+        
+        if (s.charAt(index) == '"') {
+            index++;
+            int start = index;
+            while (s.charAt(s.indexOf('"',index) - 1) == '\\')  // skip over escaped quotes
+                index = s.indexOf('"',index) + 1;
+            end = s.indexOf('"',index);
+            String value = s.substring(start,end);        
+            index = end;
+            index++;
+            JSONElement jsNew = h.new JSONElement();
+            jsNew.key = key;
+            jsNew.value = value;
+            js.subelements.add(jsNew);
+            //System.out.println("INFO in parseJSONPair(): key,value " + key + "," + value);
+            return index;
+        }
+        else if (Character.isDigit(s.charAt(index))) {
+            int start = index;
+            while (Character.isDigit(s.charAt(index)) || s.charAt(index) == '.')
+                index++;                    
+            String value = s.substring(start,index); 
+            JSONElement jsNew = h.new JSONElement();
+            jsNew.key = key;
+            jsNew.value = value;
+            js.subelements.add(jsNew);
+            //System.out.println("INFO in parseJSONPair(): key,value " + key + "," + value);
+            return index;
+        }
+        else if (s.charAt(index) == '[') {       
+            Hotel.level++;
+            JSONElement jsNew = h.new JSONElement();
+            jsNew.key = key;
+            index++;
+            index = parseJSONElement(s,index,jsNew);
+            //System.out.println("INFO in parseJSONPair(): returning " + jsNew);
+            js.subelements.add(jsNew);
+            return index;
+        }
+        else if (s.substring(index,index+4).equals("null")) {       
+            index = index + 4;
+            return index;
+        } 
+        else {
+            System.out.println("Error in parseJSONPair(): Bad character " + s.charAt(index) + " at character " + index);
+            System.out.println(s.substring(index,index+4));
+            return index;
+        }
+    }
+    
+    /** *************************************************************
+     * This routine adds elements to the parameter
+     * @return the string index
+     */   
+    public static int parseJSONElement(String s, int ind, JSONElement js) {
+    
+        //System.out.println("INFO in Hotel.parseJSONElement(): index: " + ind + " " + s.substring(ind));
+        //System.out.println("INFO in Hotel.parseJSONElement(): character " + s.charAt(ind));
+        //System.out.println("INFO in Hotel.parseJSONElement(): level " + Hotel.level);
+        int index = ind;
+        Hotel h = new Hotel();
+        while (index < s.length()) {
+            //System.out.println("INFO in Hotel.parseJSONElement(): testing, equals quote? " + ((s.charAt(index)) == '"'));
+            if (s.charAt(index) == '}' || s.charAt(index) == ']') {
+                Hotel.level--;
+                //System.out.println("INFO in Hotel.parseJSONElement(): it's a close brace or bracket");
+                //System.out.println("INFO in Hotel.parseJSONElement(): returning, level: " + Hotel.level);
+                //System.out.println(js);
+                index++;
+                return index;
+            }
+            else if (s.charAt(index) == '{') {
+                Hotel.level++;
+                //System.out.println("INFO in Hotel.parseJSONElement(): it's an open brace");
+                index++;        
+                JSONElement jsNew = h.new JSONElement();
+                index = parseJSONElement(s,index,jsNew); 
+                //System.out.println("INFO in Hotel.parseJSONElement(): returning " + jsNew);
+                //System.out.println("INFO in Hotel.parseJSONElement(): character " + s.charAt(index));
+                js.subelements.add(jsNew);
+            }
+            else if (s.charAt(index) == '"') {   
+                //System.out.println("INFO in Hotel.parseJSONElement(): it's a quote");
+                index = parseJSONPair(s,index,js);
+            }
+            else if (s.charAt(index) == ',') {   
+                //System.out.println("INFO in Hotel.parseJSONElement(): it's a comma");
+                index++;
+            }
+            else { 
+                System.out.println("Error in parseJSONElement(): Bad character " + s.charAt(index) + " at character " + index);
+                return index;
+            }
+            //index++;
+        }
+        return index;
+    }
+    
+    /** *************************************************************
+     */
+    public static Hotel convertJSON2Hotel(JSONElement js) {
+    
+        Hotel result = new Hotel();
+        JSONElement jsNew = js.subelements.get(0);
+        result.name = jsNew.getElementValue("name");        
+        result.address = jsNew.getElementValue("address");
+        result.taID = jsNew.getElementValue("id");
+        result.stateProv = jsNew.getElementValue("state");
+        result.city = jsNew.getElementValue("city");
+        JSONElement reviews = jsNew.getElement("reviews");
+        if (reviews != null) {
+            for (int i = 0; i < reviews.subelements.size(); i++) {
+                String review = reviews.subelements.get(i).getElementValue("review");
+                result.reviews.add(review);
+            }  
+        }
+        return result;
+    }
+    
+    /** *************************************************************
+     */
+    public static Hotel parseOneJSONReviewFile(String fname) {
+
+        Hotel h = new Hotel();
+        LineNumberReader lnr = null;
+        try {
+            File fin  = new File(fname);
+            FileReader fr = new FileReader(fin);
+            if (fr != null) {
+                lnr = new LineNumberReader(fr);
+                String line = null;
+                boolean done = false;
+                while ((line = lnr.readLine()) != null) {
+                    line = line.trim();
+                    JSONElement js = h.new JSONElement();
+                    parseJSONElement(line,0,js);
+                    h = convertJSON2Hotel(js);
+                    //System.out.println("---------------------------");
+                    //System.out.println(h);
+                    //System.out.println(js);
+                    
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in parseOneJSONReviewFile(): File error reading " + fname + ": " + e.getMessage());
+            return null;
+        }
+        finally {
+            try {
+                if (lnr != null) lnr.close();
+            }
+            catch (Exception e) {
+                System.out.println("Exception in parseOneJSONReviewFile()" + e.getMessage());
+            }
+        }
+        return h;
+    }
+    
+    /** *************************************************************
+     */
+    public static ArrayList<Hotel> readJSONHotels(String dir) {
+        
+        System.out.println("INFO in readJSONHotels()");
+        ArrayList<Hotel> result = new ArrayList<Hotel>();
+        LineNumberReader lnr = null;
+        try {
+            File fin  = new File(dir);
+            String[] children = fin.list();
+            if (children == null || children.length == 0) 
+                System.out.println("Error in readJSONHotels(): dir: " + dir + " does not exist or is empty.");            
+            else {
+                //System.out.println("INFO in readJSONHotels(): " + children.length + " files.");
+                for (int i=0; i<children.length; i++) {
+                    // Get filename of file or directory
+                    String filename = children[i];
+                    if (!StringUtil.emptyString(filename) && filename.endsWith("json"))
+                        result.add(parseOneJSONReviewFile(dir + File.separator + filename));
+                    if (result.size() % 10 == 0)
+                        System.out.print('.');                    
+                }
+                System.out.println("INFO in readJSONHotels(): Completed reading reviews.");
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in readJSONHotels(): File error reading " + dir + ": " + e.getMessage());
+            return null;
+        }
+        finally {
+            try {
+                if (lnr != null) lnr.close();
+            }
+            catch (Exception e) {
+                System.out.println("Exception in readJSONHotels()" + e.getMessage());
+            }
+        }
+        return result;
+    }
+    
+    /** *************************************************************
      */
     public static void hotelSentiment(ArrayList<Hotel> hotels) {
 
+        System.out.println("INFO in Hotel.hotelSentiment()");
         ArrayList<Hotel> result = new ArrayList<Hotel>();
         DB.readSentimentArray();
         DB.readStopConceptArray();
@@ -1113,7 +1510,7 @@ public class Hotel {
             h.sentiment = total;
             //System.out.println("======== " + total + " ========");
             //System.out.println();
-            //System.out.println(DB.computeSentiment("This hotel is the most abject failure of a rotten etablishment."));
+            //System.out.println(DB.computeSentiment("This hotel is the most abject failure of a rotten establishment."));
             //System.out.println(DB.computeSentiment("This hotel is the most outstanding elyssian paradise."));
         }
     }
@@ -1144,6 +1541,10 @@ public class Hotel {
      */
     public static void main(String[] args) {
 
+        ArrayList<Hotel> hotels = readJSONHotels("/home/apease/Rearden/Schema/TA");
+        System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels),true));
+        //parseOneJSONReviewFile("/home/apease/Rearden/Schema/TA/2992-Arlington.json");
+        
         //HotelDBImport();
         //System.out.println(topSUMOInReviews());
         //System.out.println(topWordSensesInReviews());
@@ -1163,12 +1564,10 @@ public class Hotel {
 
         //System.out.println(printAllHotels(readCSVHotels("NHotel-sample.csv")));
 
-    	ArrayList<Hotel> hotels = null;
-    	//hotels = Hotel.readOXMLhotels("OHotel.xml");
-    	hotels = Hotel.readXMLHotels("OHotel.xml");
-    	setHotelWeights(hotels);
-        System.out.println(printAllHotels(hotels));
-        //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(Hotel.parseAllHotelReviewFiles("hotelReviews-US-fileList.txt")),true));
+    	//ArrayList<Hotel> hotels = null;
+    	//hotels = Hotel.readXMLHotels("OHotel.xml");
+    	//setHotelWeights(hotels);
+        //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels),true));
         //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(Hotel.readOXMLhotels()),true));
         //System.out.println(Hotel.readOXMLhotels());
         //System.out.println(writeSpreadsheet(HotelXMLtoCSV(),true));
