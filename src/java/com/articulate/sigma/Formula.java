@@ -15,10 +15,32 @@ Systems, August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
-import java.util.*;
-import java.util.regex.*;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** ************************************************************
  * Handle operations on an individual formula.  This includes
@@ -26,8 +48,6 @@ import java.text.ParseException;
  * to the inference engine.
  */
 public class Formula implements Comparable {
-
-    private static boolean DEBUG = false;
 
     protected static final String AND    = "and";
     protected static final String OR     = "or";
@@ -108,6 +128,8 @@ public class Formula implements Comparable {
 
     /** The formula. */
     public String theFormula;
+
+	private static Logger logger = null;
 
     /** ***************************************************************
      *  Returns the platform-specific line separator String
@@ -192,6 +214,10 @@ public class Formula implements Comparable {
      */
     private ArrayList theClausalForm = null;
 
+	public Formula() {
+		if (logger == null)
+			logger = Logger.getLogger(this.getClass().getName());
+	}
     /** ***************************************************************
      * Returns a List of the clauses that together constitute the
      * resolution form of this Formula.  The list could be empty if
@@ -201,7 +227,7 @@ public class Formula implements Comparable {
      */
     public ArrayList getTheClausalForm() {
 
-        // System.out.println("ENTER Formula.getTheClausalForm(" + this + ")");
+		logger.entering("Formula", "getTheClausalForm");
         try {
             if (theClausalForm == null) {
                 if (isNonEmptyString(theFormula))
@@ -210,8 +236,10 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
-        // System.out.println("  ==> " + theClausalForm);
+
+		logger.exiting("Formula", "getTheClausalForm", theClausalForm);
         return theClausalForm;
     }
 
@@ -323,7 +351,10 @@ public class Formula implements Comparable {
             result = "N" + (new Integer(hc)).toString().substring(1) + fname;
         else
             result = (new Integer(hc)).toString() + fname;
-        //System.out.println("INFO in Formula.createID: " + result);
+
+		// logger.finest("ID Created: " + result + "; For the formula: " +
+		// theFormula);
+
         return result;
     }
 
@@ -409,14 +440,13 @@ public class Formula implements Comparable {
                         i++;
                     }
                     ans = ((pLevel == 0) && (qLevel == 0));
-                    // System.out.println("  qLevel == " + qLevel);
-                    // System.out.println("  pLevel == " + pLevel);
+					// logger.finest("qLevel == " + qLevel);
+					// logger.finest("pLevel == " + pLevel);
                 }
             }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in Formula.isBalancedList("
-                               + this + "): " + ex.getMessage());
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return ans;
@@ -436,7 +466,7 @@ public class Formula implements Comparable {
      * an empty list.
      */
     public String car() {
-    	
+		logger.entering("Formula", "car");
         String ans = null;
         try {
             if (this.listP()) {
@@ -505,10 +535,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in Formula.car(" + this + "): " + ex.getMessage());
+			logger.warning(ex.getMessage());
             return null;
             // ex.printStackTrace();
         }
+		logger.exiting("Formula", "car", ans);
         return ans;
     }
 
@@ -518,7 +549,8 @@ public class Formula implements Comparable {
      * Note that this operation has no side effect on the Formula.
      */
     public String cdr() {
-    	
+
+		logger.entering("Formula", "cdr");
         String ans = null;
         try {
             if (this.listP()) {
@@ -594,10 +626,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in Formula.cdr(" + this + "): " + ex.getMessage());
+			logger.warning(ex.getMessage());
             return null;
             // ex.printStackTrace();
         }
+		logger.exiting("Formula", "cdr", ans);
         return ans;
     }
 
@@ -617,6 +650,7 @@ public class Formula implements Comparable {
      */
     public Formula cons(String obj) {
 
+		logger.entering("Formula", "cons", obj);
         Formula ans = this;
         try {
             String fStr = this.theFormula;
@@ -641,7 +675,9 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
+		logger.exiting("Formula", "cons", ans);
         return ans;
     }
 
@@ -821,8 +857,10 @@ public class Formula implements Comparable {
      */
     private String validArgsRecurse(Formula f, String filename, Integer lineNo) {
 
-        //System.out.println("INFO in Formula.validArgsRecurse(): Formula: " + f.theFormula);
-        if (f.theFormula == "" || !f.listP() || f.atom() || f.empty()) return "";
+		// logger.finest("Formula: " + f.theFormula);
+
+		if (f.theFormula == "" || !f.listP() || f.atom() || f.empty())
+			return "";
         String pred = f.car();
         String rest = f.cdr();
         Formula restF = new Formula();
@@ -906,7 +944,9 @@ public class Formula implements Comparable {
         Formula f = new Formula();
         f.read(theFormula);
         String result = validArgsRecurse(f, filename, lineNo);
-        //System.out.println("INFO in Formula.validArgs(): result: " + result);
+
+		// logger.finest("Result: " + result);
+
         return result;
     }
 
@@ -1068,7 +1108,9 @@ public class Formula implements Comparable {
 
         form.theFormula = Clausifier.normalizeVariables(theFormula);
         f = form.toString().trim().intern();
-        // System.out.println("INFO in Formula.equals(): Comparing " + s + " to " + f);
+
+		// logger.finest("Comparing " + s + " to " + f);
+
         return (f == s);
     }
 
@@ -1100,7 +1142,7 @@ public class Formula implements Comparable {
             if (ans == null) { ans = ""; }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in Formula.getArgument(" + this + ", " + argnum + ")");
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return ans;
@@ -1126,7 +1168,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println("ERROR in Formula.listLength(" + this + ")");
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return ans;
@@ -1181,9 +1223,7 @@ public class Formula implements Comparable {
      */
     public Formula separateVariableScope(Formula c2) {
 
-        boolean _SCOPE_DEBUG = false;
-
-        if (_SCOPE_DEBUG) System.out.println("INFO in Formula.separateVariableScope(): before: \n" + this + " and \n" + c2);
+		// logger.finest("before: \n" + this + "\n and " + c2);
 
         ArrayList<String> varList1 = this.simpleCollectVariables();
         ArrayList<String> varList2 = c2.simpleCollectVariables();
@@ -1197,13 +1237,17 @@ public class Formula implements Comparable {
             varList1.add(varNew);
         }
         Formula c2new = c2.deepCopy();
-        if (_SCOPE_DEBUG) System.out.println("INFO in Formula.separateVariableScope(): varmap:\n" + varMap);
+
+		// logger.finest("varmap: " + varMap);
+
         c2new = c2new.substituteVariables(varMap);
-        if (_SCOPE_DEBUG) System.out.println("INFO in Formula.separateVariableScope(): middle : " + c2new + " and " + c2new);
-        if (_SCOPE_DEBUG) System.out.println("INFO in Formula.separateVariableScope(): after:\n" + this + " and\n" + c2new);
+
+		// logger.finest("middle: \n" + c2new + "\n and " + c2new);
+		// logger.finest("after: \n" + this + "\n and " + c2new);
 
         return c2new;
     }
+
     /** ***************************************************************
      *  @see unify()
      */
@@ -1283,9 +1327,10 @@ public class Formula implements Comparable {
      */
     public Formula appendClauseInCNF(Formula f) {
 
-        //System.out.println("INFO in Formula.appendClauseInCNF(): appending \n" + this + "\n and \n" + f);
-        if (f == null) {
-            System.out.println("Error in Formula.appendClauseInCNF(): null formula");
+		// logger.finest("Appending \n" + this + "\n and \n" + f);
+
+		if (f == null) {
+			logger.warning("Error in Formula.appendClauseInCNF(): null formula");
             return null;
         }
         if (f.empty())
@@ -1293,11 +1338,13 @@ public class Formula implements Comparable {
         if (this.empty())
             return f;
         if (this.atom()) {
-            System.out.println("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: " + this);
+			logger.warning("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: "
+					+ this);
             return null;
         }
         if (f.atom()) {
-            System.out.println("Error in Formula.appendClauseInCNF(): formula to append not in CNF: " + f);
+			logger.warning("Error in Formula.appendClauseInCNF(): formula to append not in CNF: "
+					+ f);
             return null;
         }
         Formula thisNew = new Formula();
@@ -1306,7 +1353,8 @@ public class Formula implements Comparable {
             thisNew.read("(" + this.theFormula + ")");
         else {
             if (!this.car().equals("or")) {
-                System.out.println("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: " + this);
+				logger.warning("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: "
+						+ this);
                 return null;
             }
             thisNew.read(this.cdr());   // remove the "or"
@@ -1315,7 +1363,8 @@ public class Formula implements Comparable {
             fnew.read("(" + f.theFormula + ")");
         else {
             if (!f.car().equals("or")) {
-                System.out.println("Error in Formula.appendClauseInCNF(): formula to append not in CNF: " + f);
+				logger.warning("Error in Formula.appendClauseInCNF(): formula to append not in CNF: "
+						+ f);
                 return null;
             }
             fnew.read(f.cdr());   // remove the "or"
@@ -1335,14 +1384,15 @@ public class Formula implements Comparable {
      */
     public TreeMap<String, String> resolve(Formula f, Formula result) {
 
-        boolean _RESOLVE_DEBUG = false;
+		Formula accumulator = new Formula();
 
-        Formula accumulator = new Formula();
-        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): Attempting to resolve : \n" + this + "\n with \n" + f);
+		// logger.finest("Attempting to resolve: \n" + this + "\n with \n" + f);
+
         if (f.empty() || this.empty()) {
             System.out.println("Error in Formula.resolve() attempt to resolve with empty list");
             return null;
         }
+
         Formula thisFormula = new Formula();
         thisFormula.read(theFormula);
         Formula argFormula = new Formula();
@@ -1350,15 +1400,16 @@ public class Formula implements Comparable {
         TreeMap mapping = new TreeMap();
         if ((this.isSimpleClause() && f.isSimpleNegatedClause()) ||
             (this.isSimpleNegatedClause() && f.isSimpleClause())) {
-            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): both simple clauses");
+			// logger.finest("Both simple clauses");
             if (this.isSimpleNegatedClause()) {
-                if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): this (or fnew).isSimpleNegatedClause(): \n" + this);
+				// logger.finest("This (or fnew).isSimpleNegatedClause(): \n" +
+				// this);
                 thisFormula.read(thisFormula.cdr());
                 thisFormula.read(thisFormula.car());
-                if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): thisFormula: \n" + thisFormula);
+				// logger.finest("thisFormula: \n" + thisFormula);
             }
             if (f.isSimpleNegatedClause()) {
-                if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): f (or f2).isSimpleNegatedClause(): \n" + f);
+				// logger.finest("f (or f2).isSimpleNegatedClause(): \n" + f);
                 argFormula.read(argFormula.cdr());
                 argFormula.read(argFormula.car());
             }
@@ -1367,8 +1418,8 @@ public class Formula implements Comparable {
                 result.theFormula = null;
             else
                 result.theFormula = "()";
-            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
-            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): mapping: " + mapping);
+			// logger.finest("result: " + result);
+			// logger.finest("mapping: " + mapping);
             if (result.theFormula != null)
                 result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
             return mapping;
@@ -1380,7 +1431,8 @@ public class Formula implements Comparable {
             }
             if (this.isSimpleClause() || this.isSimpleNegatedClause()) {
                 if (!argFormula.car().equals("or")) {
-                    System.out.println("Error in Formula.resolve() (this is simple): The non-simple clause not in CNF: \n" + argFormula);
+					// logger.finest("(this is simple): The non-simple clause not in CNF: \n"
+					// + argFormula);
                     return null;
                 }
                 argFormula.read(argFormula.cdr());  // remove the initial "or"
@@ -1388,15 +1440,15 @@ public class Formula implements Comparable {
                 while (!argFormula.empty()) {
                     Formula clause = new Formula();
                     clause.read(argFormula.car());
-                    if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 1): checking clause: \n" + clause);
+					// logger.finest("(loop 1): checking clause: \n" + clause);
                     if (result != null)
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result so far: \n" + accumulator);
+						// logger.finest("result so far: \n" + accumulator);
                     argFormula.read(argFormula.cdr());
                     Formula newResult = new Formula();
                     mapping = thisFormula.resolve(clause,newResult); // if it succeeds, newResult will be () so ignore
                     if (mapping != null ) {  //&& mapping.keySet().size() > 0
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 1): \n" + newResult);
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() argFormula: \n" + argFormula);
+						// logger.finest("(returning loop 1): \n" + newResult);
+						// logger.finest("argFormula: \n" + argFormula);
                         if (!argFormula.empty() && !argFormula.isSimpleClause() && !argFormula.isSimpleNegatedClause()) {
                              if (!empty(argFormula.cdr()))
                                  argFormula.read("(or " + argFormula.theFormula.substring(1));
@@ -1407,7 +1459,7 @@ public class Formula implements Comparable {
                         accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
                         result.theFormula = accumulator.theFormula;
 
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
+						// logger.finest("Result: " + result);
                         if (result.theFormula != null)
                             result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
                         return mapping;
@@ -1419,7 +1471,8 @@ public class Formula implements Comparable {
             else {
                 if (argFormula.isSimpleClause() || argFormula.isSimpleNegatedClause()) {
                     if (!this.car().equals("or")) {
-                        System.out.println("Error in Formula.resolve() (f2 is simple): The non-simple clause not in CNF: " + this);
+						logger.warning("Error in Formula.resolve() (f2 is simple): The non-simple clause not in CNF: "
+								+ this);
                         return null;
                     }
                     thisFormula.read(thisFormula.cdr());// remove the initial "or"
@@ -1427,13 +1480,14 @@ public class Formula implements Comparable {
                     while (!thisFormula.empty()) {
                         Formula clause = new Formula();
                         clause.read(thisFormula.car());
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 2): checking clause: \n" + clause);
+						// logger.finest("(loop 2): checking clause: \n" + clause);
                         thisFormula.read(thisFormula.cdr());
                         Formula newResult = new Formula();
                         mapping = argFormula.resolve(clause,newResult);
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 2): return mapping: \n" + mapping);
+						// logger.finest("(loop 2): return mapping: \n" + mapping);
                         if (mapping != null) {   //  && mapping.keySet().size() > 0
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 2): newResult: \n" + newResult);
+							// logger.finest("(returning loop 2): newResult: \n"
+							// + newResult);
                             if (!thisFormula.empty() && !thisFormula.isSimpleClause() && !thisFormula.isSimpleNegatedClause()) {
                                 if (!empty(thisFormula.cdr()))
                                     thisFormula.read("(or " + thisFormula.theFormula.substring(1));
@@ -1443,7 +1497,7 @@ public class Formula implements Comparable {
                             accumulator = accumulator.appendClauseInCNF(thisFormula);
                             accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
                             result.theFormula = accumulator.theFormula;
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
+							// logger.finest("result: " + result);
                             if (result.theFormula != null)
                                 result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
                             return mapping;
@@ -1454,43 +1508,48 @@ public class Formula implements Comparable {
                 }
                 else {                                      // both formulas are not a simple clause
                     Formula newResult = new Formula();
-                    if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (before loop 3): looping through argFormula's clauses: \n" + argFormula);
+					// logger.finest("(before loop 3): looping through argFormula's clauses: \n"
+					// argFormula);
                     argFormula.read(argFormula.cdr());    // remove the initial "or"
                     accumulator.theFormula = "()";
                     while (!argFormula.empty()) {
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 1: ");
+						// logger.finest("(loop 3): here 1: ");
                         Formula clause = new Formula();
                         clause.read(argFormula.car());
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): checking clause: \n" + clause);
+						// logger.finest("(loop 3): checking clause: \n" + clause);
                         argFormula.read(argFormula.cdr());
                         TreeMap newMapping = thisFormula.resolve(clause,newResult);
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): mapping: " + newMapping);
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): argFormula: \n" + argFormula);
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): accumulator: \n" + accumulator);
+						// logger.finest("(returning loop 3): mapping: " +
+						// newMapping);
+						// logger.finest("(returning loop 3): argFormula: \n" +
+						// argFormula);
+						// logger.finest("(returning loop 3): accumulator: \n"+
+						// accumulator);
                         if (newMapping != null) {  // && newMapping.keySet().size() > 0
                             mapping.putAll(newMapping);  // could still be a problem if a mapping overwrites another...
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (returning loop 3): newResult: \n" + newResult);
+							// logger.finest("(returning loop 3): newResult: \n"
+							// + newResult);
                             //accumulator = accumulator.appendClauseInCNF(argFormula);
                             accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
                             argFormula.theFormula = (argFormula.substitute(mapping)).theFormula;
                             thisFormula.theFormula = new String(newResult.theFormula);
                         }
                         else {
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 2: ");
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): accumulator: \n" + accumulator);
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): clause: \n" + clause);
+							// logger.finest("(loop 3): here 2: ");
+							// logger.finest("accumulator: \n" + accumulator);
+							// logger.finest("clause: \n" + clause);
                             accumulator = accumulator.appendClauseInCNF(clause);
-                            if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): accumulator after: \n" + accumulator);
+							// logger.finest("accumulator after: \n" + accumulator);
                         }
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 3: ");
+						// logger.finest("(loop 3): here 3: ");
                         result.theFormula = accumulator.theFormula;
-                        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve() (loop 3): here 4: ");
+						// logger.finest("(loop 3): here 4: ");
                     }
                     result.theFormula = new String(result.appendClauseInCNF(thisFormula).theFormula);
                 }
             }
         }
-        if (_RESOLVE_DEBUG) System.out.println("INFO in Formula.resolve(): result: " + result);
+		// logger.finest("Result: " + result);
         if (result.theFormula != null)
             result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
         return mapping;
@@ -1503,9 +1562,9 @@ public class Formula implements Comparable {
      */
     public Formula substitute(TreeMap<String,String> m) {
 
-        //System.out.println("INFO in Formula.substitute(): Replacing vars in " + this +
-        //                   " as per " + m);
-        String newForm = null;
+		// logger.finest("Replacing vars in " + this + " as per " + m);
+
+		String newForm = null;
         Formula result = null;
         while (newForm == null || !newForm.equals(theFormula)) {
             newForm = theFormula;
@@ -1554,8 +1613,8 @@ public class Formula implements Comparable {
     public ArrayList<ArrayList<String>> collectVariables() {
         /*
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER Formula.collectVariables()");
         */
+		logger.entering("Formula", "collectVariables");
         ArrayList<ArrayList<String>> ans = new ArrayList<ArrayList<String>>();
         ans.add(new ArrayList());
         ans.add(new ArrayList());
@@ -1567,10 +1626,12 @@ public class Formula implements Comparable {
             ans.get(1).addAll(unquantified);
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         //System.out.println("EXIT Formula.collectVariables()");
         // System.out.println("  elapsed time == " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+		logger.exiting("Formula", "collectVariables", ans);
         return ans;
     }
 
@@ -1590,8 +1651,14 @@ public class Formula implements Comparable {
      */
     private void collectVariables_1(Formula originalF, Set quantified, Set unquantified) {
 
-        //System.out.println("ENTER Formula.collectVariables_1(" + this + ", " + originalF + ", " + quantified + ", " + unquantified + ")");
-        try {
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "originalF = " + originalF.theFormula,
+					"quantified = " + quantified,
+					"unquantified = " + unquantified };
+			logger.entering("Formula", "collectVariables_1", params);
+		}
+
+		try {
             if (this.theFormula.contains(V_PREF) || this.theFormula.contains(R_PREF)) {
                 KBmanager mgr = KBmanager.getMgr();
                 List quantifiers = Arrays.asList(UQUANT, EQUANT, KAPPAFN);
@@ -1615,8 +1682,8 @@ public class Formula implements Comparable {
                                 if (isVariable(var)
                                     && (quantified.contains(var) || unquantified.contains(var))) {
                                     String err = ("Possible quantification error for " + var + " in ");
-                                    System.out.println(err);
-                                    System.out.println(originalF);
+									logger.warning(err + " \n" + originalF);
+
                                     mgr.setError(mgr.getError() + "\n<br/>" + err + "\n<br/>" + originalF + "\n<br/>");
                                 }
                                 quantified.add(var);
@@ -1640,8 +1707,11 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
-        //System.out.println("EXIT Formula.collectVariables_1(" + this + ", " + originalF + ", " + quantified + ", " + unquantified + ")");
+
+		logger.exiting("Formula", "collectVariables_1");
+
         return;
     }
 
@@ -1669,7 +1739,7 @@ public class Formula implements Comparable {
 
         ArrayList<String> result = new ArrayList();
         if (this.theFormula == null || this.theFormula == "") {
-            System.out.println("Error in Formula.collectTerms(): formula : " + this);
+			logger.warning("No formula to collect terms from: " + this);
             return null;
         }
         if (this.empty())
@@ -1720,10 +1790,12 @@ public class Formula implements Comparable {
                 sb.append(this.theFormula);
                 sb.append(")");
                 result = sb.toString();
+				logger.exiting("Formula", "makeQuantifiersExplicit", result);
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
         return result;
     }
@@ -1752,6 +1824,7 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
         return ans;
     }
@@ -1801,6 +1874,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1872,8 +1946,9 @@ public class Formula implements Comparable {
      */
     public ArrayList expandRowVars(KB kb) {       
     	
-        // System.out.println("ENTER Formula.expandRowVars(" + this.theFormula + ", " + kb.name + ")");
-        ArrayList resultList = new ArrayList();
+		logger.entering("Formula", "expandRowVars", kb.name);
+
+		ArrayList resultList = new ArrayList();
         try {
             TreeSet rowVars = (this.theFormula.contains(R_PREF)
                                ? this.findRowVars()
@@ -1895,8 +1970,10 @@ public class Formula implements Comparable {
                 String rowvar = null;
                 for (Iterator irv = rowVars.iterator(); irv.hasNext();) {
                     rowvar = (String) irv.next();
-                    // System.out.println("  rowvar == " + rowvar);
-                    // System.out.println("  accumulator == " + accumulator);
+
+					// logger.finest("rowvar ==" + rowvar);
+					// logger.finest("accumulator == " + accumulator);
+
                     working.clear();
                     working.addAll(accumulator);
                     accumulator.clear();
@@ -1961,10 +2038,12 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }        
-        //  System.out.println("EXIT Formula.expandRowVars(" + this.theFormula + ", " + kb.name + ")");
-        //  System.out.println("  ==> " + resultList);        
+
+		logger.exiting("Formula", "expandRowVars", resultList);
+
         return resultList;
     }
 
@@ -1989,7 +2068,12 @@ public class Formula implements Comparable {
      */
     private int adjustExpansionCount(boolean variableArity, int count, String var) {
 
-        // System.out.println("INFO in Formula.adjustExpansionCount(" + this + " ...)");
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "variableArity = " + variableArity,
+					"count = " + count, "var = " + var };
+			logger.entering("Formula", "adjustExpansionCount", params);
+		}
+
         int revisedCount = count;
         try {
             if (isNonEmptyString(var)) {
@@ -2007,7 +2091,8 @@ public class Formula implements Comparable {
                     for (int i = 0 ; i < working.size() ; i++) {
                         Formula f = (Formula) working.get(i);
                         List literal = f.literalToArrayList();
-                        // System.out.println(literal);
+						// logger.finest("Literal: " + literal);
+
                         int len = literal.size();
                         if (literal.contains(rowVar) && !isVariable(f.car())) {
                             if (!variableArity && (len > 2))
@@ -2032,8 +2117,10 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
-        // System.out.println("    -> " + revisedCount);
+
+		logger.exiting("Formula", "adjustExpansionCount", revisedCount);
         return revisedCount;
     }
 
@@ -2053,7 +2140,11 @@ public class Formula implements Comparable {
      */
     private int[] getRowVarExpansionRange(KB kb, String rowVar) {
 
-        // System.out.println("INFO in Formula.getRowVarExpansionRange(" + this + " ...)");
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "kb = " + kb.name, "rowVar = " + rowVar };
+			logger.entering("Formula", "getRowVarExpansionRange", params);
+		}
+
         int[] ans = new int[2];
         ans[0] = 1;
         ans[1] = 8;
@@ -2070,9 +2161,11 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
-        // System.out.print("INFO in getRowVarExpansionRange(" + this + ", " + kb + ", " + rowVar + ")");
-        // System.out.println(" -> [" + ans[0] + "," + ans[1] + "]");
+
+		logger.exiting("Formula", "getRowVarExpansionRange", ans);
+
         return ans;
     }
 
@@ -2092,10 +2185,9 @@ public class Formula implements Comparable {
      */
     private Map getRowVarsMinMax(KB kb) {
 
-        //  DEBUG = this.theFormula.contains("(immediateSubclass");
-        if (DEBUG)
-            System.out.println("ENTER Formula.getRowVarsMinMax(" + this.theFormula + ", "  + kb.name + ")");
-        Map ans = new HashMap();
+		logger.entering("Formula", "getRowVarsMinMax", kb.name);
+
+		Map ans = new HashMap();
         try {
             long t1 = System.currentTimeMillis();
             ArrayList clauseData = this.getTheClausalForm();
@@ -2129,7 +2221,7 @@ public class Formula implements Comparable {
                         litF.computeRowVarsWithRelations(rowVarRelns, varMap);
                     }
                 }
-                if (DEBUG) System.out.println("  rowVarRelns == " + rowVarRelns);
+				// logger.finest("rowVarRelns == " + rowVarRelns);
                 if (!rowVarRelns.isEmpty()) {
                     for (Iterator kit = rowVarRelns.keySet().iterator(); kit.hasNext();) {
                         String rowVar = (String) kit.next();
@@ -2163,8 +2255,11 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
-        if (DEBUG) System.out.println("EXIT Formula.getRowVarsMinMax(" + this.theFormula + ", " + kb.name + ")\n ==> " + ans);
+
+		logger.exiting("Formula", "getRowVarsMinMax", ans);
+
         return ans;
     }
 
@@ -2221,6 +2316,7 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
         return;
     }
@@ -2262,6 +2358,7 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
         return argtypemap;
     }
@@ -2317,6 +2414,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return relations;
@@ -2428,6 +2526,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return ans;
@@ -2448,7 +2547,7 @@ public class Formula implements Comparable {
      */
     public boolean isSimpleClause() {
 
-        // System.out.println("INFO in Formula.isSimpleClause(): " + this);
+		logger.entering("Formula", "isSimpleClause");
         Formula f = new Formula();
         f.read(theFormula);
         while (!f.empty()) {
@@ -2470,6 +2569,7 @@ public class Formula implements Comparable {
      * negation.
      */
     public boolean isSimpleNegatedClause() {
+
 
         //System.out.println("INFO in Formula.isSimpleNegatedClause(): " + this);
         Formula f = new Formula();
@@ -2728,6 +2828,12 @@ public class Formula implements Comparable {
      * A utility helper method for computing predicate data types.
      */
     private String[] addToTypeList(String pred, ArrayList al, String[] result, boolean classP) {
+
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "pred = " + pred, "al = " + al,
+					"result = " + result, "classP = " + classP };
+			logger.entering("Formula", "addToTypeList", params);
+		}
     	
         try {
             Formula f = null;
@@ -2738,7 +2844,7 @@ public class Formula implements Comparable {
             int clPos = 2;
             for (int i = 0; i < al.size(); i++) {
                 f = (Formula) al.get(i);
-                //System.out.println("INFO in addToTypeList(): formula: " + f.theFormula);
+				// logger.finest("theFormula: " + f.theFormula);
                 if (f.theFormula.startsWith("(domain")) {
                     argnum = Integer.parseInt(f.getArgument(2));
                     clPos = 3;
@@ -2749,9 +2855,7 @@ public class Formula implements Comparable {
                 if ((argnum < 0) || (argnum >= result.length)) {
                     errStr = "Possible arity confusion for " + pred;
                     mgrErrStr = KBmanager.getMgr().getError();
-                    System.out.println("WARNING in Formula.addToTypeList(): "
-                                       + errStr + ": al == " + al + ", result.length == " + result.length
-                                       + ", classP == \"" + classP + "\"");
+					logger.warning(errStr);
                     if (mgrErrStr.equals("") || (mgrErrStr.indexOf(errStr) == -1)) {
                         KBmanager.getMgr().setError(mgrErrStr + "\n<br/>" + errStr + "\n<br/>");
                     }
@@ -2765,7 +2869,7 @@ public class Formula implements Comparable {
                         errStr = ("Multiple types asserted for argument " + argnum
                                   + " of " + pred + ": " + cl + ", " + result[argnum]);
                         mgrErrStr = KBmanager.getMgr().getError();
-                        System.out.println("Error in Formula.addToTypeList(): " + errStr);
+						logger.warning(errStr);
                         if (mgrErrStr.equals("") || (mgrErrStr.indexOf(errStr) == -1)) {
                             KBmanager.getMgr().setError(KBmanager.getMgr().getError()
                                                         + "\n<br/>" + errStr + "\n<br/>");
@@ -2775,7 +2879,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println(ex.getMessage());
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -2790,9 +2894,11 @@ public class Formula implements Comparable {
      */
    public static String findType(int numarg, String pred, KB kb) {
 
-        // System.out.println("INFO in Formula.findType(" + numarg + ", " + pred + ")");
-        if (DEBUG)
-            System.out.println("ENTER findType(" + numarg + ", " + pred + ", " + kb.name + ")");
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "numarg = " + numarg, "pred = " + pred,
+					"kb = " + kb.name };
+			logger.entering("Formula", "findType", params);
+		}
         String result = null;
         boolean isCached = false;
         boolean cacheResult = false;
@@ -2872,12 +2978,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-        if (DEBUG) {
-            System.out.println("EXIT findType(" + numarg + ", " + pred + ", " + kb.name + ")");
-            System.out.println("  " + (isCached ? "cached " : "") + "result == " + result);
-        }
+
+		logger.exiting("Formula", "findType", result);
         return result;
     }
 
@@ -2895,11 +3000,12 @@ public class Formula implements Comparable {
      */
     private void winnowTypeList(List types, KB kb) {
 
-        long t1 = 0L;
-        if (DEBUG) {
-            t1 = System.currentTimeMillis();
-            System.out.println("ENTER winnowTypeList(" + types + ", " + kb.name + ")");
-        }
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "types = " + types, "kb = " + kb.name };
+			logger.entering("Formula", "winnowTypeList", params);
+		}
+
+		long t1 = 0L;
         try {
             if ((types instanceof List) && (types.size() > 1)) {
                 Object[] valArr = types.toArray();
@@ -2925,12 +3031,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-        if (DEBUG) {
-            System.out.println("EXIT winnowTypeList(" + types + ", " + kb.name + ")");
-            System.out.println("  time == " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-        }
+
+		logger.exiting("Formula", "winnowTypeList");
         return;
     }
 
@@ -2954,12 +3059,13 @@ public class Formula implements Comparable {
      */
     private void computeTypeRestrictions(List ios, List scs, String var, KB kb) {
 
-        long t1 = 0L;
-        if (DEBUG) {
-            t1 = System.currentTimeMillis();
-            System.out.println("ENTER computeTypeRestrictions(" + this + ", " + ios + ", " + scs + ", " + var + ", " + kb.name + ")");
-        }
-        String pred = null;
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "ios = " + ios, "scs = " + scs, "var = " + var,
+					"kb = " + kb.name };
+			logger.entering("Formula", "computeTypeRestrictions", params);
+		}
+
+		String pred = null;
         try {
             if (!this.listP() || !this.theFormula.contains(var))
                 return;
@@ -3106,16 +3212,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in Formula.computeTypeRestrictions(" + this + ", " + ios + ", " + scs + ", " + var + ", " + kb.name + ")");
-            System.out.println("  pred == " + pred);
-            System.out.println(ex.getMessage());
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
 
-        if (DEBUG) {
-            System.out.println("EXIT computeTypeRestrictions(" + this + ", " + ios + ", " + scs + ", " + var + ", " + kb.name + " )");
-            System.out.println("  time == " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-        }
+		logger.exiting("Formula", "computeTypeRestrictions");
         return;
     }
 
@@ -3137,11 +3238,10 @@ public class Formula implements Comparable {
      */
     private String insertTypeRestrictionsU(List shelf, KB kb) {
 
-        long t1 = 0L;
-        if (DEBUG) {
-            t1 = System.currentTimeMillis();
-            System.out.println("ENTER insertTypeRestrictionsU(" + this + ", " + shelf + ", " + kb.name + ")");
-        }
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "shelf = " + shelf, "kb = " + kb.name };
+			logger.entering("Formula", "insertTypeRestrictionsU", params);
+		}
 
         String result = this.theFormula;
         try {
@@ -3224,15 +3324,12 @@ public class Formula implements Comparable {
             result = sb.toString();
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
             result = this.theFormula;
         }
 
-        if (DEBUG) {
-            System.out.println("EXIT insertTypeRestrictionsU(" + this + ", " + shelf + ", " + kb.name + ")");
-            System.out.println("  time == " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-            System.out.println("  result == " + result);
-        }
+		logger.exiting("Formula", "insertTypeRestrictionsU", result);
         return result;
     }
 
@@ -3254,12 +3351,11 @@ public class Formula implements Comparable {
      */
     private String insertTypeRestrictionsE(List shelf, KB kb) {
 
-        long t1 = 0L;
-        if (DEBUG) {
-            t1 = System.currentTimeMillis();
-            System.out.println("ENTER insertTypeRestrictionsE(" + this + ", " + shelf + ", " + kb.name + ")");
-        }
-
+		if (logger.isLoggable(Level.FINER)) {
+    		String[] params = {"shelf = " + shelf, "kb = " + kb.name};
+			logger.entering("Formula", "insertTypeRestrictionsE", params);
+    	}
+    	
         String result = this.theFormula;
         try {
             String varlist = this.getArgument(1);
@@ -3353,11 +3449,7 @@ public class Formula implements Comparable {
             result = this.theFormula;
         }
 
-        if (DEBUG) {
-            System.out.println("EXIT insertTypeRestrictionsE(" + this + ", " + shelf + ", " + kb.name + ")");
-            System.out.println("  time == " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-            System.out.println("  result == " + result);
-        }
+		logger.exiting("Formula", "insertTypeRestrictionsE", result);
         return result;
     }
 
@@ -3380,11 +3472,11 @@ public class Formula implements Comparable {
      */
     private String insertTypeRestrictionsR(List shelf, KB kb) {
 
-        long t1 = 0L;
-        if (DEBUG) {
-            t1 = System.currentTimeMillis();
-            System.out.println("ENTER insertTypeRestrictionsR(" + shelf + ", " + kb.name + ")");
-        }
+
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "shelf = " + shelf, "kb = " + kb.name };
+			logger.entering("Formula", "insertTypeRestrictionsR", params);
+		}
 
         String result = this.theFormula;
         try {
@@ -3435,16 +3527,12 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println(ex.getMessage());
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
             result = this.theFormula;
         }
 
-        if (DEBUG) {
-            System.out.println("EXIT insertTypeRestrictionsR(" + this + ", " + shelf + ", " + kb.name + ")");
-            System.out.println("  time == " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-            System.out.println("  result == " + result);
-        }
+		logger.exiting("Formula", "insertTypeRestrictionsR", result);
 
         return result;
     }
@@ -3461,6 +3549,7 @@ public class Formula implements Comparable {
             shelf.add(0, quad);
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return;
@@ -3481,6 +3570,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -3501,6 +3591,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -3518,6 +3609,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return;
@@ -3535,6 +3627,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return;
@@ -3566,17 +3659,14 @@ public class Formula implements Comparable {
      */
     private String addTypeRestrictions(KB kb) {
 
-        // System.out.println("INFO in Formula.addTypeRestrictions(" + this + ")");
-        if (DEBUG) 
-            System.out.println("ENTER addTypeRestrictions(" + kb.name + ")");      
-        String result = this.theFormula;
+		logger.entering("Formula", "addTypeRestrictions", kb.name);
+
+    	String result = this.theFormula;
         try {
             Formula f = new Formula();
             long t1 = System.currentTimeMillis();
             f.read(this.makeQuantifiersExplicit(false));
-
-            if (DEBUG) 
-                System.out.println("  f == " + f);            
+			// logger.finest("f == " + f);
             long t2 = System.currentTimeMillis();
             result = f.insertTypeRestrictionsR(new ArrayList(), kb);
             long t3 = System.currentTimeMillis();
@@ -3586,12 +3676,12 @@ public class Formula implements Comparable {
             KB.ppTimers[8] += (t3 - t2);
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-        if (DEBUG) {
-            System.out.println("EXIT addTypeRestrictions(" + kb.name + ")");
-            System.out.println("  result == " + result);
-        }
+
+		logger.exiting("Formula", "addTypeRestrictions", result);
+
         return result;
     }
 
@@ -3613,8 +3703,8 @@ public class Formula implements Comparable {
      */
     public HashMap computeVariableTypes(KB kb) {
 
-        if (DEBUG) 
-            System.out.println("ENTER computeVariableTypes(" + kb.name + ")");        
+		logger.entering("Formula", "computeVariableTypes", kb.name);
+
         HashMap result = new HashMap();
         try {
             Formula f = new Formula();
@@ -3622,12 +3712,11 @@ public class Formula implements Comparable {
             f.computeVariableTypesR(result, kb);
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-        if (DEBUG) {
-            System.out.println("EXIT computeVariableTypes(" + kb.name + ")");
-            System.out.println("  result == " + result);
-        }
+
+		logger.exiting("Formula", "computeVariableTypes", result);
         return result;
     }
 
@@ -3645,9 +3734,12 @@ public class Formula implements Comparable {
      */
     private void computeVariableTypesR(HashMap map, KB kb) {
 
-        if (DEBUG) 
-            System.out.println("ENTER computeVariableTypesR(" + map + ", " + kb.name + ")");        
-        try {
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "map = " + map, "kb = " + kb.name };
+			logger.entering("Formula", "computeVariableTypesR", params);
+		}
+
+		try {
             if (this.listP() && !this.empty()) {
                 int len = this.listLength();
                 String arg0 = this.car();
@@ -3663,11 +3755,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
+			logger.warning(ex.getMessage());
+			ex.printStackTrace();
         }
-        if (DEBUG) 
-            System.out.println("EXIT computeVariableTypesR(" + map + ", " + kb.name + ")");        
+
+		logger.exiting("Formula", "computeVariableTypesR");
         return;
     }
 
@@ -3686,8 +3778,11 @@ public class Formula implements Comparable {
      */
     private void computeVariableTypesQ(HashMap map, KB kb) {
 
-        if (DEBUG) 
-            System.out.println("ENTER computeVariableTypesQ(" + map + ", " + kb.name + ")");        
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "map = " + map, "kb = " + kb.name };
+			logger.entering("Formula", "computeVariableTypesQ", params);
+		}
+
         try {
             Formula varlistF = new Formula();
             varlistF.read(this.getArgument(1));
@@ -3720,10 +3815,11 @@ public class Formula implements Comparable {
             nextF.computeVariableTypesR(map, kb);
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-        if (DEBUG) 
-            System.out.println("EXIT computeVariableTypesQ(" + map + ", " + kb.name + ")");        
+
+		logger.exiting("Formula", "computeVariableTypesQ");
         return;
     }
 
@@ -3737,8 +3833,15 @@ public class Formula implements Comparable {
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
                                      boolean translateIneq, boolean translateMath) {
 
-        // System.out.println("INFO in Formula.preProcessRecurse(" + this + ")");
-        StringBuilder result = new StringBuilder();
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "f = " + f, "previousPred = " + previousPred,
+					"ignoreStrings = " + ignoreStrings,
+					"translateIneq = " + translateIneq,
+					"translateMath = " + translateMath };
+			logger.entering("Formula", "preProcessRecurse", params);
+		}
+
+		StringBuilder result = new StringBuilder();
         try {
             if (f.listP() && !f.empty()) {
                 String prefix = "";
@@ -3809,8 +3912,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
+
+		logger.exiting("Formula", "preProcessRecurse", result.toString());
         return result.toString();
     }
 
@@ -3832,16 +3938,18 @@ public class Formula implements Comparable {
      */
     public ArrayList preProcess(boolean isQuery, KB kb) {
 
-        if (DEBUG) System.out.println("ENTER Formula.preProcess(" + this + ", " + isQuery + ", " + kb.name + ")");
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "isQuery = " + isQuery, "kb = " + kb.name };
+			logger.entering("Formula", "preProcess", params);
+		}
+
         ArrayList results = new ArrayList();
         try {
             if (isNonEmptyString(this.theFormula)) {
                 KBmanager mgr = KBmanager.getMgr();
                 if (!this.isBalancedList()) {
                     String errStr = "Unbalanced parentheses or quotes";
-                    System.out.println("WARNING in Formula.preProcess(" + this.theFormula
-                                       + ", " + isQuery + ", " + kb.name + ")");
-                    System.out.println("  " + errStr);
+					logger.warning(errStr + " for formula = " + this.theFormula);
                     mgr.setError(mgr.getError() + "\n<br/>" + errStr + " in "
                                  + this.theFormula + "\n<br/>");
                     return results;
@@ -3891,8 +3999,8 @@ public class Formula implements Comparable {
                             results.add(fnew);
                         }
                         else {
-                            System.out.println("WARNING in Formula.preProcess()");
-                            System.out.println("  REJECTING " + theNewFormula);
+							logger.warning("Following formula rejected for inference: "
+									+ theNewFormula);
                             mgr.setError(mgr.getError() + "\n<br/>Formula rejected for inference:<br/>"
                                          + fnew.htmlFormat(kb) + "<br/>\n");
                         }
@@ -3902,9 +4010,10 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.warning(ex.getMessage());
         }
-        if (DEBUG) 
-        	System.out.println("EXIT Formula.preProcess(" + this + ", " + isQuery + ", " + kb.name + ")\n results == " + results);
+
+		logger.exiting("Formula", "preProcess", results);
         return results;
     }
 
@@ -3913,7 +4022,11 @@ public class Formula implements Comparable {
      */
     public Formula replaceVar(String v, String term) {
 
-        // System.out.println("Formula.replaceVar(): " + this.theFormula);
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "v = " + v, "term = " + term };
+			logger.entering("Formula", "replaceVar", params);
+		}
+
         Formula newFormula = new Formula();
         newFormula.read("()");
         if (this.isVariable()) {
@@ -3924,17 +4037,19 @@ public class Formula implements Comparable {
         if (!this.empty()) {
             Formula f1 = new Formula();
             f1.read(this.car());
-            // System.out.println("car: " + f1.theFormula);
+			// logger.finest("car: " + f1.theFormula);
             if (f1.listP())
                 newFormula = newFormula.cons(f1.replaceVar(v,term));
             else
                 newFormula = newFormula.append(f1.replaceVar(v,term));
             Formula f2 = new Formula();
             f2.read(this.cdr());
-            // System.out.println("cdr: " + f2);
+			// logger.finest("cdr: " + f2);
             newFormula = newFormula.append(f2.replaceVar(v,term));
         }
-        //System.out.println("Return: " + newFormula.theFormula);
+
+		logger.exiting("Formula", "replaceVar", newFormula);
+
         return newFormula;
     }
 
@@ -3952,8 +4067,13 @@ public class Formula implements Comparable {
      */
     private ArrayList replacePredVarsAndRowVars(KB kb, boolean addHoldsPrefix) {
 
-          // System.out.println("ENTER Formula.replacePredVarsAndRowVars(" + this + ", " + kb.name + ", " + addHoldsPrefix + ")");
-        ArrayList result = new ArrayList();
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "kb = " + kb.name,
+					"addHoldsPrefix = " + addHoldsPrefix };
+			logger.entering("Formula", "replacePredVarsAndRowVars", params);
+		}
+
+		ArrayList result = new ArrayList();
         try {
             Formula startF = new Formula();
             startF.read(this.theFormula);
@@ -3977,7 +4097,7 @@ public class Formula implements Comparable {
                     for (it = working.iterator(); it.hasNext();) {
                         f = (Formula) it.next();
                         List instantiations = f.instantiatePredVars(kb);
-                        if (DEBUG) System.out.println("  instantiations == " + instantiations);
+						// logger.finest("instantiations == " + instantiations);
                         if (instantiations.isEmpty()) {
                             // If the accumulator is empty -- no pred
                             // var instantiations were possible -- add
@@ -3994,9 +4114,7 @@ public class Formula implements Comparable {
                             String errStr = "No predicate instantiations for";
                             if (isNonEmptyString(obj0)
                                 && ((String) obj0).equalsIgnoreCase("reject")) {
-                                System.out.println("INFO in Formula.preProcess()");
-                                System.out.println("  " + errStr);
-                                System.out.println(f);
+								logger.warning(errStr + " " + f);
                                 errStr += ("\n<br/> " + f.htmlFormat(kb));
                                 mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
                             }
@@ -4037,8 +4155,8 @@ public class Formula implements Comparable {
                         f = (Formula) it.next();
                         // System.out.println("f == " + f);
                         accumulator.addAll(f.expandRowVars(kb));
-                        if (DEBUG) System.out.println("  accumulator == " + accumulator);
-                        // System.out.println("  2. rve accumulator.size() == " + accumulator.size());
+						// logger.finest("f == " + f);
+						// logger.finest("accumulator == " + accumulator);
                         if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
                             System.out.println("  AXIOM_EXPANSION_LIMIT EXCEEDED: "
                                                + AXIOM_EXPANSION_LIMIT);
@@ -4053,11 +4171,12 @@ public class Formula implements Comparable {
             result.addAll(accumulator);
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         
-        //  System.out.println("EXIT Formula.replacePredVarsAndRowVars(" + this + ", " + kb.name + ", " + addHoldsPrefix + ")");
-        //  System.out.println("  ==> " + result);        
+		logger.exiting("Formula", "replacePredVarsAndRowVars", result);
+
         return result;
     }
 
@@ -4135,6 +4254,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -4184,6 +4304,7 @@ public class Formula implements Comparable {
                      );
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return pass;
@@ -4211,8 +4332,11 @@ public class Formula implements Comparable {
 
         boolean result = false;
         try {
-
-            //System.out.println("INFO in Formula.isNegatedQuery(): Comparing |" + query + "| to |" + formula + "|");
+			if (logger.isLoggable(Level.FINER)) {
+				String[] params = { "query = " + query,
+						"formulaString = " + formulaString };
+				logger.entering("Formula", "isNegatedQuery", params);
+			}
 
             String fstr = formulaString.trim();
             if (fstr.startsWith("(not")) {
@@ -4224,8 +4348,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
+
+		logger.exiting("Formula", "isNegatedQuery", result);
         return result;
     }
 
@@ -4273,7 +4400,7 @@ public class Formula implements Comparable {
             char pch = '0';  // char at (i-1)
             char ch = '0';   // char at i
             for (int i = 0; i < flen; i++) {
-                // System.out.println("INFO in format(): " + formatted.toString());
+				// logger.finest("formatted string = " + formatted.toString());
                 ch = this.theFormula.charAt(i);
                 if (inComment) {     // In a comment
                     formatted.append(ch);
@@ -4371,6 +4498,7 @@ public class Formula implements Comparable {
             result = formatted.toString();
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -4419,6 +4547,7 @@ public class Formula implements Comparable {
             fKbHref = format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return fKbHref;
@@ -4432,11 +4561,11 @@ public class Formula implements Comparable {
     public String toProlog() {
 
         if (!listP()) {
-            System.out.println("INFO in Fomula.toProlog(): Not a formula: " + theFormula);
+			logger.warning("Not a formula: " + theFormula);
             return "";
         }
         if (empty()) {
-            System.out.println("INFO in Fomula.toProlog(): Empty formula: " + theFormula);
+			logger.warning("Empty formula: " + theFormula);
             return "";
         }
         StringBuilder result = new StringBuilder();
@@ -4444,7 +4573,7 @@ public class Formula implements Comparable {
         Formula f = new Formula();
         f.theFormula = cdr();
         if (!Formula.atom(relation)) {
-            System.out.println("INFO in Fomula.toProlog(): Relation not an atom: " + relation);
+			logger.warning("Relation not an atom: " + relation);
             return "";
         }
         result.append(relation + "('");
@@ -4452,7 +4581,7 @@ public class Formula implements Comparable {
             String arg = f.car();
             f.theFormula = f.cdr();
             if (!Formula.atom(arg)) {
-                System.out.println("INFO in Formula.toProlog(): Argument not an atom: " + arg);
+				logger.warning("Argument not an atom: " + arg);
                 return "";
             }
             result.append(arg + "'");
@@ -4481,34 +4610,22 @@ public class Formula implements Comparable {
 
         String result = null;
         try {
-            if (DEBUG) {
-                System.out.println("ENTER Formula.translateWord(" + st.toString()
-                                   + ", " + hasArguments + ")");
-                System.out.println("  st.ttype == " + st.ttype);
-                System.out.println("  st.sval == " + st.sval);
-                System.out.println("  st.nval == " + st.nval);
-            }
+
+			// logger.finest("st.ttype == " + st.ttype);
+			// logger.finest("st.sval == " + st.sval);
+			// logger.finest("st.nval == " + st.nval);
+
             result = translateWord_1(st, hasArguments);
             if (result.equals("$true__m") || result.equals("$false__m")) {
                 result = "'" + result + "'";
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in Formula.translateWord(" + st.toString()
-                               + ", " + hasArguments + "): " + ex.getMessage());
-            System.out.println("  st.ttype == " + st.ttype);
-            System.out.println("  st.sval == " + st.sval);
-            System.out.println("  st.nval == " + st.nval);
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-        if (DEBUG) {
-            System.out.println("EXIT Formula.translateWord(" + st.toString()
-                               + ", " + hasArguments + ")");
-            System.out.println("  st.ttype == " + st.ttype);
-            System.out.println("  st.sval == " + st.sval);
-            System.out.println("  st.nval == " + st.nval);
-            System.out.println("  result == " + result);
-        }
+
+		logger.exiting("Formula", "translateWord", result);
         return result;
     }
 
@@ -4563,6 +4680,7 @@ public class Formula implements Comparable {
         }
         catch (Exception ex) {
             //---Be silent if there is a problem getting the KBmanager.
+			logger.warning(ex.getMessage());
         }
 
         //----Places single quotes around strings, and replace \n by space
@@ -4732,7 +4850,7 @@ public class Formula implements Comparable {
                 st.nextToken();
                 if (st.ttype==40) {         //----Open bracket
                     if (lastWasOpen) {      //----Should not have ((in KIF
-                        System.out.println("ERROR in Formula.tptpParseSUOKIFString: Double open bracket at " + tptpFormula);
+						logger.warning("Double open bracket at " + tptpFormula);
                         throw new ParseException("Parsing error in " + suoString,0);
                     }
                     //----Track nesting of ()s for hol__, so I know when to close the '
@@ -4745,7 +4863,7 @@ public class Formula implements Comparable {
                            (arity = operatorArity(st)) > 0) {
                     //----Operators must be preceded by a (
                     if (!lastWasOpen) {
-                        System.out.println("ERROR in Formula.tptpParseSUOKIFString: Missing ( before " +
+						logger.warning("Missing ( before " +
                                            st.sval + " at " + tptpFormula);
                         return(null);
                     }
@@ -4878,13 +4996,14 @@ public class Formula implements Comparable {
                             translatedFormula += "& ( " + tptpFormula.toString() + " )";
 
                         if ((Integer)(countStack.pop()) != 1)
-                            System.out.println("Error in Formula.tptpParseSUOKIFString(): Not one formula");
+							logger.warning("Not one formula");
                     } else if (parenLevel < 0) {
-                        System.out.print("Error in Formula.tptpParseSUOKIFString(): Extra closing bracket at " + tptpFormula.toString());
+						logger.warning("Extra closing bracket at "
+								+ tptpFormula.toString());
                         throw new ParseException("Parsing error in " + suoString,0);
                     }
                 } else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    System.out.println("ERROR in Formula.tptpParseSUOKIFString(): Illegal character '" +
+					logger.warning("Illegal character '" +
                                        (char)st.ttype + "' at " + tptpFormula.toString());
                     throw new ParseException("Parsing error in " + suoString,0);
                 }
@@ -4895,10 +5014,8 @@ public class Formula implements Comparable {
                 translatedFormula = tptpFormula.toString();
         }
         catch (Exception ex2) {
-            System.out.println("Error in Formula.tptpParseSUOKIFString(" + suoString + ")");
-            System.out.println("  st.sval == " + st.sval);
-            System.out.println("  message == " + ex2.getMessage());
-            ex2.printStackTrace();
+			logger.warning(ex2.getMessage());
+			ex2.printStackTrace();
         }
           //System.out.println("  ==> " + translatedFormula);
           //System.out.println("EXIT Formula.tptpParseSUOKIFString(\"" + suoString + "\")");
@@ -4911,54 +5028,55 @@ public class Formula implements Comparable {
     public void tptpParse(boolean query, KB kb, List<Formula> preProcessedForms)
         throws ParseException, IOException {
 
-        if (DEBUG)
-            System.out.println("INFO in Formula.tptpParse(" + this + ", " + query + ", " + kb + ", " + preProcessedForms + ") : entering");
-        try {
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "query = " + query, "kb = " + kb.name,
+					"preProcessForms = " + preProcessedForms };
+			logger.entering("Formula", "tptpParse", params);
+		}
+
+		try {
             KBmanager mgr = KBmanager.getMgr();
             if (kb == null)
                 kb = new KB("",mgr.getPref("kbDir"));
 
             if (!this.isBalancedList()) {
                 String errStr = "Unbalanced parentheses or quotes";
-                System.out.println("Error in Formula.tptpParse(" + this.theFormula + ", " + query + ", " + kb.name + ", " + preProcessedForms + ")");
-                System.out.println("  " + errStr);
+				logger.warning(errStr);
                 mgr.setError(mgr.getError() + ("\n<br/>" + errStr + " in " + this.theFormula + "\n<br/>"));
                 return;
             }
             List<Formula> processed = preProcessedForms;
             if (processed == null)
                 processed = this.preProcess(query, kb);
-            if (DEBUG)
-                System.out.println("  processed == " + processed);
-            //     System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
-            //     System.out.println("  processed == " + processed);
+
+			// logger.finest("processed = " + processed);
+
             if (processed != null) {
                 this.clearTheTptpFormulas();
                 //----Performs function on each current processed axiom
                 Formula f = null;
                 for (Iterator<Formula> g = processed.iterator(); g.hasNext();) {
                     f = (Formula) g.next();
-                    if (DEBUG)
-                        System.out.println("  f == " + f);
+					logger.finer("f = " + f);
                     String tptpStr = tptpParseSUOKIFString(f.theFormula);
                     if (StringUtil.isNonEmptyString(tptpStr)) {
                         this.getTheTptpFormulas().add(tptpStr);
                     }
                 }
-                //         System.out.println("INFO in Formula.tptpParse(" + this.theFormula + ")");
-                //         System.out.println("  theTptpFormulas == " + this.getTheTptpFormulas());
+
+				// logger.finest("theTptpFormulas = " + this.getTheTptpFormulas());
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in Formula.tptpParse(" + this + ", " + query + ", " + kb + ", " + preProcessedForms + "): " + ex.getMessage());
+			logger.severe(ex.getMessage());
             ex.printStackTrace();
             if (ex instanceof ParseException)
                 throw (ParseException) ex;
             if (ex instanceof IOException)
                 throw (IOException) ex;
         }
-        if (DEBUG)
-            System.out.println("INFO in Formula.tptpParse(" + this + ", " + query + ", " + kb + ", " + preProcessedForms + ") : exiting");
+
+		logger.exiting("Formula", "tptpParse");
         return;
     }
 
@@ -5144,6 +5262,7 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return ans;
@@ -5311,11 +5430,9 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-
-        //     System.out.println("EXIT computeSubstitutionTuples(" + kb + ", " + queryLits + ")");
-        //     System.out.println("  -> " + result);
 
         return result;
     }
@@ -5353,13 +5470,18 @@ public class Formula implements Comparable {
      */
     private ArrayList prepareIndexedQueryLiterals(KB kb, Map varTypeMap) {
 
-        // System.out.println("ENTER prepareIndexedQueryLiterals(" + this + ")");
-        ArrayList ans = new ArrayList();
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "kb = " + kb.name, "varTypeMap = " + varTypeMap };
+			logger.entering("Formula", "prepareIndexedQueryLiterals", params);
+		}
+
+		ArrayList ans = new ArrayList();
         try {
             Map varsWithTypes = ((varTypeMap instanceof Map)
                                  ? varTypeMap
                                  : this.gatherPredVars(kb));
-            // System.out.println("  varsWithTypes == " + varsWithTypes);
+
+			// logger.finest("varsWithTypes = " + varsWithTypes);
 
             if (!varsWithTypes.isEmpty()) {
                 String yOrN = (String) varsWithTypes.get("arg0");
@@ -5385,11 +5507,11 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
 
-        //     System.out.println("EXIT prepareIndexedQueryLiterals(" + this + ")");
-        //     System.out.println("  -> " + ans);
+		logger.exiting("Formula", "prepareIndexedQueryLiterals", ans);
 
         return ans;
     }
@@ -5413,7 +5535,7 @@ public class Formula implements Comparable {
      */
     protected HashMap gatherPredVars(KB kb) {
 
-        // System.out.println("ENTER gatherPredVars(" +  this + ")");
+		logger.entering("Formula", "gatherPredVars", kb.name);
         HashMap ans = new HashMap();
         try {
             if (isNonEmptyString(this.theFormula)) {
@@ -5447,8 +5569,8 @@ public class Formula implements Comparable {
                                     accumulator.add(newF);
                             }
                             else {
-                                System.out.println("INFO in Formula.gatherPredVars(" + this + ")");
-                                System.out.println("Is this malformed? " + f.theFormula);
+								logger.warning("Is this malformed? "
+										+ f.theFormula);
                             }
                         }
                         else if (arg0.equals("holds"))
@@ -5498,10 +5620,12 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-        // System.out.println("INFO in gatherPredVars(" +  this + ")");
-        // System.out.println("  -> " + ans);
+
+		logger.exiting("Formula", "gatherPredVars", ans);
+
         return ans;
     }
 
@@ -5535,8 +5659,9 @@ public class Formula implements Comparable {
      */
     private Formula maybeRemoveMatchingLits(Formula litF) {
 
-        // System.out.println("ENTER maybeRemoveMatchingLits(" + litF + ") ");
-        Formula result = null;
+		logger.entering("Formula", "maybeRemoveMatchingLits", litF);
+
+		Formula result = null;
         try {
             Formula f = this;
             if (f.listP() && !f.empty()) {
@@ -5599,12 +5724,13 @@ public class Formula implements Comparable {
             }
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         if (result == null)
             result = this;
-        // System.out.println("EXIT maybeRemoveMatchingLits(" + litF + ")");
-        // System.out.println("  -> " + result);
+
+		logger.exiting("Formula", "maybeRemoveMatchingLits", result);
         return result;
     }
 
@@ -5767,6 +5893,7 @@ public class Formula implements Comparable {
             // System.out.println("  ==> " + ans);
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         return ans;
@@ -5783,8 +5910,8 @@ public class Formula implements Comparable {
      */
     public Formula substituteVariables(Map<String,String> m) {
 
-        //System.out.println("INFO in Formula.instantiateVariables(): " + this.theFormula);
-        //System.out.println(m);
+		logger.entering("Formula", "substituteVariables", m);
+
         Formula newFormula = new Formula();
         newFormula.read("()");
         if (atom()) {
@@ -5807,7 +5934,8 @@ public class Formula implements Comparable {
             f2.read(this.cdr());
             newFormula = newFormula.append(f2.substituteVariables(m));
         }
-        //System.out.println("Return: " + newFormula.theFormula);
+
+		logger.exiting("Formula", "substituteVariables", newFormula);
         return newFormula;
     }
 
@@ -5842,7 +5970,11 @@ public class Formula implements Comparable {
      */
     public Formula rename(String term2, String term1) {
 
-        // System.out.println("Formula.rename(): " + this.theFormula);
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "term2 = " + term2, "term1 = " + term1 };
+			logger.entering("Formula", "rename", params);
+		}
+
         Formula newFormula = new Formula();
         newFormula.read("()");
         if (this.atom()) {
@@ -5853,17 +5985,21 @@ public class Formula implements Comparable {
         if (!this.empty()) {
             Formula f1 = new Formula();
             f1.read(this.car());
-            // System.out.println("car: " + f1.theFormula);
+			// logger.finest("car: " + f1.theFormula);
+
             if (f1.listP())
                 newFormula = newFormula.cons(f1.rename(term2,term1));
             else
                 newFormula = newFormula.append(f1.rename(term2,term1));
             Formula f2 = new Formula();
             f2.read(this.cdr());
-            // System.out.println("cdr: " + f2);
+
+			// logger.finest("cdr: " + f2);
             newFormula = newFormula.append(f2.rename(term2,term1));
         }
-        //System.out.println("Return: " + newFormula.theFormula);
+
+		logger.exiting("Formula", "rename", newFormula.theFormula);
+
         return newFormula;
     }
 
@@ -5916,9 +6052,11 @@ public class Formula implements Comparable {
                 }
             }
             long dur = (System.currentTimeMillis() - t1);
-            System.out.println(count + " clausal forms written in " + (dur / 1000.0) + " seconds");
+			logger.info(count + " clausal forms written in " + (dur / 1000.0)
+					+ " seconds");
         }
         catch (Exception ex) {
+			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -5927,6 +6065,7 @@ public class Formula implements Comparable {
                     bw.close();
                 }
                 catch (Exception e2) {
+					logger.warning(e2.getMessage());
                     e2.printStackTrace();
                 }
             }
@@ -5939,7 +6078,7 @@ public class Formula implements Comparable {
      */
     public static void resolveTest3() {
 
-        System.out.println("--------------------INFO in Formula.resolveTest3()--------------");
+		// logger.finest("--------------------INFO in Formula.resolveTest3()--------------");
         Formula newResult = new Formula();
         Formula f1 = new Formula();
         Formula f2 = new Formula();
@@ -5950,10 +6089,10 @@ public class Formula implements Comparable {
         f2.read("(or (not (recipient ?VAR5 ?VAR3)) (not (patient ?VAR5 ?VAR4)) (not (instance ?VAR5 Selling)) (not (instance ?VAR4 Weapon)) " +
                   "(not (instance ?VAR3 Nation)) (not (agent ?VAR5 ?VAR2)) (not (attribute ?VAR3 Hostile)) (not (attribute ?VAR2 American)))");
 
-        System.out.println("INFO in Formula.resolveTest3(): f1: " + f1);
-        System.out.println("INFO in Formula.resolveTest3(): f2: " + f2);
-        System.out.println("INFO in CNFFormula.resolveTest3(): resolution result mapping: " + f1.resolve(f2,newResult));
-        System.out.println("INFO in CNFFormula.resolveTest3(): resolution result: " + newResult);
+		// logger.finest("f1: " + f1);
+		// logger.finest("f2: " + f2);
+		// logger.finest("resolution result mapping: " + f1.resolve(f2, newResult));
+		// logger.finest("resolution result: " + newResult);
     }
 
 
@@ -5962,22 +6101,22 @@ public class Formula implements Comparable {
      */
     public static void unifyTest1() {
 
-        System.out.println("--------------------INFO in Formula.unifyTest1()--------------");
+		// logger.finest("--------------------INFO in Formula.unifyTest1()--------------");
         Formula f2 = new Formula();
         f2.read("(m (SkFn 1 ?VAR1) ?VAR1)");
         f2 = Clausifier.clausify(f2);
         Formula f3 = new Formula();
         f3.read("(m ?VAR1 Org1-1)");
 
-        System.out.println("INFO in Formula.unifyTest1(): f2: " + f2);
-        System.out.println("INFO in Formula.unifyTest1(): f3: " + f3);
+		// logger.finest("f2: " + f2);
+		// logger.finest("f3: " + f3);
         f3 = Clausifier.clausify(f3);
         TreeMap tm = f3.unify(f2);
-        System.out.println("INFO in Formula.unifyTest1(): Map result: " + tm);
+		// logger.finest("Map result: " + tm);
         if (tm != null)
             f3 = f3.substitute(tm);
-        System.out.println("INFO in Formula.unifyTest1(): f2: " + f2);
-        System.out.println("INFO in Formula.unifyTest1(): f3: " + f3);
+		// logger.finest("f2: " + f2);
+		// logger.finest("f3: " + f3);
     }
 
     /** ***************************************************************
@@ -5985,7 +6124,7 @@ public class Formula implements Comparable {
      */
     public static void unifyTest2() {
 
-        System.out.println("--------------------INFO in Formula.unifyTest2()--------------");
+		// logger.finest("--------------------INFO in Formula.unifyTest2()--------------");
         Formula f2 = new Formula();
         f2.read("(attribute (SkFn Jane) Investor)");
         f2 = Clausifier.clausify(f2);
@@ -5993,15 +6132,15 @@ public class Formula implements Comparable {
         f3.read("(attribute ?X Investor)");
         f3 = Clausifier.clausify(f3);
 
-        System.out.println("INFO in Formula.unifyTest2(): f2: " + f2);
-        System.out.println("INFO in Formula.unifyTest2(): f3: " + f3);
+		// logger.finest("f2: " + f2);
+		// logger.finest("f3: " + f3);
 
         TreeMap tm = f3.unify(f2);
-        System.out.println("INFO in Formula.unifyTest2(): mapping: " + tm);
+		// logger.finest("mapping: " + tm);
         if (tm != null)
             f3 = f3.substitute(tm);
-        System.out.println("INFO in Formula.unifyTest2(): f2: " + f2);
-        System.out.println("INFO in Formula.unifyTest2(): f3: " + f3);
+		// logger.finest("f2: " + f2);
+		// logger.finest("f3: " + f3);
     }
 
     /** ***************************************************************
@@ -6009,7 +6148,7 @@ public class Formula implements Comparable {
      */
     public static void unifyTest3() {
 
-        System.out.println("--------------------INFO in Formula.unifyTest3()--------------");
+		// logger.finest("--------------------INFO in Formula.unifyTest3()--------------");
         Formula f2 = new Formula();
         f2.read("(agent ?VAR4 ?VAR1)");
         f2 = Clausifier.clausify(f2);
@@ -6017,14 +6156,14 @@ public class Formula implements Comparable {
         f3.read("(agent ?VAR5 West)");
         f3 = Clausifier.clausify(f3);
         f3 = f2.separateVariableScope(f3);
-        System.out.println("INFO in Formula.unifyTest3(): f2: " + f2);
-        System.out.println("INFO in Formula.unifyTest3(): f3: " + f3);
+		// logger.finest("f2: " + f2);
+		// logger.finest("f3: " + f3);
         TreeMap tm = f3.unify(f2);
-        System.out.println("INFO in Formula.unifyTest3(): mapping: " + tm);
+		// logger.finest("mapping: " + tm);
         if (tm != null)
             f3 = f3.substitute(tm);
-        System.out.println("INFO in Formula.unifyTest3(): f2: " + f2);
-        System.out.println("INFO in Formula.unifyTest3(): f3: " + f3);
+		// logger.finest("f2: " + f2);
+		// logger.finest("f3: " + f3);
     }
 
     /** ***************************************************************
@@ -6032,20 +6171,20 @@ public class Formula implements Comparable {
      */
     public static void unifyTest4() {
 
-        System.out.println("--------------------INFO in Formula.unifyTest4()--------------");
+		// logger.finest("--------------------INFO in Formula.unifyTest4()--------------");
         Formula f1 = new Formula();
         Formula f2 = new Formula();
         //cnf1.read("(equal (ListOrderFn (ListFn ?VAR1 ?VAR2) (ListLengthFn (ListFn ?VAR1 ?VAR2))) ?VAR2)");
         f1.read("(equal (ListOrderFn (ListFn ?VAR1 ?VAR2)) ?VAR2)");
         f2.read("(equal (ImmediateFamilyFn ?VAR1) Org1-1)");
-        System.out.println("INFO in Formula.unifyTest4(): f1: " + f1);
-        System.out.println("INFO in Formula.unifyTest4(): f2: " + f2);
+		// logger.finest("f1: " + f1);
+		// logger.finest("f2: " + f2);
         TreeMap tm = f1.unify(f2);
-        System.out.println("INFO in Formula.unifyTest4(): mapping: " + tm);
+		// logger.finest("mapping: " + tm);
         if (tm != null)
             f1 = f1.substitute(tm);
-        System.out.println("INFO in Formula.unifyTest4(): f1: " + f1);
-        System.out.println("INFO in Formula.unifyTest4(): f2: " + f2);
+		// logger.finest("f1: " + f1);
+		// logger.finest("f2: " + f2);
     }
 
     /** ***************************************************************
@@ -6053,20 +6192,20 @@ public class Formula implements Comparable {
      */
     public static void unifyTest5() {
 
-        System.out.println("--------------------INFO in Formula.unifyTest5()--------------");
+		// logger.finest("--------------------INFO in Formula.unifyTest5()--------------");
         Formula f1 = new Formula();
         Formula f2 = new Formula();
         //cnf1.read("(equal (ListOrderFn (ListFn ?VAR1 ?VAR2) (ListLengthFn (ListFn ?VAR1 ?VAR2))) ?VAR2)");
         f1.read("(equal ?VAR1 ?VAR2)");
         f2.read("(equal (ImmediateFamilyFn ?VAR3) Org1-1)");
-        System.out.println("INFO in Formula.unifyTest5(): f1: " + f1);
-        System.out.println("INFO in Formula.unifyTest5(): f2: " + f2);
+		// logger.finest("f1: " + f1);
+		// logger.finest("f2: " + f2);
         TreeMap tm = f1.unify(f2);
-        System.out.println("INFO in Formula.unifyTest5(): mapping: " + tm);
+		// logger.finest("mapping: " + tm);
         if (tm != null)
             f1 = f1.substitute(tm);
-        System.out.println("INFO in Formula.unifyTest5(): f1: " + f1);
-        System.out.println("INFO in Formula.unifyTest5(): f2: " + f2);
+		// logger.finest("f1: " + f1);
+		// logger.finest("f2: " + f2);
     }
 
     /** ***************************************************************

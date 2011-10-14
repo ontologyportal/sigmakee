@@ -1,16 +1,28 @@
 package TPTPWorld;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
-import java.text.SimpleDateFormat;
-import java.util.regex.*;
-import tptp_parser.*;
-import ClientHttpRequest.*;
-import javax.servlet.jsp.*;
-import com.articulate.sigma.*;
-import TPTPWorld.SystemOnTPTP;
-import java.net.URLDecoder;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import ClientHttpRequest.ClientHttpRequest;
+
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.HTMLformatter;
+import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.TPTP2SUMO;
 
 public class InterfaceTPTP {
 
@@ -41,6 +53,8 @@ public class InterfaceTPTP {
 	public static String SystemOnTPTPFormReplyURL =
 		"http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTPTPFormReply";
 
+	private static Logger logger;
+	
 	private static class ATPResult {
 
 		public static String cleanResult = "";
@@ -57,12 +71,18 @@ public class InterfaceTPTP {
 			printResult = "";
 			idvResult = "";
 		}
+		
 	}
-
-
+	
 	public static void init() {
+		if (logger == null)
+			logger = Logger.getLogger(InterfaceTPTP.class.getName().toString());
+
+		logger.info("Initializing InterfaceTPTP.");
+
 		TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
 		BuiltInDir = TPTPWorld + "/Systems";
+		
 		//----Check available Systems
 		String systemsInfo = BuiltInDir + "/SystemInfo";
 		builtInExists = (new File(BuiltInDir)).exists() && (new File(systemsInfo)).exists();
@@ -71,11 +91,13 @@ public class InterfaceTPTP {
 		tptpWorldExists = (new File(SoTPTP)).exists();
 		BufferedReader reader;
 		String responseLine;
+		
 		//----Check builtin systems
 		if (builtInExists) {
 			systemListBuiltIn = SystemOnTPTP.listSystems(BuiltInDir, "SoTPTP");
 			defaultSystemBuiltIn = "EP---0.999";
 		}        
+		
 		//----Check local TPTP
 		if (tptpWorldExists) {
 			try {
@@ -93,9 +115,10 @@ public class InterfaceTPTP {
 				}
 				reader.close();
 			} catch (Exception ioe) {
-				System.err.println("Exception: " + ioe.getMessage());
+				logger.severe("Exception: " + ioe.getMessage());
 			}
 		}
+		
 		//----Call RemoteSoT to retrieve remote list of systems
 		Hashtable URLParameters = new Hashtable();
 
@@ -119,10 +142,11 @@ public class InterfaceTPTP {
 				if (responseLine.startsWith("EP---")) {
 					defaultSystemRemote = responseLine;
 				}
+				else defaultSystemRemote = "";
 			}
 			reader.close();
 		} catch (Exception ioe) {
-			System.err.println("Exception: " + ioe.getMessage());
+			logger.severe("Exception: " + ioe.getMessage());
 		}
 	}
 
@@ -197,20 +221,16 @@ public class InterfaceTPTP {
 				}
 			}
 			if (trimmed != null) {
-				System.out.println("INFO in InterfaceTPTP.trimUnexpectedTokens("
-						+ (((input instanceof String) && (input.length() > 20))
+				logger.info((((input instanceof String) && (input.length() > 20))
 								? (input.substring(0, 20) + " ...")
-										: input) + ")");
-				System.out.println("  trimmed == \"" + trimmed + "\"");
+										: input) + ";  trimmed == \"" + trimmed + "\"");
 			}
 		}
 		catch (Exception ex) {
-			System.out.println("ERROR in InterfaceTPTP.trimUnexpectedTokens("
+			logger.warning("ERROR in InterfaceTPTP.trimUnexpectedTokens("
 					+ (((input instanceof String) && (input.length() > 20))
 							? (input.substring(0, 20) + " ...")
-									: input) + ")");
-			System.out.println("  trimmed == \"" + trimmed + "\"");
-			System.out.println("  output == \"" + output + "\"");
+									: input) + ");  trimmed == \"" + trimmed + "\";  output == \"" + output + "\"");
 			ex.printStackTrace();
 		}
 		return output;
@@ -274,6 +294,7 @@ public class InterfaceTPTP {
 			atpOut.printResult += "</PRE>";
 		}
 		catch (Exception ex) {
+			logger.warning("Error: " + ex.getStackTrace());
 			ex.printStackTrace();
 		}
 		finally {
@@ -281,6 +302,7 @@ public class InterfaceTPTP {
 				if (reader != null) reader.close();
 			}
 			catch (Exception ioe) {
+				logger.warning("Error: " + ioe.getStackTrace());
 				ioe.printStackTrace();
 			}
 		}
@@ -293,7 +315,11 @@ public class InterfaceTPTP {
 			String quietFlag, 
 			String tstpFormat) { 
 
-		System.out.println("ENTER InterfaceTPTP.callLocalTPTP(" + systemChosen + ", " + problemFile + ", " + timeout + ", " + quietFlag + ", " + tstpFormat + ")");
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = {"systemChosen = " + systemChosen, "problemFile = " + problemFile, "timeout = " + timeout, "quietFlag = " + quietFlag, "tstpFormat = " + tstpFormat};
+			logger.entering("InterfaceTPTP", "callLocalTPTP", params);
+		}
+
 		ATPResult atpOut = new ATPResult ();
 		BufferedReader reader = null;
 		try {
@@ -322,7 +348,7 @@ public class InterfaceTPTP {
 				tstpFormat   + " " +
 				problemFile;
 			}
-			System.out.println("command: " + command);
+			logger.finer("command: " + command);
 
 			proc = Runtime.getRuntime().exec(command);
 			reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -344,6 +370,7 @@ public class InterfaceTPTP {
 			atpOut.printResult += "</PRE>";
 		}
 		catch (Exception ex) {
+			logger.severe("ERROR: " + ex.getStackTrace());
 			ex.printStackTrace();
 		}
 		finally {
@@ -351,10 +378,12 @@ public class InterfaceTPTP {
 				if (reader != null) reader.close();
 			}
 			catch (Exception ioe) {
+				logger.warning("ERROR: " + ioe.getStackTrace());
 				ioe.printStackTrace();
 			}
 		}
-		System.out.println("EXIT InterfaceTPTP.callLocalTPTP");
+		
+		logger.exiting("InterfaceTPTP", "callLocalTPTP", atpOut);
 		return atpOut;
 	}
 
@@ -410,12 +439,12 @@ public class InterfaceTPTP {
 			atpOut.printResult += "</PRE>";
 		}
 		catch (Exception ex) {
+			logger.severe("ERROR: " + ex.getStackTrace());
 			ex.printStackTrace();
 		}
 		return atpOut;
 	}
-
-
+	
 	public static String queryTPTP (String stmt, 
 			int timeout, 
 			int maxAnswers, 
@@ -424,25 +453,18 @@ public class InterfaceTPTP {
 			String location,
 			String quietFlag, 
 			String kbName, 
-			String language, 
-			Writer out) 
+			String language) 
 	throws Exception {
 
-		/*        */
-		System.out.println("ENTER InterfaceTPTP.queryTPTP(");
-		System.out.println("  " + stmt + ",");
-		System.out.println("  " + timeout + ",");
-		System.out.println("  " + maxAnswers + ",");
-		System.out.println("  " + lineHtml + ",");
-		System.out.println("  " + systemChosen + ",");
-		System.out.println("  " + location + ",");
-		System.out.println("  " + quietFlag + ",");
-		System.out.println("  " + kbName + ",");
-		System.out.println("  " + language + ",");
-		System.out.println("  " + out + ")");
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = {"stmt = " + stmt, "timeout = " + timeout, "maxAnswers = " + maxAnswers,
+					"lineHtml = " + lineHtml, "systemChosen = " + systemChosen, "location = " + location, 
+					"quietFlag = " + quietFlag, "kbName = " + kbName, "language = " + language};
+			logger.entering("InterfaceTPTP", "queryTPTP", params);
+		}
 
-		System.out.println("BuiltIn Exists? : " + builtInExists);
-		System.out.println("TPTP World Exists? :" + tptpWorldExists);
+		logger.finest("BuiltIn Exists? : " + builtInExists);
+		logger.finest("TPTP World Exists? :" + tptpWorldExists);
 
 		//----Setup
 		String resultAll = "";
@@ -480,8 +502,7 @@ public class InterfaceTPTP {
 		conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
 		boolean suppressAnswerExtraction = oldConjecture.equals(conjectureFormula.theFormula);
 
-		System.out.println("  conjectureFormula.theFormula == " + conjectureFormula.theFormula);
-		System.out.println("  suppressAnswerExtraction == " + suppressAnswerExtraction);
+		logger.finest("conjectureFormula.theFormula == " + conjectureFormula.theFormula + "\nsuppressAnswerExtraction == " + suppressAnswerExtraction);
 
 		//if (suppressAnswerExtraction) resultAll += "suppress definite answers<br/>";
 
@@ -561,6 +582,8 @@ public class InterfaceTPTP {
 				System.out.println("  kbFileName == " + kbFileName);
 				kb.addToFile(kbFileName, null, conjectureTPTPFormula);
 			}
+			
+			
 			//----Call RemoteSoT
 			if (location.equals("remote")) {
 				if (systemChosen.equals("Choose%20system")) {
@@ -588,13 +611,13 @@ public class InterfaceTPTP {
 					atpOut = callLocalTPTP (systemChosen, kbFileName, timeout,
 							quietFlag, tstpFormat);
 					resultAll += atpOut.printResult;
-					System.out.println("resultAll: " + resultAll);
+					logger.finest("resultAll: " + resultAll);
 					idvResult += atpOut.idvResult;
-					System.out.println("idvResult: " + idvResult);
+					logger.finest("idvResult: " + idvResult);
 					result += atpOut.cleanResult;
-					System.out.println("result: " + result);
+					logger.finest("result: " + result);
 					originalResult +=atpOut.originalResult; 
-					System.out.println("originalResult: " + originalResult);
+					logger.finest("originalResult: " + originalResult);
 				}
 			} 
 			else if (location.equals("local") && builtInExists && !tptpWorldExists) {
@@ -611,24 +634,27 @@ public class InterfaceTPTP {
 					idvResult += atpOut.idvResult;
 					result += atpOut.cleanResult;
 
-					System.out.println("  result == " + result);
+					logger.finest("result == " + result);
 
 					originalResult += atpOut.originalResult;    
 
-					System.out.println("  originalResult == " + originalResult);
+					logger.finest("originalResult == " + originalResult);
 
 				}            
 			}
 			else {
+				logger.warning("INTERNAL ERROR: chosen option not valid: " + location +
+				".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.");
 				resultAll += "INTERNAL ERROR: chosen option not valid: " + location +
 				".  Valid options are: 'Local SystemOnTPTP, Built-In SystemOnTPTP, or Remote SystemOnTPTP'.";
 			}
+			
 			//----If selected prover is not an ANSWER system, send proof to default ANSWER system (Metis)
 			if (!(systemChosen.startsWith(TPTP_ANSWER_SYSTEM)
 					&& location.equals("local")
 					&& builtInExists 
 					&& !tptpWorldExists)) {
-
+				logger.finest("Sending proof to Metis because selected prover is not an Answer System.");
 				String answerResult = AnswerFinder.findProofWithAnswers(result, BuiltInDir);
 				//----If answer is blank, ERROR, or WARNING, do not place in result
 				if (StringUtil.isNonEmptyString(answerResult) 
@@ -641,6 +667,7 @@ public class InterfaceTPTP {
 					resultAll += ("==" + answerResult);
 				} 
 			}
+			
 			if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
 				//----Procedure if SNARK was chosen
 				String conj = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
@@ -649,11 +676,18 @@ public class InterfaceTPTP {
 				newResult = TPTP2SUMO.convert(result, answer, false);
 			} else {
 				//----Procedure if not SNARK (call one answer system: Metis)
-				TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(result)));
-				lastAnswer = AnswerExtractor.extractAnswers(parser.ftable);
-				//----Get original variable names
-				lastAnswer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, lastAnswer);
-				newResult = TPTP2SUMO.convert(result, false);
+				try {
+					logger.finest("Parsing the following result from Metis = " + result);
+					TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(result)));
+					lastAnswer = AnswerExtractor.extractAnswers(parser.ftable);
+					//----Get original variable names
+					lastAnswer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, lastAnswer);
+					newResult = TPTP2SUMO.convert(result, false);
+				}
+				catch (Exception e) {
+					logger.severe("Error when parsing result from Metis: " + e.getMessage());
+					resultAll = "Error parsing result from Metis = \n" + result;
+				}
 			}
 
 			if (quietFlag.equals("IDV") && location.equals("remote")) {
@@ -779,25 +813,13 @@ public class InterfaceTPTP {
 			} 
 			//----Add query time limit to while loop break
 		} while (numAnswers < maxAnswers && lastAnswer != null && lastAnswer.size() > 0);
+		
 		//----Delete the kbFile
 		if (originalKBFileName != null) {
 			(new File(originalKBFileName)).delete();
 		}
 
-		/*        */
-		System.out.println("EXIT InterfaceTPTP.queryTPTP(");
-		System.out.println("  " + stmt + ",");
-		System.out.println("  " + timeout + ",");
-		System.out.println("  " + maxAnswers + ",");
-		System.out.println("  " + lineHtml + ",");
-		System.out.println("  " + systemChosen + ",");
-		System.out.println("  " + location + ",");
-		System.out.println("  " + quietFlag + ",");
-		System.out.println("  " + kbName + ",");
-		System.out.println("  " + language + ",");
-		System.out.println("  " + out + ")");
-		System.out.println("  ==> " + resultAll);
-
+		logger.exiting("InterfaceTPTP", "queryTPTP", resultAll);
 		return resultAll;
 	}
 

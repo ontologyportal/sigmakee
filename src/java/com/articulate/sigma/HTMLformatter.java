@@ -13,11 +13,17 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  */
 
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.*;
-import java.io.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
@@ -767,7 +773,10 @@ public class HTMLformatter {
 	                        html = html.append(l+1);
 	                        html = html.append(". </td>" + "\n");
 	                        html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language) + "\n");
-	                        System.out.println(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language));
+						logger.finest(HTMLformatter
+								.proofTableFormat(stmt,
+										(ProofStep) proofSteps.get(l), kbName,
+										language));
 	                        html = html.append("</tr>\n" + "\n");
 	                    }
 	                    html = html.append("</table>" + "\n");
@@ -874,9 +883,19 @@ public class HTMLformatter {
 		    								processedQ = entryItem.contents;
 		    							else if (entryItem.tagname.equals("sourceFile"))
 		    								sourceFile = entryItem.contents;
-		    							else if (entryItem.tagname.equals("proof"))
-		    				    			proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
-		    							
+		    							else if (entryItem.tagname.equals("proof")) {
+		    								if (type.indexOf("Error") == -1)
+		    									if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("Vampire"))
+		    										proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
+											else {
+												proof = entryItem.contents;
+												proof = proof.replaceAll("%3C",
+														"<");
+												proof = proof.replaceAll("%3E",
+														">");
+											}
+		    								else proof = entryItem.contents;
+		    							}
 		    						}
 	    							html.append("<br/>Query:  " + query + "<br />");
 		    		    			html.append("Type:  " + type + "<br />");

@@ -1,18 +1,17 @@
 package com.articulate.sigma;
 
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.StringReader;
-import java.sql.Timestamp;
-import java.util.Date;
+
 
 /***
  * This class manages the threads that run consistency checks for the different 
@@ -25,6 +24,10 @@ public class CCheckManager extends ThreadPoolExecutor {
 	 * ccheckQueue keeps track of the KBs that are currently being checked.
 	 * checkedKBs keeps track of the KBs that have already been checked, and a timestamp of when that check finished.
 	 */
+	public enum CCheckStatus {
+		ONGOING, DONE, QUEUED, NOCCHECK, ERROR
+	}
+	
 	private HashMap<String, HashMap<String, Object>> checkedKBs = null;
 	private HashMap<String, String> ccheckQueue= null;
 	private Logger logger = null;
@@ -62,6 +65,7 @@ public class CCheckManager extends ThreadPoolExecutor {
 	 * @return SimpleElement of the parsed XML file or null if there are errors or it does not exist.
 	 */
 	public String ccheckResults(String kbName) {
+		logger.entering("CCheckManager", "ccheckResults", "kbName = " + kbName);
 		StringBuilder result = new StringBuilder();
 		FileReader fr = null;
 		BufferedReader br = null;
@@ -82,7 +86,8 @@ public class CCheckManager extends ThreadPoolExecutor {
 					// CCheck.java yet, as the process is still ongoing.
 					if (result.length() > 0)
 						result.append("  </entries>\n</ConsistencyCheck>");
-									
+
+					logger.exiting("CCheckManager", "ccheckResults", result.toString());
 					return result.toString();
 				}
 				catch (Exception ex) {
@@ -120,26 +125,33 @@ public class CCheckManager extends ThreadPoolExecutor {
 					while ((line = br.readLine()) != null)
 						result.append(line);
 					
+					logger.exiting("CCheckManager", "ccheckResults", result.toString());					
 					return result.toString();
 				}
 				catch (Exception ex){
 					logger.warning(ex.getMessage());
 				}
 			}
-			else return null;
+			else {
+				logger.exiting("CCheckManager", "ccheckResults", null);
+				return null;
+			}
 		}
+		logger.exiting("CCheckManager", "ccheckResults", null);
 		return null;
 	}
 
 	/** 
-	 * Checks if a kb is currently undergoing checks.  
+	 * Returns the current status of a KB
 	 * @param kbName - the name of the KB to be checked
 	 * @return true if there is a worker thread currently performing consistency checks on it, and false if not
 	 */
-	public boolean isOngoingCCheck(String kbName) {
+	public CCheckStatus ccheckStatus(String kbName) {
 		if (ccheckQueue.containsKey(kbName))
-			return true;
-		else return false;
+			return CCheckStatus.ONGOING;
+		else if (checkedKBs.containsKey(kbName))
+			return CCheckStatus.DONE;
+		else return CCheckStatus.NOCCHECK;
 	}
 
 	/**
@@ -147,7 +159,8 @@ public class CCheckManager extends ThreadPoolExecutor {
 	 * @param kb - KB to be checked
 	 * @return the status of the check (whether it has been accepted or rejected)
 	 */
-	public String performConsistencyCheck(KB kb) {
+	public CCheckStatus performConsistencyCheck(KB kb, String chosenEngine, String systemChosen,  
+			String location, String language, int timeout) {
 		
 		if (!ccheckQueue.containsKey(kb.name)) {
 			try {
@@ -156,7 +169,12 @@ public class CCheckManager extends ThreadPoolExecutor {
 					filename = KBmanager.getMgr().getPref("baseDir") + File.separator + filename;
 
 				// lines up the Runnable CCheck for execution
-				super.execute(new CCheck(kb, filename));
+				if (chosenEngine.equals("SoTPTP"))
+					super.execute(new CCheck(kb, filename, chosenEngine,
+							systemChosen, "hyperlinkedKIF", location, language,
+							timeout));
+				else
+					super.execute(new CCheck(kb, filename, chosenEngine, timeout));
 			
 				ccheckQueue.put(kb.name, filename);
 				
@@ -165,19 +183,24 @@ public class CCheckManager extends ThreadPoolExecutor {
 					checkedKBs.remove(kb.name);
 				
 				logger.info("KB " + kb.name + " has been added to the queue for consistency check.");
-				return "KB " + kb.name + " has been added to the queue for consistency check.";
+				return CCheckStatus.QUEUED;
 			}
 			catch (RejectedExecutionException e) {
 				logger.warning(e.getMessage());
-				return e.getMessage();
+				return CCheckStatus.ERROR;
 			}			
+			catch (Exception e) {
+				logger.warning(e.getMessage());
+				return CCheckStatus.ERROR;
+			}
 		}
 		else {
 			logger.info("KB " + kb.name + "has been rejected for consistency check as it is already undergoing the check.");
-			return "KB " + kb.name + " already undergoing consistency check.";
+			return CCheckStatus.ONGOING;
 		}
 	}
-
+	
+	
 	/**
 	 * Removes the KB from the list of kbs currently being checked, and add it to the checkedKBs list.  
 	 * This method is overridden from the parent class.

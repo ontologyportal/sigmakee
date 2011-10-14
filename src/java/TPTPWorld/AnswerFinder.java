@@ -1,12 +1,18 @@
 package TPTPWorld;
 
-import java.util.*;
-import java.io.*;
-import tptp_parser.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AnswerFinder {
   
     public static String findProof (String problem, String systemsDir) throws Exception {
+		Logger logger = Logger.getLogger("");
+
         // find proof with one-answer system (default: Metis)
         String OneAnswerSystem = "";
         ArrayList<String> atpSystems = SystemOnTPTP.listSystems(systemsDir);
@@ -21,7 +27,7 @@ public class AnswerFinder {
         }
         if (OneAnswerSystem.equals("")) {
             String errorMsg = "% ERROR: Metis not found in " + systemsDir;
-            System.out.println(errorMsg);
+			logger.severe(errorMsg);
             return errorMsg;
         }  
         return AnswerFinder.findProof(problem, OneAnswerSystem, systemsDir);
@@ -55,11 +61,12 @@ public class AnswerFinder {
     // given a list of TPTPFormulas, extract conjecture and lemma vine
     // send to one-answer system (Metis)
     public static String findProofWithAnswers (String tptp, String systemsDir) {
+		Logger logger = Logger.getLogger("");
 
-        /*          */
-        System.out.println("ENTER AnswerFinder.findProofWithAnswers("
-                           + tptp + ", "
-                           + systemsDir + ")");
+    	if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "tptp = " + tptp, "systemsDir = " + systemsDir };
+			logger.entering("AnswerFinder", "findProofWithAnswers", params);
+		}
 
         String result = "";
         try {
@@ -68,7 +75,7 @@ public class AnswerFinder {
                     int idx = tptp.indexOf("fof(");
                     if (idx > 0) {
                         tptp = tptp.substring(idx);
-                        
+						logger.finest("new tptp == " + tptp);
                         // System.out.println("  new tptp == " + tptp);
                     }
                 }
@@ -77,18 +84,24 @@ public class AnswerFinder {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+			logger.severe(ex.getMessage());
         }
-        /*        */
-        System.out.println("  result == " + result);
-        System.out.println("EXIT AnswerFinder.findProofWithAnswers("
-                           + tptp + ", "
-                           + systemsDir + ")");
+
+		logger.exiting("AnswerFinder", "findProofWithAnswers", result);
         return result;
     } 
 
 
     public static String findProofWithAnswers (BufferedReader reader, String systemsDir) {
-        String ans = "";
+		Logger logger = Logger.getLogger("");
+
+		if (logger.isLoggable(Level.FINER)) {
+			String[] params = { "reader =" + reader,
+					"systemsDir = " + systemsDir };
+			logger.entering("AnswerFinder", "findProofWithAnswers", params);
+		}
+
+		String ans = "";
         try {
             String problem = "";
             TPTPParser parser = TPTPParser.parse(reader);    
@@ -97,7 +110,7 @@ public class AnswerFinder {
             // no conjecture = no answers
             if (conjecture == null) {    
                 String errorMsg = "% WARNING: No fof conjecture in proof -> no lemmas -> cannot call one-answer system -> find answers failed";
-                System.out.println(errorMsg);
+				logger.warning(errorMsg);
                 return errorMsg;
             }
             
@@ -108,12 +121,15 @@ public class AnswerFinder {
             for (TPTPFormula lemma : lemmas) {
                 problem += lemma.fofify() + "\n\n";
             }
-            System.out.println("Problem: " + problem);
+			logger.finer("Problem: " + problem);
             ans = findProof(problem, systemsDir);
         }
         catch (Exception ex) {
             //ex.printStackTrace();
+			logger.severe(ex.getMessage());
         }
+
+		logger.exiting("AnswerFinder", "findProofWithAnswers", ans);
         return ans;
     } 
 

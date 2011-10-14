@@ -1,19 +1,31 @@
 package TPTPWorld;
 
-import java.util.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
-import java.util.regex.*;
-import tptp_parser.*;
-import javax.servlet.jsp.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.StringTokenizer;
+import java.util.Vector;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
+import tptp_parser.SimpleTptpParserOutput;
+import tptp_parser.TptpLexer;
+import tptp_parser.TptpParser;
+
+import com.articulate.sigma.KBmanager;
 
 public class SystemOnTPTP {
     
     public static final String NEW_LINE_TEXT = "%------------------------------------------------------------------------------\n";
     //private static final String SystemDirectory = "../System";
-    //private static final String SystemDirectory = KBmanager.getMgr().getPref("systemsDir");
+    private static String SystemDirectory = KBmanager.getMgr().getPref("systemsDir");
     //private static final String SystemDirectory = "../../../../../systems";
-    private static String SystemDirectory = "/home/graph/strac/geoff/TPTPWorld/Systems";
+    //private static String SystemDirectory = "/home/graph/strac/geoff/TPTPWorld/Systems";
 
     //private static final String Systeminfo = KBmanager.getMgr().getPref("baseDir") + "/KBs/systemsInfo.xml";
     private static String SystemInfo = SystemDirectory + "/" + "systemInfo.xml";
@@ -37,6 +49,7 @@ public class SystemOnTPTP {
         private long startTime;
         private long stopSolvedTime;
         private long stopSolutionTime;
+        private Logger logger;
 
         private Process process;    
         private final String problemFile;
@@ -69,6 +82,7 @@ public class SystemOnTPTP {
             this.problemFile = problemFile;
             this.commandLine = commandLine;
             this.limit = limit;
+            this.logger = Logger.getLogger(this.getClass().getName());
             setDaemon(true);
         }
     
@@ -178,6 +192,7 @@ public class SystemOnTPTP {
         }
     
         public String getResponse () {
+        	logger.finest(response);
             return response;
         }
         // take each response line and comment
@@ -188,6 +203,7 @@ public class SystemOnTPTP {
         public String getSolution () {
             String solutionResult = "";
             try {
+            	logger.finest(solution);
                 BufferedReader bin = new BufferedReader(new StringReader(solution));
                 TptpLexer lexer = new TptpLexer(bin);
                 TptpParser parser = new TptpParser(lexer);
@@ -200,7 +216,15 @@ public class SystemOnTPTP {
                 }
                 return solutionResult;
             } catch (Exception e) {
-                return "Error in pretty printing tptp format: " + e + "\n.  Solution: \n" + solution;
+				String[] split = solution.split("\n");
+				String result = "%  Error in pretty-printing tptp format: " + e
+						+ "\n";
+				result = result + "%  Solution: \n";
+
+				for (int i = 0; i < split.length; i++)
+					result = result + "%  " + split[i] + "\n";
+
+				return result;
             }
         }
 
@@ -350,6 +374,7 @@ public class SystemOnTPTP {
         // retrieve necessary info (Command, Solved, StartSoln/EndSoln, etc)
         // IMPLEMENT
         //checkSystemDirectory(systemDir);
+		Logger logger = Logger.getLogger("");
         File problemFile = new File(filename);
 
         if (atpSystemList == null) {
@@ -403,6 +428,7 @@ public class SystemOnTPTP {
             if (!atpSystem.preCommand.equals("")) {
                 commandLine = atpSystem.preCommand + " " + commandLine;
             }
+			logger.finer("commandLine = " + commandLine);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -423,7 +449,9 @@ public class SystemOnTPTP {
             // times up (stop process if still going)
             process.destroy();
             //      return atp.getResponse() + "\n\nStatus: " + atp.getStatus() + "\n\nSolution (in tptp format): \n" + atp.getSolution() + "\nSolution type: " + atp.getSolutionType() + "\nTotal running time: " + atp.getTime();
-            return atp.getResults();
+			String results = atp.getResults();
+			logger.exiting("SystemOnTPTP", "SystemOnTPTP", results);
+			return results;
         } catch (Exception e) {
             e.printStackTrace();
             return "% SystemOnTPTP.java ERROR: Something wrong with commandLine(" + commandLine + ") from prover (" + systemVersion + "): " + e;

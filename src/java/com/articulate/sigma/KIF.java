@@ -13,15 +13,23 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforget.net
 
 package com.articulate.sigma;
 
-import java.io.*;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
 import java.text.ParseException;
-//import java.util.logging.Logger;
-//import java.util.logging.SimpleFormatter;
-//import java.util.logging.FileHandler;
-//import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Logger;
 
 /** *****************************************************************
  * A class designed to read a file in SUO-KIF format into memory.
@@ -129,25 +137,28 @@ public class KIF {
     private void display(StreamTokenizer_s st, boolean inRule, boolean inAntecedent,
                          boolean inConsequent, int argumentNum, int parenLevel, String key) {
 
-        System.out.print (inRule);
-        System.out.print ("\t");
-        System.out.print (inAntecedent);
-        System.out.print ("\t");
-        System.out.print (inConsequent);
-        System.out.print ("\t");
-        System.out.print (st.ttype);
-        System.out.print ("\t");
-        System.out.print (argumentNum);
-        System.out.print ("\t");
-        System.out.print (parenLevel);
-        System.out.print ("\t");
-        System.out.print (st.sval);
-        System.out.print ("\t");
-        System.out.print (st.nval);
-        System.out.print ("\t");
-        System.out.print (st.toString());
-        System.out.print ("\t");
-        System.out.println (key);
+		StringBuilder result = new StringBuilder();
+		result.append(inRule);
+		result.append("\t");
+		result.append(inAntecedent);
+		result.append("\t");
+		result.append(inConsequent);
+		result.append("\t");
+		result.append(st.ttype);
+		result.append("\t");
+		result.append(argumentNum);
+		result.append("\t");
+		result.append(parenLevel);
+		result.append("\t");
+		result.append(st.sval);
+		result.append("\t");
+		result.append(st.nval);
+		result.append("\t");
+		result.append(st.toString());
+		result.append("\t");
+		result.append(key);
+
+		logger.fine(result.toString());
     }
 
     /** ***************************************************************

@@ -12,9 +12,18 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import java.util.*;
-import java.io.*;
-import java.text.ParseException;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /** *****************************************************************
  * A class that finds problems in a knowledge base.  It is not meant
@@ -491,22 +500,32 @@ public class Diagnostics {
 
         System.out.println("INFO in Diagnostics.quantifierNotInBody(): "); 
         ArrayList result = new ArrayList();
-        Iterator it = kb.formulaMap.values().iterator();
-        Formula form = null;
-        while (it.hasNext()) {             // Iterate through all the axioms.
-            form = (Formula) it.next();
-            if ((form.theFormula.indexOf("forall") != -1) ||
-                (form.theFormula.indexOf("exists") != -1)) {
-                if (quantifierNotInStatement(form)) {
-                    result.add(form);
-                    // System.out.println("  " + form);
-                }
-            }
-            if (result.size() > 19) {
-                result.add("limited to 20 results");
-                return result;
-            }
+		try {
+			Iterator it = kb.formulaMap.values().iterator();
+			Formula form = null;
+			while (it.hasNext()) { // Iterate through all the axioms.
+				form = (Formula) it.next();
+				if ((form.theFormula.indexOf("forall") != -1)
+						|| (form.theFormula.indexOf("exists") != -1)) {
+					if (quantifierNotInStatement(form)) {
+						result.add(form);
+						// System.out.println("  " + form);
+					}
+				}
+				if (result.size() > 19) {
+					result.add("limited to 20 results");
+					System.out.println("EXIT quantifierNotInBody with return: "
+							+ result);
+					return result;
+				}
+			}
         }
+ catch (Exception e) {
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+		}
+		System.out.println("EXIT quantifierNotInBody with return: " + result);
+
         return result;
     }
 
@@ -696,7 +715,7 @@ public class Diagnostics {
             if (al != null) 
                 return al.size();            
         } 
-        return -1;
+		return 0;
     }
 
     /** *****************************************************************
@@ -716,6 +735,7 @@ public class Diagnostics {
         // on which the given file depends.  The interior TreeMap file name
         // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
         TreeMap fileDepends = Diagnostics.termDependency(kb);
+		System.out.println(fileDepends);
         Iterator it = fileDepends.keySet().iterator();
         while (it.hasNext()) {
             String f = (String) it.next();
@@ -725,31 +745,63 @@ public class Diagnostics {
             while (it2.hasNext()) {
                 String f2 = (String) it2.next();                
                 ArrayList al = (ArrayList) tm.get(f2);
-                if (al != null && (dependencySize(fileDepends,f,f2) > al.size() || al.size() < 20))
-                    //!examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)
-                    {  // show mutual dependencies of comparable size
-                    result.append("\nFile " + f2 + " dependency size on file " + f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
-                    result.append("\nFile " + f + " dependency size on file " + f2 + " is " + al.size() + "\n");
-                    result.append(" with terms:<br>\n ");
-                    for (int i = 0; i < al.size(); i++) {
-                        String term = (String) al.get(i);
-                        result.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
-                        if (i < al.size()-1) 
-                            result.append(", ");
-                    }
-                    result.append("<P>\n");
+
+				if (al != null && al.size() < 40) {
+					result.append("<br/>File " + f
+							+ " dependency size on file " + f2 + " is "
+							+ al.size() + " with terms:<br/>");
+					for (int i = 0; i < al.size(); i++) {
+						String term = (String) al.get(i);
+						result.append("<a href=\"" + kbHref + "&term=" + term
+								+ "\">" + term + "</a>");
+						if (i < al.size() - 1)
+							result.append(", ");
+					}
+					result.append("<P>");
                 }
                 else {
-                    int i = dependencySize(fileDepends,f,f2);
-                    int j = dependencySize(fileDepends,f2,f);
-                    // && !examined.contains(f + "-" + f2) && !examined.contains(f2 + "-" + f)
-                    if (i > 0 ) 
-                        result.append("\nFile " + f2 + " dependency size on file " + f + " is " + i + "<P>\n");                    
-                    if (j > 0 ) 
-                        result.append("\nFile " + f + " dependency size on file " + f2 + " is " + j + "<P>\n");                    
+					int i = dependencySize(fileDepends, f, f2);
+
+					if (i > 0)
+						result.append("<br/>File " + f
+								+ " dependency size on file " + f2 + " is " + i
+								+ "<P>");
+
                 }
-                if (!examined.contains(f + "-" + f2)) 
-                    examined.add(f + "-" + f2);
+				// if (al != null
+				// && (dependencySize(fileDepends, f, f2) > al.size() || al
+				// .size() < 40))
+				// !examined.contains(f + "-" + f2) && !examined.contains(f2 +
+				// "-" + f)
+				// { // show mutual dependencies of comparable size
+				// result.append("\nFile " + f2 + " dependency size on file " +
+				// f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
+				// result.append("\nFile " + f + " dependency size on file " +
+				// f2 + " is " + al.size() + "\n");
+				// result.append(" with terms:<br>\n ");
+				// for (int i = 0; i < al.size(); i++) {
+				// String term = (String) al.get(i);
+				// result.append("<a href=\"" + kbHref + "&term=" + term + "\">"
+				// + term + "</a>");
+				// if (i < al.size()-1)
+				// result.append(", ");
+				// }
+				// result.append("<P>\n");
+				// }
+				// else {
+				// int i = dependencySize(fileDepends,f,f2);
+				// int j = dependencySize(fileDepends,f2,f);
+				// // && !examined.contains(f + "-" + f2) &&
+				// !examined.contains(f2 + "-" + f)
+				// if (i > 0 )
+				// result.append("\nFile " + f2 + " dependency size on file " +
+				// f + " is " + i + "<P>\n");
+				// if (j > 0 )
+				// result.append("\nFile " + f + " dependency size on file " +
+				// f2 + " is " + j + "<P>\n");
+				// }
+				// if (!examined.contains(f + "-" + f2))
+				// examined.add(f + "-" + f2);
             }
             result.append("\n\n");
         }

@@ -13,18 +13,28 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 import java.util.logging.FileHandler;
-import java.util.logging.MemoryHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import java.io.*;
-import java.text.*;
 
-import sun.net.www.protocol.https.Handler;
+import com.articulate.sigma.CCheckManager.CCheckStatus;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -59,7 +69,7 @@ public class KBmanager {
     public static final int USE_TPTP         = 8;
     private static CCheckManager ccheckManager = new CCheckManager();
     
-    private static KBmanager manager = new KBmanager();
+	private static KBmanager manager = new KBmanager();
     protected static final String CONFIG_FILE = "config.xml";
 
     private static Logger logger;
@@ -193,18 +203,20 @@ public class KBmanager {
         return;
     }
 
-    public static String performCCheck(KB kb, boolean override, String language, int page) {
-    	String msg = "";
-    	if (ccheckManager.isOngoingCCheck(kb.name))
-    		msg = kb.name + " is currently undergoing checks.  Partial results are available.";
-    	else if (!override && ccheckManager.lastCCheck(kb.name) != null) {
-    		msg = kb.name + " was last checked at " + ccheckManager.lastCCheck(kb.name) + ". Results can be found below. ";
-    		msg = msg + "[<a href=CCheck.jsp?kb=" + kb.name + "&lang=" + language + "&override=true&page=0>Restart Check</a>]";
-    	}
-    	else
-    		msg = ccheckManager.performConsistencyCheck(kb);
+    public static CCheckStatus initiateCCheck(KB kb, String chosenEngine, String systemChosen, String location,
+    		String language, int timeout) {
     	
-    	return HTMLformatter.formatConsistencyCheck(msg, ccheckManager.ccheckResults(kb.name), language, page);
+    	return ccheckManager.performConsistencyCheck(kb, chosenEngine, systemChosen, location, language, timeout);
+    	
+    }
+
+    public static String ccheckResults(String kbName) {    	
+    	return ccheckManager.ccheckResults(kbName); 
+    }
+    
+    public static CCheckStatus ccheckStatus(String kbName) {  
+    	return ccheckManager.ccheckStatus(kbName);    		
+   // 	return HTMLformatter.formatConsistencyCheck(msg, ccheckManager.ccheckResults(kb.name), language, page);
     }
     	
     private void preferencesFromXML(SimpleElement configuration) {
@@ -491,7 +503,7 @@ public class KBmanager {
                 preferencesFromXML(configuration);
                 
                 if (!logInitialized) {
-                	Logger packageLogger = Logger.getLogger(this.getClass().getPackage().getName());
+                	Logger packageLogger = Logger.getLogger("");
                 	            	
                 	String logLevel = preferences.get("logLevel").toString();
                 	
