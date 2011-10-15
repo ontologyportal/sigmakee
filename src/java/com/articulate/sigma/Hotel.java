@@ -1536,13 +1536,29 @@ public class Hotel {
             }
         }
     }
+
+    /** ***************************************************************
+     */
+    public static void execJSON(String path) {
+        
+        ArrayList<Hotel> hotels = readJSONHotels(path);
+        System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels),true));
+    }
     
     /** ***************************************************************
      */
     public static void main(String[] args) {
 
-        ArrayList<Hotel> hotels = readJSONHotels("/home/apease/Rearden/Schema/TA");
-        System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels),true));
+        if (args[0].equals("-help") || StringUtil.emptyString(args[0]) ) {
+            System.out.println("usage:");
+            System.out.println(">java -classpath . com.articulate.sigma.Hotel -js /home/me/data");
+        }
+        if (args[0].equals("-js")) {
+            String path = ".";
+            if (!StringUtil.emptyString(args[1]))
+                path = args[1];
+            execJSON(path);
+        }
         //parseOneJSONReviewFile("/home/apease/Rearden/Schema/TA/2992-Arlington.json");
         
         //HotelDBImport();
