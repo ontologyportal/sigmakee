@@ -727,7 +727,6 @@ public class Diagnostics {
 
         // A list of String of filename1-filename2 of pairs already examined so that
         // the routine doesn't waste time examining filename2-filename1
-        ArrayList examined = new ArrayList();
 
         StringBuffer result = new StringBuffer();
 
@@ -747,13 +746,10 @@ public class Diagnostics {
                 ArrayList al = (ArrayList) tm.get(f2);
 
 				if (al != null && al.size() < 40) {
-					result.append("<br/>File " + f
-							+ " dependency size on file " + f2 + " is "
-							+ al.size() + " with terms:<br/>");
+					result.append("<br/>File " + f + " dependency size on file " + f2 + " is " + al.size() + " with terms:<br/>");
 					for (int i = 0; i < al.size(); i++) {
 						String term = (String) al.get(i);
-						result.append("<a href=\"" + kbHref + "&term=" + term
-								+ "\">" + term + "</a>");
+						result.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
 						if (i < al.size() - 1)
 							result.append(", ");
 					}
@@ -761,12 +757,8 @@ public class Diagnostics {
                 }
                 else {
 					int i = dependencySize(fileDepends, f, f2);
-
 					if (i > 0)
-						result.append("<br/>File " + f
-								+ " dependency size on file " + f2 + " is " + i
-								+ "<P>");
-
+						result.append("<br/>File " + f + " dependency size on file " + f2 + " is " + i + "<P>");
                 }
 				// if (al != null
 				// && (dependencySize(fileDepends, f, f2) > al.size() || al
@@ -896,7 +888,7 @@ public class Diagnostics {
         String proof;
         String result = null;
 
-        String answer = new String();
+        StringBuffer answer = new StringBuffer();
         KB empty = makeEmptyKB("consistencyCheck");
 
         System.out.println("=================== Consistency Testing ===================");
@@ -920,18 +912,18 @@ public class Diagnostics {
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
                     proof = empty.ask(processedQuery,timeout,maxAnswers);
-                    String a = reportAnswer(kb,proof,query,processedQuery,"Redundancy");
+                    StringBuffer a = new StringBuffer();
+                    a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
                     //  if (answer.length() != 0) return answer;
-                    answer = answer + a;
-                    a = new String();
+                    answer.append(a);
 
                     StringBuffer negatedQuery = new StringBuffer();
                     negatedQuery.append("(not " + processedQuery + ")");
                     proof = empty.ask(negatedQuery.toString(),timeout,maxAnswers);
-                    a = reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency");
+                    a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
                     if (a.length() != 0) {
-                        answer = answer + a;
-                        return answer;
+                        answer.append(a);
+                        return answer.toString();
                     }
                 }
                 empty.tell(query.theFormula);

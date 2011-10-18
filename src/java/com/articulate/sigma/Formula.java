@@ -1084,8 +1084,10 @@ public class Formula implements Comparable {
      * Test if the contents of the formula are equal to the
      * argument. Normalize all variables.
      */
-    public boolean equals(Formula f) {
+    public boolean equals(Object f_obj) {
 
+        assert !f_obj.getClass().getName().equals("Formula") : "Formula.equals() passed object not of type Formula"; 
+        Formula f = (Formula) f_obj;
         String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
         String argString = Clausifier.normalizeVariables(f.theFormula).trim();
         return (thisString.equals(argString));
@@ -1369,7 +1371,7 @@ public class Formula implements Comparable {
             }
             fnew.read(f.cdr());   // remove the "or"
         }
-        fnew.theFormula = fnew.theFormula;
+        //fnew.theFormula = fnew.theFormula;
         thisNew = thisNew.append(fnew);
         thisNew.theFormula = "(or " + thisNew.theFormula.substring(1);
         return thisNew;
@@ -2199,7 +2201,7 @@ public class Formula implements Comparable {
             // System.out.println("\nclauseData == " + clauseData + "\n");
             ArrayList clauses = (ArrayList) clauseData.get(0);
             // System.out.println("\nclauses == " + clauses + "clauses.size() == " + clauses.size() + "\n");
-            if (!(clauses instanceof ArrayList) || clauses.isEmpty())
+            if (clauses == null || clauses.isEmpty())
                 return ans;
             Map varMap = (Map) clauseData.get(2);
             Map rowVarRelns = new HashMap();
@@ -2699,7 +2701,7 @@ public class Formula implements Comparable {
      */
     public static boolean isGround(String form) {
 
-        if (form == null || form == "")
+        if (!StringUtil.emptyString(form))
             return false;
         if (form.indexOf("\"") < 0)
             return (form.indexOf("?") < 0 && form.indexOf("@") < 0);
@@ -2831,7 +2833,7 @@ public class Formula implements Comparable {
 
 		if (logger.isLoggable(Level.FINER)) {
 			String[] params = { "pred = " + pred, "al = " + al,
-					"result = " + result, "classP = " + classP };
+					"result = " + Arrays.toString(result), "classP = " + classP };
 			logger.entering("Formula", "addToTypeList", params);
 		}
     	
@@ -3423,7 +3425,6 @@ public class Formula implements Comparable {
             }
             else {
                 sb.append(" (and");
-                int clen = constraints.size();
                 for (it2 = constraints.iterator(); it2.hasNext();) {
                     sb.append(" ");
                     sb.append(it2.next().toString());
@@ -5138,7 +5139,7 @@ public class Formula implements Comparable {
                         while (it1.hasNext()) {
                             varQueryTuples = (List) it1.next();
                             substTuples = computeSubstitutionTuples(kb, varQueryTuples);
-                            if ((substTuples instanceof List) && !substTuples.isEmpty()) {
+                            if (substTuples != null && !substTuples.isEmpty()) {
                                 if (substForms.isEmpty())
                                     substForms.add(substTuples);
                                 else {
@@ -5311,10 +5312,7 @@ public class Formula implements Comparable {
         // System.out.println("ENTER computeSubstitutionTuples(" + kb + ", " + queryLits + ")");
         ArrayList result = new ArrayList();
         try {
-            if ((kb instanceof KB)
-                && (queryLits instanceof List)
-                && !queryLits.isEmpty()) {
-
+            if (kb != null && queryLits != null && !queryLits.isEmpty()) {
                 String idxVar = (String) queryLits.get(0);
                 int i = 0;
                 int j = 0;
@@ -5448,9 +5446,9 @@ public class Formula implements Comparable {
      * @return An ArrayList, or null if the input formula contains no
      * predicate variables.
      */
-    private ArrayList prepareIndexedQueryLiterals(KB kb) {
-        return prepareIndexedQueryLiterals(kb, null);
-    }
+    //private ArrayList prepareIndexedQueryLiterals(KB kb) {
+    //    return prepareIndexedQueryLiterals(kb, null);
+    //}
 
     /** ***************************************************************
      * This method returns an ArrayList in which each element is
@@ -5771,7 +5769,6 @@ public class Formula implements Comparable {
             Set added = new HashSet();
 
             // Get the clauses for this Formula.
-            StringBuilder litBuf = new StringBuilder();
             List clauses = getClauses();
             Map varMap = getVarMap();
             String qlString = null;
@@ -6079,7 +6076,6 @@ public class Formula implements Comparable {
     public static void resolveTest3() {
 
 		// logger.finest("--------------------INFO in Formula.resolveTest3()--------------");
-        Formula newResult = new Formula();
         Formula f1 = new Formula();
         Formula f2 = new Formula();
 
@@ -6088,7 +6084,6 @@ public class Formula implements Comparable {
                   "(not (attribute ?VAR2 American)))");
         f2.read("(or (not (recipient ?VAR5 ?VAR3)) (not (patient ?VAR5 ?VAR4)) (not (instance ?VAR5 Selling)) (not (instance ?VAR4 Weapon)) " +
                   "(not (instance ?VAR3 Nation)) (not (agent ?VAR5 ?VAR2)) (not (attribute ?VAR3 Hostile)) (not (attribute ?VAR2 American)))");
-
 		// logger.finest("f1: " + f1);
 		// logger.finest("f2: " + f2);
 		// logger.finest("resolution result mapping: " + f1.resolve(f2, newResult));

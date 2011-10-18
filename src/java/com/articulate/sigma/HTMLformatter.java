@@ -109,7 +109,6 @@ public class HTMLformatter {
         Formula f = new Formula();
         KB kb = KBmanager.getMgr().getKB(kbName);
         f.read(step.axiom);
-        String axiom = new String(f.theFormula);
         f.theFormula = Formula.postProcess(f.theFormula);
         String hostname = KBmanager.getMgr().getPref("hostname");
         if (hostname == null)
@@ -415,7 +414,7 @@ public class HTMLformatter {
         result.append("<p><ul><li>\tSUMO Mappings:  ");
         for (int j=0; j<sumoList.length; j++) {
             String sumoEquivalent = sumoList[j];
-            sumoEquivalent.trim();
+            sumoEquivalent = sumoEquivalent.trim();
 
             Pattern p = Pattern.compile("\\&\\%");
             Matcher m = p.matcher(sumoEquivalent);

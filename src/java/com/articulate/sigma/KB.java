@@ -3273,7 +3273,7 @@ public class KB {
                 ArrayList processedStmts = query.preProcess(true, this);
                 logger.fine("processedStmts == " + processedStmts);
                 //if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof Vampire)) {
-                if (!processedStmts.isEmpty() && (this.inferenceEngine instanceof InferenceEngine))
+                if (!processedStmts.isEmpty() && this.inferenceEngine != null)
                     result = this.inferenceEngine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);
                 logger.info("result == " + result);
             }
@@ -3325,14 +3325,9 @@ public class KB {
                 Formula query = new Formula();
                 query.read(suoKifFormula);
                 ArrayList processedStmts = query.preProcess(true, this);
-
                 logger.fine("processedStmts == " + processedStmts);
-
-                if (!processedStmts.isEmpty() && (engine instanceof InferenceEngine)) {
-                    result = engine.submitQuery(((Formula)processedStmts.get(0)).theFormula,
-                                                timeout,
-                                                maxAnswers);
-                }
+                if (!processedStmts.isEmpty()) 
+                    result = engine.submitQuery(((Formula)processedStmts.get(0)).theFormula,timeout,maxAnswers);                
             }
             result = result.replaceAll("&lt;","<");
             result = result.replaceAll("&gt;",">");
@@ -3340,8 +3335,7 @@ public class KB {
         catch (Exception ex) {
         	logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
-        }
-        
+        }        
         logger.exiting("KB", "askEngine", result);
         return result;
     }
@@ -3479,125 +3473,125 @@ public class KB {
      */
     public String askLEO(String suoKifFormula, int timeout, int maxAnswers, String flag) {
 
-	String result = "";
+        String result = "";
         try {
-	    String LeoExecutable = "/Users/christophbenzmueller/leo/trunk/bin/leo";
-	    String LeoInput = "/tmp/prob.p";
-	    String LeoProblem;
-	    String responseLine;
-	    String LeoOutput = "";
-	    File LeoExecutableFile = new File(LeoExecutable);
-	    File LeoInputFile = new File(LeoInput);
-	    FileWriter LeoInputFileW = new FileWriter(LeoInput);
+            String LeoExecutable = "/Users/christophbenzmueller/leo/trunk/bin/leo";
+            String LeoInput = "/tmp/prob.p";
+            String LeoProblem;
+            String responseLine;
+            String LeoOutput = "";
+            File LeoExecutableFile = new File(LeoExecutable);
+            File LeoInputFile = new File(LeoInput);
+            FileWriter LeoInputFileW = new FileWriter(LeoInput);
             //InferenceEngine.EngineFactory factory=SInE.getFactory();
             //InferenceEngine engine=createInferenceEngine(factory);
             // result = askEngine(suoKifFormula, timeout, maxAnswers, engine);
-	    /*
+            /*
 	    result =
 		("<queryResponse>" + getLineSeparator()
 		 + "  <answer result=\"no \" number=\"0\">" + getLineSeparator()
 		 + "  </answer>" + getLineSeparator()
 		 + "  <summary proofs=\"0\"/>" + getLineSeparator()
 		 + "</queryResponse>" + getLineSeparator());
-	    */
-	    List<Formula> selectedQuery = new ArrayList<Formula>();
-	    Formula newQ = new Formula();
-	    newQ.read(suoKifFormula);
-	    selectedQuery.add(newQ);
+             */
+            List<Formula> selectedQuery = new ArrayList<Formula>();
+            Formula newQ = new Formula();
+            newQ.read(suoKifFormula);
+            selectedQuery.add(newQ);
 
-	    String kbFileName = "/Users/christophbenzmueller/Sigma/KBs/Merge.kif";
-	    logger.fine("kbFileName = " + kbFileName);
+            String kbFileName = "/Users/christophbenzmueller/Sigma/KBs/Merge.kif";
+            logger.fine("kbFileName = " + kbFileName);
 
-	    List<String> selFs = null;
+            List<String> selFs = null;
 
-	    if (flag.equals("LeoSine")) {
-		SInE sine = SInE.getNewInstance(kbFileName);
-		selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
-		sine.terminate();
-	    }
-	    else if (flag.equals("LeoLocal")) {
-		selFs = new ArrayList<String>();
-	    }
-	    else if (flag.equals("LeoGlobal")) {
-		selFs = new ArrayList<String>();
-		for (Iterator it = this.formulaMap.values().iterator(); it.hasNext();) {
-		    Formula entry = (Formula) it.next();
-		    selFs.add(entry.toString());
-		}
-	    }
-	    // add user asserted formulas
-	    try {
+            if (flag.equals("LeoSine")) {
+                SInE sine = SInE.getNewInstance(kbFileName);
+                selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
+                sine.terminate();
+            }
+            else if (flag.equals("LeoLocal")) {
+                selFs = new ArrayList<String>();
+            }
+            else if (flag.equals("LeoGlobal")) {
+                selFs = new ArrayList<String>();
+                for (Iterator it = this.formulaMap.values().iterator(); it.hasNext();) {
+                    Formula entry = (Formula) it.next();
+                    selFs.add(entry.toString());
+                }
+            }
+            // add user asserted formulas
+            try {
                 File dir = new File(this.kbDir);
-		File file = new File(dir, (this.name + _userAssertionsString));
+                File file = new File(dir, (this.name + _userAssertionsString));
                 String filename = file.getCanonicalPath();
-		BufferedReader userAssertedInput =  new BufferedReader(new FileReader(filename));
+                BufferedReader userAssertedInput =  new BufferedReader(new FileReader(filename));
 
-		try {
-		    String line = null;
-		    /*
-		     * readLine is a bit quirky :
-		     * it returns the content of a line MINUS the newline.
-		     * it returns null only for the END of the stream.
-		     * it returns an empty String if two newlines appear in a row.
-		     */
-		    while (( line = userAssertedInput.readLine()) != null){
-			selFs.add(line);
-			// System.out.println("/n asserted Formula: " + line);
-		    }
-		}
-		finally {
-		    userAssertedInput.close();
-		}
-	    }
-	    catch (IOException ex){
-	    	logger.severe(ex.getStackTrace().toString());
-	    	ex.printStackTrace();
-	    }
+                try {
+                    String line = null;
+                    /*
+                     * readLine is a bit quirky :
+                     * it returns the content of a line MINUS the newline.
+                     * it returns null only for the END of the stream.
+                     * it returns an empty String if two newlines appear in a row.
+                     */
+                    while (( line = userAssertedInput.readLine()) != null){
+                        selFs.add(line);
+                        // System.out.println("/n asserted Formula: " + line);
+                    }
+                }
+                finally {
+                    userAssertedInput.close();
+                }
+            }
+            catch (IOException ex){
+                logger.severe(ex.getStackTrace().toString());
+                ex.printStackTrace();
+            }
 
-	    List<Formula> selectedFormulas = new ArrayList();
-	    Formula newF = new Formula();
+            List<Formula> selectedFormulas = new ArrayList();
+            Formula newF = new Formula();
 
-	    for (Iterator it = selFs.iterator(); it.hasNext();) {
-		String entry = (String) it.next();
-		newF = new Formula();
-		newF.read(entry);
-		selectedFormulas.add(newF);
-	    }
+            for (Iterator it = selFs.iterator(); it.hasNext();) {
+                String entry = (String) it.next();
+                newF = new Formula();
+                newF.read(entry);
+                selectedFormulas.add(newF);
+            }
 
-	    logger.finer("selectedFormulas = " +  selFs.toString());
+            logger.finer("selectedFormulas = " +  selFs.toString());
 
-	    THF thf = new THF();
-	    LeoProblem = thf.KIF2THF(selectedFormulas,selectedQuery,this);
-	    LeoInputFileW.write(LeoProblem);
-	    LeoInputFileW.close();
+            THF thf = new THF();
+            LeoProblem = thf.KIF2THF(selectedFormulas,selectedQuery,this);
+            LeoInputFileW.write(LeoProblem);
+            LeoInputFileW.close();
 
-	    String command = LeoExecutableFile.getCanonicalPath() + " -po -t " + timeout + " " + LeoInputFile.getCanonicalPath();
-	    logger.finer("command = " + command);
+            String command = LeoExecutableFile.getCanonicalPath() + " -po -t " + timeout + " " + LeoInputFile.getCanonicalPath();
+            logger.finer("command = " + command);
 
-	    Process leo = Runtime.getRuntime().exec(command);
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
+            Process leo = Runtime.getRuntime().exec(command);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
             while ((responseLine = reader.readLine()) != null) {
-		LeoOutput += responseLine + "\n";
-	    }
+                LeoOutput += responseLine + "\n";
+            }
             reader.close();
 
-	    logger.finer("LeoOutput == " + LeoOutput);
+            logger.finer("LeoOutput == " + LeoOutput);
 
-	    if (LeoOutput.contains("SZS status Theorem")) {
-		result = "Answer 1. yes"
-		    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>")
-		    + "<br> <br>" + LeoOutput.replaceAll("\\n","<br>");
-	    }
-	    else {
-		result = "Answer 1. don't know"
-		    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>")
-		    + "<br> <br>" + LeoOutput.replaceAll("\\n","<br>");
-	    }
+            if (LeoOutput.contains("SZS status Theorem")) {
+                result = "Answer 1. yes"
+                    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>")
+                    + "<br> <br>" + LeoOutput.replaceAll("\\n","<br>");
+            }
+            else {
+                result = "Answer 1. don't know"
+                    + "<br> <br>" + LeoProblem.replaceAll("\\n","<br>")
+                    + "<br> <br>" + LeoOutput.replaceAll("\\n","<br>");
+            }
             //if (engine != null)
-	    //  engine.terminate();
+            //  engine.terminate();
         }
         catch (Exception ex) {
-        	logger.severe(ex.getStackTrace().toString());
+            logger.severe(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
         return result;
@@ -5471,7 +5465,7 @@ public class KB {
             logger.severe(e.getStackTrace().toString());
             e.printStackTrace();
         }
-        if (!(inferenceEngine instanceof InferenceEngine))
+        if (inferenceEngine != null)
             mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
         return;
     }
@@ -6759,8 +6753,8 @@ public class KB {
             int numAxioms = 5;
             Random r = new Random(4);
             ArrayList<Formula> axioms = new ArrayList<Formula>();
-            ArrayList<Formula> head = new ArrayList<Formula>();
-            ArrayList<Formula> assertions = new ArrayList<Formula>();
+            ArrayList<Formula> head = null;
+            ArrayList<Formula> assertions = null;
             Formula query = new Formula();
             while (axioms.size() < 2) {
                 axioms = new ArrayList<Formula>();

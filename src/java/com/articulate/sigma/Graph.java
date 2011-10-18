@@ -240,61 +240,58 @@ public class Graph {
                            + indentChars + ", " + level + ", " + show + ")");
 
         ArrayList result = new ArrayList();
-        ArrayList parents = new ArrayList();
-        ArrayList children = new ArrayList();
-        int colCount = columnCount();
         int graphMax = Integer.valueOf(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
-	if (!check.contains(term) && graphsize < graphMax) {
-	    if (above > 0) {
-		ArrayList stmtAbove = new ArrayList();
+        if (!check.contains(term) && graphsize < graphMax) {
+            if (above > 0) {
+                ArrayList stmtAbove = new ArrayList();
                 if (!DB.emptyString(relation) && relation.equals("all"))
                     stmtAbove = kb.ask("arg",1,term);
                 else 
                     stmtAbove = kb.askWithRestriction(0,relation,1,term);
-		for (int i = 0; i < stmtAbove.size(); i++) {
-		    Formula f = (Formula) stmtAbove.get(i);
-		    String newTerm = f.getArgument(2);
-		    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-			result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true,language));		    
-		    check.add(term);
-		}
-	    }
+                for (int i = 0; i < stmtAbove.size(); i++) {
+                    Formula f = (Formula) stmtAbove.get(i);
+                    String newTerm = f.getArgument(2);
+                    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true,language));		    
+                    check.add(term);
+                }
+            }
 
-	    StringBuffer prefix = new StringBuffer();
-	    for (int i = 0; i < level; i++)
-		prefix = prefix.append(indentChars);
-        
-	    String hostname = KBmanager.getMgr().getPref("hostname");
-	    if (hostname == null)
-		hostname = "localhost";
-	    String port = KBmanager.getMgr().getPref("port");
-	    if (port == null)
-		port = "8080";
-	    String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
-        
-	    if (show) {
+            StringBuffer prefix = new StringBuffer();
+            for (int i = 0; i < level; i++)
+                prefix = prefix.append(indentChars);
+
+            String hostname = KBmanager.getMgr().getPref("hostname");
+            if (hostname == null)
+                hostname = "localhost";
+            String port = KBmanager.getMgr().getPref("port");
+            if (port == null)
+                port = "8080";
+            String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
+
+            if (show) {
                 graphsize++;
                 if (graphsize < 100)                 
                     result.add(createGraphEntry(kb,prefix.toString(),kbHref,term,language));
             }
-        
-	    if (below > 0) {
-		ArrayList stmtBelow = kb.askWithRestriction(0,relation,2,term);
-		for (int i = 0; i < stmtBelow.size(); i++) {
-		    Formula f = (Formula) stmtBelow.get(i);
-		    String newTerm = f.getArgument(1);
-		    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-			result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true,language));		    
-		    check.add(term);
-		}
-	    }
-	}
+
+            if (below > 0) {
+                ArrayList stmtBelow = kb.askWithRestriction(0,relation,2,term);
+                for (int i = 0; i < stmtBelow.size(); i++) {
+                    Formula f = (Formula) stmtBelow.get(i);
+                    String newTerm = f.getArgument(1);
+                    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true,language));            
+                    check.add(term);
+                }
+            }
+        }
 
         //System.out.println("EXIT Graph.createGraphBody(" + kb.name + ", "+ check + ", "
         //                   + term + ", " + relation + ", " + above + ", " + below + ", "
         //                   + indentChars + ", " + level + ", " + show + ")");
         //System.out.println("  -> " + result);
-        
+
         return result;
     }
 
@@ -312,12 +309,12 @@ public class Graph {
      */
     public boolean createDotGraph(KB kb, String term, String relation, String fname) throws IOException {
 
-    	if (logger.isLoggable(Level.FINER)) {
-    		String[] params = {"kb=" + kb, "term=" + term, "relation=" + relation, "fname=" + fname};
-    		logger.entering("Graph", "createDotGraph", params);
-    	}
+        if (logger.isLoggable(Level.FINER)) {
+            String[] params = {"kb=" + kb, "term=" + term, "relation=" + relation, "fname=" + fname};
+            logger.entering("Graph", "createDotGraph", params);
+        }
 
-    	FileWriter fw = null;
+        FileWriter fw = null;
         PrintWriter pw = null; 
         String filename = KBmanager.getMgr().getPref("graphDir") + File.separator + fname;
         logger.finer("Full filename = " + filename);
@@ -346,16 +343,14 @@ public class Graph {
             String command = "dot " + filename + ".dot -Tgif";
             logger.finer("command = " + command);
             
-			Process proc = Runtime.getRuntime().exec(command);
-			BufferedInputStream img = new BufferedInputStream(proc.getInputStream());
-			BufferedInputStream err = new BufferedInputStream(proc.getErrorStream());
-			
-			RenderedImage image = ImageIO.read(img);
-			
-			File file = new File(filename + ".gif");
-			ImageIO.write(image, "gif", file);
-			logger.info(filename + ".gif created.");
-			
+            Process proc = Runtime.getRuntime().exec(command);
+            BufferedInputStream img = new BufferedInputStream(proc.getInputStream());            
+            RenderedImage image = ImageIO.read(img);
+            
+            File file = new File(filename + ".gif");
+            ImageIO.write(image, "gif", file);
+            logger.info(filename + ".gif created.");
+            
             return true;
         }
         catch (java.io.IOException e) {
@@ -402,9 +397,9 @@ public class Graph {
                 result.add(s);
                 checkedSet.add(term);
                 if (upSearch)
-                	startSet.add(parent);
+                    startSet.add(parent);
                 else
-                	startSet.add(child);
+                    startSet.add(child);
                 
                 createDotGraphBody(kb,startSet,checkedSet,relation,upSearch,result);
             } 

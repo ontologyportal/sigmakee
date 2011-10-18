@@ -126,7 +126,6 @@ public class TPTP2SUMO {
       StringBuffer result = new StringBuffer();
       int indent = 12;
       int indented = 0;
-      Vector<String> parents = new Vector();
       
       result.append("      <proofStep>\n");
       result.append("        <premises>\n");

@@ -108,12 +108,10 @@ public class DocGen {
                 if (kb instanceof KB)
                     inst.setKB(kb);
                 String ontology = null;
-                if ((idx > 0) && (idx < (interned.length() - 1))) {
-                    ontology = interned.substring(idx + 1).trim();
-                }
-                if (StringUtil.emptyString(ontology) && (kb instanceof KB)) {
-                    ontology = inst.getOntology(kb);
-                }
+                if ((idx > 0) && (idx < (interned.length() - 1))) 
+                    ontology = interned.substring(idx + 1).trim();                
+                if (StringUtil.emptyString(ontology)) 
+                    ontology = inst.getOntology(kb);                
                 if (StringUtil.isNonEmptyString(ontology)) {
                     inst.setOntology(ontology);
                     inst.setDefaultNamespace(inst.getDefaultNamespace());
@@ -126,10 +124,8 @@ public class DocGen {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
         // System.out.println("EXIT DocGen.getInstance(" + compositeKey + ")");
         // System.out.println("    inst == " + inst.toString());
-
         return inst;
     }
 
@@ -448,59 +444,57 @@ public class DocGen {
             else {
                 Set<String> candidates = new HashSet<String>();
                 if (kb == null)
-                    kb = this.getKB();
-                if (kb instanceof KB) {
-                    Iterator it = null;
-                    // First, we try to find any obvious instances of
-                    // Ontology, using predicate subsumption to take
-                    // advantage of any predicates that have been
-                    // liked with SUMO's predicates.
-                    for (it = kb.getAllInstancesWithPredicateSubsumption("Ontology")
-                             .iterator(); it.hasNext();) {
-                        candidates.add((String) it.next());
-                    }
-                    if (candidates.isEmpty()) {
-                        // Next, we check for explicit
-                        // ontologyNamespace statements.
-                        List formulae = kb.ask("arg", 0, "ontologyNamespace");
-                        if ((formulae != null) && !formulae.isEmpty()) {
-                            Formula f = null;
-                            for (it = formulae.iterator(); it.hasNext();) {
-                                f = (Formula) it.next();
-                                candidates.add(f.getArgument(1));
-                            }
+                    kb = this.getKB();                
+                Iterator it = null;
+                // First, we try to find any obvious instances of
+                // Ontology, using predicate subsumption to take
+                // advantage of any predicates that have been
+                // liked with SUMO's predicates.
+                for (it = kb.getAllInstancesWithPredicateSubsumption("Ontology")
+                        .iterator(); it.hasNext();) {
+                    candidates.add((String) it.next());
+                }
+                if (candidates.isEmpty()) {
+                    // Next, we check for explicit
+                    // ontologyNamespace statements.
+                    List formulae = kb.ask("arg", 0, "ontologyNamespace");
+                    if ((formulae != null) && !formulae.isEmpty()) {
+                        Formula f = null;
+                        for (it = formulae.iterator(); it.hasNext();) {
+                            f = (Formula) it.next();
+                            candidates.add(f.getArgument(1));
                         }
                     }
-                    if (!candidates.isEmpty()) {
-                        // Here we try to match one of the ontologies
-                        // to the name of the current KB, since we
-                        // have no other obvious way to determine
-                        // which ontology is appropriate if two or
-                        // more are represented in the KB.  This
-                        // section probably should use some word/token
-                        // based partial matching algorithm, but does
-                        // not.  We just accept the first fairly
-                        // liberal regex match.
-                        String termstr = null;
-                        String ontoPattern = null;
-                        String kbNamePattern = (".*(?i)" + kb.name + ".*");
-                        for (it = candidates.iterator(); it.hasNext();) {
-                            termstr = (String) it.next();
-                            ontoPattern = (".*(?i)" + termstr + ".*");
-                            if (termstr.matches(kbNamePattern) || kb.name.matches(ontoPattern)) {
-                                onto = termstr;
-                                break;
-                            }
-                        }
-                        if (onto == null) {
-                            // Finally, if onto is still null and
-                            // candidates is not empty, we just grab a
-                            // candidate and try it.
-                            it = candidates.iterator();
-                            if (it.hasNext()) 
-                                onto = (String) it.next();                            
+                }
+                if (!candidates.isEmpty()) {
+                    // Here we try to match one of the ontologies
+                    // to the name of the current KB, since we
+                    // have no other obvious way to determine
+                    // which ontology is appropriate if two or
+                    // more are represented in the KB.  This
+                    // section probably should use some word/token
+                    // based partial matching algorithm, but does
+                    // not.  We just accept the first fairly
+                    // liberal regex match.
+                    String termstr = null;
+                    String ontoPattern = null;
+                    String kbNamePattern = (".*(?i)" + kb.name + ".*");
+                    for (it = candidates.iterator(); it.hasNext();) {
+                        termstr = (String) it.next();
+                        ontoPattern = (".*(?i)" + termstr + ".*");
+                        if (termstr.matches(kbNamePattern) || kb.name.matches(ontoPattern)) {
+                            onto = termstr;
+                            break;
                         }
                     }
+                    if (onto == null) {
+                        // Finally, if onto is still null and
+                        // candidates is not empty, we just grab a
+                        // candidate and try it.
+                        it = candidates.iterator();
+                        if (it.hasNext()) 
+                            onto = (String) it.next();                            
+                    }                    
                 }
                 if (StringUtil.isNonEmptyString(onto))
                     this.setOntology(onto);
@@ -558,14 +552,9 @@ public class DocGen {
                 Object[] namesArr = classNames.toArray();
                 if (namesArr != null) {
                     String className = null;
-                    List formulae = new ArrayList();
                     for (int i = 0; i < namesArr.length; i++) {
                         className = (String) namesArr[i];
-                        codes.addAll(kb.getTermsViaPredicateSubsumption("instance",
-                                                                        2,
-                                                                        className,
-                                                                        1,
-                                                                        false));
+                        codes.addAll(kb.getTermsViaPredicateSubsumption("instance",2,className,1,false));
                     }
                 }
                 codedIdentifiers.addAll(codes);
@@ -761,7 +750,7 @@ public class DocGen {
             if (stringReplacementMap == null) {
                 Map srMap = new HashMap();
                 KB kb = getKB();
-                if (kb instanceof KB) {
+                if (kb != null) {
                     List formulae = kb.ask("arg", 0, "docGenCodeMapTranslation");
                     if (formulae != null) {
                         Formula f = null;
@@ -988,8 +977,9 @@ public class DocGen {
      * @param obj A File object representing a directory
      */
     public void setOutputParentDir(File obj) {
+        
         try {
-            if (obj instanceof File) {
+            if (obj != null) {
                 if (!obj.exists() || !obj.isDirectory() || !obj.canWrite()) {
                     System.out.println("WARNING in DocGen.setOutputParentDir(" + obj + "):");
                     System.out.println("  " + obj + " is not an accessible directory");
@@ -999,9 +989,8 @@ public class DocGen {
                         obj.mkdirs();
                     }
                 }
-                if (obj.isDirectory() && obj.canWrite()) {
-                    this.outputParentDir = obj;
-                }
+                if (obj.isDirectory() && obj.canWrite()) 
+                    this.outputParentDir = obj;                
                 else {
                     System.out.println("WARNING in DocGen.setOutputParentDir(" + obj + "):");
                     System.out.println("  Could not set outputParentDir");
@@ -1195,8 +1184,16 @@ public class DocGen {
             }
             return ans;
         }
+        
+        /** ***************************************************************
+         * should never be called so throw an error.
+         */   
+        public int hashCode() {
+            assert false : "DocGen.hashCode not designed";
+            return 0;
+        }
+        
     } // end of PresentationNameComparator
-
 
     /** *************************************************************
      *  Rebuilds the TreeSet containing all terms in kb, and forces
@@ -2847,6 +2844,7 @@ public class DocGen {
      * documentation String can be found
      */
     protected String getContextualDocumentation(KB kb, String term, List contexts) {
+        
         String ans = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2859,16 +2857,14 @@ public class DocGen {
                         ans = f.getArgument(3);
                     }
                     else {
-                        if (!(contexts instanceof List)) {
-                            contexts = new ArrayList();
-                        }
+                        if (contexts == null) 
+                            contexts = new ArrayList();                        
                         List supers = getSuperComponents(kb, term);
                         contexts.addAll(supers);
                         contexts.add(0, term);
                         contexts.add(getDefaultNamespace());
-                        if (!contexts.contains("EnglishLanguage")) {
-                            contexts.add("EnglishLanguage");
-                        }
+                        if (!contexts.contains("EnglishLanguage")) 
+                            contexts.add("EnglishLanguage");                        
 
                         String ctx = null;
                         Iterator itf = null;
@@ -4364,7 +4360,6 @@ public class DocGen {
             else {
                 String minCard = "0";
                 String maxCard = "n";
-                StringBuilder result = new StringBuilder();
                 cardForms = kb.askWithPredicateSubsumption("hasMinCardinality", 1, term);
                 // kb.askWithRestriction(0,"minCardinality",2,term);
                 if (cardForms != null && cardForms.size() > 0) {

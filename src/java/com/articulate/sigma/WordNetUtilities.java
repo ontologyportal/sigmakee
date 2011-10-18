@@ -34,7 +34,7 @@ public class WordNetUtilities {
      */
     public static String getBareSUMOTerm (String term) {
 
-        if (term != null && term != "")
+        if (!StringUtil.emptyString(term))
             return term.substring(2,term.length()-1);
         else
             return "";
@@ -83,7 +83,7 @@ public class WordNetUtilities {
      */
     public static char getSUMOMappingSuffix (String term) {
 
-        if (term != null && term != "")
+        if (!StringUtil.emptyString(term))
             return term.charAt(term.length()-1);
         else
             return ' ';

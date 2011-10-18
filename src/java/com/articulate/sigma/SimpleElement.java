@@ -46,7 +46,7 @@ public class SimpleElement {
 
     public void setText(String text) {
 
-        if (text != null && text != "")
+        if (!StringUtil.emptyString(text))
             this.text = SimpleDOMParser.convertFromReservedCharacters(text.trim());
         else
             this.text = text.trim();
@@ -67,7 +67,7 @@ public class SimpleElement {
 
     public void setAttribute(String name, String value) {
 
-        if (value != null && value != "")
+        if (!StringUtil.emptyString(value))
             value = SimpleDOMParser.convertFromReservedCharacters(value);
         attributes.put(name, value);
     }
@@ -85,7 +85,7 @@ public class SimpleElement {
      */
      public SimpleElement getChildByFirstTag(String tag) {
 
-         if (childElements == null | childElements.size() < 1)
+         if (childElements == null || childElements.size() < 1)
              return null;
          for (int i = 0; i < childElements.size(); i++) {
              SimpleElement se = childElements.get(i);

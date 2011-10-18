@@ -22,7 +22,6 @@ public class Editor {
      */
     public static String createFormPage(KB kb, String term, Formula f) {
 
-        StringBuffer result = new StringBuffer();
         if (f.theFormula.indexOf("(",1) < 0) {  // a simple statement
             Formula temp = new Formula();
             temp.read(f.theFormula);

@@ -175,18 +175,15 @@ public class ProofProcessor {
 				}
 		   	}
     	}    	    	
-
     	//LOGGER.finest("returnSkolemStmt matches: " + matches);
-
-    	if(matches.size()>0)
+    	if (matches.size()>0)
     		return matches;
-
     	return null;
     }
     
     //looks for skolem variable if a query string is given
     private ArrayList<String> returnSkolemStmt(String query, String variable) {
-    	if (query != "") {
+    	if (!StringUtil.emptyString(query)) {
     		query = query.replaceAll("\\" + variable, "_SKOLEM");
     		//LOGGER.finest("returnSkolemStmt VARIABLE: " + variable);
     		//LOGGER.finest("returnSkolemStmt QUERY: " + query);
@@ -205,8 +202,7 @@ public class ProofProcessor {
     	    	//LOGGER.finest("returnSkolemStmt matches: " + matches);
     			return matches;   		
     		}
-    	}
-    	
+    	}    	
     	return null;
     }
 
@@ -366,7 +362,7 @@ public class ProofProcessor {
 	        		done = true;	        		
 	        }
 	        
-	        substr.trim();	        
+	        substr = substr.trim();	        
 	        if (substr.split(" ").length <= 2) {
 	        	st = st.substring(4, st.length()-1);
 	        }

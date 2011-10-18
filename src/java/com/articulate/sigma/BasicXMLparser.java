@@ -65,7 +65,6 @@ public class BasicXMLparser {
         String newTag = null;
         boolean inQuote = false;
         int lineNumber = 0;
-        ArrayList result = new ArrayList();
 
         while (lnr.ready()) {
             String line = lnr.readLine();

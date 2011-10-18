@@ -728,7 +728,6 @@ public class Hotel {
     public static Hotel parseOneHotelReviewFile(String fname) {
 
         Hotel h = new Hotel();
-        ArrayList<AVPair> result = new ArrayList<AVPair>();
         String name = "";
         String review = "";
         Pattern pReview = Pattern.compile("data-vocabulary.org/Review");
@@ -840,7 +839,6 @@ public class Hotel {
     public static Hotel parseOneTHotelReviewFile(String fname) {
 
         Hotel h = new Hotel();
-        ArrayList<AVPair> result = new ArrayList<AVPair>();
         String name = "";
         String review = "";
         Pattern pMemberReview = Pattern.compile("<span class=\"ic i-quote\">Quote:</span>");
@@ -1120,7 +1118,6 @@ public class Hotel {
 
         Hotel result = new Hotel();
         int maxString = 30;
-        TreeMap<String,String> values = new TreeMap<String,String>();
         NodeList features = h.getChildNodes();
         for (int i = 0; i < features.getLength(); i++) {
             if (features.item(i).getNodeType() == Node.ELEMENT_NODE) {
@@ -1493,7 +1490,6 @@ public class Hotel {
     public static void hotelSentiment(ArrayList<Hotel> hotels) {
 
         System.out.println("INFO in Hotel.hotelSentiment()");
-        ArrayList<Hotel> result = new ArrayList<Hotel>();
         DB.readSentimentArray();
         DB.readStopConceptArray();
         for (int i = 0; i < hotels.size(); i++) {

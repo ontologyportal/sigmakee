@@ -36,7 +36,6 @@ public class SimpleDOMParser {
     public static SimpleElement readFile (String filename) {
 
         SimpleElement result = null;
-        StringBuffer xml = new StringBuffer();
         File f = new File(filename);
         BufferedReader br = null;
 
@@ -267,7 +266,7 @@ public class SimpleDOMParser {
      */
     public static String convertToReservedCharacters(String input) {
 
-        if (input == null || input == "") 
+        if (!StringUtil.emptyString(input)) 
             return "";
         input = input.replaceAll("&gt;",">");
         input = input.replaceAll("&lt;","<");
@@ -279,7 +278,7 @@ public class SimpleDOMParser {
      */
     public static String convertFromReservedCharacters(String input) {
 
-        if (input == null || input == "") 
+        if (!StringUtil.emptyString(input)) 
             return "";
         input = input.replaceAll(">","&gt;");
         input = input.replaceAll("<","&lt;");

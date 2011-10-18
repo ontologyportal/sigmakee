@@ -469,9 +469,9 @@ public class KBmanager {
      * It also creates the KBs directory and an empty configuration
      * file if none exists.
      */
-    private SimpleElement readConfiguration() {
-        return readConfiguration(null);
-    }
+    //private SimpleElement readConfiguration() {
+    //    return readConfiguration(null);
+    //}
 
     /** ***************************************************************
      * Reads in the KBs and other parameters defined in the XML
@@ -740,9 +740,8 @@ public class KBmanager {
      */
     public static KBmanager getMgr() {
 
-        if (manager == null) {
-            manager = new KBmanager();
-        }
+        if (manager == null) 
+            manager = new KBmanager();        
         return manager;
     }
 

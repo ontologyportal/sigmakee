@@ -53,8 +53,6 @@ public class CELT {
             throw new IOException("Error in CELT(): File " + PL_EXECUTABLE + " does not exist.");
         if (!(new File(CELT_PATH)).exists())
             throw new IOException("Error in CELT(): File " + CELT_PATH + " does not exist.");
-        
-        StringBuffer kif = new StringBuffer();
 
         Process _CELT = Runtime.getRuntime().exec(PL_EXECUTABLE + " " + CELT_PATH + File.separator + "Startup.pl");
         InputStream stderr = _CELT.getErrorStream();

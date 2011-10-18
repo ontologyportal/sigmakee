@@ -390,7 +390,10 @@ public class STP extends InferenceEngine {
         public String toString() {
             return String.valueOf(intval) + "\n" + form.toString();
         }
-        public boolean equals(AnotherAVP avp) {
+        public boolean equals(Object avp_obj) {
+            
+            assert !avp_obj.getClass().getName().equals("AnotherAVP") : "AnotherAVP.equals() passed object not of type AnotherAVP"; 
+            AnotherAVP avp = (AnotherAVP) avp_obj;
             return form.equals(avp.form);
         }
         public int hashCode() {
@@ -792,7 +795,6 @@ public class STP extends InferenceEngine {
     public String submitQuery (String formula,int timeLimit,int bindingsLimit) {
 
         boolean ground = false;
-        ArrayList result = new ArrayList();
         Formula negQuery = new Formula();
         String rawNegQuery = "(not " + formula + ")";
         if (negQuery.isGround()) {

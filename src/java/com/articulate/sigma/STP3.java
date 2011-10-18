@@ -18,6 +18,8 @@ package com.articulate.sigma;
 import java.io.*;
 import java.util.*;
 
+import com.articulate.sigma.STP2.FormulaRating;
+
 /** ***************************************************************
  * The Sigma theorem prover. A simple resolution prover in Java.
  */
@@ -369,8 +371,10 @@ public class STP3 extends InferenceEngine {
         public String toString() {
             return String.valueOf(intval) + "\n" + form.toString();
         }
-        public boolean equals(FormulaRating avp) {
-            return form.equals(avp.form);
+        public boolean equals(Object fr_obj) {
+            assert !fr_obj.getClass().getName().equals("FormulaRating") : "FormulaRating() passed object not of type FormulaRating"; 
+            FormulaRating fr = (FormulaRating) fr_obj;
+            return form.equals(fr.form);
         }
         public int hashCode() {
             return form.hashCode();
@@ -1043,7 +1047,6 @@ public class STP3 extends InferenceEngine {
         System.out.println("INFO in STP3.submitQuery(): formulas: " + formulas.size());
         //System.out.println("INFO in STP3.submitQuery(): formulas: " + formulas);
         System.out.println("INFO in STP3.submitQuery(): deductions: " + deductions.keySet().size());
-        ArrayList result = new ArrayList();
         Formula negQuery = new Formula();
         Formula rawNegQuery = new Formula();
         rawNegQuery.read("(not " + formula + ")");
