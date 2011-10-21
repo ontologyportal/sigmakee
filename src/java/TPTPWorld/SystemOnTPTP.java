@@ -18,6 +18,7 @@ import tptp_parser.TptpLexer;
 import tptp_parser.TptpParser;
 
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.StringUtil;
 
 public class SystemOnTPTP {
     
@@ -312,7 +313,7 @@ public class SystemOnTPTP {
 
     public static void checkSystemDirectory (String systemDir) {
         String tptpHome = System.getenv("JTPTP_HOME");
-        if (systemDir != null && systemDir != "") {
+        if (!StringUtil.emptyString(systemDir)) {
             SystemDirectory = systemDir;
             SystemInfo = SystemDirectory + "/" + "SystemInfo";
         } else if (tptpHome != null && tptpHome != "") {
