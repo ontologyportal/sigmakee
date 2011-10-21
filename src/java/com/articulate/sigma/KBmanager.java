@@ -504,7 +504,6 @@ public class KBmanager {
                 
                 if (!logInitialized) {
                 	Logger packageLogger = Logger.getLogger("");
-                	            	
                 	String logLevel = preferences.get("logLevel").toString();
                 	
                 	if (logLevel.equals("severe"))

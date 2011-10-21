@@ -466,7 +466,7 @@ public class Formula implements Comparable {
      * an empty list.
      */
     public String car() {
-		logger.entering("Formula", "car");
+		// logger.entering("Formula", "car");
         String ans = null;
         try {
             if (this.listP()) {
@@ -539,7 +539,7 @@ public class Formula implements Comparable {
             return null;
             // ex.printStackTrace();
         }
-		logger.exiting("Formula", "car", ans);
+		// logger.exiting("Formula", "car", ans);
         return ans;
     }
 
@@ -550,7 +550,7 @@ public class Formula implements Comparable {
      */
     public String cdr() {
 
-		logger.entering("Formula", "cdr");
+		// logger.entering("Formula", "cdr");
         String ans = null;
         try {
             if (this.listP()) {
@@ -630,7 +630,7 @@ public class Formula implements Comparable {
             return null;
             // ex.printStackTrace();
         }
-		logger.exiting("Formula", "cdr", ans);
+		// logger.exiting("Formula", "cdr", ans);
         return ans;
     }
 
@@ -650,7 +650,7 @@ public class Formula implements Comparable {
      */
     public Formula cons(String obj) {
 
-		logger.entering("Formula", "cons", obj);
+		// logger.entering("Formula", "cons", obj);
         Formula ans = this;
         try {
             String fStr = this.theFormula;
@@ -677,7 +677,7 @@ public class Formula implements Comparable {
             ex.printStackTrace();
 			logger.warning(ex.getMessage());
         }
-		logger.exiting("Formula", "cons", ans);
+		// logger.exiting("Formula", "cons", ans);
         return ans;
     }
 
@@ -1084,10 +1084,8 @@ public class Formula implements Comparable {
      * Test if the contents of the formula are equal to the
      * argument. Normalize all variables.
      */
-    public boolean equals(Object f_obj) {
+	public boolean equals(Formula f) {
 
-        assert !f_obj.getClass().getName().equals("Formula") : "Formula.equals() passed object not of type Formula"; 
-        Formula f = (Formula) f_obj;
         String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
         String argString = Clausifier.normalizeVariables(f.theFormula).trim();
         return (thisString.equals(argString));
@@ -1616,7 +1614,7 @@ public class Formula implements Comparable {
         /*
         long t1 = System.currentTimeMillis();
         */
-		logger.entering("Formula", "collectVariables");
+		// logger.entering("Formula", "collectVariables");
         ArrayList<ArrayList<String>> ans = new ArrayList<ArrayList<String>>();
         ans.add(new ArrayList());
         ans.add(new ArrayList());
