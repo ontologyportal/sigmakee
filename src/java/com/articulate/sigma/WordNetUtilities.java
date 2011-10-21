@@ -173,11 +173,12 @@ public class WordNetUtilities {
      */
     public static String posLettersToNumber(String pos) {
 
+        assert !StringUtil.emptyString(pos) : "Error in WordNetUtilities.posLettersToNumber(): empty string";
         if (pos.equalsIgnoreCase("NN")) return "1";
         if (pos.equalsIgnoreCase("VB")) return "2";
         if (pos.equalsIgnoreCase("JJ")) return "3";
         if (pos.equalsIgnoreCase("RB")) return "4";
-        System.out.println("Error in WordNetUtilities.posLettersToNumber(): bad letters: " + pos);
+        assert false : "Error in WordNetUtilities.posLettersToNumber(): bad letters: " + pos;
         return "1";
     }
 
