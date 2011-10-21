@@ -2701,7 +2701,7 @@ public class Formula implements Comparable {
      */
     public static boolean isGround(String form) {
 
-        if (!StringUtil.emptyString(form))
+        if (StringUtil.emptyString(form))
             return false;
         if (form.indexOf("\"") < 0)
             return (form.indexOf("?") < 0 && form.indexOf("@") < 0);

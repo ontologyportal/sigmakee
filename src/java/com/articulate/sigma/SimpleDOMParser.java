@@ -266,7 +266,7 @@ public class SimpleDOMParser {
      */
     public static String convertToReservedCharacters(String input) {
 
-        if (!StringUtil.emptyString(input)) 
+        if (StringUtil.emptyString(input)) 
             return "";
         input = input.replaceAll("&gt;",">");
         input = input.replaceAll("&lt;","<");
@@ -278,7 +278,7 @@ public class SimpleDOMParser {
      */
     public static String convertFromReservedCharacters(String input) {
 
-        if (!StringUtil.emptyString(input)) 
+        if (StringUtil.emptyString(input)) 
             return "";
         input = input.replaceAll(">","&gt;");
         input = input.replaceAll("<","&lt;");
