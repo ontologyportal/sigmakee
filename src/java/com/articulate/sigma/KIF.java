@@ -171,11 +171,13 @@ public class KIF {
      */
     protected Set parse(Reader r) {
 
+        //System.out.println("INFO in KIF.parse()");
     	logger.entering("KIF", "parse");
     	
         int mode = this.getParseMode();               
         
         logger.info("Parsing " + this.getFilename() + " with parseMode = " + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));  
+        //System.out.println("Parsing " + this.getFilename() + " with parseMode = " + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));  
 
         String key = null;
         StringBuilder expression = new StringBuilder();
@@ -561,6 +563,7 @@ public class KIF {
      */
     public void readFile(String fname) throws Exception {
 
+        //System.out.println("INFO in KIF.readFile()");
     	logger.entering("KIF", "readFile", fname);
 
         FileReader fr = null;
