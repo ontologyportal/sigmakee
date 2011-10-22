@@ -1448,8 +1448,13 @@ public class Hotel {
     /** *************************************************************
      */
     public static ArrayList<Hotel> readJSONHotels(String dir) {
-        
+
         System.out.println("INFO in readJSONHotels()");
+        KBmanager.getMgr().initializeOnce();
+        //System.out.println("INFO in readJSONHotels(): completed KB initialization");
+        WordNet.wn.initOnce();        
+        //System.out.println("INFO in readJSONHotels(): complete reading WordNet files");
+        
         ArrayList<Hotel> result = new ArrayList<Hotel>();
         LineNumberReader lnr = null;
         try {
@@ -1467,7 +1472,7 @@ public class Hotel {
                     if (result.size() % 10 == 0)
                         System.out.print('.');                    
                 }
-                System.out.println("INFO in readJSONHotels(): Completed reading reviews.");
+                //System.out.println("INFO in readJSONHotels(): Completed reading reviews.");
             }
         }
         catch (Exception e) {
