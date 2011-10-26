@@ -1058,7 +1058,7 @@ public class Hotel {
      * for several fields and then a count of SUMO terms appearing in
      * the review for the given hotel
      */
-    public static ArrayList<ArrayList<String>> hotelReviewSUMOSentimentAsSparseMatrix(ArrayList<Hotel> feed) {
+    public static ArrayList<ArrayList<String>> hotelReviewSUMOSentimentAsSparseMatrix(ArrayList<Hotel> feed, boolean write) {
 
         ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
         System.out.println("INFO in Hotel.hotelReviewSUMOSentimentAsSparseMatrix()");
@@ -1105,7 +1105,10 @@ public class Hotel {
                     hotelAsArray.add("");
                 count++;
             }
-            result.add(hotelAsArray);
+            if (write)
+                System.out.println(DB.writeSpreadsheetLine(hotelAsArray, true));
+            else
+                result.add(hotelAsArray);
         }
         return result;
     }
@@ -1447,46 +1450,101 @@ public class Hotel {
     
     /** *************************************************************
      */
-    public static ArrayList<Hotel> readJSONHotels(String dir) {
+    public static void writeHotelAsXML(Hotel h, PrintWriter pw) {
+        
+        try {
+            pw.println("\t<hotel>");
+            pw.println("\t\t<orbitzID value=\"" + h.oID + "\"/>");
+            pw.println("\t\t<northID value=\"" + h.nID + "\"/>");
+            pw.println("\t\t<taID value=\"" + h.taID + "\"/>");
+            pw.println("\t\t<name value=\"" + h.name + "\"/>");
+            pw.println("\t\t<address value=\"" + h.address + "\"/>");
+            pw.println("\t\t<address2 value=\"" + h.address2 + "\"/>");
+            pw.println("\t\t<city value=\"" + h.city + "\"/>");
+            pw.println("\t\t<stateProv value=\"" + h.stateProv + "\"/>");
+            pw.println("\t\t<country value=\"" + h.country + "\"/>");
+            pw.println("\t\t<postCode value=\"" + h.postCode + "\"/>");            
+            pw.println("\t\t<tel value=\"" + h.tel + "\"/>");
+            pw.println("\t\t<sentiment>");
+            Iterator<String> it = h.conceptSentiment.keySet().iterator();
+            while (it.hasNext()) {
+                String concept = it.next();
+                String value = h.conceptSentiment.get(concept).toString();
+                pw.println("\t\t\t<sent concept=\"" + concept + "\" value=\"" + value + "\"/>");
+            }
+            pw.println("\t\t</sentiment>");
+            pw.println("\t</hotel>");
+        }
+        catch (Exception e) {
+            System.out.println("Error in Hotel.writeHotelAsXML(): File error writing " + pw + ": " + e.getMessage());
+        }        
+    }
+    
+    /** *************************************************************
+     * @param writeIncremental means that each hotel review will be 
+     * processed and each spreadsheet line will be written after reading
+     * each hotel.
+     */
+    public static ArrayList<Hotel> readJSONHotels(String dir, boolean writeIncremental) {
 
         System.out.println("INFO in readJSONHotels()");
         KBmanager.getMgr().initializeOnce();
-        //System.out.println("INFO in readJSONHotels(): completed KB initialization");
+        System.out.println("INFO in readJSONHotels(): completed KB initialization");
         WordNet.wn.initOnce();        
-        //System.out.println("INFO in readJSONHotels(): complete reading WordNet files");
+        System.out.println("INFO in readJSONHotels(): complete reading WordNet files");
         
+        long t1 = System.currentTimeMillis();
         ArrayList<Hotel> result = new ArrayList<Hotel>();
         LineNumberReader lnr = null;
+        PrintWriter pw = null;
         try {
             File fin  = new File(dir);
+            File outfile = new File(dir + File.separator + "hoteSentiment.xml");
+            pw = new PrintWriter(outfile);
+            if (writeIncremental)
+                pw.println("<hotels>");
             String[] children = fin.list();
             if (children == null || children.length == 0) 
-                System.out.println("Error in readJSONHotels(): dir: " + dir + " does not exist or is empty.");            
+                System.out.println("Error in Hotel.readJSONHotels(): dir: " + dir + " does not exist or is empty.");            
             else {
-                //System.out.println("INFO in readJSONHotels(): " + children.length + " files.");
+                System.out.println("INFO in readJSONHotels(): " + children.length + " files.");
                 for (int i=0; i<children.length; i++) {
-                    // Get filename of file or directory
+                    // Get filename of file or directory                   
                     String filename = children[i];
-                    if (!StringUtil.emptyString(filename) && filename.endsWith("json"))
-                        result.add(parseOneJSONReviewFile(dir + File.separator + filename));
-                    if (result.size() % 10 == 0)
+                    //System.out.println("INFO in readJSONHotels(): filename: " + filename); 
+                    String qualifiedFilename = dir + File.separator + filename;
+                    if (!StringUtil.emptyString(filename) && filename.endsWith("json")) {
+                        Hotel h = parseOneJSONReviewFile(qualifiedFilename);
+                        if (writeIncremental) {
+                            oneHotelAmenitySentiment(h);
+                            writeHotelAsXML(h,pw);
+                        }
+                        else
+                            result.add(h);                        
+                    }
+                    if (i % 10 == 0)
                         System.out.print('.');                    
                 }
-                //System.out.println("INFO in readJSONHotels(): Completed reading reviews.");
+                System.out.println("INFO in readJSONHotels(): Completed reading reviews.");
             }
+            if (writeIncremental)
+                pw.println("</hotels>");
         }
         catch (Exception e) {
-            System.out.println("Error in readJSONHotels(): File error reading " + dir + ": " + e.getMessage());
+            System.out.println("Error in Hotel.readJSONHotels(): File error reading/writing " + dir + ": " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
         finally {
             try {
                 if (lnr != null) lnr.close();
+                if (pw != null) pw.close();
             }
             catch (Exception e) {
                 System.out.println("Exception in readJSONHotels()" + e.getMessage());
             }
         }
+        System.out.println("INFO in Hotel.readJSONHotels(): done reading reviews in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         return result;
     }
     
@@ -1519,6 +1577,21 @@ public class Hotel {
     /** *************************************************************
      * Compute concept sentiment and store as a side effect.
      */
+    public static void oneHotelAmenitySentiment(Hotel h) {
+
+        //System.out.println("======== " + h.name + " ========");
+        for (int j = 0; j < h.reviews.size(); j++) {
+            String review = h.reviews.get(j);
+            //System.out.println(review);
+            HashMap<String,Integer> conceptSent = DB.computeConceptSentiment(review);
+            //System.out.println("=== " + conceptSent + " ===");
+            h.addConceptSentiment(conceptSent);
+        }        
+    }
+    
+    /** *************************************************************
+     * Compute concept sentiment and store as a side effect.
+     */
     public static void hotelAmenitySentiment(ArrayList<Hotel> hotels) {
 
         WordNet.wn.initOnce();
@@ -1526,15 +1599,7 @@ public class Hotel {
         DB.readStopConceptArray();
         for (int i = 0; i < hotels.size(); i++) {
             Hotel h = hotels.get(i);
-            //System.out.println("======== " + h.name + " ========");
-            int total = 0;
-            for (int j = 0; j < h.reviews.size(); j++) {
-                String review = h.reviews.get(j);
-                //System.out.println(review);
-                HashMap<String,Integer> conceptSent = DB.computeConceptSentiment(review);
-                //System.out.println("=== " + conceptSent + " ===");
-                h.addConceptSentiment(conceptSent);
-            }
+            oneHotelAmenitySentiment(h);
         }
     }
 
@@ -1542,8 +1607,12 @@ public class Hotel {
      */
     public static void execJSON(String path) {
         
-        ArrayList<Hotel> hotels = readJSONHotels(path);
-        System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels),true));
+        //ArrayList<Hotel> hotels = readJSONHotels(path,false);
+        ArrayList<Hotel> hotels = readJSONHotels(path,true);
+        long t1 = System.currentTimeMillis();
+        //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels,true),true));
+        System.out.println("INFO in Hotel.execJSON(): done computing sentiment in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+
     }
     
     /** ***************************************************************
