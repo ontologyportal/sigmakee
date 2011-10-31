@@ -171,7 +171,6 @@ public class KB {
      * where KBs preprocessed for Vampire should be placed.
      */
     public KB(String n, String dir) {
-
         name = n;
         kbDir = dir;
         try {
@@ -668,7 +667,7 @@ public class KB {
      * @return a String indicating any errors, or the empty string if
      * there were no errors.
      */
-    public String cache() {
+	public void cache() {
 
     	logger.entering("KB", "cache");
         String result = "";
@@ -755,7 +754,7 @@ public class KB {
                     }
                     constituents.remove(filename);
                     logger.fine("Adding " + filename);
-                    result = addConstituent(filename, false, false);
+					addConstituent(filename, false, false, true);
                     KBmanager.getMgr().writeConfiguration();
                 }
             }
@@ -775,7 +774,6 @@ public class KB {
             }
         }
         logger.exiting("KB", "cache", result);
-        return result;
     }
 
     /** *************************************************************
@@ -833,6 +831,31 @@ public class KB {
         }
         return ans;
     }
+
+	public void checkArity() {
+		ArrayList<String> toRemove = new ArrayList<String>();
+
+		System.out.println("Performing Arity Check");
+		if (formulaMap != null && formulaMap.size() > 0) {
+			Iterator<String> formulas = formulaMap.keySet().iterator();
+
+			while (formulas.hasNext()) {
+				Formula f = (Formula) formulaMap.get(formulas.next());
+
+				if (!f.hasCorrectArity(this)) {
+					errors.add("Formula in " + f.sourceFile
+							+ " rejected due to arity error: <br/>"
+							+ f.theFormula);
+					toRemove.add(f.theFormula);
+				}
+			}
+		}
+
+		for (int i = 0; i < toRemove.size(); i++) {
+			formulaMap.remove(toRemove.get(i));
+		}
+
+	}
 
     /** *************************************************************
      * This method computes the transitive closure for the relation
@@ -3147,11 +3170,10 @@ public class KB {
             String msg = kif.parseStatement(input);
             if (msg != null) {
                 result = "Error parsing \"" + input + "\": " + msg;
-            }
-            else if (kif.formulaSet.isEmpty()) {
+			} else if (kif.formulaSet.isEmpty()) {
                 result = "The input could not be parsed";
-            }
-            else {
+			} else {
+
                 // Make the pathname of the user assertions file.
                 File dir = new File(this.kbDir);
                 File file = new File(dir, (this.name + _userAssertionsString));
@@ -3174,8 +3196,11 @@ public class KB {
                         parsedF = (Formula) this.formulaMap.get(fstr.intern());
                         if (parsedF == null) {
                             go = false;
-                        }
-                        else {
+						} else if (!parsedF.hasCorrectArity(this)) {
+							result = result
+									+ "<br/>Following formula does not have correct arity: "
+									+ parsedF.htmlFormat(this);
+						} else {
                             parsedFormulas.add(parsedF);
                         }
                     }
@@ -3210,6 +3235,7 @@ public class KB {
                             parsedF = (Formula) pfit.next();
                             // 5. Preproccess the formula.
                             processedFormulas.addAll(parsedF.preProcess(false, this));
+							errors.addAll(parsedF.getErrors());
                             if (processedFormulas.isEmpty()) {
                                 allAdded = false;
                             }
@@ -4068,6 +4094,10 @@ public class KB {
         return;
     }
 
+
+	public void addNewConstituent(String filename) throws IOException {
+		addConstituent(filename, true, false, true);
+	}
     /** *************************************************************
      * Add a new KB constituent by reading in the file, and then
      * merging the formulas with the existing set of formulas.  All
@@ -4076,8 +4106,8 @@ public class KB {
      *
      * @param filename - the full path of the file being added.
      */
-    public String addConstituent(String filename) throws IOException {
-        return addConstituent(filename, true,  true);
+	public void addConstituent(String filename) throws IOException {
+		addConstituent(filename, true, true, false);
     }
 
     /** *************************************************************
@@ -4089,16 +4119,19 @@ public class KB {
      * @param loadVampireP - If true, destroys the old Vampire process and
      * starts a new one
      */
-    public String addConstituent(String filename, boolean buildCachesP, boolean loadVampireP) {
+	public void addConstituent(String filename, boolean buildCachesP,
+			boolean loadVampireP, boolean performArity) {
 
     	if (logger.isLoggable(Level.FINER)) {
-    		String[] params = {"filename = " + filename, "buildCachesP = " + buildCachesP, "loadVampireP = " + loadVampireP};
+			String[] params = { "filename = " + filename,
+					"buildCachesP = " + buildCachesP,
+					"loadVampireP = " + loadVampireP,
+					"performArity = " + performArity };
         	logger.entering("KB", "addConstituent", params);
     	}
     	
         long t1 = System.currentTimeMillis();
 
-        StringBuilder result = new StringBuilder();
         try {
             if (filename.endsWith(".owl") || filename.endsWith(".OWL") ||
                 filename.endsWith(".rdf") || filename.endsWith(".RDF")) {
@@ -4117,20 +4150,21 @@ public class KB {
             Formula f;
 
             if (constituents.contains(canonicalPath))
-                return ("Error: " + canonicalPath + " already loaded.");
+				errors.add("Error: " + canonicalPath + " already loaded.");
             logger.info("Adding " + canonicalPath + " to KB.");
             try {
                 file.readFile(canonicalPath);
                 errors.addAll(file.warningSet);
             }
             catch (Exception ex1) {
-                result.append(ex1.getMessage());
+				StringBuilder error = new StringBuilder();
+				error.append(ex1.getMessage());
                 if (ex1 instanceof ParseException)
-                    result.append(" at line "
+					error.append(" at line "
                                   + ((ParseException)ex1).getErrorOffset());
-                result.append(" in file " + canonicalPath);
-                logger.severe(result.toString());
-                return result.toString();
+				error.append(" in file " + canonicalPath);
+				logger.severe(error.toString());
+				errors.add(error.toString());
             }
 
             logger.info("Parsed file " + canonicalPath + " containing " + file.formulas.keySet().size() + " KIF expressions");
@@ -4147,25 +4181,49 @@ public class KB {
                     list = new ArrayList();
                     formulas.put(key, list);
                 }
+
                 newList = (ArrayList) file.formulas.get(key);
                 it2 = newList.iterator();
                 while (it2.hasNext()) {
                     f = (Formula) it2.next();
-                    internedFormula = f.theFormula.intern();
-                    if (!list.contains(f)) {
-                        list.add(f);
-                        formulaMap.put(internedFormula, f);
-                    }
-                    else {
-                        result.append("Warning: Duplicate axiom in ");
-                        result.append(f.sourceFile + " at line " + f.startLine + "<br />");
-                        result.append(f.theFormula + "<p>");
-                        Formula existingFormula = (Formula) formulaMap.get(internedFormula);
-                        result.append("Warning: Existing formula appears in ");
-                        result.append(existingFormula.sourceFile + " at line "
-                                      + existingFormula.startLine + "<br />");
-                        result.append("<p>");
-                    }
+
+					boolean correctArity = true;
+					if (performArity) {
+						System.out
+								.println("Performing Arity Check in addConstituent");
+						if (!f.hasCorrectArity(this)) {
+							errors.add("The following formula rejected for incorrect arity: "
+									+ f.theFormula);
+							System.out
+									.println("Formula rejected for incorrect arity: "
+											+ f.theFormula);
+							correctArity = false;
+						}
+					}
+
+					if (correctArity) {
+						internedFormula = f.theFormula.intern();
+
+						if (!list.contains(f)) {
+							list.add(f);
+							formulaMap.put(internedFormula, f);
+						} else {
+							StringBuilder error = new StringBuilder();
+							error.append("Warning: Duplicate axiom in ");
+							error.append(f.sourceFile + " at line "
+									+ f.startLine + "<br />");
+							error.append(f.theFormula + "<p>");
+							Formula existingFormula = (Formula) formulaMap
+									.get(internedFormula);
+							error.append("Warning: Existing formula appears in ");
+							error.append(existingFormula.sourceFile
+									+ " at line " + existingFormula.startLine
+									+ "<br />");
+							error.append("<p>");
+							System.out.println("Duplicate detected.");
+							errors.add(error.toString());
+						}
+					}
                 }
             }
 
@@ -4183,13 +4241,13 @@ public class KB {
                 loadVampire();
         }
         catch (Exception ex) {
-            result.append(ex.getMessage());
-            logger.severe(result + "; \nStack Trace: " + ex.getStackTrace());
-            ex.printStackTrace();
+			logger.severe(ex.getMessage() + "; \nStack Trace: "
+					+ ex.getStackTrace());
         }
         
-        logger.exiting("KB", "addConstituent", result);
-        return result.toString();
+		logger.exiting("KB", "addConstituent", "Constituent " + filename
+				+ "successfully added to KB: " + this.name);
+
     }
 
     /** ***************************************************************
@@ -4217,21 +4275,25 @@ public class KB {
                 formulaMap.clear();
                 terms.clear();
                 clearFormatMaps();
+				errors.clear();
 
                 int i = 0;
                 for (Iterator nci = newConstituents.iterator(); nci.hasNext(); i++) {
                     cName = (String) nci.next();
                     if (i == 0) System.out.println("INFO in KB.reload()");
                     System.out.println("  constituent == " + cName);
-                    sb.append(addConstituent(cName, false, false));
+					addConstituent(cName, false, false, false);
                 }
+
+				// Reperform arity checks on everything
+				checkArity();
 
                 // Rebuild the in-memory relation caches.
                 buildRelationCaches();
 
                 // If cache == yes, write the cache file.
                 if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
-                    sb.append(cache());
+					cache();
 
                 // At this point, we have reloaded all constituents, have
                 // rebuilt the relation caches, and, if cache == yes, have
@@ -5291,7 +5353,9 @@ public class KB {
                 while ((start < sb.length()) && ((i = sb.indexOf("&%", start)) != -1)) {
                     sb.delete(i, (i + 2));
                     j = i;
-                    while ((j < sb.length()) && !Character.isWhitespace(sb.charAt(j)))
+					while ((j < sb.length())
+							&& !Character.isWhitespace(sb.charAt(j))
+							&& sb.charAt(j) != '"')
                         j++;
                     while (j > i) {
                         term = sb.substring(i,j);
@@ -5578,11 +5642,15 @@ public class KB {
                     }
                 }
 
+				errors.addAll(f.getErrors());
+
                 Formula p = null;
                 for (Iterator itp = processed.iterator(); itp.hasNext();) {
                     p = (Formula) itp.next();
-                    if (StringUtil.isNonEmptyString(p.theFormula))
+					if (StringUtil.isNonEmptyString(p.theFormula)) {
                         newTreeSet.add(p.theFormula);
+						errors.addAll(p.getErrors());
+					}
                 }
                 long t_elapsed = (System.currentTimeMillis() - t_start);
                 t_total += t_elapsed;
@@ -6082,7 +6150,9 @@ public class KB {
                 pr.flush();
                 if (f.getTheTptpFormulas().isEmpty()) {
                     String addErrStr = "No TPTP formula for <br/>" + f.htmlFormat(this);
-                    mgr.setError(mgr.getError() + "<br/>\n" + addErrStr + "\n<br/>");
+					// mgr.setError(mgr.getError() + "<br/>\n" + addErrStr +
+					// "\n<br/>");
+					errors.add(addErrStr);
                     logger.info("No TPTP formula for\n" + f);
                 }
             }
@@ -6341,8 +6411,8 @@ public class KB {
                               // SUO-KIF formulas for the inference
                               // engine, and don't try to start an
                               // inference engine process.
-                              false
-                              );
+					false, false);
+			kb.checkArity();
             kb.preProcess(kb.getFormulas());
             File tptpFile = new File(kbDir, kb.name + ".tptp");
             String fileWritten = kb.writeTPTPFile(tptpFile.getCanonicalPath(), null, false, "none");

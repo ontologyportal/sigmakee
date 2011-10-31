@@ -634,11 +634,12 @@ public class HTMLformatter {
         Iterator it = kb.errors.iterator();
         while (it.hasNext()) {
             String err = (String) it.next();
+			err = err.replaceAll("\\n", "<br/>");
             int p = err.indexOf("(");
-            String begin = "";
+			String begin = "<br/>";
             String end = "";
             if (p > -1) {
-                begin = err.substring(0,p);
+				begin += err.substring(0, p);
                 end = err.substring(p);
                 Formula f = new Formula();
                 f.theFormula = end;
@@ -647,7 +648,7 @@ public class HTMLformatter {
             else
                 begin = err;
 
-            result.append(begin + end + "<br>\n");
+			result.append(begin + end + "<br>");
         }
         return result.toString();
     }

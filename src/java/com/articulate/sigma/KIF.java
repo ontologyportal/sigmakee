@@ -291,7 +291,8 @@ public class KIF {
                         if (formulaSet.contains(f.theFormula)) {
                             String warning = ("Duplicate formula at line " + f.startLine + " of " + f.sourceFile + ": " + expression);
                             //lineStart + totalLinesForComments + expression;
-                             warningSet.add(warning);                            
+							warningSet.add(warning);
+							System.out.println(warning);
                             duplicateCount++;
                         }
                         // Check argument validity ONLY if we are in
@@ -473,7 +474,6 @@ public class KIF {
         	String warning = "WARNING in KIF.parse(Reader): " + duplicateCount + " duplicate statement"
             + ((duplicateCount > 1) ? "s " : " ") + "detected in " + (StringUtil.emptyString(filename)
                     ? " the input file" : filename);
-            warningSet.add(warning);
             logger.warning(warning);
         }
         if (!warningSet.isEmpty()) {

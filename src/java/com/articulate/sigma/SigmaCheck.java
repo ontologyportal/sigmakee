@@ -67,33 +67,44 @@ public class SigmaCheck {
         }
     }
 
-    /** ***************************************************************
-     * @param args
-     */
-	public static void checkSite(String url, String email) {
+	/**
+	 * ***************************************************************
+	 * 
+	 * @param args
+	 * @throws InterruptedException
+	 */
+	public static void checkSite(String url, String email)
+			throws InterruptedException {
 		File emailSentFile = new File(System.getenv("SIGMA_HOME")
 				+ File.separator + "emailSent-" + url.hashCode());
 
-        if (!emailSentFile.exists() && !containsSUMO(url)) {
+		boolean sumoUp = containsSUMO(url);
+		if (!emailSentFile.exists() && !sumoUp) {
             try {
-                emailSentFile.createNewFile(); //create empty File
-                //send email
-                Properties props = new Properties();
-                //props.put("mail.smtp.host", "owa.mygazoo.com");
-                //props.put("mail.from", "first.last@reardencommerce.com");
-				props.put("mail.smtp.host", "owa.mygazoo.com");
-				props.put("mail.from", "adam.pease@reardencommerce.com");
-                Session session = Session.getInstance(props, null);
+				// sleep awhile, and then check again some seconds later to make
+				// sure it wasn't just a network error
+				Thread.sleep(20000);
 
-                MimeMessage msg = new MimeMessage(session);
-                msg.setFrom();
-                //msg.setRecipients(Message.RecipientType.TO,"first.last@reardencommerce.com");
-				msg.setRecipients(Message.RecipientType.TO, email);
-                msg.setSubject("SIGMA IS DOWN");
-                msg.setSentDate(new Date());
-				msg.setText("The Sigma main page at " + url + " is down.");
-                Transport.send(msg);
-                System.out.println("Email Sent");
+				if (!containsSUMO(url)) {
+					emailSentFile.createNewFile(); // create empty File
+					// send email
+					Properties props = new Properties();
+					// props.put("mail.smtp.host", "owa.mygazoo.com");
+					// props.put("mail.from", "first.last@reardencommerce.com");
+					props.put("mail.smtp.host", "owa.mygazoo.com");
+					props.put("mail.from", "adam.pease@reardencommerce.com");
+					Session session = Session.getInstance(props, null);
+
+					MimeMessage msg = new MimeMessage(session);
+					msg.setFrom();
+					// msg.setRecipients(Message.RecipientType.TO,"first.last@reardencommerce.com");
+					msg.setRecipients(Message.RecipientType.TO, email);
+					msg.setSubject("SIGMA IS DOWN");
+					msg.setSentDate(new Date());
+					msg.setText("The Sigma main page at " + url + " is down.");
+					Transport.send(msg);
+					System.out.println("Email Sent");
+				}
             } 
             catch (MessagingException mex) {
                 System.out.println("send failed, exception: " + mex);
@@ -101,8 +112,7 @@ public class SigmaCheck {
             catch (IOException ioex) {
                 System.out.println("File creation failed, exception: " + ioex);
             }
-        }    
- else if (emailSentFile.exists() && containsSUMO(url)) {
+		} else if (emailSentFile.exists() && sumoUp) {
             try {
                 //delete file
                 boolean deleted = emailSentFile.delete();

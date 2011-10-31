@@ -235,8 +235,7 @@ public class KBmanager {
     	logger.fine("Successfully retrieved preferences from config.xml and stored it in KBmanager.preferences object.");
     }
     
-    private String kbsFromXML(SimpleElement configuration) {
-    	StringBuffer result = new StringBuffer();
+	private void kbsFromXML(SimpleElement configuration) {
     	if (!configuration.getTagName().equals("configuration")) 
     		logger.warning("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
     	else {
@@ -264,37 +263,58 @@ public class KBmanager {
     						}
     					}
     				}
-    				if ( !(constituentsToAdd.isEmpty()) ) {
-    					Iterator it = constituentsToAdd.iterator();
-    					while ( it.hasNext() ) {
-    						String filename = (String) it.next();
-    						try {                            
-    							result.append(kb.addConstituent(filename, false, false)); 
-    						} 
-    						catch (Exception e1) {
-    							logger.warning("ERROR in KBmanager.kbsFromXML():  " + e1.getMessage());
-    						}
-    					}
-    					kb.buildRelationCaches();
-    					if (useCacheFile) {
-    						result.append(kb.cache());
-    					}
-    					kb.loadVampire();
-    				}
+					loadKB(kbName, constituentsToAdd);
     			}
     		}
     	}
-    	return result.toString();
-
     }
     
-    
+	public boolean loadKB(String kbName, List constituents) {
+		StringBuilder result = new StringBuilder();
+
+		try {
+			if (existsKB(kbName))
+				removeKB(kbName);
+
+			addKB(kbName);
+
+			KB kb = getKB(kbName);
+			boolean useCacheFile = KBmanager.getMgr().getPref("cache")
+					.equalsIgnoreCase("yes");
+
+			if (!(constituents.isEmpty())) {
+				Iterator<String> it = constituents.iterator();
+
+				while (it.hasNext()) {
+					String filename = it.next();
+					try {
+						kb.addConstituent(filename, false, false, false);
+					} catch (Exception e1) {
+						logger.warning("ERROR in KBmanager.fromXML() :  "
+								+ e1.getMessage());
+						return false;
+					}
+				}
+				kb.buildRelationCaches();
+				if (useCacheFile) {
+					kb.cache();
+				}
+				kb.checkArity();
+				kb.loadVampire();
+			}
+
+			writeConfiguration();
+		} catch (Exception e) {
+			logger.severe("Unable to save configuration: " + e.getMessage());
+			return false;
+		}
+		return true;
+	}
     
     /** ***************************************************************
      */
-    private String fromXML(SimpleElement configuration) {
+	private void fromXML(SimpleElement configuration) {
 
-        StringBuffer result = new StringBuffer();
         if (!configuration.getTagName().equals("configuration")) 
             logger.warning("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
         else {
@@ -328,23 +348,8 @@ public class KBmanager {
                                 }
                             }
                         }
-                        if ( !(constituentsToAdd.isEmpty()) ) {
-                            Iterator it = constituentsToAdd.iterator();
-                            while ( it.hasNext() ) {
-                                String filename = (String) it.next();
-                                try {                            
-                                    result.append(kb.addConstituent(filename, false, false)); 
-                                } 
-                                catch (Exception e1) {
-                                    logger.warning("ERROR in KBmanager.fromXML() :  " + e1.getMessage());
-                                }
-                            }
-                            kb.buildRelationCaches();
-                            if (useCacheFile) {
-                                result.append(kb.cache());
-                            }
-                            kb.loadVampire();
-                        }
+
+						loadKB(kbName, constituentsToAdd);
                     }
                     else {
                         logger.warning("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
@@ -352,7 +357,6 @@ public class KBmanager {
                 }
             }
         }
-        return result.toString();
     }
 
     /** ***************************************************************
@@ -546,9 +550,7 @@ public class KBmanager {
                 	logger.info("Logger initialized with logging level set to: " + packageLogger.getLevel().getName() + ". All log files are saved to: " + preferences.get("logDir") + ". Any previous log statements can be found in the default target of System.err.");
                 }
 
-                String result = kbsFromXML(configuration);
-                if (StringUtil.isNonEmptyString(result)) 
-                    error = result;                
+				kbsFromXML(configuration);
                 String kbDir = (String) preferences.get("kbDir");
                 logger.fine("kbDir = " + kbDir);
                 LanguageFormatter.readKeywordMap(kbDir);
@@ -611,12 +613,11 @@ public class KBmanager {
      * @param name - the name of the KB
      */
 
-    public void removeKB(String name) {
+	public String removeKB(String name) {
 
         KB kb = (KB) kbs.get(name);
         if (kb == null) {
-            error = "KB " + name + " does not exist and cannot be removed.";
-            return;
+			return "KB " + name + " does not exist and cannot be removed.";
         }
         try {
             if (kb.inferenceEngine != null) 
@@ -636,6 +637,7 @@ public class KBmanager {
         }
 
         logger.info("Removing KB: " + name);
+		return "KB " + name + " successfully removed.";
     }
 
     /** ***************************************************************
