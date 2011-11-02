@@ -82,13 +82,13 @@ public class KB {
     public String kbDir = null;
 
     /** A HashMap of HashSets, which contain all the parent classes of a given class. */
-    public HashMap parents = new HashMap();
+    public HashMap<String,HashSet<String>> parents = new HashMap<String,HashSet<String>>();
 
     /** A HashMap of HashSets, which contain all the child classes of a given class. */
-    public HashMap children = new HashMap();
+    public HashMap<String,HashSet<String>> children = new HashMap<String,HashSet<String>>();
 
     /** A HashMap of HashSets, which contain all the disjoint classes of a given class. */
-    public HashMap disjoint = new HashMap();
+    public HashMap<String,HashSet<String>> disjoint = new HashMap<String,HashSet<String>>();
 
     /** A threshold limiting the number of values that will be added to
      * a single relation cache table. */
