@@ -23,7 +23,8 @@ ad-hoc formats to KIF
    */
 public class Mapping {
 
-    public static TreeMap mappings = new TreeMap();
+    public static TreeMap<String,TreeMap<Integer,String>> mappings = 
+        new TreeMap<String,TreeMap<Integer,String>>();
     public static char termSeparator = '!';
 
     /** *************************************************************
@@ -259,22 +260,24 @@ public class Mapping {
     public static void mapOntologies(String kbName1, String kbName2, int threshold, String matchMethod) {
 
         System.out.println("INFO in Mapping.mapOntologies()");
+
         long t1 = System.currentTimeMillis();
         int mapCount = 0;
         if (!matchMethod.equals("JaroWinkler") && 
-            !matchMethod.equals("Levenshtein") &&
-            !matchMethod.equals("Substring")) {
+                !matchMethod.equals("Levenshtein") &&
+                !matchMethod.equals("Substring")) {
             matchMethod = "Substring";
             System.out.println("Error in Mapping.mapOntologies(): Invalid match method " + 
-                               matchMethod + ". Defaulting to substring match.");
+                    matchMethod + ". Defaulting to substring match.");
         }
-            
+
         TreeMap result = new TreeMap();
         int counter = 0;
         KB kb1,kb2;
         kb1 = KBmanager.getMgr().getKB(kbName1);
         kb2 = KBmanager.getMgr().getKB(kbName2);
         int totalCandidates = kb1.getTerms().size() * kb2.getTerms().size();
+        System.out.println("Time estimate to map: " + totalCandidates / 100 + " seconds.");
         if (kb1 != null && kb2 != null) {
             synchronized (kb1.getTerms()) {
                 synchronized (kb2.getTerms()) {
@@ -300,18 +303,20 @@ public class Mapping {
                                     String normLabel2 = normalize(getTermFormat(kb2,term2));
                                     int score = Integer.MAX_VALUE; 
                                     score = min(score,stringMatch(normTerm1, normTerm2,matchMethod));
+                                    //System.out.println(normTerm1 + " " + normTerm2);
                                     if (normLabel1 != null && isValidTerm(normLabel1))
                                         score = min(score,stringMatch(normLabel1,normTerm2,matchMethod));                            
                                     if (normLabel2 != null && isValidTerm(normLabel2)) 
                                         score = min(score,stringMatch(normTerm1, normLabel2,matchMethod));                            
                                     if (normLabel1 != null && normLabel2 != null && 
-                                        isValidTerm(normLabel1) && isValidTerm(normLabel2)) 
+                                            isValidTerm(normLabel1) && isValidTerm(normLabel2)) 
                                         score = min(score,stringMatch(normLabel1, normLabel2,matchMethod));                            
-                                    if (score > 0 && score < Integer.MAX_VALUE)
+                                    if (score > 0 && score < Integer.MAX_VALUE) {
                                         if (score < threshold) {                                
                                             tm.put(new Integer(score), term2);
                                             mapCount++;
                                         }
+                                    }
                                 }
                             }
                             if (tm.keySet().size() > 0)
@@ -329,8 +334,8 @@ public class Mapping {
         }
         System.out.println();
         System.out.println(totalCandidates + " " + " possible mappings checked with " +
-                           mapCount + " mappings found in "
-                           + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
+                mapCount + " mappings found in "
+                + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         mappings = result;
     }
 
