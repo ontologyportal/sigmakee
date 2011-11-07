@@ -1454,17 +1454,17 @@ public class Hotel {
         
         try {
             pw.println("\t<hotel>");
-            pw.println("\t\t<orbitzID value=\"" + h.oID + "\"/>");
-            pw.println("\t\t<northID value=\"" + h.nID + "\"/>");
-            pw.println("\t\t<taID value=\"" + h.taID + "\"/>");
-            pw.println("\t\t<name value=\"" + h.name + "\"/>");
-            pw.println("\t\t<address value=\"" + h.address + "\"/>");
-            pw.println("\t\t<address2 value=\"" + h.address2 + "\"/>");
-            pw.println("\t\t<city value=\"" + h.city + "\"/>");
-            pw.println("\t\t<stateProv value=\"" + h.stateProv + "\"/>");
-            pw.println("\t\t<country value=\"" + h.country + "\"/>");
-            pw.println("\t\t<postCode value=\"" + h.postCode + "\"/>");            
-            pw.println("\t\t<tel value=\"" + h.tel + "\"/>");
+            pw.println("\t\t<orbitzID value=\"" + StringUtil.encode(h.oID) + "\"/>");
+            pw.println("\t\t<northID value=\"" + StringUtil.encode(h.nID) + "\"/>");
+            pw.println("\t\t<taID value=\"" + StringUtil.encode(h.taID) + "\"/>");
+            pw.println("\t\t<name value=\"" + StringUtil.encode(h.name) + "\"/>");
+            pw.println("\t\t<address value=\"" + StringUtil.encode(h.address) + "\"/>");
+            pw.println("\t\t<address2 value=\"" + StringUtil.encode(h.address2) + "\"/>");
+            pw.println("\t\t<city value=\"" + StringUtil.encode(h.city) + "\"/>");
+            pw.println("\t\t<stateProv value=\"" + StringUtil.encode(h.stateProv) + "\"/>");
+            pw.println("\t\t<country value=\"" + StringUtil.encode(h.country) + "\"/>");
+            pw.println("\t\t<postCode value=\"" + StringUtil.encode(h.postCode) + "\"/>");            
+            pw.println("\t\t<tel value=\"" + StringUtil.encode(h.tel) + "\"/>");
             pw.println("\t\t<sentiment>");
             Iterator<String> it = h.conceptSentiment.keySet().iterator();
             while (it.hasNext()) {
