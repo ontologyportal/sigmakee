@@ -1450,6 +1450,23 @@ public class Hotel {
     
     /** *************************************************************
      */
+    public static String normalizeSentiment(String value) {
+    
+        try {
+            float val = Integer.parseInt(value);
+            if (val < 0)
+                return "0";
+            val = 1 - ((50 + val)/(50 + val * val));
+            return Float.toString(val);
+        }
+        catch (NumberFormatException n) {
+            System.out.println("Error in Hotel.normalizeSentiment(): bad input: " + value);
+            return "0";
+        }
+    }
+    
+    /** *************************************************************
+     */
     public static void writeHotelAsXML(Hotel h, PrintWriter pw) {
         
         try {
@@ -1470,6 +1487,7 @@ public class Hotel {
             while (it.hasNext()) {
                 String concept = it.next();
                 String value = h.conceptSentiment.get(concept).toString();
+                value = normalizeSentiment(value);
                 pw.println("\t\t\t<sent concept=\"" + concept + "\" value=\"" + value + "\"/>");
             }
             pw.println("\t\t</sentiment>");
