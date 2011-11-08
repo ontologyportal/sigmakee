@@ -27,6 +27,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.articulate.sigma.WordNetUtilities;
+
 /** ***************************************************************
  */
 public class Hotel {
@@ -1471,8 +1473,6 @@ public class Hotel {
         
         try {
             pw.println("\t<hotel>");
-            pw.println("\t\t<orbitzID value=\"" + StringUtil.encode(h.oID) + "\"/>");
-            pw.println("\t\t<northID value=\"" + StringUtil.encode(h.nID) + "\"/>");
             pw.println("\t\t<taID value=\"" + StringUtil.encode(h.taID) + "\"/>");
             pw.println("\t\t<name value=\"" + StringUtil.encode(h.name) + "\"/>");
             pw.println("\t\t<address value=\"" + StringUtil.encode(h.address) + "\"/>");
@@ -1486,6 +1486,7 @@ public class Hotel {
             Iterator<String> it = h.conceptSentiment.keySet().iterator();
             while (it.hasNext()) {
                 String concept = it.next();
+                concept= WordNetUtilities.getBareSUMOTerm(concept);
                 String value = h.conceptSentiment.get(concept).toString();
                 value = normalizeSentiment(value);
                 pw.println("\t\t\t<sent concept=\"" + concept + "\" value=\"" + value + "\"/>");
