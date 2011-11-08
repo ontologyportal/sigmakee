@@ -34,10 +34,11 @@ public class WordNetUtilities {
      */
     public static String getBareSUMOTerm (String term) {
 
-        if (!StringUtil.emptyString(term))
+        if (!StringUtil.emptyString(term) && term.indexOf("&%") == 0 && 
+                !Character.isLetter(term.length()-1) && !Character.isDigit(term.length()-1))
             return term.substring(2,term.length()-1);
         else
-            return "";
+            return term;
     }
 
     /** ***************************************************************
