@@ -1486,8 +1486,9 @@ public class Hotel {
             Iterator<String> it = h.conceptSentiment.keySet().iterator();
             while (it.hasNext()) {
                 String concept = it.next();
-                concept= WordNetUtilities.getBareSUMOTerm(concept);
                 String value = h.conceptSentiment.get(concept).toString();
+                concept = WordNetUtilities.getBareSUMOTerm(concept);
+                System.out.println(concept);                
                 value = normalizeSentiment(value);
                 pw.println("\t\t\t<sent concept=\"" + concept + "\" value=\"" + value + "\"/>");
             }
@@ -1495,8 +1496,9 @@ public class Hotel {
             pw.println("\t</hotel>");
         }
         catch (Exception e) {
-            System.out.println("Error in Hotel.writeHotelAsXML(): File error writing " + pw + ": " + e.getMessage());
-        }        
+            System.out.println("Error in Hotel.writeHotelAsXML(): Error writing " + pw + ": " + e.getMessage());
+            e.printStackTrace();
+        } 
     }
     
     /** *************************************************************
@@ -1518,7 +1520,7 @@ public class Hotel {
         PrintWriter pw = null;
         try {
             File fin  = new File(dir);
-            File outfile = new File(dir + File.separator + "hoteSentiment.xml");
+            File outfile = new File(dir + File.separator + "hotelSentiment.xml");
             pw = new PrintWriter(outfile);
             if (writeIncremental)
                 pw.println("<hotels>");
