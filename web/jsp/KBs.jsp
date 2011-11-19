@@ -1,4 +1,5 @@
 <%@ include file="Prelude.jsp" %>
+
 <%
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -165,9 +166,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 <%
   Iterator kbNames = null;
+  String removeResult = "";
   String remove = request.getParameter("remove");  // Delete the given KB
   if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) && remove.equalsIgnoreCase("true"))
-      KBmanager.getMgr().removeKB(kbName);
+      removeResult = KBmanager.getMgr().removeKB(kbName);
 
   if (KBmanager.getMgr().getKBnames() != null && !KBmanager.getMgr().getKBnames().isEmpty()) {
       System.out.println(KBmanager.getMgr().getKBnames().size());
@@ -220,7 +222,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           if (isAdministrator) {
               out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
               if (kb.inferenceEngine != null) 
-                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "\">Consistency Check</A></TD>");               
+                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "&page=0\">Consistency Check</A></TD>");               
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + language + "\">Inference Tests</A></TD>");
               if (kb.celt != null) 
                   out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + language + "\">CELT Tests</A></TD>");              
@@ -278,21 +280,22 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
          kbName3 = (String) kbNames.next();
          kb = (KB) KBmanager.getMgr().getKB(kbName3);
          if (!kb.errors.isEmpty()) {
-             out.println("<b>Errors in KB " + kb.name + "</b><br>\n");
-             kbErrorsFound = true;
+            out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
+            kbErrorsFound = true;        
+         	out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
          }
-         out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
-         kb.errors.clear();
      }  
    
      out.println("<p>\n");
      if (KBmanager.getMgr().getError().length() > 0) {
-         out.print("<b>");
+         out.print("<br/><b>");
          if (kbErrorsFound) out.print("Other ");
          out.println("Warnings and Error Notices</b>\n<br>\n");
          out.println(KBmanager.getMgr().getError());
-         KBmanager.getMgr().setError("");
      }
+     
+     if (!StringUtil.emptyString(removeResult))
+     	out.println("<br/>" + removeResult + "<br/>");
   }
 %>
 </ul>

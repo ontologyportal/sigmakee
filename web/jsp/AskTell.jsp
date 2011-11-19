@@ -242,9 +242,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
+                systemChosen = systemChosen.replace("%2E", ".");
                 resultSoTPTP = InterfaceTPTP.queryTPTP(stmt, timeout, maxAnswers, lineHtml,
                                                         systemChosen, location, quietFlag, 
-                                                        kbName, language, out);
+                                                        kbName, language);
             }
         }
         catch (IOException ioe) {

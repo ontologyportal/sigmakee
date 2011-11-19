@@ -128,6 +128,7 @@ August 9, Acapulco, Mexico.
   out.println(HTMLformatter.htmlDivider("Warning: Terms that do not appear in any rules"));
   out.println(HTMLformatter.termList(norule,kbHref));
 
+  System.out.println("Going on to Formulae with extraneous quantifiers.");
   // Formulae with extraneous quantifiers
   t1 = System.currentTimeMillis();
   ArrayList noquant = Diagnostics.quantifierNotInBody(kb);

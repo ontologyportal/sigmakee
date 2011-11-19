@@ -31,7 +31,9 @@ August 9, Acapulco, Mexico.
   }
 
   Graph g = new Graph();
-  String view = "text";
+  String view = request.getParameter("view");
+  if (view == null)
+  	view = "text";
   String relation = request.getParameter("relation");
   if (relation == null) relation = "subclass";
   String term = request.getParameter("term");
@@ -62,6 +64,7 @@ August 9, Acapulco, Mexico.
       for (int i = 0; i < items.length; i++)
           g.columnList.put(items[i],"yes");
   }
+  
 %>
 
 <form action="Graph.jsp">
@@ -98,7 +101,7 @@ August 9, Acapulco, Mexico.
       <font face="Arial,helvetica"><b>Relation: </b>
       <a href="Browse.jsp?kb=<%=kbName%>&term=<%=relation%>"> <%=relation%></a></font><p>
       <%
-          /* Present the text layout (grpah layout is in the else) */
+          /* Present the text layout (graph layout is in the else) */
           if (view.equals("text")) {
               ArrayList result = null;
               if (limit != null && limit != "")
@@ -116,27 +119,29 @@ August 9, Acapulco, Mexico.
               int width = 200;
               int size = 200;
               String edges = "";
-              %>
-              <br>
-              <applet codebase="./applet/classes" code="com.articulate.Graph" width=<%=size%> height=<%=size%>>
-              <param name="kb" value='<%=kbName%>'>
-              <param name="edges" value='<%=edges %>'>
-              <param name="term" value="<%=term%>">
-              <param name="relation" value="<%=relation%>">
-              <param name="up" value="<%=up%>">
-              <param name="down" value="<%=down%>">
-              <param name="path" value="graphxml.jsp">
-              alt="Your browser understands the &lt;APPLET&gt; tag but isn't running the applet, for some reason."
-              Your browser is ignoring the &lt;APPLET&gt; tag!
-              </applet><p>
-
-              <B>Instructions:</B><BR>
-              Click on "Big Scramble" or "Small Scramble" to spread out the
-              graph.  Double-click on any node in the graph to go to the Sigma page for that
-              term.  To make any node the center of the graph, double-click on it while
-              holding down on the Ctrl key.<p>
-
-                <%
+   			  String fname = null;
+   			  boolean graphAvailable = false;
+   			  
+   			if (term != null && relation != null && kb != null) {
+	  	  		fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
+	  	  		try {
+		 	  		graphAvailable = g.createDotGraph(kb, term, relation, fname); 
+		  		}
+		  		catch (Exception ex) {
+					graphAvailable = false;
+		  		}
+	 	  
+			 }
+			 
+			 if (graphAvailable) {
+			 %>
+			 	<img src="graph/<%=fname%>.gif"></img>
+			 <%
+			 }
+			 else {
+			 %> <p> Error producing graph. </p>
+			 <% 
+			 }
           } // end else - graph
   %>
 

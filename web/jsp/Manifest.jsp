@@ -129,7 +129,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     }
     else if (constituent != null) {
             System.out.println("  > kb.constituents 87 == " + kb.constituents);
-        kb.addConstituent(constituent, true, false);
+        kb.addNewConstituent(constituent);
             System.out.println("  > kb.constituents 89 == " + kb.constituents);
         //System.out.println("INFO in Manifest.jsp (top): The error string is : " + KBmanager.getMgr().getError());
         KBmanager.getMgr().writeConfiguration();
@@ -251,10 +251,14 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
   String er = KBmanager.getMgr().getError();
   //out.println("INFO in Manifest.jsp: Error string is : " + er);
+  if (!kb.errors.isEmpty()) {
+  	out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
+    out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + "&kb=" + kb.name));  
+  }
+  
   if (StringUtil.isNonEmptyString(er)) {
       out.println(er);  
       //System.out.println(er);
-      KBmanager.getMgr().setError("");
   }
   else
       if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))

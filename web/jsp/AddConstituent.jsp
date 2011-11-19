@@ -19,7 +19,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
        response.sendRedirect("KBs.jsp");     
   else {
       System.out.println("ENTER AddConstituent.jsp");
-      StringBuilder result = new StringBuilder();
       String kbDir = mgr.getPref("kbDir");
       File kbDirFile = new File(kbDir);
       System.out.println("INFO in AddConstituent.jsp: KB dir: " + kbDir);
@@ -108,20 +107,32 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
               response.sendRedirect("KBs.jsp"); 
           }
           else {
-              if (mgr.getKB(kbName) == null) 
-                  mgr.addKB(kbName);
-              kb = mgr.getKB(kbName);
-              // Remove the constituent, if it is already present.
-              for (ListIterator lit = kb.constituents.listIterator(); lit.hasNext();) {
-                  String constituent = (String) lit.next();
-                  if (StringUtil.isNonEmptyString(baseName) && constituent.contains(baseName))
-                      lit.remove();
+          	  boolean newKB = false;
+          	  
+              if (!mgr.existsKB(kbName))  
+                newKB = true;
+              else
+              	kb = mgr.getKB(kbName);
+              	             
+              if(newKB) {
+              	ArrayList list = new ArrayList();
+              	list.add(outfile.getCanonicalPath());
+              	mgr.loadKB(kbName, list);
+              } else {
+                 // Remove the constituent, if it is already present.
+              	for (ListIterator lit = kb.constituents.listIterator(); lit.hasNext();) {
+                  	String constituent = (String) lit.next();
+                  	if (StringUtil.isNonEmptyString(baseName) && constituent.contains(baseName))
+                     	 lit.remove();
+              	}
+              	           
+              	kb.addNewConstituent(outfile.getCanonicalPath());
+              	if (mgr.getPref("cache").equalsIgnoreCase("yes")) 
+                  kb.cache();                          
+              	kb.loadVampire();
+              	KBmanager.getMgr().writeConfiguration();              
               }
-              result.append(kb.addConstituent(outfile.getCanonicalPath(),true,false));
-              if (mgr.getPref("cache").equalsIgnoreCase("yes")) 
-                  result.append(kb.cache());                          
-              kb.loadVampire();
-              KBmanager.getMgr().writeConfiguration();
+              
           }
           if (!isError) 
               response.sendRedirect("Manifest.jsp?kb=" + kbName);          
