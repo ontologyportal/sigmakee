@@ -1489,7 +1489,7 @@ public class Hotel {
                 String value = h.conceptSentiment.get(concept).toString();
                 concept = WordNetUtilities.getBareSUMOTerm(concept);
                 System.out.println(concept);                
-                value = normalizeSentiment(value);
+                //value = normalizeSentiment(value);
                 pw.println("\t\t\t<sent concept=\"" + concept + "\" value=\"" + value + "\"/>");
             }
             pw.println("\t\t</sentiment>");
@@ -1633,7 +1633,6 @@ public class Hotel {
         long t1 = System.currentTimeMillis();
         //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels,true),true));
         System.out.println("INFO in Hotel.execJSON(): done computing sentiment in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-
     }
     
     /** ***************************************************************
