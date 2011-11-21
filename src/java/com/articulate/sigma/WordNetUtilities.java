@@ -39,7 +39,7 @@ public class WordNetUtilities {
         if (!StringUtil.emptyString(term)) {
             if (term.indexOf("&%") == 0)
                 start = 2;
-            if (!Character.isLetter(term.length()-1) && !Character.isDigit(term.length()-1))
+            if (!Character.isLetter(term.charAt(term.length()-1)) && !Character.isDigit(term.charAt(term.length()-1)))
                 finish--;
             return term.substring(start,finish);
         }
