@@ -689,7 +689,7 @@ public class OWLtranslator {
         String YAGO = (String) SUMOYAGOMap.get(term);
         if (YAGO != null) {        
             pw.println("  <owl:sameAs rdf:resource=\"http://dbpedia.org/resource/" + YAGO + "\" />");
-            pw.println("  <owl:sameAs rdf:resource=\"http://mpii.de/yago/resource/" + YAGO + "\" />");
+            pw.println("  <owl:sameAs rdf:resource=\"http://yago-knowledge.org/resource/" + YAGO + "\" />");
             pw.println("  <rdfs:seeAlso rdf:resource=\"http://en.wikipedia.org/wiki/" + YAGO + "\" />");
         }                    
     }
