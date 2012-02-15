@@ -367,11 +367,14 @@ public class SInE extends InferenceEngine {
         System.out.println("% Selecting from " + kbFileName);
 
         SInE sine = SInE.getNewInstance(kbFileName);
-        Set<String> selectedFormulas = sine.performSelection(query);
+        System.out.println("symbols: " + sine.getSymbols(query));
+        /*Set<String> selectedFormulas = sine.performSelection(query);
         
         for (String form : selectedFormulas) 
             System.out.println(form); 
        
-	sine.terminate();
+        sine.terminate();
+        */
+        
     }
 }
