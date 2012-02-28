@@ -20,7 +20,7 @@
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpath="lib/antlr-2.7.5.jar:lib/servlet.jar">
+    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpath="lib/antlr-2.7.5.jar:lib/servlet.jar:lib/mail.jar">
         <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
@@ -53,6 +53,7 @@
     <copy todir="${deploy.home}/lib">
         <fileset file="${basedir}/lib/IDV.jar" />
         <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
+        <fileset file="${basedir}/lib/mail.jar" />
         <fileset file="${basedir}/lib/TptpParser.jar" />
         <fileset file="${basedir}/lib/ClientHttpRequest.jar" />
     </copy>
