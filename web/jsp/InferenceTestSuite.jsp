@@ -199,8 +199,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
     Vampire <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (chosenEngine.equals("LEO")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
+    onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP2" <% if (chosenEngine.equals("STP2")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
@@ -287,7 +286,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           }          
           if (chosenEngine.equalsIgnoreCase("LEO")) {
               out.println("(Testing LEO)<br>");
-              sb = sb.append("Chris' method must return a string here.");
+	      THF thf = new THF();
+              sb = sb.append(thf.testLEO(kb).replaceAll("\\n","<br>"));
           }          
           if (chosenEngine.equalsIgnoreCase("SoTPTP")) {
               if (location.equalsIgnoreCase("local")&&(!tptpWorldExists)&&builtInExists) {

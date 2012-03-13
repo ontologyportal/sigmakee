@@ -174,7 +174,12 @@ public class KBmanager {
             File ieExecFile = (ieDirFile.isDirectory()
                                ? new File(ieDirFile, ieExec)
                                : new File(ieExec));
+	    String leoExec = "leo";
+	    File leoExecFile = (ieDirFile.isDirectory()
+				  ? new File(ieDirFile, leoExec)
+				  : new File(leoExec));
             preferences.put("inferenceEngine",ieExecFile.getCanonicalPath());
+            preferences.put("leoExecutable",leoExecFile.getCanonicalPath());
             preferences.put("loadCELT","no");  
             preferences.put("showcached","yes");  
             preferences.put("typePrefix","yes");  
@@ -672,7 +677,8 @@ public class KBmanager {
             if (Arrays.asList("kbDir", 
                               "celtdir", 
                               "inferenceEngine", 
-                              "inferenceTestDir").contains(key))
+                              "inferenceTestDir",
+			      "leoExecutable").contains(key))
                 value = escapeFilename(value);
             if (!Arrays.asList("userName", "userRole").contains(key)) {
                 SimpleElement preference = new SimpleElement("preference");

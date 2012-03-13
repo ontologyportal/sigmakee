@@ -3528,14 +3528,14 @@ public class KB {
 
         String result = "";
         try {
-            String LeoExecutable = "/Users/christophbenzmueller/leo/trunk/bin/leo";
-            String LeoInput = "/tmp/prob.p";
-            String LeoProblem;
-            String responseLine;
-            String LeoOutput = "";
-            File LeoExecutableFile = new File(LeoExecutable);
-            File LeoInputFile = new File(LeoInput);
-            FileWriter LeoInputFileW = new FileWriter(LeoInput);
+	    String LeoExecutable = KBmanager.getMgr().getPref("leoExecutable");
+	    String LeoInput = KBmanager.getMgr().getPref("inferenceTestDir") + "prob.p";
+	    String LeoProblem;
+	    String responseLine;
+	    String LeoOutput = "";
+	    File LeoExecutableFile = new File(LeoExecutable);
+	    File LeoInputFile = new File(LeoInput);
+	    FileWriter LeoInputFileW = new FileWriter(LeoInput);
             //InferenceEngine.EngineFactory factory=SInE.getFactory();
             //InferenceEngine engine=createInferenceEngine(factory);
             // result = askEngine(suoKifFormula, timeout, maxAnswers, engine);

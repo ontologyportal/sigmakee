@@ -415,7 +415,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         if ((resultLeo != null) && (resultLeo.indexOf("Syntax error detected") != -1)) 
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
-	    out.println("<font color='red'>" + resultLeo + "</font>");
+	    out.println("<font color='blue'>" + resultLeo + "</font>");
     }
 %>
     <p>
