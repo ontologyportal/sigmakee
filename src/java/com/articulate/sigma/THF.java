@@ -388,6 +388,9 @@ public class THF {
 
         // the main loop; we proceed formula by formula and work with side effects
         // to variables introduced above (I know that this is terrible programming style!) 
+  
+        int axcounter = 1;
+        int concounter = 1;
         for (Iterator iter = sortFormulas2(taggedFormulas.keySet()).iterator(); iter.hasNext();) {
             Formula form = (Formula) iter.next();
 
@@ -485,7 +488,8 @@ public class THF {
                     resAx = "\n" + res;
                 }
                 else {
-                    resAx = "\n thf(ax,axiom,(" + res + ")).";
+                    resAx = "\n thf(ax"+axcounter+",axiom,(" + res + ")).";
+                    axcounter++;
                 }
                 System.out.println("KIF2THF -- result: " + resAx);
                 axiomsResult.append(resAx);
@@ -496,7 +500,8 @@ public class THF {
                     resCon = "\n" + res;
                 }
                 else {
-                    resCon = "\n thf(con,conjecture,(" + res + ")).";
+                    resCon = "\n thf(con"+concounter+",conjecture,(" + res + ")).";
+		    concounter++;
                 }
                 System.out.println("KIF2THF -- result: " + resCon);
                 conjecturesResult.append(resCon);
@@ -1466,8 +1471,8 @@ public class THF {
         else {
             String h = f.getArgument(0);
             /* documentation formulas and some others are not translated */
-            if (h.equals("documentation") || h.equals("synonymousExternalConcept") ) {
-                result.append("%%% not translated yet : " + f.theFormula.trim());
+            if (h.equals("documentation") || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")) {
+                result.append("%%% not translated: " + f.theFormula.trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
             else if (h.equals(Formula.NOT)) {
@@ -1845,8 +1850,8 @@ public class THF {
             String arith_op_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + indTp + ")";
 
             /* documentation formulas are not translated */
-            if (h.equals("documentation")  || h.equals("synonymousExternalConcept")) {
-                result.append("%KIF documentation:" + f.theFormula.trim());
+            if (h.equals("documentation")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")) {
+                result.append("%%% not translated: " + f.theFormula.trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
             else if (h.equals(Formula.NOT)) {
@@ -2356,17 +2361,17 @@ public class THF {
             out.close();
             System.out.println("\n\nResult written to file " + "/tmp/all2.p");
 
-            /*
+            
 	    System.out.println("\n\nTest on all KB kb content:");
 	    Collection coll = Collections.EMPTY_LIST;
-	    String kbAll = "";
-	    kbAll = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
-	    fstream = new FileWriter("/tmp/kbAll.p");
+	    String kbAll2 = "";
+	    kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
+	    fstream = new FileWriter("/tmp/kbAll2.p");
 	    out = new BufferedWriter(fstream);
-	    out.write(kbAll);
+	    out.write(kbAll2);
 	    out.close();
-	    System.out.println("\n\nResult written to file " + "/tmp/kbAll.p");
-             */
+	    System.out.println("\n\nResult written to file " + "/tmp/kbAll2.p");
+             
 
             System.out.println("\n\nTest on all KB kb content with SInE:");
             String kbFileName = args[0];
@@ -2386,7 +2391,7 @@ public class THF {
             newQ.read(query);
             selectedQuery.add(newQ);
             String kbAll = "";
-            //kbAll = thf.KIF2THF(selectedFormulas,selectedQuery,kb);
+            kbAll = thf.KIF2THF(selectedFormulas,selectedQuery,kb);
             System.out.println(kbAll); 
             fstream = new FileWriter("/tmp/kbAll.p");
             out = new BufferedWriter(fstream);
@@ -2394,7 +2399,9 @@ public class THF {
             out.close();
             System.out.println("\n\nResult written to file " + "/tmp/kbAll.p");
 
-            System.out.println("\n\naskLEO Test: result = \n" + kb.askLEO(query,30,1,"LeoLocal"));
+            System.out.println("\n\naskLEO Test: result = \n" + kb.askLEO(query,30,1,"LeoGlobal"));
+
+	    System.out.println(KBmanager.getMgr().getKBnames());
 
         }
         catch (Exception ex) {
