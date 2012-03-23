@@ -357,9 +357,22 @@ public class THF {
     public String KIF2THF(Collection<Formula> axiomsC, Collection<Formula> conjecturesC, KB kb) {
 
 
+	Collection axioms = new LinkedHashSet();
+	Collection conjectures = new LinkedHashSet();
+
+	for (Iterator iter = axiomsC.iterator(); iter.hasNext();) {
+            Formula ax = (Formula) iter.next();
+            axioms.addAll(ax.expandRowVars(kb));
+        }
+
+	for (Iterator iter = conjecturesC.iterator(); iter.hasNext();) {
+            Formula con = (Formula) iter.next();
+	    conjectures.addAll(con.expandRowVars(kb));
+        }
+
         //not sort the formulas
-        Collection axioms = axiomsC;
-        Collection conjectures = conjecturesC;
+        //Collection axioms = axiomsC;
+        //Collection conjectures = conjecturesC;
 
         // initialize the global signature
         overallsig = new HashMap();
@@ -695,7 +708,7 @@ public class THF {
      */
     private String groundType(String sym, String intype) {
 
-        //System.out.println("\n  Enter groundType with sym=" + sym + " intype=" + intype);
+        System.out.println("\n  Enter groundType with sym=" + sym + " intype=" + intype);
         THFdebugOut("\n  Enter groundType with sym=" + sym + " intype=" + intype);
         String res = intype;
 
@@ -1628,7 +1641,7 @@ public class THF {
 
                 // recurse over the arguments and pass on useful type information; memorize useful information delivered back 
                 // bottom up
-                for (int i = 1; i < len; i++) {
+                for (int i = 1; i < Math.min(len,7); i++) {
                     String sumoTp = (String) typeInfo.get(i);
                     String argiTp = KIFType2THF(sumoTp);
                     String argi = (f.getArgument(i));
@@ -1815,10 +1828,10 @@ public class THF {
             /* sym is a constant symbol */
             else {
                 String symcon = toTHFKifConst(sym);
-                //if (terms.get(symcon).equals(unknownTp)) {
-                //	   terms.put(symcon,indTp);
-                //	   localsig.put(symcon,indTp);
-                //}
+                if (terms.get(symcon) == null) {
+		    terms.put(symcon,indTp);
+		    localsig.put(symcon,indTp);
+                }
                 String nwTp = groundType(symcon,(String) terms.get(symcon));
                 symcon = makeNewConstWithSuffix(symcon,nwTp);
                 terms.put(symcon,nwTp);
@@ -2216,7 +2229,8 @@ public class THF {
         KBmanager kbmgr = KBmanager.getMgr();
         kbmgr.initializeOnce();
         KB kb = kbmgr.getKB("SUMO");
-
+	
+	
         List<String> testStrings =
             Arrays.asList(
                     "(and (?REL ?X ?Y) (?REL ?X ?Y) (?REL ?X ?Y))",
@@ -2263,16 +2277,20 @@ public class THF {
                     ,"(=> (instance ?NUMBER Quantity) (equal (ReciprocalFn ?NUMBER) (ExponentiationFn ?NUMBER -1)))"
                     ,"(instance MonthFn TemporalRelation)"
                     //todo ,"(forall (?YEAR2 ?YEAR1) (=> (and (instance ?YEAR1 Year) (instance ?YEAR2 Year) (equal (SubtractionFn ?YEAR2 ?YEAR1) 1)) (meetsTemporally ?YEAR1 ?YEAR2)))"
-                    ,"(forall (?YEAR2 ?YEAR1) (=> (and (instance ?YEAR1 Year) (instance ?YEAR2 Year) (equal ?YEAR1 (MeasureFn ?X Year)) (equal ?YEAR2 (MeasureFn ?Y Year)) (equal (SubtractionFn ?X ?Y) 1)) (meetsTemporally ?YEAR1 ?YEAR2)))"
+                    ,"(forall (?YEAR2 ?YEAR1) (=> (and (instance ?YEAR1 Year) (instance ?YEAR2 Year) (equal ?YEAR1 (MeasureFn ?X Year)) (equal ?YEAR2 (MeasureFn ?Y Year)) (equal (SubtractionFn ?X ?Y) 1)) (meetsTemporally ?YEAR1 ?YEAR2)))",
+		    "(partition Communication Stating Supposing Directing Committing Expressing Declaring)"
                     // ,
                     // ,
                     // ,
                     // ,
             );
+	    
+
 
         THFdebug = false;  /* set this to true for lots of debug output */
         //THFdebug = true;  /* set this to true for lots of debug output */	
 
+	
         List<Formula> testFormulas = new ArrayList<Formula>();
         List<Formula> emptyL = Collections.emptyList(); 
         Formula newF = null;
@@ -2360,12 +2378,12 @@ public class THF {
             out.write(ax_con_res);
             out.close();
             System.out.println("\n\nResult written to file " + "/tmp/all2.p");
-
+	
             
 	    System.out.println("\n\nTest on all KB kb content:");
 	    Collection coll = Collections.EMPTY_LIST;
 	    String kbAll2 = "";
-	    kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
+	    kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb); 
 	    fstream = new FileWriter("/tmp/kbAll2.p");
 	    out = new BufferedWriter(fstream);
 	    out.write(kbAll2);
