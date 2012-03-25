@@ -3552,14 +3552,17 @@ public class KB {
             newQ.read(suoKifFormula);
             selectedQuery.add(newQ);
 
-            String kbFileName = "/Users/christophbenzmueller/Sigma/KBs/Merge.kif";
-            logger.fine("kbFileName = " + kbFileName);
+            //String kbFileName = "/Users/christophbenzmueller/Sigma/KBs/SumoMilo.kif";
+            //logger.fine("kbFileName = " + kbFileName);
 
             List<String> selFs = null;
 
             if (flag.equals("LeoSine")) {
-                SInE sine = SInE.getNewInstance(kbFileName);
+                SInE sine = new SInE(this.formulaMap.keySet());
                 selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
+
+                //SInE sine = SInE.getNewInstance(kbFileName);
+                //selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
                 sine.terminate();
             }
             else if (flag.equals("LeoLocal")) {
@@ -3618,7 +3621,7 @@ public class KB {
             LeoInputFileW.write(LeoProblem);
             LeoInputFileW.close();
 
-            String command = LeoExecutableFile.getCanonicalPath() + " -po -t " + timeout + " " + LeoInputFile.getCanonicalPath();
+            String command = LeoExecutableFile.getCanonicalPath() + " -po 1 -t " + timeout + " " + LeoInputFile.getCanonicalPath();
             logger.finer("command = " + command);
 
             Process leo = Runtime.getRuntime().exec(command);
@@ -3629,6 +3632,8 @@ public class KB {
             reader.close();
 
             logger.finer("LeoOutput == " + LeoOutput);
+
+	    System.out.println(LeoOutput);
 
             if (LeoOutput.contains("SZS status Theorem")) {
                 result = "Answer 1. yes"
