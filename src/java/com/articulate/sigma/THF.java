@@ -708,7 +708,6 @@ public class THF {
      */
     private String groundType(String sym, String intype) {
 
-        System.out.println("\n  Enter groundType with sym=" + sym + " intype=" + intype);
         THFdebugOut("\n  Enter groundType with sym=" + sym + " intype=" + intype);
         String res = intype;
 
@@ -1484,7 +1483,7 @@ public class THF {
         else {
             String h = f.getArgument(0);
             /* documentation formulas and some others are not translated */
-            if (h.equals("documentation") || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") || h.equals("format") || h.equals("comment") || h.equals("conventionalShortName")) {
+            if (h.equals("documentation") || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") || h.equals("format") || h.equals("comment") || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName")) {
                 result.append("%%% not translated: " + f.theFormula.trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
@@ -1863,7 +1862,7 @@ public class THF {
             String arith_op_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + indTp + ")";
 
             /* documentation formulas are not translated */
-            if (h.equals("documentation")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  || h.equals("format") || h.equals("comment")  || h.equals("conventionalShortName")) {
+            if (h.equals("documentation")  || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  || h.equals("format") || h.equals("comment")  || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName")) {
                 result.append("%%% not translated: " + f.theFormula.trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
