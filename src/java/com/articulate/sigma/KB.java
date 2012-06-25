@@ -6929,6 +6929,8 @@ public class KB {
         return result;
     }
 
+    /** *************************************************************
+     */
     public void writeDisplayText(String displayFormatPredicate, String displayTermPredicate, String language, String fname) throws IOException {   	
     	PrintWriter pr = null;
     	try {
@@ -6987,17 +6989,13 @@ public class KB {
 	    						sb.append(",");
 	    						displayText = displayText.replace(argNum, term);		    					
 	    					}    								    						
-	    				} 		    			
-	    				
-	    				sb.append(displayText);	   
-	    				
-	    				
+	    				} 		    			    				
+	    				sb.append(displayText);	   	    				    			
 	    				// resulting line will be something like:
 	    				// <predicate>, <argument_0>, ..., <argument_n>, <display_text>
 	    				// note: argument_0 to argument_n is only placed there if their 
 	    				// termFormat is used in the display_text.
-	    				pr.println(sb.toString());
-	    				
+	    				pr.println(sb.toString());	    				
 	    			}	    			
     			}
     		}    		
@@ -7018,17 +7016,72 @@ public class KB {
             }
         }
     }
-    
-    private ArrayList<com.articulate.sigma.Formula> askWithRestrictions(int i,
-			String displayFormatPredicate, int j) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
+	/** *************************************************************
+     */
+    public static void generateTestAssertions() {
+    	
+	    try {
+	    	int counter = 0;
+	    	System.out.println("INFO in KB.main()");
+	        KBmanager.getMgr().initializeOnce();
+	        KB kb = KBmanager.getMgr().getKB("SUMO");
+	    	System.out.println("INFO in KB.main(): printing predicates");
+	        Iterator<String> it = kb.terms.iterator();
+	        while (it.hasNext()) {
+	        	String term = it.next();
+	        	if (Character.isLowerCase(term.charAt(0)) && kb.getValence(term) <= 2) {
+	        		/*
+	        		ArrayList<Formula> forms = kb.askWithRestriction(0,"domain",1,term);
+	        		for (int i = 0; i < forms.size(); i++) {
+	        			String argnum = forms.get(i).getArgument(2);
+	        			String type = forms.get(i).getArgument(3);
+	        			if (argnum.equals("1"))
+	        				System.out.print("(instance Foo " + type + "),");
+	        			if (argnum.equals("2"))
+	        				System.out.print("(instance Bar " + type + ")");
+	        		}
+	        		*/
+	        		String argType1 = kb.getArgType(term,1);
+	        		String argType2 = kb.getArgType(term,2);
+	        		if (argType1 != null && argType2 != null) {
+		        		System.out.print("fof(local_" + counter++ + ",axiom,(s__" + term + "(s__Foo,s__Bar))).|");
+		        		System.out.print("fof(local_" + counter++ + ",axiom,(s__instance(s__Foo,s__" + argType1 + "))).|");
+		        		System.out.println("fof(local_" + counter++ + ",axiom,(s__instance(s__Bar,s__" + argType2 + "))).");
+	        		}	        		
+	        	}
+	        }
+	    } catch (Exception e) {
+	        System.out.println(e.getMessage());
+	    }
+    }
+    
+	/** *************************************************************
+     */
+    public static void generateRelationList() {
+    	
+        try {
+        	System.out.println("INFO in KB.main()");
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+        	System.out.println("INFO in KB.main(): printing predicates");
+            Iterator<String> it = kb.terms.iterator();
+            while (it.hasNext()) {
+            	String term = it.next();
+            	if (Character.isLowerCase(term.charAt(0)))
+            		System.out.println(term);
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
 	/** *************************************************************
      */
     public static void main(String[] args) {
 
+    	generateTestAssertions();
+    	
         // testTPTP(args);
         /*
           try {
@@ -7040,19 +7093,7 @@ public class KB {
           kb.termsWithNoPictureLinks();
         */
 
-        try {
-        	System.out.println("Am running it!!!");
-            KBmanager.getMgr().initializeOnce();
-            WordNet.initOnce();
-            KBmanager.getMgr().addKB("SUMO");
-            KB kb = KBmanager.getMgr().getKB("SUMO");
-            kb.addConstituent("/home/knomorosa/SourceForge/KBs/ReardenLabels.kif");
-            
-            kb.writeDisplayText("reardenFormat", "reardenDisplayFormat", "EnglishLanguage", "/home/knomorosa/Desktop/FileForRama.csv");
-            
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+
         
         //kb.generateSemanticNetwork();
         //kb.generateRandomProof();
