@@ -3615,6 +3615,7 @@ public class KB {
             }
 
             logger.finer("selectedFormulas = " +  selFs.toString());
+	    System.out.println(selFs.toString());
 
             THF thf = new THF();
             LeoProblem = thf.KIF2THF(selectedFormulas,selectedQuery,this);

@@ -120,6 +120,11 @@ public class THF {
     private static String typeDelimiter = ">";
 
     /** ***************************************************************
+     * A variable that defines the THF 'not translated' string
+     */
+    private static String notTranslatedStr   = "%%% notTranslated: ";
+
+    /** ***************************************************************
      * Declaration of some special THF types used in the KIF2THF translation.
      * In the final translation only the THF base types $i (individuals) and
      * $o (Booleans) should be occuring.
@@ -497,25 +502,33 @@ public class THF {
             // formula f to the appropriate result string builder
             if (taggedFormulas.get(form).equals(axTag)) {
                 String resAx = "";
-                if (res.startsWith("%")) {
-                    resAx = "\n" + res;
+                if (res.startsWith(notTranslatedStr)) {
+                    resAx = "\n\n" + res;
                 }
-                else {
-                    resAx = "\n thf(ax"+axcounter+",axiom,(" + res + ")).";
-                    axcounter++;
-                }
+		else
+		    if (res.indexOf(notTranslatedStr) != -1) {
+                    resAx = "\n\n" + notTranslatedStr + res;
+		    }
+		    else {
+			resAx = "\n\n thf(ax"+axcounter+",axiom,(" + res + ")).";
+			axcounter++;
+		    }
                 System.out.println("KIF2THF -- result: " + resAx);
                 axiomsResult.append(resAx);
             }
             else if (taggedFormulas.get(form).equals(conTag)) {
                 String resCon = "";
-                if (res.startsWith("%")) {
-                    resCon = "\n" + res;
+                if (res.startsWith(notTranslatedStr)) {
+                    resCon = "\n\n" + res;
                 }
-                else {
-                    resCon = "\n thf(con"+concounter+",conjecture,(" + res + ")).";
-		    concounter++;
-                }
+		else
+		    if (res.indexOf(notTranslatedStr) != -1) {
+                    resCon = "\n\n" + notTranslatedStr + res;
+		    }
+		    else {
+			resCon = "\n\n thf(con"+concounter+",conjecture,(" + res + ")).";
+			concounter++;
+		    }
                 System.out.println("KIF2THF -- result: " + resCon);
                 conjecturesResult.append(resCon);
             }
@@ -1483,8 +1496,8 @@ public class THF {
         else {
             String h = f.getArgument(0);
             /* documentation formulas and some others are not translated */
-            if (h.equals("documentation") || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") || h.equals("format") || h.equals("comment") || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName")) {
-                result.append("%%% not translated: " + f.theFormula.trim());
+            if (h.equals("documentation") || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") || h.equals("format") || h.equals("comment") || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") || h.equals("formerName") || h.equals("conventionalLongName") || h.equals("conventionalShortName") || h.equals("relatedExternalConcept") || h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") || h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") || h.equals("acronym")) {
+                result.append(notTranslatedStr + f.theFormula.trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
             else if (h.equals(Formula.NOT)) {
@@ -1862,8 +1875,8 @@ public class THF {
             String arith_op_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + indTp + ")";
 
             /* documentation formulas are not translated */
-            if (h.equals("documentation")  || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  || h.equals("format") || h.equals("comment")  || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName")) {
-                result.append("%%% not translated: " + f.theFormula.trim());
+            if (h.equals("documentation")  || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  || h.equals("format") || h.equals("comment")  || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") || h.equals("formerName") || h.equals("conventionalLongName") || h.equals("conventionalShortName") || h.equals("relatedExternalConcept") || h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") || h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") || h.equals("acronym")) {
+                result.append(notTranslatedStr + f.theFormula.trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
             else if (h.equals(Formula.NOT)) {
@@ -2227,63 +2240,7 @@ public class THF {
         THF thf = new THF();
         KBmanager kbmgr = KBmanager.getMgr();
         kbmgr.initializeOnce();
-        KB kb = kbmgr.getKB("SUMO");
-	
-	
-        List<String> testStrings =
-            Arrays.asList(
-                    "(and (?REL ?X ?Y) (?REL ?X ?Y) (?REL ?X ?Y))",
-                    "(exists (?REL) (and (instance ?REL bla) (forall (?X ?Y) (and (?REL ?X ?Y) (bla ?X ?Y) (instance bla blu)))))",
-                    "(exists (?REL) (and (instance ?REL TrichotomizingRelation) (instance Peter Human) (forall (?X ?Y) (?REL ?X ?Y))))",
-                    "(=> (and (believes John (and True False)) (attribute ?SYLLABLE1 Stressed) (instance ?WORD Word) (part ?SYLLABLE ?WORD)) (not (exists (?SYLLABLE2 ?BLU ?BLI) (and (believes John ?BLU) (instance ?SYLLABLE2 Syllable) (part ?SYLLABLE2 ?WORD) (attribute ?SYLLABLE2 Stressed) (not (equal ?SYLLABLE2 ?SYLLABLE))))))",
-                    "(=> (and (believes John (and True False)) (attribute ?SYLLABLE1 Stressed) (instance ?WORD Word) (part ?SYLLABLE1 ?WORD)) (not (exists (?SYLLABLE2 ?BlU ?BLI) (and (believes John True) (instance ?SYLLABLE2 Syllable) (part ?SYLLABLE2 ?WORD) (attribute ?SYLLABLE2 Stressed) (not (equal ?SYLLABLE2 ?SYLLABLE))))))",
-                    "(exists (?BLI) (and (believes John ?BLI) False))",
-                    "(=>  (instance ?PHRASE Phrase)  (exists (?PART1 ?PART2)    (and      (part ?PART1 ?PHRASE)      (part ?PART2 ?PHRASE)      (instance ?PART1 Word)      (instance ?PART2 Word)      (not (equal ?PART1 ?PART2)))))",
-                    "(=> (knows ?X (and ?FACT1 ?FACT2 ?FACT3)) (and (believes ?X ?FACT1) (believes ?X (and ?FACT2 ?FACT2))))",
-                    "(=> (knows ?X ?FACT1) (and (knows ?X ?FACT1) (knows ?X ?FACT2) (knows ?X ?FACT3)))",
-                    "(=> (knows ?X (and ?FACT1 ?FACT2 ?FACT3)) (and (knows ?X ?FACT1) (knows ?X ?FACT2) (knows ?X ?FACT3)))",
-                    "(=> (and (knows ?X ?FACT1) (knows ?X ?FACT1) (knows ?X ?FACT2)) (knows ?X (and ?FACT1 ?FACT2)))",
-                    "(=> (and (holdsDuring ?INTERVAL (?REL ?INST1 ?INST2)) (instance ?INST1 Physical) (instance ?INST2 Physical)) (and (time ?INST1 ?INTERVAL) (time ?INST2 ?INTERVAL)))",
-                    "(<=> (instance ?REL TrichotomizingRelation) (forall (?INST1 ?INST2) (or (and (?REL ?INST1 ?INST2) (not (equal ?INST1 ?INST2)) (not (?REL ?INST2 ?INST1))) (and (not (?REL ?INST1 ?INST2)) (equal ?INST1 ?INST2) (not (?REL ?INST2 ?INST1))) (and (not (?REL ?INST1 ?INST2)) (not (equal ?INST1 ?INST2)) (?REL ?INST2 ?INST1)))))",
-                    "(<=> (instance ?REL TotalOrderingRelation) (forall (?INST1 ?INST2) (and (or (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST1)) (or (not (?REL ?INST1 ?INST2)) (not (?REL ?INST2 ?INST1))))))",
-                    "(=> (and (instance ?REL RelationExtendedToQuantities) (instance ?REL TernaryRelation) (instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber) (?REL ?NUMBER1 ?NUMBER2 ?VALUE)) (forall (?UNIT) (=> (instance ?UNIT UnitOfMeasure) (?REL (MeasureFn ?NUMBER1 ?UNIT) (MeasureFn ?NUMBER2 ?UNIT) (MeasureFn ?VALUE ?UNIT)))))",
-                    "(=> (involvedInEvent ?E ?T) (exists (?R) (and (instance ?R CaseRole) (subrelation ?R involvedInEvent) (?R ?E ?T))))",
-                    "(=> (trichotomizingOn ?RELATION ?CLASS) (forall (?INST1 ?INST2) (=> (and (instance ?INST1 ?CLASS) (instance ?INST2 ?CLASS)) (or (?RELATION ?INST1 ?INST2) (?RELATION ?INST2 ?INST1) (equal ?INST1 ?INST2)))))",
-                    "(=> (knows ?AGENT ?FORMULA) (believes ?AGENT ?FORMULA))",
-                    "(=> (knows ?AGENT (subclass Human Organism)) (believes ?AGENT (subclass Human Organism)))",
-                    "(=> (knows ?AGENT (instance Bob27 Human)) (believes ?AGENT (instance Bob27 Human)))",
-                    "(=> (knows ?AGENT ?FORMULA) (truth ?FORMULA True))",
-                    "(=> (and (domain ?REL ?NUMBER ?CLASS) (?REL ?ARG1 ?ARG2)) (instance (ListOrderFn (ListFn ?ARG1 ?ARG2) ?NUMBER) ?CLASS))",
-                    "(=> (and (domainSubclass ?REL ?NUMBER ?CLASS) (?REL ?ARG1 ?ARG2 ?ARG3)) (subclass (ListOrderFn (ListFn ?ARG1 ?ARG2 ?ARG3) ?NUMBER) ?CLASS))",
-                    "(=> (holdsDuring ?TIME (confersNorm ?ENTITY ?FORMULA ?NORM)) (and (holdsDuring (ImmediatePastFn ?TIME) (not (modalAttribute ?FORMULA ?NORM))) (holdsDuring (ImmediateFutureFn ?TIME) (modalAttribute ?FORMULA ?NORM))))",
-                    "(=> (inhibits ?PROC1 ?PROC2) (forall (?TIME ?PLACE) (decreasesLikelihood (holdsDuring ?TIME (exists (?INST1) (and (instance ?INST1 ?PROC1) (located ?INST1 ?PLACE)))) (holdsDuring ?TIME (exists (?INST2) (and (instance ?INST2 ?PROC2) (located ?INST2 ?PLACE)))))))",
-                    "(<=> (instance ?ENTITY (UnionFn ?CLASS1 ?CLASS2)) (or (instance ?ENTITY ?CLASS1) (instance ?ENTITY ?CLASS2)))"
-
-                    ,"(instance instance BinaryPredicate)"
-                    ,"(domain domain 1 Relation)"
-                    ,"(domain domain 2 PositiveInteger)"
-                    ,"(domain domain 3 SetOrClass)"
-                    ,"(relatedInternalConcept relatedExternalConcept relatedInternalConcept)"
-                    ,"(forall (@ROW ?ITEM) (equal (ListLengthFn (ListFn @ROW ?ITEM)) (SuccessorFn (ListLengthFn (ListFn @ROW)))))"
-                    ,"(bla 2 4)"
-                    ,"(forall (?ROLE ?ARG1 ?ARG2 ?PROC) (=> (and (instance ?ROLE CaseRole) (?ROLE ?ARG1 ?ARG2) (instance ?ARG1 ?PROC) (subclass ?PROC Process)) (capability ?PROC ?ROLE ?ARG2)))"			  
-                    ,"(forall (?OBJ ?HOLE) (=> (hole ?HOLE ?OBJ) (not (instance ?OBJ Hole))))"
-                    ,"(=> (and (instance ?ARGUMENT Argument) (equal ?PREMISES (PremisesFn ?ARGUMENT))) (<=> (subProposition ?PROPOSITION ?PREMISES) (premise ?ARGUMENT ?PROPOSITION)))"
-                    ,"(=> (instance ?ARGUMENT Argument) (exists (?PREMISES ?CONCLUSION) (and (equal (PremisesFn ?ARGUMENT) ?PREMISES) (conclusion ?CONCLUSION ?ARGUMENT))))"
-                    ,"(member ?ARGUMENT (KappaFn ?X True)))"
-                    ,"(member ?ARGUMENT (KappaFn ?X (subProposition ?PROPOSITION ?PREMISES)))"
-                    ,"(=> (and (equal ?MONTH1 (MonthFn April ?YEAR)) (equal ?MONTH2 (MonthFn May ?YEAR))) (meetsTemporally ?MONTH1 ?MONTH2))"
-                    ,"(=> (instance ?NUMBER Quantity) (equal (ReciprocalFn ?NUMBER) (ExponentiationFn ?NUMBER -1)))"
-                    ,"(instance MonthFn TemporalRelation)"
-                    //todo ,"(forall (?YEAR2 ?YEAR1) (=> (and (instance ?YEAR1 Year) (instance ?YEAR2 Year) (equal (SubtractionFn ?YEAR2 ?YEAR1) 1)) (meetsTemporally ?YEAR1 ?YEAR2)))"
-                    ,"(forall (?YEAR2 ?YEAR1) (=> (and (instance ?YEAR1 Year) (instance ?YEAR2 Year) (equal ?YEAR1 (MeasureFn ?X Year)) (equal ?YEAR2 (MeasureFn ?Y Year)) (equal (SubtractionFn ?X ?Y) 1)) (meetsTemporally ?YEAR1 ?YEAR2)))",
-		    "(partition Communication Stating Supposing Directing Committing Expressing Declaring)"
-                    // ,
-                    // ,
-                    // ,
-                    // ,
-            );
-	    
+        KB kb = kbmgr.getKB("SUMO");  
 
 
         THFdebug = false;  /* set this to true for lots of debug output */
@@ -2294,102 +2251,20 @@ public class THF {
         List<Formula> emptyL = Collections.emptyList(); 
         Formula newF = null;
         String newFTHF = null;
-        for (String testStr : testStrings) {
-            newF = new Formula();
-            newF.read(testStr);
-            testFormulas.add(newF);
-        }
-        int tflen = testFormulas.size();
-        //for (int i = 0; i < tflen; i++) {
 
         try {
-            for (int i = 0; i < tflen; i++) {          
-                newF = (Formula) testFormulas.get(i);
-
-                System.out.println("\n\n---------- Example " + i + " ----------\n");
-                System.out.println("\n\nKIF Formula:\n" + newF.toString());
-                System.out.println("\n\nVariables with types:\n" + newF.computeVariableTypes(kb));
-                System.out.println("\n\nRelations with argtypes:\n" + newF.gatherRelationsWithArgTypes(kb));
-                newFTHF = thf.KIF2THF(Arrays.asList(newF),emptyL,kb);
-                System.out.println("\n\ntoTHF with formula:\n " + newF.toString() + "\n \n --- THF-converted to ---> \n "+ newFTHF);
-                FileWriter fstream = new FileWriter("/tmp/" + i + ".p");
-                BufferedWriter out = new BufferedWriter(fstream);
-                out.write(newFTHF);
-                out.close();
-                System.out.println("\n\nTHF result written to file " + "/tmp/" + i + ".p");
-            }
-
-            System.out.println("\n\nTesting now KIF2THF on the combination of all test formulas");
-            String bigres = "";
-            bigres = thf.KIF2THF(testFormulas,emptyL,kb);
-            System.out.println("\n\nKIF2THF result on all test formulas is:\n " + bigres);
-            FileWriter fstream = new FileWriter("/tmp/all1.p");
-            BufferedWriter out = new BufferedWriter(fstream);
-            out.write(bigres);
-            out.close();
-            System.out.println("\n\nCombined result written to file " + "/tmp/all1.p");
-
-
-            List<Formula> testAx = new ArrayList<Formula>();
-            List<Formula> testCon = new ArrayList<Formula>();
-
-            List<String> testAxioms =
-                Arrays.asList( 			     
-                        "(holdsDuring (YearFN n2009) (enjoys Mary Cooking))"
-                        ,"(bli wants instance)"
-                        ,"(holdsDuring (YearFN n2009) (=> (instance ?X Female) (wants Ben ?X)))"
-                        ,"(holdsDuring ?X (instance Mary Female))"
-                        ,"(domain wants 1 blu)"
-                        ,"(domain enjoys 1 bli)"
-                        ,"(bli wants instance)"
-                );
-            List<String> testConjectures =
-                Arrays.asList(
-                        "(holdsDuring (YearFN n2009) (and (enjoys Mary Cooking) (wants Ben Mary)))"
-                        ,"(holdsDuring ?X (and (enjoys Mary ?Y) (wants ?Z Mary)))"
-                        ,"(holdsDuring ?X (and (?Y Mary Cooking) (wants ?Z Mary)))"
-                        ,"(forall (?P ?Q ?X) (equal (and (?P ?X) (?Q ?X)) (and (?Q ?X) True (?P ?X))))"
-                        ,"(forall (?P ?Q) (equal (KappaFn ?X (and (?P ?X) (?Q ?X))) (KappaFn ?X (and (?Q ?X) True (?P ?X)))))"
-                );
-
-            Formula newAx = null;
-            String newAxTHF = null;
-            for (String testStr : testAxioms) {
-                newAx = new Formula();
-                newAx.read(testStr);
-                testAx.add(newAx);
-            }
-
-            Formula newCon = null;
-            String newConTHF = null;
-            for (String testStr : testConjectures) {
-                newCon = new Formula();
-                newCon.read(testStr);
-                testCon.add(newCon);
-            }
-
-            System.out.println("\n\nTest on some Axioms and Conjectures");
-            String ax_con_res = "";
-            ax_con_res = thf.KIF2THF(testAx,testCon,kb);
-            System.out.println("\n\nKIF2THF result :\n " + ax_con_res);
-            fstream = new FileWriter("/tmp/all2.p");
-            out = new BufferedWriter(fstream);
-            out.write(ax_con_res);
-            out.close();
-            System.out.println("\n\nResult written to file " + "/tmp/all2.p");
-	
-            
+             
 	    System.out.println("\n\nTest on all KB kb content:");
 	    Collection coll = Collections.EMPTY_LIST;
 	    String kbAll2 = "";
 	    kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb); 
-	    fstream = new FileWriter("/tmp/kbAll2.p");
-	    out = new BufferedWriter(fstream);
+	    FileWriter fstream = new FileWriter("/tmp/kbAll2.p");
+	    BufferedWriter out = new BufferedWriter(fstream);
 	    out.write(kbAll2);
 	    out.close();
 	    System.out.println("\n\nResult written to file " + "/tmp/kbAll2.p");
-             
-
+            
+	    /*
             System.out.println("\n\nTest on all KB kb content with SInE:");
             String kbFileName = args[0];
             String query = args[1];
@@ -2419,7 +2294,7 @@ public class THF {
             System.out.println("\n\naskLEO Test: result = \n" + kb.askLEO(query,30,1,"LeoGlobal"));
 
 	    System.out.println(KBmanager.getMgr().getKBnames());
-
+	    */
         }
         catch (Exception ex) {
             ex.printStackTrace();
