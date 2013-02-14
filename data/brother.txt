@@ -6,13 +6,21 @@ Theodore Hardeen is a brother of Harry Houdini.
 (brother Theodore_Hardeen Harry_Houdini)
 (S (NP (NNP PERSON)) (VP (VBZ is) (NP (NP (DT a) (NN brother)) (PP (IN of) (NP (NNP PERSON))))) (. .))
 
+Arbaaz Khan is the brother of actor Salman Khan.
+(brother Arbaaz_Khan Salman_Khan)
+(S (NP (NNP PERSON)) (VP (VBZ is) (NP (NP (DT the) (NN brother)) (PP (IN of) (NP (NN actor) (NN PERSON))))) (. .))
+
 Jesus did have a brother called James.
 (brother James Jesus)
 (S (NP (NNP PERSON)) (VP (VBD did) (VP (VB have) (NP (NP (DT a) (NN brother)) (VP (VBN [called|named]) (NP (NNP PERSON)))))) (. .))
 
 Justin Bieber has a brother named Jaxon Jeremy Bieber.
 (brother JaxonJeremyBieber JustinBieber)
-(S (NP (NNP PERSON)) (VP (VBZ [has|had|have]) (NP (NP (DT a) (NN brother)) (VP (VBN named) (NP (NNP PERSON))))) (. .))
+(S (NP (NNP PERSON)) (VP (VBZ [has|had|have]) (NP (NP (DT a) (NN brother)) (VP (VBN [called|named]) (NP (NNP PERSON))))) (. .))
+
+John has a brother Thomas.
+(brother Thomas John)
+(S (NP (NNP PERSON)) (VP (VBZ has) (NP (DT a) (NN brother) (NNP PERSON))) (. .))
 
 Dennis Quaid loves his brother Randy.
 (brother Randy DennisQuaid)
@@ -37,13 +45,3 @@ Lucy and her fraternal twin brother Peter are born in December 1993.
 Scott's identical twin brother Brad Scott played alongside him at the Brisbane Lions and is now the coach of North Melbourne. 
 (brother BradScott Scott)
 (NP (NP (NNP PERSON) (POS 's)) (JJ identical) (JJ twin) (NN brother) (NN PERSON))
-
-Thomas had two brothers: Nelson M. Linton and Iverson Linton.
-(brother NelsonM.Linton Thomas)
-(brother IversonLinton Thomas)
-(S (NP (NNP PERSON)) (VP (VBD had) (NP (NP (CD two) (NNS brothers)) (: :) (NP (NNP PERSON) (CC and) (NNP PERSON)))) (. .))
-
-John Quincy Adams had two brothers--Charles and Thomas.
-(brother Charles JohnQuincyAdams)
-(brother Thomas JohnQuincyAdams)
-(S (NP (NNP PERSON)) (VP (VBD [have|had|has]) (NP (NP (CD two) (NNS brothers)) (: --) (NP (NNP PERSON) (CC and) (NNP PERSON)))) (. .))
