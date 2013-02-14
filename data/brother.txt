@@ -1,38 +1,49 @@
-For Stephanie Pratt, having Spencer Pratt as a brother is coming in handy.
-(brother SpencerPratt StephaniePratt)
+John is Susan's brother.
+(brother John Susan)
+(S (NP (NNP PERSON)) (VP (VBZ [is|am|was]) (NP (NP (NNP PERSON) (POS 's)) (NN brother))) (. .))
+
+Theodore Hardeen is a brother of Harry Houdini.
+(brother Theodore_Hardeen Harry_Houdini)
+(S (NP (NNP PERSON)) (VP (VBZ is) (NP (NP (DT a) (NN brother)) (PP (IN of) (NP (NNP PERSON))))) (. .))
+
+Jesus did have a brother called James.
+(brother James Jesus)
+(S (NP (NNP PERSON)) (VP (VBD did) (VP (VB have) (NP (NP (DT a) (NN brother)) (VP (VBN [called|named]) (NP (NNP PERSON)))))) (. .))
+
+Justin Bieber has a brother named Jaxon Jeremy Bieber.
+(brother JaxonJeremyBieber JustinBieber)
+(S (NP (NNP PERSON)) (VP (VBZ [has|had|have]) (NP (NP (DT a) (NN brother)) (VP (VBN named) (NP (NNP PERSON))))) (. .))
+
+Dennis Quaid loves his brother Randy.
+(brother Randy DennisQuaid)
+(S (NP (NNP PERSON)) (VP (VBZ [loves|love|loved|hates|hate|hated]) (NP (PRP$ [his|her]) (NN brother) (NNP PERSON))) (. .))
+
+Does Miley Cyrus love her brother Braison Cyrus?
+(brother BraisonCyrus MileyCyrus)
+(SQ (NNP [Does|Did|Do]) (NP (NNPS PERSON)) (VP (VB [love|hate]) (NP (PRP$ [her|his]) (NN brother) (NNS PERSON))) (. ?))
 
 Bill Clinton¡¯s brother, Roger, may not be the Clinton that feels others¡¯ pain, but it sure seems he enjoys watching it.
 (brother Roger BillClinton) 
+(NP (NP (NP (NNP PERSON) (POS 's)) (NN brother)) (, ,) (NP (NNP PERSON)) (, ,))
 
 Jesse and his brother Frank James were Confederate guerrillas during the Civil War.
 (brother FrankJames Jesse)
+(NP (NP (NNP PERSON)) (CC and) (NP (PRP$ [her|his]) (NN brother) (NNP PERSON)))
+
+Lucy and her fraternal twin brother Peter are born in December 1993.
+(brother Peter Lucy)
+(NP (NP (NNP PERSON)) (CC and) (NP (NP (PRP$ [her|his]) (JJ fraternal) (JJ twin) (NN brother)) (NP (NNP PERSON))))
+
+Scott's identical twin brother Brad Scott played alongside him at the Brisbane Lions and is now the coach of North Melbourne. 
+(brother BradScott Scott)
+(NP (NP (NNP PERSON) (POS 's)) (JJ identical) (JJ twin) (NN brother) (NN PERSON))
 
 Thomas had two brothers: Nelson M. Linton and Iverson Linton.
 (brother NelsonM.Linton Thomas)
 (brother IversonLinton Thomas)
-
-Lucy and her fraternal twin brother Peter are born in December 1993.
-(brother Peter Lucy)
-
-In 2002, Neil Bush commended his brother, George, for his efforts on education as President.
-(brother George NeilBush)
-
-Scott's identical twin brother Brad Scott played alongside him at the Brisbane Lions and is now the coach of North Melbourne. He is three minutes older than Brad.
-(brother BradScott Scott)
-
-John Adams' biological brothers were Peter Boylston Adams (1738-1823) and Elihu Adams (1741-1776). 
-(brother PeterBoylstonAdams JohnAdams)
-(brother ElihuAdams JohnAdams)
-
-Theodore Hardeen, a brother of the late Harry Houdini, illusionist and a prominent magician in his own right, died yesterday in the Doctors Hospital.
-(brother TheodoreHardeen HarryHoudini)
+(S (NP (NNP PERSON)) (VP (VBD had) (NP (NP (CD two) (NNS brothers)) (: :) (NP (NNP PERSON) (CC and) (NNP PERSON)))) (. .))
 
 John Quincy Adams had two brothers--Charles and Thomas.
 (brother Charles JohnQuincyAdams)
 (brother Thomas JohnQuincyAdams)
-
-Some church members assumed that Samuel would succeed his brother Joseph as the president of the Latter Day Saint church.
-(brother Samuel Joseph)
-
- As Agnes' brother, Robert, has been quoted "The whole secret of my getting on lay with my mother."
- (brother Robert Agnes)
+(S (NP (NNP PERSON)) (VP (VBD [have|had|has]) (NP (NP (CD two) (NNS brothers)) (: --) (NP (NNP PERSON) (CC and) (NNP PERSON)))) (. .))
