@@ -57,8 +57,8 @@ public class KBmanager {
 
     private static Logger logger;
     private static boolean logInitialized = false;
-    private HashMap preferences = new HashMap();
-    protected HashMap kbs = new HashMap();
+    private HashMap<String,String> preferences = new HashMap<String,String>();
+    protected HashMap<String,KB> kbs = new HashMap<String,KB>();
     private boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
@@ -191,6 +191,8 @@ public class KBmanager {
         return;
     }
 
+    /** *************************************************************** 
+     */
     public static CCheckStatus initiateCCheck(KB kb, String chosenEngine, String systemChosen, String location,
     		String language, int timeout) {
     	
@@ -207,6 +209,8 @@ public class KBmanager {
    // 	return HTMLformatter.formatConsistencyCheck(msg, ccheckManager.ccheckResults(kb.name), language, page);
     }
     	
+    /** ***************************************************************  
+     */    
     private void preferencesFromXML(SimpleElement configuration) {
     	if (!configuration.getTagName().equals("configuration")) 
     		logger.warning("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
@@ -223,7 +227,10 @@ public class KBmanager {
     	logger.fine("Successfully retrieved preferences from config.xml and stored it in KBmanager.preferences object.");
     }
     
+    /** *************************************************************** 
+     */    
 	private void kbsFromXML(SimpleElement configuration) {
+		
     	if (!configuration.getTagName().equals("configuration")) 
     		logger.warning("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
     	else {
@@ -257,22 +264,20 @@ public class KBmanager {
     	}
     }
     
+    /** ***************************************************************
+     */
 	public boolean loadKB(String kbName, List constituents) {
+		
 		StringBuilder result = new StringBuilder();
-
 		try {
 			if (existsKB(kbName))
 				removeKB(kbName);
-
 			addKB(kbName);
-
 			KB kb = getKB(kbName);
 			boolean useCacheFile = KBmanager.getMgr().getPref("cache")
 					.equalsIgnoreCase("yes");
-
 			if (!(constituents.isEmpty())) {
 				Iterator<String> it = constituents.iterator();
-
 				while (it.hasNext()) {
 					String filename = it.next();
 					try {
@@ -290,12 +295,12 @@ public class KBmanager {
 				kb.checkArity();
 				kb.loadVampire();
 			}
-
 			writeConfiguration();
 		} catch (Exception e) {
 			logger.severe("Unable to save configuration: " + e.getMessage());
 			return false;
 		}
+		System.out.println("INFO in KBmanager.loadKB(): " + kbName);
 		return true;
 	}
     
@@ -354,7 +359,8 @@ public class KBmanager {
      * called "configuration".  It also creates the KBs directory and an empty
      * configuration file if none exists.
      */
-    public static void copyFile(File in, File out) {  
+    public static void copyFile(File in, File out) { 
+    	
         FileInputStream fis  = null;
         FileOutputStream fos = null;
         try {
@@ -392,6 +398,7 @@ public class KBmanager {
      * empty configuration file if none exists.
      */
     private SimpleElement readConfiguration(String configDirPath) {
+    	
         logger.entering("KBmanager", "readConfiguration", "configDirPath = " + configDirPath);
         SimpleElement configuration = null;
         BufferedReader br = null;
@@ -543,6 +550,16 @@ public class KBmanager {
                 logger.fine("kbDir = " + kbDir);
                 LanguageFormatter.readKeywordMap(kbDir);
                 WordNet.wn.initOnce();
+                if (kbs != null && kbs.size() > 0) {
+                	Iterator<String> it = kbs.keySet().iterator();
+	                while (it.hasNext()) {
+	                	String kbName = it.next();
+	                	System.out.println("INFO in KBmanager.initOnce(): " + kbName);
+	                	WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
+	                }          
+                }
+                else
+                	System.out.println("Error in KBmanager.initOnce(): No kbs");
             }
         }
 
