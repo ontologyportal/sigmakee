@@ -2,6 +2,10 @@ John is Susan's brother.
 (brother John Susan)
 (S (NP (NNP PERSON)) (VP (VBZ [is|am|was]) (NP (NP (NNP PERSON) (POS 's)) (NN brother))) (. .))
 
+Tom is Lily's brother.
+(brother Tom Lily)
+(S (NP (NNP PERSON)) (VP (VBZ [is|am|was]) (NP (NP (NNP PERSON) (POS 's)) (NN brother))) (. .))
+
 Theodore Hardeen is a brother of Harry Houdini.
 (brother Theodore_Hardeen Harry_Houdini)
 (S (NP (NNP PERSON)) (VP (VBZ is) (NP (NP (DT a) (NN brother)) (PP (IN of) (NP (NNP PERSON))))) (. .))
