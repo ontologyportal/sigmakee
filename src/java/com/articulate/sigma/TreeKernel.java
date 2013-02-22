@@ -28,11 +28,18 @@ public class TreeKernel {
 	 * between 0 and this value are precalculated
 	 */
 	protected static final int MAX_POWER_OF_LAMBDA = 10;
+	/** flag to control whether normalize the tree similarity */
+	private boolean mNormalize = false;
 
 	public TreeKernel() {
 		m_powersOflambda = precomputePowersOfLambda();
 	}
 
+	public TreeKernel(boolean normalize) {
+		m_powersOflambda = precomputePowersOfLambda();
+		mNormalize = normalize;
+	}
+	
 	/**
 	 * precalculates small powers of lambda to speed up the kernel evaluation
 	 * 
@@ -61,9 +68,18 @@ public class TreeKernel {
 
 		ParseTreeNode root1 = tree1.getRoot();
 		ParseTreeNode root2 = tree2.getRoot();
-		double sim = continguousSubtreeKernel(tree1, tree2, root1, root2);
-
-		return sim;
+		
+		if(mNormalize){
+			double k1 = continguousSubtreeKernel(tree1, tree1, root1, root1);
+			double k2 = continguousSubtreeKernel(tree2, tree2, root2, root2);
+			double normTerm = Math.sqrt(k1 * k2);
+			double k_1_2 = continguousSubtreeKernel(tree1, tree2, root1, root2);
+			
+			return k_1_2/normTerm;
+			
+		}else{
+			return continguousSubtreeKernel(tree1, tree2, root1, root2);
+		}
 	}
 
 	/**
