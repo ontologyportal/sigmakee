@@ -22,7 +22,6 @@ public class TreeBuilder {
 		mTreeFile = treeFile;
 	}
 	
-	
 	Factory<Integer> edgeFactory = new Factory<Integer>() {
 		int i = 0;
 
@@ -35,12 +34,20 @@ public class TreeBuilder {
 		SentenceParser sp = new SentenceParser(mTreeFile);
 		ArrayList<SentenceInstance> instances = sp.loadSentenceInstances();
 		ArrayList<Tree> parseTrees = sp.loadParseTrees();
-		
+		ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>> augmentTrees 
+			= new ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>>();
 		for(int i=0; i<instances.size(); i++){
 			Tree parse = parseTrees.get(i);
 			SentenceInstance instance = instances.get(i);
-			augmentParseTree(parse, instance);
+			edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentedTree = augmentParseTree(parse, instance);
+			
+			TreeKernel tk = new TreeKernel();
+			double sim = tk.treeKernelSim(augmentedTree, augmentedTree);
+			System.out.println(sim);
+//			augmentTrees.add(augmentedTree);
 		}
+		
+		
 	}
 	/**
 	 * Count the number of nodes.
@@ -63,7 +70,7 @@ public class TreeBuilder {
 	 * @param parse
 	 * @param instance
 	 */
-	public void augmentParseTree(Tree parse, SentenceInstance instance){
+	public edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentParseTree(Tree parse, SentenceInstance instance){
 		mNodeCount = 1;
 		countNodes(parse);
 		
@@ -71,18 +78,60 @@ public class TreeBuilder {
 		Forest <ParseTreeNode, ParseTreeEdge> forest = new DelegateForest <ParseTreeNode, ParseTreeEdge>();
 		ParseTreeNode parent = new ParseTreeNode(root.value(), mNodeCount);
 		forest.addVertex(parent);
-		
 		growTree(root, parent, forest);
 		
+		edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> agumentedTree = forest.getTrees().iterator().next();
+		ArrayList<ParseTreeNode> leaves = getLeaves(agumentedTree);
+		modifyLeafIndex(leaves);
+		enrichLeaves(leaves, instance);
 		
-		edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> tt = forest.getTrees().iterator().next();
-		Collection<ParseTreeNode> childs = tt.getVertices();
-		Map<Integer, String> map = new HashMap<Integer, String>();
+		return agumentedTree;
+	}
+	
+	/**
+	 * Get leaves of a tree.
+	 * @param tree
+	 * @return
+	 */
+	public ArrayList<ParseTreeNode> getLeaves(edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> tree){
+		ArrayList<ParseTreeNode> leaves = new ArrayList<ParseTreeNode>();
+		Collection<ParseTreeNode> childs = tree.getVertices();
 		for(ParseTreeNode node : childs){
 			if(node.isLeaf()){
-				
+				leaves.add(node);
 			}
-				
+		}
+		
+		return leaves;
+	}
+	
+	/**
+	 * Modify leaf node index and assign a new index starting from 1 to the number of tokens in the sentence.
+	 * @param tree
+	 */
+	private void modifyLeafIndex(ArrayList<ParseTreeNode> leaves){
+		Map<Integer, String> map = new HashMap<Integer, String>();
+		for(ParseTreeNode node : leaves){
+			if(node.isLeaf()){
+				int nodeIndex = node.getNodeIndex();
+				String nodeText = node.getNodeText();
+				map.put(nodeIndex, nodeText);
+			}	
+		}
+		
+		SortedSet<Integer> sortedIndices = new TreeSet<Integer>(map.keySet());
+		int newIndex = 1;
+		for( int nodeIndex : sortedIndices ){
+			String nodeText = map.get(nodeIndex);
+			
+			for(ParseTreeNode node : leaves){
+				if( (node.getNodeIndex() == nodeIndex) 
+						&& (node.getNodeText().equalsIgnoreCase(nodeText))){
+					node.setNodeIndex(newIndex);
+				}
+			}
+			
+			newIndex ++;
 		}
 	}
 	/**
@@ -94,7 +143,12 @@ public class TreeBuilder {
 		return t.getChildrenAsList().get(0);
 	}
 	
-	
+	/**
+	 * Grow a tree with an addition of indices
+	 * @param root
+	 * @param parent
+	 * @param forest
+	 */
 	private void growTree(Tree root, ParseTreeNode parent, Forest <ParseTreeNode, ParseTreeEdge> forest){
 		Tree[] children = root.children();
 		if( children.length > 0 ){
@@ -111,37 +165,27 @@ public class TreeBuilder {
 				growTree(ch, child, forest);
 			}
 		}
-		
-		
-		
 	}
 	
 	/**
-	 * Create a tree node and assign lemma, ner type to the leaf node
-	 * @param t
-	 * @param index
+	 * Enrich leaf nodes with lemma and NER types.
+	 * @param leaves
 	 * @param instance
-	 * @return
 	 */
-	public ParseTreeNode createTreeNode(Tree t, int index, SentenceInstance instance){
-		ParseTreeNode node = new ParseTreeNode(t.value(), index);
+	private void enrichLeaves(ArrayList<ParseTreeNode> leaves, SentenceInstance instance){
 		
-		if(t.isLeaf()){
-			node.setAsLeaf(true);
-			
-			String key = t.value() + "_" + index;
+		for( ParseTreeNode leaf : leaves ){
+			String key = leaf.getNodeText() + "-" + leaf.getNodeIndex();
 			if(instance.getWords2Lemma().containsKey(key)){
 				String lemma = instance.getWords2Lemma().get(key);
-				node.setNodeLemma(lemma);
+				leaf.setNodeLemma(lemma);
 			}
 			
 			if(instance.getWords2NER().containsKey(key)){
 				String ner = instance.getWords2NER().get(key);
-				node.setNodeNER(ner);
+				leaf.setNodeNER(ner);
 			}
 		}
-		
-		return node;
 	}
 	
 	
