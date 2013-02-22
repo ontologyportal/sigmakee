@@ -107,7 +107,7 @@ public class ParseTreeNode {
 	}
 	
 	public String toString(){
-		return mNodeText + "-" + mNodeIndex;
+		return mNodeText + "-" + mNodeIndex + "-" + mNodeNER;
 	}
 	
 	public boolean equals(Object obj){
