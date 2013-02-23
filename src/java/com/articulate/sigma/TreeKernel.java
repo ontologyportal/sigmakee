@@ -214,13 +214,13 @@ public class TreeKernel {
 	/**
 	 * Test case one: tree with different number of children
 	 * Tree 1:
-	 * 		a
+	 * 	    a
 	 *     /
 	 *    /
 	 *   b
 	 *   
 	 *   Tree 2:
-	 * 		a
+	 * 	    a
 	 *     /\
 	 *    /  \
 	 *   b    c
@@ -261,13 +261,13 @@ public class TreeKernel {
 	/**
 	 * Test case two: tree with the same number of children, and the children are the same as well
 	 * Tree 1:
-	 * 	    a
+	 *      a
 	 *     /\
 	 *    /  \
 	 *   b    c
 	 *   
 	 *   Tree 2:
-	 * 		a
+	 *      a
 	 *     /\
 	 *    /  \
 	 *   b    c
@@ -315,7 +315,7 @@ public class TreeKernel {
 	 * but children in two trees have different number of grand children.
 	 * 
 	 * Tree 1:
-	 * 	    a
+	 *      a
 	 *     /\
 	 *    /  \
 	 *   b    c
@@ -323,7 +323,7 @@ public class TreeKernel {
 	 *      /
 	 *     e
 	 *   Tree 2:
-	 * 		a
+	 *      a
 	 *     /\
 	 *    /  \
 	 *   b    c
@@ -381,7 +381,7 @@ public class TreeKernel {
 	 * Also, the child (c) has the same number of grand children in both trees.
 	 * 
 	 * Tree 1:
-	 * 	    a
+	 *      a
 	 *     /\
 	 *    /  \
 	 *   j    c
@@ -389,7 +389,7 @@ public class TreeKernel {
 	 *      /  \
 	 *     e    f
 	 *   Tree 2:
-	 * 		a
+	 *      a
 	 *     /\
 	 *    /  \
 	 *   b    c
