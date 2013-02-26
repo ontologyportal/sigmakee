@@ -96,16 +96,17 @@ public class TextAnnotator {
 	 * @param triggerWord the trigger word used for selecting sentences
 	 * @return annotated text
 	 */
-	public String annotateText(String text, String triggerWord){
+	public String annotateText(String text, String personName, String triggerWord){
 		Annotation annotation = new Annotation(text);
 		pipeline.annotate(annotation);
 		List<CoreMap> sentences = annotation.get(SentencesAnnotation.class);
 		
 		String annotatedText = "";
 		for( CoreMap sentence : sentences ){
-			if( !hasTriggerWord(sentence, triggerWord) ) continue;
+			if( !sentenceHasTerm(sentence, triggerWord) ) continue;
+			if( !sentenceHasTerm(sentence, personName) ) continue;
 			
-			annotatedText += "      <sentence>\n";
+			annotatedText += "      <sentence person=\"" + personName + "\">\n";
 			
 			String annotatedTokens = getAnnotedTokens(sentence);
 			annotatedText += annotatedTokens;
@@ -136,6 +137,32 @@ public class TextAnnotator {
 		return false;
 	}
 	
+	
+	public boolean sentenceHasTerm(CoreMap sentence, String term){
+		boolean hasTerm = true;
+		String parts[] = term.split("\\s");
+		for( String part : parts ){
+			boolean flag = false;
+			
+			for (CoreLabel token : sentence.get(TokensAnnotation.class)) {	
+				
+				String word = token.get(TextAnnotation.class);
+				String lemma = token.get(LemmaAnnotation.class);
+				if(word.equalsIgnoreCase(part) || lemma.equalsIgnoreCase(part)){
+					flag = true;
+					break;
+				}
+			}
+			
+			if( !flag ){
+				hasTerm = false;
+				break;
+			}
+		}
+		
+		return hasTerm;
+	}
+	
 	/**
 	 * Batch annotate texts.
 	 * @param corpusDir the directory of a corpus
@@ -152,7 +179,8 @@ public class TextAnnotator {
 			for( File file : fileList ){
 				String text = FileUtils.getTextFromFile(file);
 				if(text == null || text.isEmpty()) continue;
-				String annotatedText = annotateText(text, triggerWord);
+				String personName = removeExtension(file.getName());
+				String annotatedText = annotateText(text, personName, triggerWord);
 				
 				if( annotatedText == null || annotatedText.isEmpty() ) continue;
 				writer.write(annotatedText);
@@ -164,5 +192,24 @@ public class TextAnnotator {
 			writer.flush();
 			writer.close();
 		}catch(Exception e){}
+	}
+	
+	/**
+	 * Remove file name extension
+	 * @param filename
+	 * @return
+	 */
+	public static String removeExtension(String filename){
+		int index = filename.lastIndexOf(".");
+	    if (index == -1)
+	        return filename;
+	    return filename.substring(0, index);
+	}
+	
+	public static void main(String[] args){
+		String corpusDir = args[0]; String annoFile = args[1];
+		String triggerWord = args[2];
+		TextAnnotator ta = new TextAnnotator();
+		ta.batchAnnotate(corpusDir, annoFile, triggerWord);
 	}
 }
