@@ -1,8 +1,10 @@
 package com.articulate.sigma;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -12,6 +14,7 @@ import org.apache.commons.collections15.Factory;
 import edu.stanford.nlp.trees.Tree;
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.graph.Forest;
+import edu.uci.ics.jung.graph.util.TreeUtils;
 
 public class TreeBuilder {
 
@@ -36,18 +39,80 @@ public class TreeBuilder {
 		ArrayList<Tree> parseTrees = sp.loadParseTrees();
 		ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>> augmentTrees 
 			= new ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>>();
+		
 		for(int i=0; i<instances.size(); i++){
 			Tree parse = parseTrees.get(i);
 			SentenceInstance instance = instances.get(i);
 			edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentedTree = augmentParseTree(parse, instance);
+			String[] str = new String[]{"Sarah", "Joe"};
+			augmentedTree = pruneTree(augmentedTree, str);
 			
-			TreeKernel tk = new TreeKernel();
+			System.out.println(augmentedTree.toString());
+			TreeKernel tk = new TreeKernel(true);
 			double sim = tk.treeKernelSim(augmentedTree, augmentedTree);
 			System.out.println(sim);
 //			augmentTrees.add(augmentedTree);
 		}
 		
 		
+	}
+	
+	/**
+	 * Prune the tree by specifying the leaf nodes.
+	 * @param tree
+	 * @param leafTexts
+	 * @return
+	 */
+	private edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> pruneTree(edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> tree, String[] leafTexts){
+		
+		edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> prunedTree = tree;
+		try{
+			Collection<ParseTreeNode> nodes = tree.getVertices();
+			int height = tree.getHeight();
+			
+			for(ParseTreeNode node : nodes){
+				if(node.isLeaf()) continue;
+				
+				edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> subtree = TreeUtils.getSubTree(tree, node);
+				if( hasLeaves(subtree, leafTexts) ){
+					int subTreeHeight = subtree.getHeight();
+					if(subTreeHeight < height){
+						height = subTreeHeight;
+						prunedTree = subtree;
+					}
+				}
+			}
+		}catch(Exception e){e.printStackTrace();}
+		
+		return prunedTree;
+	}
+	/**
+	 * Check if the tree has leaves.
+	 * @param tree
+	 * @param leafTexts
+	 * @return
+	 */
+	private boolean hasLeaves(edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> tree, String[] leafTexts){
+		ArrayList<ParseTreeNode> leaves = getLeaves(tree);
+		
+		boolean hasLeafs = true;
+		for( String txt : leafTexts ){
+			
+			boolean flag = false;
+			for(ParseTreeNode leaf : leaves){
+				if(txt.equals(leaf.getNodeText())){
+					flag = true;
+					break;
+				}
+			}
+			
+			if(! flag ) {//the leaf is not found
+				hasLeafs = false;
+				break;
+			}
+		}
+		
+		return hasLeafs;
 	}
 	/**
 	 * Count the number of nodes.
