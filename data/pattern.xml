@@ -1,0 +1,814 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="CoreNLP-to-HTML.xsl" type="text/xsl"?>
+<root>
+  <document>
+    <sentences>
+      <sentence sourceEntity="Arbaaz Khan" targetEntity="Salman Khan">
+        <tokens>
+          <token id="1">
+            <word>Arbaaz</word>
+            <lemma>Arbaaz</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>Khan</word>
+            <lemma>Khan</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="3">
+            <word>is</word>
+            <lemma>be</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>the</word>
+            <lemma>the</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>of</word>
+            <lemma>of</lemma>
+            <POS>IN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="7">
+            <word>actor</word>
+            <lemma>actor</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="8">
+            <word>Salman</word>
+            <lemma>Salman</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="9">
+            <word>Khan</word>
+            <lemma>Khan</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="10">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NNP Arbaaz) (NNP Khan)) (VP (VBZ is) (NP (NP (DT the) (NN brother)) (PP (IN of) (NP (NN actor) (NNP Salman) (NNP Khan))))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="James" targetEntity="Jesus">
+        <tokens>
+          <token id="1">
+            <word>Jesus</word>
+            <lemma>Jesus</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>did</word>
+            <lemma>do</lemma>
+            <POS>VBD</POS>
+            <NER>O</NER>
+          </token>
+          <token id="3">
+            <word>have</word>
+            <lemma>have</lemma>
+            <POS>VB</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>a</word>
+            <lemma>a</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>called</word>
+            <lemma>call</lemma>
+            <POS>VBN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="7">
+            <word>James</word>
+            <lemma>James</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="8">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NNP Jesus)) (VP (VBD did) (VP (VB have) (NP (NP (DT a) (NN brother)) (VP (VBN called) (NP (NNP James)))))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="Jaxon Jeremy Bieber" targetEntity="Justin Bieber">
+        <tokens>
+          <token id="1">
+            <word>Justin</word>
+            <lemma>Justin</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>Bieber</word>
+            <lemma>Bieber</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="3">
+            <word>has</word>
+            <lemma>have</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>a</word>
+            <lemma>a</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>named</word>
+            <lemma>name</lemma>
+            <POS>VBN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="7">
+            <word>Jaxon</word>
+            <lemma>Jaxon</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="8">
+            <word>Jeremy</word>
+            <lemma>Jeremy</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="9">
+            <word>Bieber</word>
+            <lemma>Bieber</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="10">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NNP Justin) (NNP Bieber)) (VP (VBZ has) (NP (NP (DT a) (NN brother)) (VP (VBN named) (NP (NNP Jaxon) (NNP Jeremy) (NNP Bieber))))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="Thomas" targetEntity="John">
+        <tokens>
+          <token id="1">
+            <word>John</word>
+            <lemma>John</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>has</word>
+            <lemma>have</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="3">
+            <word>a</word>
+            <lemma>a</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>Thomas</word>
+            <lemma>Thomas</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="6">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NNP John)) (VP (VBZ has) (NP (DT a) (NN brother) (NNP Thomas))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="Randy" targetEntity="Dennis Quaid">
+        <tokens>
+          <token id="1">
+            <word>Dennis</word>
+            <lemma>Dennis</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>Quaid</word>
+            <lemma>Quaid</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="3">
+            <word>loves</word>
+            <lemma>love</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>his</word>
+            <lemma>he</lemma>
+            <POS>PRP$</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>Randy</word>
+            <lemma>Randy</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="7">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NNP Dennis) (NNP Quaid)) (VP (VBZ loves) (NP (PRP$ his) (NN brother) (NNP Randy))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="Braison Cyrus" targetEntity="Miley Cyrus">
+        <tokens>
+          <token id="1">
+            <word>Does</word>
+            <lemma>do</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="2">
+            <word>Miley</word>
+            <lemma>Miley</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="3">
+            <word>Cyrus</word>
+            <lemma>Cyrus</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="4">
+            <word>love</word>
+            <lemma>love</lemma>
+            <POS>VB</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>her</word>
+            <lemma>she</lemma>
+            <POS>PRP$</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="7">
+            <word>Braison</word>
+            <lemma>Braison</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="8">
+            <word>Cyrus</word>
+            <lemma>Cyrus</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="9">
+            <word>?</word>
+            <lemma>?</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (SQ (VBZ Does) (NP (NNP Miley) (NNP Cyrus)) (VP (VB love) (S (NP (PRP$ her) (NN brother)) (NP (NNP Braison) (NNP Cyrus)))) (. ?)))</parse>
+      </sentence>
+      <sentence sourceEntity="Roger" targetEntity="Bill Clinton">
+        <tokens>
+          <token id="1">
+            <word>Bill</word>
+            <lemma>Bill</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>Clinton</word>
+            <lemma>Clinton</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="3">
+            <word>s</word>
+            <lemma>s</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>,</word>
+            <lemma>,</lemma>
+            <POS>,</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>Roger</word>
+            <lemma>Roger</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="7">
+            <word>,</word>
+            <lemma>,</lemma>
+            <POS>,</POS>
+            <NER>O</NER>
+          </token>
+          <token id="8">
+            <word>may</word>
+            <lemma>may</lemma>
+            <POS>MD</POS>
+            <NER>O</NER>
+          </token>
+          <token id="9">
+            <word>not</word>
+            <lemma>not</lemma>
+            <POS>RB</POS>
+            <NER>O</NER>
+          </token>
+          <token id="10">
+            <word>be</word>
+            <lemma>be</lemma>
+            <POS>VB</POS>
+            <NER>O</NER>
+          </token>
+          <token id="11">
+            <word>the</word>
+            <lemma>the</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="12">
+            <word>Clinton</word>
+            <lemma>Clinton</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="13">
+            <word>that</word>
+            <lemma>that</lemma>
+            <POS>WDT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="14">
+            <word>feels</word>
+            <lemma>feel</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="15">
+            <word>others</word>
+            <lemma>other</lemma>
+            <POS>NNS</POS>
+            <NER>O</NER>
+          </token>
+          <token id="16">
+            <word>pain</word>
+            <lemma>pain</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="17">
+            <word>,</word>
+            <lemma>,</lemma>
+            <POS>,</POS>
+            <NER>O</NER>
+          </token>
+          <token id="18">
+            <word>but</word>
+            <lemma>but</lemma>
+            <POS>CC</POS>
+            <NER>O</NER>
+          </token>
+          <token id="19">
+            <word>it</word>
+            <lemma>it</lemma>
+            <POS>PRP</POS>
+            <NER>O</NER>
+          </token>
+          <token id="20">
+            <word>sure</word>
+            <lemma>sure</lemma>
+            <POS>RB</POS>
+            <NER>O</NER>
+          </token>
+          <token id="21">
+            <word>seems</word>
+            <lemma>seem</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="22">
+            <word>he</word>
+            <lemma>he</lemma>
+            <POS>PRP</POS>
+            <NER>O</NER>
+          </token>
+          <token id="23">
+            <word>enjoys</word>
+            <lemma>enjoy</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="24">
+            <word>watching</word>
+            <lemma>watch</lemma>
+            <POS>VBG</POS>
+            <NER>O</NER>
+          </token>
+          <token id="25">
+            <word>it</word>
+            <lemma>it</lemma>
+            <POS>PRP</POS>
+            <NER>O</NER>
+          </token>
+          <token id="26">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (S (NP (NNP Bill) (NNP Clinton)) (VP (VBZ s) (SBAR (S (NP (NP (NN brother)) (, ,) (NP (NNP Roger)) (, ,)) (VP (MD may) (RB not) (VP (VB be) (NP (NP (DT the) (NNP Clinton)) (SBAR (WHNP (WDT that)) (S (VP (VBZ feels) (NP (NNS others) (NN pain)))))))))))) (, ,) (CC but) (S (NP (PRP it)) (ADVP (RB sure)) (VP (VBZ seems) (SBAR (S (NP (PRP he)) (VP (VBZ enjoys) (S (VP (VBG watching) (NP (PRP it))))))))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="Frank James" targetEntity="Jesse">
+        <tokens>
+          <token id="1">
+            <word>Jesse</word>
+            <lemma>Jesse</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>and</word>
+            <lemma>and</lemma>
+            <POS>CC</POS>
+            <NER>O</NER>
+          </token>
+          <token id="3">
+            <word>his</word>
+            <lemma>he</lemma>
+            <POS>PRP$</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>Frank</word>
+            <lemma>Frank</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="6">
+            <word>James</word>
+            <lemma>James</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="7">
+            <word>were</word>
+            <lemma>be</lemma>
+            <POS>VBD</POS>
+            <NER>O</NER>
+          </token>
+          <token id="8">
+            <word>Confederate</word>
+            <lemma>confederate</lemma>
+            <POS>JJ</POS>
+            <NER>ORGANIZATION</NER>
+          </token>
+          <token id="9">
+            <word>guerrillas</word>
+            <lemma>guerrilla</lemma>
+            <POS>NNS</POS>
+            <NER>O</NER>
+          </token>
+          <token id="10">
+            <word>during</word>
+            <lemma>during</lemma>
+            <POS>IN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="11">
+            <word>the</word>
+            <lemma>the</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="12">
+            <word>Civil</word>
+            <lemma>civil</lemma>
+            <POS>JJ</POS>
+            <NER>MISC</NER>
+          </token>
+          <token id="13">
+            <word>War</word>
+            <lemma>war</lemma>
+            <POS>NN</POS>
+            <NER>MISC</NER>
+          </token>
+          <token id="14">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NP (NNP Jesse)) (CC and) (NP (PRP$ his) (NN brother) (NNP Frank) (NNP James))) (VP (VBD were) (NP (JJ Confederate) (NNS guerrillas)) (PP (IN during) (NP (DT the) (JJ Civil) (NN War)))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="Peter" targetEntity="Lucy">
+        <tokens>
+          <token id="1">
+            <word>Lucy</word>
+            <lemma>Lucy</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>and</word>
+            <lemma>and</lemma>
+            <POS>CC</POS>
+            <NER>O</NER>
+          </token>
+          <token id="3">
+            <word>her</word>
+            <lemma>she</lemma>
+            <POS>PRP$</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>fraternal</word>
+            <lemma>fraternal</lemma>
+            <POS>JJ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>twin</word>
+            <lemma>twin</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="7">
+            <word>Peter</word>
+            <lemma>Peter</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="8">
+            <word>are</word>
+            <lemma>be</lemma>
+            <POS>VBP</POS>
+            <NER>O</NER>
+          </token>
+          <token id="9">
+            <word>born</word>
+            <lemma>bear</lemma>
+            <POS>VBN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="10">
+            <word>in</word>
+            <lemma>in</lemma>
+            <POS>IN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="11">
+            <word>December</word>
+            <lemma>December</lemma>
+            <POS>NNP</POS>
+            <NER>DATE</NER>
+          </token>
+          <token id="12">
+            <word>1993</word>
+            <lemma>1993</lemma>
+            <POS>CD</POS>
+            <NER>DATE</NER>
+          </token>
+          <token id="13">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NP (NNP Lucy)) (CC and) (NP (PRP$ her) (JJ fraternal) (NN twin) (NN brother) (NNP Peter))) (VP (VBP are) (VP (VBN born) (PP (IN in) (NP (NNP December) (CD 1993))))) (. .)))</parse>
+      </sentence>
+      <sentence sourceEntity="Brad Scott" targetEntity="Scott">
+        <tokens>
+          <token id="1">
+            <word>Scott</word>
+            <lemma>Scott</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="2">
+            <word>'s</word>
+            <lemma>'s</lemma>
+            <POS>POS</POS>
+            <NER>O</NER>
+          </token>
+          <token id="3">
+            <word>identical</word>
+            <lemma>identical</lemma>
+            <POS>JJ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="4">
+            <word>twin</word>
+            <lemma>twin</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="5">
+            <word>brother</word>
+            <lemma>brother</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="6">
+            <word>Brad</word>
+            <lemma>Brad</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="7">
+            <word>Scott</word>
+            <lemma>Scott</lemma>
+            <POS>NNP</POS>
+            <NER>PERSON</NER>
+          </token>
+          <token id="8">
+            <word>played</word>
+            <lemma>play</lemma>
+            <POS>VBD</POS>
+            <NER>O</NER>
+          </token>
+          <token id="9">
+            <word>alongside</word>
+            <lemma>alongside</lemma>
+            <POS>IN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="10">
+            <word>him</word>
+            <lemma>he</lemma>
+            <POS>PRP</POS>
+            <NER>O</NER>
+          </token>
+          <token id="11">
+            <word>at</word>
+            <lemma>at</lemma>
+            <POS>IN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="12">
+            <word>the</word>
+            <lemma>the</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="13">
+            <word>Brisbane</word>
+            <lemma>Brisbane</lemma>
+            <POS>NNP</POS>
+            <NER>ORGANIZATION</NER>
+          </token>
+          <token id="14">
+            <word>Lions</word>
+            <lemma>Lions</lemma>
+            <POS>NNPS</POS>
+            <NER>ORGANIZATION</NER>
+          </token>
+          <token id="15">
+            <word>and</word>
+            <lemma>and</lemma>
+            <POS>CC</POS>
+            <NER>O</NER>
+          </token>
+          <token id="16">
+            <word>is</word>
+            <lemma>be</lemma>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+          </token>
+          <token id="17">
+            <word>now</word>
+            <lemma>now</lemma>
+            <POS>RB</POS>
+            <NER>DATE</NER>
+          </token>
+          <token id="18">
+            <word>the</word>
+            <lemma>the</lemma>
+            <POS>DT</POS>
+            <NER>O</NER>
+          </token>
+          <token id="19">
+            <word>coach</word>
+            <lemma>coach</lemma>
+            <POS>NN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="20">
+            <word>of</word>
+            <lemma>of</lemma>
+            <POS>IN</POS>
+            <NER>O</NER>
+          </token>
+          <token id="21">
+            <word>North</word>
+            <lemma>North</lemma>
+            <POS>NNP</POS>
+            <NER>LOCATION</NER>
+          </token>
+          <token id="22">
+            <word>Melbourne</word>
+            <lemma>Melbourne</lemma>
+            <POS>NNP</POS>
+            <NER>LOCATION</NER>
+          </token>
+          <token id="23">
+            <word>.</word>
+            <lemma>.</lemma>
+            <POS>.</POS>
+            <NER>O</NER>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (NP (NP (NNP Scott) (POS 's)) (ADJP (JJ identical)) (NN twin) (NN brother) (NNP Brad) (NNP Scott)) (VP (VP (VBD played) (PP (IN alongside) (NP (PRP him))) (PP (IN at) (NP (DT the) (NNP Brisbane) (NNPS Lions)))) (CC and) (VP (VBZ is) (ADVP (RB now)) (NP (NP (DT the) (NN coach)) (PP (IN of) (NP (NNP North) (NNP Melbourne)))))) (. .)))</parse>
+      </sentence>
+    </sentences>
+  </document>
+</root>
