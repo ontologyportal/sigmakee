@@ -83,7 +83,7 @@ public class TreeBuilder {
 
 		for (int i = 0; i < instances.size(); i++) {
 			Tree parse = parseTrees.get(i);
-			if(parse.getLeaves().size() < 2) continue;
+			if(parse.getLeaves().size() < 2 || parse.getLeaves().size() > 30) continue;
 			SentenceInstance instance = instances.get(i);
 			edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentedTree = augmentParseTree(
 					parse, instance);
