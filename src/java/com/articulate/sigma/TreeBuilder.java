@@ -73,13 +73,13 @@ public class TreeBuilder {
 	 * @param triggerWord
 	 * @return
 	 */
-	public ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>> buildCandidateTrees(
+	public Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> buildCandidateTrees(
 			String candidateTreeFile, String triggerWord) {
 		SentenceParser sp = new SentenceParser(candidateTreeFile);
 		ArrayList<SentenceInstance> instances = sp.loadSentenceInstances();
 		ArrayList<Tree> parseTrees = sp.loadParseTrees();
-		ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>> augmentTrees 
-			= new ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>>();
+		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> augmentTrees 
+			= new HashMap<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance>();
 
 		for (int i = 0; i < instances.size(); i++) {
 			Tree parse = parseTrees.get(i);
@@ -91,7 +91,7 @@ public class TreeBuilder {
 			String sourceEntity = instance.getSourceEntity();
 			String[] leafTexts = convert2Array(sourceEntity, triggerWord);
 			augmentedTree = pruneTree(augmentedTree, leafTexts);
-			augmentTrees.add(augmentedTree);
+			augmentTrees.put(augmentedTree, instance);
 		}
 
 		return augmentTrees;
@@ -104,13 +104,13 @@ public class TreeBuilder {
 	 * @param triggerWord
 	 * @return
 	 */
-	public ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>> buildPatternTrees(
+	public Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> buildPatternTrees(
 			String patternTreeFile, String triggerWord) {
 		SentenceParser sp = new SentenceParser(patternTreeFile);
 		ArrayList<SentenceInstance> instances = sp.loadSentenceInstances();
 		ArrayList<Tree> parseTrees = sp.loadParseTrees();
-		ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>> augmentTrees 
-			= new ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>>();
+		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> augmentTrees 
+			= new HashMap<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance>();
 
 		for (int i = 0; i < instances.size(); i++) {
 			Tree parse = parseTrees.get(i);
@@ -125,7 +125,7 @@ public class TreeBuilder {
 			String[] leafTexts = convert2Array(sourceEntity, targetEntity,
 					triggerWord);
 			augmentedTree = pruneTree(augmentedTree, leafTexts);
-			augmentTrees.add(augmentedTree);
+			augmentTrees.put(augmentedTree, instance);
 		}
 
 		return augmentTrees;
