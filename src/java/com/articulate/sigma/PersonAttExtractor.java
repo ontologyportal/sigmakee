@@ -29,21 +29,21 @@ public class PersonAttExtractor {
 		return mThreshold;
 	}
 	
-	public List<Tree<ParseTreeNode, ParseTreeEdge>> extract(String patternTreeFile, String candidateTreeFile, String triggerWord) throws Exception{
+	public List<Tree<ParseTreeNode, ParseTreeEdge>> extract(String patternTreeFile, String candidateTreeFile, String triggerWord, String outFile) throws Exception{
 		
-		PrintWriter writer = FileUtils.getWriter("data/match4.xml");
+		PrintWriter writer = FileUtils.getWriter(outFile);
 		TreeBuilder tb = new TreeBuilder();
-		List<Tree<ParseTreeNode, ParseTreeEdge>> patternTrees = tb.buildPatternTrees(patternTreeFile, triggerWord);
-		List<Tree<ParseTreeNode, ParseTreeEdge>> candidateTrees = tb.buildCandidateTrees(candidateTreeFile, triggerWord);
+		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> patternTrees = tb.buildPatternTrees(patternTreeFile, triggerWord);
+		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> candidateTrees = tb.buildCandidateTrees(candidateTreeFile, triggerWord);
 		
 		TreeKernel tk = new TreeKernel(true);
 		List<Tree<ParseTreeNode, ParseTreeEdge>> validTrees = new ArrayList<Tree<ParseTreeNode, ParseTreeEdge>>();
 		int i = 1;
-		for(Tree<ParseTreeNode, ParseTreeEdge> candidate : candidateTrees){
+		for(Tree<ParseTreeNode, ParseTreeEdge> candidate : candidateTrees.keySet()){
 			
 			Tree<ParseTreeNode, ParseTreeEdge> bestPattern = null;
 			double bestSim = Double.MIN_VALUE;
-			for(Tree<ParseTreeNode, ParseTreeEdge> pattern : patternTrees){
+			for(Tree<ParseTreeNode, ParseTreeEdge> pattern : patternTrees.keySet()){
 				double similarity = tk.treeKernelSim(candidate, pattern);
 				
 				if(similarity > bestSim){
@@ -54,10 +54,17 @@ public class PersonAttExtractor {
 			
 			if( bestPattern != null ){
 				System.out.println(i + "\tsim: " + bestSim);
-				writer.write("<match>\n    <pattern>");
+				SentenceInstance patternInst = patternTrees.get(bestPattern);
+				writer.write("<match>\n    <pattern sourceEntity=\"" + patternInst.getSourceEntity() + "\" targetEntity=\"" + patternInst.getTargetEntity() + "\">");
+				String patRet = sortLeaves(bestPattern)+ "</pattern>\n";
+				writer.write(patRet);
 				
-				String ret = output(bestPattern, candidate);
-				writer.write(ret);
+				SentenceInstance candidateInst = patternTrees.get(candidate);
+				String candVal = candidateInst.getSourceEntity() + "\t" + candidateInst.getTargetEntity();
+				writer.write("    <candidate sourceEntity=\"" + candidateInst.getSourceEntity() + "\" targetEntity=\"" + candidateInst.getTargetEntity() + "\">");
+				String canRet = sortLeaves(candidate) + "</candidate>\n";
+				writer.write(patRet);
+				
 				writer.write("    <similarity>" + bestSim + "</similarity>\n</match>\n");
 				
 				writer.flush();
@@ -68,14 +75,6 @@ public class PersonAttExtractor {
 		writer.flush();
 		writer.close();
 		return validTrees;
-	}
-	
-	public String output(Tree<ParseTreeNode, ParseTreeEdge> pattern, Tree<ParseTreeNode, ParseTreeEdge> candidate){
-		
-		String patRet = sortLeaves(pattern);
-		String canRet = sortLeaves(candidate);
-		
-		return patRet + "</pattern>\n    <candiate>" + canRet + "</candidate>\n";
 	}
 	
 	public String sortLeaves(Tree<ParseTreeNode, ParseTreeEdge> tree){
@@ -89,14 +88,16 @@ public class PersonAttExtractor {
 		for(Integer i : sort){
 			ret += map.get(i) + " ";
 		}
-		return ret;
+		return ret.trim();
 	}
+	
 	public static void main(String[] args)throws Exception{
 		PersonAttExtractor pae = new PersonAttExtractor();
 		String patternTreeFile = "data/pattern.xml";
 		String candidateTreeFile = "data/candidates.xml";
 		String triggerWord = "brother";
-		pae.extract(patternTreeFile, candidateTreeFile, triggerWord);
+		String outfile = "data/result.xml";
+		pae.extract(patternTreeFile, candidateTreeFile, triggerWord, outfile);
 		
 	}
 }
