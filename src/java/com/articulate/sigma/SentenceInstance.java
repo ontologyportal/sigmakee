@@ -11,6 +11,12 @@ public class SentenceInstance {
 	public Map<Integer, String> mIndex2Word;
 	/**words to NER */
 	public Map<String, String> mWords2NER;
+	/** the source entity */
+	public String mSourceEntity = null;
+	/** target entity */
+	public String mTargetEntity = null;
+	/** sentence label */
+	public String mSentenceLabel = null;
 	
 	/**
 	 * Set words to their lemma.
@@ -68,6 +74,39 @@ public class SentenceInstance {
 	public Map<String, String> getWords2NER(){
 		return mWords2NER;
 	}
-	
+	/**
+	 * Set source entity
+	 * @param srcEntity
+	 */
+	public void setSourceEntity(String srcEntity){
+		mSourceEntity = srcEntity;
+	}
+	/**
+	 * Get source entity
+	 * @return
+	 */
+	public String getSourceEntity(){
+		return mSourceEntity;
+	}
+	/**
+	 * Set target entity
+	 * @param targetEntity
+	 */
+	public void setTargetEntity(String targetEntity){
+		mTargetEntity = targetEntity;
+	}
+	/**
+	 * Get target entity
+	 * @return
+	 */
+	public String getTargetEntity(){
+		return mTargetEntity;
+	}
+	public void setSentenceLabel(String label){
+		mSentenceLabel = label;
+	}
+	public String getSentenceLabel(){
+		return mSentenceLabel;
+	}	
 	
 }
