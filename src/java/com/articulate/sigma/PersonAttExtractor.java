@@ -1,10 +1,15 @@
 package com.articulate.sigma;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -16,8 +21,8 @@ import edu.uci.ics.jung.graph.Tree;
  */
 public class PersonAttExtractor {
 
-	/** threshold 0.5 by default */
-	public double mThreshold = 0.5;
+	/** threshold 0.2 by default */
+	public double mThreshold = 0.0;
 	
 	public PersonAttExtractor(){
 	}
@@ -29,20 +34,20 @@ public class PersonAttExtractor {
 		return mThreshold;
 	}
 	
-	public List<Tree<ParseTreeNode, ParseTreeEdge>> extract(String patternTreeFile, String candidateTreeFile, String triggerWord, String outFile) throws Exception{
+	public List<Map.Entry> extract(String patternTreeFile, String candidateTreeFile, String[] triggerWords, int topN) throws Exception{
 		
-		PrintWriter writer = FileUtils.getWriter(outFile);
 		TreeBuilder tb = new TreeBuilder();
-		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> patternTrees = tb.buildPatternTrees(patternTreeFile, triggerWord);
-		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> candidateTrees = tb.buildCandidateTrees(candidateTreeFile, triggerWord);
+		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> patternTrees = tb.buildPatternTrees(patternTreeFile, triggerWords);
+		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, String> candidateTrees = tb.buildCandidateTrees(candidateTreeFile, triggerWords);
 		
 		TreeKernel tk = new TreeKernel(true);
-		List<Tree<ParseTreeNode, ParseTreeEdge>> validTrees = new ArrayList<Tree<ParseTreeNode, ParseTreeEdge>>();
-		int i = 1;
+		Map<String, Double> map = new HashMap<String, Double>();
 		for(Tree<ParseTreeNode, ParseTreeEdge> candidate : candidateTrees.keySet()){
 			
-			Tree<ParseTreeNode, ParseTreeEdge> bestPattern = null;
+			String targetEntity = candidateTrees.get(candidate);
+			
 			double bestSim = Double.MIN_VALUE;
+			Tree<ParseTreeNode, ParseTreeEdge> bestPattern = candidate;
 			for(Tree<ParseTreeNode, ParseTreeEdge> pattern : patternTrees.keySet()){
 				double similarity = tk.treeKernelSim(candidate, pattern);
 				
@@ -52,52 +57,109 @@ public class PersonAttExtractor {
 				}	
 			}
 			
-			if( bestPattern != null ){
-				System.out.println(i + "\tsim: " + bestSim);
-				SentenceInstance patternInst = patternTrees.get(bestPattern);
-				writer.write("<match>\n    <pattern sourceEntity=\"" + patternInst.getSourceEntity() + "\" targetEntity=\"" + patternInst.getTargetEntity() + "\">");
-				String patRet = sortLeaves(bestPattern)+ "</pattern>\n";
-				writer.write(patRet);
-				
-				SentenceInstance candidateInst = patternTrees.get(candidate);
-				String candVal = candidateInst.getSourceEntity() + "\t" + candidateInst.getTargetEntity();
-				writer.write("    <candidate sourceEntity=\"" + candidateInst.getSourceEntity() + "\" targetEntity=\"" + candidateInst.getTargetEntity() + "\">");
-				String canRet = sortLeaves(candidate) + "</candidate>\n";
-				writer.write(patRet);
-				
-				writer.write("    <similarity>" + bestSim + "</similarity>\n</match>\n");
-				
-				writer.flush();
-				i++;
-			}
+//			if(bestSim > 0.1){
+				String can_seq = flattenTreeLeafSeq(candidate);
+				String pat_seq = flattenTreeLeafSeq(bestPattern);
+				System.out.println(bestSim + "\t" + targetEntity + "\t" + can_seq + "\t" + pat_seq);
+//			}
 			
+			map.put(targetEntity, bestSim);
 		}
-		writer.flush();
-		writer.close();
-		return validTrees;
+		
+		
+		Map.Entry[] entries = reverseSortByDoubleValue(map);
+		topN = entries.length < topN ? entries.length : topN;
+		
+		List<Map.Entry> list = new ArrayList<Map.Entry>();
+		for(int i=0; i<topN; i++){
+			Map.Entry entry = entries[i];
+			list.add(entry);
+		}
+		
+		return list;
 	}
 	
-	public String sortLeaves(Tree<ParseTreeNode, ParseTreeEdge> tree){
+	/**
+	 * Flatten tree sequence.
+	 * @param tree
+	 * @return
+	 */
+	public String flattenTreeLeafSeq(Tree<ParseTreeNode, ParseTreeEdge> tree){
+		ArrayList<ParseTreeNode> leaves = new ArrayList<ParseTreeNode>();
+		Collection<ParseTreeNode> childs = tree.getVertices();
 		Map<Integer, String> map = new HashMap<Integer, String>();
-		for( ParseTreeNode node : tree.getVertices() ){
-			if(node.isLeaf())
-				map.put(node.getNodeIndex(), node.getNodeText());
+		for (ParseTreeNode node : childs) {
+			if (node.isLeaf()) {
+				int nodeIndex = node.getNodeIndex();
+				String nodeText = node.getNodeText();
+				map.put(nodeIndex, nodeText);
+			}
 		}
-		SortedSet<Integer> sort = new TreeSet<Integer>(map.keySet());
-		String ret = "";
-		for(Integer i : sort){
-			ret += map.get(i) + " ";
+
+		String leafSeq = "";
+		SortedSet<Integer> sortedIndices = new TreeSet<Integer>(map.keySet());
+		int newIndex = 1;
+		for (int nodeIndex : sortedIndices) {
+			String nodeText = map.get(nodeIndex);
+
+			leafSeq += nodeText + " ";
 		}
-		return ret.trim();
+		
+		return leafSeq;
 	}
+	
+	
+	public void batchExtract(String patternTreeFile, String corpusDirectory, String[] triggers, int topN, String outfile) throws Exception{
+		
+		PrintWriter writer = FileUtils.getWriter(outfile);
+		File[] fileList = new File(corpusDirectory).listFiles();
+		
+		for( File file : fileList ){
+			String sourceEntity = file.getName().replace(".xml", "");
+			String candidateTreeFile = file.getCanonicalPath();
+			List<Map.Entry> entries = extract(patternTreeFile, candidateTreeFile, triggers, topN);
+			
+			
+			for( Map.Entry entry : entries ){
+				double sim = Double.parseDouble(entry.getValue().toString());
+//				System.out.println(sim);
+				if( sim > mThreshold ){
+					writer.write(sourceEntity + "\t" + entry.getKey().toString() + "\t" + sim + "\n");
+				}
+				writer.flush();
+			}
+		}
+		writer.close();
+	}
+	
+	/**
+	 * Reverse sort of a map by value
+	 * @param m
+	 * @return
+	 */
+	public static Map.Entry[] reverseSortByDoubleValue(Map m){
+	    Set set = m.entrySet();   
+	    Map.Entry[] entries = (Map.Entry[]) set.toArray(new Map.Entry[set.size()]);   
+	    Arrays.sort(entries, new Comparator(){
+	        public int compare(Object arg0, Object arg1) {   
+	        Double value1 = Double.valueOf(((Map.Entry) arg0).getValue().toString());   
+	        Double value2 = Double.valueOf(((Map.Entry) arg1).getValue().toString());   
+	        return -value1.compareTo(value2);//in reverse order
+	        }   
+	     });   
+	     return entries;
+	  }
+	
 	
 	public static void main(String[] args)throws Exception{
 		PersonAttExtractor pae = new PersonAttExtractor();
 		String patternTreeFile = "data/pattern.xml";
-		String candidateTreeFile = "data/candidates.xml";
-		String triggerWord = "brother";
-		String outfile = "data/result.xml";
-		pae.extract(patternTreeFile, candidateTreeFile, triggerWord, outfile);
+		String corpusDir = "data/raw1tag";
+		String triggers[] = new String[]{"brother", "brothers"};
+		String outfile = "data/raw2_eval/result0.3";
+		pae.setThreshold(0.3);
+		int topN = 2;
+		pae.batchExtract(patternTreeFile, corpusDir, triggers, topN, outfile);
 		
 	}
 }
