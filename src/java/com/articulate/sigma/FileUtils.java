@@ -36,7 +36,7 @@ public class FileUtils {
 	 */
 	public static PrintWriter getWriter(String fileName) throws IOException {
 		PrintWriter writer = new PrintWriter(new OutputStreamWriter(
-				new FileOutputStream(fileName, true), "UTF-8"));
+				new FileOutputStream(fileName), "UTF-8"));
 		return writer;
 	}
 	/**

@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import java.util.List;
 import java.util.Map;
 
 public class SentenceInstance {
@@ -17,6 +18,28 @@ public class SentenceInstance {
 	public String mTargetEntity = null;
 	/** sentence label */
 	public String mSentenceLabel = null;
+	public int mSentenceId = 0;
+	
+	public List<TokenFeature> mTokens = null;
+	
+	public SentenceInstance(List<TokenFeature> tokens){
+		mTokens = tokens;
+	}
+	
+	public void setSentenceTokens(List<TokenFeature> tokens){
+		mTokens = tokens;
+	}
+	
+	public void setSentenceId(int id){
+		mSentenceId = id;
+	}
+	public int getSentenceId(){
+		return mSentenceId;
+	}
+	
+	public List<TokenFeature> getSentenceTokens(){
+		return mTokens;
+	}
 	
 	/**
 	 * Set words to their lemma.
@@ -107,6 +130,14 @@ public class SentenceInstance {
 	}
 	public String getSentenceLabel(){
 		return mSentenceLabel;
-	}	
+	}
 	
+	public String toString(){
+		String str = "";
+		
+		for(TokenFeature token : mTokens){
+			str += token.getFeatureText() + " ";
+		}
+		return str.trim();
+	}
 }

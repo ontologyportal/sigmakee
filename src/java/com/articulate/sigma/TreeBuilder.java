@@ -1,7 +1,7 @@
 package com.articulate.sigma;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -36,67 +36,137 @@ public class TreeBuilder {
 		}
 	};
 
-	public void build() {
-		SentenceParser sp = new SentenceParser(mTreeFile);
-		ArrayList<Tree> parseTrees = sp.loadParseTrees();
-		for (Tree t : parseTrees) {
-			t.pennPrint();
-		}
-	}
-
-	public void buildTrees() {
-		SentenceParser sp = new SentenceParser(mTreeFile);
-		ArrayList<SentenceInstance> instances = sp.loadSentenceInstances();
-		ArrayList<Tree> parseTrees = sp.loadParseTrees();
-		ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>> augmentTrees = new ArrayList<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>>();
-
-		for (int i = 0; i < instances.size(); i++) {
-			Tree parse = parseTrees.get(i);
-			SentenceInstance instance = instances.get(i);
-			edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentedTree = augmentParseTree(
-					parse, instance);
-			String[] str = new String[] { "Sarah", "Joe" };
-			augmentedTree = pruneTree(augmentedTree, str);
-
-			System.out.println(augmentedTree.toString());
-			TreeKernel tk = new TreeKernel(true);
-			double sim = tk.treeKernelSim(augmentedTree, augmentedTree);
-			System.out.println(sim);
-			// augmentTrees.add(augmentedTree);
-		}
-
-	}
-
 	/**
 	 * Build candidate trees.
 	 * @param candidateTreeFile
-	 * @param triggerWord
+	 * @param triggers
 	 * @return
 	 */
-	public Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> buildCandidateTrees(
-			String candidateTreeFile, String triggerWord) {
-		SentenceParser sp = new SentenceParser(candidateTreeFile);
-		ArrayList<SentenceInstance> instances = sp.loadSentenceInstances();
-		ArrayList<Tree> parseTrees = sp.loadParseTrees();
-		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> augmentTrees 
-			= new HashMap<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance>();
+	public Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, String> buildCandidateTrees(
+			String candidateTreeFile, String[] triggers) throws Exception{
+		
+		String sourceEntity = new File(candidateTreeFile).getName().replace(".xml", "");
+		
+		List<SentenceInstance> sentenceInsts = DocumentParser.loadSentences(candidateTreeFile, triggers);
+		sentenceInsts = filterSentenceInstance(sentenceInsts, sourceEntity);
+		List<Integer> ids = getSentenceIds(sentenceInsts);
+		
+		ArrayList<Tree> parseTrees = DocumentParser.loadParseTrees(candidateTreeFile);
+		parseTrees = filterParseTree(parseTrees, ids);
+		
+		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, String> augmentTrees 
+			= new HashMap<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, String>();
 
-		for (int i = 0; i < instances.size(); i++) {
+		for (int i = 0; i < sentenceInsts.size(); i++) {
 			Tree parse = parseTrees.get(i);
-			if(parse.getLeaves().size() < 2 || parse.getLeaves().size() > 30) continue;
-			SentenceInstance instance = instances.get(i);
-			edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentedTree = augmentParseTree(
-					parse, instance);
-
-			String sourceEntity = instance.getSourceEntity();
-			String[] leafTexts = convert2Array(sourceEntity, triggerWord);
-			augmentedTree = pruneTree(augmentedTree, leafTexts);
-			augmentTrees.put(augmentedTree, instance);
+			SentenceInstance instance = sentenceInsts.get(i);
+			
+			List<TokenFeature> tokens = instance.getSentenceTokens();
+			List<TokenFeature> names = DocumentParser.getNamedMentions(tokens, "person");
+			edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentedTree = augmentParseTree(parse, instance);
+			
+			for( TokenFeature targetEntity : names ){
+				
+				String txt = targetEntity.getFeatureText();
+				if(txt.contains(sourceEntity) || sourceEntity.contains(txt)) continue;
+				
+				String[] leafTexts = convert2Array(sourceEntity, txt);
+				edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> t = pruneTree(augmentedTree, leafTexts);
+				
+				if( t == null ) continue;
+				if(getLeaves(t).size() > 30 || getLeaves(t).size() <= 0) continue;
+				
+				augmentTrees.put(t, targetEntity.getFeatureText());
+			}
 		}
 
 		return augmentTrees;
 	}
+	/**
+	 * 
+	 * @param sentenceInsts
+	 * @return
+	 */
+	public List<Integer> getSentenceIds(List<SentenceInstance> sentenceInsts){
+		List<Integer> ids = new ArrayList<Integer>();
+		for(SentenceInstance inst : sentenceInsts){
+			ids.add(inst.getSentenceId());
+		}
+		
+		return ids;
+	}
+	/**
+	 * 
+	 * @param parseTrees
+	 */
+	public ArrayList<Tree> filterParseTree(ArrayList<Tree> parseTrees, List<Integer> ids){
+		
+		ArrayList<Tree> trees = new ArrayList<Tree>();
+		for(int i=0; i<parseTrees.size(); i++){
+			int id = i + 1;
+			if(ids.contains(id)){
+				Tree t = parseTrees.get(i);
+				trees.add(t);
+			}
+		}
+		
+		return trees;
+	}
+	
+	/**
+	 * 
+	 * @param sentenceInsts
+	 * @param personName
+	 * @return
+	 */
+	public List<SentenceInstance> filterSentenceInstance(List<SentenceInstance> sentenceInsts, String personName){
+		List<SentenceInstance> insts = new ArrayList<SentenceInstance>();
+		for(SentenceInstance inst : sentenceInsts){
+			if(isTermInSequence(inst.toString(), personName))
+				insts.add(inst);
+		}
+		
+		return insts;
+	}
 
+	/**
+	 * Check if the term is in the sequence.
+	 * @param sequence
+	 * @param term
+	 * @return
+	 */
+	public static boolean isTermInSequence(String sequence, String term){
+		
+		if(sequence == null || sequence.isEmpty() || term == null || term.isEmpty()) return false;
+		
+		int index = sequence.indexOf(term);
+		while(index >= 0){
+			//if it is an independent term, it cannot have English character preceeding or succeeding this term
+			if(index == 0){//at the beginning of the sequence
+				if(index + term.length() == sequence.length()){//they are of the same length
+					if(sequence.equalsIgnoreCase(term)) return true;
+				}else{
+					char succeedingChar = sequence.charAt(index + term.length());
+					if(!Character.isAlphabetic(succeedingChar))
+						return true;
+				}
+			}else if((index + term.length()) == sequence.length()){//at the end of the sequence
+				char preceedingChar = sequence.charAt( index - 1 );
+				if(!Character.isAlphabetic(preceedingChar))
+					return true;
+			}else{//term is inbetween the sequence
+				char preceedingChar = sequence.charAt( index - 1 );
+				char succeedingChar = sequence.charAt(index + term.length());
+				if(!Character.isAlphabetic(preceedingChar) && !Character.isAlphabetic(succeedingChar))
+					return true;
+			}
+			
+			index = sequence.indexOf(term, index + term.length());
+		}
+		
+		return false;
+	}
+	
 	/**
 	 * Load pattern trees.
 	 * 
@@ -105,16 +175,15 @@ public class TreeBuilder {
 	 * @return
 	 */
 	public Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> buildPatternTrees(
-			String patternTreeFile, String triggerWord) {
-		SentenceParser sp = new SentenceParser(patternTreeFile);
-		ArrayList<SentenceInstance> instances = sp.loadSentenceInstances();
-		ArrayList<Tree> parseTrees = sp.loadParseTrees();
+			String patternTreeFile, String triggers[]) throws Exception{
+		List<SentenceInstance> sentenceInsts = DocumentParser.loadSentences(patternTreeFile, triggers);
+		ArrayList<Tree> parseTrees = DocumentParser.loadParseTrees(patternTreeFile);
 		Map<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance> augmentTrees 
 			= new HashMap<edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge>, SentenceInstance>();
 
-		for (int i = 0; i < instances.size(); i++) {
+		for (int i = 0; i < sentenceInsts.size(); i++) {
 			Tree parse = parseTrees.get(i);
-			SentenceInstance instance = instances.get(i);
+			SentenceInstance instance = sentenceInsts.get(i);
 			edu.uci.ics.jung.graph.Tree<ParseTreeNode, ParseTreeEdge> augmentedTree = augmentParseTree(
 					parse, instance);
 
@@ -122,8 +191,7 @@ public class TreeBuilder {
 			
 			String sourceEntity = instance.getSourceEntity();
 			String targetEntity = instance.getTargetEntity();
-			String[] leafTexts = convert2Array(sourceEntity, targetEntity,
-					triggerWord);
+			String[] leafTexts = convert2Array(sourceEntity, targetEntity);
 			augmentedTree = pruneTree(augmentedTree, leafTexts);
 			augmentTrees.put(augmentedTree, instance);
 		}
@@ -366,23 +434,45 @@ public class TreeBuilder {
 
 		for (ParseTreeNode leaf : leaves) {
 			String key = leaf.getNodeText() + "-" + leaf.getNodeIndex();
-			if (instance.getWords2Lemma().containsKey(key)) {
-				String lemma = instance.getWords2Lemma().get(key);
-				leaf.setNodeLemma(lemma);
-			}
-
-			if (instance.getWords2NER().containsKey(key)) {
-				String ner = instance.getWords2NER().get(key);
-				leaf.setNodeNER(ner);
-			}
+			
+			String lemma = getTokenProperty(leaf.getNodeText(), leaf.getNodeIndex(), instance, "lemma");
+			leaf.setNodeLemma(lemma);
+			String pos = getTokenProperty(leaf.getNodeText(), leaf.getNodeIndex(), instance, "pos");
+			leaf.setNodePOS(pos);
+			String ner = getTokenProperty(leaf.getNodeText(), leaf.getNodeIndex(), instance, "ner");
+			leaf.setNodeNER(ner);
 		}
 	}
 
+	/**
+	 * Get token property including, pos, lemma, ner
+	 * @param text
+	 * @param index
+	 * @param instance
+	 * @param type
+	 * @return
+	 */
+	public String getTokenProperty(String text, int index, SentenceInstance instance, String type){
+		List<TokenFeature> tokens = instance.getSentenceTokens();
+		for(TokenFeature token : tokens){
+			if(token.getFeatureText().equalsIgnoreCase(text) && (token.getPosition() == index )){
+				if(type.equals("lemma"))
+					return token.getLemma();
+				if(type.equals("pos"))
+					return token.getPOS();
+				if(type.equals("ner"))
+					return token.getNER();
+			}
+		}
+		
+		return null;
+	}
+	
 	public static void main(String[] args) {
 		String treeFile = "data/output4.xml";
 		TreeBuilder tb = new TreeBuilder(treeFile);
 		// tb.buildTrees();
-		tb.build();
+		
 	}
 
 }
