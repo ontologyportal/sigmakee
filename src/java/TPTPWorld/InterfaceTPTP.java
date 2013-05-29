@@ -1,28 +1,12 @@
 package TPTPWorld;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import ClientHttpRequest.ClientHttpRequest;
-
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.HTMLformatter;
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.StringUtil;
-import com.articulate.sigma.TPTP2SUMO;
+import com.articulate.sigma.*;
 
 public class InterfaceTPTP {
 
@@ -132,6 +116,7 @@ public class InterfaceTPTP {
 
 		try {
 			URL replyUrl = new URL(SystemOnTPTPFormReplyURL);
+			//InputStreamReader isr = null;
 			InputStreamReader isr = new InputStreamReader(ClientHttpRequest.post(replyUrl,
 					URLParameters));
 			reader = new BufferedReader(isr);
@@ -267,8 +252,9 @@ public class InterfaceTPTP {
 			URLParameters.put("UPLOADProblem",new File(problemFile));
 			URLParameters.put("SubmitButton","RunSelectedSystems");
 			URL url = new URL(SystemOnTPTPFormReplyURL);
+			//InputStreamReader isr = null;
 			InputStreamReader isr = 
-				new InputStreamReader(ClientHttpRequest.post(url,URLParameters));
+					new InputStreamReader(ClientHttpRequest.post(url,URLParameters));
 			reader = new BufferedReader(isr);
 			atpOut.printResult += "<PRE>";
 			while ((responseLine = reader.readLine()) != null) {
