@@ -904,22 +904,102 @@ public class WordNetUtilities {
         }
     }
 
+    /** *************************************************************
+     * Take a file of <id>tab<timestamp>tab<string> and calculate
+     * the average Levenshtein distance for each ID.
+     */
+    public static void searchCoherence() {
+    
+        String line;
+        String lastT = "";
+        String id = "";
+        int count = 0;
+        int total = 0;
+        try {
+            File f = new File("SearchQueriesResultsExport.txt");
+            FileReader r = new FileReader(f);
+            LineNumberReader lr = new LineNumberReader(r);
+            while ((line = lr.readLine()) != null) {
+                //System.out.println(line);
+                int tabIndex = line.indexOf("\t");
+                if (tabIndex > -1) {
+                    String uid = line.substring(0,tabIndex);
+                    tabIndex = line.indexOf("\t",tabIndex+1);
+                    String t = line.substring(tabIndex + 1, line.length());
+                    //System.out.println("Found tab: t, uid, id, lastT: " + t + " " + uid
+                    //                    + " " + id+ " " + lastT);
+                    if (!id.equals(uid)) {
+                        if (id != "" && count != 0)
+                            System.out.println("***** Total for " + id + " is " + total/count);
+                        count = 0;
+                        total = 0;
+                        id = uid;
+                    }
+                    if (lastT != "") {
+                        int l = Mapping.getLevenshteinDistance(lastT,t);
+                        if (l != 0) {  // exclude searches with no changes
+                            total = total + l;
+                            count++;
+                        }
+                    }
+                    lastT = t;
+                }
+            }
+            if (id != "" && count != 0)
+                System.out.println("***** Total for " + id + " is " + total/count);
+        }
+        catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+            ioe.printStackTrace();
+        }
+
+    }
+    /** *************************************************************
+     * Take a file of <id>tab<timestamp>tab<string> and calculate
+     * the average Levenshtein distance for each ID.
+     */
+    public static void commentSentiment() {
+    
+        String line;
+        try {
+            File f = new File("CustSvcMsgUID-1.csv");
+            FileReader r = new FileReader(f);
+            LineNumberReader lr = new LineNumberReader(r);
+            while ((line = lr.readLine()) != null) {
+                //System.out.println(line);
+                int tabIndex = line.indexOf("\t");
+                if (tabIndex > -1) {
+                    String comment = line.substring(0,tabIndex);
+                    String uid = line.substring(tabIndex + 1, line.length());
+                    System.out.println("UID: " + uid + " Sentiment: " + DB.computeSentiment(comment));
+                }
+            }
+        }
+        catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+            ioe.printStackTrace();
+        }
+    }
+    
     /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
-        //    try {
+    	//searchCoherence();
+
+            try {
         KBmanager.getMgr().initializeOnce();
-        WordNet.initOnce();
-        extractMeronyms();
+        //WordNet.initOnce();
+    	commentSentiment();
+        //extractMeronyms();
         //WordNetUtilities wnu = new WordNetUtilities();
         //wnu.imageNetLinks();
-        //     }
-        //     catch (IOException ioe) {
-        //        System.out.println("Error in WordNet.main(): IOException: " + ioe.getMessage());
-        //    }
+            }
+            catch (Exception e) {
+                System.out.println("Error in WordNet.main(): Exception: " + e.getMessage());
+            }
 
     }
 }
