@@ -908,7 +908,7 @@ public class WordNetUtilities {
      * Take a file of <id>tab<timestamp>tab<string> and calculate
      * the average Levenshtein distance for each ID.
      */
-    public static void searchCoherence() {
+    public static void searchCoherence(String fileWithPath) {
     
         String line;
         String lastT = "";
@@ -916,7 +916,7 @@ public class WordNetUtilities {
         int count = 0;
         int total = 0;
         try {
-            File f = new File("SearchQueriesResultsExport.txt");
+            File f = new File(fileWithPath);
             FileReader r = new FileReader(f);
             LineNumberReader lr = new LineNumberReader(r);
             while ((line = lr.readLine()) != null) {
@@ -958,11 +958,11 @@ public class WordNetUtilities {
      * Take a file of <id>tab<timestamp>tab<string> and calculate
      * the average Levenshtein distance for each ID.
      */
-    public static void commentSentiment() {
-    
+    public static void commentSentiment(String fileWithPath) {
+    	
         String line;
         try {
-            File f = new File("CustSvcMsgUID-1.csv");
+            File f = new File(fileWithPath);
             FileReader r = new FileReader(f);
             LineNumberReader lr = new LineNumberReader(r);
             while ((line = lr.readLine()) != null) {
@@ -992,7 +992,8 @@ public class WordNetUtilities {
             try {
         KBmanager.getMgr().initializeOnce();
         //WordNet.initOnce();
-    	commentSentiment();
+    	commentSentiment("CustSvcMsgUID-1.csv");
+    	searchCoherence("SearchQueriesResultsExport.txt");
         //extractMeronyms();
         //WordNetUtilities wnu = new WordNetUtilities();
         //wnu.imageNetLinks();
