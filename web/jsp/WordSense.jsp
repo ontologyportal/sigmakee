@@ -55,8 +55,7 @@ if (sentence != null && sentCounter != null)
 
 <form name="sentenceLoader" id="sentenceLoader" action="WordSense.jsp" method="GET">
   <font face="Arial,helvetica"><b>Sentence:&nbsp;</b></font>
-  <input type="text" name="sentence" VALUE=<%= "\"" + (request.getParameter("sentence")==null?"":request.getParameter("sentence")) + "\"" %>>
-  
+  <input type="textarea" rows="4" cols="50" name="sentence" VALUE=<%= "\"" + (request.getParameter("sentence")==null?"":request.getParameter("sentence")) + "\"" %>>
   <input type="submit" value="Submit">
 </form>
 
