@@ -109,6 +109,8 @@ public class OWLtranslator {
     private HashMap SUMOYAGOMap = new HashMap();
     private TreeMap axiomMap = new TreeMap();
     private static String termPrefix = ""; //"http://sigma.ontologyportal.org:4010/OWL.jsp";
+    
+    private static int _debugLevelCounter = 0;
 
     /** ***************************************************************
      */
@@ -266,11 +268,14 @@ public class OWLtranslator {
     private static void decode(PrintWriter pw, SimpleElement se, String parentTerm, 
                                String parentTag, String indent) {
         
+    	_debugLevelCounter++;
+    	//System.out.println("INFO in OWLtranslator().decode(): Debug level: " + _debugLevelCounter);
+    	//System.out.println(se);
         String tag = se.getTagName();
         String value = null;
         String existential = null;
         String parens = null;
-        // pw.println(";; " + tag);
+        //System.out.println(";; " + tag);
         if (tag.equals("owl:Class") || tag.equals("owl:ObjectProperty") || 
             tag.equals("owl:DatatypeProperty") || tag.equals("owl:FunctionalProperty") || 
             tag.equals("owl:InverseFunctionalProperty") || tag.equals("owl:TransitiveProperty") || 
@@ -370,9 +375,9 @@ public class OWLtranslator {
         }
         else if (tag.equals("owl:Restriction")) { }
         else if (tag.equals("owl:onProperty")) { }
-        else if (tag.equals("owl:unionOf")) { return; }
-        else if (tag.equals("owl:complimentOf")) { return; }
-        else if (tag.equals("owl:intersectionOf")) { return; }
+        else if (tag.equals("owl:unionOf")) { _debugLevelCounter--; return; }
+        else if (tag.equals("owl:complimentOf")) { _debugLevelCounter--; return; }
+        else if (tag.equals("owl:intersectionOf")) { _debugLevelCounter--; return; }
         else if (tag.equals("owl:cardinality")) { }
         else if (tag.equals("owl:FunctionalProperty")) {
             value = se.getAttribute("rdf:about");
@@ -445,12 +450,14 @@ public class OWLtranslator {
             }
         }
 
+        //System.out.println("INFO in OWLtranslator().decode(): reading attributes");
         Set s = se.getAttributeNames();
         Iterator it = s.iterator();
         while (it.hasNext()) {
             String att = (String) it.next();
             String val = (String) se.getAttribute(att);
         }
+        //System.out.println("INFO in OWLtranslator().decode(): reading children");
         ArrayList al = se.getChildElements();
         it = al.iterator();
         while (it.hasNext()) {
@@ -462,7 +469,8 @@ public class OWLtranslator {
             pw.println (parens);
             parens = null;
         }
-        //System.out.println(se.toString());
+        _debugLevelCounter--;
+        //System.out.println("INFO in OWLtranslator().decode(): exiting decode with level: " + _debugLevelCounter);
     }
 
     /** ***************************************************************
@@ -473,6 +481,7 @@ public class OWLtranslator {
         FileWriter fw = null;
         PrintWriter pw = null;
 
+        _debugLevelCounter = 0;
         try {
             SimpleElement se = SimpleDOMParser.readFile(filename);
             System.out.println("INFO in WLtranslator.read(): input filename: " + filename);
@@ -1532,6 +1541,7 @@ public class OWLtranslator {
      */
     public static void main(String args[]) {
 
+    	/*
         OWLtranslator ot = new OWLtranslator();
 
         try {
@@ -1552,6 +1562,13 @@ public class OWLtranslator {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+        */
+        try {
+        	OWLtranslator.read(args[0]);
+        } catch (Exception e ) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }    	
     }
 }
 
