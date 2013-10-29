@@ -952,8 +952,8 @@ public class WordNetUtilities {
             System.out.println(ioe.getMessage());
             ioe.printStackTrace();
         }
-
     }
+    
     /** *************************************************************
      * Take a file of <id>tab<timestamp>tab<string> and calculate
      * the average Levenshtein distance for each ID.
@@ -981,26 +981,153 @@ public class WordNetUtilities {
         }
     }
     
+    /** *************************************************************
+     */
+    public static char getOMWMappingSuffix(String SUMOmapping) {
+    	
+    	switch (getSUMOMappingSuffix(SUMOmapping)) {
+	    	case '=': return '='; 
+	    	case '+': return '⊂'; 
+	    	case '@': return '∈'; 
+	    	case ':': return '≠'; 
+	    	case '[': return '⊃'; 
+    	}
+    	return ' ';
+    }
+    
+    /** *************************************************************
+     */
+    public static void generateOMWformat(String fileWithPath) {
+    	
+        String line;
+        System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file " + fileWithPath);
+        try {
+            File f = new File(fileWithPath);
+            FileWriter r = new FileWriter(f); 
+            PrintWriter pw = new PrintWriter(r);
+            pw.println("# SUMO http://www.ontologyportal.org");
+            Iterator<String> it = WordNet.wn.nounSUMOHash.keySet().iterator();
+            while (it.hasNext()) {
+            	String key = it.next();
+            	String SUMOterm = WordNet.wn.nounSUMOHash.get(key);
+            	String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
+            	if (SUMOterm.indexOf(" ") < 0)
+            		pw.println(key + "-n\tsumo:xref\t" + getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
+            }
+            it = WordNet.wn.verbSUMOHash.keySet().iterator();
+            while (it.hasNext()) {
+            	String key = it.next();
+            	String SUMOterm = WordNet.wn.verbSUMOHash.get(key);
+            	String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
+            	if (SUMOterm.indexOf(" ") < 0)
+            		pw.println(key + "-n\tsumo:xref\t" + getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
+            }
+            it = WordNet.wn.adjectiveSUMOHash.keySet().iterator();
+            while (it.hasNext()) {
+            	String key = it.next();
+            	String SUMOterm = WordNet.wn.adjectiveSUMOHash.get(key);
+            	String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
+            	if (SUMOterm.indexOf(" ") < 0)
+            		pw.println(key + "-n\tsumo:xref\t" + getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
+            }
+            it = WordNet.wn.adverbSUMOHash.keySet().iterator();
+            while (it.hasNext()) {
+            	String key = it.next();
+            	String SUMOterm = WordNet.wn.adverbSUMOHash.get(key);
+            	String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
+            	if (SUMOterm.indexOf(" ") < 0)
+            		pw.println(key + "-n\tsumo:xref\t" + getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
+            }
+        }
+        catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+            ioe.printStackTrace();
+        }
+    }
+
+    /** *************************************************************
+     */
+    public static void readOMWformat(String inputFileWithPath) {
+    	
+        String line;
+        System.out.println("INFO in WordNetUtilities.readOMWformat(): read file " + inputFileWithPath);
+        try {
+	        File inputf = new File(inputFileWithPath);
+	        FileReader fr = new FileReader(inputf);
+	        LineNumberReader lr = new LineNumberReader(fr);
+	        while ((line = lr.readLine()) != null) {
+	            int tabIndex = line.indexOf("\t");
+	            if (tabIndex > -1) {
+	                String id = line.substring(0,tabIndex);
+	                int tab2index = line.indexOf("\t",tabIndex);
+	                if (tab2index > -1) { 
+	                	String type = line.substring(tabIndex+1,tab2index);                    
+	                    int end = line.length();
+	                    String value = line.substring(tab2index+1,end);  
+	                }
+	            }            
+	        }
+        }
+        catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+            ioe.printStackTrace();
+        }
+    }
+    
+    /** *************************************************************
+     */
+    public static void generateOMWOWLformat(String inputFileWithPath, String outputFileWithPath) {
+    	
+        String line;
+        System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file " + outputFileWithPath);
+        try {
+            File f = new File(outputFileWithPath);
+            FileWriter fw = new FileWriter(f); 
+            PrintWriter pw = new PrintWriter(fw);
+	    	pw.println("<rdf:RDF xml:base=\"http://www.ontologyportal.org/SUMO.owl\">");
+	    	pw.println("<owl:Ontology rdf:about=\"http://www.ontologyportal.org/SUMO.owl\">");
+	        pw.println("<rdfs:comment xml:lang=\"en\">A provisional and necessarily lossy translation to OWL.  Please see");
+	    	pw.println("www.ontologyportal.org for the original KIF, which is the authoritative");
+	    	pw.println("source.  This software is released under the GNU Public License");
+	    	pw.println("www.gnu.org.</rdfs:comment><rdfs:comment xml:lang=\"en\">Produced on date: Tue Sep 03 11:07:34 PDT 2013");
+	    	pw.println("</rdfs:comment></owl:Ontology><owl:Class rdf:about=\"#Object\">");
+	    	pw.println("<rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
+	    	pw.println("<wnd:equivalenceRelation rdf:resource=\"http://www.ontologyportal.org/WNDefs.owl#WN30-100019613\"/>");
+	        File inputf = new File(inputFileWithPath);
+	        FileReader fr = new FileReader(inputf);
+	        LineNumberReader lr = new LineNumberReader(fr);
+	        while ((line = lr.readLine()) != null) {
+	            int tabIndex = line.indexOf("\t");
+	            if (tabIndex > -1) {
+	                String id = line.substring(0,tabIndex);
+	                int tab2index = line.indexOf("\t",tabIndex);
+	                if (tab2index > -1) { 
+	                	String type = line.substring(tabIndex+1,tab2index);                    
+	                    int end = line.length();
+	                    String value = line.substring(tab2index+1,end);  
+	                }
+	            }            
+	        }
+        }
+        catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+            ioe.printStackTrace();
+        }
+    }
+    
     /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
-    	//searchCoherence();
-
-            try {
-        KBmanager.getMgr().initializeOnce();
-        //WordNet.initOnce();
-    	commentSentiment("CustSvcMsgUID-1.csv");
-    	searchCoherence("SearchQueriesResultsExport.txt");
-        //extractMeronyms();
-        //WordNetUtilities wnu = new WordNetUtilities();
-        //wnu.imageNetLinks();
-            }
-            catch (Exception e) {
-                System.out.println("Error in WordNet.main(): Exception: " + e.getMessage());
-            }
+        try {
+	        KBmanager.getMgr().initializeOnce();
+	        generateOMWformat(KBmanager.getMgr().getPref("kbDir") + "/wn-data-smo.tab");
+        }
+        catch (Exception e) {
+            System.out.println("Error in WordNet.main(): Exception: " + e.getMessage());
+        }
 
     }
 }
