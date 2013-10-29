@@ -721,6 +721,8 @@ public class HTMLformatter {
         return formatProofResult(result, stmt, processedStmt, lineHtml, kbName, language, 1);
     }
 
+    /** *************************************************************
+     */
     public static String formatProofResult(String result, String stmt, String processedStmt,
             String lineHtml, String kbName, String language, int answerOffset) {
 
@@ -738,7 +740,9 @@ public class HTMLformatter {
         
         return null;
     }
-            
+           
+    /** *************************************************************
+     */    
     public static String formatProofResult(ArrayList proof, String stmt, String processedStmt,
     		String lineHtml, String kbName, String language, int answerOffset) {
 
@@ -786,6 +790,8 @@ public class HTMLformatter {
         return html.toString();
     }
     
+    /** *************************************************************
+     */    
     public static String formatConsistencyCheck(String msg, String ccheckResult, 
     		String language, int page) {
 
