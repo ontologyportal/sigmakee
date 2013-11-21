@@ -279,13 +279,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       while (kbNames.hasNext()) {
          kbName3 = (String) kbNames.next();
          kb = (KB) KBmanager.getMgr().getKB(kbName3);
-  
-         String hostname = KBmanager.getMgr().getPref("hostname");
-         if (hostname == null)
-         	hostname = "localhost";
-         String port = KBmanager.getMgr().getPref("port");
-         if (port == null)
-             port = "8080";
          HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?";
   
          if (!kb.errors.isEmpty()) {
