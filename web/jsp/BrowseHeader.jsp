@@ -72,8 +72,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
           </td>
           <td align="left" valign="top">
               <input type="submit" value="Show">
+              <img src="pixmaps/1pixel.gif" width="10"><a href="Intersect.jsp?kb=<%=kbName %>&lang=<%=language %>&flang=<%=flang %>&term1=<%=term %>">Term intersection</a>              
           </td>
-        <br> 
+         <br> 
       </tr>
       <tr>
           <td><img src="pixmaps/1pixel.gif" height="3"></td>
