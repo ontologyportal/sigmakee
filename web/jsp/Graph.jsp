@@ -19,25 +19,28 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
-
-  System.out.println("request == " + request.toString());
-
   // If the request parameter can appear more than once in the query string, get all values
   String[] values = request.getParameterValues("columns");
-  if (values != null) {
-      for (int i = 0; i < values.length; i++) {
-          System.out.println("  value[" + i + "] == " + values[i]);
-      }
-  }
+  //if (values != null) {
+  //    for (int i = 0; i < values.length; i++) 
+  //        System.out.println("  value[" + i + "] == " + values[i]);      
+  //}
 
   Graph g = new Graph();
   String view = request.getParameter("view");
   if (view == null)
   	view = "text";
-  String relation = request.getParameter("relation");
-  if (relation == null) relation = "subclass";
   String term = request.getParameter("term");
-  if (term == null) term = "Process";
+  if (term == null || term.equals("null")) term = "Process";
+  String relation = request.getParameter("relation");
+  if (relation == null || relation.equals("null") || relation.equals("")) {
+      if (KButilities.isRelation(kb,term))
+          relation = "subrelation";
+      else if (KButilities.isAttribute(kb,term))
+          relation = "subAttribute";
+      else
+          relation = "subclass";
+  }
   String up = request.getParameter("up");
   if (up == null) up = "1";
   int upint = Integer.parseInt(up);
@@ -51,7 +54,8 @@ August 9, Acapulco, Mexico.
   String limit = request.getParameter("limit");
   try {
       Integer.parseInt(limit);
-  } catch (NumberFormatException nfe) {
+  } 
+  catch (NumberFormatException nfe) {
       limit = "";
   }
   String[] items = request.getParameterValues("columns");
@@ -122,26 +126,25 @@ August 9, Acapulco, Mexico.
    			  String fname = null;
    			  boolean graphAvailable = false;
    			  
-   			if (term != null && relation != null && kb != null) {
-	  	  		fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
-	  	  		try {
-		 	  		graphAvailable = g.createDotGraph(kb, term, relation, fname); 
-		  		}
-		  		catch (Exception ex) {
-					graphAvailable = false;
-		  		}
-	 	  
-			 }
+   			  if (term != null && relation != null && kb != null && userRole.equalsIgnoreCase("administrator")) {
+   			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
+   			      try {
+   			          graphAvailable = g.createDotGraph(kb, term, relation, fname); 
+   			      }
+   			      catch (Exception ex) {
+   			          graphAvailable = false;
+   			      }	  	  		
+   			  }
 			 
-			 if (graphAvailable) {
-			 %>
-			 	<img src="graph/<%=fname%>.gif"></img>
-			 <%
-			 }
-			 else {
-			 %> <p> Error producing graph. </p>
-			 <% 
-			 }
+   			  if (graphAvailable) {
+   			      %>
+   			      <img src="graph/<%=fname%>.gif"></img>
+   			      <%
+   			  }
+   			  else {
+   			      %> <p> Error producing graph. </p>
+   			      <% 
+   			  }
           } // end else - graph
   %>
 
