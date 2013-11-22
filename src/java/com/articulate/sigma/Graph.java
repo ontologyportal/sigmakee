@@ -38,8 +38,7 @@ public class Graph {
     public Graph() {
 
     	if (logger == null)
-    		logger = Logger.getLogger(this.getClass().getName());
-    	
+    		logger = Logger.getLogger(this.getClass().getName());    	
         columnList.put("documentation","yes");
         columnList.put("direct-children","yes");
         columnList.put("graph","yes");
@@ -80,7 +79,6 @@ public class Graph {
         String result = href.replace("Browse.jsp","Graph.jsp");
         return "<a href=\"" + result + "&term=" + term + "&relation=subclass\">^</a>";
     }
-
 
     /** *************************************************************
      */
@@ -166,7 +164,6 @@ public class Graph {
         return result.toString();
     }
 
-
     /** *************************************************************
      * Create a graph of a bounded size by incrementing the number of
      * levels above and below until the limit is reached or there are
@@ -183,9 +180,6 @@ public class Graph {
         int oldlimit = -1;
         while ((result.size() < size) && (result.size() != oldlimit)) {
             oldlimit = result.size();
-            //System.out.println("INFO in Graph.createBoundedSizeGraph(): result size : " + result.size());
-            //System.out.println("INFO in Graph.createBoundedSizeGraph(): above, below, oldlimit : " + above + 
-            //                   " " + below + " " + oldlimit);
             oldresult = result;
             HashSet checkAbove = new HashSet();
             HashSet checkBelow = new HashSet();
@@ -215,8 +209,8 @@ public class Graph {
 
         graphsize = 0;
         ArrayList result = new ArrayList();  // a list of Strings
-	HashSet checkAbove = new HashSet();
-	HashSet checkBelow = new HashSet();
+        HashSet checkAbove = new HashSet();
+        HashSet checkBelow = new HashSet();
         result.add(createColumnHeader());
         result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true,language));
         result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false,language));
@@ -238,7 +232,6 @@ public class Graph {
         System.out.println("ENTER Graph.createGraphBody(" + kb.name + ", " + check + ", "
                            + term + ", " + relation + ", " + above + ", " + below + ", "
                            + indentChars + ", " + level + ", " + show + ")");
-
         ArrayList result = new ArrayList();
         int graphMax = Integer.valueOf(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
         if (!check.contains(term) && graphsize < graphMax) {
@@ -268,13 +261,11 @@ public class Graph {
             if (port == null)
                 port = "8080";
             String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
-
             if (show) {
                 graphsize++;
                 if (graphsize < 100)                 
                     result.add(createGraphEntry(kb,prefix.toString(),kbHref,term,language));
             }
-
             if (below > 0) {
                 ArrayList stmtBelow = kb.askWithRestriction(0,relation,2,term);
                 for (int i = 0; i < stmtBelow.size(); i++) {
@@ -286,12 +277,6 @@ public class Graph {
                 }
             }
         }
-
-        //System.out.println("EXIT Graph.createGraphBody(" + kb.name + ", "+ check + ", "
-        //                   + term + ", " + relation + ", " + above + ", " + below + ", "
-        //                   + indentChars + ", " + level + ", " + show + ")");
-        //System.out.println("  -> " + result);
-
         return result;
     }
 
@@ -309,10 +294,9 @@ public class Graph {
      */
     public boolean createDotGraph(KB kb, String term, String relation, String fname) throws IOException {
 
-        if (logger.isLoggable(Level.FINER)) {
-            String[] params = {"kb=" + kb, "term=" + term, "relation=" + relation, "fname=" + fname};
-            logger.entering("Graph", "createDotGraph", params);
-        }
+        
+        String[] params = {"kb=" + kb, "term=" + term, "relation=" + relation, "fname=" + fname};
+        System.out.println("INFO in Graph.createDotGraph():" + params);
 
         FileWriter fw = null;
         PrintWriter pw = null; 
@@ -370,9 +354,6 @@ public class Graph {
     private void createDotGraphBody(KB kb, HashSet startSet, HashSet checkedSet, 
                                                 String relation, boolean upSearch, HashSet result) {
 
-        //System.out.println("StartSet: " + startSet.toString());
-        //System.out.println("CheckedSet: " + checkedSet.toString());
-
         while (startSet.size() > 0) {
             Iterator it = startSet.iterator();
             String term = (String) it.next();
@@ -390,17 +371,14 @@ public class Graph {
             for (int i = 0; i < stmts.size(); i++) {
                 Formula f = (Formula) stmts.get(i);
                 String parent = f.getArgument(2); 
-                String child = f.getArgument(1);         
-               
+                String child = f.getArgument(1);                      
                 String s = "  \"" + parent + "\" -> \"" + child + "\";";
-                //System.out.println(s);
                 result.add(s);
                 checkedSet.add(term);
                 if (upSearch)
                     startSet.add(parent);
                 else
-                    startSet.add(child);
-                
+                    startSet.add(child);                
                 createDotGraphBody(kb,startSet,checkedSet,relation,upSearch,result);
             } 
         }
