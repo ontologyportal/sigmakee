@@ -248,12 +248,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     </FORM>
 
 <% } 
-  String hostname = KBmanager.getMgr().getPref("hostname");
-  if (hostname == null)
-      hostname = "localhost";
-  String port = KBmanager.getMgr().getPref("port");
-  if (port == null)
-      port = "8080";
   HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?";
         
   String er = KBmanager.getMgr().getError();
@@ -261,7 +255,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   if (!kb.errors.isEmpty()) {
       out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
       out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + 
-                  "language=" + HTMLformatter.language + "&kb=" + kb.name));  
+                  "language=" + language + "&kb=" + kb.name));  
   }
   
   if (StringUtil.isNonEmptyString(er)) {
