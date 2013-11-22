@@ -44,7 +44,6 @@ public class HTMLformatter {
 
     public static ArrayList<String> availableFormalLanguages =
         new ArrayList(Arrays.asList("SUO-KIF","TPTP","traditionalLogic","OWL"));
-
     
     /** *************************************************************
      *  Create the HTML for the labeled divider between the sections
@@ -345,7 +344,6 @@ public class HTMLformatter {
     * relREmatch and nonRelREmatch are the two relation and nonRelation terms respectively that are the first terms
     * at the top of the list. They are passed into the method to keep track of what 30 terms are being viewed. 
     */
-
     public static String showREMatches(KB kb, String relREmatch, String nonRelREmatch, String term) {
     	
         String markup = "";
@@ -454,6 +452,66 @@ public class HTMLformatter {
 
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
+     *  Needs a <table>...</table> enclosure to format HTML properly.
+     */
+    public static String formatFormulaList(ArrayList<Formula> forms, String header, KB kb,
+            String language, String flang, int start, int localLimit, String limitString) {
+    	
+        boolean traditionalLogic = false;
+        if (flang.equals("traditionalLogic"))
+            traditionalLogic = true;        
+        StringBuilder show = new StringBuilder();
+        boolean isArabic = (language.matches(".*(?i)arabic.*") || language.equalsIgnoreCase("ar"));
+        if (forms.size() < localLimit || localLimit == 0)
+            localLimit = forms.size();
+        for (int i = start; i < localLimit; i++) {
+        	System.out.println(forms.get(i).getClass().getName());
+        	String strForm = forms.get(i).theFormula;
+        	System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
+            Formula f = (Formula) kb.formulaMap.get(strForm);
+        	System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
+            if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
+                    !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
+                String arg0 = f.getArgument(0);
+                show.append("<tr><td width=\"50%\" valign=\"top\">");
+                String formattedFormula = null;
+                if (flang.equals("TPTP") || flang.equals("traditionalLogic"))
+                    formattedFormula = TPTPutil.htmlTPTPFormat(f,kbHref,traditionalLogic) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
+                else
+                    formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
+                if (Formula.DOC_PREDICATES.contains(arg0))
+                    show.append(kb.formatDocumentation(kbHref,formattedFormula,language));
+                else
+                    show.append(formattedFormula);
+                File srcfile = new File(f.sourceFile);
+                String sourceFilename = srcfile.getName();
+                if (StringUtil.isNonEmptyString(sourceFilename)) {
+                    show.append(sourceFilename);
+                    show.append(" " + f.startLine + "-" + f.endLine);
+                }
+                show.append("</a>");
+                show.append("</td>\n<td width=\"40%\" valign=\"top\">");
+                String pph = null;
+                if (!Formula.DOC_PREDICATES.contains(arg0))
+                    pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,
+                            kb.getFormatMap(language),
+                            kb.getTermFormatMap(language),
+                            kb, language);
+                if (StringUtil.emptyString(pph))
+                    pph = "";
+                else if (isArabic)
+                    pph = ("<span dir=\"rtl\">" + pph + "</span>");
+                else
+                    pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
+                show.append(pph + "</td></tr>\n");
+            }
+        }
+        show.append(limitString);
+        return show.toString();
+    }
+    
+    /** *************************************************************
+     *  Create the HTML for a section of the Sigma term browser page.
      */
     public static String browserSectionFormatLimit(String term, String header, KB kb,
             String language, String flang, int start, int limit,
@@ -463,17 +521,13 @@ public class HTMLformatter {
         StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
-        boolean traditionalLogic = false;
-
-        if (flang.equals("traditionalLogic"))
-            traditionalLogic = true;
         if (forms != null && !KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes"))
             forms = TaxoModel.removeCached(forms);
         if (forms != null && !forms.isEmpty()) {
             Collections.sort(forms);
             show.append(htmlDivider(header));
             show.append("<table width=\"95%\">");
-            if (forms.size() < localLimit)
+            if (forms.size() < localLimit || localLimit == 0)
                 localLimit = forms.size();
             else
                 limitString = ("<tr><td><br></td></tr><tr><td>Display limited to "
@@ -483,48 +537,7 @@ public class HTMLformatter {
                         + "&arg=" + arg + "&type=" + type + "\">Show next "
                         + limit + "</a></td></tr>\n");
 
-            boolean isArabic = (language.matches(".*(?i)arabic.*")
-                    || language.equalsIgnoreCase("ar"));
-            //System.out.println("INFO in HTMLformatter.browserSectionFormatLimit(): localLimit" + localLimit);
-            for (int i = start; i < localLimit; i++) {
-                Formula f = (Formula) forms.get(i);
-
-                if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
-                        !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
-                    String arg0 = f.getArgument(0);
-                    show.append("<tr><td width=\"50%\" valign=\"top\">");
-                    String formattedFormula = null;
-                    if (flang.equals("TPTP") || flang.equals("traditionalLogic"))
-                        formattedFormula = TPTPutil.htmlTPTPFormat(f,kbHref,traditionalLogic) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
-                    else
-                        formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
-                    if (Formula.DOC_PREDICATES.contains(arg0))
-                        show.append(kb.formatDocumentation(kbHref,formattedFormula,language));
-                    else
-                        show.append(formattedFormula);
-                    File srcfile = new File(f.sourceFile);
-                    String sourceFilename = srcfile.getName();
-                    if (StringUtil.isNonEmptyString(sourceFilename)) {
-                        show.append(sourceFilename);
-                        show.append(" " + f.startLine + "-" + f.endLine);
-                    }
-                    show.append("</a>");
-                    show.append("</td>\n<td width=\"40%\" valign=\"top\">");
-                    String pph = null;
-                    if (!Formula.DOC_PREDICATES.contains(arg0))
-                        pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,
-                                kb.getFormatMap(language),
-                                kb.getTermFormatMap(language),
-                                kb, language);
-                    if (StringUtil.emptyString(pph))
-                        pph = "";
-                    else if (isArabic)
-                        pph = ("<span dir=\"rtl\">" + pph + "</span>");
-                    else
-                        pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
-                    show.append(pph + "</td></tr>\n");
-                }
-            }
+            show.append(formatFormulaList(forms,header,kb,language,flang,start,localLimit,limitString));
             show.append(limitString);
             show.append("</table>\n");
         }
@@ -727,17 +740,14 @@ public class HTMLformatter {
             String lineHtml, String kbName, String language, int answerOffset) {
 
         if (result != null && result.toString().length() > 0) {
-        	logger.finer("result=" + result);
-        	
+        	logger.finer("result=" + result);        
             BasicXMLparser res = new BasicXMLparser(result.toString());
-
             if (res != null) {
             	ArrayList elements = res.elements;
             	
           		return formatProofResult(elements, stmt, processedStmt, lineHtml, kbName, language, answerOffset);
             }
-        }
-        
+        }        
         return null;
     }
            
@@ -747,10 +757,8 @@ public class HTMLformatter {
     		String lineHtml, String kbName, String language, int answerOffset) {
 
         	StringBuilder html = new StringBuilder();
-
             ProofProcessor pp = new ProofProcessor(proof);
-            logger.finer("PP NumAnswers: " + pp.numAnswers());
-            
+            logger.finer("PP NumAnswers: " + pp.numAnswers());            
             for (int i = 0; i < pp.numAnswers(); i++) {
                 ArrayList proofSteps = pp.getProofSteps(i);
                 logger.finer("proofSteps: " + pp.getProofSteps(i));
@@ -777,10 +785,8 @@ public class HTMLformatter {
 	                        html = html.append(l+1);
 	                        html = html.append(". </td>" + "\n");
 	                        html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language) + "\n");
-						logger.finest(HTMLformatter
-								.proofTableFormat(stmt,
-										(ProofStep) proofSteps.get(l), kbName,
-										language));
+						    logger.finest(HTMLformatter.proofTableFormat(stmt,
+										    (ProofStep) proofSteps.get(l), kbName, language));
 	                        html = html.append("</tr>\n" + "\n");
 	                    }
 	                    html = html.append("</table>" + "\n");
@@ -798,144 +804,149 @@ public class HTMLformatter {
     	if (logger.isLoggable(Level.FINER)) {
     		String[] params = {"msg = " + msg, "ccheckResult=" + ccheckResult, "language=" + language};
     		logger.entering("HTMLformatter", "formatConsistencyCheck", params);
-    	}
-    	
+    	}    	
     	StringBuilder html = new StringBuilder();
-    	String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-    	
+    	String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";    	
     	html.append(msg);
     	html.append("<br/>");
     	
     	if (ccheckResult != null) {
     		BasicXMLparser res = new BasicXMLparser(ccheckResult);
-
     		String kbName = null;
-
     		try {
-	    			if (res != null) {	    	    		
+    			if (res != null) {	    	    			    				
+	    			ArrayList elements = res.elements;
+	    			ArrayList subElements = ((BasicXMLelement) elements.get(0)).subelements;
+	    			
+	    			for (int i = 0; i < subElements.size(); i++) {
+	    				BasicXMLelement item = (BasicXMLelement) subElements.get(i);
 	    				
-		    			ArrayList elements = res.elements;
-		    			ArrayList subElements = ((BasicXMLelement) elements.get(0)).subelements;
-		    			
-		    			for (int i = 0; i < subElements.size(); i++) {
-		    				BasicXMLelement item = (BasicXMLelement) subElements.get(i);
-		    				
-		    				logger.finer("item: " + item);
-		    				logger.finer("item-tagname: " + item.tagname);
-		    				if (item.tagname.equals("kb")) 
-		    					kbName = item.contents;
-		    				else if (item.tagname.equals("entries")) {
-		    					ArrayList entries = ((BasicXMLelement) subElements.get(i)).subelements;
+	    				logger.finer("item: " + item);
+	    				logger.finer("item-tagname: " + item.tagname);
+	    				if (item.tagname.equals("kb")) 
+	    					kbName = item.contents;
+	    				else if (item.tagname.equals("entries")) {
+	    					ArrayList entries = ((BasicXMLelement) subElements.get(i)).subelements;
+	    					logger.finer("entries: " + entries);		    					
+    	    	    		html.append("<br/><b><u>Consistency Check Results:</u></b><br />");		    					
+	    					if (page == 0) {
+	    						String pagelink = "CCheck.jsp?kb=" + kbName + "&lang=" + language + "&page=";
+	    						html.append("<br />");
+	    						html.append("<table width=80% frame='border'>");
+	    						html.append("<tr><td>Query</td><td>Result Type</td><td>Source File</td><tr>");
 
-		    					logger.finer("entries: " + entries);
-		    					
-	    	    	    		html.append("<br/><b><u>Consistency Check Results:</u></b><br />");
-		    					
-		    					if (page == 0) {
-		    						String pagelink = "CCheck.jsp?kb=" + kbName + "&lang=" + language + "&page=";
-		    						html.append("<br />");
-		    						html.append("<table width=80% frame='border'>");
-		    						html.append("<tr><td>Query</td><td>Result Type</td><td>Source File</td><tr>");
-
-		    						for (int j=0; j < entries.size(); j++) {
-			    						ArrayList entry = ((BasicXMLelement) entries.get(j)).subelements;
-			     						String query = null;
-			    						String type = null;
-			    						String sourceFile = null;
-
-			    						for (int k=0; k < entry.size(); k++) {
-			    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
-				    						
-			    							logger.finer("entryItem: " + entryItem);
-			    							
-			    							if (entryItem.tagname.equals("query")) 
-			    								query = entryItem.contents;
-			    							else if (entryItem.tagname.equals("type"))
-			    								type = entryItem.contents;
-			    							else if (entryItem.tagname.equals("sourceFile"))
-			    								sourceFile = entryItem.contents;
-			    						}
-			    						
-			    						int pageNum = j + 1;
-			    						html.append("<tr><td><a href='" + pagelink + pageNum + "'>" + query + "</a></td><td>" + type + "</td><td>" + sourceFile + "</td></tr>");
-		    						}		    						
-		    						html.append("</table>");
-		    						
-		    						if (entries.size() > 0)
-			    		    			html.append("<br/><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=1'><p>Individual Results&#32;&gt;&gt;</p></a>");
-		    					}		    					
-		    					else if (page >= 1 && page <= entries.size()) {		    						
-		    						int j = page - 1;
-		    						
-		    						ArrayList<BasicXMLelement> entry = ((BasicXMLelement) entries.get(j)).subelements;
-
-		    						logger.finer("entry: " + entry);
-		    						String query = null;
+	    						for (int j=0; j < entries.size(); j++) {
+		    						ArrayList entry = ((BasicXMLelement) entries.get(j)).subelements;
+		     						String query = null;
 		    						String type = null;
-	    							String processedQ = null;
-		    						String proof = null;
 		    						String sourceFile = null;
-	    							
 		    						for (int k=0; k < entry.size(); k++) {
-		    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
-			    						
-		    							logger.finer("entryItem: " + entryItem);
-		    							
+		    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);				    						
+		    							logger.finer("entryItem: " + entryItem);			    							
 		    							if (entryItem.tagname.equals("query")) 
 		    								query = entryItem.contents;
 		    							else if (entryItem.tagname.equals("type"))
 		    								type = entryItem.contents;
-		    							else if (entryItem.tagname.equals("processedStatement"))
-		    								processedQ = entryItem.contents;
 		    							else if (entryItem.tagname.equals("sourceFile"))
 		    								sourceFile = entryItem.contents;
-		    							else if (entryItem.tagname.equals("proof")) {
-		    								if (type.indexOf("Error") == -1)
-		    									if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("Vampire"))
-		    										proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
-											else {
-												proof = entryItem.contents;
-												proof = proof.replaceAll("%3C",
-														"<");
-												proof = proof.replaceAll("%3E",
-														">");
-											}
-		    								else proof = entryItem.contents;
-		    							}
-		    						}
-	    							html.append("<br/>Query:  " + query + "<br />");
-		    		    			html.append("Type:  " + type + "<br />");
-		    		    			html.append("Source File: " + sourceFile + "<br /><br />");
-		    		    			html.append(proof);
+		    						}			    						
+		    						int pageNum = j + 1;
+		    						html.append("<tr><td><a href='" + pagelink + pageNum + "'>" + query + "</a></td><td>" + type + "</td><td>" + sourceFile + "</td></tr>");
+	    						}		    						
+	    						html.append("</table>");		    						
+	    						if (entries.size() > 0)
+		    		    			html.append("<br/><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=1'><p>Individual Results&#32;&gt;&gt;</p></a>");
+	    					}		    					
+	    					else if (page >= 1 && page <= entries.size()) {		    						
+	    						int j = page - 1;		    						
+	    						ArrayList<BasicXMLelement> entry = ((BasicXMLelement) entries.get(j)).subelements;
+	    						logger.finer("entry: " + entry);
+	    						String query = null;
+	    						String type = null;
+    							String processedQ = null;
+	    						String proof = null;
+	    						String sourceFile = null;	    							
+	    						for (int k=0; k < entry.size(); k++) {
+	    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);			    						
+	    							logger.finer("entryItem: " + entryItem);		    							
+	    							if (entryItem.tagname.equals("query")) 
+	    								query = entryItem.contents;
+	    							else if (entryItem.tagname.equals("type"))
+	    								type = entryItem.contents;
+	    							else if (entryItem.tagname.equals("processedStatement"))
+	    								processedQ = entryItem.contents;
+	    							else if (entryItem.tagname.equals("sourceFile"))
+	    								sourceFile = entryItem.contents;
+	    							else if (entryItem.tagname.equals("proof")) {
+	    								if (type.indexOf("Error") == -1)
+	    									if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("Vampire"))
+	    										proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
+										else {
+											proof = entryItem.contents;
+											proof = proof.replaceAll("%3C",
+													"<");
+											proof = proof.replaceAll("%3E",
+													">");
+										}
+	    								else proof = entryItem.contents;
+	    							}
+	    						}
+    							html.append("<br/>Query:  " + query + "<br />");
+	    		    			html.append("Type:  " + type + "<br />");
+	    		    			html.append("Source File: " + sourceFile + "<br /><br />");
+	    		    			html.append(proof);
 
-		    		    			html.append(lineHtml);
-		    		    			html.append("<table width=80% frame='void'");
-	    		    				html.append("<tr>");
-	    		    				int before = page - 1;
-	    		    				int after = page + 1;
-		    		    			if (page == 1) 
-		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Result</a></td>");		    		    			
-		    		    			else if (page > 1) {
-		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + before + "'>&lt;&lt;&#32;Prev</a></td>");		    	
-		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Results&#32;&gt;&gt;</a></td>");		    	
-		    		    			}
-		    		    			if (after <= entries.size() && page >= 1) 
-		    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + after + "'>Next&#32;&gt;&gt;</a></td>");		    		    			
-		    		    			html.append("</tr></table>");
-		    					}
-		    				}
-		    			}		    						    			 
-	    			}
-
+	    		    			html.append(lineHtml);
+	    		    			html.append("<table width=80% frame='void'");
+    		    				html.append("<tr>");
+    		    				int before = page - 1;
+    		    				int after = page + 1;
+	    		    			if (page == 1) 
+	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Result</a></td>");		    		    			
+	    		    			else if (page > 1) {
+	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + before + "'>&lt;&lt;&#32;Prev</a></td>");		    	
+	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Results&#32;&gt;&gt;</a></td>");		    	
+	    		    			}
+	    		    			if (after <= entries.size() && page >= 1) 
+	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + after + "'>Next&#32;&gt;&gt;</a></td>");		    		    			
+	    		    			html.append("</tr></table>");
+	    					}
+	    				}
+	    			}		    						    			 
+    			}
     		}
     		catch (Exception ex) {
     			logger.warning(ex.getMessage());
     		}
-       	}    	
-    	
-    	logger.exiting("HTMLformatter", "formatConsistencyCheck", html.toString());
-    	
+       	}    	    	
+    	logger.exiting("HTMLformatter", "formatConsistencyCheck", html.toString());    	
     	return html.toString();
+    }
+    
+    /** *************************************************************
+     */    
+    public static void main(String[] args) {
+    	
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (Exception ex ) {
+            System.out.println(ex.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        System.out.println("INFO in HTMLformatter.main()");
+        ArrayList<Formula> forms = KButilities.termIntersection(kb,"ShapeChange","ShapeAttribute");
+        /* should get from Merge.kif 15034-15041
+         * (=>
+    (and
+        (instance ?OBJ Object)
+        (attribute ?OBJ Pliable))
+    (exists (?CHANGE)
+        (and
+            (instance ?CHANGE ShapeChange)
+            (patient ?CHANGE ?OBJ))))
+            */        
+        System.out.println("INFO in HTMLformatter.main(): got intersections: " + forms);
+        System.out.println(HTMLformatter.formatFormulaList(forms,"",  kb, "EnglishLanguage",  "SUO-KIF", 0, 0, ""));
     }
 }
 
