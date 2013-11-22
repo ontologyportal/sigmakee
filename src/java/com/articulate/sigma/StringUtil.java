@@ -1179,6 +1179,16 @@ public class StringUtil {
 
     /** *****************************************************************
      */
+    public static String indent(int num, String indentChars) {
+    	
+    	StringBuffer sb = new StringBuffer();
+    	for (int i = 0; i < num; i++)
+    		sb.append(indentChars);
+    	return sb.toString();
+    }
+    
+    /** *****************************************************************
+     */
     public static void main(String args[]) {
 
         System.out.println(StringUtil.isNonEmptyString("foo"));
