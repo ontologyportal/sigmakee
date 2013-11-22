@@ -224,6 +224,17 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           systemsDir = "";
   }
 
+  String graphDir = request.getParameter("graphDir");
+  if (graphDir != null) {
+      changed = true;
+      KBmanager.getMgr().setPref("graphDir",graphDir);
+  }
+  else {
+      graphDir = KBmanager.getMgr().getPref("graphDir");
+      if (graphDir == null)
+          graphDir = "";
+  }
+  
   String editorCommand = request.getParameter("editorCommand");
   if (editorCommand != null) {
       changed = true;
@@ -403,6 +414,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <INPUT type="text" SIZE=50 name="tptpHomeDir" value=<%=tptpHomeDir %> >
     Directory in which local copy of TPTPWorld is installed</label><P>
 
+    <label for="graphDir">
+    <INPUT type="text" SIZE=50 name="graphDir" value=<%=graphDir %> >
+    Directory in which dot graphs will be saved</label><P>
+    
     <label for="systemsDir">
     <INPUT type="text" SIZE=50 name="systemsDir" value=<%=systemsDir %> >
     Directory in which built in ATP systems are located</label><P>
