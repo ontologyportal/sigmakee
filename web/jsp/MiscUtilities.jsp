@@ -23,6 +23,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   if (StringUtil.emptyString(sigmaHome))
       sigmaHome = "SIGMA_HOME";
   String kbDir = KBmanager.getMgr().getPref("kbDir");
+  String graphDir = KBmanager.getMgr().getPref("graphDir");
   File kbDirFile = new File(kbDir);
   String namespace = "";
   String term = "";
@@ -142,7 +143,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <table>
         <tr><td align="right">Term:&nbsp;</td><td><input type="text" name="term" size=20 value=""></td></tr>
         <tr><td align="right">Relation:&nbsp;</td><td><input type="text" name="relation" size=20 value=""></td></tr>
-        <tr><td align="right">Filename:&nbsp;</td><td><input type="text" name="filename" size=20 value="<%=kbName + "-graph.dot"%>">(saved in <%=sigmaHome%>)</td></tr>
+        <tr><td align="right">Filename:&nbsp;</td><td><input type="text" name="filename" size=20 value="<%=kbName + "-graph.dot"%>">(saved in <%=graphDir%>)</td></tr>
         <tr><td align="right"><input type="submit" name="action" value="dotGraph">&nbsp;&nbsp;</td><td>Generate graph file</td></tr>
     </table>
 
