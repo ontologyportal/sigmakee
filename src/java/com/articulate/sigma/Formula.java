@@ -1733,6 +1733,7 @@ public class Formula implements Comparable {
      * @result the formula as a String, with explicit quantification
      */
     public String makeQuantifiersExplicit(boolean query) {
+    	
         String result = this.theFormula;
         try {
             String arg0 = this.car();
@@ -2398,7 +2399,8 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Test whether a Formula is a functional term
+     * Test whether a Formula is a functional term.  Note this assumes
+     * the textual convention of all functions ending with "Fn".
      */
     public boolean isFunctionalTerm() {
 
@@ -5155,8 +5157,7 @@ public class Formula implements Comparable {
 											if (hasCorrectArity(template, kb))
 												accumulator.add(template);
 											else {
-												logger.info("FORMULA REJECTED because of incorrect arity: "
-																+ template);
+												logger.info("FORMULA REJECTED because of incorrect arity: " + template);
 												break;
 											}
 										}
@@ -5219,34 +5220,27 @@ public class Formula implements Comparable {
 		try {
 			while (m.find() && arityCorrect) {
 				String f = m.group(1);
-
 				if (f.length() > 2)
 					f = f.substring(1, f.length() - 1);
 				String[] split = f.split(" ");
-
 				if (split.length > 1) {
 					String rel = split[0];
-
 					if (!rel.startsWith("?")) {
 						int arity = -1;
-
 						if (rel.equals("=>") || rel.equals("<=>"))
 							arity = 2;
 						else
 							arity = kb.getValence(rel);
 
 						boolean startsWith = false;
-
 						// disregard statements using the @ROW variable as it
 						// will more often than not resolve to a wrong arity
 						for (int i = 1; i < split.length; i++)
 							if (split[i].startsWith("@"))
 								startsWith = true;
-
 						if (!startsWith)
-							if (arity >= 1 && split.length - 1 != arity) {
-								arityCorrect = false;
-							}
+							if (arity >= 1 && split.length - 1 != arity) 
+								arityCorrect = false;							
 					}
 				}
 
@@ -5374,15 +5368,9 @@ public class Formula implements Comparable {
                     ql = (List) sortedQLits.get(i);
                     accumulator = kb.askWithLiteral(ql);
                     satisfiable = ((accumulator != null) && !accumulator.isEmpty());
-                    tryNextQueryLiteral =
-                        (satisfiable
-                         ||
-                         (getVarCount(ql) > 1)
-                         // !((String)(ql.get(0))).equals("instance")
-                         );
-
+                    tryNextQueryLiteral = (satisfiable || (getVarCount(ql) > 1));
+                         // !((String)(ql.get(0))).equals("instance")                         
                     // System.out.println(ql + " accumulator == " + accumulator);
-
                     if (satisfiable) {
                         simplificationLits.add(ql);
                         if (keyLit == null) {
@@ -5473,13 +5461,11 @@ public class Formula implements Comparable {
 			String[] params = { "kb = " + kb.name, "varTypeMap = " + varTypeMap };
 			logger.entering("Formula", "prepareIndexedQueryLiterals", params);
 		}
-
 		ArrayList ans = new ArrayList();
         try {
             Map varsWithTypes = ((varTypeMap instanceof Map)
                                  ? varTypeMap
                                  : this.gatherPredVars(kb));
-
 			// logger.finest("varsWithTypes = " + varsWithTypes);
 
             if (!varsWithTypes.isEmpty()) {
@@ -5508,9 +5494,7 @@ public class Formula implements Comparable {
 			logger.warning(ex.getMessage());
             ex.printStackTrace();
         }
-
 		logger.exiting("Formula", "prepareIndexedQueryLiterals", ans);
-
         return ans;
     }
 
