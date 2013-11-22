@@ -29,6 +29,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   userPages.add("Browse.jsp");
   userPages.add("BrowseExtra.jsp");
   userPages.add("Graph.jsp");
+  userPages.add("Intersect.jsp");
   userPages.add("KBs.jsp");
   userPages.add("Manifest.jsp");
   userPages.add("OWL.jsp");
