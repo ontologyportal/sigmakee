@@ -110,9 +110,10 @@ public class KB {
      * object corresponding to the key. */
     public Map<String, Formula> formulaMap = new LinkedHashMap<String, Formula>();
 
-    /** A HashMap of ArrayLists of Formulae, containing all the
+    /** A HashMap of ArrayLists of String formulae, containing all the
      * formulae in the KB.  Keys are the formula itself, a formula ID, and term
-     * indexes created in KIF.createKey().  */
+     * indexes created in KIF.createKey().  The actual formula can be retrieved
+     * by using the returned String as the key for the variable formulaMap */
     public Map<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();
 
     /** The natural language formatting strings for relations in the
@@ -1110,10 +1111,8 @@ public class KB {
                             count += dc1ValSet.size();
                         }
                     }
-
                     if (changed)
                         dc1.setIsClosureComputed(true);
-                    // System.out.println("  " + count + " disjoint entries after pass " + ++passes);
                 }
             }
             // printDisjointness();
@@ -1121,12 +1120,10 @@ public class KB {
         catch (Exception ex) {
         	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
-        }
-        
+        }        
         if (count > 0L)
             logger.info(count + " " + relationName + " entries computed in "
-                               + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-        
+                               + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");        
         logger.exiting("KB", "computeSymmetricCacheClosure");
         return;
     }
@@ -1143,18 +1140,13 @@ public class KB {
 
         long t1 = System.currentTimeMillis();
         logger.entering("KB", "cacheRelnsWithRelnArgs");
-
         try {
-            if (relnsWithRelnArgs == null) {
-                relnsWithRelnArgs = new HashMap();
-            }
+            if (relnsWithRelnArgs == null) 
+                relnsWithRelnArgs = new HashMap();            
             relnsWithRelnArgs.clear();
             Set relnClasses = getCachedRelationValues("subclass", "Relation", 2, 1);
             if (relnClasses != null)
                 relnClasses.add("Relation");
-
-            // System.out.println("  relnClasses == " + relnClasses);
-
             if (relnClasses != null) {
                 ArrayList formulas = null;
                 Iterator it = relnClasses.iterator();
@@ -1168,18 +1160,14 @@ public class KB {
                 while (it.hasNext()) {
                     relnClass = (String) it.next();
                     formulas = askWithRestriction(3, relnClass, 0, "domain");
-
-                    // System.out.println("  formulas == " + formulas);
-
                     if (formulas != null) {
                         it2 = formulas.iterator();
                         while (it2.hasNext()) {
                             f = (Formula) it2.next();
                             reln = f.getArgument(1);
                             valence = getValence(reln);
-                            if (valence < 1) {
-                                valence = Formula.MAX_PREDICATE_ARITY;
-                            }
+                            if (valence < 1) 
+                                valence = Formula.MAX_PREDICATE_ARITY;                            
                             signature = (boolean[]) relnsWithRelnArgs.get(reln);
                             if (signature == null) {
                                 signature = new boolean[ valence + 1 ];
@@ -1193,10 +1181,7 @@ public class KB {
                                 signature[argPos] = true;
                             }
                             catch (Exception e1) {
-                            	logger.warning( "Error in KB.cacheRelnsWithRelnArgs(): reln == " 
-                            					   + reln
-                                                   + ", argPos == " + argPos
-                                                   + ", signature == " + signature);
+                            	logger.warning("Error in KB.cacheRelnsWithRelnArgs(): reln == " + reln + ", argPos == " + argPos + ", signature == " + signature);
                                 throw e1;
                             }
                         }
@@ -1211,9 +1196,8 @@ public class KB {
                 if (signature == null) {
                     signature = new boolean[4];
                     // signature = { false, false, true, false };
-                    for (int i = 0 ; i < signature.length ; i++) {
-                        signature[i] = (i == 2);
-                    }
+                    for (int i = 0 ; i < signature.length ; i++) 
+                        signature[i] = (i == 2);                    
                     relnsWithRelnArgs.put("format", signature);
                 }
             }
@@ -2161,12 +2145,8 @@ public class KB {
                                                            int argnum2,
                                                            String term2,
                                                            int targetArgnum) {
-        return getTermsViaAskWithRestriction(argnum1,
-                                             term1,
-                                             argnum2,
-                                             term2,
-                                             targetArgnum,
-                                             null);
+        return getTermsViaAskWithRestriction(argnum1, term1, argnum2,
+                                             term2, targetArgnum, null);
     }
 
     /** *************************************************************
@@ -2177,22 +2157,15 @@ public class KB {
      * @return A SUO-KIF term (String), or null is no answer can be
      *         retrieved.
      */
-    public String getFirstTermViaAskWithRestriction(int argnum1,
-                                                    String term1,
-                                                    int argnum2,
-                                                    String term2,
-                                                    int targetArgnum) {
+    public String getFirstTermViaAskWithRestriction(int argnum1, String term1,
+                                           int argnum2, String term2, int targetArgnum) {
 
         String result = null;
         try {
-            List terms = getTermsViaAskWithRestriction(argnum1,
-                                                       term1,
-                                                       argnum2,
-                                                       term2,
-                                                       targetArgnum);
-            if (!terms.isEmpty()) {
-                result = (String) terms.get(0);
-            }
+            List terms = getTermsViaAskWithRestriction(argnum1, term1, argnum2,
+                                                       term2, targetArgnum);
+            if (!terms.isEmpty()) 
+                result = (String) terms.get(0);            
         }
         catch (Exception ex) {
         	logger.warning(ex.getStackTrace().toString());
@@ -2439,9 +2412,7 @@ public class KB {
      * @return An ArrayList of Strings, which will be empty if no
      *         match found.
      */
-    public ArrayList<String> getTermsViaAsk(int knownArgnum,
-                                            String knownArg,
-                                            int targetArgnum) {
+    public ArrayList<String> getTermsViaAsk(int knownArgnum, String knownArg, int targetArgnum) {
 
         ArrayList<String> result = new ArrayList<String>();
         try {
@@ -2478,15 +2449,13 @@ public class KB {
      * @return An ArrayList of Formula(s), which will be empty if no
      *         match found.
      */
-    public ArrayList ask(String kind, int argnum, String term) {
-        ArrayList result = new ArrayList();
+    public ArrayList<Formula> ask(String kind, int argnum, String term) {
+    	
+        ArrayList<Formula> result = new ArrayList<Formula>();
         try {
         	String msg = null;
             if (StringUtil.emptyString(term)) {
-                msg = ("Error in KB.ask(\""
-                       + kind + "\", "
-                       + argnum + ", \""
-                       + term + "\"): "
+                msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"): "
                        + "search term is null, or an empty string");
                 logger.warning(msg);
                 throw new Exception(msg);
@@ -2498,15 +2467,13 @@ public class KB {
                 logger.warning(msg);
                 throw new Exception(msg);
             }
-            List tmp = null;
+            List<Formula> tmp = null;
             if (kind.equals("arg"))
                 tmp = (List) this.formulas.get(kind + "-" + argnum + "-" + term);
             else
                 tmp = (List) this.formulas.get(kind + "-" + term);
-            if (tmp != null) {
-                result.addAll(tmp);
-            }
-            
+            if (tmp != null) 
+                result.addAll(tmp);                        
         }
         catch (Exception ex) {
         	logger.warning(ex.getStackTrace().toString());
@@ -2537,12 +2504,7 @@ public class KB {
      *         empy ArrayList if no Formulae are retrieved.
      */
     public ArrayList askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
-        /*
-          System.out.println("ENTER KB.askWithPredicateSubsumption("
-          + relation + ", "
-          + idxArgnum + ", "
-          + idxTerm + ")");
-        */
+
         ArrayList ans = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(relation)
@@ -2592,13 +2554,8 @@ public class KB {
         	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        /*
-          System.out.println("EXIT KB.askWithPredicateSubsumption("
-          + relation + ", "
-          + idxArgnum + ", "
-          + idxTerm + ") == "
-          + (ans.size() > 10 ? (ans.subList(0, 10) + " ...") : ans));
-        */
+        /* System.out.println("EXIT KB.askWithPredicateSubsumption(" + relation + ", " + idxArgnum + ", " + idxTerm + ") == "
+          + (ans.size() > 10 ? (ans.subList(0, 10) + " ...") : ans));    */
         return ans;
     }
 
@@ -3003,7 +2960,6 @@ public class KB {
             logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        
     	logger.exiting("KB", "merge", formulasPresent);	    
         return formulasPresent;
     }
@@ -3016,7 +2972,7 @@ public class KB {
     public void rename(String term2, String term1) {
 
         logger.info("Replace " + term2 + " with " + term1);
-        TreeSet<Formula> formulas = new TreeSet<Formula>();
+        HashSet<Formula> formulas = new HashSet<Formula>();
         for (int i = 0; i < 7; i++)
             formulas.addAll(ask("arg",i,term2));
         formulas.addAll(ask("ant",0,term2));
@@ -7031,6 +6987,7 @@ public class KB {
     }
     
 	/** *************************************************************
+	 * Note this simply assumes that initial lower case terms are relations.
      */
     public static void generateRelationList() {
     	
