@@ -172,10 +172,8 @@ public class KIF {
     protected Set parse(Reader r) {
 
         //System.out.println("INFO in KIF.parse()");
-    	logger.entering("KIF", "parse");
-    	
-        int mode = this.getParseMode();               
-        
+    	logger.entering("KIF", "parse");    	
+        int mode = this.getParseMode();                       
         logger.info("Parsing " + this.getFilename() + " with parseMode = " + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));  
         //System.out.println("Parsing " + this.getFilename() + " with parseMode = " + ((mode == RELAXED_PARSE_MODE) ? "RELAXED_PARSE_MODE" : "NORMAL_PARSE_MODE"));  
 
@@ -244,17 +242,14 @@ public class KIF {
                         }
                         continue;
                     }
-                    else {                                            
-                        // Found a first end of line character.
-                        isEOL = true;                                 
-                        // Turn on flag, to watch for a second consecutive one.
+                    else {    // Found a first end of line character.                                                                
+                        isEOL = true;   // Turn on flag, to watch for a second consecutive one.                                                      
                         continue;
                     }
                 }
                 else if (isEOL) 
-                    isEOL = false;                                    
-                // Turn off isEOL if a non-space token encountered                              
-                if (st.ttype==40) {                                   
+                    isEOL = false;                                                                               
+                if (st.ttype==40) {    // Turn off isEOL if a non-space token encountered                                  
                     // open paren
                     if (parenLevel == 0) {
                         lineStart = st.lineno();
@@ -271,9 +266,8 @@ public class KIF {
                             inConsequent = true;
                         }
                     }
-                    if ((parenLevel != 0) && (lastVal != 40) && (expression.length() > 0))  
-                        // add back whitespace that ST removes
-                        expression.append(" ");                    
+                    if ((parenLevel != 0) && (lastVal != 40) && (expression.length() > 0))                          
+                        expression.append(" ");   // add back whitespace that ST removes                 
                     expression.append("(");
                 }
                 else if (st.ttype==41) {
@@ -284,10 +278,6 @@ public class KIF {
                         // The end of the statement...
                         fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.theFormula = (StringUtil.replaceDateTime(fstr)).intern();
-                        // if (f.theFormula.startsWith("(contentRegex")) {
-                        //      System.out.println("  formula == " + f.theFormula);
-                        //  }
-                        //f.tptpParse(false,null);   // not a query
                         if (formulaSet.contains(f.theFormula)) {
                             String warning = ("Duplicate formula at line " + f.startLine + " of " + f.sourceFile + ": " + expression);
                             //lineStart + totalLinesForComments + expression;
@@ -295,8 +285,7 @@ public class KIF {
 							System.out.println(warning);
                             duplicateCount++;
                         }
-                        // Check argument validity ONLY if we are in
-                        // NORMAL_PARSE_MODE.
+                        // Check argument validity ONLY if we are in NORMAL_PARSE_MODE.
                         if (mode == NORMAL_PARSE_MODE) {
                             String validArgs = f.validArgs((file != null ? file.getName() : null), 
                                                            (file != null 
@@ -316,13 +305,10 @@ public class KIF {
                                 throw new ParseException(errStr, f.startLine);  
                             }
                         }
-                        // formulaList.add(expression.intern());
-                        // if (formulaSet.size() % 100 == 0) System.out.print('.');
                         keySet.add(f.theFormula);           // Make the formula itself a key
                         keySet.add(f.createID());  
                         f.endLine = st.lineno() + totalLinesForComments;
-                        for (String fkey : keySet) {
-                            // Add the expression but ...
+                        for (String fkey : keySet) {   // Add the expression but ...                            
                             if (formulas.containsKey(fkey)) {
                                 if (!formulaSet.contains(f.theFormula)) {  
                                     // don't add keys if formula is already present
@@ -338,17 +324,11 @@ public class KIF {
                             }
                         }
                         formulaSet.add(f.theFormula);
-//                        logger.finest("formulaSet.add(" + f.theFormula + ")");
-
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
-                        lineStart = (st.lineno() + 1);                            
-
-                        // start next statement from next line
+                        lineStart = (st.lineno() + 1);    // start next statement from next line                     
                         expression = new StringBuilder();
-                        // expression.delete(0,expression.length());
-//                        logger.finest("keySet: " + keySet);
                         keySet.clear();
                     }
                     else if (parenLevel < 0) {
@@ -363,31 +343,20 @@ public class KIF {
                         throw new ParseException(errStr, f.startLine);
                     }
                 }
-                else if (st.ttype==34) {                                      // " - it's a string
-                    //System.out.println("INFO in KIF.parse()");
-                    //System.out.println(st.sval);                    
+                else if (st.ttype==34) {                                      // " - it's a string                 
                     st.sval = StringUtil.escapeQuoteChars(st.sval);
-                    // st.sval = st.sval.replace("\"","\\\"");
-                    // if (st.sval.contains("W[")) {
-                    //   System.out.println("  st.sval == " + st.sval);
-                    // }
-                    //System.out.println(st.sval);
                     if (lastVal != 40)           // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
                     com = st.sval;
-                    // if (com.contains("[")) {
-                    //     System.out.println("  com == \"" + com + "\"");
-                    // }
                     totalLinesForComments += countChar(com,(char)0X0A);
                     expression.append(com);
                     expression.append("\"");
                     if (parenLevel < 2)   // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
                 }
-                else if ((st.ttype == StreamTokenizer.TT_NUMBER) || 
-                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) { 
-                    // number
+                else if ((st.ttype == StreamTokenizer.TT_NUMBER) ||           // number
+                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {              
                     if (lastVal != 40)  // add back whitespace that ST removes
                         expression.append(" ");
                     if (st.nval == 0) 
@@ -408,8 +377,6 @@ public class KIF {
                         expression.append(" ");
                     expression.append(String.valueOf(st.sval));
                     if (expression.length() > 64000) {
-                        //System.out.print("Error in KIF.parse(): Parsing error: Sentence Over 64000 characters.");
-                        //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
                         errStr = (errStart + ": Sentence over 64000 characters new line " + f.startLine);
                         logger.warning(errStr);
                         logger.fine("st.sval = " + st.sval);
@@ -420,26 +387,21 @@ public class KIF {
                             logger.fine("expression == " + expression.toString());
                         throw new ParseException(errStr, f.startLine);                      
                     }
-                    // Build the terms list and create special keys
-                    // ONLY if we are in NORMAL_PARSE_MODE.
+                    // Build the terms list and create special keys ONLY if we are in NORMAL_PARSE_MODE.
                     if ((mode == NORMAL_PARSE_MODE) 
                         && (st.sval.charAt(0) != '?') 
                         && (st.sval.charAt(0) != '@')) {   // Variables are not terms
                         terms.add(st.sval);                  // collect all terms
                         key = createKey(st.sval,inAntecedent,inConsequent,argumentNum,parenLevel);
-                        keySet.add(key);                     // Collect all the keys until the end of
-                    }                                        // the statement is reached.
+                        keySet.add(key); // Collect all the keys until the end of the statement is reached.
+                    }                                        
                 } 
                 else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) { 
                     // AB: 5/2007 - allow '`' in relaxed parse mode.
                     expression.append(" `");
-                    // expression.append("`");
                 }
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
                     key = null;
-                    // System.out.println( "st.ttype == " + st.ttype );
-                    //System.out.print("Error in KIF.parse(): Parsing Error: Illegal character at line: ");
-                    //System.out.println(new Integer(lineStart + totalLinesForComments).toString());
                     errStr = (errStart + ": Illegal character near line " + f.startLine);
                     logger.warning(errStr);
                     logger.fine("st.sval = " + st.sval);
@@ -469,7 +431,6 @@ public class KIF {
             logger.severe("Error: " + ex.getStackTrace());
             ex.printStackTrace();
         }
-        // System.out.println( "x" );
         if (duplicateCount > 0) {
         	String warning = "WARNING in KIF.parse(Reader): " + duplicateCount + " duplicate statement"
             + ((duplicateCount > 1) ? "s " : " ") + "detected in " + (StringUtil.emptyString(filename)
@@ -485,9 +446,6 @@ public class KIF {
                                    : ("WARNING in KIF.parse(): " + w));
             }
         }
-        // System.out.println("EXIT KIF.parse(" + r + ")");
-        //logger.finest("formulaSet: " + this.formulaSet);
-        //logger.finest("formulas: " + this.formulas);
         logger.exiting("KIF", "parse");
         return warningSet;
     }
@@ -675,26 +633,16 @@ public class KIF {
         FileWriter fw;
         PrintWriter pw;
 
-        logger.entering("KIF", "tptpOutputTest", "filename=" + filename);
-        
+        logger.entering("KIF", "tptpOutputTest", "filename=" + filename);        
         try {
             kifp.readFile(filename);
         }
         catch (Exception e1) {
             String msg = e1.getMessage();
-            if (e1 instanceof ParseException) {
-                msg += (" in statement starting at line " 
-                        + ((ParseException)e1).getErrorOffset());
-            }
+            if (e1 instanceof ParseException) 
+                msg += (" in statement starting at line " + ((ParseException)e1).getErrorOffset());            
             logger.warning(msg);
         }
-        /*
-          it = kifp.formulaSet.iterator();
-          while (it.hasNext()) {
-          form = (String) it.next();
-          System.out.println (form);
-          }
-        */
         fw = null;
         pw = null;
         File outfile = new File(filename + ".tptp");
@@ -702,7 +650,6 @@ public class KIF {
         try {
             fw = new FileWriter(outfile);
             pw = new PrintWriter(fw);
-
             it = kifp.formulaSet.iterator();
             while (it.hasNext()) {
                 axiomCount++;
@@ -714,20 +661,15 @@ public class KIF {
             }
         }
         catch (Exception ex) {
-            logger.warning("Error writing " 
-                               + outfile.getCanonicalPath() + ": " 
-                               + ex.getMessage());
+            logger.warning("Error writing " + outfile.getCanonicalPath() + ": "  + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
             try {
-                if (pw != null) 
-                    pw.close();                
-                if (fw != null) 
-                    fw.close();                
+                if (pw != null) pw.close();                
+                if (fw != null) fw.close();                
             }
-            catch (Exception e3) {
-            }
+            catch (Exception e3) { }
         }
     }
 
