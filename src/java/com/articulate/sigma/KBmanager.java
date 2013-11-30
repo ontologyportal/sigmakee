@@ -550,6 +550,7 @@ public class KBmanager {
                 logger.fine("kbDir = " + kbDir);
                 LanguageFormatter.readKeywordMap(kbDir);
                 WordNet.wn.initOnce();
+                OMWordnet.readOMWfiles();
                 if (kbs != null && kbs.size() > 0) {
                 	Iterator<String> it = kbs.keySet().iterator();
 	                while (it.hasNext()) {
