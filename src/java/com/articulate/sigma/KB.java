@@ -91,7 +91,7 @@ public class KB {
     private List<String> cachedRelationNames = Arrays.asList("instance", "disjoint");
 
     /** An ArrayList of RelationCache objects. */
-    private ArrayList relationCaches = new ArrayList();
+    private ArrayList<RelationCache> relationCaches = new ArrayList<RelationCache>();
 
     /** The instance of the CELT process. */
     public CELT celt = null;
@@ -119,15 +119,15 @@ public class KB {
     /** The natural language formatting strings for relations in the
      *  KB. It is a HashMap of language keys and HashMap values.
      *  The interior HashMap is term name keys and String values. */
-    private HashMap formatMap = new HashMap();
+    private HashMap<String,HashMap<String,String>> formatMap = new HashMap<String,HashMap<String,String>>();
 
     /** The natural language strings for terms in the KB. It is a
      *  HashMap of language keys and HashMap values. The interior
      *  HashMap is term name keys and String values. */
-    private HashMap termFormatMap = new HashMap();
+    private HashMap<String,HashMap<String,String>> termFormatMap = new HashMap<String,HashMap<String,String>>();
 
     /** Errors and warnings found during loading of the KB constituents. */
-    public TreeSet errors = new TreeSet();
+    public TreeSet<String> errors = new TreeSet<String>();
 
     /** Future: If true, the contents of the KB have been modified without updating the caches */
     public boolean modifiedContents = false;
@@ -150,21 +150,16 @@ public class KB {
         try {
             KBmanager mgr = KBmanager.getMgr();
             if (mgr != null) {
-                // initRelationCaches();
                 String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
-                    celt = new CELT();
-                }
-            }
-            
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) 
+                    celt = new CELT();                
+            }            
             logger = Logger.getLogger(this.getClass().getName());
         }
         catch (IOException ioe) {
             logger.warning("Error in KB(): " + ioe.getMessage());
             celt = null;
-        }
-        
-        
+        }                
     }
     
     public KB(String n, String dir, boolean visibility) {
@@ -172,7 +167,6 @@ public class KB {
 
     	isVisible = visibility;    	
     }
-
     
     public boolean isVisible() {
     	return isVisible;
@@ -188,15 +182,11 @@ public class KB {
             KBmanager mgr = KBmanager.getMgr();
             kbDir = mgr.getPref("kbDir");
             if (mgr != null) {
-                // initRelationCaches();
                 String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
-                    celt = new CELT();
-                }
-            }
-            
-            logger = Logger.getLogger(this.getClass().getName());
-            
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) 
+                    celt = new CELT();                
+            }            
+            logger = Logger.getLogger(this.getClass().getName());            
         }
         catch (IOException ioe) {
             logger.warning("Error in KB(): " + ioe.getMessage());
@@ -274,11 +264,11 @@ public class KB {
     }
 
     /** **************************************************
-    *Takes a term (interpreted as a Regular Expression) and returns true
-    *if any term in the KB has a match with the RE.
+    * Takes a term (interpreted as a Regular Expression) and returns true
+    * if any term in the KB has a match with the RE.
     *
-    *@param term A String
-    *@return true or false.
+    * @param term A String
+    * @return true or false.
     */
     public boolean containsRE(String term) {
     	
@@ -286,11 +276,11 @@ public class KB {
     }  
 
     /** **************************************************
-    *Takes a term (interpreted as a Regular Expression) and returns an ArrayList
-    *containing every term in the KB that has a match with the RE.
+    * Takes a term (interpreted as a Regular Expression) and returns an ArrayList
+    * containing every term in the KB that has a match with the RE.
     *
-    *@param term A String
-    *@return An ArrayList of terms that have a match to term
+    * @param term A String
+    * @return An ArrayList of terms that have a match to term
     */
     public ArrayList<String> getREMatch(String term) {
     	try {
@@ -346,8 +336,9 @@ public class KB {
     /** *************************************************************
      * @return An ArrayList of relation names (Strings).
      */
-    private ArrayList getCachedRelationNames() {
-        ArrayList relationNames = new ArrayList();
+    private ArrayList<String> getCachedRelationNames() {
+        
+        ArrayList<String> relationNames = new ArrayList();
         try {
         	LinkedHashSet<String> reduced = new LinkedHashSet<String>(cachedRelationNames);
             reduced.addAll(getCachedTransitiveRelationNames());
@@ -365,13 +356,14 @@ public class KB {
      *
      * @return An ArrayList of relation names (Strings).
      */
-    private ArrayList getCachedTransitiveRelationNames() {
-        ArrayList ans = new ArrayList(cachedTransitiveRelationNames);
+    private ArrayList<String> getCachedTransitiveRelationNames() {
+        
+        ArrayList<String> ans = new ArrayList<String>(cachedTransitiveRelationNames);
         try {
-            Set trset = getAllInstancesWithPredicateSubsumption("TransitiveRelation");
+            Set<String> trset = getAllInstancesWithPredicateSubsumption("TransitiveRelation");
             String name = null;
-            for (Iterator it = trset.iterator(); it.hasNext();) {
-                name = (String) it.next();
+            for (Iterator<String> it = trset.iterator(); it.hasNext();) {
+                name = it.next();
                 if (!ans.contains(name)) ans.add(name);
             }
         }
@@ -386,8 +378,9 @@ public class KB {
      *
      * @return An ArrayList of relation names (Strings).
      */
-    private ArrayList getCachedSymmetricRelationNames() {
-        ArrayList ans = new ArrayList();
+    private ArrayList<String> getCachedSymmetricRelationNames() {
+        
+        ArrayList<String> ans = new ArrayList<String>();
         try {
             Set symmset = getAllInstancesWithPredicateSubsumption("SymmetricRelation");
             // symmset.addAll(getTermsViaPredicateSubsumption("subrelation",2,"inverse",1,true));
@@ -403,16 +396,17 @@ public class KB {
     /** *************************************************************
      * @return An ArrayList of relation names (Strings).
      */
-    private ArrayList getCachedReflexiveRelationNames() {
-        ArrayList ans = new ArrayList();
+    private ArrayList<String> getCachedReflexiveRelationNames() {
+        
+        ArrayList<String> ans = new ArrayList();
         try {
-            List allcached = getCachedRelationNames();
-            List reflexives = new ArrayList(cachedReflexiveRelationNames);
+            List<String> allcached = getCachedRelationNames();
+            List<String> reflexives = new ArrayList<String>(cachedReflexiveRelationNames);
             String name = null;
-            Iterator it = null;
+            Iterator<String> it = null;
             for (it = getAllInstancesWithPredicateSubsumption("ReflexiveRelation").iterator();
                  it.hasNext();) {
-                name = (String) it.next();
+                name = it.next();
                 if (!reflexives.contains(name)) reflexives.add(name);
             }
             for (it = reflexives.iterator(); it.hasNext();) {
@@ -429,7 +423,7 @@ public class KB {
     /** *************************************************************
      * @return An ArrayList of RelationCache objects.
      */
-    protected ArrayList getRelationCaches() {
+    protected ArrayList<RelationCache> getRelationCaches() {
         return this.relationCaches;
     }
 
@@ -459,9 +453,8 @@ public class KB {
      * contents when used in other contexts.
      */
     public HashMap<String, Object> getSortalTypeCache() {
-        if (sortalTypeCache == null) {
-            sortalTypeCache = new HashMap<String, Object>();
-        }
+        if (sortalTypeCache == null) 
+            sortalTypeCache = new HashMap<String, Object>();        
         return sortalTypeCache;
     }
 
@@ -471,17 +464,16 @@ public class KB {
      * @return void
      */
     protected void clearSortalTypeCache() {
+        
         try {
             logger.info("Clearing " + getSortalTypeCache().size() + " entries");
             Object obj = null;
             for (Iterator it = getSortalTypeCache().values().iterator(); it.hasNext();) {
                 obj = it.next();
-                if (obj instanceof Collection) {
-                    ((Collection) obj).clear();
-                }
+                if (obj instanceof Collection) 
+                    ((Collection) obj).clear();                
             }
             getSortalTypeCache().clear();
-
         }
         catch (Exception ex) {
         	logger.warning(ex.getStackTrace().toString());
@@ -497,12 +489,11 @@ public class KB {
      * @return void
      */
     protected void resetSortalTypeCache() {
-        if (getSortalTypeCache().isEmpty()) {
-        	logger.info("KB.getSortalTypeCache() == " + getSortalTypeCache());
-        }
-        else {
-            clearSortalTypeCache();
-        }
+        
+        if (getSortalTypeCache().isEmpty()) 
+        	logger.info("KB.getSortalTypeCache() == " + getSortalTypeCache());        
+        else 
+            clearSortalTypeCache();        
         return;
     }
 
@@ -512,11 +503,11 @@ public class KB {
      *
      * @return an ArrayList of Strings containing the language identifiers
      */
-    public ArrayList availableLanguages() {
+    public ArrayList<String> availableLanguages() {
 
-        ArrayList al = new ArrayList();
-        ArrayList col = ask("arg", 0, "format");
-        ArrayList col2 = ask("arg", 0, "termFormat");
+        ArrayList<String> al = new ArrayList<String>();
+        ArrayList<Formula> col = ask("arg", 0, "format");
+        ArrayList<Formula> col2 = ask("arg", 0, "termFormat");
         if (col != null) {
             if (col2 != null)
                 col.addAll(col2);
@@ -527,6 +518,7 @@ public class KB {
                     al.add(lang.intern());
             }
         }
+        al.addAll(OMWordnet.lnames);
         return al;
     }
 
@@ -545,46 +537,35 @@ public class KB {
     protected void initRelationCaches(boolean clearExistingCaches) {
 
     	logger.entering("KB", "initRelationCaches", "clearExistingCaches = " + clearExistingCaches);
-
-        Iterator it = null;
-        if (clearExistingCaches) {
-            // Clear all cache maps.
+        Iterator<RelationCache> it = null;
+        if (clearExistingCaches) {  // Clear all cache maps.            
             for (it = getRelationCaches().iterator(); it.hasNext();) {
-                RelationCache rc = (RelationCache) it.next();
+                RelationCache rc = it.next();
                 rc.clear();
-            }
-
-            // Discard all cache maps.
-            getRelationCaches().clear();
+            }            
+            getRelationCaches().clear();  // Discard all cache maps.
         }
         List symmetric = getCachedSymmetricRelationNames();
-        it = getCachedRelationNames().iterator();
+        Iterator it2 = getCachedRelationNames().iterator();
         String relname = null;
         while (it.hasNext()) {
-            relname = (String) it.next();
+            relname = (String) it2.next();
             getRelationCache(relname, 1, 2);
-
             System.out.println("  " + relname);
-
             // We put each symmetric relation -- disjoint and a
             // few others -- into just one RelationCache table
             // apiece.  All transitive binary relations are cached
             // in two RelationCaches, one that looks "upward" from
             // the keys, and another that looks "downward" from
             // the keys.
-            if (!symmetric.contains(relname)) {
-                getRelationCache(relname, 2, 1);
-            }
+            if (!symmetric.contains(relname)) 
+                getRelationCache(relname, 2, 1);            
         }
-
-        // We still set these legacy variables.  Eventually, they
-        // should be removed.
+        // We still set these legacy variables.  Eventually, they should be removed.
         parents  = getRelationCache("subclass", 1, 2);
         children = getRelationCache("subclass", 2, 1);
         disjoint = getRelationCache("disjoint", 1, 2);
-
         logger.exiting("KB", "initRelationCaches");
-
         return;
     }
 
@@ -605,12 +586,13 @@ public class KB {
      * corresponding to the input arguments.
      */
     private RelationCache getRelationCache(String relName, int keyArg, int valueArg) {
+        
         RelationCache result = null;
         try {
             if (StringUtil.isNonEmptyString(relName)) {
                 RelationCache cache = null;
-                for (Iterator it = getRelationCaches().iterator(); it.hasNext();) {
-                    cache = (RelationCache) it.next();
+                for (Iterator<RelationCache> it = getRelationCaches().iterator(); it.hasNext();) {
+                    cache = it.next();
                     if (cache.getRelationName().equals(relName)
                         && (cache.getKeyArgument() == keyArg)
                         && (cache.getValueArgument() == valueArg)) {
@@ -618,7 +600,6 @@ public class KB {
                         break;
                     }
                 }
-                /*                 */
                 if (result == null) {
                     cache = new RelationCache(relName, keyArg, valueArg);
                     getRelationCaches().add(cache);
@@ -649,9 +630,9 @@ public class KB {
         try {
             boolean isClosureComputed = false;
             List caches = getRelationCaches();
-            Iterator it = null;
-            Iterator it2 = null;
-            Iterator it3 = null;
+            Iterator<RelationCache> it = null;
+            Iterator<String> it2 = null;
+            Iterator<String> it3 = null;
             String relation = null;
             String arg1 = null;
             String arg2 = null;
@@ -667,7 +648,6 @@ public class KB {
                         break;
                     }
                 }
-
                 // Don't bother writing the cache file if we have not
                 // at least partially computed the closure of the
                 // various cached relations.
@@ -687,22 +667,19 @@ public class KB {
                     logger.finer("Appending statements to " + f.getCanonicalPath());
                     it = caches.iterator();
                     while (it.hasNext()) {
-                        rc = (RelationCache) it.next();
+                        rc = it.next();
                         if (rc.getKeyArgument() == 1) {
                             relation = rc.getRelationName();
-
-                            // Unfortunately, there are just too many
-                            // disjoint classes to consider writing
-                            // them to a file, or to consider having
-                            // Vampire try to load the assertions.
+                            // Unfortunately, there are just too many disjoint classes to consider writing
+                            // them to a file, or to consider having Vampire try to load the assertions.
                             if (!relation.equals("disjoint")) {
                                 it2 = rc.keySet().iterator();
                                 while (it2.hasNext()) {
-                                    arg1 = (String) it2.next();
+                                    arg1 = it2.next();
                                     valSet = (Set) rc.get(arg1);
                                     it3 = valSet.iterator();
                                     while (it3.hasNext()) {
-                                        arg2 = (String) it3.next();
+                                        arg2 = it3.next();
                                         StringBuilder sb = new StringBuilder("(");
                                         sb.append(relation);
                                         sb.append(" ");
@@ -739,9 +716,8 @@ public class KB {
         }
         finally {
             try {
-                if (fr != null) {
-                    fr.close();
-                }
+                if (fr != null) 
+                    fr.close();                
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -759,6 +735,7 @@ public class KB {
      * @return The int value 1 if a new entry is added, else 0.
      */
     private int addRelationCacheEntry(RelationCache cache, String keyTerm, String valueTerm) {
+        
         int count = 0;
         if ((cache != null)
             && StringUtil.isNonEmptyString(keyTerm)
@@ -768,9 +745,8 @@ public class KB {
                 valueSet = new HashSet();
                 cache.put(keyTerm, valueSet);
             }
-            if (valueSet.add(valueTerm)) {
-                count++;
-            }
+            if (valueSet.add(valueTerm)) 
+                count++;            
         }
         return count;
     }
@@ -788,10 +764,9 @@ public class KB {
      *
      * @return A HashSet, which could be empty
      */
-    public HashSet getCachedRelationValues(String relation,
-                                           String term,
-                                           int keyArg,
-                                           int valueArg) {
+    public HashSet getCachedRelationValues(String relation, String term,
+                                           int keyArg, int valueArg) {
+        
         HashSet ans = new HashSet();
         try {
             RelationCache cache = getRelationCache(relation, keyArg, valueArg);
@@ -806,29 +781,24 @@ public class KB {
         return ans;
     }
 
+    /** *************************************************************
+     */
 	public void checkArity() {
+	    
 		ArrayList<String> toRemove = new ArrayList<String>();
-
 		System.out.println("Performing Arity Check");
 		if (formulaMap != null && formulaMap.size() > 0) {
 			Iterator<String> formulas = formulaMap.keySet().iterator();
-
 			while (formulas.hasNext()) {
 				Formula f = (Formula) formulaMap.get(formulas.next());
-
 				if (!f.hasCorrectArity(this)) {
-					errors.add("Formula in " + f.sourceFile
-							+ " rejected due to arity error: <br/>"
-							+ f.theFormula);
+					errors.add("Formula in " + f.sourceFile	+ " rejected due to arity error: <br/>"	+ f.theFormula);
 					toRemove.add(f.theFormula);
 				}
 			}
 		}
-
-		for (int i = 0; i < toRemove.size(); i++) {
-			formulaMap.remove(toRemove.get(i));
-		}
-
+		for (int i = 0; i < toRemove.size(); i++) 
+			formulaMap.remove(toRemove.get(i));		
 	}
 
     /** *************************************************************
@@ -873,18 +843,14 @@ public class KB {
                         it1 = c1Keys.iterator();
                         while (it1.hasNext()) {
                             keyTerm = (String) it1.next();
-                            if (StringUtil.emptyString(keyTerm)) {
-                                logger.warning("Error in KB.computeTransitiveCacheClosure("
-                                                   + relationName + ") \n   keyTerm == "
-                                                   + ((keyTerm == null) ? null : "\""
-                                                      + keyTerm + "\""));
-                            }
+                            if (StringUtil.emptyString(keyTerm)) 
+                                logger.warning("Error in KB.computeTransitiveCacheClosure(" + relationName + ") \n   keyTerm == "
+                                                   + ((keyTerm == null) ? null : "\"" + keyTerm + "\""));                            
                             else {
                                 valSet = (Set) c1.get(keyTerm);
                                 valArr = valSet.toArray();
                                 for (int i = 0 ; i < valArr.length ; i++) {
                                     valTerm = (String) valArr[i];
-
                                     valSet2 = (Set) c1.get(valTerm);
                                     if (valSet2 != null) {
                                         it2 = valSet2.iterator();
@@ -908,28 +874,22 @@ public class KB {
                                         }
                                     }
                                 }
-                                // Here we try to ensure that instances of
-                                // Relation have at least some entry in the
-                                // "instance" caches, since this
-                                // information is sometimes considered
-                                // redundant and so could be left out of
-                                // .kif files.
+                                // Here we try to ensure that instances of Relation have at least some entry in the
+                                // "instance" caches, since this information is sometimes considered
+                                // redundant and so could be left out of .kif files.
                                 if (isSubrelationCache) {
                                     valTerm = "Relation";
-                                    if (keyTerm.endsWith("Fn")) {
-                                        valTerm = "Function";
-                                    }
+                                    if (keyTerm.endsWith("Fn")) 
+                                        valTerm = "Function";                                    
                                     else {
                                         String nsdelim = StringUtil.getKifNamespaceDelimiter();
                                         int ndidx = keyTerm.indexOf(nsdelim);
                                         String stripped = keyTerm;
-                                        if (ndidx > -1) {
-                                            stripped = keyTerm.substring(nsdelim.length() + ndidx);
-                                        }
+                                        if (ndidx > -1) 
+                                            stripped = keyTerm.substring(nsdelim.length() + ndidx);                                        
                                         if (Character.isLowerCase(stripped.charAt(0))
-                                            && !keyTerm.contains("(")) {
-                                            valTerm = "Predicate";
-                                        }
+                                            && !keyTerm.contains("(")) 
+                                            valTerm = "Predicate";                                        
                                     }
                                     addRelationCacheEntry(inst1, keyTerm, valTerm);
                                     addRelationCacheEntry(inst2, valTerm, keyTerm);
@@ -943,28 +903,14 @@ public class KB {
                     }
                 }
             }
-
-            /*
-              if (relationName.equals("subclass")) {
-              printParents();
-              printChildren();
-              }
-            */
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        if (count > 0) {
-            logger.fine(count
-                      + " "
-                      + relationName
-                      + " entries computed in "
-                      + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
-        }
-        
-        logger.exiting("KB", "computeTransitiveCacheClosure");
-        
+        if (count > 0) 
+            logger.fine(count + " " + relationName + " entries computed in "
+                      + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");               
+        logger.exiting("KB", "computeTransitiveCacheClosure");        
         return;
     }
 
@@ -4685,11 +4631,7 @@ public class KB {
      * empty.
      */
     public Set getAllSuperClassesWithPredicateSubsumption(String className) {
-        /*
-          System.out.println("ENTER KB.getAllSuperClassesWithPredicateSubsumption("
-          + className
-          + ")");
-        */
+
         Set ans = new TreeSet();
         try {
             if (StringUtil.isNonEmptyString(className)) {
@@ -4713,47 +4655,12 @@ public class KB {
                     pred = (String) it.next();
                     ans.addAll(getCachedRelationValues(pred, className, 1, 2));
                 }
-
-                /*
-                  Set done = new HashSet();
-                  Set accumulator = new HashSet();
-                  List working = new ArrayList();
-                  working.add(className);
-                  String name = null;
-                  List tmp = null;
-                  Iterator it = null;
-                  Formula f = null;
-                  while (!working.isEmpty()) {
-                  it = working.iterator();
-                  while (it.hasNext()) {
-                  name = (String) it.next();
-                  tmp = (List) askWithPredicateSubsumption("subclass", 1, name);
-                  for (int j = 0; j < tmp.size(); j++) {
-                  f = (Formula) tmp.get(j);
-                  if (!done.contains(f.theFormula)) {
-                  accumulator.add(f.getArgument(2));
-                  done.add(f.theFormula);
-                  }
-                  }
-                  }
-                  working.clear();
-                  ans.addAll(accumulator);
-                  working.addAll(accumulator);
-                  accumulator.clear();
-                  }
-                */
             }
         }
         catch (Exception ex) {
         	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        /*
-          System.out.println("EXIT KB.getAllSuperClassesWithPredicateSubsumption("
-          + className
-          + ") == "
-          + ans);
-        */
         return ans;
     }
 
@@ -4766,7 +4673,7 @@ public class KB {
      * @return A Set of terms (string constants), which could be
      * empty
      */
-    public Set getAllInstancesWithPredicateSubsumption(String className) {
+    public Set<String> getAllInstancesWithPredicateSubsumption(String className) {
         return getAllInstancesWithPredicateSubsumption(className, true);
     }
 
@@ -4785,7 +4692,7 @@ public class KB {
      * @return A Set of terms (string constants), which could be
      * empty
      */
-    public Set getAllInstancesWithPredicateSubsumption(String className,
+    public Set<String> getAllInstancesWithPredicateSubsumption(String className,
                                                        boolean gatherSubclasses) {
         Set ans = new TreeSet();
         try {
@@ -4826,23 +4733,6 @@ public class KB {
                         }
                     }
                 }
-
-                /*
-                  working.add(className);
-                  String name = null;
-                  List tmp = null;
-                  Formula f = null;
-                  Iterator it2 = null;
-                  for (Iterator it1 = working.iterator(); it1.hasNext();) {
-                  name = (String) it1.next();
-                  tmp = (List) askWithPredicateSubsumption("instance", 2, name);
-                  for (it2 = tmp.iterator(); it2.hasNext();) {
-                  f = (Formula) it2.next();
-                  ans.add(f.getArgument(1));
-                  }
-                  }
-                */
-
             }
         }
         catch (Exception ex) {
@@ -4862,15 +4752,10 @@ public class KB {
      * empty.
      */
     public Set getAllInstanceOfsWithPredicateSubsumption(String term) {
-        /*
-          System.out.println("ENTER KB.getAllInstanceOfsWithPredicateSubsumption("
-          + term
-          + ")");
-        */
+
         Set ans = new TreeSet();
         try {
             if (StringUtil.isNonEmptyString(term)) {
-
                 // Get all subrelations of subrelation.
                 Set metarelations = getCachedRelationValues("subrelation", "subrelation", 2, 1);
                 metarelations.add("subrelation");
@@ -4899,41 +4784,12 @@ public class KB {
                     cl = (String) it.next();
                     ans.addAll(getAllSuperClassesWithPredicateSubsumption(cl));
                 }
-
-                /*
-                  List tmp = (List) askWithPredicateSubsumption("instance", 1, term);
-                  if ((tmp != null) && !tmp.isEmpty()) {
-                  List working = new ArrayList();
-                  Formula f = null;
-
-                  // Initialize working
-                  for (int i = 0; i < tmp.size(); i++) {
-                  f = (Formula) tmp.get(i);
-                  working.add(f.getArgument(2));
-                  }
-                  if (!working.isEmpty()) {
-                  ans.addAll(working);
-                  String className = null;
-                  for (int j = 0; j < working.size(); j++) {
-                  className = (String) working.get(j);
-                  ans.addAll(getAllSuperClassesWithPredicateSubsumption(className));
-                  }
-                  }
-                  }
-                */
-
             }
         }
         catch (Exception ex) {
         	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        /*
-          System.out.println("EXIT KB.getAllInstanceOfsWithPredicateSubsumption("
-          + term
-          + ") == "
-          + ans);
-        */
         return ans;
     }
 
@@ -5024,8 +4880,6 @@ public class KB {
         	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-        // System.out.println("EXIT KB.getAllInstances(" + classNames + ")");
-        // System.out.println("=> " + ans);
         return ans;
     }
 
@@ -5099,14 +4953,8 @@ public class KB {
                             }
                         }
                     }
-
-                    // See which valence-determining class the
-                    // relation belongs to.
-
+                    // See which valence-determining class the relation belongs to.
                     Set classNames = getCachedRelationValues("instance", relation, 1, 2);
-
-                    // System.out.println("classNames == " + classNames);
-
                     if (classNames != null) {
                         String[][] tops = { {"VariableArityRelation", "0"},
                                             {"UnaryFunction",         "1"},
@@ -5115,14 +4963,10 @@ public class KB {
                                             {"QuaternaryRelation",    "4"},
                                             {"QuintaryRelation",      "5"},
                         };
-
                         for (int i = 0 ; (ans < 0) && (i < tops.length) ; i++) {
-
                             if (classNames.contains(tops[i][0])) {
                                 ans = Integer.parseInt(tops[i][1]);
-
-                                // Sigh.  It's never simple.  The kluge
-                                // below is to deal with the fact that a
+                                // The kluge below is to deal with the fact that a
                                 // function, by definition, has a valence
                                 // one less than the corresponding
                                 // predicate.  An instance of
@@ -5150,16 +4994,6 @@ public class KB {
         	logger.warning(ex.getStackTrace().toString());
             ex.printStackTrace();
         }
-
-        /*
-          if (trace) {
-          System.out.println("EXIT KB.getValence("
-          + this.name + ", "
-          + relnName + ")");
-          System.out.println("  ==> " + ans);
-          }
-        */
-
         return ans;
     }
 
