@@ -59,30 +59,15 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       relation = request.getParameter("relation");
       filename = request.getParameter("filename");
       action = request.getParameter("action");
+      String writeOWL = request.getParameter("writeOWL");
+      
       if (StringUtil.emptyString(action) || action.equalsIgnoreCase("null")) 
           action = "";
+      if (writeOWL != null) 
+          OMWordnet.generateOMWOWLformat(kb);
       if (StringUtil.isNonEmptyString(action)) {
           if (kb != null) {
-              /* if (action.equalsIgnoreCase("generateDocs")
-                  || action.equalsIgnoreCase("generateSingle")) {
-                  if (ontology == null) ontology = "";
-                  String formatType = "dd";
-                  if (ontology.matches(".*(?i)ddex.*"))
-                      formatType = "dd1";
-                  else if (ontology.matches(".*(?i)ccli.*"))
-                      formatType = "dd2";
-                  if (action.equalsIgnoreCase("generateSingle"))
-                      formatType = "tab";
-                  boolean isSimple = (action.equalsIgnoreCase("generateSingle")
-                                      || DocGen.getControlTokens().contains(formatType));
-                  status = DocGen.generateDocumentsFromKB(kbName,
-                                                          ontology, 
-                                                          DocGen.getControlBitValue(formatType),
-                                                          isSimple,
-                                                          null,   // was header
-                                                          null);  // was footer
-              }
-              else*/ if (action.equals("dotGraph")) {
+              if (action.equals("dotGraph")) {
                   Graph g = new Graph();
                   g.createDotGraph(kb, term, relation, filename);
               }
@@ -147,6 +132,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         <tr><td align="right"><input type="submit" name="action" value="dotGraph">&nbsp;&nbsp;</td><td>Generate graph file</td></tr>
     </table>
 
+    <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
+    <img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
+    
+    Write OMW in OWL: <INPUT type="submit" NAME="writeOWL" VALUE="writeOWL">
+    
 </form><p>
 
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
