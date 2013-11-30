@@ -210,6 +210,7 @@ public class LanguageFormatter {
      * For debugging ...
      */
     private static void printSpaces(int depth) {
+        
         for (int i = 0 ; i <= depth ; i++)
             System.out.print("  ");
         System.out.print(depth + ":");
@@ -328,9 +329,8 @@ public class LanguageFormatter {
         try {
             if (!Formula.isVariable(word) && (termMap != null)) {
                 String pph = (String) termMap.get(word);
-                if (StringUtil.isNonEmptyString(pph)) {
-                    ans = pph;
-                }
+                if (StringUtil.isNonEmptyString(pph)) 
+                    ans = pph;                
             }
         }
         catch (Exception ex) {
@@ -351,17 +351,11 @@ public class LanguageFormatter {
      * @param depth The nested operator depth, for controlling indentation.
      * @return The natural language paraphrase as a String, or null if the predicate was not a logical operator.
      */
-    private static String paraphraseLogicalOperator(String stmt,
-                                                    boolean isNegMode,
-                                                    KB kb,
-                                                    Map phraseMap,
-                                                    Map termMap,
-                                                    String language,
-                                                    int depth) {
+    private static String paraphraseLogicalOperator(String stmt, boolean isNegMode, KB kb,
+                                                    Map phraseMap, Map termMap, String language, int depth) {
         try {
             if (keywordMap == null) {
-                System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): "
-                                   + "keywordMap is null");
+                System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
                 return null;
             }
             ArrayList args = new ArrayList();
@@ -691,9 +685,6 @@ public class LanguageFormatter {
             num++;
             argPointer = ("%" + num);
         }
-
-        //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 4 format: " + strFormat);
-        // System.out.println("str: " + strFormat);
         return strFormat.toString();
     }
 
@@ -714,12 +705,7 @@ public class LanguageFormatter {
      * expanded.
      */
     private static String expandStar(Formula f, String strFormat, String lang) {
-        /*
-          System.out.println("ENTER LanguageFormatter.expandStar(\""
-          + f.theFormula + "\", \""
-          + strFormat + "\", \""
-          + lang + "\")");
-         */
+
         String result = strFormat;
         ArrayList problems = new ArrayList();
         try {
@@ -766,11 +752,7 @@ public class LanguageFormatter {
                             if (lb.equals("{")) { rb = "}"; }
                             rbi = strFormat.indexOf(rb, lbi);
                             if (rbi == -1) {
-                                problems.add("Error in format \""
-                                        + strFormat
-                                        + "\": missing \""
-                                        + rb
-                                        + "\"");
+                                problems.add("Error in format \"" + strFormat + "\": missing \"" + rb + "\"");
                                 break;
                             }
                             p1 = (rbi + 1);
@@ -778,9 +760,6 @@ public class LanguageFormatter {
                             if (lb.equals("{")) {
                                 range = ss.trim();
                                 rangeArr = range.split(",");
-                                // System.out.println("INFO in LanguageFormatter.expandStar(): "
-                                //                    + "rangeArr == "
-                                //                    + rangeArr);
                                 for (int i = 0 ; i < rangeArr.length ; i++) {
                                     if (StringUtil.isNonEmptyString(rangeArr[i])) {
                                         isRange = (rangeArr[i].indexOf("-") != -1);
@@ -790,16 +769,9 @@ public class LanguageFormatter {
                                             low = Integer.parseInt(lowStr);
                                         }
                                         catch (Exception e1) {
-                                            problems.add("Error in format \""
-                                                    + strFormat
-                                                    + "\": bad value in \""
-                                                    + ss
-                                                    + "\"");
+                                            problems.add("Error in format \"" + strFormat + "\": bad value in \"" + ss + "\"");
                                             low = 1;
                                         }
-                                        // System.out.println("INFO in LanguageFormatter"
-                                        //                    + ".expandStar(): low == "
-                                        //                    + low);
                                         high = low;
                                         if (isRange) {
                                             if (rangeArr2.length == 2) {
@@ -808,33 +780,22 @@ public class LanguageFormatter {
                                                     high = Integer.parseInt(highStr);
                                                 }
                                                 catch (Exception e2) {
-                                                    problems.add("Error in format \""
-                                                            + strFormat
-                                                            + "\": bad value in \""
-                                                            + ss
-                                                            + "\"");
+                                                    problems.add("Error in format \"" + strFormat + "\": bad value in \"" + ss + "\"");
                                                     high = (flen - 1);
                                                 }
                                             }
-                                            else {
-                                                high = (flen - 1);
-                                            }
+                                            else 
+                                                high = (flen - 1);                                            
                                         }
-                                        // System.out.println("INFO in LanguageFormatter"
-                                        //                    + ".expandStar(): high == "
-                                        //                    + high);
-                                        for (int j = low ;
-                                        (j <= high) && (j < argsToPrint.length);
-                                        j++) {
+                                        for (int j = low; (j <= high) && (j < argsToPrint.length); j++) {
                                             argsToPrint[j] = true;
                                             nArgsSet++;
                                         }
                                     }
                                 }
                             }
-                            else {
-                                delim = ss;
-                            }
+                            else 
+                                delim = ss;                            
                             lb = null;
                             lbi = p1;
                             if (lbi < slen) { lb = strFormat.substring(lbi, (lbi + 1)); }
@@ -842,7 +803,6 @@ public class LanguageFormatter {
                         String AND = getKeyword("and",lang);
                         if (StringUtil.emptyString(AND))
                             AND = "+";
-                        // System.out.println("  delim == " + delim);
                         int nAdded = 0;
                         boolean addAll = (nArgsSet == 0);
                         int nToAdd = (addAll ? (argsToPrint.length - 1) : nArgsSet);
@@ -897,11 +857,6 @@ public class LanguageFormatter {
             }
             KBmanager.getMgr().setError(errStr);
         }
-        /*
-          System.out.println("EXIT LanguageFormatter.expandStar(\""
-          + f.theFormula + "\", \"" + strFormat + "\", \"" + lang + "\")");
-          System.out.println("  => \"" + result + "\"");
-         */
         return result;
     }
 
@@ -921,13 +876,6 @@ public class LanguageFormatter {
     public static String htmlParaphrase(String href, String stmt, Map phraseMap,
                                         Map termMap, KB kb, String language) {
 
-        /*
-        System.out.println("ENTER LanguageFormatter.htmlParaphrase("
-                           + href + ", " + stmt + ", "
-                           + "[phraseMap with " + phraseMap.size() + " entries], "
-                           + "[termMap with " + termMap.size() + " entries], "
-                           + kb.name + ", " + language + ")");
-         */
         String nlFormat = "";
         try {
             String template = nlStmtPara(stmt, false, kb, phraseMap, termMap, language, 1);
@@ -956,9 +904,7 @@ public class LanguageFormatter {
                 int dj = -1;
                 int dk = -1;
                 int dl = -1;
-                // The indexed positions:
-                //   &%termNameString$"termDisplayString"
-                //   ti tj           di dj              dk dl
+                // The indexed positions: &%termNameString$"termDisplayString"  ti tj   di dj  dk dl
                 while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
                     prevti = ti;
                     tj = (ti + titoklen);
@@ -1004,16 +950,6 @@ public class LanguageFormatter {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        /*
-        System.out.println("EXIT LanguageFormatter.htmlParaphrase("
-                           + href + ", "
-                           + stmt + ", "
-                           + "[phraseMap with " + phraseMap.size() + " entries], "
-                           + "[termMap with " + termMap.size() + " entries], "
-                           + kb.name + ", "
-                           + language + ")");
-        System.out.println("  > nlFormat == " + nlFormat);
-         */
         return nlFormat;
     }
 
@@ -1102,16 +1038,7 @@ public class LanguageFormatter {
     private static String incrementalVarReplace(String form, String varString, String varType,
                                                 String varPretty, String language,
                                                 boolean isClass, HashMap typeMap) {
-        /*
-        System.out.println("ENTER LanguageFormatter.incrementalVarReplace("
-                           + form + ", "
-                           + varString + ", "
-                           + varType + ", "
-                           + varPretty + ", "
-                           + language + ", "
-                           + isClass + ", "
-                           + "[typeMap with " + typeMap.size() + " entries])");
-         */
+
         String result = new String(form);
         boolean isArabic = (language.matches(".*(?i)arabic.*")
                 || language.equalsIgnoreCase("ar"));
@@ -1161,17 +1088,6 @@ public class LanguageFormatter {
                 found = false;
             count++;
         }
-        /*
-        System.out.println("EXIT LanguageFormatter.incrementalVarReplace("
-                           + form + ", "
-                           + varString + ", "
-                           + varType + ", "
-                           + varPretty + ", "
-                           + language + ", "
-                           + isClass + ", "
-                           + "[typeMap with " + typeMap.size() + " entries])");
-        System.out.println("  > result == " + result);
-         */
         return result;
     }
 
@@ -1209,13 +1125,7 @@ public class LanguageFormatter {
      * type.
      */
     public static String variableReplace(String form, HashMap varMap, KB kb, String language) {
-        /*
-        System.out.println("ENTER LanguageFormatter.variableReplace("
-                           + form + ", "
-                           + "[varMap with " + varMap.size() + " entries], "
-                           + kb.name + ", "
-                           + language + ")");
-        */
+
         String result = form;
         HashMap typeMap = new HashMap();
         ArrayList varList = collectOrderedVariables(form);
@@ -1252,14 +1162,6 @@ public class LanguageFormatter {
                 }
             }
         }
-        /*
-        System.out.println("EXIT LanguageFormatter.variableReplace("
-                           + form + ", "
-                           + "[varMap with " + varMap.size() + " entries], "
-                           + kb.name + ", "
-                           + language + ")");
-        System.out.println("  > result == " + result);
-        */
         return result;
     }
 
@@ -1282,12 +1184,7 @@ public class LanguageFormatter {
     protected static String upcaseFirstVisibleChar(String htmlParaphrase,
                                                    boolean addFullStop,
                                                    String language) {
-        /*
-          System.out.println("ENTER LanguageFormatter.upcaseFirstVisibleChar(\""
-          + htmlParaphrase + "\", "
-          + addFullStop + ", \""
-          + language + "\")");
-        */
+
         String ans = htmlParaphrase;
         try {
             if (StringUtil.isNonEmptyString(htmlParaphrase)) {
@@ -1361,13 +1258,6 @@ public class LanguageFormatter {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        /*
-          System.out.println("EXIT LanguageFormatter.upcaseFirstVisibleChar(\""
-          + htmlParaphrase + "\", "
-          + addFullStop + ", \""
-          + language + "\")");
-          System.out.println("  ==> \"" + ans + "\"");
-        */
         return ans;
     }
 
