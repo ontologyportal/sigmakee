@@ -72,15 +72,20 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       if (synset != null && synset != "")
           out.println(WordNet.wn.displaySynset(kbName,synset,params)); 
       else if (key != null) 
-          out.println(WordNet.wn.displayByKey(kbName,key,params));
-  if (synset != null && synset.length() < 9)
+          out.println(WordNet.wn.displayByKey(kbName,key,params));  
+  if (synset != null && synset.length() < 9) {
+      String OMWsynset = synset + "-" + WordNetUtilities.posNumberToLetter(POS.charAt(0));
+      out.println("\n<a href=\"http://" + hostname + ":" + port + "/sigma/OMW.jsp?" + 
+              "kb=" + kbName + "&synset=" + OMWsynset + "\">Show Open Multilingual Wordnet links</a><p>\n");         
 	  synset = POS + synset;
+  }
   if (synset != null && synset != "")
   	  out.println("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
-                  "kb=" + kbName + "&term=WN30-" + synset + "\">Show OWL translation</small><p>\n");              
+                  "kb=" + kbName + "&term=WN30-" + synset + "\">Show OWL translation</a></small><p>\n");              
   else if (word != null && word != "")
   	  out.println("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
-                  "kb=" + kbName + "&term=WN30Word-" + word + "\">Show OWL translation</small><p>\n");              
+                  "kb=" + kbName + "&term=WN30Word-" + word + "\">Show OWL translation</a></small><p>\n");   
+  
 %>
 <BR>
 
