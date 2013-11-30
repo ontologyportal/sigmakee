@@ -31,15 +31,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 <BODY BGCOLOR="#FFFFFF">
 
 <%
- String kbName = "";
  StringBuffer show = new StringBuffer();
- term = request.getParameter("term");
- kbName = request.getParameter("kb");
- if (Formula.isNonEmptyString(kbName)) {
-     kb = KBmanager.getMgr().getKB(kbName);
- }
- if (kb == null)
-     response.sendRedirect("login.html");
 
  show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
  if (Formula.isNonEmptyString(term)) {
