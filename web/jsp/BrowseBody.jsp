@@ -1,5 +1,4 @@
 <%
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -27,14 +26,12 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  else if (KBPOS == null && term != null)
  	KBPOS = kb.REswitch(term);
  
-
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
 
  if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm) && StringUtil.emptyString(relREmatch))        // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
  else if (kb != null && term != null && !kb.containsTerm(term) && KBPOS.equals("1")) {           // Show the alphabetic neighbors of a term
     show.append(HTMLformatter.showNeighborTerms(kb,term));
-    //WordNet.initOnce();
     TreeMap tm = WordNet.wn.getSensesFromWord(term);
     if (tm != null) {
         show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
@@ -48,7 +45,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     show.append(HTMLformatter.showNeighborTerms(kb,nonRelTerm, relTerm));
     show.append("</td></table>");
  }
- else if ((kb != null) && (term != null) && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in
+ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build the HTML format for all the formulas in
      term = kb.simplifyTerm(term);
      
      show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
@@ -89,12 +86,14 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          show.append(HTMLformatter.showMap(kb,term));
          show.append(HTMLformatter.showPictures(kb,term));
          show.append("</td>");
-         //WordNet.initOnce();
          TreeMap tm = WordNet.wn.getWordsFromTerm(term);
          if (tm != null) {
              show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
              show.append("<td width=\"40%\"><small>");
-             show.append(WordNetUtilities.formatWords(tm,kbName));
+             if (language.equals("EnglishLanguage")) 
+                 show.append(WordNetUtilities.formatWords(tm,kbName));
+             else 
+                 show.append(OMWordnet.formatWords(term,kbName,language,"http://" + hostname + ":" + port + "/sigma/"));             
              show.append("</small></td>");
          }
          else
@@ -114,16 +113,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
          show.append(HTMLformatter.browserSectionFormatLimit(term, argHeader, kb, language,flang,0,limit,arg,"arg"));
      }
 
-     //forms = kb.ask("ant",0,term);
      show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,flang,0,limit,0,"ant"));
-
-     //forms = kb.ask("cons",0,term);
      show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, language,flang,0,limit,0,"cons"));
-
-     //forms = kb.ask("stmt",0,term);
      show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,flang,0,limit,0,"stmt"));
-
-     //forms = kb.ask("arg",0,term);
      show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,flang,0,limit,0,"arg"));
 
      show.append("<p><table align=\"left\" width=\"50%\"><tr><td bgcolor=\"#A8BACF\">" +
@@ -140,15 +132,6 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
      show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" +
                  "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" +
                  "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
-     /** if (flang.equals("SUO-KIF"))
-     	show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/Browse.jsp?" +
-        	        "kb=" + kbName + "&term=" + term + "&flang=TPTP" + "&lang=" + language + "\">Show TPTP translation</small><p>\n");
-     if (flang.equals("TPTP"))
-     	show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/Browse.jsp?" +
-        	        "kb=" + kbName + "&term=" + term + "&flang=SUO-KIF" + "&lang=" + language + "\">Show SUO-KIF original</small><p>\n");
-     show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/OWL.jsp?" +
-                 "kb=" + kbName + "&term=" + term + "\">Show OWL translation</small><p>\n");
-	 */
  }
  else if (kb != null && term != null && kb.containsRE(term) && KBPOS.equals("2") && relREmatch == null) {
  	ArrayList<String> matches = kb.getREMatch(term);
