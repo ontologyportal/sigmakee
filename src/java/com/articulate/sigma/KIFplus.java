@@ -14,9 +14,11 @@ August 9, Acapulco, Mexico.
 
 package com.articulate.sigma;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 

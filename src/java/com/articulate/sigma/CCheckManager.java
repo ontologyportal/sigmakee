@@ -12,6 +12,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import com.articulate.sigma.KB;
+
 
 /***
  * This class manages the threads that run consistency checks for the different 

@@ -18,8 +18,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
     out.println("  </head>");
     out.println("  <body bgcolor=\"#FFFFFF\">");
-
-// KBmanager mgr = KBmanager.getMgr();
     String baseDir = mgr.getPref("baseDir");
     String kbDir = mgr.getPref("kbDir");
     System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
@@ -34,12 +32,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                                      : " to Sigma") + "!");
 
 // If the user is already logged in, do nothing.
-
 // If the user is known, log them in.
-
 // If the user is unknown, initiate the new account creation routine
 // (user role, not admin role).
-
 // If no KBmanager object exists, create one.  If the KBmanager object
 // already exists, use the existing object.
 
@@ -55,16 +50,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
     KBmanager.getMgr().initializeOnce();
-%>
-
-<%
 /*
     if (request.getParameter("userName") != null)
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
 */
-
 /* new Password Validation */
-
 /*
     PasswordService psvc = PasswordService.getInstance();
     if (StringUtil.isNonEmptyString(rUserName)) {
@@ -101,7 +91,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         }
     }
 
-    
     if (StringUtil.isNonEmptyString(request.getParameter("userName"))) {
         if (StringUtil.isNonEmptyString(request.getParameter("password")) &&
             PasswordService.getInstance().authenticate(request.getParameter("userName"),
@@ -140,7 +129,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     }
 */
 %>
-	
 <table width="95%" cellspacing="0" cellpadding="0">
     <tr>
         <td valign="top">
@@ -165,7 +153,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
-  Iterator kbNames = null;
+  Iterator<String> kbNames = null;
   String removeResult = "";
   String remove = request.getParameter("remove");  // Delete the given KB
   if (StringUtil.isNonEmptyString(kbName) && StringUtil.isNonEmptyString(remove) && remove.equalsIgnoreCase("true"))
@@ -176,7 +164,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       kbNames = KBmanager.getMgr().getKBnames().iterator();
       System.out.println("INFO in KBs.jsp: Got KB names.");
   }
-
   boolean isAdministrator = 
       (StringUtil.isNonEmptyString(KBmanager.getMgr().getPref("userRole"))
        && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"));
@@ -238,7 +225,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 %>
 <P>
 <P>
-
 <% 
     if (isAdministrator) { %>
     <b>Add a new knowledge base</b>

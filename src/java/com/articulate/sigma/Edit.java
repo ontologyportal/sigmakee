@@ -1,8 +1,7 @@
 
 package com.articulate.sigma;
 
-import java.util.*;
-import java.io.*;
+import java.io.IOException;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.

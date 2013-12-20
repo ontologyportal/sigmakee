@@ -7,7 +7,11 @@
 
 package com.articulate.sigma;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**  *****************************************************************
  * <code>SimpleElement</code> is the only node type for

@@ -23,7 +23,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     constituent - a constituent to be added to the KB.
     delete - a constituent to be deleted from the KB.
 */
-
     String kbDir = KBmanager.getMgr().getPref("kbDir");
     File kbDirFile = new File(kbDir);
     String saveAs = request.getParameter("saveAs");
@@ -57,14 +56,15 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             result = ((StringUtil.isNonEmptyString(prologFile) && plFile.canRead())
                       ? ("Wrote the Prolog file " + prologFile)
                       : "Could not write a Prolog file");
-            // KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
         }
         else if (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL")) {
             // Force translation of the KB to TPTP, even if the user has not
             // requested this on the Preferences page.
             if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
                 System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas");
-                kb.tptpParse();
+                SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
+                skbtptpkb.kb = kb;
+                skbtptpkb.tptpParse();
             }
             boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
             File tptpf = new File(kbDirFile, (saveFile + ".tptp"));
@@ -72,15 +72,17 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             String tptpFile = null;
             try {
                 tptpfcp = tptpf.getCanonicalPath();
-                tptpFile = kb.writeTPTPFile(tptpfcp, null, onlyPlainFOL, "");
+                SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
+        		skbtptpkb.kb = kb;
+                tptpFile = skbtptpkb.writeTPTPFile(tptpfcp, null, onlyPlainFOL, "");
             }
             catch (Exception tptpfe) {
                 tptpfe.printStackTrace();
             }
-            result = (StringUtil.isNonEmptyString(tptpFile)
-                      ? ("Wrote the TPTP file " + tptpFile)
-                      : "Could not write a TPTP file");
-            // KBmanager.getMgr().setError(KBmanager.getMgr().getError() + statusStr);
+            if (StringUtil.isNonEmptyString(tptpFile))
+            	result = ("Wrote the TPTP file " + tptpFile);
+           	else
+  				result = "Could not write a TPTP file";
         }
         else if (saveAs.equalsIgnoreCase("OWL")) {
             OWLtranslator ot = new OWLtranslator();
@@ -121,26 +123,13 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
         }
-        System.out.println("INFO in Manifest.jsp");
-        System.out.println("  > kb.constituents 81 == " + kb.constituents);
-        System.out.println("  > call: kb.reload()");
 	    result = kb.reload();
-        System.out.println("  > kb.constituents 84 == " + kb.constituents);
     }
     else if (constituent != null) {
-            System.out.println("  > kb.constituents 87 == " + kb.constituents);
         kb.addNewConstituent(constituent);
-            System.out.println("  > kb.constituents 89 == " + kb.constituents);
-        //System.out.println("INFO in Manifest.jsp (top): The error string is : " + KBmanager.getMgr().getError());
         KBmanager.getMgr().writeConfiguration();
-            System.out.println("INFO in Manifest.jsp");
-            System.out.println("  > kb.constituents 93 == " + kb.constituents);
-	    if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
-            System.out.println("INFO in Manifest.jsp");
-            System.out.println("  > kb.constituents 96 == " + kb.constituents);
-            System.out.println("  > call: kb.cache()");
-	        kb.cache();
-	    }
+	    if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) 
+	        kb.kbCache.cache();	    
 	    kb.loadVampire();
     }
 %>
@@ -249,28 +238,21 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 <% } 
   HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?";
-        
   String er = KBmanager.getMgr().getError();
-  //out.println("INFO in Manifest.jsp: Error string is : " + er);
   if (!kb.errors.isEmpty()) {
       out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
       out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + 
                   "language=" + language + "&kb=" + kb.name));  
   }
   
-  if (StringUtil.isNonEmptyString(er)) {
-      out.println(er);  
-      //System.out.println(er);
-  }
+  if (StringUtil.isNonEmptyString(er)) 
+      out.println(er);    
   else
       if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))
           out.println("File " + constituent + " loaded successfully.");
-
 %>
-
 <P>
-  <a href="KBs.jsp" >Return to home page</a><p>
-
+  <a href="KBs.jsp">Return to home page</a><p>
 <%@ include file="Postlude.jsp" %>
 </BODY>
 </HTML>

@@ -16,12 +16,17 @@ See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
+import java.io.File;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
-import java.security.*;
-// import org.apache.commons.codec.binary.Base64;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.SimpleTimeZone;
 
 /** ***************************************************************
  * A utility class that defines static methods for common string

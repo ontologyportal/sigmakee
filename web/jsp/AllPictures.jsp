@@ -23,7 +23,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  * */
 
  String term = request.getParameter("term");
- if (!Formula.isNonEmptyString(term))
+ if (StringUtil.emptyString(term))
      term = "";
 %>
 <html>
@@ -34,7 +34,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  StringBuffer show = new StringBuffer();
 
  show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
- if (Formula.isNonEmptyString(term)) {
+ if (!StringUtil.emptyString(term)) {
      term = term.intern();
      show.append(term);
      show.append("</b></FONT>");

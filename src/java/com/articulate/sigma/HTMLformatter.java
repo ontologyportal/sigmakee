@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.articulate.sigma.KB;
+
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
@@ -43,7 +45,7 @@ public class HTMLformatter {
     public static String language = "EnglishLanguage";
 
     public static ArrayList<String> availableFormalLanguages =
-        new ArrayList(Arrays.asList("SUO-KIF","TPTP","traditionalLogic","OWL"));
+        new ArrayList<String>(Arrays.asList("SUO-KIF","TPTP","traditionalLogic","OWL"));
     
     /** *************************************************************
      *  Create the HTML for the labeled divider between the sections
@@ -185,11 +187,11 @@ public class HTMLformatter {
     /** *************************************************************
      *  Show a hyperlinked list of terms.
      */
-    public static String termList(ArrayList terms, String kbHref) {
+    public static String termList(ArrayList<String> terms, String kbHref) {
 
         StringBuilder show = new StringBuilder();
         for (int i = 0; i < terms.size(); i++) {
-            String term = (String) terms.get(i);
+            String term = terms.get(i);
             show.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
             if (i < terms.size()-1)
                 show.append(", ");
@@ -256,7 +258,7 @@ public class HTMLformatter {
     public static String showNumberPictures(KB kb, String term, int count) {
 
         StringBuilder show = new StringBuilder();
-        ArrayList pictures = kb.askWithRestriction(0,"externalImage",1,term);   // Handle picture display
+        ArrayList<Formula> pictures = kb.askWithRestriction(0,"externalImage",1,term);   // Handle picture display
         if (pictures != null && pictures.size() > 0) {
             show.append("<br>");
             int numPictures = pictures.size();
@@ -266,7 +268,7 @@ public class HTMLformatter {
                 more = true;
             }
             for (int i = 0; i < numPictures; i++) {
-                Formula f = (Formula) pictures.get(i);
+                Formula f = pictures.get(i);
                 String url = f.getArgument(2);
                 if (url.startsWith("\"http://upload.wikimedia.org")) {
                     String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
@@ -297,11 +299,12 @@ public class HTMLformatter {
      *  Show alphabetic list of neighbor terms
      */
     public static String showNeighborTerms(KB kb, String nonRelTerm, String relTerm) {
+    	
         String markup = "";
         try {
             StringBuilder show = new StringBuilder();
-            ArrayList relations = kb.getNearestRelations(relTerm); 
-            ArrayList nonRelations = kb.getNearestNonRelations(nonRelTerm);
+            ArrayList<String> relations = kb.getNearestRelations(relTerm); 
+            ArrayList<String> nonRelations = kb.getNearestNonRelations(nonRelTerm);
             String lowcaseTerm = Character.toLowerCase(nonRelTerm.charAt(0)) + nonRelTerm.substring(1);
             String uppercaseTerm = Character.toUpperCase(relTerm.charAt(0)) + relTerm.substring(1);
             show.append("<table><tr><td>");
@@ -350,8 +353,8 @@ public class HTMLformatter {
         try {	
         	StringBuilder show = new StringBuilder();
         	ArrayList<String> matchesList = kb.getREMatch(term);
-        	ArrayList<String> relTermsList = kb.getAllRelTerms(matchesList);
-        	ArrayList<String> nonRelTermsList = kb.getAllNonRelTerms(matchesList);
+        	ArrayList<String> relTermsList = KBcache.getAllRelTerms(matchesList);
+        	ArrayList<String> nonRelTermsList = KBcache.getAllNonRelTerms(matchesList);
         	ArrayList<String> largerList = (relTermsList.size()>nonRelTermsList.size())?relTermsList:nonRelTermsList;
         	ArrayList<String> smallerList = (relTermsList.size()>nonRelTermsList.size())?nonRelTermsList:relTermsList;
         	int sizeDiff = largerList.size() - smallerList.size();
@@ -433,7 +436,7 @@ public class HTMLformatter {
     /** *************************************************************
      *  Show a hyperlinked list of WordNet synsets.
      */
-    public static String synsetList(ArrayList synsets, String kbHref) {
+    public static String synsetList(ArrayList<String> synsets, String kbHref) {
 
         StringBuilder show = new StringBuilder();
         for (int i = 0; i < synsets.size(); i++) {
@@ -517,7 +520,7 @@ public class HTMLformatter {
             String language, String flang, int start, int limit,
             int arg, String type) {
 
-        ArrayList forms = kb.ask(type,arg,term);
+        ArrayList<Formula> forms = kb.ask(type,arg,term);
         StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
@@ -607,7 +610,8 @@ public class HTMLformatter {
      *  value(s) are String representations of int(s) but the displayed
      *  menu items are String(s).
      */
-    public static String createNumberedMenu(String menuName, String selectedOption, ArrayList options) {
+    public static String createNumberedMenu(String menuName, String selectedOption, 
+    		ArrayList<String> options) {
 
         StringBuilder result = new StringBuilder();
 
@@ -617,7 +621,6 @@ public class HTMLformatter {
         for (int i = 0; i < options.size(); i++) {
             result.append("<option value='");
             String menuItem = (String) options.get(i);
-            String menuItemProcessed = encodeForURL(menuItem);
             result.append(Integer.toString(i));
             if (selectedOption != null && selectedOption.equalsIgnoreCase(Integer.toString(i)))
                 result.append("' selected='yes'>\n");
@@ -633,27 +636,42 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create an HTML menu, given an ArrayList of Strings.
      */
-    public static String createMenu(String menuName, String selectedOption, ArrayList options) {
+    public static String createMenu(String menuName, String selectedOption, ArrayList<String> options) {
+    	
         String params = null;
         return createMenu(menuName, selectedOption, options, params);
     }
-
+    
     /** *************************************************************
-     * hyperlink formulas in error messages
+     *  Create an HTML menu of KB names
+     */
+    public static String createKBMenu(String kbName) {
+    	
+    	ArrayList<String> kbnames = new ArrayList<String>();
+    	kbnames.addAll(KBmanager.getMgr().getKBnames());
+    	return(HTMLformatter.createMenu("kb",kbName,kbnames));
+    }
+    
+    /** *************************************************************
+     * hyperlink formulas in error messages.  It assumes that the errors
+     * are in and TreeSet of Strings in kb.errors.  It further
+     * assumes that the error message is given first, followed by
+     * a colon, and then the axiom.  There must be no other colon
+     * characters.
      */
     public static String formatErrors(KB kb, String kbHref) {
-
+    	
         StringBuilder result = new StringBuilder();
-        Iterator it = kb.errors.iterator();
+        Iterator<String> it = kb.errors.iterator();
         while (it.hasNext()) {
-            String err = (String) it.next();
-			err = err.replaceAll("\\n", "<br/>");
-            int p = err.indexOf("(");
-			String begin = "<br/>";
+            String err = it.next();            
+			err = err.replaceAll("\\n", "<br>\\n");
+            int p = err.indexOf(":");
+			String begin = "<br>";
             String end = "";
             if (p > -1) {
-				begin += err.substring(0, p);
-                end = err.substring(p);
+				begin += err.substring(0, p + 1);
+                end = err.substring(p + 1);
                 Formula f = new Formula();
                 f.theFormula = end;
                 end = f.htmlFormat(kbHref);
@@ -661,7 +679,7 @@ public class HTMLformatter {
             else
                 begin = err;
 
-			result.append(begin + end + "<br>");
+			result.append(begin + end + "<P>\\n");
         }
         return result.toString();
     }
@@ -670,7 +688,7 @@ public class HTMLformatter {
      *  Create an HTML menu with an ID, given an ArrayList of
      *  Strings, and possibly multiple selections.
      */
-    public static String createMultiMenu(String menuName, TreeMap options) {
+    public static String createMultiMenu(String menuName, TreeMap<String,String> options) {
 
         StringBuilder result = new StringBuilder();
 
@@ -678,10 +696,11 @@ public class HTMLformatter {
         result.append("<select name=" + menuNameProcessed);
         result.append(" MULTIPLE size=");
         result.append(Integer.toString(options.keySet().size()) + ">\n  ");
-        for (Iterator it = options.keySet().iterator(); it.hasNext();) {
+        Iterator<String> it = options.keySet().iterator();
+        while (it.hasNext()) {
             result.append("<option value='");
-            String menuItem = (String) it.next();
-            String selected = (String) options.get(menuItem);
+            String menuItem = it.next();
+            String selected = options.get(menuItem);
             String menuItemProcessed = encodeForURL(menuItem);
             result.append(menuItemProcessed);
             if (selected != null && selected.equals("yes"))
@@ -698,20 +717,21 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create an HTML menu with an ID, given an ArrayList of Strings.
      */
-    public static String createMenu(String menuName, String selectedOption, ArrayList options, String params) {
+    public static String createMenu(String menuName, String selectedOption, 
+    		ArrayList<String> options, String params) {
 
         StringBuilder result = new StringBuilder();
-        TreeSet menuOptions = new TreeSet();
+        TreeSet<String> menuOptions = new TreeSet<String>();
         menuOptions.addAll(options);
 
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=" + menuNameProcessed);
-        if (params != null) {
-            result.append(" " + params + " ");
-        }
+        if (params != null) 
+            result.append(" " + params + " ");        
         result.append(">\n  ");
-        for (Iterator it = menuOptions.iterator(); it.hasNext();) {
-            String menuItem = (String) it.next();
+        Iterator<String> it = menuOptions.iterator();
+        while (it.hasNext()) {
+            String menuItem = it.next();
             result.append("<option value='");
             String menuItemProcessed = encodeForURL(menuItem);
             result.append(menuItemProcessed);
@@ -739,12 +759,10 @@ public class HTMLformatter {
     public static String formatProofResult(String result, String stmt, String processedStmt,
             String lineHtml, String kbName, String language, int answerOffset) {
 
-        if (result != null && result.toString().length() > 0) {
-        	logger.finer("result=" + result);        
+        if (result != null && result.toString().length() > 0) {       
             BasicXMLparser res = new BasicXMLparser(result.toString());
             if (res != null) {
-            	ArrayList elements = res.elements;
-            	
+            	ArrayList<BasicXMLelement> elements = res.elements;            	
           		return formatProofResult(elements, stmt, processedStmt, lineHtml, kbName, language, answerOffset);
             }
         }        
@@ -753,17 +771,15 @@ public class HTMLformatter {
            
     /** *************************************************************
      */    
-    public static String formatProofResult(ArrayList proof, String stmt, String processedStmt,
+    public static String formatProofResult(ArrayList<BasicXMLelement> proof, String stmt, String processedStmt,
     		String lineHtml, String kbName, String language, int answerOffset) {
 
         	StringBuilder html = new StringBuilder();
-            ProofProcessor pp = new ProofProcessor(proof);
-            logger.finer("PP NumAnswers: " + pp.numAnswers());            
+            ProofProcessor pp = new ProofProcessor(proof);           
             for (int i = 0; i < pp.numAnswers(); i++) {
-                ArrayList proofSteps = pp.getProofSteps(i);
-                logger.finer("proofSteps: " + pp.getProofSteps(i));
-                proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
-                proofSteps = new ArrayList(ProofStep.removeDuplicates(proofSteps));
+                ArrayList<ProofStep> proofSteps = pp.getProofSteps(i);
+                proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
+                proofSteps = new ArrayList<ProofStep>(ProofStep.removeDuplicates(proofSteps));
 
                 if (i != 0)
                     html = html.append(lineHtml + "\n");
@@ -785,8 +801,6 @@ public class HTMLformatter {
 	                        html = html.append(l+1);
 	                        html = html.append(". </td>" + "\n");
 	                        html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language) + "\n");
-						    logger.finest(HTMLformatter.proofTableFormat(stmt,
-										    (ProofStep) proofSteps.get(l), kbName, language));
 	                        html = html.append("</tr>\n" + "\n");
 	                    }
 	                    html = html.append("</table>" + "\n");

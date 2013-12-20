@@ -12,7 +12,9 @@ August 9, Acapulco, Mexico.
 */
 
 package com.articulate.sigma;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 
 /**
  * The <code>StreamTokenizer_s</code> class takes an input stream and

@@ -13,8 +13,18 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import com.articulate.sigma.KB;
 
 /** ***************************************************************
  *  A class that handles the generation of natural language from logic.
@@ -879,16 +889,14 @@ public class LanguageFormatter {
         String nlFormat = "";
         try {
             String template = nlStmtPara(stmt, false, kb, phraseMap, termMap, language, 1);
-            // System.out.println("  > template 1 == " + template);
             if (StringUtil.isNonEmptyString(template)) {
                 String anchorStart = ("<a href=\"" + href + "&term=");
                 Formula f = new Formula();
                 f.read(stmt);
-                //System.out.println("Formula: " + f.theFormula);
-                HashMap varMap = f.computeVariableTypes(kb);
+                FormulaPreprocessor fp = new FormulaPreprocessor(f);
+                HashMap varMap = fp.computeVariableTypes(kb);
                 if ((varMap != null) && !varMap.isEmpty())
                     template = variableReplace(template, varMap, kb, language);
-                // System.out.println("  > template 2 == " + template);
                 StringBuilder sb = new StringBuilder(template);
                 int sblen = sb.length();
                 String titok = "&%";
@@ -1018,9 +1026,8 @@ public class LanguageFormatter {
             }
             return ordinal;
         }
-        else {
-            return ordinal;
-        }
+        else 
+            return ordinal;        
     }
 
     /** **************************************************************
@@ -1042,9 +1049,8 @@ public class LanguageFormatter {
         String result = new String(form);
         boolean isArabic = (language.matches(".*(?i)arabic.*")
                 || language.equalsIgnoreCase("ar"));
-        if (StringUtil.emptyString(varPretty)) {
-            varPretty = varType;
-        }
+        if (StringUtil.emptyString(varPretty)) 
+            varPretty = varType;        
         boolean found = true;
         int occurrenceCounter = 1;
         if (typeMap.keySet().contains(varType)) {
@@ -1156,10 +1162,9 @@ public class LanguageFormatter {
                         }
                     }
                 }
-                else {
+                else 
                     System.out.println("Error in LanguageFormatter.variableReplace() - varString: "
-                                       + varString + " - formula: " + form);
-                }
+                                       + varString + " - formula: " + form);                
             }
         }
         return result;
@@ -1221,9 +1226,8 @@ public class LanguageFormatter {
                         i = sb.indexOf(">", i);
                         if (i > -1) {
                             i++;
-                            while ((i < sbLen) && sb.substring(i, i + 1).matches("\\s")) {
-                                i++;
-                            }
+                            while ((i < sbLen) && sb.substring(i, i + 1).matches("\\s")) 
+                                i++;                            
                         }
                     }
                     if (addFullStop) {
@@ -1261,6 +1265,139 @@ public class LanguageFormatter {
         return ans;
     }
 
+    /** *************************************************************
+     */
+    private String prettyPrint(String term) {
+
+        if (term.endsWith("Fn"))
+            term = term.substring(0,term.length()-2);
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < term.length(); i++) {
+            if (Character.isLowerCase(term.charAt(i)) || !Character.isLetter(term.charAt(i)))
+                result.append(term.charAt(i));
+            else {
+                if (i + 1 < term.length() && Character.isUpperCase(term.charAt(i+1)))
+                    result.append(term.charAt(i));
+                else {
+                    if (i != 0)
+                        result.append(" ");
+                    result.append(Character.toLowerCase(term.charAt(i)));
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
+     *  @return a string with termFormat expressions created for all
+     *  the terms in the knowledge base
+     */
+    private String allTerms(KB kb) {
+
+        StringBuilder result = new StringBuilder();
+        for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+            String term = (String) it.next();
+            result.append("(termFormat EnglishLanguage ");
+            result.append(term);
+            result.append(" \"");
+            result.append(prettyPrint(term));
+            result.append("\")\n");
+        }        
+        return result.toString();
+    }
+
+    /** *************************************************************
+     */
+    private String functionFormat(String term, int i) {
+
+        switch (i) {
+        case 1: return "the &%" + prettyPrint(term) + " of %1";
+        case 2: return "the &%" + prettyPrint(term) + " of %1 and %2";
+        case 3: return "the &%" + prettyPrint(term) + " of %1, %2 and %3";
+        case 4: return "the &%" + prettyPrint(term) + " of %1, %2, %3 and %4";
+        }
+        return "";
+    }
+
+    /** *************************************************************
+     */
+    private String allFunctionsOfArity(KB kb, int i) {
+
+        String parent = "";
+        switch (i) {
+            case 1: parent = "UnaryFunction"; break;
+            case 2: parent = "BinaryFunction"; break;
+            case 3: parent = "TernaryFunction"; break;
+            case 4: parent = "QuaternaryFunction"; break;
+        }
+        if (parent == "")
+            return "";
+        StringBuffer result = new StringBuffer();
+        for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+            String term = (String) it.next();
+            if (kb.childOf(term,parent))
+                result.append("(format EnglishLanguage "
+                              + term + " \""
+                              + functionFormat(term,i)
+                              + "\")\n");
+        }        
+        return result.toString();
+    }
+
+    /** *************************************************************
+     */
+    private String relationFormat(String term, int i) {
+
+        switch (i) {
+            case 2: return ("%2 is %n "
+                            + LanguageFormatter.getArticle(term,1,1,"EnglishLanguage")
+                            + "&%"
+                            + prettyPrint(term)
+                            + " of %1");
+            case 3: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3";
+            case 4: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4";
+            case 5: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4 and %5";
+        }
+        return "";
+    }
+
+    /** *************************************************************
+     */
+    private String allRelationsOfArity(KB kb, int i) {
+
+        String parent = "";
+        switch (i) {
+            case 2: parent = "BinaryPredicate"; break;
+            case 3: parent = "TernaryPredicate"; break;
+            case 4: parent = "QuaternaryPredicate"; break;
+            case 5: parent = "QuintaryPredicate"; break;
+        }
+        if (parent == "")
+            return "";
+        StringBuffer result = new StringBuffer();
+        for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+            String term = (String) it.next();
+            if (kb.childOf(term,parent))
+                result.append("(format EnglishLanguage " + term + " \"" + relationFormat(term,i) + "\")\n");
+        }        
+        return result.toString();
+    }
+
+    /** *************************************************************
+     * Print out set of all format and termFormat expressions
+     */
+    private void generateAllLanguageFormats(KB kb) {
+
+        System.out.println(";;-------------- Terms ---------------");
+        System.out.println(allTerms(kb));
+        for (int i = 1; i < 5; i++) {
+            System.out.println(";;-------------- Arity " + i + " Functions ---------------");
+            System.out.println(allFunctionsOfArity(kb,i));
+            System.out.println(";;-------------- Arity " + i + " Relations ---------------");
+            System.out.println(allRelationsOfArity(kb,i+1));
+        }
+    }
+    
     /** **************************************************************
      */
     public static void main(String[] args) {

@@ -13,7 +13,6 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-
   String submit = request.getParameter("submit");
   String term = request.getParameter("term");
   if (StringUtil.emptyString(term))
@@ -69,9 +68,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
               <img src="pixmaps/1pixel.gif" height="3"> <br>
               <b>KB:&nbsp;</b>
 <%
-              ArrayList kbnames = new ArrayList();
-              kbnames.addAll(KBmanager.getMgr().getKBnames());
-              out.println(HTMLformatter.createMenu("kb",kbName,kbnames));
+out.println(HTMLformatter.createKBMenu(kbName)); 
 %>
               <% if (kb != null) { %>
               <b>Language:&nbsp;</b><%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %>

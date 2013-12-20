@@ -13,8 +13,8 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import java.util.*;
-import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
  /** A trivial structure to hold the elements of a proof step. */
 public class ProofStep {

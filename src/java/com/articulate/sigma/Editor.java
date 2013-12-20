@@ -11,11 +11,9 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 package com.articulate.sigma;
-import java.util.*;
-import java.io.*;
+import com.articulate.sigma.KB;
 
 public class Editor {
-
 
     /** *************************************************************
      * Create an HTML form for editing facts about a term.

@@ -95,9 +95,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             <b><A href="Properties.jsp">Prefs</A></b>&nbsp;]&nbsp;
             <b>KB:&nbsp;
 <%
-            ArrayList kbnames = new ArrayList();
-            kbnames.addAll(KBmanager.getMgr().getKBnames());
-            out.println(HTMLformatter.createMenu("kb",kbName,kbnames)); 
+out.println(HTMLformatter.createKBMenu(kbName)); 
 %>              
             </b>
             <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>

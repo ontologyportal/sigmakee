@@ -2,7 +2,7 @@
 
 <html>
   <head>
-    <title>Sigma KB Browser</title>
+    <title>Sigma KB Term Intersection</title>
   </head>
 <body BGCOLOR=#FFFFFF>
 
@@ -49,9 +49,7 @@ August 9, Acapulco, Mexico.
       <font face="Arial,helvetica" SIZE=-1><b>KB:</b></font>
 
 <%
-  ArrayList kbnames = new ArrayList();
-  kbnames.addAll(KBmanager.getMgr().getKBnames());
-  out.println(HTMLformatter.createMenu("kb",kbName,kbnames)); 
+out.println(HTMLformatter.createKBMenu(kbName)); 
 %>              
             </b>
             <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>

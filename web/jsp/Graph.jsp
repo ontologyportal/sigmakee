@@ -60,9 +60,9 @@ August 9, Acapulco, Mexico.
   }
   String[] items = request.getParameterValues("columns");
   if (items != null) {
-      Iterator it = g.columnList.keySet().iterator();
+      Iterator<String> it = g.columnList.keySet().iterator();
       while (it.hasNext()) {
-          String key = (String) it.next();
+          String key = it.next();
           g.columnList.put(key,"no");
       }
       for (int i = 0; i < items.length; i++)
@@ -91,9 +91,7 @@ August 9, Acapulco, Mexico.
       <font face="Arial,helvetica" SIZE=-1><b>KB:</b></font>
 
 <%
-  ArrayList kbnames = new ArrayList();
-  kbnames.addAll(KBmanager.getMgr().getKBnames());
-  out.println(HTMLformatter.createMenu("kb",kbName,kbnames)); 
+out.println(HTMLformatter.createKBMenu(kbName)); 
 %>              
             </b>
             <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>

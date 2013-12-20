@@ -26,6 +26,26 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  * */
  TaxoModel.kbName = kbName;
 
+ String nonRelTerm = request.getParameter("nonrelation");
+ String relTerm = request.getParameter("relation");
+ String relREmatch = request.getParameter("relREmatch");
+ String nonRelREmatch = request.getParameter("nonRelREmatch");
+ 
+ String term = request.getParameter("term");
+ if (!StringUtil.isNonEmptyString(term)) 
+   term = TaxoModel.defaultTerm;
+
+ if (StringUtil.emptyString(nonRelTerm))
+ 	nonRelTerm = "";
+ if (StringUtil.emptyString(relTerm))
+    relTerm = "";
+ 
+ String KBPOS = request.getParameter("KBPOS");
+ if (KBPOS == null && term == null)
+    KBPOS = "1";
+ else if (KBPOS == null && term != null)
+ 	KBPOS = kb.REswitch(term);
+ 	
  String contract = request.getParameter("contract");
  if (StringUtil.isNonEmptyString(contract)) 
      TaxoModel.collapseNode(contract);
@@ -43,9 +63,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  String kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
  "&simple=" + simple + "&lang=" + language + "&flang=" + flang + "&term=";
 
- String term = request.getParameter("term");
- if (!StringUtil.isNonEmptyString(term)) 
-   term = TaxoModel.defaultTerm;
  TaxoModel.displayTerm(term);
 %>
   <TITLE>TreeView Knowledge Base Browser - <%=term%></TITLE>

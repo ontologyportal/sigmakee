@@ -209,16 +209,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                     throw(new IOException("Row variables not allowed in query: " + stmt));
 		        resultVampire = kb.ask(stmt,timeout,maxAnswers);
             }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("STP")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
-		        resultSTP = kb.askSTP(stmt,timeout,maxAnswers);
-            }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("STP2")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
-		        resultSTP2 = kb.askSTP2(stmt,timeout,maxAnswers);
-            }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SInE")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));

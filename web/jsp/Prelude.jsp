@@ -7,6 +7,7 @@
 <!DOCTYPE html
    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <%
 
@@ -24,7 +25,7 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
-  ArrayList userPages = new ArrayList();
+  ArrayList<String> userPages = new ArrayList<String>();
   userPages.add("AllPictures.jsp");
   userPages.add("Browse.jsp");
   userPages.add("BrowseExtra.jsp");
@@ -71,7 +72,7 @@ if (!userRole.equalsIgnoreCase("administrator") && !userPages.contains(pageStrin
 }
 
 %>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
 <%
 if (StringUtil.isNonEmptyString(userName)) {
     String simple = request.getParameter("simple");

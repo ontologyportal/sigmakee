@@ -15,7 +15,9 @@ August 9, Acapulco, Mexico.
 
 package com.articulate.sigma;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /** ***************************************************************
  * A class designed to mirror the information in a basic XML tag.

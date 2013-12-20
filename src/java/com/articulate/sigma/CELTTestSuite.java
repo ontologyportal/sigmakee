@@ -2,8 +2,11 @@
 
 package com.articulate.sigma;
 
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
+
+import com.articulate.sigma.KB;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -48,10 +51,12 @@ public class CELTTestSuite {
             test.readFile(celtTestFile);
         }
         catch (Exception e) {
-            return("Error in CELTTestSuite.test(): exception reading file: " + celtTestFile + ".\n" + e.getMessage());
+            return("Error in CELTTestSuite.test(): exception reading file: " + 
+                    celtTestFile + ".\n" + e.getMessage());
         }
-        System.out.println("INFO in CELTTestSuite.test(): num formulas: " + String.valueOf(test.formulaSet.size()));
-        Iterator it = test.formulaSet.iterator();
+        System.out.println("INFO in CELTTestSuite.test(): num formulas: " + 
+            String.valueOf(test.formulaMap.keySet().size()));
+        Iterator it = test.formulaMap.keySet().iterator();
         String sentence = null;
         String expectedAnswer = null;
         String celtResult = null;
@@ -63,7 +68,8 @@ public class CELTTestSuite {
         String port = KBmanager.getMgr().getPref("port");
         if (port == null)
             port = "8080";
-        String html = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=EnglishLanguage&kb=" + kb.name;
+        String html = "http://" + hostname + ":" + port + 
+            "/sigma/Browse.jsp?lang=EnglishLanguage&kb=" + kb.name;
 
         while (it.hasNext()) {
             String formula = (String) it.next();

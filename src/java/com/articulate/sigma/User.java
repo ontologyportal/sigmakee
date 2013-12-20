@@ -5,11 +5,15 @@ and Ted Gordon in any writings, briefings, publications, presentations, or
 other representations of any software which incorporates, builds on, or uses this 
 code.  */
 package com.articulate.sigma;
-import java.util.*;
-import java.io.*;
-import java.text.*;
-import com.articulate.sigma.*;
-import java.net.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /** *****************************************************************
  * A class that encrypts a string and checks it against another stored

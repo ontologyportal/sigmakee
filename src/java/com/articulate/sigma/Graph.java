@@ -13,32 +13,37 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
+
+import com.articulate.sigma.KB;
 
 /** Handle operations for creating a graphical representation of partial
  *  ordering relations.  Supports Graph.jsp.  */
 public class Graph {
-
-	private static Logger logger = null;
-    private int graphsize = 0;                     // a limit counter to prevent pathologically large graphs
-    public TreeMap columnList = new TreeMap();     // A map of the fields to display in the graph
-                                                   // in addition to the indented term name with 
-                                                   // option names as keys and "yes", "no" as values.
-
+	
+	  // a limit counter to prevent pathologically large graphs
+    private int graphsize = 0;                    
+    
+      // A map of the fields to display in the graph in addition to the 
+      // indented term name with option names as keys and "yes", "no" as values.
+    public TreeMap<String,String> columnList = new TreeMap<String,String>();
+    
     /** *************************************************************
      */
     public Graph() {
-
-    	if (logger == null)
-    		logger = Logger.getLogger(this.getClass().getName());    	
+  	
         columnList.put("documentation","yes");
         columnList.put("direct-children","yes");
         columnList.put("graph","yes");
@@ -51,7 +56,7 @@ public class Graph {
     private String generateChildrenColumn(KB kb, String term) {
 
         // probably should find all instances of PartialOrderingRelation
-        ArrayList relations = new ArrayList();
+        ArrayList<String> relations = new ArrayList<String>();
         relations.add("instance");
         relations.add("subclass");
         relations.add("subrelation");
@@ -59,7 +64,7 @@ public class Graph {
 
         int count = 0;
         for (int i = 0; i < relations.size(); i++) {
-            ArrayList children = kb.askWithRestriction(0,(String) relations.get(i),2,term);
+            ArrayList<Formula> children = kb.askWithRestriction(0,relations.get(i),2,term);
             if (children != null) 
                 count = count + children.size();
         }
@@ -85,7 +90,7 @@ public class Graph {
     private String generateDocumentationColumn(KB kb, String term, String href, String language) {
 
         String docString = "";
-        ArrayList docStmts = kb.askWithRestriction(0,"documentation",1,term);
+        ArrayList<Formula> docStmts = kb.askWithRestriction(0,"documentation",1,term);
         if (docStmts.size() > 0) {
             Formula doc = (Formula) docStmts.get(0);
             docString = doc.getArgument(3);
@@ -107,10 +112,10 @@ public class Graph {
     public int columnCount() {
 
         int counter = 0;
-        Iterator it = columnList.keySet().iterator();
+        Iterator<String> it = columnList.keySet().iterator();
         while (it.hasNext()) {
-            String col = (String) it.next();
-            String val = (String) columnList.get(col);
+            String col = it.next();
+            String val = columnList.get(col);
             if (val.equals("yes")) 
                 counter++;
         }
@@ -125,13 +130,12 @@ public class Graph {
 
         StringBuffer result = new StringBuffer();
         result.append("<tr bgcolor=#EEEEEE><td></td>");             // a blank column for the indented terms
-        Iterator it = columnList.keySet().iterator();
+        Iterator<String> it = columnList.keySet().iterator();
         while (it.hasNext()) {
-            String col = (String) it.next();
-            String val = (String) columnList.get(col);
-            if (val.equals("yes")) {
-                result.append("<td>" + col + "</td>");
-            }
+            String col = it.next();
+            String val = columnList.get(col);
+            if (val.equals("yes")) 
+                result.append("<td>" + col + "</td>");            
         }
         result.append("</tr>");
         return result.toString();
@@ -147,10 +151,10 @@ public class Graph {
         result.append("<tr>");
         String formattedTerm = "<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>";
         result.append("<td>" + prefix + formattedTerm + "</td>");
-        Iterator it = columnList.keySet().iterator();
+        Iterator<String> it = columnList.keySet().iterator();
         while (it.hasNext()) {
-            String col = (String) it.next();
-            String val = (String) columnList.get(col);
+            String col = it.next();
+            String val = columnList.get(col);
             if (val.equals("yes")) {
                 if (col.equals("documentation")) 
                     result.append("<td><small>" + generateDocumentationColumn(kb,term,kbHref,language) + "</small></td>");
@@ -170,19 +174,19 @@ public class Graph {
      * no more levels in the knowledge base from the given term and 
      * relation.
      */
-    public ArrayList createBoundedSizeGraph(KB kb, String term, String relation, 
+    public ArrayList<String> createBoundedSizeGraph(KB kb, String term, String relation, 
                                         int size, String indentChars, String language) {
 
-        ArrayList result = new ArrayList();
-        ArrayList oldresult = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> oldresult = new ArrayList<String>();
         int above = 1;
         int below = 1;
         int oldlimit = -1;
         while ((result.size() < size) && (result.size() != oldlimit)) {
             oldlimit = result.size();
             oldresult = result;
-            HashSet checkAbove = new HashSet();
-            HashSet checkBelow = new HashSet();
+            HashSet<String> checkAbove = new HashSet<String>();
+            HashSet<String> checkBelow = new HashSet<String>();
             result = createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true,language);
             result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false,language));
             above++;
@@ -204,13 +208,13 @@ public class Graph {
      * @param below the number of levels below the given term in the graph
      * @param indentChars a String of characters to be used for indenting the terms
      */
-    public ArrayList createGraph(KB kb, String term, String relation, 
+    public ArrayList<String> createGraph(KB kb, String term, String relation, 
                                  int above, int below, String indentChars, String language) {
 
         graphsize = 0;
-        ArrayList result = new ArrayList();  // a list of Strings
-        HashSet checkAbove = new HashSet();
-        HashSet checkBelow = new HashSet();
+        ArrayList<String> result = new ArrayList<String>();  // a list of Strings
+        HashSet<String> checkAbove = new HashSet<String>();
+        HashSet<String> checkBelow = new HashSet<String>();
         result.add(createColumnHeader());
         result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true,language));
         result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false,language));
@@ -225,24 +229,21 @@ public class Graph {
      * @param check collects all the terms added to the graph so
      *              far, which is used to prevent cycles
      */
-    private ArrayList createGraphBody(KB kb, Set check, String term, String relation, 
+    private ArrayList<String> createGraphBody(KB kb, Set<String> check, String term, String relation, 
                                       int above, int below, String indentChars,int level, 
                                       boolean show, String language) {
 
-        System.out.println("ENTER Graph.createGraphBody(" + kb.name + ", " + check + ", "
-                           + term + ", " + relation + ", " + above + ", " + below + ", "
-                           + indentChars + ", " + level + ", " + show + ")");
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
         int graphMax = Integer.valueOf(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
         if (!check.contains(term) && graphsize < graphMax) {
             if (above > 0) {
-                ArrayList stmtAbove = new ArrayList();
+                ArrayList<Formula> stmtAbove = new ArrayList<Formula>();
                 if (!DB.emptyString(relation) && relation.equals("all"))
                     stmtAbove = kb.ask("arg",1,term);
                 else 
                     stmtAbove = kb.askWithRestriction(0,relation,1,term);
                 for (int i = 0; i < stmtAbove.size(); i++) {
-                    Formula f = (Formula) stmtAbove.get(i);
+                    Formula f = stmtAbove.get(i);
                     String newTerm = f.getArgument(2);
                     if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
                         result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true,language));		    
@@ -267,9 +268,9 @@ public class Graph {
                     result.add(createGraphEntry(kb,prefix.toString(),kbHref,term,language));
             }
             if (below > 0) {
-                ArrayList stmtBelow = kb.askWithRestriction(0,relation,2,term);
+                ArrayList<Formula> stmtBelow = kb.askWithRestriction(0,relation,2,term);
                 for (int i = 0; i < stmtBelow.size(); i++) {
-                    Formula f = (Formula) stmtBelow.get(i);
+                    Formula f = stmtBelow.get(i);
                     String newTerm = f.getArgument(1);
                     if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
                         result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true,language));            
@@ -294,82 +295,68 @@ public class Graph {
      */
     public boolean createDotGraph(KB kb, String term, String relation, String fname) throws IOException {
 
-        
-        String[] params = {"kb=" + kb, "term=" + term, "relation=" + relation, "fname=" + fname};
-        System.out.println("INFO in Graph.createDotGraph():" + params);
-
         FileWriter fw = null;
         PrintWriter pw = null; 
         String filename = KBmanager.getMgr().getPref("graphDir") + File.separator + fname;
-        logger.finer("Full filename = " + filename);
         try {
             fw = new FileWriter(filename + ".dot");
             pw = new PrintWriter(fw);
-            HashSet result = new HashSet();
-            HashSet start = new HashSet();
-            HashSet checked = new HashSet();
+            HashSet<String> result = new HashSet<String>();
+            HashSet<String> start = new HashSet<String>();
+            HashSet<String> checked = new HashSet<String>();
             start.add(term);
             createDotGraphBody(kb,start,checked,relation,true,result);
             start.add(term);
             createDotGraphBody(kb,start,checked,relation,false,result);
             pw.println("digraph G {");
             pw.println("  rankdir=LR");
-            Iterator it = result.iterator();
+            Iterator<String> it = result.iterator();
             while (it.hasNext()) {
-                String s = (String) it.next();
+                String s = it.next();
                 pw.println(s);
             }
             pw.println("}");
             pw.close();
             fw.close();
-            logger.info(filename + ".dot created.");
             
-            String command = "dot " + filename + ".dot -Tgif";
-            logger.finer("command = " + command);
-            
+            String command = "dot " + filename + ".dot -Tgif";            
             Process proc = Runtime.getRuntime().exec(command);
             BufferedInputStream img = new BufferedInputStream(proc.getInputStream());            
-            RenderedImage image = ImageIO.read(img);
-            
+            RenderedImage image = ImageIO.read(img);            
             File file = new File(filename + ".gif");
-            ImageIO.write(image, "gif", file);
-            logger.info(filename + ".gif created.");
-            
+            ImageIO.write(image, "gif", file);            
             return true;
         }
         catch (java.io.IOException e) {
             throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
         }
         finally {
-            if (pw != null) 
-                pw.close();
-            if (fw != null)
-                fw.close();            
+            if (pw != null) pw.close();
+            if (fw != null) fw.close();            
         }
     }
 
     /** *************************************************************
      * The main body for createGraph().
      */
-    private void createDotGraphBody(KB kb, HashSet startSet, HashSet checkedSet, 
-                                                String relation, boolean upSearch, HashSet result) {
+    private void createDotGraphBody(KB kb, HashSet<String> startSet, HashSet<String> checkedSet, 
+                                   String relation, boolean upSearch, HashSet<String> result) {
 
         while (startSet.size() > 0) {
-            Iterator it = startSet.iterator();
+            Iterator<String> it = startSet.iterator();
             String term = (String) it.next();
                         
             boolean removed = startSet.remove(term);
             if (!removed) 
-                System.out.println("Error in createDotGraphBody(): " + term + " not removed");
-            ArrayList stmts;
-            String newTerm;
+                System.out.println("Error in Graph.createDotGraphBody(): " + term + " not removed");
+            ArrayList<Formula> stmts;
             if (upSearch) 
                 stmts = kb.askWithRestriction(0,relation,1,term);
             else 
                 stmts = kb.askWithRestriction(0,relation,2,term);
             
             for (int i = 0; i < stmts.size(); i++) {
-                Formula f = (Formula) stmts.get(i);
+                Formula f = stmts.get(i);
                 String parent = f.getArgument(2); 
                 String child = f.getArgument(1);                      
                 String s = "  \"" + parent + "\" -> \"" + child + "\";";
@@ -391,7 +378,8 @@ public class Graph {
 
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex ) {
+        } 
+        catch (Exception ex ) {
             System.out.println(ex.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");

@@ -1,5 +1,8 @@
 package com.articulate.sigma;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import com.articulate.sigma.KB;
 
 /** This code is copyright Articulate Software (c) 2003.  
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -23,8 +26,8 @@ public class TaxoModel {
     public static String kbName = "";
     public static String defaultTerm = "Entity";
     public static String termPage = "SimpleBrowse.jsp";
-    public static HashMap nodeMap = new HashMap();
-    public static HashMap rootList = new HashMap();
+    public static HashMap<String,TaxoNode> nodeMap = new HashMap<String,TaxoNode>();
+    public static HashMap<String,TaxoNode> rootList = new HashMap<String,TaxoNode>();
 
     /** ***************************************************************
      * Remove the old tree and start over from termName.
@@ -42,9 +45,9 @@ public class TaxoModel {
     /** ***************************************************************
      * Remove any cached formulas from a list.
      */
-    public static ArrayList removeCached (ArrayList forms) {
+    public static ArrayList<Formula> removeCached (ArrayList<Formula> forms) {
 
-        ArrayList result = new ArrayList();
+        ArrayList<Formula> result = new ArrayList<Formula>();
         for (int i = 0; i < forms.size(); i++) {
             Formula f = (Formula) forms.get(i);
             if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) 
@@ -72,7 +75,7 @@ public class TaxoModel {
             if (rootList.containsKey(parentKey)) 
                 rootList.remove(parentKey);
         }
-        n.parents = new ArrayList();
+        n.parents = new ArrayList<TaxoNode>();
         rootList.put(key,n);
     }
 
@@ -88,11 +91,10 @@ public class TaxoModel {
             System.out.println("Error in TaxoModel.expandParentNodes(): Bad key: " + key);
             return;
         }
-        n.parents = new ArrayList();
+        n.parents = new ArrayList<TaxoNode>();
         rootList.clear();  // = new HashMap();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        ArrayList forms = kb.askWithPredicateSubsumption(relation,1,nodeName);
-        // kb.askWithRestriction(0,relation,1,nodeName);
+        ArrayList<Formula> forms = kb.askWithPredicateSubsumption(relation,1,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
             Formula form = (Formula) forms.get(i);

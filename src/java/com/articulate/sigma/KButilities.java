@@ -15,10 +15,17 @@ http://sigmakee.sourceforge.net
 
 /*************************************************************************************************/
 package com.articulate.sigma;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.regex.*;
+import java.io.FileReader;
+import java.io.LineNumberReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.articulate.sigma.KB;
 
 /** *****************************************************************
  *  Contains utility methods for KBs

@@ -1,7 +1,6 @@
 
 package com.articulate.sigma;
 
-import java.io.*;
 
 public class Login {
 

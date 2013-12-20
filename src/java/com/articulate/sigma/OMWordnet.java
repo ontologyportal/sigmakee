@@ -1,8 +1,17 @@
 package com.articulate.sigma;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import com.articulate.sigma.KB;
 
 public class OMWordnet {
 
@@ -46,7 +55,7 @@ August 9, Acapulco, Mexico.
      */
     private static void generateOMWformat(String fileWithPath) {
 
-        System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file " + fileWithPath);
+        //System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file " + fileWithPath);
         try {
             File f = new File(fileWithPath);
             FileWriter r = new FileWriter(f); 
@@ -95,7 +104,7 @@ August 9, Acapulco, Mexico.
      */
     private static void readOMWformat(String inputFileWithPath, String langName) {
         
-        System.out.println("INFO in WordNetUtilities.readOMWformat(): creating table entry for " + langName);
+        //System.out.println("INFO in WordNetUtilities.readOMWformat(): creating table entry for " + langName);
         HashMap<String,ArrayList<String>> wordnet = new HashMap<String,ArrayList<String>>();
         wordnets.put(langName,wordnet);
         HashMap<String,ArrayList<String>> gloss = new HashMap<String,ArrayList<String>>();
@@ -105,7 +114,7 @@ August 9, Acapulco, Mexico.
         File inputf = new File(inputFileWithPath);
         if (!inputf.exists()) return;
         String line = "";
-        System.out.println("INFO in WordNetUtilities.readOMWformat(): read file " + inputFileWithPath);
+        //System.out.println("INFO in WordNetUtilities.readOMWformat(): read file " + inputFileWithPath);
         try {
             FileReader fr = new FileReader(inputf);
             LineNumberReader lr = new LineNumberReader(fr);
@@ -194,7 +203,7 @@ August 9, Acapulco, Mexico.
      */
     public static String toOMWsynset(String synset) {
         
-        System.out.println("INFO in OMWordnet.toOMWsynset(): " + synset);
+        //System.out.println("INFO in OMWordnet.toOMWsynset(): " + synset);
         if (synset.length() != 9) {
             System.out.println("Error in OMWordnet.toOMWsynset(): synset not 9 digits: " + synset);
             return synset;
@@ -208,7 +217,7 @@ August 9, Acapulco, Mexico.
      */
     public static String fromOMWsynset(String synset) {
         
-        System.out.println("INFO in OMWordnet.fromOMWsynset(): " + synset);
+        //System.out.println("INFO in OMWordnet.fromOMWsynset(): " + synset);
         if (synset.length() != 10) {
             System.out.println("Error in OMWordnet.fromOMWsynset(): synset not 9 digits: " + synset);
             return synset;
@@ -221,14 +230,16 @@ August 9, Acapulco, Mexico.
      */
     public static void readOMWfiles() {
         
-        String kbDir = KBmanager.getMgr().getPref("kbDir");        
+        String kbDir = KBmanager.getMgr().getPref("kbDir");  
+        System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
         for (int i = 0; i < lcodes.size(); i++) {
             String filename = kbDir + File.separator + "OMW" + 
                     File.separator + lcodes.get(i)  + File.separator + 
                     "wn-data-" + lcodes.get(i) + ".tab";
-            System.out.println("INFO in OMWordnet.readOMWfiles(): reading file: " + filename);
+            System.out.print(" " + filename.substring(filename.length()-15));
             readOMWformat(filename,lcodes.get(i));            
         }
+        System.out.println();
     }
     
     /** *************************************************************
@@ -236,7 +247,7 @@ August 9, Acapulco, Mexico.
     public static void generateOMWOWLformat(KB kb) {
         
         String line;
-        System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file ");
+        //System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file ");
         try {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             File f = new File(kbDir + File.separator + "OMW" + 
@@ -266,7 +277,7 @@ August 9, Acapulco, Mexico.
      */
     public static String formatWords(String term, String kbName, String lang, String href) {
 
-        System.out.println("INFO in OMWordnet.formatWords(): " + term + " " + lang);
+        //System.out.println("INFO in OMWordnet.formatWords(): " + term + " " + lang);
         HashMap<String,ArrayList<String>> wordnet = wordnets.get(languageToCode(lang));
         if (wordnet == null || wordnet.size() == 0)
             return "";

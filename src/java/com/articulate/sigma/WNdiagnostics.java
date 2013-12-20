@@ -12,9 +12,11 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import java.util.*;
-import java.io.*;
-import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import com.articulate.sigma.KB;
 
 /** *****************************************************************
  * A class that finds problems in WordNet to KB mappings.  It is not meant
@@ -168,9 +170,9 @@ public class WNdiagnostics {
                                 HashSet SUMOtaxonomy = new HashSet();
                                 String arrow = "->";
                                 if (avp.attribute.equals("hypernym")) 
-                                    SUMOtaxonomy = (HashSet) kb.parents.get(bareSUMOterm);                                                                  
+                                    SUMOtaxonomy = (HashSet) kb.kbCache.getParents(bareSUMOterm);                                                                  
                                 if (avp.attribute.equals("hyponym")) {
-                                    SUMOtaxonomy = (HashSet) kb.children.get(bareSUMOterm);                                
+                                    SUMOtaxonomy = (HashSet) kb.kbCache.getChildren(bareSUMOterm);                                
                                     arrow = "<-";
                                 }
                                 //System.out.println("taxonomy: " + SUMOtaxonomy);

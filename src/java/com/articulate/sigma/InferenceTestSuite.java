@@ -1,10 +1,18 @@
 package com.articulate.sigma;
 
-import java.util.*;
-import java.io.*;
-//import javax.servlet.jsp.*;
-import TPTPWorld.SystemOnTPTP;
-import TPTPWorld.InterfaceTPTP;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+
+import TPTPWorld.*;
+
+import com.articulate.sigma.KB;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -133,8 +141,12 @@ public class InferenceTestSuite {
         conjectureFormula = new Formula();
         conjectureFormula.theFormula = processedStmt;
         conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
-        conjectureFormula.tptpParse(true,kb);
-        String kbFileName = kb.writeTPTPFile(null,conjectureFormula,true,
+        SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+    	stptp._f = conjectureFormula;
+    	stptp.tptpParse(conjectureFormula,true,kb);
+    	SUMOKBtoTPTPKB stptpkb = new SUMOKBtoTPTPKB();
+    	stptpkb.kb = kb;
+        String kbFileName = stptpkb.writeTPTPFile(null,conjectureFormula,true,
                                              systemChosen,false);
         InterfaceTPTP.init();
         String res = InterfaceTPTP.callTPTP(TPTPlocation, systemChosen, kbFileName,
@@ -209,11 +221,6 @@ public class InferenceTestSuite {
         File allResultsFile = new File(outputDir, "TestSuiteResults");
         FileWriter afw = new FileWriter(allResultsFile);
         PrintWriter apw = new PrintWriter(afw);
-        if (systemChosen.equals("STP2")) {
-            TreeSet<String> processedForms = kb.preProcess(kb.formulaMap.keySet());
-            STP2 stp2 = new STP2(processedForms);
-            kb.engineMap.put("STP2",stp2);
-        }
 
         System.out.println("INFO in InferenceTestSuite.test(): number of files: " + files.size());
         for (int i = 0; i < files.size(); i++) {
@@ -231,17 +238,20 @@ public class InferenceTestSuite {
                     test.readFile(f.getCanonicalPath());
                 }
                 catch (Exception e) {
-                    return("Error in InferenceTestSuite.test(): exception reading file: " + f.getCanonicalPath() + ". " + e.getMessage());
+                    return("Error in InferenceTestSuite.test(): exception reading file: " + 
+                        f.getCanonicalPath() + ". " + e.getMessage());
                 }
                 File outfile = new File(outputDir, f.getName());
                 try {
                     test.writeFile(outfile.getCanonicalPath());
                 }
                 catch (IOException ioe) {
-                    return("Error in InferenceTestSuite.test(): exception writing file: " + outfile.getCanonicalPath() + ". " + ioe.getMessage());
+                    return("Error in InferenceTestSuite.test(): exception writing file: " + 
+                        outfile.getCanonicalPath() + ". " + ioe.getMessage());
                 }
-                System.out.println("INFO in InferenceTestSuite.test(): num formulas: " + String.valueOf(test.formulaSet.size()));
-                Iterator it = test.formulaSet.iterator();
+                System.out.println("INFO in InferenceTestSuite.test(): num formulas: " + 
+                    String.valueOf(test.formulaMap.keySet().size()));
+                Iterator it = test.formulaMap.keySet().iterator();
                 String note = f.getName();
                 String query = null;
                 ArrayList answerList = new ArrayList();
@@ -258,12 +268,8 @@ public class InferenceTestSuite {
                         answerList.add(formula.substring(8,formula.length()-1));
                     else if (formula.startsWith("(time")) 
                         timeout = Integer.parseInt(formula.substring(6,formula.length()-1));
-                    else {
-                        if (systemChosen.equals("STP2")) 
-                            kb.tellSTP2(formula);   
-                        else
-                            kb.tell(formula);
-                    }
+                    else 
+                    	kb.tell(formula);                    
                 }
                 maxAnswers = answerList.size();
                 try {
@@ -273,7 +279,8 @@ public class InferenceTestSuite {
                     ArrayList theQueries = null;
                     theQuery.theFormula = query;
 
-                    theQueries = theQuery.preProcess(true,kb);
+                    FormulaPreprocessor fp = new FormulaPreprocessor(theQuery);
+                    theQueries = fp.preProcess(true,kb);
                     Iterator q = theQueries.iterator();
                     while (q.hasNext()) {
                         processedStmt = ((Formula)q.next()).theFormula;
@@ -282,11 +289,8 @@ public class InferenceTestSuite {
                             System.out.println("INFO in InferenceTestSuite.test(): Query is posed to Vampire ");
                             proof = kb.ask(processedStmt,timeout,maxAnswers);                        
                         }
-                        else if (systemChosen.equals("STP2")) 
-                            proof = kb.askSTP2(processedStmt,timeout,maxAnswers);                       
                         else  // SoTPTP:
                             proof = askSoTPTP(processedStmt,timeout,maxAnswers,systemChosen,kb, TPTPlocation);                       
-
                         duration = System.currentTimeMillis() - start;                        
                         System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
                         System.out.println(duration);
@@ -297,7 +301,8 @@ public class InferenceTestSuite {
                     result = result.append("<br>Error in InferenceTestSuite.test() while executing query " +
 					   f.getName() + ": " + ex.getMessage() + "<br>");
                 }
-                String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+                String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'>" +
+                    "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
                 String rfn = f.getName();
                 String resultsFilename = rfn.substring(0,rfn.length()-3) + "-res.html";
                 File resultsFile = new File(outputDir, resultsFilename);
@@ -311,12 +316,8 @@ public class InferenceTestSuite {
                 }
                 finally {
                     try {
-                        if (pw != null) {
-                            pw.close();
-                        }
-                        if (fw != null) {
-                            fw.close();
-                        }
+                        if (pw != null) { pw.close(); }
+                        if (fw != null) { fw.close(); }
                     }
                     catch (Exception ex) {
                     }

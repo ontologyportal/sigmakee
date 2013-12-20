@@ -6,8 +6,12 @@
  */
 package com.articulate.sigma;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Stack;
-import java.io.*;
 
 /** *****************************************************************   
  * <code>SimpleDOMParser</code> is a highly-simplified XML DOM

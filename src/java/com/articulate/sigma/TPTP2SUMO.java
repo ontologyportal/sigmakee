@@ -15,8 +15,15 @@ http://sigmakee.sourceforge.net
 /*************************************************************************************************/
 package com.articulate.sigma;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Vector;
 import tptp_parser.*;
 import TPTPWorld.*;
 

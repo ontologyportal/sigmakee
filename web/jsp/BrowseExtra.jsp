@@ -28,11 +28,11 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
   String formattedFormula = null;
  int start = 0;
  String startString = request.getParameter("start");
- if (Formula.isNonEmptyString(startString))
+ if (!StringUtil.emptyString(startString))
      start = Integer.decode(startString).intValue();
  int arg = 1;
  String argString = request.getParameter("arg");
- if (Formula.isNonEmptyString(argString))
+ if (!StringUtil.emptyString(argString))
      arg = Integer.decode(argString).intValue();
  String type = request.getParameter("type");
  String term = request.getParameter("term");

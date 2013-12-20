@@ -29,7 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Krystof Hoder - Minor changes by Adam Pease
@@ -130,9 +131,9 @@ public class SInE extends InferenceEngine {
             KIF kif = new KIF();
             kif.setParseMode(KIF.RELAXED_PARSE_MODE);
             kif.readFile( kbFile.getCanonicalPath());
-            if (!kif.formulaSet.isEmpty()) {
-                formulas.ensureCapacity(kif.formulaSet.size());
-                loadFormulas(kif.formulaSet);
+            if (!kif.formulaMap.keySet().isEmpty()) {
+                formulas.ensureCapacity(kif.formulaMap.keySet().size());
+                loadFormulas(kif.formulaMap.keySet());
             }
         }
     }

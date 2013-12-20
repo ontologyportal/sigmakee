@@ -14,9 +14,18 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
 
 /*************************************************************************************************/
 package com.articulate.sigma;
-import java.io.*;
-import java.util.*;
-import java.util.regex.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import com.articulate.sigma.KB;
 
 /** A class that generates a GUI for elements of the ontology. */
 public class EditGUI {
@@ -173,7 +182,7 @@ public class EditGUI {
                 ArrayList al2 = new ArrayList();
                 String className = kb.getArgTypeClass(r,j);
                 if (className.endsWith("+"))
-                    al2.addAll(kb.getAllSubClasses(className.substring(0,className.length()-1)));
+                    al2.addAll(kb.kbCache.getChildren(className.substring(0,className.length()-1)));
                 else
                     al2.addAll(kb.getAllInstances(className));
                 al.add(al2);
@@ -224,7 +233,7 @@ public class EditGUI {
                 ArrayList al2 = new ArrayList();
                 String className = kb.getArgTypeClass(r,j);
                 if (className.endsWith("+"))
-                    al2.addAll(kb.getAllSubClasses(className.substring(0,className.length()-1)));
+                    al2.addAll(kb.kbCache.getChildren(className.substring(0,className.length()-1)));
                 else
                     al2.addAll(kb.getAllInstances(className));
                 al.add(al2);
@@ -360,7 +369,8 @@ public class EditGUI {
         try {
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             System.out.println(e.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");

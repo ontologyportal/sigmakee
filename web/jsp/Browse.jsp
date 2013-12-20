@@ -27,15 +27,15 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  String nonRelREmatch = request.getParameter("nonRelREmatch");
  String KBPOS = request.getParameter("KBPOS");
 
- if (!Formula.isNonEmptyString(relREmatch))
+ if (StringUtil.emptyString(relREmatch))
   	relREmatch = "";
- if (!Formula.isNonEmptyString(nonRelREmatch))
+ if (StringUtil.emptyString(nonRelREmatch))
  	nonRelREmatch = "";
- if (!Formula.isNonEmptyString(term))
+ if (StringUtil.emptyString(term))
     term = "";
- if (!Formula.isNonEmptyString(nonRelTerm))
+ if (StringUtil.emptyString(nonRelTerm))
  	nonRelTerm = "";
- if (!Formula.isNonEmptyString(relTerm))
+ if (StringUtil.emptyString(relTerm))
     relTerm = "";
  if (flang.equals("OWL")) {
     response.sendRedirect("http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 

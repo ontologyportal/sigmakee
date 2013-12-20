@@ -30,15 +30,13 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 //----Determine Location
   String location = request.getParameter("systemOnTPTP");  
   if (location == null) {
-      if (tptpWorldExists) { 
+      if (tptpWorldExists)
           location = "local";
-      } else if (builtInExists) {
+      else if (builtInExists) 
           location = "local";
-      } else {
-          location = "remote";
-      }
+      else 
+          location = "remote";      
   }
-
 %>
 
 <HTML>
@@ -71,33 +69,24 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 //----Toggle to either the local/builtin/remote list by showing new and hiding current
     function toggleList (location) {
-         if (current_location == location) {
-             return;
-         }
+        
+         if (current_location == location) 
+             return;         
          var obj;
          obj = window.document.getElementById("systemList" + current_location);
-         if (obj) {
-             obj.setAttribute("style","display:none");
-         }
+         if (obj) 
+             obj.setAttribute("style","display:none");         
          current_location = location;
          obj = window.document.getElementById("systemList" + location);
-         if (obj) {
-             obj.setAttribute("style","display:inline");
-         }
+         if (obj) 
+             obj.setAttribute("style","display:inline");         
     }
   //]]></script>
 
-
 </HEAD>
 <%
-    System.out.println("INFO in AskTell.jsp");
-    StringBuffer status = new StringBuffer();
-    ArrayList processedStmts = null;
-
     String req = request.getParameter("request");
     String chosenEngine = request.getParameter("inferenceEngine");
-
-//unused:    String href = "Browse.jsp?kb=" + kbName + "&lang=" + language + "&term=";
 
     boolean syntaxError = false;
     boolean english = false;
@@ -125,12 +114,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   String systemChosenLocal = request.getParameter("systemChosenLocal");
   String systemChosenRemote = request.getParameter("systemChosenRemote");
   String systemChosenBuiltIn = request.getParameter("systemChosenBuiltIn");
+  
   if (systemChosenLocal == null) 
       systemChosenLocal = defaultSystemLocal;
-  
   if (systemChosenRemote == null) 
       systemChosenRemote = defaultSystemRemote;
-  
   if (systemChosenBuiltIn == null) 
       systemChosenBuiltIn = defaultSystemBuiltIn;
   
@@ -139,14 +127,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
   if (systemChosenLocal == null) 
       systemChosenLocal = defaultSystemLocal;
-  
   if (systemChosenRemote == null) 
       systemChosenRemote = defaultSystemRemote;
-  
   if (systemChosenBuiltIn == null) 
       systemChosenBuiltIn = defaultSystemBuiltIn;
-  
-
   if (location.equals("local")) {
       if (tptpWorldExists)  
           systemChosen = systemChosenLocal;
@@ -156,17 +140,14 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   else 
       systemChosen = systemChosenRemote;
   
-
   if (tstpFormat == null) 
       tstpFormat = "";
   
-    String resultVampire = null;        
-    String resultSoTPTP = null;        
-
-    String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'>" +
+  String resultVampire = null;        
+  String resultSoTPTP = null;        
+  String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'>" +
                       "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
 %>
-
 <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF>
 <FORM name="AskTell" ID="AskTell" action="InferenceTestSuite.jsp" METHOD="POST">
     <TABLE width="95%" cellspacing="0" cellpadding="0">
@@ -180,9 +161,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             <b><A href="Properties.jsp">Prefs</A></b>&nbsp;]&nbsp;
             <b>KB:&nbsp;
 <%
-            ArrayList kbnames = new ArrayList();
-            kbnames.addAll(KBmanager.getMgr().getKBnames());
-            out.println(HTMLformatter.createMenu("kb",kbName,kbnames)); 
+            out.println(HTMLformatter.createKBMenu(kbName)); 
 %>              
             </b>
             <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
@@ -257,9 +236,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 %>
     <br>
   </DIV>
-<%
-//----End System selection
-%>
     <INPUT type="submit" name="request" value="Test"><br><br>
     <INPUT TYPE="hidden" NAME="test" VALUE="inference">
 </FORM>
@@ -267,7 +243,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
-
   StringBuffer sb = new StringBuffer();
   String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
   if (inferenceTestDir == null)
@@ -279,16 +254,12 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           if (chosenEngine.equalsIgnoreCase("Vampire")) {
               out.println("(Testing Vampire-KIF)<br>");
               sb = sb.append(InferenceTestSuite.test(kb, "KIF-Vampire", timeout));
-          }          
-          if (chosenEngine.equalsIgnoreCase("STP2")) {
-              out.println("(Testing STP2)<br>");
-              sb = sb.append(InferenceTestSuite.test(kb, "STP2", timeout));
-          }          
-          if (chosenEngine.equalsIgnoreCase("LEO")) {
-              out.println("(Testing LEO)<br>");
-	      THF thf = new THF();
-              sb = sb.append(thf.testLEO(kb).replaceAll("\\n","<br>"));
-          }          
+          }               
+          //if (chosenEngine.equalsIgnoreCase("LEO")) {
+          //    out.println("(Testing LEO)<br>");
+          //    THF thf = new THF();
+          //    sb = sb.append(thf.testLEO(kb).replaceAll("\\n","<br>"));
+          //}          
           if (chosenEngine.equalsIgnoreCase("SoTPTP")) {
               if (location.equalsIgnoreCase("local")&&(!tptpWorldExists)&&builtInExists) {
                   out.println("(Testing built-in SystemOnTPTP)<br>");
@@ -308,13 +279,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       if (test != null && test.equalsIgnoreCase("english")) 
           sb = sb.append(CELTTestSuite.test(kb));
   }
-%>
-
-<%
   out.println(sb.toString());
 %>
 <p>
-
 <%@ include file="Postlude.jsp" %>
-
- 

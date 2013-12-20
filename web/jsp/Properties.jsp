@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include    file="Prelude.jsp" %>
 
 <% 
 if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))         
@@ -160,8 +160,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
   String testOutputDir = request.getParameter("testOutputDir");
   if (testOutputDir != null) {
-  	  changed = true;
-  	  KBmanager.getMgr().setPref("testOutputDir", testOutputDir);
+        changed = true;
+        KBmanager.getMgr().setPref("testOutputDir", testOutputDir);
   }
   else {
       testOutputDir = KBmanager.getMgr().getPref("testOutputDir");
@@ -357,8 +357,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                       kb.reload();
                   }
                   else if (callCache) {
-                      System.out.println("INFO in Properties.jsp: writing the cache file and reloading Vampire");
-                      kb.cache();
+                      System.out.println("INFO in Properties.jsp: writing the cache file and reloading Vampire");                      
+                      kb.kbCache.cache();
                       kb.loadVampire();
                   }
                   else if (callLoadVampire) {
@@ -369,7 +369,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                       // If we reach this point, the only action required is that a TPTP translation be
                       // generated and stored in the Formula.theTPTPFormula field for each formula.
                       System.out.println("INFO in Properties.jsp: generating TPTP for all formulas");
-                      kb.tptpParse();
+                      SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
+                      skbtptpkb.kb = kb;
+                      skbtptpkb.tptpParse();
                   }
               }
           }
@@ -437,7 +439,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <label for="logLevel">
     <INPUT type="text" name="logLevel" value=<%=logLevel %> >
     Level of messages to be logged (can be severe, warning, info, config, finest) </label><P>
-	
+    
     <label for="overwrite">                                                   
     <INPUT type="radio" name="overwrite" value="yes" <%  // default is no
     overwrite = mgr.getPref("overwrite");

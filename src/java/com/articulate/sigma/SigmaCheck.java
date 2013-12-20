@@ -34,11 +34,6 @@ import javax.mail.internet.MimeMessage;
  */
 public class SigmaCheck {
 
-	// Will create a file object called emailSent.txt located in the Sigma home
-	// directory
-	// private static File emailSentFile = new File(System.getenv("SIGMA_HOME")
-	// + File.separator + "emailSent.txt");
-
     /** ***************************************************************
      *  checkURL checks whether an inputed URL contains the string "SUMO" somewhere in it's HTML body
      *  @param targetURL is a URL to be checked
@@ -67,11 +62,7 @@ public class SigmaCheck {
         }
     }
 
-	/**
-	 * ***************************************************************
-	 * 
-	 * @param args
-	 * @throws InterruptedException
+	/** ***************************************************************
 	 */
 	public static void checkSite(String url, String email)
 			throws InterruptedException {
@@ -91,8 +82,8 @@ public class SigmaCheck {
 					Properties props = new Properties();
 					// props.put("mail.smtp.host", "owa.mygazoo.com");
 					// props.put("mail.from", "first.last@reardencommerce.com");
-					props.put("mail.smtp.host", "owa.mygazoo.com");
-					props.put("mail.from", "adam.pease@reardencommerce.com");
+					props.put("mail.smtp.host", "outbound.att.net");
+					props.put("mail.from", "apease@articulatesoftware.com");
 					Session session = Session.getInstance(props, null);
 
 					MimeMessage msg = new MimeMessage(session);
@@ -112,7 +103,8 @@ public class SigmaCheck {
             catch (IOException ioex) {
                 System.out.println("File creation failed, exception: " + ioex);
             }
-		} else if (emailSentFile.exists() && sumoUp) {
+		} 
+		else if (emailSentFile.exists() && sumoUp) {
             try {
                 //delete file
                 boolean deleted = emailSentFile.delete();
@@ -123,9 +115,12 @@ public class SigmaCheck {
         }
     }
 
+	/** ***************************************************************
+	 */
 	public static void main(String[] args) {
-		String url = "http://sigma.ontologyportal.org:4010/sigma/KBs.jsp";
-		String email = "adam.pease@reardencommerce.com";
+		
+		String url = "http://sigma-01.cim3.net:8080/sigma/KBs.jsp";
+		String email = "apease@articulatesoftware.com";
 
 		for (int i = 0; i < args.length; i++) {
 			if (args[i].contains("http://"))
@@ -133,10 +128,10 @@ public class SigmaCheck {
 			else if (args[i].contains("@"))
 				email = args[i];
 		}
-
 		try {
 			checkSite(url, email);
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

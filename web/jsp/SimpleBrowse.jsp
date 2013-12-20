@@ -1,15 +1,18 @@
 <%@ include file="Prelude.jsp" %>
 <html>
 <%
- String term = request.getParameter("term");
- String nonRelTerm = request.getParameter("nonrelation");
- String relTerm = request.getParameter("relation");
+String term = request.getParameter("term");
+String nonRelTerm = request.getParameter("nonrelation");
+String relTerm = request.getParameter("relation");
+String relREmatch = request.getParameter("relREmatch");
+String nonRelREmatch = request.getParameter("nonRelREmatch");
+String KBPOS = request.getParameter("KBPOS");
  
- if (!Formula.isNonEmptyString(term))
+ if (StringUtil.emptyString(term))
      term = "";
- if (!Formula.isNonEmptyString(nonRelTerm))
+ if (StringUtil.emptyString(nonRelTerm))
  	nonRelTerm = "";
- if (!Formula.isNonEmptyString(relTerm))
+ if (StringUtil.emptyString(relTerm))
     relTerm = "";
 
 %>

@@ -133,10 +133,11 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
                  "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" +
                  "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
  }
- else if (kb != null && term != null && kb.containsRE(term) && KBPOS.equals("2") && relREmatch == null) {
+ else if (kb != null && term != null && kb.containsRE(term) && 
+         KBPOS.equals("2") && relREmatch == null) {
  	ArrayList<String> matches = kb.getREMatch(term);
- 	ArrayList<String> relMatches = kb.getAllRelTerms(matches);
- 	ArrayList<String> nonRelMatches = kb.getAllNonRelTerms(matches);
+ 	ArrayList<String> relMatches = kb.kbCache.getAllRelTerms(matches);
+ 	ArrayList<String> nonRelMatches = kb.kbCache.getAllNonRelTerms(matches);
  	relREmatch = relMatches.size()>0?relMatches.get(0):"";
  	nonRelREmatch = nonRelMatches.size()>0?nonRelMatches.get(0):"";
  	show.append(HTMLformatter.showREMatches(kb, relREmatch, nonRelREmatch, term));

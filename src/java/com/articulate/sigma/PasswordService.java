@@ -6,11 +6,15 @@ other representations of any software which incorporates, builds on, or uses thi
 code.  */
 package com.articulate.sigma;
 
-import java.io.UnsupportedEncodingException;
-import java.util.*;
-import java.io.*;
-import java.text.*;
-import com.articulate.sigma.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 /** *****************************************************************
  * A class that encrypts a string and checks it against another stored

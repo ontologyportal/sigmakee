@@ -53,7 +53,7 @@ SUMO mapping: <a href="Browse.jsp?<%= params%>&term=<%= baseSUMOterm %>"><%= bas
 <a href="http://www.casta-net.jp/~kuribayashi/cgi-bin/wn-multi.cgi?term=<%=synset %>">Browse</a> Open Multilingual Wordnet site<P>
 
 <small>
-Source language data from:
+Source language data (linked through OMW) from:
 <A HREF="http://fjalnet.com/">Albanet</A>,
 <A HREF="http://www.globalwordnet.org/AWN/">Arabic WordNet (AWN)</A>,
 <A HREF="http://lope.linguistics.ntu.edu.tw/cwn/">Chinese Wordnet (Taiwan)</A>,
@@ -61,7 +61,7 @@ Source language data from:
 <A HREF="http://wordnet.princeton.edu/">Princeton WordNet</A>,
 <A HREF="http://www.pwn.ir/">Persian Wordnet</A>,
 <A HREF="http://www.ling.helsinki.fi/en/lt/research/finnwordnet/">FinnWordNet</A>,
-<A HREF="http://alpage.inria.fr/%7Esagot/wolf-en.html">WOLF (Wordnet Libre du Français)</A>,
+<A HREF="http://alpage.inria.fr/%7Esagot/wolf-en.html">WOLF (Wordnet Libre du Fran&#231;ais)</A>,
 <A HREF="http://cl.haifa.ac.il/projects/mwn/index.shtml">Hebrew Wordnet</A>,
 <A HREF="http://multiwordnet.fbk.eu/english/home.php">MultiWordNet</A>,
 <A HREF="http://nlpwww.nict.go.jp/wn-ja/">Japanese Wordnet</A>,

@@ -15,11 +15,22 @@ Systems, August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
-import java.io.*;
-import java.text.*;
-import java.util.*;
-import java.util.logging.*;
-import java.util.regex.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import com.articulate.sigma.KB;
 
 /** ************************************************************
  * Handle operations on an individual formula.  This includes
@@ -104,12 +115,10 @@ public class Formula implements Comparable {
      *  count on it being set to a value other than -1L.
      */
     public long endFilePosition = -1L;
-	private ArrayList<String> errors = new ArrayList<String>();
+	public ArrayList<String> errors = new ArrayList<String>();
 
     /** The formula. */
     public String theFormula;
-
-	private static Logger logger = null;
 	
     public static final String termMentionSuffix  = "__m";
     public static final String classSymbolSuffix  = "__t";  // for the case when a class is used as an instance
@@ -135,6 +144,7 @@ public class Formula implements Comparable {
 	public ArrayList<String> getErrors() {
 		return this.errors;
 	}
+	
     /** ***************************************************************
      * Should be false if this Formula occurs in and was loaded from
      * sourceFile.  Should be true if this Formula does not actually
@@ -181,7 +191,7 @@ public class Formula implements Comparable {
     public ArrayList<String> getTheTptpFormulas() {
 
         if (theTptpFormulas == null)
-            theTptpFormulas = new ArrayList();
+            theTptpFormulas = new ArrayList<String>();
         return theTptpFormulas;
     }
 
@@ -204,11 +214,17 @@ public class Formula implements Comparable {
 
     /** *****************************************************************
      */
-	public Formula() {
-		
-		if (logger == null)
-			logger = Logger.getLogger(this.getClass().getName());
+	public Formula(Formula f) {
+		this.endLine = f.endLine;
+		this.startLine = f.startLine;
+		this.sourceFile = f.sourceFile.intern();
+		this.theFormula = f.theFormula.intern();
 	}
+	
+    /** *****************************************************************
+     */
+	public Formula() {
+	}	
 	
     /** ***************************************************************
      * Returns a List of the clauses that together constitute the
@@ -219,19 +235,10 @@ public class Formula implements Comparable {
      */
     public ArrayList getTheClausalForm() {
 
-		logger.entering("Formula", "getTheClausalForm");
-        try {
-            if (theClausalForm == null) {
-                if (isNonEmptyString(theFormula))
-                    theClausalForm = Clausifier.toNegAndPosLitsWithRenameInfo(this);
-            }
+        if (theClausalForm == null) {
+            if (!StringUtil.emptyString(theFormula))
+                theClausalForm = Clausifier.toNegAndPosLitsWithRenameInfo(this);
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
-        }
-
-		logger.exiting("Formula", "getTheClausalForm", theClausalForm);
         return theClausalForm;
     }
 
@@ -288,7 +295,7 @@ public class Formula implements Comparable {
      *
      * @return A SUO-KIF variable (String), which may be just the
      * input variable.
-     */
+     
     public String getOriginalVar(String var) {
 
         Map varmap = getVarMap();
@@ -296,14 +303,7 @@ public class Formula implements Comparable {
             return var;
         return Clausifier.getOriginalVar(var, varmap);
     }
-
-    /** ***************************************************************
-     * For any given formula, stop generating new pred var
-     * instantiations and row var expansions if this threshold value
-     * has been exceeded.  The default value is 2000.
-     */
-    private static final int AXIOM_EXPANSION_LIMIT = 2000;
-
+*/
     /** ***************************************************************
      * This constant indicates the maximum predicate arity supported
      * by the current implementation of Sigma.
@@ -335,7 +335,7 @@ public class Formula implements Comparable {
     public String createID() {
 
         String fname = sourceFile;
-        if (StringUtil.isNonEmptyString(fname) && fname.lastIndexOf(File.separator) > -1)
+        if (!StringUtil.emptyString(fname) && fname.lastIndexOf(File.separator) > -1)
             fname = fname.substring(fname.lastIndexOf(File.separator)+1);
         int hc = theFormula.hashCode();
         String result = null;
@@ -343,10 +343,6 @@ public class Formula implements Comparable {
             result = "N" + (new Integer(hc)).toString().substring(1) + fname;
         else
             result = (new Integer(hc)).toString() + fname;
-
-		// logger.finest("ID Created: " + result + "; For the formula: " +
-		// theFormula);
-
         return result;
     }
 
@@ -391,59 +387,51 @@ public class Formula implements Comparable {
      * @return boolean
      */
     public boolean isBalancedList() {
+    	
         boolean ans = false;
-        try {
-            if (this.listP()) {
-                if (this.empty())
-                    ans = true;
-                else {
-                    String input = this.theFormula.trim();
-                    List quoteChars = Arrays.asList('"', '\'');
-                    int i = 0;
-                    int len = input.length();
-                    int end = len - 1;
-                    int pLevel = 0;
-                    int qLevel = 0;
-                    char prev = '0';
-                    char ch = prev;
-                    boolean insideQuote = false;
-                    char quoteCharInForce = '0';
-                    while (i < len) {
-                        ch = input.charAt(i);
-                        if (!insideQuote) {
-                            if (ch == '(')
-                                pLevel++;
-                            else if (ch == ')')
-                                pLevel--;
-                            else if (quoteChars.contains(ch) && (prev != '\\')) {
-                                insideQuote = true;
-                                quoteCharInForce = ch;
-                                qLevel++;
-                            }
+        if (this.listP()) {
+            if (this.empty())
+                ans = true;
+            else {
+                String input = this.theFormula.trim();
+                List quoteChars = Arrays.asList('"', '\'');
+                int i = 0;
+                int len = input.length();
+                int end = len - 1;
+                int pLevel = 0;
+                int qLevel = 0;
+                char prev = '0';
+                char ch = prev;
+                boolean insideQuote = false;
+                char quoteCharInForce = '0';
+                while (i < len) {
+                    ch = input.charAt(i);
+                    if (!insideQuote) {
+                        if (ch == '(')
+                            pLevel++;
+                        else if (ch == ')')
+                            pLevel--;
+                        else if (quoteChars.contains(ch) && (prev != '\\')) {
+                            insideQuote = true;
+                            quoteCharInForce = ch;
+                            qLevel++;
                         }
-                        else if (quoteChars.contains(ch)
-                                 && (ch == quoteCharInForce)
-                                 && (prev != '\\')) {
-                            insideQuote = false;
-                            quoteCharInForce = '0';
-                            qLevel--;
-                        }
-                        prev = ch;
-                        i++;
                     }
-                    ans = ((pLevel == 0) && (qLevel == 0));
-					// logger.finest("qLevel == " + qLevel);
-					// logger.finest("pLevel == " + pLevel);
+                    else if (quoteChars.contains(ch)
+                             && (ch == quoteCharInForce)
+                             && (prev != '\\')) {
+                        insideQuote = false;
+                        quoteCharInForce = '0';
+                        qLevel--;
+                    }
+                    prev = ch;
+                    i++;
                 }
+                ans = ((pLevel == 0) && (qLevel == 0));
             }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
         }
         return ans;
     }
-
 
     /** ***************************************************************
      * @return the LISP 'car' of the formula as a String - the first
@@ -458,80 +446,66 @@ public class Formula implements Comparable {
      * an empty list.
      */
     public String car() {
-		// logger.entering("Formula", "car");
+
         String ans = null;
-        try {
-            if (this.listP()) {
-                if (this.empty()) {
-                    // NS: Clean this up someday.
-                    ans = "";  // this.theFormula;
-                }
-                else {
-                    String input = this.theFormula.trim();
-                    StringBuilder sb = new StringBuilder();
-                    List quoteChars = Arrays.asList('"', '\'');
-                    int i = 1;
-                    int len = input.length();
-                    int end = len - 1;
-                    int level = 0;
-                    char prev = '0';
-                    char ch = prev;
-                    boolean insideQuote = false;
-                    char quoteCharInForce = '0';
-                    while (i < end) {
-                        ch = input.charAt(i);
-                        if (!insideQuote) {
-                            if (ch == '(') {
-                                sb.append(ch);
-                                level++;
-                            }
-                            else if (ch == ')') {
-                                sb.append(ch);
-                                level--;
-                                if (level <= 0) {
-                                    break;
-                                }
-                            }
-                            else if (Character.isWhitespace(ch) && (level <= 0)) {
-                                if (sb.length() > 0) {
-                                    break;
-                                }
-                            }
-                            else if (quoteChars.contains(ch) && (prev != '\\')) {
-                                sb.append(ch);
-                                insideQuote = true;
-                                quoteCharInForce = ch;
-                            }
-                            else {
-                                sb.append(ch);
-                            }
-                        }
-                        else if (quoteChars.contains(ch)
-                                 && (ch == quoteCharInForce)
-                                 && (prev != '\\')) {
+        if (this.listP()) {
+            if (this.empty()) 
+                // NS: Clean this up someday.
+                ans = "";  // this.theFormula;            
+            else {
+                String input = this.theFormula.trim();
+                StringBuilder sb = new StringBuilder();
+                List quoteChars = Arrays.asList('"', '\'');
+                int i = 1;
+                int len = input.length();
+                int end = len - 1;
+                int level = 0;
+                char prev = '0';
+                char ch = prev;
+                boolean insideQuote = false;
+                char quoteCharInForce = '0';
+                while (i < end) {
+                    ch = input.charAt(i);
+                    if (!insideQuote) {
+                        if (ch == '(') {
                             sb.append(ch);
-                            insideQuote = false;
-                            quoteCharInForce = '0';
-                            if (level <= 0) {
-                                break;
-                            }
+                            level++;
                         }
-                        else {
+                        else if (ch == ')') {
                             sb.append(ch);
+                            level--;
+                            if (level <= 0) 
+                                break;                            
                         }
-                        prev = ch;
-                        i++;
+                        else if (Character.isWhitespace(ch) && (level <= 0)) {
+                            if (sb.length() > 0) 
+                                break;                            
+                        }
+                        else if (quoteChars.contains(ch) && (prev != '\\')) {
+                            sb.append(ch);
+                            insideQuote = true;
+                            quoteCharInForce = ch;
+                        }
+                        else 
+                            sb.append(ch);                        
                     }
-                    ans = sb.toString();
+                    else if (quoteChars.contains(ch)
+                             && (ch == quoteCharInForce)
+                             && (prev != '\\')) {
+                        sb.append(ch);
+                        insideQuote = false;
+                        quoteCharInForce = '0';
+                        if (level <= 0) 
+                            break;                        
+                    }
+                    else 
+                        sb.append(ch);                    
+                    prev = ch;
+                    i++;
                 }
+                ans = sb.toString();
             }
         }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            return null;
-            // ex.printStackTrace();
-        }
-		// logger.exiting("Formula", "car", ans);
         return ans;
     }
 
@@ -542,87 +516,70 @@ public class Formula implements Comparable {
      */
     public String cdr() {
 
-		// logger.entering("Formula", "cdr");
         String ans = null;
-        try {
-            if (this.listP()) {
-                if (this.empty()) {
-                    ans = this.theFormula;
+        if (this.listP()) {
+            if (this.empty()) 
+                ans = this.theFormula;            
+            else {
+                String input = theFormula.trim();
+                List quoteChars = Arrays.asList('"', '\'');
+                int i = 1;
+                int len = input.length();
+                int end = len - 1;
+                int level = 0;
+                char prev = '0';
+                char ch = prev;
+                boolean insideQuote = false;
+                char quoteCharInForce = '0';
+                int carCount = 0;
+                while (i < end) {
+                    ch = input.charAt(i);
+                    if (!insideQuote) {
+                        if (ch == '(') {
+                            carCount++;
+                            level++;
+                        }
+                        else if (ch == ')') {
+                            carCount++;
+                            level--;
+                            if (level <= 0) 
+                                break;                            
+                        }
+                        else if (Character.isWhitespace(ch) && (level <= 0)) {
+                            if (carCount > 0) 
+                                break;                            
+                        }
+                        else if (quoteChars.contains(ch) && (prev != '\\')) {
+                            carCount++;
+                            insideQuote = true;
+                            quoteCharInForce = ch;
+                        }
+                        else 
+                            carCount++;                        
+                    }
+                    else if (quoteChars.contains(ch)
+                             && (ch == quoteCharInForce)
+                             && (prev != '\\')) {
+                        carCount++;
+                        insideQuote = false;
+                        quoteCharInForce = '0';
+                        if (level <= 0) 
+                            break;                        
+                    }
+                    else 
+                        carCount++;                    
+                    prev = ch;
+                    i++;
                 }
-                else {
-                    String input = theFormula.trim();
-                    List quoteChars = Arrays.asList('"', '\'');
-                    int i = 1;
-                    int len = input.length();
-                    int end = len - 1;
-                    int level = 0;
-                    char prev = '0';
-                    char ch = prev;
-                    boolean insideQuote = false;
-                    char quoteCharInForce = '0';
-                    int carCount = 0;
-                    while (i < end) {
-                        ch = input.charAt(i);
-                        if (!insideQuote) {
-                            if (ch == '(') {
-                                carCount++;
-                                level++;
-                            }
-                            else if (ch == ')') {
-                                carCount++;
-                                level--;
-                                if (level <= 0) {
-                                    break;
-                                }
-                            }
-                            else if (Character.isWhitespace(ch) && (level <= 0)) {
-                                if (carCount > 0) {
-                                    break;
-                                }
-                            }
-                            else if (quoteChars.contains(ch) && (prev != '\\')) {
-                                carCount++;
-                                insideQuote = true;
-                                quoteCharInForce = ch;
-                            }
-                            else {
-                                carCount++;
-                            }
-                        }
-                        else if (quoteChars.contains(ch)
-                                 && (ch == quoteCharInForce)
-                                 && (prev != '\\')) {
-                            carCount++;
-                            insideQuote = false;
-                            quoteCharInForce = '0';
-                            if (level <= 0) {
-                                break;
-                            }
-                        }
-                        else {
-                            carCount++;
-                        }
-                        prev = ch;
-                        i++;
-                    }
-                    if (carCount > 0) {
-                        int j = i + 1;
-                        if (j < end) {
-                            ans = "(" + input.substring(j, end).trim() + ")";
-                        }
-                        else {
-                            ans = "()";
-                        }
-                    }
+                if (carCount > 0) {
+                    int j = i + 1;
+                    if (j < end) 
+                        ans = "(" + input.substring(j, end).trim() + ")";                    
+                    else 
+                        ans = "()";                    
                 }
             }
         }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            return null;
-            // ex.printStackTrace();
-        }
-		// logger.exiting("Formula", "cdr", ans);
         return ans;
     }
 
@@ -642,34 +599,26 @@ public class Formula implements Comparable {
      */
     public Formula cons(String obj) {
 
-		// logger.entering("Formula", "cons", obj);
         Formula ans = this;
-        try {
-            String fStr = this.theFormula;
-            if (isNonEmptyString(obj) && isNonEmptyString(fStr)) {
-                String theNewFormula = null;
-                if (this.listP()) {
-                    if (this.empty())
-                        theNewFormula = ("(" + obj + ")");
-                    else
-                        theNewFormula = ("(" + obj + " " + fStr.substring(1, (fStr.length() - 1)) + ")");
-                }
+        String fStr = this.theFormula;
+        if (!StringUtil.emptyString(obj) && !StringUtil.emptyString(fStr)) {
+            String theNewFormula = null;
+            if (this.listP()) {
+                if (this.empty())
+                    theNewFormula = ("(" + obj + ")");
                 else
-                    // This should never happen during clausification, but
-                    // we include it to make this procedure behave
-                    // (almost) like its LISP namesake.
-                    theNewFormula = ("(" + obj + " . " + fStr + ")");
-                if (theNewFormula != null) {
-                    ans = new Formula();
-                    ans.read(theNewFormula);
-                }
+                    theNewFormula = ("(" + obj + " " + fStr.substring(1, (fStr.length() - 1)) + ")");
+            }
+            else
+                // This should never happen during clausification, but
+                // we include it to make this procedure behave
+                // (almost) like its LISP namesake.
+                theNewFormula = ("(" + obj + " . " + fStr + ")");
+            if (theNewFormula != null) {
+                ans = new Formula();
+                ans.read(theNewFormula);
             }
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
-        }
-		// logger.exiting("Formula", "cons", ans);
         return ans;
     }
 
@@ -721,9 +670,8 @@ public class Formula implements Comparable {
     public String cddr() {
     	
         Formula fCdr = this.cdrAsFormula();
-        if (fCdr != null) {
-            return fCdr.cdr();
-        }
+        if (fCdr != null) 
+            return fCdr.cdr();        
         return null;
     }
 
@@ -736,6 +684,7 @@ public class Formula implements Comparable {
      * @return a Formula, or null.
      */
     public Formula cddrAsFormula() {
+    	
         String thisCddr = this.cddr();
         if (listP(thisCddr)) {
             Formula f = new Formula();
@@ -790,7 +739,7 @@ public class Formula implements Comparable {
     public static boolean atom(String s) {
 
         boolean ans = false;
-        if (isNonEmptyString(s)) {
+        if (!StringUtil.emptyString(s)) {
             String str = s.trim();
             ans = (StringUtil.isQuotedString(s) ||
                   (!str.contains(")") && !str.matches(".*\\s.*")) );
@@ -837,7 +786,7 @@ public class Formula implements Comparable {
     public static boolean listP(String s) {
 
         boolean ans = false;
-        if (isNonEmptyString(s)) {
+        if (!StringUtil.emptyString(s)) {
             String str = s.trim();
             ans = (str.startsWith("(") && str.endsWith(")"));
         }
@@ -848,8 +797,6 @@ public class Formula implements Comparable {
      * @see #validArgs() validArgs below for documentation
      */
     private String validArgsRecurse(Formula f, String filename, Integer lineNo) {
-
-		// logger.finest("Formula: " + f.theFormula);
 
 		if (f.theFormula == "" || !f.listP() || f.atom() || f.empty())
 			return "";
@@ -868,32 +815,45 @@ public class Formula implements Comparable {
                 return result;
             restF.theFormula = restF.cdr();
         }
+        String location = "";
+        if ((filename != null) && (lineNo != null)) 
+            location = "near line " + lineNo + " in " + filename;
         if (pred.equals(AND) || pred.equals(OR)) {
-            if (argCount < 2)
-                return "Too few arguments for 'and' or 'or' in formula: \n"
-                    + f.toString() + "\n";
+            if (argCount < 2) {            	
+                String errString = "Too few arguments for 'and' or 'or'at " + location + ": " + f.toString();
+                errors.add(errString);
+                return errString;
+            }
         }
         else if (pred.equals(UQUANT) || pred.equals(EQUANT)) {
-            if (argCount != 2)
-                return "Wrong number of arguments for 'exists' or 'forall' in formula: \n"
-                    + f.toString() + "\n";
+            if (argCount != 2) {
+                String errString = "Wrong number of arguments for quantifer at " + location + ":" + f.toString();
+                errors.add(errString);
+                return errString;
+            }
             else {
                 Formula quantF = new Formula();
                 quantF.read(rest);
-                if (!listP(quantF.car()))
-                    return ("No parenthesized variable list for 'exists' or 'forall' "
-                            + "in formula: \n" + f.toString() + "\n");
+                if (!listP(quantF.car())) {
+                    String errString = "No var list for quantifier at " + location + ":" + f.toString();
+                    errors.add(errString);
+                    return errString;
+                }
             }
         }
         else if (pred.equals(IFF) || pred.equals(IF)) {
-            if (argCount != 2)
-                return "Wrong number of arguments for '<=>' or '=>' in formula: \n"
-                    + f.toString() + "\n";
+            if (argCount != 2) {
+                String errString = "Wrong number of arguments for '<=>' or '=>' at " + location + ":" + f.toString();
+                errors.add(errString);
+                return errString;
+            }
         }
         else if (pred.equals(EQUAL)) {
-            if (argCount != 2)
-                return "Wrong number of arguments for 'equals' in formula: \n"
-                    + f.toString() + "\n";
+            if (argCount != 2) {
+                String errString = "Wrong number of arguments for 'equals' at " + location + ":" + f.toString();
+                errors.add(errString);
+                return errString;
+            }
         }
         else if (// !(isVariable(pred))
                  // &&
@@ -901,16 +861,10 @@ public class Formula implements Comparable {
                   && (argCount > (MAX_PREDICATE_ARITY + 1)))
                  ||
                  (!KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes")
-                  && (argCount > MAX_PREDICATE_ARITY))) {
-            String location = "";
-            if ((filename != null) && (lineNo != null)) {
-                location = (" near line " + lineNo + " in " + filename);
-            }
-			errors.add("Maybe too many arguments " + location + ": "
-					+ f.toString() + "\n");
-			// KBmanager.getMgr().setError(KBmanager.getMgr().getError() +
-			// "\n<br/>Maybe too many arguments"
-			// + location + ": " + f.toString() + "\n<br/>");
+                  && (argCount > MAX_PREDICATE_ARITY))) {           
+			String errString = "Maybe too many arguments at " + location + ": " + f.toString();
+            errors.add(errString);
+            return errString;        
         }
         return "";
     }
@@ -939,9 +893,6 @@ public class Formula implements Comparable {
         Formula f = new Formula();
         f.read(theFormula);
         String result = validArgsRecurse(f, filename, lineNo);
-
-		// logger.finest("Result: " + result);
-
         return result;
     }
 
@@ -975,18 +926,15 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Parse a String into an ArrayList of Formulas. The String must be
      * a LISP-style list.
-     * @return an ArrayList of Formulas
      */
-    private ArrayList parseList(String s) {
+    private ArrayList<Formula> parseList(String s) {
 
-        //System.out.println("INFO in Formula.parseList(): s " + s);
-        ArrayList result = new ArrayList();
+        ArrayList<Formula> result = new ArrayList<Formula>();
         Formula f = new Formula();
         f.read("(" + s + ")");
         if (f.empty())
             return result;
         while (!f.empty()) {
-            //System.out.println("INFO in Formula.parseList(): f " + f.theFormula);
             String car = f.car();
             f.read(f.cdr());
             Formula newForm = new Formula();
@@ -1008,18 +956,13 @@ public class Formula implements Comparable {
      */
     private boolean compareFormulaSets(String s) {
     	
-        // an ArrayList of Formulas
-        ArrayList thisList = parseList(this.theFormula.substring(1,this.theFormula.length()-1));
-        ArrayList sList = parseList(s.substring(1,s.length()-1));
+        ArrayList<Formula> thisList = parseList(this.theFormula.substring(1,this.theFormula.length()-1));
+        ArrayList<Formula> sList = parseList(s.substring(1,s.length()-1));
         if (thisList.size() != sList.size())
             return false;
-
         for (int i = 0; i < thisList.size(); i++) {
             for (int j = 0; j < sList.size(); j++) {
-                if (((Formula) thisList.get(i)).logicallyEquals(((Formula) sList.get(j)).theFormula)) {
-                    // System.out.println("INFO in Formula.compareFormulaSets(): " +
-                    //       ((Formula) thisList.get(i)).toString() + " equal to " +
-                    //       ((Formula) sList.get(j)).theFormula);
+                if ((thisList.get(i)).logicallyEquals((sList.get(j)).theFormula)) {
                     sList.remove(j);
                     j = sList.size();
                 }
@@ -1103,9 +1046,6 @@ public class Formula implements Comparable {
 
         form.theFormula = Clausifier.normalizeVariables(theFormula);
         f = form.toString().trim().intern();
-
-		// logger.finest("Comparing " + s + " to " + f);
-
         return (f == s);
     }
 
@@ -1126,20 +1066,14 @@ public class Formula implements Comparable {
     public String getArgument(int argnum) {
 
         String ans = "";
-        try {
-            Formula form = new Formula();
-            form.read(theFormula);
-            for (int i = 0 ; form.listP() ; i++) {
-                ans = form.car();
-                if (i == argnum) { break; }
-                form.read(form.cdr());
-            }
-            if (ans == null) { ans = ""; }
+        Formula form = new Formula();
+        form.read(theFormula);
+        for (int i = 0 ; form.listP() ; i++) {
+            ans = form.car();
+            if (i == argnum) break;
+            form.read(form.cdr());
         }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
+        if (ans == null) ans = ""; 
         return ans;
     }
 
@@ -1155,16 +1089,10 @@ public class Formula implements Comparable {
     public int listLength() {
     	
         int ans = -1;
-        try {
-            if (this.listP()) {
-                ans = 0;
-                while (isNonEmptyString(this.getArgument(ans)))
-                    ++ans;
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
+        if (this.listP()) {
+            ans = 0;
+            while (!StringUtil.emptyString(this.getArgument(ans)))
+                ++ans;
         }
         return ans;
     }
@@ -1181,7 +1109,7 @@ public class Formula implements Comparable {
         if (theFormula.indexOf('(',1) != -1)
             return null;
         int index = start;
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
         String arg = getArgument(index);
         while (arg != null && arg != "" && arg.length() > 0) {
             result.add(arg.intern());
@@ -1195,7 +1123,7 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      * Translate SUMO inequalities to the typical inequality symbols that
-     * the theorem prover requires.
+     * some theorem provers require.
      */
     private static String translateInequalities(String s) {
 
@@ -1204,393 +1132,6 @@ public class Formula implements Comparable {
         if (s.equalsIgnoreCase("lessThan")) return "<";
         if (s.equalsIgnoreCase("lessThanOrEqualTo")) return "<=";
         return "";
-    }
-
-    /** ***************************************************************
-     *  Alter formulas so that their variable indexes have shared
-     *  scope, which in effect means that they are different.  For
-     *  example, given (p ?V1 a) and (p c ?V1) the second formula
-     *  will be changed to (p c ?V2) because the ?V1 in the original
-     *  formulas do not refer to the same variable.  There is no
-     *  side effect to this method
-     *  @return the argument with its variable numbering altered if
-     *          necessary
-     */
-    public Formula separateVariableScope(Formula c2) {
-
-		// logger.finest("before: \n" + this + "\n and " + c2);
-
-        ArrayList<String> varList1 = this.simpleCollectVariables();
-        ArrayList<String> varList2 = c2.simpleCollectVariables();
-        TreeMap<String, String> varMap = new TreeMap();
-        for (int i = 0; i < varList2.size(); i++) {                 // renumber variables
-            int index = 1;
-            while (varList1.contains("?VAR" + Integer.toString(index)))
-                index++;
-            String varNew = "?VAR" + Integer.toString(index);
-            varMap.put((String) varList2.get(i),varNew);
-            varList1.add(varNew);
-        }
-        Formula c2new = c2.deepCopy();
-
-		// logger.finest("varmap: " + varMap);
-
-        c2new = c2new.substituteVariables(varMap);
-
-		// logger.finest("middle: \n" + c2new + "\n and " + c2new);
-		// logger.finest("after: \n" + this + "\n and " + c2new);
-
-        return c2new;
-    }
-
-    /** ***************************************************************
-     *  @see unify()
-     */
-    private TreeMap<String, String> unifyVar(String f1, String f2, TreeMap m) {
-
-        //System.out.println("INFO in Formula.unifyVar(): Attempting to unify : " + f1 +
-        //                   " with " + f2);
-        if (m.keySet().contains(f1))
-            return unifyInternal((String) m.get(f1),f2,m);
-        else if (m.keySet().contains(f2))
-            return unifyInternal((String) m.get(f2),f1,m);
-        else if (f2.indexOf(f1) > -1)
-            return null;
-        else {
-            m.put(f1,f2);
-            return m;
-        }
-    }
-
-    /** ***************************************************************
-     *  @see unify()
-     */
-    private TreeMap<String, String> unifyInternal(String f1, String f2, TreeMap m) {
-
-        //System.out.println("INFO in Formula.unifyInternal(): Attempting to unify : " + f1 + " with " + f2);
-        if (m == null)
-            return null;
-        else if (f1.equals(f2))
-            return m;
-        else if (isVariable(f1))
-            return unifyVar(f1,f2,m);
-        else if (isVariable(f2))
-            return unifyVar(f2,f1,m);
-        else if (listP(f1) && listP(f2)) {
-            Formula form1 = new Formula();
-            form1.read(f1);
-            Formula form2 = new Formula();
-            form2.read(f2);
-            TreeMap<String, String> res = unifyInternal(form1.car(),form2.car(),m);
-            if (res == null)
-                return null;
-            else
-                return unifyInternal(form1.cdr(),form2.cdr(),res);
-        }
-        else {
-            //System.out.println("failed to unify");
-            return null;
-        }
-    }
-
-    /** ***************************************************************
-     *  Attempt to unify one formula with another. @return a Map of
-     *  variable substitutions if successful, null if not. If two
-     *  formulas are identical the result will be an empty (but not
-     *  null) TreeMap. Algorithm is after Russell and Norvig's AI: A
-     *  Modern Approach p303. But R&N's algorithm assumes that
-     *  variables are within the same scope, which is not the case
-     *  when unifying clauses in resolution.  This needs to be
-     *  corrected by renaming variables so each clause does not
-     *  duplicate names from the other.
-     */
-    public TreeMap<String, String> unify(Formula f) {
-
-        //System.out.println("INFO in Formula.unify(): Attempting to unify : " + theFormula + " with " + f.theFormula);
-        TreeMap result = new TreeMap();
-        result = unifyInternal(f.theFormula,this.theFormula,result);
-        return result;
-    }
-
-    /** ***************************************************************
-     *  Append a clause to a (potentially empty) list of clauses.
-     *  append () and (foo A B) yields (foo A B)
-     *  append (foo A B) and (bar B C) yields
-     *  (or (foo A B) (bar B C))
-     *  append (or (foo A B) (bar B C)) and
-     *    (baz D E) yields (or (foo A B) (bar B C) (baz D E))
-     */
-    public Formula appendClauseInCNF(Formula f) {
-
-		// logger.finest("Appending \n" + this + "\n and \n" + f);
-
-		if (f == null) {
-			logger.warning("Error in Formula.appendClauseInCNF(): null formula");
-            return null;
-        }
-        if (f.empty())
-            return this;
-        if (this.empty())
-            return f;
-        if (this.atom()) {
-			logger.warning("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: "
-					+ this);
-            return null;
-        }
-        if (f.atom()) {
-			logger.warning("Error in Formula.appendClauseInCNF(): formula to append not in CNF: "
-					+ f);
-            return null;
-        }
-        Formula thisNew = new Formula();
-        Formula fnew = new Formula();
-        if (isSimpleClause() || isSimpleNegatedClause())
-            thisNew.read("(" + this.theFormula + ")");
-        else {
-            if (!this.car().equals("or")) {
-				logger.warning("Error in Formula.appendClauseInCNF(): formula to append to not in CNF: "
-						+ this);
-                return null;
-            }
-            thisNew.read(this.cdr());   // remove the "or"
-        }
-        if (f.isSimpleClause() || f.isSimpleNegatedClause())
-            fnew.read("(" + f.theFormula + ")");
-        else {
-            if (!f.car().equals("or")) {
-				logger.warning("Error in Formula.appendClauseInCNF(): formula to append not in CNF: "
-						+ f);
-                return null;
-            }
-            fnew.read(f.cdr());   // remove the "or"
-        }
-        //fnew.theFormula = fnew.theFormula;
-        thisNew = thisNew.append(fnew);
-        thisNew.theFormula = "(or " + thisNew.theFormula.substring(1);
-        return thisNew;
-    }
-
-    /** ***************************************************************
-     *  Attempt to resolve one formula with another. @return a
-     *  TreeMap of (possibly empty) variable substitutions if
-     *  successful, null if not. Return Formula "result" as a side
-     *  effect, that is the result of the substition (which could be
-     *  the empty list), null if not.
-     */
-    public TreeMap<String, String> resolve(Formula f, Formula result) {
-
-		Formula accumulator = new Formula();
-
-		// logger.finest("Attempting to resolve: \n" + this + "\n with \n" + f);
-
-        if (f.empty() || this.empty()) {
-            System.out.println("Error in Formula.resolve() attempt to resolve with empty list");
-            return null;
-        }
-
-        Formula thisFormula = new Formula();
-        thisFormula.read(theFormula);
-        Formula argFormula = new Formula();
-        argFormula.read(f.theFormula);
-        TreeMap mapping = new TreeMap();
-        if ((this.isSimpleClause() && f.isSimpleNegatedClause()) ||
-            (this.isSimpleNegatedClause() && f.isSimpleClause())) {
-			// logger.finest("Both simple clauses");
-            if (this.isSimpleNegatedClause()) {
-				// logger.finest("This (or fnew).isSimpleNegatedClause(): \n" +
-				// this);
-                thisFormula.read(thisFormula.cdr());
-                thisFormula.read(thisFormula.car());
-				// logger.finest("thisFormula: \n" + thisFormula);
-            }
-            if (f.isSimpleNegatedClause()) {
-				// logger.finest("f (or f2).isSimpleNegatedClause(): \n" + f);
-                argFormula.read(argFormula.cdr());
-                argFormula.read(argFormula.car());
-            }
-            mapping = thisFormula.unify(argFormula);
-            if (mapping == null)
-                result.theFormula = null;
-            else
-                result.theFormula = "()";
-			// logger.finest("result: " + result);
-			// logger.finest("mapping: " + mapping);
-            if (result.theFormula != null)
-                result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
-            return mapping;
-        }
-        else {
-            if ((this.isSimpleClause() && f.isSimpleClause()) ||
-                (this.isSimpleNegatedClause() && f.isSimpleNegatedClause())) {
-                return null;
-            }
-            if (this.isSimpleClause() || this.isSimpleNegatedClause()) {
-                if (!argFormula.car().equals("or")) {
-					// logger.finest("(this is simple): The non-simple clause not in CNF: \n"
-					// + argFormula);
-                    return null;
-                }
-                argFormula.read(argFormula.cdr());  // remove the initial "or"
-                accumulator.theFormula = "()";     // holds clauses that have been tried and not unified
-                while (!argFormula.empty()) {
-                    Formula clause = new Formula();
-                    clause.read(argFormula.car());
-					// logger.finest("(loop 1): checking clause: \n" + clause);
-                    if (result != null)
-						// logger.finest("result so far: \n" + accumulator);
-                    argFormula.read(argFormula.cdr());
-                    Formula newResult = new Formula();
-                    mapping = thisFormula.resolve(clause,newResult); // if it succeeds, newResult will be () so ignore
-                    if (mapping != null ) {  //&& mapping.keySet().size() > 0
-						// logger.finest("(returning loop 1): \n" + newResult);
-						// logger.finest("argFormula: \n" + argFormula);
-                        if (!argFormula.empty() && !argFormula.isSimpleClause() && !argFormula.isSimpleNegatedClause()) {
-                             if (!empty(argFormula.cdr()))
-                                 argFormula.read("(or " + argFormula.theFormula.substring(1));
-                             else
-                                 argFormula.read(argFormula.car());
-                        }
-                        accumulator = accumulator.appendClauseInCNF(argFormula);
-                        accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
-                        result.theFormula = accumulator.theFormula;
-
-						// logger.finest("Result: " + result);
-                        if (result.theFormula != null)
-                            result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
-                        return mapping;
-                    }
-                    else
-                        accumulator = accumulator.appendClauseInCNF(clause);
-                }
-            }
-            else {
-                if (argFormula.isSimpleClause() || argFormula.isSimpleNegatedClause()) {
-                    if (!this.car().equals("or")) {
-						logger.warning("Error in Formula.resolve() (f2 is simple): The non-simple clause not in CNF: "
-								+ this);
-                        return null;
-                    }
-                    thisFormula.read(thisFormula.cdr());// remove the initial "or"
-                    accumulator.theFormula = "()";
-                    while (!thisFormula.empty()) {
-                        Formula clause = new Formula();
-                        clause.read(thisFormula.car());
-						// logger.finest("(loop 2): checking clause: \n" + clause);
-                        thisFormula.read(thisFormula.cdr());
-                        Formula newResult = new Formula();
-                        mapping = argFormula.resolve(clause,newResult);
-						// logger.finest("(loop 2): return mapping: \n" + mapping);
-                        if (mapping != null) {   //  && mapping.keySet().size() > 0
-							// logger.finest("(returning loop 2): newResult: \n"
-							// + newResult);
-                            if (!thisFormula.empty() && !thisFormula.isSimpleClause() && !thisFormula.isSimpleNegatedClause()) {
-                                if (!empty(thisFormula.cdr()))
-                                    thisFormula.read("(or " + thisFormula.theFormula.substring(1));
-                                else
-                                    thisFormula.read(thisFormula.car());
-                            }
-                            accumulator = accumulator.appendClauseInCNF(thisFormula);
-                            accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
-                            result.theFormula = accumulator.theFormula;
-							// logger.finest("result: " + result);
-                            if (result.theFormula != null)
-                                result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
-                            return mapping;
-                        }
-                        else
-                            accumulator = accumulator.appendClauseInCNF(clause);
-                    }
-                }
-                else {                                      // both formulas are not a simple clause
-                    Formula newResult = new Formula();
-					// logger.finest("(before loop 3): looping through argFormula's clauses: \n"
-					// argFormula);
-                    argFormula.read(argFormula.cdr());    // remove the initial "or"
-                    accumulator.theFormula = "()";
-                    while (!argFormula.empty()) {
-						// logger.finest("(loop 3): here 1: ");
-                        Formula clause = new Formula();
-                        clause.read(argFormula.car());
-						// logger.finest("(loop 3): checking clause: \n" + clause);
-                        argFormula.read(argFormula.cdr());
-                        TreeMap newMapping = thisFormula.resolve(clause,newResult);
-						// logger.finest("(returning loop 3): mapping: " +
-						// newMapping);
-						// logger.finest("(returning loop 3): argFormula: \n" +
-						// argFormula);
-						// logger.finest("(returning loop 3): accumulator: \n"+
-						// accumulator);
-                        if (newMapping != null) {  // && newMapping.keySet().size() > 0
-                            mapping.putAll(newMapping);  // could still be a problem if a mapping overwrites another...
-							// logger.finest("(returning loop 3): newResult: \n"
-							// + newResult);
-                            //accumulator = accumulator.appendClauseInCNF(argFormula);
-                            accumulator.theFormula = (accumulator.substitute(mapping)).theFormula;
-                            argFormula.theFormula = (argFormula.substitute(mapping)).theFormula;
-                            thisFormula.theFormula = new String(newResult.theFormula);
-                        }
-                        else {
-							// logger.finest("(loop 3): here 2: ");
-							// logger.finest("accumulator: \n" + accumulator);
-							// logger.finest("clause: \n" + clause);
-                            accumulator = accumulator.appendClauseInCNF(clause);
-							// logger.finest("accumulator after: \n" + accumulator);
-                        }
-						// logger.finest("(loop 3): here 3: ");
-                        result.theFormula = accumulator.theFormula;
-						// logger.finest("(loop 3): here 4: ");
-                    }
-                    result.theFormula = new String(result.appendClauseInCNF(thisFormula).theFormula);
-                }
-            }
-        }
-		// logger.finest("Result: " + result);
-        if (result.theFormula != null)
-            result.theFormula = Clausifier.toCanonicalClausalForm(result).theFormula;
-        return mapping;
-    }
-
-    /** ***************************************************************
-     *  Use a TreeMap of [varname, value] to substitute value in for
-     *  varname wherever it appears in the formula.  This is
-     *  iterative, since values can themselves contain varnames.
-     */
-    public Formula substitute(TreeMap<String,String> m) {
-
-		// logger.finest("Replacing vars in " + this + " as per " + m);
-
-		String newForm = null;
-        Formula result = null;
-        while (newForm == null || !newForm.equals(theFormula)) {
-            newForm = theFormula;
-            result = substituteVariables(m);
-            theFormula = result.theFormula;
-        }
-        return this;
-    }
-
-    /** ***************************************************************
-     *  A convenience method that collects all variables and returns
-     *  a simple ArrayList of variables whether quantified or not.
-     *
-     * @see Formula.collectVariables()
-     *
-     * @return An ArrayList of String
-     */
-    public ArrayList<String> simpleCollectVariables() {
-
-        ArrayList<String> result = new ArrayList();
-        ArrayList<ArrayList<String>> ans = collectVariables();
-        if (ans == null || ans.size() < 1) return null;
-        ArrayList<String> ans1 = (ArrayList<String>) ans.get(0);
-        if (ans1 == null) return null;
-        result.addAll(ans1);
-        if (ans.size() < 2) return result;
-        ArrayList<String> ans2 = (ArrayList<String>) ans.get(1);
-        if (ans2 == null)
-            return result;
-        result.addAll(ans2);
-        return result;
     }
 
     /** ***************************************************************
@@ -1608,20 +1149,13 @@ public class Formula implements Comparable {
         ArrayList<ArrayList<String>> ans = new ArrayList<ArrayList<String>>();
         ans.add(new ArrayList());
         ans.add(new ArrayList());
-        try {
-        	HashSet<String> quantified = new HashSet<String>();
-        	HashSet<String> unquantified = new HashSet<String>();
-            unquantified.addAll(collectAllVariables());
-            //quantified.allAll(collectQuantifiedVariables());
-            unquantified.removeAll(quantified);
-            ans.get(0).addAll(quantified);
-            ans.get(1).addAll(unquantified);
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-		logger.exiting("Formula", "collectVariables", ans);
+    	HashSet<String> quantified = new HashSet<String>();
+    	HashSet<String> unquantified = new HashSet<String>();
+        unquantified.addAll(collectAllVariables());
+        quantified.addAll(collectQuantifiedVariables());
+        unquantified.removeAll(quantified);
+        ans.get(0).addAll(quantified);
+        ans.get(1).addAll(unquantified);
         return ans;
     }
 
@@ -1635,24 +1169,26 @@ public class Formula implements Comparable {
     private ArrayList<String> collectAllVariables() {
     	    
     	ArrayList<String> result = new ArrayList<String>();
+    	HashSet<String> resultSet = new HashSet<String>();
     	if (listLength() < 1)
     		return result;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
     	if (fcar.isVariable()) 
-    		result.add(fcar.theFormula);
+    		resultSet.add(fcar.theFormula);
     	else {
     		if (fcar.listP())
-    			result.addAll(fcar.collectAllVariables());
+    			resultSet.addAll(fcar.collectAllVariables());
     	}
     	Formula fcdr = new Formula();
     	fcdr.read(this.cdr());
     	if (fcdr.isVariable()) 
-    		result.add(fcdr.theFormula);
+    		resultSet.add(fcdr.theFormula);
     	else {
     		if (fcdr.listP())
-    			result.addAll(fcdr.collectAllVariables());
+    			resultSet.addAll(fcdr.collectAllVariables());
     	}
+    	result.addAll(resultSet);
     	return result;
     }
     
@@ -1666,6 +1202,7 @@ public class Formula implements Comparable {
     private ArrayList<String> collectQuantifiedVariables() {
     	    
     	ArrayList<String> result = new ArrayList<String>();
+    	HashSet<String> resultSet = new HashSet<String>();
     	if (listLength() < 1)
     		return result;
     	Formula fcar = new Formula();
@@ -1679,14 +1216,15 @@ public class Formula implements Comparable {
         	}
         	Formula varlist = new Formula();
         	varlist.read(remainder.car());
-        	result.addAll(varlist.collectAllVariables());
-    		result.addAll(remainder.cdrAsFormula().collectQuantifiedVariables());
+        	resultSet.addAll(varlist.collectAllVariables());
+    		resultSet.addAll(remainder.cdrAsFormula().collectQuantifiedVariables());
     	}
     	else {
     		if (fcar.listP())
-    			result.addAll(fcar.collectQuantifiedVariables());
-    		result.addAll(this.cdrAsFormula().collectQuantifiedVariables());
+    			resultSet.addAll(fcar.collectQuantifiedVariables());
+    		resultSet.addAll(this.cdrAsFormula().collectQuantifiedVariables());
     	}
+    	result.addAll(resultSet);
     	return result;
     }
 
@@ -1702,26 +1240,57 @@ public class Formula implements Comparable {
      */
     public ArrayList<String> collectTerms() {
 
-        ArrayList<String> result = new ArrayList();
+        HashSet<String> resultSet = new HashSet<String>();
         if (this.theFormula == null || this.theFormula == "") {
-			logger.warning("No formula to collect terms from: " + this);
+			System.out.println("Error in Formula.collectTerms(): " +
+					"No formula to collect terms from: " + this);
             return null;
         }
         if (this.empty())
-            return result;
+            return new ArrayList<String>();
         if (this.atom())
-            result.add(theFormula);
+            resultSet.add(theFormula);
         else {
             Formula f = new Formula();
             f.read(theFormula);
             while (!f.empty() && f.theFormula != null && f.theFormula != "") {
                 Formula f2 = new Formula();
                 f2.read(f.car());
-                result.addAll(f2.collectTerms());
+                resultSet.addAll(f2.collectTerms());
                 f.read(f.cdr());
             }
         }
+        ArrayList<String> result = new ArrayList(resultSet);
         return result;
+    }
+
+    /** ***************************************************************
+     *  Replace variables with a value as given by the map argument
+     */
+    public Formula substituteVariables(Map<String,String> m) {
+
+        Formula newFormula = new Formula();
+        newFormula.read("()");
+        if (atom()) {
+            if (m.keySet().contains(theFormula)) {
+                theFormula = (String) m.get(theFormula);
+                if (this.listP())
+                    theFormula = "(" + theFormula + ")";
+            }
+            return this;
+        }
+        if (!empty()) {
+            Formula f1 = new Formula();
+            f1.read(this.car());
+            if (f1.listP()) 
+                newFormula = newFormula.cons(f1.substituteVariables(m));            
+            else
+                newFormula = newFormula.append(f1.substituteVariables(m));
+            Formula f2 = new Formula();
+            f2.read(this.cdr());
+            newFormula = newFormula.append(f2.substituteVariables(m));
+        }
+        return newFormula;
     }
 
     /** ***************************************************************
@@ -1735,33 +1304,25 @@ public class Formula implements Comparable {
     public String makeQuantifiersExplicit(boolean query) {
     	
         String result = this.theFormula;
-        try {
-            String arg0 = this.car();
-            ArrayList<ArrayList<String>> vpair = collectVariables();
-            ArrayList<String> quantVariables = vpair.get(0);
-            ArrayList<String> unquantVariables = vpair.get(1);
+        String arg0 = this.car();
+        ArrayList<ArrayList<String>> vpair = collectVariables();
+        ArrayList<String> quantVariables = vpair.get(0);
+        ArrayList<String> unquantVariables = vpair.get(1);
 
-            if (!unquantVariables.isEmpty()) {   // Quantify all the unquantified variables
-                StringBuilder sb = new StringBuilder();
-                sb.append((query ? "(exists (" : "(forall ("));
-                boolean afterTheFirst = false;
-                for (Iterator itu = unquantVariables.iterator(); itu.hasNext();) {
-                    if (afterTheFirst) sb.append(" ");
-                    sb.append(itu.next().toString());
-                    afterTheFirst = true;
-                }
-                //System.out.println("INFO in Formula.makeQuantifiersExplicit(): result: " +
-                //    quant.toString() + ") " + theFormula + ")");
-                sb.append(") ");
-                sb.append(this.theFormula);
-                sb.append(")");
-                result = sb.toString();
-				logger.exiting("Formula", "makeQuantifiersExplicit", result);
+        if (!unquantVariables.isEmpty()) {   // Quantify all the unquantified variables
+            StringBuilder sb = new StringBuilder();
+            sb.append((query ? "(exists (" : "(forall ("));
+            boolean afterTheFirst = false;
+            Iterator<String> itu = unquantVariables.iterator();
+            while (itu.hasNext()) {
+                if (afterTheFirst) sb.append(" ");
+                sb.append(itu.next());
+                afterTheFirst = true;
             }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
+            sb.append(") ");
+            sb.append(this.theFormula);
+            sb.append(")");
+            result = sb.toString();
         }
         return result;
     }
@@ -1775,22 +1336,16 @@ public class Formula implements Comparable {
     protected boolean containsVariableArityRelation(KB kb) {
 
         boolean ans = false;
-        try {
-            Set relns = kb.getCachedRelationValues("instance", "VariableArityRelation", 2, 1);
-            if (relns == null)
-                relns = new HashSet();
-            relns.addAll(KB.VA_RELNS);
-            String r = null;
-            Iterator it = relns.iterator();
-            while (it.hasNext()) {
-                r = (String) it.next();
-                ans = (this.theFormula.indexOf(r) != -1);
-                if (ans) { break; }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
+        Set relns = kb.kbCache.getCachedRelationValues("instance", "VariableArityRelation", 2, 1);
+        if (relns == null)
+            relns = new HashSet();
+        relns.addAll(KB.VA_RELNS);
+        String r = null;
+        Iterator it = relns.iterator();
+        while (it.hasNext()) {
+            r = (String) it.next();
+            ans = (this.theFormula.indexOf(r) != -1);
+            if (ans) { break; }
         }
         return ans;
     }
@@ -1809,39 +1364,33 @@ public class Formula implements Comparable {
     protected Formula renameVariableArityRelations(KB kb, TreeMap<String,String> relationMap) {
 
         Formula result = this;
-        try {
-            if (this.listP()) {
-                StringBuilder sb = new StringBuilder();
-                Formula f = new Formula();
-                f.read(this.theFormula);
-                int flen = f.listLength();
-                String suffix = ("_" + (flen - 1));
-                String arg = null;
-                sb.append("(");
-                for (int i = 0 ; i < flen ; i++) {
-                    arg = f.getArgument(i);
-                    if (i > 0)
-                        sb.append(" ");
-                    if ((i == 0) && kb.isVariableArityRelation(arg) && !arg.endsWith(suffix)) {
-                        relationMap.put(arg + suffix, arg);
-                        arg += suffix;
-                    }
-                    else if (listP(arg)) {
-                        Formula argF = new Formula();
-                        argF.read(arg);
-                        arg = argF.renameVariableArityRelations(kb,relationMap).theFormula;
-                    }
-                    sb.append(arg);
+        if (this.listP()) {
+            StringBuilder sb = new StringBuilder();
+            Formula f = new Formula();
+            f.read(this.theFormula);
+            int flen = f.listLength();
+            String suffix = ("_" + (flen - 1));
+            String arg = null;
+            sb.append("(");
+            for (int i = 0 ; i < flen ; i++) {
+                arg = f.getArgument(i);
+                if (i > 0)
+                    sb.append(" ");
+                if ((i == 0) && kb.isVariableArityRelation(arg) && !arg.endsWith(suffix)) {
+                    relationMap.put(arg + suffix, arg);
+                    arg += suffix;
                 }
-                sb.append(")");
-                f = new Formula();
-                f.read(sb.toString());
-                result = f;
+                else if (listP(arg)) {
+                    Formula argF = new Formula();
+                    argF.read(arg);
+                    arg = argF.renameVariableArityRelations(kb,relationMap).theFormula;
+                }
+                sb.append(arg);
             }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
+            sb.append(")");
+            f = new Formula();
+            f.read(sb.toString());
+            result = f;
         }
         return result;
     }
@@ -1854,11 +1403,10 @@ public class Formula implements Comparable {
      * names, each of which will start with the row variable
      * designator '@'.
      */
-    private TreeSet findRowVars() {
+    private TreeSet<String> findRowVars() {
 
-        TreeSet result = new TreeSet();
-        try {
-            if (isNonEmptyString(this.theFormula)
+        TreeSet<String> result = new TreeSet<String>();
+            if (!StringUtil.emptyString(this.theFormula)
                 && this.theFormula.contains(R_PREF)) {
                 Formula f = new Formula();
                 f.read(this.theFormula);
@@ -1875,10 +1423,6 @@ public class Formula implements Comparable {
                     f.read(f.cdr());
                 }
             }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
         return result;
     }
 
@@ -1912,104 +1456,90 @@ public class Formula implements Comparable {
      */
     public ArrayList expandRowVars(KB kb) {       
     	
-		logger.entering("Formula", "expandRowVars", kb.name);
-
 		ArrayList resultList = new ArrayList();
-        try {
-            TreeSet rowVars = (this.theFormula.contains(R_PREF)
-                               ? this.findRowVars()
-                               : null);
-            // If this Formula contains no row vars to expand, we just
-            // add it to resultList and quit.
-            if ((rowVars == null) || rowVars.isEmpty()) {
-                resultList.add(this);
-            }
-            else {
-                Formula f = new Formula();
-                f.read(this.theFormula);
-                Set accumulator = new LinkedHashSet();
-                accumulator.add(f);
-                List working = new ArrayList();
-                long t1 = 0L;
+        TreeSet rowVars = (this.theFormula.contains(R_PREF)
+                           ? this.findRowVars()
+                           : null);
+        // If this Formula contains no row vars to expand, we just
+        // add it to resultList and quit.
+        if ((rowVars == null) || rowVars.isEmpty()) 
+            resultList.add(this);        
+        else {
+            Formula f = new Formula();
+            f.read(this.theFormula);
+            Set accumulator = new LinkedHashSet();
+            accumulator.add(f);
+            List working = new ArrayList();
+            long t1 = 0L;
 
-                // Iterate through the row variables
-                String rowvar = null;
-                for (Iterator irv = rowVars.iterator(); irv.hasNext();) {
-                    rowvar = (String) irv.next();
+            // Iterate through the row variables
+            String rowvar = null;
+            Iterator<String> irv = rowVars.iterator();
+            while (irv.hasNext()) {
+                rowvar = irv.next();
+                working.clear();
+                working.addAll(accumulator);
+                accumulator.clear();
 
-					// logger.finest("rowvar ==" + rowvar);
-					// logger.finest("accumulator == " + accumulator);
+                String fstr = null;
+                Iterator<Formula> itw = working.iterator();
+                while (itw.hasNext()) {
+                    f = itw.next();
+                    fstr = f.theFormula;
+                    if (!fstr.contains(R_PREF)
+                        || (fstr.indexOf("\"") > -1)) {
+                        f.sourceFile = this.sourceFile;
+                        resultList.add(f);
+                    }
+                    else {
+                        t1 = System.currentTimeMillis();
+                        int[] range = f.getRowVarExpansionRange(kb, rowvar);
+                        // Increment the timer for getRowVarExpansionRange().
+                        KB.ppTimers[3] += (System.currentTimeMillis() - t1);
+                        boolean hasVariableArityRelation = (range[0] == 0);
+                        t1 = System.currentTimeMillis();
+                        range[1] = adjustExpansionCount(hasVariableArityRelation, range[1], rowvar);
+                        // Increment the timer for adjustExpansionCount().
+                        KB.ppTimers[5] += (System.currentTimeMillis() - t1);
+                        Formula newF = null;
+                        StringBuilder varRepl = new StringBuilder();
 
-                    working.clear();
-                    working.addAll(accumulator);
-                    accumulator.clear();
-
-                    String fstr = null;
-                    for (Iterator itw = working.iterator(); itw.hasNext();) {
-                        f = (Formula) itw.next();
-                        fstr = f.theFormula;
-                        if (!fstr.contains(R_PREF)
-                            || (fstr.indexOf("\"") > -1)) {
-                            f.sourceFile = this.sourceFile;
-                            resultList.add(f);
-                        }
-                        else {
-                            t1 = System.currentTimeMillis();
-                            int[] range = f.getRowVarExpansionRange(kb, rowvar);
-                            // Increment the timer for getRowVarExpansionRange().
-                            KB.ppTimers[3] += (System.currentTimeMillis() - t1);
-                            boolean hasVariableArityRelation = (range[0] == 0);
-                            t1 = System.currentTimeMillis();
-                            range[1] = adjustExpansionCount(hasVariableArityRelation, range[1], rowvar);
-                            // Increment the timer for adjustExpansionCount().
-                            KB.ppTimers[5] += (System.currentTimeMillis() - t1);
-                            Formula newF = null;
-                            StringBuilder varRepl = new StringBuilder();
-
-                            for (int j = 1 ; j < range[1] ; j++) {
-                                if (varRepl.length() > 0)
-                                    varRepl.append(" ");
-                                varRepl.append("?");
-                                varRepl.append(rowvar.substring(1));
-                                // varRepl.append("_");
-                                varRepl.append(Integer.toString(j));
-                                if (hasVariableArityRelation) {
-                                    newF = new Formula();
-                                    newF.read(fstr.replaceAll(rowvar, varRepl.toString()));
-                                    // Copy the source file information for each expanded formula.
-                                    newF.sourceFile = this.sourceFile;
-                                    if (newF.theFormula.contains(R_PREF)
-                                        && (newF.theFormula.indexOf("\"") == -1)) {
-                                        accumulator.add(newF);
-                                    }
-                                    else
-                                        resultList.add(newF);
-                                }
-                            }
-                            if (!hasVariableArityRelation) {
+                        for (int j = 1 ; j < range[1] ; j++) {
+                            if (varRepl.length() > 0)
+                                varRepl.append(" ");
+                            varRepl.append("?");
+                            varRepl.append(rowvar.substring(1));
+                            // varRepl.append("_");
+                            varRepl.append(Integer.toString(j));
+                            if (hasVariableArityRelation) {
                                 newF = new Formula();
                                 newF.read(fstr.replaceAll(rowvar, varRepl.toString()));
                                 // Copy the source file information for each expanded formula.
                                 newF.sourceFile = this.sourceFile;
                                 if (newF.theFormula.contains(R_PREF)
-                                    && (newF.theFormula.indexOf('"') == -1)) {
+                                    && (newF.theFormula.indexOf("\"") == -1)) {
                                     accumulator.add(newF);
                                 }
                                 else
                                     resultList.add(newF);
                             }
                         }
+                        if (!hasVariableArityRelation) {
+                            newF = new Formula();
+                            newF.read(fstr.replaceAll(rowvar, varRepl.toString()));
+                            // Copy the source file information for each expanded formula.
+                            newF.sourceFile = this.sourceFile;
+                            if (newF.theFormula.contains(R_PREF)
+                                && (newF.theFormula.indexOf('"') == -1)) {
+                                accumulator.add(newF);
+                            }
+                            else
+                                resultList.add(newF);
+                        }
                     }
                 }
             }
         }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }        
-
-		logger.exiting("Formula", "expandRowVars", resultList);
-
         return resultList;
     }
 
@@ -2034,59 +1564,43 @@ public class Formula implements Comparable {
      */
     private int adjustExpansionCount(boolean variableArity, int count, String var) {
 
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "variableArity = " + variableArity,
-					"count = " + count, "var = " + var };
-			logger.entering("Formula", "adjustExpansionCount", params);
-		}
-
         int revisedCount = count;
-        try {
-            if (isNonEmptyString(var)) {
-                String rowVar = var;
-                if (!var.startsWith("@"))
-                    rowVar = ("@" + var);
-                List accumulator = new ArrayList();
-                List working = new ArrayList();
-                if (this.listP() && !this.empty())
-                    accumulator.add(this);
-                while (!accumulator.isEmpty()) {
-                    working.clear();
-                    working.addAll(accumulator);
-                    accumulator.clear();
-                    for (int i = 0 ; i < working.size() ; i++) {
-                        Formula f = (Formula) working.get(i);
-                        List literal = f.literalToArrayList();
-						// logger.finest("Literal: " + literal);
+        if (!StringUtil.emptyString(var)) {
+            String rowVar = var;
+            if (!var.startsWith("@"))
+                rowVar = ("@" + var);
+            List accumulator = new ArrayList();
+            List working = new ArrayList();
+            if (this.listP() && !this.empty())
+                accumulator.add(this);
+            while (!accumulator.isEmpty()) {
+                working.clear();
+                working.addAll(accumulator);
+                accumulator.clear();
+                for (int i = 0 ; i < working.size() ; i++) {
+                    Formula f = (Formula) working.get(i);
+                    List literal = f.literalToArrayList();
 
-                        int len = literal.size();
-                        if (literal.contains(rowVar) && !isVariable(f.car())) {
-                            if (!variableArity && (len > 2))
-                                revisedCount = (count - (len - 2));
-                            else if (variableArity)
-                                revisedCount = (10 - len);
-                        }
-                        if (revisedCount < 2) {
-                            revisedCount = 2;
-                        }
-                        while (!f.empty()) {
-                            String arg = f.car();
-                            Formula argF = new Formula();
-                            argF.read(arg);
-                            if (argF.listP() && !argF.empty())
-                                accumulator.add(argF);
-                            f = f.cdrAsFormula();
-                        }
+                    int len = literal.size();
+                    if (literal.contains(rowVar) && !isVariable(f.car())) {
+                        if (!variableArity && (len > 2))
+                            revisedCount = (count - (len - 2));
+                        else if (variableArity)
+                            revisedCount = (10 - len);
+                    }
+                    if (revisedCount < 2) 
+                        revisedCount = 2;                        
+                    while (!f.empty()) {
+                        String arg = f.car();
+                        Formula argF = new Formula();
+                        argF.read(arg);
+                        if (argF.listP() && !argF.empty())
+                            accumulator.add(argF);
+                        f = f.cdrAsFormula();
                     }
                 }
             }
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
-        }
-
-		logger.exiting("Formula", "adjustExpansionCount", revisedCount);
         return revisedCount;
     }
 
@@ -2106,32 +1620,18 @@ public class Formula implements Comparable {
      */
     private int[] getRowVarExpansionRange(KB kb, String rowVar) {
 
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "kb = " + kb.name, "rowVar = " + rowVar };
-			logger.entering("Formula", "getRowVarExpansionRange", params);
-		}
-
         int[] ans = new int[2];
         ans[0] = 1;
         ans[1] = 8;
-        try {
-            if (isNonEmptyString(rowVar)) {
-                String var = rowVar;
-                if (!var.startsWith("@"))
-                    var = "@" + var;
-                Map minMaxMap = this.getRowVarsMinMax(kb);
-                int[] newArr = (int[]) minMaxMap.get(var);
-                if (newArr != null)
-                    ans = newArr;
-            }
+        if (!StringUtil.emptyString(rowVar)) {
+            String var = rowVar;
+            if (!var.startsWith("@"))
+                var = "@" + var;
+            Map minMaxMap = this.getRowVarsMinMax(kb);
+            int[] newArr = (int[]) minMaxMap.get(var);
+            if (newArr != null)
+                ans = newArr;
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
-        }
-
-		logger.exiting("Formula", "getRowVarExpansionRange", ans);
-
         return ans;
     }
 
@@ -2151,81 +1651,70 @@ public class Formula implements Comparable {
      */
     private Map getRowVarsMinMax(KB kb) {
 
-		logger.entering("Formula", "getRowVarsMinMax", kb.name);
-
 		Map ans = new HashMap();
-        try {
-            long t1 = System.currentTimeMillis();
-            ArrayList clauseData = this.getTheClausalForm();
-            // if (trace) System.out.println("  getTheClausalForm() == " + clauseData);
-            // Increment the timer for toNegAndPosLitsWithRenameInfo().
-            KB.ppTimers[4] += (System.currentTimeMillis() - t1);
-            if (!((clauseData instanceof ArrayList) && (clauseData.size() > 2)))
-                return ans;
-            // System.out.println("\nclauseData == " + clauseData + "\n");
-            ArrayList clauses = (ArrayList) clauseData.get(0);
-            // System.out.println("\nclauses == " + clauses + "clauses.size() == " + clauses.size() + "\n");
-            if (clauses == null || clauses.isEmpty())
-                return ans;
-            Map varMap = (Map) clauseData.get(2);
-            Map rowVarRelns = new HashMap();
-            for (int i = 0 ; i < clauses.size() ; i++) {
-                ArrayList clause = (ArrayList) clauses.get(i);
-                // if (trace) System.out.println("  clause == " + clause);
-                if ((clause != null) && !clause.isEmpty()) {
-                    // First we get the neg lits.  It may be that
-                    // we should use *only* the neg lits for this
-                    // task, but we will start by combining the neg
-                    // lits and pos lits into one list of literals
-                    // and see how that works.
-                    ArrayList literals = (ArrayList) clause.get(0);
-                    ArrayList posLits = (ArrayList) clause.get(1);
-                    literals.addAll(posLits);
-                    // if (trace) System.out.println("  literals == " + literals);
-                    for (Iterator itl = literals.iterator(); itl.hasNext();) {
-                        Formula litF = (Formula) itl.next();;
-                        litF.computeRowVarsWithRelations(rowVarRelns, varMap);
-                    }
+        long t1 = System.currentTimeMillis();
+        ArrayList clauseData = this.getTheClausalForm();
+        // if (trace) System.out.println("  getTheClausalForm() == " + clauseData);
+        // Increment the timer for toNegAndPosLitsWithRenameInfo().
+        KB.ppTimers[4] += (System.currentTimeMillis() - t1);
+        if (!((clauseData instanceof ArrayList) && (clauseData.size() > 2)))
+            return ans;
+        // System.out.println("\nclauseData == " + clauseData + "\n");
+        ArrayList clauses = (ArrayList) clauseData.get(0);
+        // System.out.println("\nclauses == " + clauses + "clauses.size() == " + clauses.size() + "\n");
+        if (clauses == null || clauses.isEmpty())
+            return ans;
+        Map varMap = (Map) clauseData.get(2);
+        Map rowVarRelns = new HashMap();
+        for (int i = 0 ; i < clauses.size() ; i++) {
+            ArrayList clause = (ArrayList) clauses.get(i);
+            // if (trace) System.out.println("  clause == " + clause);
+            if ((clause != null) && !clause.isEmpty()) {
+                // First we get the neg lits.  It may be that
+                // we should use *only* the neg lits for this
+                // task, but we will start by combining the neg
+                // lits and pos lits into one list of literals
+                // and see how that works.
+                ArrayList literals = (ArrayList) clause.get(0);
+                ArrayList posLits = (ArrayList) clause.get(1);
+                literals.addAll(posLits);
+                // if (trace) System.out.println("  literals == " + literals);
+                for (Iterator itl = literals.iterator(); itl.hasNext();) {
+                    Formula litF = (Formula) itl.next();;
+                    litF.computeRowVarsWithRelations(rowVarRelns, varMap);
                 }
-				// logger.finest("rowVarRelns == " + rowVarRelns);
-                if (!rowVarRelns.isEmpty()) {
-                    for (Iterator kit = rowVarRelns.keySet().iterator(); kit.hasNext();) {
-                        String rowVar = (String) kit.next();
-                        String origRowVar = Clausifier.getOriginalVar(rowVar, varMap);
-                        int[] minMax = (int[]) ans.get(origRowVar);
-                        if (minMax == null) {
-                            minMax = new int[2];
-                            minMax[0] = 0;
-                            minMax[1] = 8;
-                            ans.put(origRowVar, minMax);
+            }
+			// logger.finest("rowVarRelns == " + rowVarRelns);
+            if (!rowVarRelns.isEmpty()) {
+                for (Iterator kit = rowVarRelns.keySet().iterator(); kit.hasNext();) {
+                    String rowVar = (String) kit.next();
+                    String origRowVar = Clausifier.getOriginalVar(rowVar, varMap);
+                    int[] minMax = (int[]) ans.get(origRowVar);
+                    if (minMax == null) {
+                        minMax = new int[2];
+                        minMax[0] = 0;
+                        minMax[1] = 8;
+                        ans.put(origRowVar, minMax);
+                    }
+                    TreeSet val = (TreeSet) rowVarRelns.get(rowVar);
+                    for (Iterator vit = val.iterator(); vit.hasNext();) {
+                        String reln = (String) vit.next();
+                        int arity = kb.getValence(reln);
+                        if (arity < 1) {
+                            // It's a VariableArityRelation or we
+                            // can't find an arity, so do nothing.
+                            ;
                         }
-                        TreeSet val = (TreeSet) rowVarRelns.get(rowVar);
-                        for (Iterator vit = val.iterator(); vit.hasNext();) {
-                            String reln = (String) vit.next();
-                            int arity = kb.getValence(reln);
-                            if (arity < 1) {
-                                // It's a VariableArityRelation or we
-                                // can't find an arity, so do nothing.
-                                ;
-                            }
-                            else {
-                                minMax[0] = 1;
-                                int arityPlusOne = (arity + 1);
-                                if (arityPlusOne < minMax[1])
-                                    minMax[1] = arityPlusOne;
-                            }
+                        else {
+                            minMax[0] = 1;
+                            int arityPlusOne = (arity + 1);
+                            if (arityPlusOne < minMax[1])
+                                minMax[1] = arityPlusOne;
                         }
                     }
                 }
             }
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
-        }
-
-		logger.exiting("Formula", "getRowVarsMinMax", ans);
-
         return ans;
     }
 
@@ -2248,41 +1737,35 @@ public class Formula implements Comparable {
      * */
     protected void computeRowVarsWithRelations(Map varsToRelns, Map varsToVars) {
 
-        try {
-            Formula f = this;
-            if (f.listP() && !f.empty()) {
-                String relation = f.car();
-                if (!isVariable(relation) && !relation.equals(SKFN)) {
-                    Formula newF = f.cdrAsFormula();
-                    while (newF.listP() && !newF.empty()) {
-                        String term = newF.car();
-                        String rowVar = term;
-                        if (isVariable(rowVar)) {
-                            if (rowVar.startsWith(V_PREF) && (varsToVars != null))
-                                rowVar = Clausifier.getOriginalVar(term, varsToVars);
-                        }
-                        if (rowVar.startsWith(R_PREF)) {
-                            TreeSet relns = (TreeSet) varsToRelns.get(term);
-                            if (relns == null) {
-                                relns = new TreeSet();
-                                varsToRelns.put(term, relns);
-                                varsToRelns.put(rowVar, relns);
-                            }
-                            relns.add(relation);
-                        }
-                        else {
-                            Formula termF = new Formula();
-                            termF.read(term);
-                            termF.computeRowVarsWithRelations(varsToRelns, varsToVars);
-                        }
-                        newF = newF.cdrAsFormula();
+        Formula f = this;
+        if (f.listP() && !f.empty()) {
+            String relation = f.car();
+            if (!isVariable(relation) && !relation.equals(SKFN)) {
+                Formula newF = f.cdrAsFormula();
+                while (newF.listP() && !newF.empty()) {
+                    String term = newF.car();
+                    String rowVar = term;
+                    if (isVariable(rowVar)) {
+                        if (rowVar.startsWith(V_PREF) && (varsToVars != null))
+                            rowVar = Clausifier.getOriginalVar(term, varsToVars);
                     }
+                    if (rowVar.startsWith(R_PREF)) {
+                        TreeSet relns = (TreeSet) varsToRelns.get(term);
+                        if (relns == null) {
+                            relns = new TreeSet();
+                            varsToRelns.put(term, relns);
+                            varsToRelns.put(rowVar, relns);
+                        }
+                        relns.add(relation);
+                    }
+                    else {
+                        Formula termF = new Formula();
+                        termF.read(term);
+                        termF.computeRowVarsWithRelations(varsToRelns, varsToVars);
+                    }
+                    newF = newF.cdrAsFormula();
                 }
             }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
         }
         return;
     }
@@ -2311,20 +1794,13 @@ public class Formula implements Comparable {
     public HashMap<String, ArrayList> gatherRelationsWithArgTypes(KB kb) {
 
         HashMap<String, ArrayList> argtypemap = new HashMap<String, ArrayList>();
-        try {
-            Set<String> relations = gatherRelationConstants();
-            for (String r : relations) {
-                int atlen = (Formula.MAX_PREDICATE_ARITY + 1);
-                ArrayList argtypes = new ArrayList();
-                for (int i = 0; i < atlen; i++) {
-                    argtypes.add(kb.getArgType(r, i));
-                }
-                argtypemap.put(r, argtypes);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
+        Set<String> relations = gatherRelationConstants();
+        for (String r : relations) {
+            int atlen = (Formula.MAX_PREDICATE_ARITY + 1);
+            ArrayList argtypes = new ArrayList();
+            for (int i = 0; i < atlen; i++) 
+                argtypes.add(kb.getArgType(r, i));                
+            argtypemap.put(r, argtypes);
         }
         return argtypemap;
     }
@@ -2340,48 +1816,42 @@ public class Formula implements Comparable {
     public HashSet<String> gatherRelationConstants() {
 
         HashSet<String> relations = new HashSet<String>();
-        try {
-            Set<String> accumulator = new HashSet<String>();
-            if (this.listP() && !this.empty())
-                accumulator.add(this.theFormula);
-            List<String> kifLists = new ArrayList<String>();
-            Formula f = null;
-            while (!accumulator.isEmpty()) {
-                kifLists.clear();
-                kifLists.addAll(accumulator);
-                accumulator.clear();
-                String klist = null;
-                for (Iterator it = kifLists.iterator(); it.hasNext();) {
-                    klist = (String) it.next();
-                    if (listP(klist)) {
-                        f = new Formula();
-                        f.read(klist);
-                        for (int i = 0; !f.empty(); i++) {
-                            String arg = f.car();
-                            if (listP(arg)) {
-                                if (!empty(arg)) accumulator.add(arg);
-                            }
-                            else if (isQuantifier(arg)) {
-                                accumulator.add(f.getArgument(2));
-                                break;
-                            }
-                            else if ((i == 0)
-                                     && !isVariable(arg)
-                                     && !isLogicalOperator(arg)
-                                     && !arg.equals(SKFN)
-                                     && !StringUtil.isQuotedString(arg)
-                                     && !arg.matches(".*\\s.*")) {
-                                relations.add(arg);
-                            }
-                            f = f.cdrAsFormula();
+        Set<String> accumulator = new HashSet<String>();
+        if (this.listP() && !this.empty())
+            accumulator.add(this.theFormula);
+        List<String> kifLists = new ArrayList<String>();
+        Formula f = null;
+        while (!accumulator.isEmpty()) {
+            kifLists.clear();
+            kifLists.addAll(accumulator);
+            accumulator.clear();
+            String klist = null;
+            for (Iterator it = kifLists.iterator(); it.hasNext();) {
+                klist = (String) it.next();
+                if (listP(klist)) {
+                    f = new Formula();
+                    f.read(klist);
+                    for (int i = 0; !f.empty(); i++) {
+                        String arg = f.car();
+                        if (listP(arg)) {
+                            if (!empty(arg)) accumulator.add(arg);
                         }
+                        else if (isQuantifier(arg)) {
+                            accumulator.add(f.getArgument(2));
+                            break;
+                        }
+                        else if ((i == 0)
+                                 && !isVariable(arg)
+                                 && !isLogicalOperator(arg)
+                                 && !arg.equals(SKFN)
+                                 && !StringUtil.isQuotedString(arg)
+                                 && !arg.matches(".*\\s.*")) {
+                            relations.add(arg);
+                        }
+                        f = f.cdrAsFormula();
                     }
                 }
             }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
         }
         return relations;
     }
@@ -2392,9 +1862,8 @@ public class Formula implements Comparable {
     private ArrayList formulasToStrings(ArrayList list) {
 
         ArrayList result = new ArrayList();
-        for (int i = 0; i < list.size(); i++) {
-            result.add(((Formula) list.get(i)).theFormula);
-        }
+        for (int i = 0; i < list.size(); i++) 
+            result.add(((Formula) list.get(i)).theFormula);        
         return result;
     }
 
@@ -2454,7 +1923,7 @@ public class Formula implements Comparable {
      */
     public static boolean isVariable(Object term) {
 
-        return (isNonEmptyString(term)
+        return (!StringUtil.emptyString(term)
                 && (((String)term).startsWith(V_PREF)
                     || ((String)term).startsWith(R_PREF)));
     }
@@ -2476,25 +1945,19 @@ public class Formula implements Comparable {
     public boolean isRule() {
     	
         boolean ans = false;
-        try {
-            if (this.listP()) {
-                String arg0 = this.car();
-                if (isQuantifier(arg0)) {
-                    String arg2 = this.getArgument(2);
-                    if (Formula.listP(arg2)) {
-                        Formula newF = new Formula();
-                        newF.read(arg2);
-                        ans = newF.isRule();
-                    }
-                }
-                else {
-                    ans = Arrays.asList(IF, IFF).contains(arg0);
+        if (this.listP()) {
+            String arg0 = this.car();
+            if (isQuantifier(arg0)) {
+                String arg2 = this.getArgument(2);
+                if (Formula.listP(arg2)) {
+                    Formula newF = new Formula();
+                    newF.read(arg2);
+                    ans = newF.isRule();
                 }
             }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
+            else {
+                ans = Arrays.asList(IF, IFF).contains(arg0);
+            }
         }
         return ans;
     }
@@ -2502,7 +1965,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Test whether a list with a predicate is a quantifier list
      */
-    private static boolean isQuantifierList(String listPred, String previousPred) {
+    public static boolean isQuantifierList(String listPred, String previousPred) {
 
         return ((previousPred.equals(EQUANT) || previousPred.equals(UQUANT)) &&
                 (listPred.startsWith(R_PREF) || listPred.startsWith(V_PREF)));
@@ -2514,7 +1977,6 @@ public class Formula implements Comparable {
      */
     public boolean isSimpleClause() {
 
-		logger.entering("Formula", "isSimpleClause");
         Formula f = new Formula();
         f.read(theFormula);
         while (!f.empty()) {
@@ -2537,8 +1999,6 @@ public class Formula implements Comparable {
      */
     public boolean isSimpleNegatedClause() {
 
-
-        //System.out.println("INFO in Formula.isSimpleNegatedClause(): " + this);
         Formula f = new Formula();
         f.read(theFormula);
         if (f == null || f.empty() || f.atom())
@@ -2561,7 +2021,7 @@ public class Formula implements Comparable {
      */
     public static boolean isQuantifier(String pred) {
 
-        return (isNonEmptyString(pred)
+        return (!StringUtil.emptyString(pred)
                 && (pred.equals(EQUANT)
                     || pred.equals(UQUANT)));
     }
@@ -2574,7 +2034,7 @@ public class Formula implements Comparable {
      */
     public static boolean isCommutative(String obj) {
 
-        return (isNonEmptyString(obj)
+        return (!StringUtil.emptyString(obj)
                 && (obj.equals(AND)
                     || obj.equals(OR)));
     }
@@ -2600,9 +2060,8 @@ public class Formula implements Comparable {
                                  { LOG_TRUE,  LOG_FALSE  },
                                  { LOG_FALSE, LOG_TRUE   }
             };
-            for (int i = 0; i < duals.length; i++) {
-                if (op.equals(duals[i][0])) ans = duals[i][1];
-            }
+            for (int i = 0; i < duals.length; i++) 
+                if (op.equals(duals[i][0])) ans = duals[i][1];            
         }
         return ans;
     }
@@ -2615,7 +2074,7 @@ public class Formula implements Comparable {
      */
     public static boolean isLogicalOperator(String term) {
 
-        return (isNonEmptyString(term) && LOGICAL_OPERATORS.contains(term));
+        return (!StringUtil.emptyString(term) && LOGICAL_OPERATORS.contains(term));
     }
 
     /** ***************************************************************
@@ -2626,7 +2085,7 @@ public class Formula implements Comparable {
      */
     public static boolean isTerm(String term) {
 
-        if (isNonEmptyString(term) && !listP(term) &&
+        if (!StringUtil.emptyString(term) && !listP(term) &&
                 Character.isJavaIdentifierStart(term.charAt(0))) {
             for (int i = 0; i < term.length(); i++) {
                 if (!Character.isJavaIdentifierPart(term.charAt(i)))
@@ -2646,7 +2105,7 @@ public class Formula implements Comparable {
      */
     public static boolean isComparisonOperator(String term) {
 
-        return (isNonEmptyString(term) && COMPARISON_OPERATORS.contains(term));
+        return (!StringUtil.emptyString(term) && COMPARISON_OPERATORS.contains(term));
     }
 
     /** ***************************************************************
@@ -2657,7 +2116,7 @@ public class Formula implements Comparable {
      */
     public static boolean isMathFunction(String term) {
 
-        return (isNonEmptyString(term) && MATH_FUNCTIONS.contains(term));
+        return (!StringUtil.emptyString(term) && MATH_FUNCTIONS.contains(term));
     }
 
     /** ***************************************************************
@@ -2696,7 +2155,7 @@ public class Formula implements Comparable {
      * @param term A String.
      */
     public static boolean isFunction(String term) {
-        return (isNonEmptyString(term) && term.endsWith(FN_SUFF));
+        return (!StringUtil.emptyString(term) && term.endsWith(FN_SUFF));
     }
 
     /** ***************************************************************
@@ -2707,16 +2166,8 @@ public class Formula implements Comparable {
      * @return true or false
      */
     public static boolean isSkolemTerm(String term) {
-        return (isNonEmptyString(term)
+        return (!StringUtil.emptyString(term)
                 && term.trim().matches("^.?" + SK_PREF + "\\S*\\s*\\d+"));
-    }
-
-    /** ***************************************************************
-     * @param obj Any object
-     * @return true if obj is a non-empty String, else false.
-     */
-    public static boolean isNonEmptyString(Object obj) {
-        return StringUtil.isNonEmptyString(obj);
     }
 
     /** ***************************************************************
@@ -2724,1270 +2175,17 @@ public class Formula implements Comparable {
      * Formula, in which each top-level element of the Formula is
      * either an atom (String) or another list.
      */
-    public ArrayList literalToArrayList() {
-        ArrayList tuple = new ArrayList();
-        try {
-            Formula f = this;
-            if (f.listP()) {
-                while (!f.empty()) {
-                    tuple.add(f.car());
-                    f = f.cdrAsFormula();
-                }
+    public ArrayList<String> literalToArrayList() {
+    	
+        ArrayList<String> tuple = new ArrayList<String>();
+        Formula f = this;
+        if (f.listP()) {
+            while (!f.empty()) {
+                tuple.add(f.car());
+                f = f.cdrAsFormula();
             }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        }        
         return tuple;
-    }
-
-    /** ***************************************************************
-     * A + is appended to the type if the parameter must be a class
-     *
-     * @return the type for each argument to the given predicate, where
-     * ArrayList element 0 is the result, if a function, 1 is the
-     * first argument, 2 is the second etc.
-     */
-    private ArrayList getTypeList(String pred, KB kb) {
-
-        //System.out.println("INFO in Formula.getTypeList(): pred: " + pred);
-        ArrayList result = null;
-        try {
-            // build the sortalTypeCache key.
-            StringBuilder sb = new StringBuilder("gtl");
-            sb.append(pred);
-            sb.append(kb.name);
-            String key = sb.toString();
-            Map stc = kb.getSortalTypeCache();
-            result = (ArrayList) (stc.get(key));
-            if (result == null) {
-                result = new ArrayList();
-                int valence = kb.getValence(pred);
-                int len = MAX_PREDICATE_ARITY + 1;
-                if (valence == 0) {
-                    len = 2;
-                }
-                else if (valence > 0) {
-                    len = valence + 1;
-                }
-                String[] r = new String[len];
-
-                ArrayList al = kb.askWithRestriction(0,"domain",1,pred);
-                ArrayList al2 = kb.askWithRestriction(0,"domainSubclass",1,pred);
-                ArrayList al3 = kb.askWithRestriction(0,"range",1,pred);
-                ArrayList al4 = kb.askWithRestriction(0,"rangeSubclass",1,pred);
-                r = addToTypeList(pred,al,r,false);
-                r = addToTypeList(pred,al2,r,true);
-                r = addToTypeList(pred,al3,r,false);
-                r = addToTypeList(pred,al4,r,true);
-                for (int i = 0; i < r.length; i++)
-                    result.add(r[i]);
-                stc.put(key, result);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** ***************************************************************
-     * A utility helper method for computing predicate data types.
-     */
-    private String[] addToTypeList(String pred, ArrayList al, String[] result, boolean classP) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "pred = " + pred, "al = " + al,
-					"result = " + Arrays.toString(result), "classP = " + classP };
-			logger.entering("Formula", "addToTypeList", params);
-		}
-    	
-        try {
-            Formula f = null;
-            // If the relations in al start with "(range", argnum will
-            // be 0, and the arg position of the desired classnames
-            // will be 2.
-            int argnum = 0;
-            int clPos = 2;
-            for (int i = 0; i < al.size(); i++) {
-                f = (Formula) al.get(i);
-				// logger.finest("theFormula: " + f.theFormula);
-                if (f.theFormula.startsWith("(domain")) {
-                    argnum = Integer.parseInt(f.getArgument(2));
-                    clPos = 3;
-                }
-                String cl = f.getArgument(clPos);
-                String errStr = null;
-                String mgrErrStr = null;
-                if ((argnum < 0) || (argnum >= result.length)) {
-                    errStr = "Possible arity confusion for " + pred;
-					// mgrErrStr = KBmanager.getMgr().getError();
-					logger.warning(errStr);
-					// if (mgrErrStr.equals("") || (mgrErrStr.indexOf(errStr) ==
-					// -1)) {
-					// KBmanager.getMgr().setError(mgrErrStr + "\n<br/>" +
-					// errStr + "\n<br/>");
-					// }
-					errors.add(errStr);
-                }
-                else if (StringUtil.emptyString(result[argnum])) {
-                    if (classP) { cl += "+"; }
-                    result[argnum] = cl;
-                }
-                else {
-                    if (!cl.equals(result[argnum])) {
-                        errStr = ("Multiple types asserted for argument " + argnum
-                                  + " of " + pred + ": " + cl + ", " + result[argnum]);
-						// mgrErrStr = KBmanager.getMgr().getError();
-						logger.warning(errStr);
-						// if (mgrErrStr.equals("") ||
-						// (mgrErrStr.indexOf(errStr) == -1)) {
-						// KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-						// + "\n<br/>" + errStr + "\n<br/>");
-						// }
-						errors.add(errStr);
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** ***************************************************************
-     * Find the argument type restriction for a given predicate and
-     * argument number that is inherited from one of its
-     * super-relations.  A "+" is appended to the type if the
-     * parameter must be a class.  Argument number 0 is used for the
-     * return type of a Function.
-     */
-   public static String findType(int numarg, String pred, KB kb) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "numarg = " + numarg, "pred = " + pred,
-					"kb = " + kb.name };
-			logger.entering("Formula", "findType", params);
-		}
-        String result = null;
-        boolean isCached = false;
-        boolean cacheResult = false;
-        try {
-            // build the sortalTypeCache key.
-            StringBuilder sb = new StringBuilder("ft");
-            sb.append(numarg);
-            sb.append(pred);
-            sb.append(kb.name);
-            String key = sb.toString();
-            Map stc = kb.getSortalTypeCache();
-            result = (String) (stc.get(key));
-            isCached = (result != null);
-            cacheResult = !isCached;
-
-            if (result == null) {
-                boolean found = false;
-                Set<String> accumulator = new HashSet<String>();
-                accumulator.add(pred);
-                List<String> relations = new ArrayList<String>();
-
-                while (!found && !accumulator.isEmpty()) {
-                    relations.clear();
-                    relations.addAll(accumulator);
-                    accumulator.clear();
-                    Iterator it = relations.iterator();
-
-                    while (!found && it.hasNext()) {
-                        String r = (String) it.next();
-                        List<Formula> formulas = null;
-                        if (numarg > 0) {
-                            formulas = kb.askWithRestriction(0,"domain",1,r);
-                            for (Formula f : formulas) {
-                                int argnum = Integer.parseInt(f.getArgument(2));
-                                if (argnum == numarg) {
-                                    result = f.getArgument(3);
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found) {
-                                formulas = kb.askWithRestriction(0,"domainSubclass",1,r);
-                                for (Formula f : formulas) {
-                                    int argnum = Integer.parseInt(f.getArgument(2));
-                                    if (argnum == numarg) {
-                                        result = (f.getArgument(3) + "+");
-                                        found = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        else if (numarg == 0) {
-                            formulas = kb.askWithRestriction(0,"range",1,r);
-                            if (!formulas.isEmpty()) {
-                                Formula f = (Formula) formulas.get(0);
-                                result = f.getArgument(2);
-                                found = true;
-                            }
-                            if (!found) {
-                                formulas = kb.askWithRestriction(0,"rangeSubclass",1,r);
-                                if (!formulas.isEmpty()) {
-                                    Formula f = (Formula) formulas.get(0);
-                                    result = (f.getArgument(2) + "+");
-                                    found = true;
-                                }
-                            }
-                        }
-                    }
-                    if (!found) {
-                        for (String r : relations)
-                            accumulator.addAll(kb.getTermsViaAskWithRestriction(1,r,0,"subrelation",2));
-                    }
-                }
-                if (cacheResult && (result != null))
-                    stc.put(key, result);
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "findType", result);
-        return result;
-    }
-
-    /** ***************************************************************
-     * This method tries to remove all but the most specific relevant
-     * classes from a List of sortal classes.
-     *
-     * @param types A List of classes (class name Strings) that
-     * constrain the value of a SUO-KIF variable.
-     *
-     * @param kb The KB used to determine if any of the classes in the
-     * List types are redundant.
-     *
-     * @return void
-     */
-    private void winnowTypeList(List types, KB kb) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "types = " + types, "kb = " + kb.name };
-			logger.entering("Formula", "winnowTypeList", params);
-		}
-
-		long t1 = 0L;
-        try {
-            if ((types instanceof List) && (types.size() > 1)) {
-                Object[] valArr = types.toArray();
-                String clX = null;
-                String clY = null;
-                for (int i = 0; i < valArr.length; i++) {
-                    boolean stop = false;
-                    for (int j = 0; j < valArr.length; j++) {
-                        if (i != j) {
-                            clX = (String) valArr[i];
-                            clY = (String) valArr[j];
-                            if (kb.isSubclass(clX, clY)) {
-                                types.remove(clY);
-                                if (types.size() < 2) {
-                                    stop = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (stop) break;
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "winnowTypeList");
-        return;
-    }
-
-    /** ***************************************************************
-     * Does much of the real work for addTypeRestrictions() by
-     * recursing through the Formula and collecting type constraint
-     * information for the variable var.
-     *
-     * @param ios A List of classes (class name Strings) of which any
-     * binding for var must be an instance.
-     *
-     * @param scs A List of classes (class name Strings) of which any
-     * binding for var must be a subclass.
-     *
-     * @param var A SUO-KIF variable.
-     *
-     * @param kb The KB used to determine predicate and variable arg
-     * types.
-     *
-     * @return void
-     */
-    private void computeTypeRestrictions(List ios, List scs, String var, KB kb) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "ios = " + ios, "scs = " + scs, "var = " + var,
-					"kb = " + kb.name };
-			logger.entering("Formula", "computeTypeRestrictions", params);
-		}
-
-		String pred = null;
-        try {
-            if (!this.listP() || !this.theFormula.contains(var))
-                return;
-            Formula f = new Formula();
-            f.read(this.theFormula);
-            pred = f.car();
-            if (isQuantifier(pred)) {
-                String arg2 = f.getArgument(2);
-                if (arg2.contains(var)) {
-                    Formula nextF = new Formula();
-                    nextF.read(arg2);
-                    nextF.computeTypeRestrictions(ios, scs, var, kb);
-                }
-            }
-            else if (isLogicalOperator(pred)) {
-                int len = f.listLength();
-                for (int i = 1; i < len; i++) {
-                    String argI = f.getArgument(i);
-                    if (argI.contains(var)) {
-                        Formula nextF = new Formula();
-                        nextF.read(argI);
-                        nextF.computeTypeRestrictions(ios, scs, var, kb);
-                    }
-                }
-            }
-            else {
-                int len = f.listLength();
-                int valence = kb.getValence(pred);
-                List types = getTypeList(pred,kb);
-                int numarg = 0;
-                for (int i = 1; i < len; i++) {
-                    numarg = i;
-                    if (valence == 0) // pred is a VariableArityRelation
-                        numarg = 1;                   
-                    String arg = f.getArgument(i);
-                    if (arg.contains(var)) {
-                        if (listP(arg)) {
-                            Formula nextF = new Formula();
-                            nextF.read(arg);
-                            nextF.computeTypeRestrictions(ios, scs, var, kb);
-                        }
-                        else if (var.equals(arg)) {
-                            String type = null;
-                            if (numarg < types.size()) 
-                                type = (String) types.get(numarg);                            
-                            if (type == null) 
-                                type = findType(numarg,pred,kb);                            
-                            if (StringUtil.isNonEmptyString(type) && !type.startsWith("Entity")) {
-                                boolean sc = false;
-                                while (type.endsWith("+")) {
-                                    sc = true;
-                                    type = type.substring(0, type.length() - 1);
-                                }
-                                if (sc) {
-                                    if (!scs.contains(type)) 
-                                        scs.add(type);                                    
-                                }
-                                else if (!ios.contains(type)) 
-                                    ios.add(type);                                
-                            }
-                        }
-                    }
-                }
-
-                String arg1 = null;
-                String arg2 = null;
-                String term = null;
-                String cl = null;
-
-                // Special treatment for equal
-                if (pred.equals("equal")) {
-                    arg1 = f.getArgument(1);
-                    arg2 = f.getArgument(2);
-                    if (var.equals(arg1)) { term = arg2; }
-                    else if (var.equals(arg2)) { term = arg1; }
-                    if (isNonEmptyString(term)) {
-                        if (listP(term)) {
-                            Formula nextF = new Formula();
-                            nextF.read(term);
-                            if (nextF.isFunctionalTerm()) {
-                                String fn = nextF.car();
-                                List classes = getTypeList(fn, kb);
-                                if (!classes.isEmpty()) 
-                                    cl = (String) classes.get(0);                                
-                                if (cl == null) 
-                                    cl = findType(0, fn, kb);                                
-                                if (StringUtil.isNonEmptyString(cl) && !cl.startsWith("Entity")) {
-                                    boolean sc = false;
-                                    while (cl.endsWith("+")) {
-                                        sc = true;
-                                        cl = cl.substring(0, cl.length() - 1);
-                                    }
-                                    if (sc) {
-                                        if (!scs.contains(cl)) 
-                                            scs.add(cl);                                        
-                                    }
-                                    else if (!ios.contains(cl)) 
-                                        ios.add(cl);                                    
-                                }
-                            }
-                        }
-                        else {
-                            Set instanceOfs = kb.getCachedRelationValues("instance", term, 1, 2);
-                            if ((instanceOfs != null) && !instanceOfs.isEmpty()) {
-                                Iterator it = instanceOfs.iterator();
-                                String io = null;
-                                while (it.hasNext()) {
-                                    io = (String) it.next();
-                                    if (!io.equals("Entity") && !ios.contains(io)) 
-                                        ios.add(io);                                    
-                                }
-                            }
-                        }
-                    }
-                }
-                // Special treatment for instance or subclass, only if var.equals(arg1)
-                // and arg2 is a functional term.
-                else if (Arrays.asList("instance", "subclass").contains(pred)) {
-                    arg1 = f.getArgument(1);
-                    arg2 = f.getArgument(2);
-                    if (var.equals(arg1) && listP(arg2)) {
-                        Formula nextF = new Formula();
-                        nextF.read(arg2);
-                        if (nextF.isFunctionalTerm()) {
-                            String fn = nextF.car();
-                            List classes = getTypeList(fn, kb);
-                            if (!classes.isEmpty()) 
-                                cl = (String) classes.get(0);                            
-                            if (cl == null) 
-                                cl = findType(0, fn, kb);                            
-                            if (StringUtil.isNonEmptyString(cl) && !cl.startsWith("Entity")) {
-                                while (cl.endsWith("+")) 
-                                    cl = cl.substring(0, cl.length() - 1);                                
-                                if (pred.equals("subclass")) {
-                                    if (!scs.contains(cl)) 
-                                        scs.add(cl);                                    
-                                }
-                                else if (!ios.contains(cl)) 
-                                    ios.add(cl);                                
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "computeTypeRestrictions");
-        return;
-    }
-
-    /** ***************************************************************
-     * When invoked on a Formula that begins with explicit universal
-     * quantification, this method returns a String representation of
-     * the Formula with type constraints added for the top level
-     * quantified variables, if possible.  Otherwise, a String
-     * representation of the original Formula is returned.
-     *
-     * @param shelf A List of quaternary ArrayLists, each of which
-     * contains type information about a variable
-     *
-     * @param kb The KB used to determine predicate and variable arg
-     * types.
-     *
-     * @return A String representation of a Formula, with type
-     * restrictions added.
-     */
-    private String insertTypeRestrictionsU(List shelf, KB kb) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "shelf = " + shelf, "kb = " + kb.name };
-			logger.entering("Formula", "insertTypeRestrictionsU", params);
-		}
-
-        String result = this.theFormula;
-        try {
-            String varlist = this.getArgument(1);
-            Formula varlistF = new Formula();
-            varlistF.read(varlist);
-            List newShelf = makeNewShelf(shelf);
-            int vlen = varlistF.listLength();
-            for (int i = 0; i < vlen; i++) 
-                addVarDataQuad(varlistF.getArgument(i), "U", newShelf);            
-
-            String arg2 = this.getArgument(2);
-            Formula nextF = new Formula();
-            nextF.read(arg2);
-            String processedArg2 = nextF.insertTypeRestrictionsR(newShelf, kb);
-            Set constraints = new LinkedHashSet();
-            List quad = null;
-            String var = null;
-            String token = null;
-            List ios = null;
-            List scs = null;
-            Iterator it2 = null;
-            String constraint = null;
-            for (Iterator it = newShelf.iterator(); it.hasNext();) {
-                quad = (List) it.next();
-                var = (String) quad.get(0);
-                token = (String) quad.get(1);
-                if (token.equals("U")) {
-                    ios = (List) quad.get(2);
-                    scs = (List) quad.get(3);
-                    if (!scs.isEmpty()) {
-                        winnowTypeList(scs, kb);
-                        if (!scs.isEmpty()) {
-                            if (!ios.contains("SetOrClass"))
-                                ios.add("SetOrClass");
-                            for (it2 = scs.iterator(); it2.hasNext();) {
-                                StringBuilder sb = new StringBuilder();
-                                sb.append("(subclass " + var + " " + it2.next().toString() + ")");
-                                constraint = sb.toString();
-                                if (!processedArg2.contains(constraint)) 
-                                    constraints.add(constraint);                                
-                            }
-                        }
-                    }
-                    if (!ios.isEmpty()) {
-                        winnowTypeList(ios, kb);
-                        for (it2 = ios.iterator(); it2.hasNext();) {
-                            StringBuilder sb = new StringBuilder();
-                            sb.append("(instance " + var + " " + it2.next().toString() + ")");
-                            constraint = sb.toString();
-                            if (!processedArg2.contains(constraint)) 
-                                constraints.add(constraint);                            
-                        }
-                    }
-                }
-            }
-            StringBuilder sb = new StringBuilder();
-            sb.append("(forall ");
-            sb.append(varlistF.theFormula);
-            if (constraints.isEmpty()) {
-                sb.append(" ");
-                sb.append(processedArg2);
-            }
-            else {
-                sb.append(" (=>");
-                int clen = constraints.size();
-                if (clen > 1) 
-                    sb.append(" (and");                
-                for (it2 = constraints.iterator(); it2.hasNext();) {
-                    sb.append(" ");
-                    sb.append(it2.next().toString());
-                }
-                if (clen > 1) 
-                    sb.append(")");                
-                sb.append(" ");
-                sb.append(processedArg2);
-                sb.append(")");
-            }
-            sb.append(")");
-            result = sb.toString();
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-            result = this.theFormula;
-        }
-
-		logger.exiting("Formula", "insertTypeRestrictionsU", result);
-        return result;
-    }
-
-    /** ***************************************************************
-     * When invoked on a Formula that begins with explicit existential
-     * quantification, this method returns a String representation of
-     * the Formula with type constraints added for the top level
-     * quantified variables, if possible.  Otherwise, a String
-     * representation of the original Formula is returned.
-     *
-     * @param shelf A List of quaternary ArrayLists, each of which
-     * contains type information about a variable
-     *
-     * @param kb The KB used to determine predicate and variable arg
-     * types.
-     *
-     * @return A String representation of a Formula, with type
-     * restrictions added.
-     */
-    private String insertTypeRestrictionsE(List shelf, KB kb) {
-
-		if (logger.isLoggable(Level.FINER)) {
-    		String[] params = {"shelf = " + shelf, "kb = " + kb.name};
-			logger.entering("Formula", "insertTypeRestrictionsE", params);
-    	}
-    	
-        String result = this.theFormula;
-        try {
-            String varlist = this.getArgument(1);
-            Formula varlistF = new Formula();
-            varlistF.read(varlist);
-            List newShelf = makeNewShelf(shelf);
-            int vlen = varlistF.listLength();
-            for (int i = 0; i < vlen; i++) 
-                addVarDataQuad(varlistF.getArgument(i), "E", newShelf);            
-
-            String arg2 = this.getArgument(2);
-            Formula nextF = new Formula();
-            nextF.read(arg2);
-
-            String processedArg2 = nextF.insertTypeRestrictionsR(newShelf, kb);
-            nextF.read(processedArg2);
-
-            Set constraints = new LinkedHashSet();
-            StringBuilder sb = new StringBuilder();
-
-            List quad = null;
-            String var = null;
-            String token = null;
-            List ios = null;
-            List scs = null;
-            Iterator it2 = null;
-            String constraint = null;
-            for (Iterator it = newShelf.iterator(); it.hasNext();) {
-                quad = (List) it.next();
-                var = (String) quad.get(0);
-                token = (String) quad.get(1);
-                if (token.equals("E")) {
-                    ios = (List) quad.get(2);
-                    scs = (List) quad.get(3);
-                    if (!ios.isEmpty()) {
-                        winnowTypeList(ios, kb);
-                        for (it2 = ios.iterator(); it2.hasNext();) {
-                            sb.setLength(0);
-                            sb.append("(instance " + var + " " + it2.next().toString() + ")");
-                            constraint = sb.toString();
-                            if (!processedArg2.contains(constraint)) {
-                                constraints.add(constraint);
-                            }
-                        }
-                    }
-                    if (!scs.isEmpty()) {
-                        winnowTypeList(scs, kb);
-                        for (it2 = scs.iterator(); it2.hasNext();) {
-                            sb.setLength(0);
-                            sb.append("(subclass " + var + " " + it2.next().toString() + ")");
-                            constraint = sb.toString();
-                            if (!processedArg2.contains(constraint)) {
-                                constraints.add(constraint);
-                            }
-                        }
-                    }
-                }
-            }
-            sb.setLength(0);
-            sb.append("(exists ");
-            sb.append(varlistF.theFormula);
-            if (constraints.isEmpty()) {
-                sb.append(" ");
-                sb.append(processedArg2);
-            }
-            else {
-                sb.append(" (and");
-                for (it2 = constraints.iterator(); it2.hasNext();) {
-                    sb.append(" ");
-                    sb.append(it2.next().toString());
-                }
-                if (nextF.car().equals("and")) {
-                    int nextFLen = nextF.listLength();
-                    for (int k = 1; k < nextFLen; k++) {
-                        sb.append(" ");
-                        sb.append(nextF.getArgument(k));
-                    }
-                }
-                else {
-                    sb.append(" ");
-                    sb.append(nextF.theFormula);
-                }
-                sb.append(")");
-            }
-            sb.append(")");
-            result = sb.toString();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            result = this.theFormula;
-        }
-
-		logger.exiting("Formula", "insertTypeRestrictionsE", result);
-        return result;
-    }
-
-    /** ***************************************************************
-     * When invoked on a Formula, this method returns a String
-     * representation of the Formula with type constraints added for
-     * all explicitly quantified variables, if possible.  Otherwise, a
-     * String representation of the original Formula is returned.
-     *
-     * @param shelf A List, each element of which is a quaternary List
-     * containing a SUO-KIF variable String, a token "U" or "E"
-     * indicating how the variable is quantified, a List of instance
-     * classes, and a List of subclass classes
-     *
-     * @param kb The KB used to determine predicate and variable arg
-     * types.
-     *
-     * @return A String representation of a Formula, with type
-     * restrictions added.
-     */
-    private String insertTypeRestrictionsR(List shelf, KB kb) {
-
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "shelf = " + shelf, "kb = " + kb.name };
-			logger.entering("Formula", "insertTypeRestrictionsR", params);
-		}
-
-        String result = this.theFormula;
-        try {
-            if (listP(this.theFormula)
-                && !empty(this.theFormula)
-                && this.theFormula.matches(".*\\?\\w+.*")) {
-                StringBuilder sb = new StringBuilder();
-                Formula f = new Formula();
-                f.read(this.theFormula);
-                int len = f.listLength();
-                String arg0 = f.car();
-                if (isQuantifier(arg0) && (len == 3)) {
-                    if (arg0.equals("forall")) 
-                        sb.append(f.insertTypeRestrictionsU(shelf, kb));                    
-                    else 
-                        sb.append(f.insertTypeRestrictionsE(shelf, kb));                    
-                }
-                else {
-                    sb.append("(");
-                    String argI = null;
-                    for (int i = 0; i < len; i++) {
-                        argI = f.getArgument(i);
-                        if (i > 0) {
-                            sb.append(" ");
-                            if (isVariable(argI)) {
-                                String type = findType(i, arg0, kb);
-                                if (StringUtil.isNonEmptyString(type)
-                                    && !type.startsWith("Entity")) {
-                                    boolean sc = false;
-                                    while (type.endsWith("+")) {
-                                        sc = true;
-                                        type = type.substring(0, type.length() - 1);
-                                    }
-                                    if (sc) 
-                                        addScForVar(argI, type, shelf);                                    
-                                    else 
-                                        addIoForVar(argI, type, shelf);                                    
-                                }
-                            }
-                        }
-                        Formula nextF = new Formula();
-                        nextF.read(argI);
-                        sb.append(nextF.insertTypeRestrictionsR(shelf, kb));
-                    }
-                    sb.append(")");
-                }
-                result = sb.toString();
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-            result = this.theFormula;
-        }
-
-		logger.exiting("Formula", "insertTypeRestrictionsR", result);
-
-        return result;
-    }
-    
-    /** ***************************************************************
-     */
-    private void addVarDataQuad(String var, String quantToken, List shelf) {
-        try {
-            ArrayList quad = new ArrayList();
-            quad.add(var);              // e.g., "?X"
-            quad.add(quantToken);       // "U" or "E"
-            quad.add(new ArrayList());  // ios
-            quad.add(new ArrayList());  // scs
-            shelf.add(0, quad);
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return;
-    }
-    
-    /** ***************************************************************
-     */
-    private ArrayList getIosForVar(String var, List shelf) {
-        ArrayList result = null;
-        try {
-            ArrayList quad = null;
-            for (Iterator si = shelf.iterator(); si.hasNext();) {
-                quad = (ArrayList) si.next();
-                if (var.equals((String) (quad.get(0)))) {
-                    result = (ArrayList) (quad.get(2));
-                    break;
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** ***************************************************************
-     */
-    private ArrayList getScsForVar(String var, List shelf) {
-        ArrayList result = null;
-        try {
-            ArrayList quad = null;
-            for (Iterator si = shelf.iterator(); si.hasNext();) {
-                quad = (ArrayList) si.next();
-                if (var.equals((String) (quad.get(0)))) {
-                    result = (ArrayList) (quad.get(3));
-                    break;
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** ***************************************************************
-     */
-    private void addIoForVar(String var, String io, List shelf) {
-        try {
-            if (StringUtil.isNonEmptyString(io)) {
-                ArrayList ios = getIosForVar(var, shelf);
-                if ((ios != null) && !ios.contains(io)) {
-                    ios.add(io);
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** ***************************************************************
-     */
-    private void addScForVar(String var, String sc, List shelf) {
-        try {
-            if (StringUtil.isNonEmptyString(sc)) {
-                ArrayList scs = getScsForVar(var, shelf);
-                if ((scs != null) && !scs.contains(sc)) {
-                    scs.add(sc);
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** ***************************************************************
-     */
-    private ArrayList makeNewShelf(List shelf) {
-        return new ArrayList(shelf);
-    }
-
-    /** ***************************************************************
-     * Add clauses for every variable in the antecedent to restrict its
-     * type to the type restrictions defined on every relation in which
-     * it appears.  For example
-     * (=>
-     *   (foo ?A B)
-     *   (bar B ?A))
-     *
-     * (domain foo 1 Z)
-     *
-     * would result in
-     *
-     * (=>
-     *   (instance ?A Z)
-     *   (=>
-     *     (foo ?A B)
-     *     (bar B ?A)))
-     */
-    private String addTypeRestrictions(KB kb) {
-
-		logger.entering("Formula", "addTypeRestrictions", kb.name);
-
-    	String result = this.theFormula;
-        try {
-            Formula f = new Formula();
-            long t1 = System.currentTimeMillis();
-            f.read(this.makeQuantifiersExplicit(false));
-			// logger.finest("f == " + f);
-            long t2 = System.currentTimeMillis();
-            result = f.insertTypeRestrictionsR(new ArrayList(), kb);
-            long t3 = System.currentTimeMillis();
-            // Time makeQuantifiersExplicit
-            KB.ppTimers[7] += (t2 - t1);
-            // Time insertTypeRestrictions
-            KB.ppTimers[8] += (t3 - t2);
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "addTypeRestrictions", result);
-
-        return result;
-    }
-
-    /** ***************************************************************
-     * This method returns a HashMap that maps each variable in this
-     * Formula to an ArrayList that contains a pair of ArrayLists.
-     * The first ArrayList of the pair contains the names of types
-     * (classes) of which the variable must be an instance.  The
-     * second ArrayList of the pair contains the names of types of
-     * which the variable must be a subclass.  Either list in the pair
-     * could be empty.  If the only instance or subclass sortal that
-     * can be computed for a variable is Entity, the lists will be
-     * empty.
-     *
-     * @param kb The KB used to compute the sortal constraints for
-     * each variable.
-     *
-     * @return A HashMap
-     */
-    public HashMap computeVariableTypes(KB kb) {
-
-		logger.entering("Formula", "computeVariableTypes", kb.name);
-
-        HashMap result = new HashMap();
-        try {
-            Formula f = new Formula();
-            f.read(this.makeQuantifiersExplicit(false));
-            f.computeVariableTypesR(result, kb);
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "computeVariableTypes", result);
-        return result;
-    }
-
-    /** ***************************************************************
-     * A recursive utility method used to collect type information for
-     * the variables in this Formula.
-     *
-     * @param map A HashMap used to store type information for the
-     * variables in this Formula.
-     *
-     * @param kb The KB used to compute the sortal constraints for
-     * each variable.
-     *
-     * @return void
-     */
-    private void computeVariableTypesR(HashMap map, KB kb) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "map = " + map, "kb = " + kb.name };
-			logger.entering("Formula", "computeVariableTypesR", params);
-		}
-
-		try {
-            if (this.listP() && !this.empty()) {
-                int len = this.listLength();
-                String arg0 = this.car();
-                if (isQuantifier(arg0) && (len == 3)) 
-                    this.computeVariableTypesQ(map, kb);                
-                else {
-                    for (int i = 0; i < len; i++) {
-                        Formula nextF = new Formula();
-                        nextF.read(this.getArgument(i));
-                        nextF.computeVariableTypesR(map, kb);
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-			ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "computeVariableTypesR");
-        return;
-    }
-
-    /** ***************************************************************
-     * A recursive utility method used to collect type information for
-     * the variables in this Formula, which is assumed to have forall
-     * or exists as its arg0.
-     *
-     * @param map A HashMap used to store type information for the
-     * variables in this Formula.
-     *
-     * @param kb The KB used to compute the sortal constraints for
-     * each variable.
-     *
-     * @return void
-     */
-    private void computeVariableTypesQ(HashMap map, KB kb) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "map = " + map, "kb = " + kb.name };
-			logger.entering("Formula", "computeVariableTypesQ", params);
-		}
-
-        try {
-            Formula varlistF = new Formula();
-            varlistF.read(this.getArgument(1));
-            // System.out.println("varlistF == " + varlistF);
-            int vlen = varlistF.listLength();
-            // System.out.println("vlen == " + vlen);
-            Formula nextF = new Formula();
-            nextF.read(this.getArgument(2));
-            // System.out.println("nextF == " + nextF);
-            String var = null;
-            for (int i = 0; i < vlen; i++) {
-                ArrayList types = new ArrayList();
-                ArrayList ios = new ArrayList();
-                ArrayList scs = new ArrayList();
-                var = varlistF.getArgument(i);
-                // System.out.println("i == " + i + ", var == " + var);
-                nextF.computeTypeRestrictions(ios, scs, var, kb);
-                if (!scs.isEmpty()) {
-                    winnowTypeList(scs, kb);
-                    if (!scs.isEmpty() && !ios.contains("SetOrClass"))
-                        ios.add("SetOrClass");
-                }
-
-                if (!ios.isEmpty()) 
-                    winnowTypeList(ios, kb);                
-                types.add(ios);
-                types.add(scs);
-                map.put(var, types);
-            }
-            nextF.computeVariableTypesR(map, kb);
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "computeVariableTypesQ");
-        return;
-    }
-
-    /** ***************************************************************
-     * Pre-process a formula before sending it to the theorem prover. This includes
-     * ignoring meta-knowledge like documentation strings, translating
-     * mathematical operators, quoting higher-order formulas, expanding
-     * row variables and prepending the 'holds__' predicate.
-     * @return an ArrayList of Formula(s)
-     */
-    private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
-                                     boolean translateIneq, boolean translateMath) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "f = " + f, "previousPred = " + previousPred,
-					"ignoreStrings = " + ignoreStrings,
-					"translateIneq = " + translateIneq,
-					"translateMath = " + translateMath };
-			logger.entering("Formula", "preProcessRecurse", params);
-		}
-
-		StringBuilder result = new StringBuilder();
-        try {
-            if (f.listP() && !f.empty()) {
-                String prefix = "";
-                String pred = f.car();
-                // Formula predF = new Formula();
-                // predF.read(pred);
-                if (isQuantifier(pred)) {
-                    // The list of quantified variables.
-                    result.append(" ");
-                    result.append(f.cadr());
-                    // The formula following the list of variables.
-                    String next = f.caddr();
-                    Formula nextF = new Formula();
-                    nextF.read(next);
-                    result.append(" ");
-                    result.append(preProcessRecurse(nextF,"",ignoreStrings,translateIneq,translateMath));
-                }
-                else {
-                    Formula restF = f.cdrAsFormula();
-                    int argCount = 1;
-                    while (!restF.empty()) {
-                        argCount++;
-                        String arg = restF.car();
-                        //System.out.println("INFO in preProcessRecurse(): arg: " + arg);
-                        Formula argF = new Formula();
-                        argF.read(arg);
-                        if (argF.listP()) {
-                            String res = preProcessRecurse(argF,pred,ignoreStrings,translateIneq,translateMath);
-                            result.append(" ");
-                            if (!isLogicalOperator(pred) &&
-                                !isComparisonOperator(pred) &&
-                                !isMathFunction(pred) &&
-                                !argF.isFunctionalTerm()) {
-                                result.append("`");
-                            }
-                            result.append(res);
-                        }
-                        else
-                            result.append(" " + arg);
-                        restF.theFormula = restF.cdr();
-                    }
-                    if (KBmanager.getMgr().getPref("holdsPrefix").equals("yes")) {
-                        if (!isLogicalOperator(pred) && !isQuantifierList(pred,previousPred))
-                            prefix = "holds_";
-                        if (f.isFunctionalTerm())
-                            prefix = "apply_";
-                        if (pred.equals("holds")) {
-                            pred = "";
-                            argCount--;
-                            prefix = prefix + argCount + "__ ";
-                        }
-                        else {
-                            if (!isLogicalOperator(pred) &&
-                                !isQuantifierList(pred,previousPred) &&
-                                !isMathFunction(pred) &&
-                                !isComparisonOperator(pred)) {
-                                prefix = prefix + argCount + "__ ";
-                            }
-                            else
-                                prefix = "";
-                        }
-                    }
-                }
-                result.insert(0, pred);
-                result.insert(0, prefix);
-                result.insert(0, "(");
-                result.append(")");
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "preProcessRecurse", result.toString());
-        return result.toString();
-    }
-
-    /** ***************************************************************
-     * Pre-process a formula before sending it to the theorem
-     * prover. This includes ignoring meta-knowledge like
-     * documentation strings, translating mathematical operators,
-     * quoting higher-order formulas, expanding row variables and
-     * prepending the 'holds__' predicate.
-     *
-     * @param isQuery If true the Formula is a query and should be
-     *                existentially quantified, else the Formula is a
-     *                statement and should be universally quantified
-     *
-     * @param kb The KB to be used for processing this Formula
-     *
-     * @return an ArrayList of Formula(s), which could be empty.
-     *
-     */
-    public ArrayList preProcess(boolean isQuery, KB kb) {
-
-    	//System.out.println("INFO in Formula.preProcess(): " + this.toString());
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "isQuery = " + isQuery, "kb = " + kb.name };
-			logger.entering("Formula", "preProcess", params);
-		}
-
-        ArrayList results = new ArrayList();
-        try {
-            if (isNonEmptyString(this.theFormula)) {
-                KBmanager mgr = KBmanager.getMgr();
-                if (!this.isBalancedList()) {
-					String errStr = "Unbalanced parentheses or quotes in "
-							+ this.theFormula;
-					logger.warning(errStr + " for formula = " + this.theFormula);
-					// mgr.setError(mgr.getError() + "\n<br/>" + errStr + " in "
-					// + this.theFormula + "\n<br/>");
-					errors.add(errStr);
-                    return results;
-                }
-                boolean ignoreStrings = false;
-                boolean translateIneq = true;
-                boolean translateMath = true;
-                Formula f = new Formula();
-                f.read(this.theFormula);
-                if (StringUtil.containsNonAsciiChars(f.theFormula))
-                    f.theFormula = StringUtil.replaceNonAsciiChars(f.theFormula);
-
-                boolean addHoldsPrefix = mgr.getPref("holdsPrefix").equalsIgnoreCase("yes");
-            	//System.out.println("INFO in Formula.preProcess(): entering replacePredVarsAndRowVars ");
-                ArrayList variableReplacements = f.replacePredVarsAndRowVars(kb, addHoldsPrefix);
-				errors.addAll(f.getErrors());
-
-            	//System.out.println("INFO in Formula.preProcess(): entering addInstancesOfSetOrClass ");
-                ArrayList accumulator = addInstancesOfSetOrClass(kb, isQuery, variableReplacements);
-                // Iterate over the formulae resulting from predicate variable instantiation and row variable expansion,
-                // passing each to preProcessRecurse for further processing.
-                if (!accumulator.isEmpty()) {
-                    boolean addSortals = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
-                    Formula fnew = null;
-                    String theNewFormula = null;
-                    long t1 = 0L;
-                    Iterator it = accumulator.iterator(); 
-                    while (it.hasNext()) {
-                        fnew = (Formula) it.next();
-                    	//System.out.println("INFO in Formula.preProcess(): iterating with " + fnew);
-                        t1 = System.currentTimeMillis();
-                        // arg0 = this.getArgument(0);
-                        if (addSortals && !isQuery && fnew.theFormula.matches(".*\\?\\w+.*"))  // isLogicalOperator(arg0) ||                                                        
-                            fnew.read(fnew.addTypeRestrictions(kb));                                             
-                        KB.ppTimers[0] += (System.currentTimeMillis() - t1);  // Increment the timer for adding type restrictions.
-                        t1 = System.currentTimeMillis();
-                        theNewFormula = fnew.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath);
-                        fnew.read(theNewFormula);
-						errors.addAll(fnew.getErrors());                        
-                        KB.ppTimers[6] += (System.currentTimeMillis() - t1);   // Increment the timer for preProcessRecurse().
-
-                        if (fnew.isOkForInference(isQuery, kb)) {
-                            fnew.sourceFile = this.sourceFile;
-                            results.add(fnew);
-                        }
-                        else {
-							logger.warning("Following formula rejected for inference: "	+ theNewFormula);
-							// mgr.setError(mgr.getError() +
-							// "\n<br/>Formula rejected for inference:<br/>"
-							// + fnew.htmlFormat(kb) + "<br/>\n");
-							errors.add("Formula rejected for inference: \n " + f.theFormula);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-			logger.warning(ex.getMessage());
-        }
-
-		logger.exiting("Formula", "preProcess", results);
-    	//System.out.println("INFO in Formula.preProcess(): exiting with results: " + results);
-        return results;
     }
 
     /** ***************************************************************
@@ -3995,10 +2193,6 @@ public class Formula implements Comparable {
      */
     public Formula replaceVar(String v, String term) {
 
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "v = " + v, "term = " + term };
-			logger.entering("Formula", "replaceVar", params);
-		}
         Formula newFormula = new Formula();
         newFormula.read("()");
         if (this.isVariable()) {
@@ -4019,258 +2213,7 @@ public class Formula implements Comparable {
 			// logger.finest("cdr: " + f2);
             newFormula = newFormula.append(f2.replaceVar(v,term));
         }
-		logger.exiting("Formula", "replaceVar", newFormula);
         return newFormula;
-    }
-
-    /** ***************************************************************
-     * Tries to successively instantiate predicate variables and then
-     * expand row variables in this Formula, looping until no new
-     * Formulae are generated.
-     *
-     * @param kb The KB to be used for processing this Formula
-     *
-     * @param addHoldsPrefix If true, predicate variables are not
-     * instantiated
-     *
-     * @return an ArrayList of Formula(s), which could be empty.
-     */
-    private ArrayList replacePredVarsAndRowVars(KB kb, boolean addHoldsPrefix) {
-
-        //System.out.println("Formula.replacePredVarsAndRowVars():" + this);
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "kb = " + kb.name,
-					"addHoldsPrefix = " + addHoldsPrefix };
-			logger.entering("Formula", "replacePredVarsAndRowVars", params);
-		}
-
-		ArrayList result = new ArrayList();
-        try {
-            Formula startF = new Formula();
-            startF.read(this.theFormula);
-
-            long t1 = 0L;
-            Set accumulator = new LinkedHashSet();
-            accumulator.add(startF);
-            List working = new ArrayList();
-            int prevAccumulatorSize = 0;
-            Formula f = null;
-            while (accumulator.size() != prevAccumulatorSize) {
-                prevAccumulatorSize = accumulator.size();
-                // Do pred var instantiations if we are not adding holds prefixes.
-                if (!addHoldsPrefix) {
-                    working.clear();
-                    working.addAll(accumulator);
-                    accumulator.clear();
-                    long tnaplwriVal = KB.ppTimers[4];
-                    t1 = System.currentTimeMillis();
-                    Iterator it = working.iterator(); 
-                    while (it.hasNext()) {
-                        f = (Formula) it.next();
-                        //System.out.println("Formula.replacePredVarsAndRowVars(): iterator1: f == " + f);
-                        List instantiations = f.instantiatePredVars(kb);
-						errors.addAll(f.getErrors());
-						// logger.finest("instantiations == " + instantiations);
-                        if (instantiations.isEmpty()) {
-                            // If the accumulator is empty -- no pred var instantiations were possible -- add
-                            // the original formula to the accumulator for possible row var expansion below.
-                            accumulator.add(f);
-                        }
-                        else {
-                            // If the formula can't be instantiated at all and so has been marked "reject",
-                            // don't add anything.
-                            KBmanager mgr = KBmanager.getMgr();
-                            Object obj0 = instantiations.get(0);
-							String errStr = "No predicate instantiations for ";
-                            if (isNonEmptyString(obj0) && ((String) obj0).equalsIgnoreCase("reject")) {
-								logger.warning(errStr + " " + f);
-								// errStr += ("\n<br/> " + f.htmlFormat(kb));
-								// mgr.setError(mgr.getError() + "\n<br/>" +
-								// errStr + "\n<br/>");
-								errStr += f.theFormula;
-								errors.add(errStr);
-                            }
-                            else {
-                                // It might not be possible to instantiate all pred vars until
-                                // after row vars have been expanded, so we loop until no new formulae
-                                // are being generated.
-                                accumulator.addAll(instantiations);
-                            }
-                        }
-                    }
-                    // Increment the timer for pred var instantiation.
-                    KB.ppTimers[1] += (System.currentTimeMillis() - t1);
-
-                    // We do this to avoid adding up time spent in Formula.toNegAndPosLitsWtihRenameInfo() while
-                    // doing pred var instantiation.  What we really want to know is how much time this method
-                    // contributes to the total time for row var expansion.
-                    KB.ppTimers[4] = tnaplwriVal;
-                }
-                // System.out.println("  1. pvi accumulator.size() == " + accumulator.size());
-                // Row var expansion. Iterate over the instantiated predicate formulas,
-                // doing row var expansion on each.  If no predicate instantiations can be generated, the accumulator
-                // will contain just the original input formula.
-                if (!accumulator.isEmpty() && (accumulator.size() < AXIOM_EXPANSION_LIMIT)) {
-                    t1 = System.currentTimeMillis();
-                    working.clear();
-                    working.addAll(accumulator);
-                    accumulator.clear();
-                    Iterator it2 = working.iterator(); 
-                    while (it2.hasNext()) {
-						f = (Formula) it2.next();
-                        //System.out.println("Formula.replacePredVarsAndRowVars(): iterator2: f == " + f);
-                        accumulator.addAll(f.expandRowVars(kb));
-						// logger.finest("f == " + f);
-						// logger.finest("accumulator == " + accumulator);
-                        if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
-							logger.warning("  AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
-                            break;
-                        }
-                    }
-                    // Increment the timer for row var expansion.
-                    KB.ppTimers[2] += (System.currentTimeMillis() - t1);
-                }
-                // System.out.println("  3. rve accumulator.size() == " + accumulator.size());
-            }
-            result.addAll(accumulator);
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        //System.out.println("Formula.replacePredVarsAndRowVars(): exiting with result: " + result);
-		logger.exiting("Formula", "replacePredVarsAndRowVars", result);
-        return result;
-    }
-
-    /** ***************************************************************
-     * Adds statements of the form (instance <Entity> <SetOrClass>) if
-     * they are not already in the KB.
-     *
-     * @param kb The KB to be used for processing the input Formulae
-     * in variableReplacements
-     *
-     * @param isQuery If true, this method just returns the initial
-     * input List, variableReplacements, with no additions
-     *
-     * @param variableReplacements A List of Formulae in which
-     * predicate variables and row variables have already been
-     * replaced, and to which (instance <Entity> <SetOrClass>)
-     * Formulae might be added
-     *
-     * @return an ArrayList of Formula(s), which could be larger than
-     * the input List, variableReplacements, or could be empty.
-     */
-    private ArrayList addInstancesOfSetOrClass(KB kb,boolean isQuery, List variableReplacements) {
-
-        ArrayList result = new ArrayList();
-        try {
-            if ((variableReplacements != null) && !variableReplacements.isEmpty()) {
-                if (isQuery)
-                    result.addAll(variableReplacements);
-                else {
-                    Set formulae = new LinkedHashSet();
-                    String arg0 = null;
-                    Formula f = null;
-                    for (Iterator it = variableReplacements.iterator(); it.hasNext();) {
-                        f = (Formula) it.next();
-                        formulae.add(f);
-
-                        // Make sure every SetOrClass is stated to be such.
-                        if (f.listP() && !f.empty()) {
-                            arg0 = f.car();
-                            int start = -1;
-                            if (arg0.equals("subclass")) start = 0;
-                            else if (arg0.equals("instance")) start = 1;
-                            if (start > -1) {
-                                List args = Arrays.asList(f.getArgument(1),f.getArgument(2));
-                                int argslen = args.size();
-                                String ioStr = null;
-                                Formula ioF = null;
-                                String arg = null;
-                                for (int i = start; i < argslen; i++) {
-                                    arg = (String) args.get(i);
-                                    if (!isVariable(arg) && !arg.equals("SetOrClass") && atom(arg)) {
-                                        StringBuilder sb = new StringBuilder();
-                                        sb.setLength(0);
-                                        sb.append("(instance ");
-                                        sb.append(arg);
-                                        sb.append(" SetOrClass)");
-                                        ioF = new Formula();
-                                        ioStr = sb.toString().intern();
-                                        ioF.read(ioStr);
-                                        ioF.sourceFile = this.sourceFile;
-                                        if (!kb.formulaMap.containsKey(ioStr)) {
-                                            Map stc = kb.getSortalTypeCache();
-                                            if (stc.get(ioStr) == null) {
-                                                stc.put(ioStr, ioStr);
-                                                formulae.add(ioF);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    result.addAll(formulae);
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** ***************************************************************
-     * Returns true if this Formula appears not to have any of the
-     * characteristics that would cause it to be rejected during
-     * translation to TPTP form, or cause problems during inference.
-     * Otherwise, returns false.
-     *
-     * @param query true if this Formula represents a query, else
-     * false.
-     *
-     * @param kb The KB object to be used for evaluating the
-     * suitability of this Formula.
-     *
-     * @return boolean
-     */
-    private boolean isOkForInference(boolean query, KB kb) {
-
-        boolean pass = false;
-        // kb isn't used yet, because the checks below are purely
-        // syntactic.  But it probably will be used in the future.
-        try {
-            pass = !(// (equal ?X ?Y ?Z ...) - equal is strictly binary.
-                     // No longer necessary?  NS: 2009-06-12
-                     // this.theFormula.matches(".*\\(\\s*equal\\s+\\?*\\w+\\s+\\?*\\w+\\s+\\?*\\w+.*")
-
-                     // The formula contains non-ASCII characters.
-                     // was: this.theFormula.matches(".*[\\x7F-\\xFF].*")
-                     // ||
-                     StringUtil.containsNonAsciiChars(this.theFormula)
-
-                     // (<relation> ?X ...) - no free variables in an
-                     // atomic formula that doesn't contain a string
-                     // unless the formula is a query.
-                     || (!query
-                         && !isLogicalOperator(this.car())
-                         // The formula does not contain a string.
-                         && (this.theFormula.indexOf('"') == -1)
-                         // The formula contains a free variable.
-                         && this.theFormula.matches(".*\\?\\w+.*"))
-
-                     // ... add more patterns here, as needed.
-                     || false
-                     );
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return pass;
     }
 
     /** ***************************************************************
@@ -4294,28 +2237,12 @@ public class Formula implements Comparable {
     public static boolean isNegatedQuery(String query, String formulaString) {
 
         boolean result = false;
-        try {
-			if (logger.isLoggable(Level.FINER)) {
-				String[] params = { "query = " + query,
-						"formulaString = " + formulaString };
-				logger.entering("Formula", "isNegatedQuery", params);
-			}
-
-            String fstr = formulaString.trim();
-            if (fstr.startsWith("(not")) {
-                Formula f = new Formula();
-                f.read(fstr);
-                result = query.equals(f.getArgument(1));
-                //System.out.print("INFO in Formula.isNegatedQuery(): ");
-                //System.out.println(result);
-            }
+        String fstr = formulaString.trim();
+        if (fstr.startsWith("(not")) {
+            Formula f = new Formula();
+            f.read(fstr);
+            result = query.equals(f.getArgument(1));
         }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "isNegatedQuery", result);
         return result;
     }
 
@@ -4344,126 +2271,120 @@ public class Formula implements Comparable {
         if (this.theFormula == null)
             return "";
         String result = this.theFormula;
-        try {
-            if (isNonEmptyString(this.theFormula))
-                this.theFormula = this.theFormula.trim();
-            String legalTermChars = "-:";
-            String varStartChars = "?@";
-            String quantifiers = "forall|exists";
-            StringBuilder token = new StringBuilder();
-            StringBuilder formatted = new StringBuilder();
-            int indentLevel = 0;
-            boolean inQuantifier = false;
-            boolean inToken = false;
-            boolean inVariable = false;
-            boolean inVarlist = false;
-            boolean inComment = false;
+        if (!StringUtil.emptyString(this.theFormula))
+            this.theFormula = this.theFormula.trim();
+        String legalTermChars = "-:";
+        String varStartChars = "?@";
+        String quantifiers = "forall|exists";
+        StringBuilder token = new StringBuilder();
+        StringBuilder formatted = new StringBuilder();
+        int indentLevel = 0;
+        boolean inQuantifier = false;
+        boolean inToken = false;
+        boolean inVariable = false;
+        boolean inVarlist = false;
+        boolean inComment = false;
 
-            int flen = this.theFormula.length();
-            char pch = '0';  // char at (i-1)
-            char ch = '0';   // char at i
-            for (int i = 0; i < flen; i++) {
-				// logger.finest("formatted string = " + formatted.toString());
-                ch = this.theFormula.charAt(i);
-                if (inComment) {     // In a comment
-                    formatted.append(ch);
-                    if ((i > 70) && (ch == '/')) // add spaces to long URL strings
-                        formatted.append(" ");
-                    if (ch == '"')
-                        inComment = false;
+        int flen = this.theFormula.length();
+        char pch = '0';  // char at (i-1)
+        char ch = '0';   // char at i
+        for (int i = 0; i < flen; i++) {
+			// logger.finest("formatted string = " + formatted.toString());
+            ch = this.theFormula.charAt(i);
+            if (inComment) {     // In a comment
+                formatted.append(ch);
+                if ((i > 70) && (ch == '/')) // add spaces to long URL strings
+                    formatted.append(" ");
+                if (ch == '"')
+                    inComment = false;
+            }
+            else {
+                if ((ch == '(')
+                    && !inQuantifier
+                    && ((indentLevel != 0) || (i > 1))) {
+                    if ((i > 0) && Character.isWhitespace(pch)) {
+                        formatted = formatted.deleteCharAt(formatted.length()-1);
+                    }
+                    formatted.append(eolChars);
+                    for (int j = 0; j < indentLevel; j++)
+                        formatted.append(indentChars);
                 }
-                else {
-                    if ((ch == '(')
-                        && !inQuantifier
-                        && ((indentLevel != 0) || (i > 1))) {
-                        if ((i > 0) && Character.isWhitespace(pch)) {
-                            formatted = formatted.deleteCharAt(formatted.length()-1);
-                        }
-                        formatted.append(eolChars);
-                        for (int j = 0; j < indentLevel; j++)
-                            formatted.append(indentChars);
-                    }
-                    if ((i == 0) && (indentLevel == 0) && (ch == '('))
-                        formatted.append(ch);
-                    if (!inToken && !inVariable && Character.isJavaIdentifierStart(ch)) {
-                        token = new StringBuilder(ch);
-                        inToken = true;
-                    }
-                    if (inToken && (Character.isJavaIdentifierPart(ch)
-                                    || (legalTermChars.indexOf(ch) > -1)))
-                        token.append(ch);
-                    if (ch == '(') {
-                        if (inQuantifier) {
-                            inQuantifier = false;
-                            inVarlist = true;
-                            token = new StringBuilder();
-                        }
-                        else
-                            indentLevel++;
-                    }
-                    if (ch == '"')
-                        inComment = true;
-                    if (ch == ')') {
-                        if (!inVarlist)
-                            indentLevel--;
-                        else
-                            inVarlist = false;
-                    }
-                    if ((token.indexOf("forall") > -1) || (token.indexOf("exists") > -1))
-                        inQuantifier = true;
-                    if (inVariable
-                        && !Character.isJavaIdentifierPart(ch)
-                        && (legalTermChars.indexOf(ch) == -1))
-                        inVariable = false;
-                    if (varStartChars.indexOf(ch) > -1)
-                        inVariable = true;
-                    if (inToken
-                        && !Character.isJavaIdentifierPart(ch)
-                        && (legalTermChars.indexOf(ch) == -1)) {
-                        inToken = false;
-                        if (StringUtil.isNonEmptyString(hyperlink)) {
-                            formatted.append("<a href=\"");
-                            formatted.append(hyperlink);
-                            formatted.append("&term=");
-                            formatted.append(token);
-                            formatted.append("\">");
-                            formatted.append(token);
-                            formatted.append("</a>");
-                        }
-                        else
-                            formatted.append(token);
+                if ((i == 0) && (indentLevel == 0) && (ch == '('))
+                    formatted.append(ch);
+                if (!inToken && !inVariable && Character.isJavaIdentifierStart(ch)) {
+                    token = new StringBuilder(ch);
+                    inToken = true;
+                }
+                if (inToken && (Character.isJavaIdentifierPart(ch)
+                                || (legalTermChars.indexOf(ch) > -1)))
+                    token.append(ch);
+                if (ch == '(') {
+                    if (inQuantifier) {
+                        inQuantifier = false;
+                        inVarlist = true;
                         token = new StringBuilder();
                     }
-                    if ((i > 0) && !inToken && !(Character.isWhitespace(ch) && (pch == '('))) {
-                        if (Character.isWhitespace(ch)) {
-                            if (!Character.isWhitespace(pch))
-                                formatted.append(" ");
-                        }
-                        else
-                            formatted.append(ch);
+                    else
+                        indentLevel++;
+                }
+                if (ch == '"')
+                    inComment = true;
+                if (ch == ')') {
+                    if (!inVarlist)
+                        indentLevel--;
+                    else
+                        inVarlist = false;
+                }
+                if ((token.indexOf("forall") > -1) || (token.indexOf("exists") > -1))
+                    inQuantifier = true;
+                if (inVariable
+                    && !Character.isJavaIdentifierPart(ch)
+                    && (legalTermChars.indexOf(ch) == -1))
+                    inVariable = false;
+                if (varStartChars.indexOf(ch) > -1)
+                    inVariable = true;
+                if (inToken
+                    && !Character.isJavaIdentifierPart(ch)
+                    && (legalTermChars.indexOf(ch) == -1)) {
+                    inToken = false;
+                    if (StringUtil.isNonEmptyString(hyperlink)) {
+                        formatted.append("<a href=\"");
+                        formatted.append(hyperlink);
+                        formatted.append("&term=");
+                        formatted.append(token);
+                        formatted.append("\">");
+                        formatted.append(token);
+                        formatted.append("</a>");
                     }
+                    else
+                        formatted.append(token);
+                    token = new StringBuilder();
                 }
-                pch = ch;
-            }
-            if (inToken) {    // A term which is outside of parenthesis, typically, a binding.
-                if (StringUtil.isNonEmptyString(hyperlink)) {
-                    formatted.append("<a href=\"");
-                    formatted.append(hyperlink);
-                    formatted.append("&term=");
-                    formatted.append(token);
-                    formatted.append("\">");
-                    formatted.append(token);
-                    formatted.append("</a>");
+                if ((i > 0) && !inToken && !(Character.isWhitespace(ch) && (pch == '('))) {
+                    if (Character.isWhitespace(ch)) {
+                        if (!Character.isWhitespace(pch))
+                            formatted.append(" ");
+                    }
+                    else
+                        formatted.append(ch);
                 }
-                else
-                    formatted.append(token);
             }
-            result = formatted.toString();
+            pch = ch;
         }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
+        if (inToken) {    // A term which is outside of parenthesis, typically, a binding.
+            if (StringUtil.isNonEmptyString(hyperlink)) {
+                formatted.append("<a href=\"");
+                formatted.append(hyperlink);
+                formatted.append("&term=");
+                formatted.append(token);
+                formatted.append("\">");
+                formatted.append(token);
+                formatted.append("</a>");
+            }
+            else
+                formatted.append(token);
         }
+        result = formatted.toString();
         return result;
     }
 
@@ -4498,21 +2419,15 @@ public class Formula implements Comparable {
     public String htmlFormat(KB kb) {
 
         String fKbHref = "";
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            String hostname = mgr.getPref("hostname");
-            if (!isNonEmptyString(hostname))
-                hostname = "localhost";
-            String port = mgr.getPref("port");
-            if (!isNonEmptyString(port))
-                port = "8080";
-            String kbHref = ("http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kb.name);
-            fKbHref = format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
+        KBmanager mgr = KBmanager.getMgr();
+        String hostname = mgr.getPref("hostname");
+        if (StringUtil.emptyString(hostname))
+            hostname = "localhost";
+        String port = mgr.getPref("port");
+        if (StringUtil.emptyString(port))
+            port = "8080";
+        String kbHref = ("http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kb.name);
+        fKbHref = format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
         return fKbHref;
     }
 
@@ -4524,11 +2439,11 @@ public class Formula implements Comparable {
     public String toProlog() {
 
         if (!listP()) {
-			logger.warning("Not a formula: " + theFormula);
+			System.out.println("Not a formula: " + theFormula);
             return "";
         }
         if (empty()) {
-			logger.warning("Empty formula: " + theFormula);
+        	System.out.println("Empty formula: " + theFormula);
             return "";
         }
         StringBuilder result = new StringBuilder();
@@ -4536,7 +2451,7 @@ public class Formula implements Comparable {
         Formula f = new Formula();
         f.theFormula = cdr();
         if (!Formula.atom(relation)) {
-			logger.warning("Relation not an atom: " + relation);
+        	System.out.println("Relation not an atom: " + relation);
             return "";
         }
         result.append(relation + "('");
@@ -4544,7 +2459,7 @@ public class Formula implements Comparable {
             String arg = f.car();
             f.theFormula = f.cdr();
             if (!Formula.atom(arg)) {
-				logger.warning("Argument not an atom: " + arg);
+            	System.out.println("Argument not an atom: " + arg);
                 return "";
             }
             result.append(arg + "'");
@@ -4557,1396 +2472,9 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Encapsulates translateWord_1, which translates the logical
-     * operators and inequalities in SUO-KIF to their TPTP
-     * equivalents.
-     *
-     * @param st is the StreamTokenizer_s that contains the current token
-     * @return the String that is the translated token
-     */
-    private static String translateWord(StreamTokenizer_s st, boolean hasArguments) {
-
-        String result = null;
-        try {
-            result = translateWord_1(st, hasArguments);
-        	//System.out.println("INFO in Formula.translateWord(): returned from translateWord_1 with result " + result);
-            if (result.equals("$true__m") || result.equals("$false__m")) 
-                result = "'" + result + "'";            
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-		logger.exiting("Formula", "translateWord", result);
-        return result;
-    }
-
-    /** ***************************************************************
-     * Convert the logical operators and inequalities in SUO-KIF to
-     * their TPTP equivalents
-     * @param st is the StreamTokenizer_s that contains the current token
-     * @return the String that is the translated token
-     */
-    private static String translateWord_1(StreamTokenizer_s st, boolean hasArguments) {      
-
-    	//System.out.println("INFO in Formula.translateWord_1(): st: " + st.sval);
-        int translateIndex;
-
-        List<String> kifOps = Arrays.asList(UQUANT, EQUANT, NOT, AND, OR, IF, IFF, EQUAL);
-        List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
-
-        List<String> kifPredicates =
-            Arrays.asList(LOG_TRUE, LOG_FALSE,
-                          "<=","<",">",">=",
-                          "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
-
-        List<String> tptpPredicates = Arrays.asList("$true","$false",
-                                                    "lesseq","less","greater","greatereq",
-                                                    "lesseq","less","greater","greatereq");
-
-        List<String> kifFunctions = Arrays.asList(TIMESFN, DIVIDEFN, PLUSFN, MINUSFN);
-        List<String> tptpFunctions = Arrays.asList("times","divide","plus","minus");
-
-        List<String> kifRelations = new ArrayList<String>();
-        kifRelations.addAll(kifPredicates);
-        kifRelations.addAll(kifFunctions);
-
-        // Context creeps back in here whether we want it or not.  We
-        // consult the KBmanager to determine if holds prefixing is
-        // turned on, or not.  If it is on, then we do not want to add
-        // the "mentions" suffix to relation names used as arguments
-        // to other relations.
-        KBmanager mgr = null;
-        boolean holdsPrefixInUse = false;
-        String mentionSuffix = termMentionSuffix;
-        String symbolPrefix = termSymbolPrefix;
-        String variablePrefix = termVariablePrefix;
-        try {
-            mgr = KBmanager.getMgr();
-            holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
-            if (holdsPrefixInUse && !kifRelations.contains(st.sval))
-                mentionSuffix = "";
-        }
-        catch (Exception ex) {  //---Be silent if there is a problem getting the KBmanager.            
-			logger.warning(ex.getMessage());
-        }
-
-        //----Places single quotes around strings, and replace \n by space
-        if (st.ttype == 34)
-            return("'" + st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
-        //----Fix variables to have leading V_
-        char ch0 = ((st.sval.length() > 0)
-                    ? st.sval.charAt(0)
-                    : 'x');
-        char ch1 = ((st.sval.length() > 1)
-                    ? st.sval.charAt(1)
-                    : 'x');
-        if (ch0 == '?' || ch0 == '@')
-            return(termVariablePrefix + st.sval.substring(1).replace('-','_'));
-        //----Translate special predicates
-        translateIndex = 0;
-        while (translateIndex < kifPredicates.size() && !st.sval.equals(kifPredicates.get(translateIndex)))
-            translateIndex++;
-        if (translateIndex < kifPredicates.size())
-            // return((hasArguments ? "$" : "") + tptpPredicates[translateIndex]);
-            return(tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
-        //----Translate special functions
-        translateIndex = 0;
-        while (translateIndex < kifFunctions.size() && !st.sval.equals(kifFunctions.get(translateIndex)))
-            translateIndex++;
-        if (translateIndex < kifFunctions.size())
-            // return((hasArguments ? "$" : "") + tptpFunctions[translateIndex]);
-            return(tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
-        //----Translate operators
-        translateIndex = 0;
-        while (translateIndex < kifOps.size() && !st.sval.equals(kifOps.get(translateIndex)))
-            translateIndex++;
-        if (translateIndex < kifOps.size())
-            return(tptpOps.get(translateIndex));
-        //----Do nothing to numbers
-        if (st.ttype == StreamTokenizer.TT_NUMBER ||
-            (st.sval != null && (Character.isDigit(ch0) ||
-                                 (ch0 == '-' && Character.isDigit(ch1))))) {
-            return(st.sval);
-        }
-        String term = st.sval;
-
-        if (!hasArguments) {
-            if (
-                // The purely syntactic criteria for testing if a term
-                // denotes a Relation are reliable only for "pure"
-                // SUO-KIF.  They break down if the terms to be
-                // translated contain namespace prefixes and other
-                // non-SUO-KIF lexical conventions.
-                (!term.endsWith(mentionSuffix)
-                 && ((!term.contains(StringUtil.getKifNamespaceDelimiter())
-                      && Character.isLowerCase(ch0))
-                     || term.endsWith("Fn")
-                     // The semantic test below works only if a KB is loaded.
-                     || KB.isInstanceOfInAnyKB(term, "Relation")))) {
-                term += mentionSuffix;
-            }
-        }
-        return(termSymbolPrefix + term.replace('-','_'));
-    }
-
-    /** ***************************************************************
-     * @param st is the StreamTokenizer_s that contains the current token
-     * for which the arity is desired
-     *
-     * @return the integer arity of the given logical operator
-     */
-    private static int operatorArity(StreamTokenizer_s st) {
-
-        int translateIndex;
-        String kifOps[] = {UQUANT, EQUANT, NOT, AND, OR, IF, IFF};
-
-        translateIndex = 0;
-        while (translateIndex < kifOps.length &&
-               !st.sval.equals(kifOps[translateIndex])) {
-            translateIndex++;
-        }
-        if (translateIndex <= 2) {
-            return(1);
-        } else {
-            if (translateIndex < kifOps.length) {
-                return(2);
-            } else {
-                return(-1);
-            }
-        }
-    }
-
-    /** ***************************************************************
-     */
-    private static void incrementTOS(Stack countStack) {
-
-        countStack.push(new Integer((Integer)countStack.pop()+1));
-    }
-
-    /** ***************************************************************
-     * Add the current token, if a variable, to the list of variables
-     * @param variables is the list of variables
-     */
-    private static void addVariable(StreamTokenizer_s st,Vector variables) {
-
-        String tptpVariable;
-
-        if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
-            tptpVariable = translateWord(st,false);
-            if (variables.indexOf(tptpVariable) == -1) 
-                variables.add(tptpVariable);            
-        }
-    }
-
-    /** ***************************************************************
-     * Parse a single formula into TPTP format
-     */
-    public static String tptpParseSUOKIFString(String suoString) {
-        
-        //System.out.println("INFO in Formula.tptpParseSUOKIFString(\"" + suoString + "\")");
-        
-        Formula tempF = new Formula();      // Special case to renam Foo for (instance Foo SetOrClass)
-        tempF.read(suoString);              // so a symbol can't be both a class and an instance.
-        if (tempF.getArgument(0).equals("instance") &&
-            tempF.getArgument(2).equals("SetOrClass")) {
-            String arg1 = tempF.getArgument(1);
-            suoString = "(instance " + arg1 + classSymbolSuffix + " SetOrClass)";
-        }
-
-        StreamTokenizer_s st = null;
-        String translatedFormula = null;
-        try {
-            int parenLevel;
-            boolean inQuantifierVars;
-            boolean lastWasOpen;
-            boolean inHOL;
-            int inHOLCount;
-            Stack operatorStack = new Stack();
-            Stack countStack = new Stack();
-            Vector quantifiedVariables = new Vector();
-            Vector allVariables = new Vector();
-            int index;
-            int arity;
-            String quantification;
-
-            StringBuilder tptpFormula = new StringBuilder();
-
-            parenLevel = 0;
-            countStack.push(0);
-            lastWasOpen = false;
-            inQuantifierVars = false;
-            inHOL = false;
-            inHOLCount = 0;
-
-            st = new StreamTokenizer_s(new StringReader(suoString));
-            KIF.setupStreamTokenizer(st);
-
-            do {
-                st.nextToken();
-                if (st.ttype==40) {         //----Open bracket
-                    if (lastWasOpen) {      //----Should not have ((in KIF
-						logger.warning("Double open bracket at " + tptpFormula);
-                        throw new ParseException("Parsing error in " + suoString,0);
-                    }                    
-                    if (inHOL)              //----Track nesting of ()s for hol__, so I know when to close the '
-                        inHOLCount++;
-                    lastWasOpen = true;
-                    parenLevel++;                    
-                } else if (st.ttype == StreamTokenizer.TT_WORD &&  //----Operators
-                           (((arity = operatorArity(st)) > 0) || st.sval.equals(EQUAL))) {                    
-                	if (st.sval.equals(EQUAL))
-                		arity = 2;
-                    if (!lastWasOpen) {             //----Operators must be preceded by a (
-						logger.warning("Missing ( before " + st.sval + " at " + tptpFormula);
-                        return(null);
-                    }
-                    //----This is the start of a new term - put in the infix operator if not the
-                    //----first term for this operator
-                    if ((Integer)(countStack.peek()) > 0) {
-                        // System.out.println("  1 : countStack == " + countStack);
-                        // System.out.println("  1 : operatorStack == " + operatorStack);
-                        tptpFormula.append((String)operatorStack.peek());
-                    }                    
-                    if (inHOL && inHOLCount == 1)     //----If this is the start of a hol__ situation, quote it all
-                        tptpFormula.append("'");
-                    tptpFormula.append("(");          //----()s around all operator expressions
-                    if (arity == 1) {                 //----Output unary as prefix
-                        tptpFormula.append(translateWord(st,false));                        
-                        countStack.push(new Integer(0));   //----Note the new operator (dummy) with 0 operands so far
-                        operatorStack.push(",");
-                        //----Check if the next thing will be the quantified variables
-                        if (st.sval.equals("forall") || st.sval.equals("exists"))
-                            inQuantifierVars = true;
-                    } 
-                    else if (arity == 2) {    //----Binary operator
-                        //----Note the new operator with 0 operands so far
-                        countStack.push(new Integer(0));
-                        operatorStack.push(translateWord(st,false));
-                    }
-                    lastWasOpen = false;                    
-                } 
-                else if (st.ttype == 96) {   //----Back tick - token translation to TPTP. Everything gets ''ed                    
-                    if (!inHOL) {              //----They may be nested - only start the situation at the outer one
-                        inHOL = true;
-                        inHOLCount = 0;
-                    }
-                } 
-                else if (st.ttype == 34 ||  //----Quote - Term token translation to TPTP
-                           st.ttype == StreamTokenizer.TT_NUMBER ||
-                           (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
-                           st.ttype == StreamTokenizer.TT_WORD) {
-                    if (lastWasOpen) {          //----Start of a predicate or variable list
-                        if (inQuantifierVars) { //----Variable list
-                            tptpFormula.append("[");
-                            tptpFormula.append(translateWord(st,false));
-                            incrementTOS(countStack);
-                        } 
-                        else {                //----Predicate
-                            //----This is the start of a new term - put in the infix operator if not the
-                            //----first term for this operator
-                            if ((Integer)(countStack.peek()) > 0)
-                                tptpFormula.append((String)operatorStack.peek());
-                            //----If this is the start of a hol__ situation, quote it all
-                            if (inHOL && inHOLCount == 1)
-                                tptpFormula.append("'");                            
-                            tptpFormula.append(translateWord(st,true));   //----Predicate or function and (
-                            tptpFormula.append("(");                            
-                            countStack.push(new Integer(0));              //----Note the , for between arguments with 0 arguments so far
-                            operatorStack.push(",");
-                        }
-                        //----Argument or quantified variable
-                    } else {
-                        //----This is the start of a new term - put in the infix operator if not the
-                        //----first term for this operator
-                        if ((Integer)(countStack.peek()) > 0)
-                            tptpFormula.append((String)operatorStack.peek());                        
-                        tptpFormula.append(translateWord(st,false));      //----Output the word               
-                        incrementTOS(countStack);                         //----Increment counter for this level
-                    }
-                    //----Collect variables that are used and quantified
-                    if (isNonEmptyString(st.sval)
-                        && (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@')) {
-                        if (inQuantifierVars)
-                            addVariable(st,quantifiedVariables);
-                        else
-                            addVariable(st,allVariables);
-                    }
-                    lastWasOpen = false;
-                } else if (st.ttype==41) {      //----Close bracket                    
-                    if (inHOL)                  //----Track nesting of ()s for hol__, so I know when to close the '
-                        inHOLCount--;
-                    //----End of quantified variable list
-                    if (inQuantifierVars) {
-                        //----Fake restarting the argument list because the quantified variable list
-                        //----does not use the operator from the surrounding expression
-                        countStack.pop();
-                        countStack.push(0);
-                        tptpFormula.append("] : ");
-                        inQuantifierVars = false;
-                        //----End of predicate or operator list
-                    } 
-                    else {                        
-                        countStack.pop();                //----Pop off the stacks to reveal the next outer layer
-                        operatorStack.pop();                        
-                        tptpFormula.append(")");         //----Close the expression               
-                        if (inHOL && inHOLCount == 0) {  //----If this closes a HOL expression, close the '
-                            tptpFormula.append("'");
-                            inHOL = false;
-                        }                        
-                        incrementTOS(countStack);        //----Note that another expression has been completed
-                    }
-                    lastWasOpen = false;
-
-                    parenLevel--;                    
-                    if (parenLevel == 0) {   //----End of the statement being processed. Universally quantify free variables
-                        //findFreeVariables(allVariables,quantifiedVariables);
-                        allVariables.removeAll(quantifiedVariables);
-                        if (allVariables.size() > 0) {
-                            quantification = "! [";
-                            for (index = 0; index < allVariables.size(); index++) {
-                                if (index > 0)
-                                    quantification += ",";
-                                quantification += (String)allVariables.elementAt(index);
-                            }
-                            quantification += "] : ";
-                            tptpFormula.insert(0,"( " + quantification);
-                            tptpFormula.append(" )");
-                        }
-                        if (StringUtil.emptyString(translatedFormula))
-                            translatedFormula = "( " + tptpFormula.toString() + " )";
-                        else
-                            translatedFormula += "& ( " + tptpFormula.toString() + " )";
-
-                        if ((Integer) (countStack.pop()) != 1)
-							logger.warning("Not one formula");
-                    } else if (parenLevel < 0) {
-						logger.warning("Extra closing bracket at " + tptpFormula.toString());
-                        throw new ParseException("Parsing error in " + suoString,0);
-                    }
-                } else if (st.ttype != StreamTokenizer.TT_EOF) {
-					logger.warning("Illegal character '" +
-                                       (char)st.ttype + "' at " + tptpFormula.toString());
-                    throw new ParseException("Parsing error in " + suoString,0);
-                }
-            } while (st.ttype != StreamTokenizer.TT_EOF);
-
-            //----Bare word like $false didn't get done by a closing)
-            if (StringUtil.emptyString(translatedFormula))
-                translatedFormula = tptpFormula.toString();
-        }
-        catch (Exception ex2) {
-			logger.warning(ex2.getMessage());
-			ex2.printStackTrace();
-        }
-        //System.out.println("translatedFormula: " + translatedFormula);
-        //System.out.println("EXIT Formula.tptpParseSUOKIFString(\"" + suoString + "\")");
-        return translatedFormula;
-    }
-
-    /** ***************************************************************
-     * Parse formulae into TPTP format
-     */
-    public void tptpParse(boolean query, KB kb, List<Formula> preProcessedForms)
-        throws ParseException, IOException {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "query = " + query, "kb = " + kb.name,
-					"preProcessForms = " + preProcessedForms };
-			logger.entering("Formula", "tptpParse", params);
-		}
-
-		try {
-            KBmanager mgr = KBmanager.getMgr();
-            if (kb == null)
-                kb = new KB("",mgr.getPref("kbDir"));
-
-            if (!this.isBalancedList()) {
-				String errStr = "Unbalanced parentheses or quotes in "
-						+ this.theFormula;
-				// logger.warning(errStr);
-				// mgr.setError(mgr.getError() + ("\n<br/>" + errStr + " in " +
-				// this.theFormula + "\n<br/>"));
-				errors.add(errStr);
-                return;
-            }
-            List<Formula> processed = preProcessedForms;
-            if (processed == null)
-                processed = this.preProcess(query, kb);
-
-			// logger.finest("processed = " + processed);
-
-            if (processed != null) {
-                this.clearTheTptpFormulas();
-                //----Performs function on each current processed axiom
-                Formula f = null;
-                for (Iterator<Formula> g = processed.iterator(); g.hasNext();) {
-                    f = (Formula) g.next();
-					logger.finer("f = " + f);
-					if (!f.theFormula.contains("@")) {
-						String tptpStr = tptpParseSUOKIFString(f.theFormula);
-						if (StringUtil.isNonEmptyString(tptpStr)) {
-							this.getTheTptpFormulas().add(tptpStr);
-						}
-					}
-                }
-
-				// logger.finest("theTptpFormulas = " + this.getTheTptpFormulas());
-            }
-        }
-        catch (Exception ex) {
-			logger.severe(ex.getMessage());
-            ex.printStackTrace();
-            if (ex instanceof ParseException)
-                throw (ParseException) ex;
-            if (ex instanceof IOException)
-                throw (IOException) ex;
-        }
-
-		logger.exiting("Formula", "tptpParse");
-        return;
-    }
-
-    /** ***************************************************************
-     * Parse formulae into TPTP format
-     */
-    public void tptpParse(boolean query, KB kb) throws ParseException, IOException {
-
-        this.tptpParse(query, kb, null);
-        return;
-    }
-
-    ///////////////////////////////////////////////////////
-    /*
-      START of instantiatePredVars(KB kb) implementation.
-    */
-    ///////////////////////////////////////////////////////
-
-    /** ***************************************************************
-     * Returns an ArrayList of the Formulae that result from replacing
-     * all arg0 predicate variables in the input Formula with
-     * predicate names.
-     *
-     * @param kb A KB that is used for processing the Formula.
-     *
-     * @return An ArrayList of Formulas, or an empty ArrayList if no
-     * instantiations can be generated.
-     */
-    public ArrayList instantiatePredVars(KB kb) {
-
-        ArrayList ans = new ArrayList();
-        try {
-            if (this.listP()) {
-                String arg0 = this.getArgument(0);
-                // First we do some checks to see if it is worth processing the formula.
-                if (isLogicalOperator(arg0)
-                    && this.theFormula.matches(".*\\(\\s*\\?\\w+.*")) {
-                    // Get all pred vars, and then compute query lits for the pred vars, indexed by var.
-                    Map varsWithTypes = gatherPredVars(kb);
-                    if (!varsWithTypes.containsKey("arg0")) {
-                        // The formula has no predicate variables in arg0 position, so just return it.
-                        ans.add(this);
-                    }
-                    else {
-                        List indexedQueryLits = prepareIndexedQueryLiterals(kb, varsWithTypes);
-                        List substForms = new ArrayList();
-                        List varQueryTuples = null;
-                        List substTuples = null;
-                        List litsToRemove = null;
-
-						// First, gather all substitutions.
-                        Iterator it1 = indexedQueryLits.iterator();
-                        while (it1.hasNext()) {
-                            varQueryTuples = (List) it1.next();
-                            substTuples = computeSubstitutionTuples(kb, varQueryTuples);
-                            if (substTuples != null && !substTuples.isEmpty()) {
-                                if (substForms.isEmpty())
-                                    substForms.add(substTuples);
-                                else {
-                                    int stSize = substTuples.size();
-                                    int iSize = -1;
-                                    int sfSize = substForms.size();
-                                    int sfLast = (sfSize - 1);
-                                    for (int i = 0 ; i < sfSize ; i++) {
-                                        iSize = ((List) substForms.get(i)).size();
-                                        if (stSize < iSize) {
-                                            substForms.add(i, substTuples);
-                                            break;
-                                        }
-                                        if (i == sfLast)
-                                            substForms.add(substTuples);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (!substForms.isEmpty()) {
-                            // Try to simplify the Formula.
-                            Formula f = this;
-                            it1 = substForms.iterator();
-                            Iterator it2 = null;
-                            while (it1.hasNext()) {
-                                substTuples = (List) it1.next();
-                                litsToRemove = (List) substTuples.get(0);
-                                it2 = litsToRemove.iterator();
-                                while (it2.hasNext()) {
-                                    List lit = (List) it2.next();
-                                    f = f.maybeRemoveMatchingLits(lit);
-                                }
-                            }
-
-							// Now generate pred var instantiations from the possibly simplified formula.
-                            List templates = new ArrayList();
-							templates.add(f.theFormula);
-                            Set accumulator = new HashSet();
-                            String template = null;
-                            String var = null;
-                            String term = null;
-                            ArrayList quantVars = null;
-                            int i = 0;
-                            // Iterate over all var plus query lits forms, getting
-                            // a list of substitution literals.
-                            it1 = substForms.iterator();
-                            while (it1.hasNext()) {
-                                substTuples = (List) it1.next();
-                                if ((substTuples instanceof List) && !substTuples.isEmpty()) {
-                                    // Iterate over all ground lits ...
-                                    // Remove litsToRemove, which we have already used above.
-                                    litsToRemove = (List) substTuples.remove(0);
-
-                                    // Remove and hold the tuple that indicates the variable substitution pattern.
-                                    List varTuple = (List) substTuples.remove(0);
-                                    it2 = substTuples.iterator();
-                                    while (it2.hasNext()) {
-                                        List groundLit = (List) it2.next();
-										String groundTerm = (String) groundLit.get(1);
-										// Iterate over all formula templates, substituting terms from each
-										// ground lit for vars in the template.
-										Iterator it3 = templates.iterator();
-										Formula templateF = new Formula();
-										while (it3.hasNext()) {
-											template = (String) it3.next();
-											templateF.read(template);
-											quantVars = templateF.collectVariables().get(0);
-											for (i = 0; i < varTuple.size(); i++) {
-												var = (String) varTuple.get(i);
-												if (isVariable(var)) {
-													term = (String) groundLit.get(i);
-													// Don't replace variables that are explicitly quantified.
-													if (!quantVars.contains(var)) {
-														List patternStrings = Arrays.asList("(\\W*\\()(\\s*holds\\s+\\"
-																		+ var + ")(\\W+)",
-																// "(\\W*\\()(\\s*\\" + var + ")(\\W+)",
-																		"(\\W*)(\\" + var + ")(\\W+)");
-														int pslen = patternStrings.size();
-														List patterns = new ArrayList();
-														for (int j = 0; j < pslen; j++)
-															patterns.add(Pattern.compile((String) (patternStrings.get(j))));
-														int plen = patterns.size();
-														Pattern p = null;
-														Matcher m = null;
-														for (int j = 0; j < plen; j++) {
-															p = (Pattern) patterns.get(j);
-															m = p.matcher(template);
-															template = m.replaceAll("$1" + term + "$3");
-														}
-													}
-												}
-											}
-
-											if (hasCorrectArity(template, kb))
-												accumulator.add(template);
-											else {
-												logger.info("FORMULA REJECTED because of incorrect arity: " + template);
-												break;
-											}
-										}
-                                    }
-                                    templates.clear();
-                                    templates.addAll(accumulator);
-                                    accumulator.clear();
-                                }
-                            }
-                            ans.addAll(KB.stringsToFormulas(templates));
-                        }
-                        if (ans.isEmpty()) 
-							ans.add("reject");                        
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return ans;
-    }
-
-    /** ***************************************************************
-     * Returns the number of SUO-KIF variables (only ? variables, not
-     * @ROW variables) in the input query literal.
-     *
-     * @param queryLiteral A List representing a Formula.
-     *
-     * @return An int.
-     */
-    private static int getVarCount(List queryLiteral) {
-
-        int ans = 0;
-        if (queryLiteral instanceof List) {
-            String term = null;
-            for (Iterator it = queryLiteral.iterator(); it.hasNext();) {
-                term = (String) it.next();
-                if (term.startsWith("?")) ans++;
-            }
-        }
-        return ans;
-    }
-
-	public boolean hasCorrectArity(KB kb) {
-		return hasCorrectArity(this.theFormula, kb);
-	}
-
-	public boolean hasCorrectArity(String formula, KB kb) {
-		boolean arityCorrect = true;
-
-		formula = formula.replaceAll("exists\\s+(\\([^\\(]+?\\))", "");
-		formula = formula.replaceAll("forall\\s+(\\([^\\(]+?\\))", "");
-		formula = formula.replaceAll("\".*?\"", "?MATCH");
-		Pattern p = Pattern.compile("(\\([^\\(]+?\\))");
-		boolean done = false;
-
-		Matcher m = p.matcher(formula);
-		try {
-			while (m.find() && arityCorrect) {
-				String f = m.group(1);
-				if (f.length() > 2)
-					f = f.substring(1, f.length() - 1);
-				String[] split = f.split(" ");
-				if (split.length > 1) {
-					String rel = split[0];
-					if (!rel.startsWith("?")) {
-						int arity = -1;
-						if (rel.equals("=>") || rel.equals("<=>"))
-							arity = 2;
-						else
-							arity = kb.getValence(rel);
-
-						boolean startsWith = false;
-						// disregard statements using the @ROW variable as it
-						// will more often than not resolve to a wrong arity
-						for (int i = 1; i < split.length; i++)
-							if (split[i].startsWith("@"))
-								startsWith = true;
-						if (!startsWith)
-							if (arity >= 1 && split.length - 1 != arity) 
-								arityCorrect = false;							
-					}
-				}
-
-				formula = formula.replace("(" + f + ")", "?MATCH");
-				m = p.matcher(formula);
-			}
-		} catch (Exception e) {
-			logger.warning("Error encountered: " + e.getMessage());
-			return false;
-		}
-
-		return arityCorrect;
-	}
-
-	private static ArrayList<String> getFunctionTerms(KB kb) {
-		ArrayList result = new ArrayList();
-
-		ArrayList accumulator = new ArrayList();
-
-		ArrayList ql = new ArrayList();
-		ql.add("range");
-		ql.add("?REL");
-		ql.add("?INST");
-
-		ArrayList response = kb.askWithLiteral(ql);
-
-		if (response != null && response.size() > 0)
-			accumulator.addAll(response);
-
-		ql.set(0, "rangeSubclass");
-		response = kb.askWithLiteral(ql);
-
-		if (response != null && response.size() > 0)
-			accumulator.addAll(response);
-
-		ArrayList terms = KB.formulasToArrayLists(accumulator);
-		for (int i = 0; i < terms.size(); i++) {
-			ArrayList args = (ArrayList) terms.get(i);
-			result.add(args.get(1));
-		}
-
-		return result;
-	}
-
-    /** ***************************************************************
-     * This method returns an ArrayList of query answer literals.  The
-     * first element is an ArrayList of query literals that might be
-     * used to simplify the Formula to be instantiated.  The second
-     * element is the query literal (ArrayList) that will be used as a
-     * template for doing the variable substitutions.  All subsequent
-     * elements are ground literals (ArrayLists).
-     *
-     * @param kb A KB to query for answers.
-     *
-     * @param queryLits A List of query literals.  The first item in
-     * the list will be a SUO-KIF variable (String), which indexes the
-     * list.  Each subsequent item is a query literal (List).
-     *
-     * @return An ArrayList of literals, or an empty ArrayList if no
-     * query answers can be found.
-     */
-    private static ArrayList computeSubstitutionTuples(KB kb, List queryLits) {
-
-        // System.out.println("ENTER computeSubstitutionTuples(" + kb + ", " + queryLits + ")");
-        ArrayList result = new ArrayList();
-        try {
-            if (kb != null && queryLits != null && !queryLits.isEmpty()) {
-                String idxVar = (String) queryLits.get(0);
-                int i = 0;
-                int j = 0;
-
-                // Sort the query lits by number of variables.
-                ArrayList sortedQLits = new ArrayList(queryLits);
-                sortedQLits.remove(0);
-                if (sortedQLits.size() > 1) {
-                    Comparator comp = new Comparator() {
-                            public int compare(Object o1, Object o2) {
-                                Integer c1 = Integer.valueOf(getVarCount((List) o1));
-                                Integer c2 = Integer.valueOf(getVarCount((List) o2));
-                                return c1.compareTo(c2);
-                            }
-                        };
-                    Collections.sort(sortedQLits, Collections.reverseOrder(comp));
-                }
-
-                // Put instance literals last.
-                List tmplist = new ArrayList(sortedQLits);
-                List ioLits = new ArrayList();
-                sortedQLits.clear();
-                List ql = null;
-                for (Iterator iql = tmplist.iterator(); iql.hasNext();) {
-                    ql = (List) iql.next();
-                    if (((String)(ql.get(0))).equals("instance"))
-                        ioLits.add(ql);
-                    else
-                        sortedQLits.add(ql);
-                }
-                sortedQLits.addAll(ioLits);
-
-                // Literals that will be used to try to simplify the
-                // formula before pred var instantiation.
-                ArrayList simplificationLits = new ArrayList();
-
-                // The literal that will serve as the pattern for
-                // extracting var replacement terms from answer
-                // literals.
-                List keyLit = null;
-
-                // The list of answer literals retrieved using the
-                // query lits, possibly built up via a sequence of
-                // multiple queries.
-                ArrayList answers = null;
-
-                Set working = new HashSet();
-                ArrayList accumulator = null;
-
-                boolean satisfiable = true;
-                boolean tryNextQueryLiteral = true;
-
-                // The first query lit for which we get an answer is
-                // the key lit.
-                for (i = 0;
-                     (i < sortedQLits.size()) && tryNextQueryLiteral;
-                     i++) {
-                    ql = (List) sortedQLits.get(i);
-                    accumulator = kb.askWithLiteral(ql);
-                    satisfiable = ((accumulator != null) && !accumulator.isEmpty());
-                    tryNextQueryLiteral = (satisfiable || (getVarCount(ql) > 1));
-                         // !((String)(ql.get(0))).equals("instance")                         
-                    // System.out.println(ql + " accumulator == " + accumulator);
-                    if (satisfiable) {
-                        simplificationLits.add(ql);
-                        if (keyLit == null) {
-                            keyLit = ql;
-                            answers = KB.formulasToArrayLists(accumulator);
-                        }
-                        else {  // if (accumulator.size() < answers.size()) {
-                            accumulator = KB.formulasToArrayLists(accumulator);
-
-                            // Winnow the answers list.
-                            working.clear();
-                            List ql2 = null;
-                            int varPos = ql.indexOf(idxVar);
-                            String term = null;
-                            for (j = 0; j < accumulator.size(); j++) {
-                                ql2 = (List) accumulator.get(j);
-                                term = (String) (ql2.get(varPos));
-                                // if (!term.endsWith("Fn")) {
-                                working.add(term);
-                                // }
-                            }
-                            accumulator.clear();
-                            accumulator.addAll(answers);
-                            answers.clear();
-                            varPos = keyLit.indexOf(idxVar);
-                            for (j = 0; j < accumulator.size(); j++) {
-                                ql2 = (List) accumulator.get(j);
-                                term = (String) (ql2.get(varPos));
-                                if (working.contains(term)) {
-                                    answers.add(ql2);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (satisfiable && (keyLit != null)) {
-                    result.add(simplificationLits);
-                    result.add(keyLit);
-                    result.addAll(answers);
-                }
-                else {
-                    result.clear();
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-        return result;
-    }
-
-    /** ***************************************************************
-     * This method returns an ArrayList in which each element is
-     * another ArrayList.  The head of each element is a variable.
-     * The subsequent objects in each element are query literals
-     * (ArrayLists).
-     *
-     * @param kb The KB to use for computing variable type signatures.
-     *
-     * @return An ArrayList, or null if the input formula contains no
-     * predicate variables.
-     */
-    //private ArrayList prepareIndexedQueryLiterals(KB kb) {
-    //    return prepareIndexedQueryLiterals(kb, null);
-    //}
-
-    /** ***************************************************************
-     * This method returns an ArrayList in which each element is
-     * another ArrayList.  The head of each element is a variable.
-     * The subsequent objects in each element are query literals
-     * (ArrayLists).
-     *
-     * @param kb The KB to use for computing variable type signatures.
-     *
-     * @param varTypeMap A Map from variables to their types, as
-     * explained in the javadoc entry for gatherPredVars(kb)
-     *
-     * @see Formula.gatherPredVars(KB kb)
-     *
-     * @return An ArrayList, or null if the input formula contains no
-     * predicate variables.
-     */
-    private ArrayList prepareIndexedQueryLiterals(KB kb, Map varTypeMap) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "kb = " + kb.name, "varTypeMap = " + varTypeMap };
-			logger.entering("Formula", "prepareIndexedQueryLiterals", params);
-		}
-		ArrayList ans = new ArrayList();
-        try {
-            Map varsWithTypes = ((varTypeMap instanceof Map)
-                                 ? varTypeMap
-                                 : this.gatherPredVars(kb));
-			// logger.finest("varsWithTypes = " + varsWithTypes);
-
-            if (!varsWithTypes.isEmpty()) {
-                String yOrN = (String) varsWithTypes.get("arg0");
-                // If the formula doesn't contain any arg0 pred vars, do nothing.
-                if (isNonEmptyString(yOrN) && yOrN.equalsIgnoreCase("yes")) {
-                    // Try to simplify the formula.
-                    ArrayList varWithTypes = null;
-                    ArrayList indexedQueryLits = null;
-
-                    String var = null;
-                    for (Iterator it = varsWithTypes.keySet().iterator(); it.hasNext();) {
-                        var = (String) it.next();
-                        if (isVariable(var)) {
-                            varWithTypes = (ArrayList) varsWithTypes.get(var);
-                            indexedQueryLits = gatherPredVarQueryLits(kb, varWithTypes);
-                            if (!indexedQueryLits.isEmpty()) {
-                                ans.add(indexedQueryLits);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-		logger.exiting("Formula", "prepareIndexedQueryLiterals", ans);
-        return ans;
-    }
-
-    /** ***************************************************************
-     * This method collects and returns all predicate variables that
-     * occur in the Formula.
-     *
-     * @param kb The KB to be used for computations involving
-     * assertions.
-     *
-     * @return a HashMap in which the keys are predicate variables,
-     * and the values are ArrayLists containing one or more class
-     * names that indicate the type constraints tha apply to the
-     * variable.  If no predicate variables can be gathered from the
-     * Formula, the HashMap will be empty.  The first element in each
-     * ArrayList is the variable itself.  Subsequent elements are the
-     * types of the variable.  If no types for the variable can be
-     * determined, the ArrayList will contain just the variable.
-     */
-    protected HashMap gatherPredVars(KB kb) {
-
-		logger.entering("Formula", "gatherPredVars", kb.name);
-        HashMap ans = new HashMap();
-        try {
-            if (isNonEmptyString(this.theFormula)) {
-                List accumulator = new ArrayList();
-                List working = new ArrayList();
-                if (this.listP() && !this.empty())
-                    accumulator.add(this);
-                Iterator it = null;
-                while (!accumulator.isEmpty()) {
-                    working.clear();
-                    working.addAll(accumulator);
-                    accumulator.clear();
-                    Formula f = null;
-                    String arg0 = null;
-                    String arg2 = null;
-                    ArrayList vals = null;
-                    int len = -1;
-                    for (it = working.iterator(); it.hasNext();) {
-                        f = (Formula) it.next();
-                        len = f.listLength();
-                        arg0 = f.getArgument(0);
-                        if (isQuantifier(arg0) || arg0.equals("holdsDuring") || arg0.equals("KappaFn")) {
-                            if (len > 2) {
-                                arg2 = f.getArgument(2);
-
-                                Formula newF = new Formula();
-                                newF.read(arg2);
-                                if (f.listP() && !f.empty())
-                                    accumulator.add(newF);
-                            }
-                            else {
-								logger.warning("Is this malformed? " + f.theFormula);
-                            }
-                        }
-                        else if (arg0.equals("holds"))
-                            accumulator.add(f.cdrAsFormula());
-                        else if (isVariable(arg0)) {
-                            vals = (ArrayList) ans.get(arg0);
-                            if (vals == null) {
-                                vals = new ArrayList();
-                                ans.put(arg0, vals);
-                                vals.add(arg0);
-                            }
-                            // Record the fact that we found at least one variable in the arg0 position.
-                            ans.put("arg0", "yes");
-                        }
-                        else {
-                            String argN = null;
-                            Formula argF = null;
-                            String argType = null;
-                            boolean[] signature = kb.getRelnArgSignature(arg0);
-                            for (int j = 1; j < len; j++) {
-                                argN = f.getArgument(j);
-                                if ((signature != null) && (signature.length > j)
-                                    && signature[j] && isVariable(argN)) {
-                                    vals = (ArrayList) ans.get(argN);
-                                    if (vals == null) {
-                                        vals = new ArrayList();
-                                        ans.put(argN, vals);
-                                        vals.add(argN);
-                                    }
-                                    argType = kb.getArgType(arg0, j);
-                                    if (!((argType == null) || vals.contains(argType)))
-                                        vals.add(argType);
-                                }
-                                else {
-                                    argF = new Formula();
-                                    argF.read(argN);
-                                    if (argF.listP() && !argF.empty())
-                                        accumulator.add(argF);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-		logger.exiting("Formula", "gatherPredVars", ans);
-        return ans;
-    }
-
-    /** ***************************************************************
-     * This method tries to remove literals from the Formula that
-     * match litArr.  It is intended for use in simplification of this
-     * Formula during predicate variable instantiation, and so only
-     * attempts removals that are likely to be safe in that context.
-     *
-     * @param litArr A List object representing a SUO-KIF atomic
-     * formula.
-     *
-     * @return A new Formula with at least some occurrences of litF
-     * removed, or the original Formula if no removals are possible.
-     */
-    private Formula maybeRemoveMatchingLits(List litArr) {
-        Formula f = KB.literalListToFormula(litArr);
-        return maybeRemoveMatchingLits(f);
-    }
-
-    /** ***************************************************************
-     * This method tries to remove literals from the Formula that
-     * match litF.  It is intended for use in simplification of this
-     * Formula during predicate variable instantiation, and so only
-     * attempts removals that are likely to be safe in that context.
-     *
-     * @param litF A SUO-KIF literal (atomic Formula).
-     *
-     * @return A new Formula with at least some occurrences of litF
-     * removed, or the original Formula if no removals are possible.
-     */
-    private Formula maybeRemoveMatchingLits(Formula litF) {
-
-		logger.entering("Formula", "maybeRemoveMatchingLits", litF);
-
-		Formula result = null;
-        try {
-            Formula f = this;
-            if (f.listP() && !f.empty()) {
-                StringBuilder litBuf = new StringBuilder();
-                String arg0 = f.car();
-                if (Arrays.asList(IF, IFF).contains(arg0)) {
-                    String arg1 = f.getArgument(1);
-                    String arg2 = f.getArgument(2);
-                    if (arg1.equals(litF.theFormula)) {
-                        Formula arg2F = new Formula();
-                        arg2F.read(arg2);
-                        litBuf.append(arg2F.maybeRemoveMatchingLits(litF).theFormula);
-                    }
-                    else if (arg2.equals(litF.theFormula)) {
-                        Formula arg1F = new Formula();
-                        arg1F.read(arg1);
-                        litBuf.append(arg1F.maybeRemoveMatchingLits(litF).theFormula);
-                    }
-                    else {
-                        Formula arg1F = new Formula();
-                        arg1F.read(arg1);
-                        Formula arg2F = new Formula();
-                        arg2F.read(arg2);
-                        litBuf.append("(" + arg0 + " "
-                                      + arg1F.maybeRemoveMatchingLits(litF).theFormula + " "
-                                      + arg2F.maybeRemoveMatchingLits(litF).theFormula + ")");
-                    }
-                }
-                else if (isQuantifier(arg0)
-                         || arg0.equals("holdsDuring")
-                         || arg0.equals("KappaFn")) {
-                    Formula arg2F = new Formula();
-                    arg2F.read(f.caddr());
-                    litBuf.append("(" + arg0 + " " + f.cadr() + " "
-                                  + arg2F.maybeRemoveMatchingLits(litF).theFormula + ")");
-                }
-                else if (isCommutative(arg0)) {
-                    List litArr = f.literalToArrayList();
-                    if (litArr.contains(litF.theFormula))
-                        litArr.remove(litF.theFormula);
-                    String args = "";
-                    int len = litArr.size();
-                    for (int i = 1 ; i < len ; i++) {
-                        Formula argF = new Formula();
-                        argF.read((String) litArr.get(i));
-                        args += (" " + argF.maybeRemoveMatchingLits(litF).theFormula);
-                    }
-                    if (len > 2)
-                        args = ("(" + arg0 + args + ")");
-                    else
-                        args = args.trim();
-                    litBuf.append(args);
-                }
-                else {
-                    litBuf.append(f.theFormula);
-                }
-                Formula newF = new Formula();
-                newF.read(litBuf.toString());
-                result = newF;
-            }
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        if (result == null)
-            result = this;
-
-		logger.exiting("Formula", "maybeRemoveMatchingLits", result);
-        return result;
-    }
-
-    /** ***************************************************************
-     * Return true if the input predicate can take relation names a
-     * arguments, else returns false.
-     */
-    private boolean isPossibleRelnArgQueryPred (KB kb, String predicate) {
-
-        return (isNonEmptyString(predicate)
-                && ((kb.getRelnArgSignature(predicate) != null)
-                    ||
-                    predicate.equals("instance")
-                    )
-                );
-    }
-
-    /** ***************************************************************
-     * This method collects and returns literals likely to be of use
-     * as templates for retrieving predicates to be substituted for
-     * var.
-     *
-     * @param varWithTypes A List containing a variable followed,
-     * optionally, by class names indicating the type of the variable.
-     *
-     * @return An ArrayList of literals (Lists) with var at the head.
-     * The first element of the ArrayList is the variable (String).
-     * Subsequent elements are Lists corresponding to SUO-KIF
-     * formulas, which will be used as query templates.
-     *
-     */
-    private ArrayList gatherPredVarQueryLits(KB kb, List varWithTypes) {
-
-        System.out.println("ENTER Formula.gatherPredVarQueryLits(" + this + ", " + kb.name + ", " + varWithTypes + ")");
-        ArrayList ans = new ArrayList();
-        try {
-            String var = (String) varWithTypes.get(0);
-            Set added = new HashSet();
-
-            // Get the clauses for this Formula.
-            List clauses = getClauses();
-            Map varMap = getVarMap();
-            String qlString = null;
-            ArrayList queryLit = null;
-
-            if (clauses != null) {
-                Iterator it2 = null;
-                Formula f = null;
-                Iterator it1 = clauses.iterator();
-                while (it1.hasNext()) {
-                    List clause = (List) it1.next();
-                    List negLits = (List) clause.get(0);
-                    // List poslits = (List) clause.get(1);
-                    if (!negLits.isEmpty()) {
-                        int flen = -1;
-                        String arg = null;
-                        String arg0 = null;
-                        String term = null;
-                        String origVar = null;
-                        List lit = null;
-                        boolean working = true;
-                        for (int ci = 0;
-                             ci < 1;
-                             // (ci < clause.size()) && ans.isEmpty();
-                             ci++) {
-                            // Try the neglits first.  Then try the poslits only if there still are no resuls.
-                            lit = (List)(clause.get(ci));
-                            it2 = lit.iterator();
-                            // System.out.println("  lit == " + lit);
-                            while (it2.hasNext()) {
-                                f = (Formula) it2.next();
-                                if (f.theFormula.matches(".*SkFn\\s+\\d+.*")
-                                    || f.theFormula.matches(".*Sk\\d+.*"))
-                                    continue;
-                                flen = f.listLength();
-                                arg0 = f.getArgument(0);
-                                // System.out.println("  var == " + var + "\n  f.theFormula == " + f.theFormula + "\n  arg0 == " + arg0);
-                                if (isNonEmptyString(arg0)) {
-                                    // If arg0 corresponds to var, then var has to be of type Predicate, not of
-                                    // types Function or List.
-                                    if (isVariable(arg0)) {
-                                        origVar = Clausifier.getOriginalVar(arg0, varMap);
-                                        if (origVar.equals(var)
-                                            && !varWithTypes.contains("Predicate")) {
-                                            varWithTypes.add("Predicate");
-                                        }
-                                    }
-                                    else {
-                                        queryLit = new ArrayList();
-                                        queryLit.add(arg0);
-                                        boolean foundVar = false;
-                                        for (int i = 1; i < flen; i++) {
-                                            arg = f.getArgument(i);
-                                            if (!listP(arg)) {
-                                                if (isVariable(arg)) {
-                                                    arg = Clausifier.getOriginalVar(arg, varMap);
-                                                    if (arg.equals(var))
-                                                        foundVar = true;
-                                                }
-                                                queryLit.add(arg);
-                                            }
-                                        }
-                                        // System.out.println("  arg0 == " + arg0 + "\n  queryLit == " + queryLit);
-                                        if (queryLit.size() != flen)
-                                            continue;
-                                        // If the literal does not start with a variable or with "holds" and does not
-                                        // contain Skolem terms, but does contain the variable in which we're interested,
-                                        // it is probably suitable as a query template, or might serve as a starting
-                                        // place.  Use it, or a literal obtained with it.
-                                        if (isPossibleRelnArgQueryPred(kb, arg0) && foundVar) {
-                                            // || arg0.equals("disjoint"))
-                                            term = "";
-                                            if (queryLit.size() > 2)
-                                                term = (String) queryLit.get(2);
-                                            if (!(arg0.equals("instance")
-                                                  && term.equals("Relation"))) {
-                                                String queryLitStr = queryLit.toString().intern();
-                                                if (!added.contains(queryLitStr)) {
-                                                    ans.add(queryLit);
-                                                    // System.out.println("  queryLitStr == " + queryLitStr);
-                                                    added.add(queryLitStr);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // If we have previously collected type info for the variable,
-            // convert that info query lits now.
-            String argType = null;
-            int vtLen = varWithTypes.size();
-            if (vtLen > 1) {
-                for (int j = 1 ; j < vtLen ; j++) {
-                    argType = (String) varWithTypes.get(j);
-                    if (!argType.equals("Relation")) {
-                        queryLit = new ArrayList();
-                        queryLit.add("instance");
-                        queryLit.add(var);
-                        queryLit.add(argType);
-                        qlString = queryLit.toString().intern();
-                        if (!added.contains(qlString)) {
-                            ans.add(queryLit);
-                            added.add(qlString);
-                        }
-                    }
-                }
-            }
-
-            // Add the variable to the front of the answer list, if it contains
-            // any query literals.
-            if (!ans.isEmpty())
-                ans.add(0, var);
-            System.out.println("EXIT Formula.gatherPredVarQueryLits(" + this + ", " + kb.name + ", " + varWithTypes + ")");
-            System.out.println("  ==> " + ans);
-        }
-        catch (Exception ex) {
-			logger.warning(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return ans;
-    }
-
-    ///////////////////////////////////////////////////////
-    /*
-      END of instantiatePredVars(KB kb) implementation.
-    */
-    ///////////////////////////////////////////////////////
-
-    /** ***************************************************************
-     *  Replace variables with a value as given by the map argument
-     */
-    public Formula substituteVariables(Map<String,String> m) {
-
-		logger.entering("Formula", "substituteVariables", m);
-
-        Formula newFormula = new Formula();
-        newFormula.read("()");
-        if (atom()) {
-            if (m.keySet().contains(theFormula)) {
-                theFormula = (String) m.get(theFormula);
-                if (this.listP())
-                    theFormula = "(" + theFormula + ")";
-            }
-            return this;
-        }
-        if (!empty()) {
-            Formula f1 = new Formula();
-            f1.read(this.car());
-            if (f1.listP()) {
-                newFormula = newFormula.cons(f1.substituteVariables(m));
-            }
-            else
-                newFormula = newFormula.append(f1.substituteVariables(m));
-            Formula f2 = new Formula();
-            f2.read(this.cdr());
-            newFormula = newFormula.append(f2.substituteVariables(m));
-        }
-
-		logger.exiting("Formula", "substituteVariables", newFormula);
-        return newFormula;
-    }
-
-    /** **************************************************************
-     *  Counter for instantiateVariables() to make sure generated
-     *  symbols are unique.
-     */
-    private static int _GENSYM_COUNTER = 0;
-
-    /** **************************************************************
-     *  Create constants to fill variables.
-     */
-    public Formula instantiateVariables() {
-
-        Formula f = Clausifier.renameVariables(this);
-        ArrayList<ArrayList<String>> varList = f.collectVariables();
-        TreeMap<String,String> vars = new TreeMap<String,String>();
-        ArrayList<String> al = (ArrayList<String>) varList.get(0);
-        al.addAll((ArrayList<String>) varList.get(1));
-        for (int i = 0; i < al.size(); i++) {
-            String s = (String) al.get(i);
-            _GENSYM_COUNTER++;
-            String value = "GenSym" + String.valueOf(_GENSYM_COUNTER);
-            vars.put(s,value);
-        }
-        return f.substituteVariables(vars);
-    }
-
-
-    /** ***************************************************************
      *  Replace term2 with term1
      */
     public Formula rename(String term2, String term1) {
-
-		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "term2 = " + term2, "term1 = " + term1 };
-			logger.entering("Formula", "rename", params);
-		}
 
         Formula newFormula = new Formula();
         newFormula.read("()");
@@ -5958,26 +2486,20 @@ public class Formula implements Comparable {
         if (!this.empty()) {
             Formula f1 = new Formula();
             f1.read(this.car());
-			// logger.finest("car: " + f1.theFormula);
-
             if (f1.listP())
                 newFormula = newFormula.cons(f1.rename(term2,term1));
             else
                 newFormula = newFormula.append(f1.rename(term2,term1));
             Formula f2 = new Formula();
             f2.read(this.cdr());
-
-			// logger.finest("cdr: " + f2);
             newFormula = newFormula.append(f2.rename(term2,term1));
         }
-
-		logger.exiting("Formula", "rename", newFormula.theFormula);
-
         return newFormula;
     }
 
     /** ***************************************************************
-     * A test method.
+     * A test method.  It expects two command line arguments for the 
+     * input file and output file.
      */
     public static void testClausifier(String[] args) {
 
@@ -5987,7 +2509,7 @@ public class Formula implements Comparable {
             int count = 0;
             String inpath = args[0];
             String outpath = args[1];
-            if (isNonEmptyString(inpath) && isNonEmptyString(outpath)) {
+            if (!StringUtil.emptyString(inpath) && !StringUtil.emptyString(outpath)) {
                 File infile = new File(inpath);
                 if (infile.exists()) {
                     KIF kif = new KIF();
@@ -6025,11 +2547,9 @@ public class Formula implements Comparable {
                 }
             }
             long dur = (System.currentTimeMillis() - t1);
-			logger.info(count + " clausal forms written in " + (dur / 1000.0)
-					+ " seconds");
         }
         catch (Exception ex) {
-			logger.warning(ex.getMessage());
+			System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -6038,174 +2558,10 @@ public class Formula implements Comparable {
                     bw.close();
                 }
                 catch (Exception e2) {
-					logger.warning(e2.getMessage());
-                    e2.printStackTrace();
                 }
             }
         }
         return;
-    }
-
-    /** ***************************************************************
-     * A test method.
-     */
-    public static void resolveTest3() {
-
-		// logger.finest("--------------------INFO in Formula.resolveTest3()--------------");
-        Formula f1 = new Formula();
-        Formula f2 = new Formula();
-
-        f1.read("(or (attribute ?VAR2 Criminal) (not (recipient ?VAR1 ?VAR3)) (not (patient ?VAR1 ?VAR4)) (not (instance ?VAR4 Weapon)) " +
-                  "(not (instance ?VAR3 Nation)) (not (instance ?VAR1 Selling)) (not (agent ?VAR1 ?VAR2)) (not (attribute ?VAR3 Hostile)) " +
-                  "(not (attribute ?VAR2 American)))");
-        f2.read("(or (not (recipient ?VAR5 ?VAR3)) (not (patient ?VAR5 ?VAR4)) (not (instance ?VAR5 Selling)) (not (instance ?VAR4 Weapon)) " +
-                  "(not (instance ?VAR3 Nation)) (not (agent ?VAR5 ?VAR2)) (not (attribute ?VAR3 Hostile)) (not (attribute ?VAR2 American)))");
-		// logger.finest("f1: " + f1);
-		// logger.finest("f2: " + f2);
-		// logger.finest("resolution result mapping: " + f1.resolve(f2, newResult));
-		// logger.finest("resolution result: " + newResult);
-    }
-
-
-    /** ***************************************************************
-     * A test method.
-     */
-    public static void unifyTest1() {
-
-		// logger.finest("--------------------INFO in Formula.unifyTest1()--------------");
-        Formula f2 = new Formula();
-        f2.read("(m (SkFn 1 ?VAR1) ?VAR1)");
-        f2 = Clausifier.clausify(f2);
-        Formula f3 = new Formula();
-        f3.read("(m ?VAR1 Org1-1)");
-
-		// logger.finest("f2: " + f2);
-		// logger.finest("f3: " + f3);
-        f3 = Clausifier.clausify(f3);
-        TreeMap tm = f3.unify(f2);
-		// logger.finest("Map result: " + tm);
-        if (tm != null)
-            f3 = f3.substitute(tm);
-		// logger.finest("f2: " + f2);
-		// logger.finest("f3: " + f3);
-    }
-
-    /** ***************************************************************
-     * A test method.
-     */
-    public static void unifyTest2() {
-
-		// logger.finest("--------------------INFO in Formula.unifyTest2()--------------");
-        Formula f2 = new Formula();
-        f2.read("(attribute (SkFn Jane) Investor)");
-        f2 = Clausifier.clausify(f2);
-        Formula f3 = new Formula();
-        f3.read("(attribute ?X Investor)");
-        f3 = Clausifier.clausify(f3);
-
-		// logger.finest("f2: " + f2);
-		// logger.finest("f3: " + f3);
-
-        TreeMap tm = f3.unify(f2);
-		// logger.finest("mapping: " + tm);
-        if (tm != null)
-            f3 = f3.substitute(tm);
-		// logger.finest("f2: " + f2);
-		// logger.finest("f3: " + f3);
-    }
-
-    /** ***************************************************************
-     * A test method.
-     */
-    public static void unifyTest3() {
-
-		// logger.finest("--------------------INFO in Formula.unifyTest3()--------------");
-        Formula f2 = new Formula();
-        f2.read("(agent ?VAR4 ?VAR1)");
-        f2 = Clausifier.clausify(f2);
-        Formula f3 = new Formula();
-        f3.read("(agent ?VAR5 West)");
-        f3 = Clausifier.clausify(f3);
-        f3 = f2.separateVariableScope(f3);
-		// logger.finest("f2: " + f2);
-		// logger.finest("f3: " + f3);
-        TreeMap tm = f3.unify(f2);
-		// logger.finest("mapping: " + tm);
-        if (tm != null)
-            f3 = f3.substitute(tm);
-		// logger.finest("f2: " + f2);
-		// logger.finest("f3: " + f3);
-    }
-
-    /** ***************************************************************
-     * A test method.
-     */
-    public static void unifyTest4() {
-
-		// logger.finest("--------------------INFO in Formula.unifyTest4()--------------");
-        Formula f1 = new Formula();
-        Formula f2 = new Formula();
-        //cnf1.read("(equal (ListOrderFn (ListFn ?VAR1 ?VAR2) (ListLengthFn (ListFn ?VAR1 ?VAR2))) ?VAR2)");
-        f1.read("(equal (ListOrderFn (ListFn ?VAR1 ?VAR2)) ?VAR2)");
-        f2.read("(equal (ImmediateFamilyFn ?VAR1) Org1-1)");
-		// logger.finest("f1: " + f1);
-		// logger.finest("f2: " + f2);
-        TreeMap tm = f1.unify(f2);
-		// logger.finest("mapping: " + tm);
-        if (tm != null)
-            f1 = f1.substitute(tm);
-		// logger.finest("f1: " + f1);
-		// logger.finest("f2: " + f2);
-    }
-
-    /** ***************************************************************
-     * A test method.
-     */
-    public static void unifyTest5() {
-
-		// logger.finest("--------------------INFO in Formula.unifyTest5()--------------");
-        Formula f1 = new Formula();
-        Formula f2 = new Formula();
-        //cnf1.read("(equal (ListOrderFn (ListFn ?VAR1 ?VAR2) (ListLengthFn (ListFn ?VAR1 ?VAR2))) ?VAR2)");
-        f1.read("(equal ?VAR1 ?VAR2)");
-        f2.read("(equal (ImmediateFamilyFn ?VAR3) Org1-1)");
-		// logger.finest("f1: " + f1);
-		// logger.finest("f2: " + f2);
-        TreeMap tm = f1.unify(f2);
-		// logger.finest("mapping: " + tm);
-        if (tm != null)
-            f1 = f1.substitute(tm);
-		// logger.finest("f1: " + f1);
-		// logger.finest("f2: " + f2);
-    }
-
-    /** ***************************************************************
-     * A test method.
-     */
-    public static void testTptpParse() {
-    	
-    	System.out.println(tptpParseSUOKIFString("(agent ?VAR4 ?VAR1)"));
-    	System.out.println(tptpParseSUOKIFString("(equal ?VAR4 ?VAR1)"));
-    	
-    	System.out.println(tptpParseSUOKIFString("(=> " +
-                "  (and " +
-                "    (attribute ?H Muslim) " +
-                "    (equal " +
-                "      (WealthFn ?H) ?W)) " +
-                "(modalAttribute " +
-                "  (exists (?Z ?T) " +
-                "    (and " +
-                "      (instance ?Z Zakat) " +
-                "      (instance ?Y Year) " +
-                "      (during ?Y " +
-                "        (WhenFn ?H)) " +
-                "      (holdsDuring ?Y " +
-                "        (attribute ?H FullyFormed)) " +
-                "      (agent ?Z ?H) " +
-                "      (patient ?Z ?T) " +
-                "      (monetaryValue ?T ?C) " +
-                "      (greaterThan ?C " +
-                "        (MultiplicationFn ?W 0.025)))) Obligation)) "));
     }
     
     /** ***************************************************************
@@ -6233,7 +2589,10 @@ public class Formula implements Comparable {
                 "      (monetaryValue ?T ?C) " +
                 "      (greaterThan ?C " +
                 "        (MultiplicationFn ?W 0.025)))) Obligation)) ");
-    	System.out.println(f.collectQuantifiedVariables());
+    	System.out.println("Quantified variables: " + f.collectQuantifiedVariables());
+    	System.out.println("All variables: " + f.collectAllVariables());
+    	System.out.println("Unquantified variables: " + f.collectUnquantifiedVariables());
+    	System.out.println("Terms: " + f.collectTerms());
     }
     
     /** ***************************************************************

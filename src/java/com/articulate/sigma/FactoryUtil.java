@@ -15,9 +15,6 @@ Systems, August 9, Acapulco, Mexico.
 
 package com.articulate.sigma;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
 
 /** ***************************************************************
  * This class defines static accessors and factory methods for Sigma

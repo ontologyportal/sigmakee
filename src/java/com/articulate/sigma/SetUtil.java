@@ -13,9 +13,11 @@ August 9, Acapulco, Mexico.
 
 package com.articulate.sigma;
 
-import java.util.*;
-import java.io.*;
-
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 /** *************************************************************** 
  * A utility class that defines static methods for working with Sets
@@ -36,17 +38,16 @@ public class SetUtil {
      *
      */
     public static void removeDuplicates(Collection collection) {
+    	
         try {
             HashSet hs = new HashSet();
             Object obj = null;
             for (Iterator it = collection.iterator(); it.hasNext();) {
                 obj = (Object) it.next();
-                if (hs.contains(obj)) {
-                    it.remove();
-                }
-                else {
-                    hs.add(obj);
-                }
+                if (hs.contains(obj)) 
+                    it.remove();                
+                else 
+                    hs.add(obj);                
             }
         }
         catch (Exception ex) {
@@ -84,6 +85,7 @@ public class SetUtil {
      * @return A String
      */
     public static String plistMatch(List<String> plist, String key) {
+    	
         String ans = "";
         try {
             int plistSize = plist.size();
@@ -96,12 +98,10 @@ public class SetUtil {
                         ans = str;
                         break;
                     }
-                    if ((i % 2) != 0) {
-                        continue;
-                    }
-                    if (key.matches(str)) {
-                        valIdx = (i + 1);
-                    }
+                    if ((i % 2) != 0) 
+                        continue;                    
+                    if (key.matches(str)) 
+                        valIdx = (i + 1);                    
                 }
             }
         }
@@ -122,14 +122,14 @@ public class SetUtil {
      *
      */
     public static void removeByPattern(List seq, String regex) {
+    	
         try {
             if ((seq instanceof List) && StringUtil.isNonEmptyString(regex)) {
                 Object obj = null;
                 for (ListIterator it = seq.listIterator(); it.hasNext();) {
                     obj = (Object) it.next();
-                    if (obj.toString().matches(regex)) {
-                        it.remove();
-                    }
+                    if (obj.toString().matches(regex)) 
+                        it.remove();                    
                 }
             }
         }
@@ -150,6 +150,7 @@ public class SetUtil {
      *
      */
     public static void retainByPattern(List seq, String regex) {
+    	
         try {
             if ((seq instanceof List) && StringUtil.isNonEmptyString(regex)) {
                 Object obj = null;
