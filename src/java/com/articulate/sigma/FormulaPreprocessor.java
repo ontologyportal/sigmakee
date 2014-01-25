@@ -32,7 +32,7 @@ public class FormulaPreprocessor {
      * ArrayList element 0 is the result, if a function, 1 is the
      * first argument, 2 is the second etc.
      */
-    private ArrayList<String> getTypeList(String pred, KB kb) {
+    private ArrayList<Object> getTypeList(String pred, KB kb) {
 
         // build the sortalTypeCache key.
         StringBuilder sb = new StringBuilder("gtl");
@@ -40,9 +40,9 @@ public class FormulaPreprocessor {
         sb.append(kb.name);
         String key = sb.toString();
         HashMap<String, Object> stc = kb.kbCache.getSortalTypeCache();
-        ArrayList<String> result = (ArrayList<String>) stc.get(key);
+        ArrayList<Object> result = (ArrayList<Object>) stc.get(key);
         if (result == null) {
-            result = new ArrayList<String>();
+            result = new ArrayList<Object>();
             int valence = kb.getValence(pred);
             int len = Formula.MAX_PREDICATE_ARITY + 1;
             if (valence == 0) 
@@ -761,16 +761,9 @@ public class FormulaPreprocessor {
 
     	String result = _f.theFormula;
         Formula f = new Formula();
-        long t1 = System.currentTimeMillis();
         f.read(_f.makeQuantifiersExplicit(false));
-        long t2 = System.currentTimeMillis();
         FormulaPreprocessor fp = new FormulaPreprocessor(f);
         result = fp.insertTypeRestrictionsR(new ArrayList(), kb);
-        long t3 = System.currentTimeMillis();
-        // Time makeQuantifiersExplicit
-        KB.ppTimers[7] += (t2 - t1);
-        // Time insertTypeRestrictions
-        KB.ppTimers[8] += (t3 - t2);
         return result;
     }
 
@@ -986,8 +979,6 @@ public class FormulaPreprocessor {
                 working.clear();
                 working.addAll(accumulator);
                 accumulator.clear();
-                long tnaplwriVal = KB.ppTimers[4];
-                t1 = System.currentTimeMillis();
                 Iterator<Formula> it = working.iterator(); 
                 while (it.hasNext()) {
                     f = (Formula) it.next();
@@ -1015,15 +1006,7 @@ public class FormulaPreprocessor {
                         }
                     }
                 }
-                // Increment the timer for pred var instantiation.
-                KB.ppTimers[1] += (System.currentTimeMillis() - t1);
-
-                // We do this to avoid adding up time spent in Formula.toNegAndPosLitsWtihRenameInfo() while
-                // doing pred var instantiation.  What we really want to know is how much time this method
-                // contributes to the total time for row var expansion.
-                KB.ppTimers[4] = tnaplwriVal;
             }
-            // System.out.println("  1. pvi accumulator.size() == " + accumulator.size());
             // Row var expansion. Iterate over the instantiated predicate formulas,
             // doing row var expansion on each.  If no predicate instantiations can be generated, the accumulator
             // will contain just the original input formula.
@@ -1044,8 +1027,6 @@ public class FormulaPreprocessor {
                         break;
                     }
                 }
-                // Increment the timer for row var expansion.
-                KB.ppTimers[2] += (System.currentTimeMillis() - t1);
             }
         }
         result.addAll(accumulator);
@@ -1188,6 +1169,7 @@ public class FormulaPreprocessor {
      */
     public ArrayList<Formula> preProcess(boolean isQuery, KB kb) {
 
+    	if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + _f.theFormula);
         ArrayList<Formula> results = new ArrayList<Formula>();
         if (!StringUtil.emptyString(_f.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
@@ -1216,32 +1198,27 @@ public class FormulaPreprocessor {
                 boolean addSortals = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
                 Formula fnew = null;
                 String theNewFormula = null;
-                long t1 = 0L;
                 Iterator it = accumulator.iterator(); 
                 while (it.hasNext()) {
                     fnew = (Formula) it.next();
-                    t1 = System.currentTimeMillis();
                     if (addSortals && !isQuery && fnew.theFormula.matches(".*\\?\\w+.*")) { // isLogicalOperator(arg0) ||    
                     	FormulaPreprocessor fp = new FormulaPreprocessor(fnew);
                         fnew.read(fp.addTypeRestrictions(kb));                           
                     }
-                    KB.ppTimers[0] += (System.currentTimeMillis() - t1);  // Increment the timer for adding type restrictions.
-                    t1 = System.currentTimeMillis();
                     FormulaPreprocessor fp = new FormulaPreprocessor(fnew);
                     theNewFormula = fp.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath);
                     fnew.read(theNewFormula);
 					_f.errors.addAll(fnew.getErrors());                        
-                    KB.ppTimers[6] += (System.currentTimeMillis() - t1);   // Increment the timer for preProcessRecurse().
-
                     if (isOkForInference(fnew,isQuery, kb)) {
                         fnew.sourceFile = _f.sourceFile;
                         results.add(fnew);
                     }
                     else 
-						_f.errors.add("Formula rejected for inference: \n " + f.theFormula);                        
+						_f.errors.add("Formula rejected for inference: \n" + f.theFormula);                        
                 }
             }
         }
+        if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         return results;
     }
 

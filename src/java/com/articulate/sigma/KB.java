@@ -31,11 +31,11 @@ public class KB {
 
     private boolean isVisible = true;
     
-    /** The inference engine process for this KB. Deprecated.   */
-    public InferenceEngine inferenceEngine;
+    /** The inference engine process for this KB. */
+    public EProver eprover;
 
     /** The collection of inference engines for this KB. */
-    public TreeMap<String, InferenceEngine> engineMap = new TreeMap<String, InferenceEngine>();
+    //public TreeMap<String, InferenceEngine> engineMap = new TreeMap<String, InferenceEngine>();
 
     /** The name of the knowledge base. */
     public String name;
@@ -1513,7 +1513,7 @@ public class KB {
                         parsedF.sourceFile = filename;
                     }
                     result = "The formula has been added for browsing";
-                    boolean allAdded = (inferenceEngine != null);
+                    boolean allAdded = (eprover != null);
                     ArrayList<Formula> processedFormulas = new ArrayList<Formula>();
                     Iterator<Formula> it2 = parsedFormulas.iterator();
                     while (it2.hasNext()) {
@@ -1532,13 +1532,13 @@ public class KB {
                             }
                             // 7. If there is an inference engine, assert the formula to the
                             // inference engine's database.
-                            if (inferenceEngine != null) {
+                            if (eprover != null) {
                                 String ieResult = null;
                                 Formula processedF = null;
                                 Iterator<Formula> it3 = processedFormulas.iterator();
                                 while (it3.hasNext()) {
                                     processedF = it3.next();
-                                    ieResult = inferenceEngine.assertFormula(processedF.theFormula);
+                                    ieResult = eprover.assertFormula(processedF.theFormula);
                                     if (ieResult.indexOf("Formula has been added") < 0) 
                                         allAdded = false;                                        
                                 }
@@ -1581,31 +1581,24 @@ public class KB {
      */
     public String ask(String suoKifFormula, int timeout, int maxAnswers) {
 
-        String result = "";
-        // Start by assuming that the ask is futile.
-        result = ("<queryResponse>" + System.getProperty("line.separator")
-                  + "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
-                  + "  <summary proofs=\"0\"/>" + System.getProperty("line.separator")
-                  + "</queryResponse>" + System.getProperty("line.separator"));
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor(query);
-            ArrayList<Formula> processedStmts = fp.preProcess(true, this);
-            try {
-                if (!processedStmts.isEmpty() && this.inferenceEngine != null) {
-                    String strQuery = processedStmts.get(0).theFormula;                
-                    result = this.inferenceEngine.submitQuery(strQuery,timeout,maxAnswers);
-                }
-            }
-            catch (IOException ioe) {
-                ioe.printStackTrace();
-                String message = ioe.getMessage().replaceAll(":","&58;");
-                errors.add(message);
-                result = ioe.getMessage();
-            }
-        }
-        return result;
+    	String result = "";
+    	// Start by assuming that the ask is futile.
+    	result = ("<queryResponse>" + System.getProperty("line.separator")
+    			+ "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
+    			+ "  <summary proofs=\"0\"/>" + System.getProperty("line.separator")
+    			+ "</queryResponse>" + System.getProperty("line.separator"));
+    	if (StringUtil.isNonEmptyString(suoKifFormula)) {
+    		Formula query = new Formula();
+    		query.read(suoKifFormula);
+    		FormulaPreprocessor fp = new FormulaPreprocessor(query);
+    		ArrayList<Formula> processedStmts = fp.preProcess(true, this);
+
+    		if (!processedStmts.isEmpty() && this.eprover != null) {
+    			String strQuery = processedStmts.get(0).theFormula;                
+    			result = this.eprover.submitQuery(strQuery,this);
+    		}
+    	}
+    	return result;
     }
 
     /** *************************************************************
@@ -2313,7 +2306,7 @@ public class KB {
         if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix))
             kbCache.buildRelationCaches(this);
         if (loadVampireP)
-            loadVampire();
+            loadEProver();
     }
 
     /** ***************************************************************
@@ -2350,7 +2343,7 @@ public class KB {
             // rebuilt the relation caches, and, if cache == yes, have
             // written out the _Cache.kif file.  Now we reload the
             // inference engine.
-            loadVampire();
+            loadEProver();
         }
         return "";
     }
@@ -3313,7 +3306,7 @@ public class KB {
      *  Starts Vampire and collects, preprocesses and loads all of the
      *  constituents into it.
      */
-    public void loadVampire() {
+    public void loadEProver() {
 
         KBmanager mgr = KBmanager.getMgr();
         try {
@@ -3323,49 +3316,24 @@ public class KB {
                 TreeSet<String> forms = preProcess(formulaStrings);
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = StringUtil.isNonEmptyString(filename);
-                if (inferenceEngine instanceof InferenceEngine) 
-                    inferenceEngine.terminate();                
-                inferenceEngine = null;
+                if (eprover != null) 
+                	eprover.terminate();                
+                eprover = null;
+                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                skb.kb = this;
+                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
+                skb.writeTPTPFile(tptpFilename, true);
                 if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")) && vFileSaved) 
-                    inferenceEngine = Vampire.getNewInstance(filename);                
+                	eprover = new EProver(mgr.getPref("inferenceEngine"),tptpFilename);          
             }
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        if (inferenceEngine == null)
+        if (eprover == null)
             mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
         return;
-    }
-
-    /** A utility array for profiling subtasks in KB.preProcess(). */
-    protected static long[] ppTimers = { 0L,  // type pred (sortal) computation
-                                         0L,  // pred var instantiation
-                                         0L,  // row var expansion
-                                         0L,  // Formula.getRowVarExpansionRange()
-                                         0L,  // Formula.toNegAndPosLitsWithRenameInfo()
-                                         0L,  // Formula.adjustExpansionCount()
-                                         0L,  // Formula.preProcessRecurse()
-                                         0L,  // Formula.makeQuantifiersExplicit()
-                                         0L   // Formula.insertTypeRestrictions()
-    };
-
-    /** ***************************************************************
-     */
-    private void printPreProcessTimers(long[] ppTimers, TreeSet newTreeSet, long dur) {
-
-        System.out.println("INFO in KB.printPreProcessTimers(): PreProcess Timers: "
-                    + "\n " + (dur / 1000.0) + " seconds total to produce " + newTreeSet.size() + " formulas"
-                    + "\n " + (ppTimers[1] / 1000.0) + " seconds instantiating predicate variables"
-                    + "\n " + (ppTimers[2] / 1000.0) + " seconds expanding row variables"
-                    + "\n " + (ppTimers[3] / 1000.0) + " seconds in Formula.getRowVarExpansionRange()"
-                    + "\n " + (ppTimers[4] / 1000.0) + " seconds in Formula.toNegAndPosLitsWithRenameInfo()"
-                    + "\n " + (ppTimers[5] / 1000.0) + " seconds in Formula.adjustExpansionCount()"
-                    + "\n " + (ppTimers[0] / 1000.0) + " seconds adding type predicates"
-                    + "\n " + (ppTimers[7] / 1000.0) + " seconds making quantifiers explicit"
-                    + "\n " + (ppTimers[8] / 1000.0) + " seconds inserting type restrictions"
-                    + "\n " + (ppTimers[6] / 1000.0) + " seconds in Formula.preProcessRecurse()");
     }
 
     /** ***************************************************************
@@ -3379,8 +3347,6 @@ public class KB {
 
         TreeSet<String> newTreeSet = new TreeSet<String>();
         KBmanager mgr = KBmanager.getMgr();
-        for (int i = 0 ; i < ppTimers.length ; i++)
-            ppTimers[i] = 0L;
         kbCache.resetSortalTypeCache();
         boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         Iterator<String> it = forms.iterator(); 

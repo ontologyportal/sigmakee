@@ -193,7 +193,7 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * Parse a single formula into TPTP format
      */
-    public static String tptpParseSUOKIFString(String suoString) {
+    public static String tptpParseSUOKIFString(String suoString, boolean query) {
         
         Formula tempF = new Formula();      // Special case to renam Foo for (instance Foo SetOrClass)
         tempF.read(suoString);              // so a symbol can't be both a class and an instance.
@@ -351,7 +351,10 @@ public class SUMOformulaToTPTPformula {
                         //findFreeVariables(allVariables,quantifiedVariables);
                         allVariables.removeAll(quantifiedVariables);
                         if (allVariables.size() > 0) {
-                            quantification = "! [";
+                        	if (query)
+                        		quantification = "? [";
+                        	else
+                        		quantification = "! [";
                             for (index = 0; index < allVariables.size(); index++) {
                                 if (index > 0)
                                     quantification += ",";
@@ -383,7 +386,7 @@ public class SUMOformulaToTPTPformula {
                 translatedFormula = tptpFormula.toString();
         }
         catch (Exception ex2) {
-			System.out.println("Error in SUMOformulaToTPTPformulat: " + ex2.getMessage());
+			System.out.println("Error in SUMOformulaToTPTPformula: " + ex2.getMessage());
 			ex2.printStackTrace();
         }
         return translatedFormula;
@@ -396,6 +399,7 @@ public class SUMOformulaToTPTPformula {
     public void tptpParse(Formula input, boolean query, KB kb, List<Formula> preProcessedForms)
         throws ParseException, IOException {
 
+    	if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
     	_f = input;
 		try {
             KBmanager mgr = KBmanager.getMgr();
@@ -418,7 +422,7 @@ public class SUMOformulaToTPTPformula {
                 while (g.hasNext()) {
                 	Formula f = (Formula) g.next();
 					if (!f.theFormula.contains("@")) {
-						String tptpStr = tptpParseSUOKIFString(f.theFormula);
+						String tptpStr = tptpParseSUOKIFString(f.theFormula,query);
 						if (StringUtil.isNonEmptyString(tptpStr)) 
 							_f.getTheTptpFormulas().add(tptpStr);						
 					}
@@ -433,6 +437,7 @@ public class SUMOformulaToTPTPformula {
             if (ex instanceof IOException)
                 throw (IOException) ex;
         }
+    	if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
         return;
     }
 
@@ -450,8 +455,8 @@ public class SUMOformulaToTPTPformula {
      */
     public static void testTptpParse() {
     	
-    	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(agent ?VAR4 ?VAR1)"));
-    	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(equal ?VAR4 ?VAR1)"));    	
+    	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(agent ?VAR4 ?VAR1)",false));
+    	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(equal ?VAR4 ?VAR1)",false));    	
     	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(=> " +
                 "  (and " +
                 "    (attribute ?H Muslim) " +
@@ -470,7 +475,7 @@ public class SUMOformulaToTPTPformula {
                 "      (patient ?Z ?T) " +
                 "      (monetaryValue ?T ?C) " +
                 "      (greaterThan ?C " +
-                "        (MultiplicationFn ?W 0.025)))) Obligation)) "));
+                "        (MultiplicationFn ?W 0.025)))) Obligation)) ",false));
     }
     
     /** ***************************************************************

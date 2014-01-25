@@ -556,7 +556,7 @@ public class KIF {
             while (it.hasNext()) {
                 axiomCount++;
                 String form = it.next();
-                form = SUMOformulaToTPTPformula.tptpParseSUOKIFString(form);
+                form = SUMOformulaToTPTPformula.tptpParseSUOKIFString(form,false); // not a query
                 form = "fof(axiom" + axiomCount + ",axiom,(" + form + ")).";
                 if (form.indexOf('"') < 0 && form.indexOf('\'') < 0) 
                     pw.println(form + '\n');

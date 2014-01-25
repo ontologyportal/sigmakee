@@ -1192,6 +1192,26 @@ public class StringUtil {
     	return sb.toString();
     }
     
+
+    /** *****************************************************************
+     * Find the parenthesis that balances the one in st at character pIndex
+     * @return -1 if not found
+     */
+    public static int findBalancedParen(int pIndex, String st) {
+    	
+    	int parenLevel = 1;
+    	for (int i = pIndex + 1; i < st.length(); i++) {
+    		if (st.charAt(i) == '(')
+    			parenLevel++;
+    		if (st.charAt(i) == ')') {
+    			parenLevel--;
+    			if (parenLevel == 0)
+    				return i;
+    		}
+    	}
+    	return -1;
+    }
+    
     /** *****************************************************************
      */
     public static void main(String args[]) {

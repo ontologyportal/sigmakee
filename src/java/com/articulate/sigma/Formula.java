@@ -649,6 +649,23 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Returns the LISP 'car' of the formula as a new Formula, if
+     * possible, else returns null.
+     *
+     * Note that this operation has no side effect on the Formula.
+     * @return a Formula, or null.
+     */
+    public Formula carAsFormula() {
+    	
+        String thisCar = this.car();
+        if (listP(thisCar)) {
+            Formula f = new Formula();
+            f.read(thisCar);
+            return f;
+        }
+        return null;
+    }
+    /** ***************************************************************
      * Returns the LISP 'cadr' (the second list element) of the
      * formula.
      *
@@ -1494,13 +1511,9 @@ public class Formula implements Comparable {
                     else {
                         t1 = System.currentTimeMillis();
                         int[] range = f.getRowVarExpansionRange(kb, rowvar);
-                        // Increment the timer for getRowVarExpansionRange().
-                        KB.ppTimers[3] += (System.currentTimeMillis() - t1);
                         boolean hasVariableArityRelation = (range[0] == 0);
                         t1 = System.currentTimeMillis();
                         range[1] = adjustExpansionCount(hasVariableArityRelation, range[1], rowvar);
-                        // Increment the timer for adjustExpansionCount().
-                        KB.ppTimers[5] += (System.currentTimeMillis() - t1);
                         Formula newF = null;
                         StringBuilder varRepl = new StringBuilder();
 
@@ -1655,8 +1668,6 @@ public class Formula implements Comparable {
         long t1 = System.currentTimeMillis();
         ArrayList clauseData = this.getTheClausalForm();
         // if (trace) System.out.println("  getTheClausalForm() == " + clauseData);
-        // Increment the timer for toNegAndPosLitsWithRenameInfo().
-        KB.ppTimers[4] += (System.currentTimeMillis() - t1);
         if (!((clauseData instanceof ArrayList) && (clauseData.size() > 2)))
             return ans;
         // System.out.println("\nclauseData == " + clauseData + "\n");

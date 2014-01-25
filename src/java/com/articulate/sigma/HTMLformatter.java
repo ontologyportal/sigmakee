@@ -103,6 +103,20 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
+    public static String createKBHref(String kbName, String language) {
+    
+        String hostname = KBmanager.getMgr().getPref("hostname");
+        if (hostname == null)
+            hostname = "localhost";
+        String port = KBmanager.getMgr().getPref("port");
+        if (port == null)
+            port = "8080";
+        return "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+    }
+    
+    /** *************************************************************
+     *  Create the HTML for a single step in a proof.
+     */
     public static String proofTableFormat(String query, ProofStep step, String kbName, String language) {
 
         // System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
@@ -111,13 +125,8 @@ public class HTMLformatter {
         KB kb = KBmanager.getMgr().getKB(kbName);
         f.read(step.axiom);
         f.theFormula = Formula.postProcess(f.theFormula);
-        String hostname = KBmanager.getMgr().getPref("hostname");
-        if (hostname == null)
-            hostname = "localhost";
-        String port = KBmanager.getMgr().getPref("port");
-        if (port == null)
-            port = "8080";
-        String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+        f.theFormula = ProofProcessor.removeNestedAnswerClause(f.theFormula);
+        String kbHref = HTMLformatter.createKBHref(kbName,language);
 
         if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
             f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
@@ -665,7 +674,7 @@ public class HTMLformatter {
         Iterator<String> it = kb.errors.iterator();
         while (it.hasNext()) {
             String err = it.next();            
-			err = err.replaceAll("\\n", "<br>\\n");
+			err = err.replaceAll("\\n", "<br>");
             int p = err.indexOf(":");
 			String begin = "<br>";
             String end = "";
@@ -768,46 +777,79 @@ public class HTMLformatter {
         }        
         return null;
     }
-           
+ 
+    /** *************************************************************
+     */    
+    public static String formatTPTP3ProofResult(TPTP3ProofProcessor tpp, String stmt,
+    		String lineHtml, String kbName, String language) {
+
+    	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number steps" + tpp.proof.size());
+    	StringBuffer html = new StringBuffer();
+    	for (int i = 0; i < tpp.bindings.size(); i++) {
+    		if (i != 0)
+    			html.append(lineHtml + "\n");
+    		html.append("Answer " + "\n");
+    		html.append(i+1);                
+    		html.append(". ");
+    		String term = TPTP2SUMO.transformTerm(tpp.bindings.get(i));
+            String kbHref = HTMLformatter.createKBHref(kbName,language);
+    		html.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
+    		html.append("<br/>");
+    	}
+    	html.append("<p><table width=\"95%\">" + "\n");
+    	for (int l = 0; l < tpp.proof.size(); l++) {
+    		if (l % 2 == 1)
+    			html.append("<tr bgcolor=#EEEEEE>" + "\n");
+    		else
+    			html.append("<tr>" + "\n");
+    		html.append("<td valign=\"top\">" + "\n");
+    		html.append(l+1);
+    		html.append(". </td>" + "\n");
+    		html.append(HTMLformatter.proofTableFormat(stmt,tpp.proof.get(l), kbName, language) + "\n");
+    		html.append("</tr>\n" + "\n");
+    	}
+    	html.append("</table>" + "\n");
+    	return html.toString();
+    }
+    
     /** *************************************************************
      */    
     public static String formatProofResult(ArrayList<BasicXMLelement> proof, String stmt, String processedStmt,
     		String lineHtml, String kbName, String language, int answerOffset) {
 
-        	StringBuilder html = new StringBuilder();
-            ProofProcessor pp = new ProofProcessor(proof);           
-            for (int i = 0; i < pp.numAnswers(); i++) {
-                ArrayList<ProofStep> proofSteps = pp.getProofSteps(i);
-                proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
-                proofSteps = new ArrayList<ProofStep>(ProofStep.removeDuplicates(proofSteps));
+    	StringBuilder html = new StringBuilder();
+    	ProofProcessor pp = new ProofProcessor(proof);           
+    	for (int i = 0; i < pp.numAnswers(); i++) {
+    		ArrayList<ProofStep> proofSteps = pp.getProofSteps(i);
+    		proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
+    		proofSteps = new ArrayList<ProofStep>(ProofStep.removeDuplicates(proofSteps));
 
-                if (i != 0)
-                    html = html.append(lineHtml + "\n");
-                html = html.append("Answer " + "\n");
-                html = html.append(i+answerOffset);                
-                html = html.append(". ");
-                String[] answer = pp.returnAnswer(i, processedStmt).split(";");
-                for(int k=0; k<answer.length; k++) {
-                	html.append(answer[k]+ "<br/>");
-	                if (!pp.returnAnswer(i, processedStmt).equalsIgnoreCase("no")) {
-	                    html = html.append("<p><table width=\"95%\">" + "\n");
-	                    for (int l = 0; l < proofSteps.size(); l++) {
-	                        if (l % 2 == 1)
-	                            html = html.append("<tr bgcolor=#EEEEEE>" + "\n");
-	                        else
-	                            html = html.append("<tr>" + "\n");
-	                        
-	                        html = html.append("<td valign=\"top\">" + "\n");
-	                        html = html.append(l+1);
-	                        html = html.append(". </td>" + "\n");
-	                        html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language) + "\n");
-	                        html = html.append("</tr>\n" + "\n");
-	                    }
-	                    html = html.append("</table>" + "\n");
-	                }
-	            }
-            }
-        return html.toString();
+    		if (i != 0)
+    			html = html.append(lineHtml + "\n");
+    		html = html.append("Answer " + "\n");
+    		html = html.append(i+answerOffset);                
+    		html = html.append(". ");
+    		String[] answer = pp.returnAnswer(i, processedStmt).split(";");
+    		for(int k=0; k<answer.length; k++) {
+    			html.append(answer[k]+ "<br/>");
+    			if (!pp.returnAnswer(i, processedStmt).equalsIgnoreCase("no")) {
+    				html = html.append("<p><table width=\"95%\">" + "\n");
+    				for (int l = 0; l < proofSteps.size(); l++) {
+    					if (l % 2 == 1)
+    						html = html.append("<tr bgcolor=#EEEEEE>" + "\n");
+    					else
+    						html = html.append("<tr>" + "\n");	                        
+    					html = html.append("<td valign=\"top\">" + "\n");
+    					html = html.append(l+1);
+    					html = html.append(". </td>" + "\n");
+    					html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language) + "\n");
+    					html = html.append("</tr>\n" + "\n");
+    				}
+    				html = html.append("</table>" + "\n");
+    			}
+    		}
+    	}
+    	return html.toString();
     }
     
     /** *************************************************************

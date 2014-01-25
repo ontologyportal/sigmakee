@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 import com.articulate.sigma.KB;
 
-/** Process results from the Vampire inference engine.
+/** Process results from the inference engine.
  */
 public class ProofProcessor {
 	
@@ -277,12 +277,86 @@ public class ProofProcessor {
     	}
     	return "cannot be determined.";
     }
+
+    /** ***************************************************************
+     * if the answer clause is found, return null
+     */
+    private static Formula removeNestedAnswerClauseRecurse(Formula f) {
+        	
+    	//System.out.println("INFO in ProofProcessor.removeNestedAnswerClauseRecurse(): checking: '" + f.theFormula + "'");
+    	if (StringUtil.emptyString(f.theFormula.trim()))
+    		return null;
+    	if (f.theFormula.indexOf("answer") == -1)
+    		return f;
+    	String relation = f.car(); 
+    	//System.out.println("relation:" + relation);
+    	if (relation.equals("answer")) 
+    		return null;
+    	if (relation.equals("not")) {
+    		//System.out.println("relation is not");
+    		Formula fcdar = f.cdrAsFormula().carAsFormula();
+	    	//System.out.println("INFO in ProofProcessor.removeNestedAnswerClauseRecurse(): '" + fcdar + "'");
+    		if (fcdar == null) {
+    	    	System.out.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.theFormula + "'");
+    	    	return null;
+    		}
+    		Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
+    		if (fnew == null)
+    			return null;
+    		else {
+    			Formula result = new Formula();
+    			result.read("(not " + fnew.theFormula + ")");    		
+    			return result;
+    		}			
+    	}
+    	boolean connective = false;
+    	if (relation.equals("or") || relation.equals("and"))
+    		connective = true;
+		ArrayList<Formula> arglist = new ArrayList<Formula>();
+		int arg = 1;
+		boolean foundAnswer = false;
+		String strArgs = "";
+		while (!StringUtil.emptyString(f.getArgument(arg))) {
+			Formula argForm = new Formula();
+			argForm.read(f.getArgument(arg));
+			//System.out.println("argform: " + argForm);
+			Formula argRes = removeNestedAnswerClauseRecurse(argForm);
+			if (argRes == null) 
+				foundAnswer = true;    				
+			else {
+				if (arg > 1)
+					 strArgs = strArgs + " ";
+				strArgs = strArgs + argRes.theFormula;
+			}
+			arg = arg + 1;
+		}
+		Formula result = new Formula();		
+		if (connective && foundAnswer && arg < 4)
+			result.read(strArgs);
+		else
+			result.read("(" + relation + " " + strArgs + ")");    		
+		return result;
+    }
     
+    /** ***************************************************************
+     * Remove the $answer clause that eProver returns, including any
+     * surrounding connective.
+     */
+    public static String removeNestedAnswerClause(String st) {
+
+        if (st.indexOf("answer") == -1)
+        	return st;
+       	// clean the substring with "answer" in it
+        Formula f = new Formula();
+        f.read(st);
+        return removeNestedAnswerClauseRecurse(f).theFormula;   	
+    }
+
     /** ***************************************************************
      * Remove the $answer clause that Vampire returns, including any
      * surrounding "or".
      */
-    private String removeAnswerClause(String st) {
+    private static String removeAnswerClause(String st) {
 
         if (st.indexOf("$answer") == -1)
         	return st;
@@ -292,17 +366,16 @@ public class ProofProcessor {
         //count number of nested statements if statement starts with (or
         //if nested statements is more than 2, keep or. If it is exactly 2 --
         //which means it's just (or plus one other statement, remove or.
-        if (st.substring(0,3).equalsIgnoreCase("(or")){
+        if (st.substring(0,3).equalsIgnoreCase("(or") || st.substring(0,3).equalsIgnoreCase("(and")){
         	boolean done = false;
 	        String substr = st.substring(4, st.length()-1);
-	        while(!done) {
+	        while (!done) {
 	        	String statement = " SUMO-AXIOM";
 	        	substr = substr.replaceAll("\\([^\\(|^\\)]+\\)", statement);
 	        	substr = substr.replaceAll("\\(not\\s[^\\(|^\\)]+\\)", statement);
 	        	if (substr.indexOf("(") == -1) 
 	        		done = true;	        		
-	        }
-	        
+	        }	        
 	        substr = substr.trim();	        
 	        if (substr.split(" ").length <= 2) {
 	        	st = st.substring(4, st.length()-1);
@@ -400,7 +473,7 @@ public class ProofProcessor {
                 else 
                     result.append("plain");                
                 result.append(",");
-                result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom));                       
+                result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom,false));                       
 
                 if (!isLeaf) {
                     result.append(",inference(rule,[],[" + step.premises.get(0));
@@ -451,21 +524,40 @@ public class ProofProcessor {
      }   
      
      /** ***************************************************************
+      */
+      public static void testRemoveAnswer() {
+    	  
+    	  String stmt = "(not (exists (?VAR1) (and (subclass ?VAR1 Object) " +
+    		            "(not (answer (esk1_1 ?VAR1))))))";
+    	  System.out.println(removeNestedAnswerClause(stmt));
+    	  stmt = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) " +
+    			        "(answer (esk1_1 ?VAR1))))";
+    	  System.out.println(removeNestedAnswerClause(stmt));
+      }
+    	
+      /** ***************************************************************
+       */
+       public static void testFormatProof() {
+     	  
+           try {
+               KBmanager.getMgr().initializeOnce();
+               KB kb = KBmanager.getMgr().getKB("SUMO");
+               String stmt = "(subclass ?X Entity)";
+               String result = kb.ask(stmt, 30, 3);
+               result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n","SUMO","EnglishLanguage");
+               System.out.println(result);
+           } 
+           catch (Exception ex) {
+               System.out.println(ex.getMessage());
+           }
+       }
+     
+     /** ***************************************************************
       *  A main method, used only for testing.  It should not be called
       *  during normal operation.
       */
       public static void main (String[] args) {
 
-          try {
-              KBmanager.getMgr().initializeOnce();
-              KB kb = KBmanager.getMgr().getKB("SUMO");
-              String stmt = "(subclass ?X Entity)";
-              String result = kb.ask(stmt, 30, 3);
-              result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n","SUMO","EnglishLanguage");
-              System.out.println(result);
-          } 
-          catch (Exception ex) {
-              System.out.println(ex.getMessage());
-          }
+    	  testRemoveAnswer();
       }
 }

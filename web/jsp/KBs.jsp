@@ -208,7 +208,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
           if (isAdministrator) {
               out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
-              if (kb.inferenceEngine != null) 
+              if (kb.eprover != null) 
                   out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "&page=0\">Consistency Check</A></TD>");               
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + language + "\">Inference Tests</A></TD>");
               if (kb.celt != null) 

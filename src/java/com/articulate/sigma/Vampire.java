@@ -262,9 +262,7 @@ public class Vampire extends InferenceEngine {
             if (line.indexOf("Error:") != -1)
                 throw new IOException(line);            
         }
-        _writer = new BufferedWriter(new OutputStreamWriter(_vampire.getOutputStream()));        
-
-            
+        _writer = new BufferedWriter(new OutputStreamWriter(_vampire.getOutputStream()));                    
     }
     
     /** *************************************************************

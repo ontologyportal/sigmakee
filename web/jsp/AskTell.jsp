@@ -97,10 +97,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     int timeout = 30;
 
     if (chosenEngine == null) {
-        if (kb.inferenceEngine == null) 
+        if (kb.eprover == null) 
             chosenEngine = "SoTPTP";
         else
-            chosenEngine = "Vampire";
+            chosenEngine = "EProver";
     }
  
     if (request.getParameter("maxAnswers") != null) 
@@ -186,11 +186,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     if (tstpFormat == null) 
         tstpFormat = "";
 
-    String resultVampire = null;        
-    String resultSoTPTP = null;        
-    String resultSInE = null;    
-    String resultSTP = null;    
-    String resultSTP2 = null;    
+    String resultEProver = null;        
+    String resultSoTPTP = null;           
     String resultLeo = null;    
 
     String lineHtml =
@@ -204,15 +201,12 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                 String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("Vampire")) {
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("EProver")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		        resultVampire = kb.ask(stmt,timeout,maxAnswers);
-            }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SInE")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
-                resultSInE = kb.askSInE(stmt,timeout,maxAnswers);
+		        resultEProver = kb.ask(stmt,timeout,maxAnswers);
+		        System.out.println("INFO in AskTell.jsp------------------------------------");
+		        System.out.println(resultEProver);
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoSine")) {
                 if (stmt.indexOf('@') != -1)
@@ -242,7 +236,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             status.append(ioe.getMessage());
         }
     }
-
 %>
 
 <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF>
@@ -275,19 +268,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     Maximum answers: <input TYPE="TEXT" NAME="maxAnswers" VALUE="<%=maxAnswers%>">
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
     Choose an inference engine:<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (chosenEngine.equals("Vampire")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (chosenEngine.equals("EProver")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if (kb.inferenceEngine == null) { %> DISABLED <% } %> >
-    Vampire <BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SInE" <% if (chosenEngine.equals("SInE")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'">
-    SInE (+Vampire) (experimental)<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP" <% if (chosenEngine.equals("STP")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'">
-    STP (experimental)<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP2" <% if (chosenEngine.equals("STP2")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'">
-    STP2 (experimental)<BR>
+    <% if (kb.eprover == null) { %> DISABLED <% } %> >
+    EProver <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (chosenEngine.equals("LeoSine")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II with SInE (experimental)<BR>
@@ -374,33 +358,19 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         out.println("Status: ");
         out.println(status.toString());
     }
-    if (chosenEngine.equals("Vampire")) {
-        if ((resultVampire != null) && (resultVampire.indexOf("Syntax error detected") != -1))         
+    if (chosenEngine.equals("EProver")) {
+        if ((resultEProver != null) && (resultEProver.indexOf("Syntax error detected") != -1))         
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else 
-            out.println(HTMLformatter.formatProofResult(resultVampire,stmt,stmt,lineHtml,kbName,language));       
-    }
-    if (chosenEngine.equals("STP")) {
-        if ((resultSTP != null) && (resultSTP.indexOf("Syntax error detected") != -1))         
-            out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else 
-            out.println(HTMLformatter.formatProofResult(resultSTP,stmt,stmt,lineHtml,kbName,language));       
-    }
-    if (chosenEngine.equals("STP2")) {
-        if ((resultSTP2 != null) && (resultSTP2.indexOf("Syntax error detected") != -1))         
-            out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else 
-            out.println(HTMLformatter.formatProofResult(resultSTP2,stmt,stmt,lineHtml,kbName,language));       
+        else if (resultEProver != null){
+        	System.out.println("in AskTell.jsp: trying EProver--------------");
+        	TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(resultEProver);
+        	System.out.println(tpp.toString());
+        	System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
+            out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+        }
     }
     if ((chosenEngine.equals("SoTPTP")) && (resultSoTPTP != null))
         out.print(resultSoTPTP);
-
-    if (chosenEngine.equals("SInE")) {
-        if ((resultSInE != null) && (resultSInE.indexOf("Syntax error detected") != -1)) 
-            out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else 
-            out.println(HTMLformatter.formatProofResult(resultSInE,stmt,stmt,lineHtml,kbName,language));
-    }
     if (chosenEngine.equals("LeoSine") || chosenEngine.equals("LeoLocal") || chosenEngine.equals("LeoGlobal")) {
         if ((resultLeo != null) && (resultLeo.indexOf("Syntax error detected") != -1)) 
             out.println("<font color='red'>A syntax error was detected in your input.</font>");

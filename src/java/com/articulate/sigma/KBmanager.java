@@ -287,7 +287,7 @@ public class KBmanager {
                 if (useCacheFile) 
                     kb.kbCache.cache();                
                 kb.checkArity();
-                kb.loadVampire();
+                kb.loadEProver();
             }
             writeConfiguration();
         } 
@@ -537,8 +537,8 @@ public class KBmanager {
         if (kb == null) 
             return "KB " + name + " does not exist and cannot be removed.";        
         try {
-            if (kb.inferenceEngine != null) 
-                kb.inferenceEngine.terminate();
+            if (kb.eprover != null) 
+                kb.eprover.terminate();
         }
         catch (Exception ioe) {
             System.out.println("Error in KBmanager.removeKB(): ");

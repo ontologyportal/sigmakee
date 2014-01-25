@@ -1,5 +1,5 @@
 package com.articulate.sigma;
-/** This code is copyright Articulate Software (c) 2012.  
+/** This code is copyright Articulate Software (c) 2014.  
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
 and Teknowledge in any writings, briefings, publications, presentations, or 
@@ -21,167 +21,44 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-public class EProver extends InferenceEngine {
+public class EProver {
 
     private Process _eprover;
     private BufferedReader _reader; 
     private BufferedWriter _writer; 
     private BufferedReader _error;
-    private String _cliOptions;
+    private static String __dummyKBdir = "/home/apease/Sigma/KBs";
     
-    public static class EProverFactory extends EngineFactory {
-
-        @Override
-        public InferenceEngine createWithFormulas(Iterable formulaSource) {
-                return EProver.getNewInstanceWithFormulas(formulaSource);
-        }
-
-        @Override
-        public InferenceEngine createFromKBFile(String kbFileName) {
-                return EProver.getNewInstance(kbFileName);
-        }
-    }
-
-    public static EngineFactory getFactory() {
-            return new EProverFactory();
-    }
-
-    /** *************************************************************
-     * This static factory method returns a new EProver instance.
-     *
-     * @param kbFileName The complete (absolute) pathname of the KB
-     * file that will be used to populate the inference engine
-     * instance with assertions.  As of 7/2012, E must start from
-     * scratch loading a KB for every new query, so this is bypassed.
-     *
-     * @throws IOException should not normally be thrown unless either
-     *         EProver executable or database file name are incorrect
-     */
-    public static EProver getNewInstance (String kbFileName) {
-
-    	EProver epr = null;
-        String error = null;
-        try {
-            File kbFile = null;
-            if (error == null) {
-                kbFile = new File(kbFileName);
-                if (!kbFile.exists()) {
-                    error = ("The file " + kbFileName + " does not exist");
-                    System.out.println("INFO in EProver.getNewInstance(): " + error);
-                    KBmanager.getMgr().setError( KBmanager.getMgr().getError()
-                                                 + "\n<br/>" + error + "\n<br/>");
-                }
-            }
-            if (error == null) {
-                KIF kif = new KIF();
-                kif.setParseMode(KIF.RELAXED_PARSE_MODE);
-                kif.readFile(kbFile.getCanonicalPath());
-                Iterable<String> formulaSource = kif.formulaMap.keySet();                
-                epr = getNewInstanceWithFormulas(formulaSource);
-            }
-        }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return epr;
-    }
-
     /** *************************************************************
      *  */
-    public static EProver getNewInstanceWithFormulas(Iterable formulaSource) {
+    public static void writeBatchConfig(String inputFilename) {
 
-    	EProver epr = null;
-        String error = null;
-
-        try {
-            String execPathname = KBmanager.getMgr().getPref("eprover");
-            if (!StringUtil.isNonEmptyString(execPathname)) {
-                error = "No pathname has been set for \"eprover\"";
-                System.out.println("Error in EProver.getNewInstanceWithFormulas(): " + error);
-                KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                            + "\n<br/>" + error + "\n<br/>");
-            }
-            File eproverExecutable = null;
-            if (error == null) {
-            	eproverExecutable = new File(execPathname);
-                if (!eproverExecutable.exists()) {
-                    error = ("The executable file " + eproverExecutable.getCanonicalPath() + " does not exist");
-                    System.out.println("Error in EProver.getNewInstanceWithFormulas(): " + error);
-                    KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                                + "\n<br/>" + error + "\n<br/>");
-                }
-            }
-            if (error == null) {
-                File eproverDirectory = eproverExecutable.getParentFile();
-                System.out.println("INFO in EProver.getNewInstanceWithFormulas(): executable == " 
-                                   + eproverExecutable.getCanonicalPath());
-                System.out.println("INFO in EProver.getNewInstanceWithFormulas(): directory == " 
-                                   + eproverDirectory.getCanonicalPath());
-                // It should only ever be necessary to write this file once.
-                File initFile = new File(eproverDirectory, "init-v.kif");
-                if (!initFile.exists()) {
-                    PrintWriter pw = new PrintWriter(initFile);
-                    pw.println("(instance Process Entity)");
-                    pw.flush();
-                    try {
-                        pw.close();
-                    }
-                    catch (Exception e1) {
-                    }
-                }
-                System.out.println("INFO in EProver.getNewInstanceWithFormulas(): "
-                                   + "Starting EProver as " + eproverExecutable.getCanonicalPath() 
-                                   + " " + initFile.getCanonicalPath());
-                EProver eprInst = new EProver(eproverExecutable, initFile);
-                if (eprInst instanceof EProver) {
-                    Iterator it = formulaSource.iterator();
-                    if (it.hasNext()) {
-                        List badFormulas = new ArrayList();
-                        String formStr = null;
-                        String response = null;
-                        int goodCount = 0;
-                        long start = System.currentTimeMillis();
-                        while (it.hasNext()) {
-                            formStr = (String) it.next();
-                            response = eprInst.assertFormula(formStr);
-                            if (!(response.indexOf("Formula has been added") >= 0)) 
-                                badFormulas.add(formStr);                            
-                            else 
-                                goodCount++ ;                            
-                        }
-                        long duration = (System.currentTimeMillis() - start);
-
-                        System.out.println(goodCount + " formulas asserted to " + eprInst 
-                                           + " in " + (duration / 1000.0) + " seconds");
-                        if (!badFormulas.isEmpty()) {
-                            int bc = badFormulas.size();
-                            Iterator it2 = badFormulas.iterator();
-                            System.out.println("INFO in EProver(): "
-                                               + bc + " FORMULA" + ((bc == 1) ? "" : "S") + " REJECTED ");
-                            int badCount = 1;
-                            String badStr = null;
-                            String mgrErrStr = KBmanager.getMgr().getError();
-                            while (it2.hasNext()) {
-                                badStr = ("[" + badCount++ + "] " + ((String)it2.next()));
-                                System.out.println(badStr);
-                                mgrErrStr += ("\n<br/>" + "Bad formula: " + badStr + "\n<br/>");
-                            }
-                            KBmanager.getMgr().setError(mgrErrStr);
-                        }
-                        if (goodCount > 0)                             
-                            epr = eprInst;     // If we've made it this far, we have a usable EProver instance.                   
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return epr;
+	    try {
+	    	System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
+	        //File initFile = new File(KBmanager.getMgr().getPref("kbDir"), "EBatchConfig.txt");
+	        File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
+	        PrintWriter pw = new PrintWriter(initFile);
+	
+	        pw.println("% SZS start BatchConfiguration");
+		    pw.println("division.category LTB.SMO");
+		    pw.println("output.required Assurance");
+		    pw.println("output.desired Proof Answer");
+		    pw.println("limit.time.problem.wc 60");
+		    pw.println("% SZS end BatchConfiguration");
+		    pw.println("% SZS start BatchIncludes");
+		    pw.println("include('" + inputFilename + "').");
+		    pw.println("% SZS end BatchIncludes");
+		    pw.println("% SZS start BatchProblems");
+		    pw.println("% SZS end BatchProblems");
+	        pw.close();
+	    }
+	    catch (Exception e1) {
+	    	e1.printStackTrace();
+	    	System.out.println("Error in EProver.writeBatchFile()");
+	    	System.out.println(e1.getMessage());
+	    }
     }
-
+    
     /** *************************************************************
      * To obtain a new instance of Vampire, use the static factory
      * method EProver.getNewInstance().
@@ -202,30 +79,34 @@ public class EProver extends InferenceEngine {
      *
      * @throws IOException should not normally be thrown unless either
      *         EProver executable or database file name are incorrect
+     *         
+     * e_ltb_runner --interactive LTBSampleInput-AP.txt
      */
-    private EProver (File executable, File kbFile) throws IOException {
+    public EProver (String executable, String kbFile) throws IOException {
 
-        _eprover = Runtime.getRuntime().exec(executable.getCanonicalPath() + " " + kbFile.getCanonicalPath());
+    	writeBatchConfig(kbFile);
+    	System.out.println("INFO in EProver(): executable: " + executable);
+    	System.out.println("INFO in EProver(): kbFile: " + kbFile);
+    	// String execString = executable + " --interactive " + 
+    			// KBmanager.getMgr().getPref("kbDir") + File.separator + "EBatchConfig.txt";
+    	String execString = executable + " --interactive " + 
+    			__dummyKBdir + File.separator + "EBatchConfig.txt";
+    	System.out.println("INFO in EProver(): executing: " + execString);
+        _eprover = Runtime.getRuntime().exec(execString);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()));
-
+        System.out.println("INFO in EProver(): initializing process");
         String line = null; 
-        while (_reader.ready() || _error.ready()) {
-            if (_reader.ready())
-                line = _reader.readLine();
-            else if (_error.ready()) 
-                line = _error.readLine();
+        while (true) {
+        	line = _reader.readLine(); 
             System.out.println("INFO in EProver(): Return string: " + line);
             if (line.indexOf("Error:") != -1)
-                throw new IOException(line);            
+                throw new IOException(line);     
+            if (line.indexOf("# Enter job") != -1) {
+            	break;
+            }
         }
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
-    }
-
-    /** *************************************************************
-     **/
-    public void setCommandLineOptions(String options) {
-    	_cliOptions = options;
     }
     
     /** *************************************************************
@@ -238,29 +119,22 @@ public class EProver extends InferenceEngine {
     public String assertFormula(String formula) {
         //public String assertFormula(String formula) throws IOException {
 
-    	System.out.println("Error in EProver.assertFormula: E cannot handle single assertions.");
-    	return "Error in EProver.assertFormula: E cannot handle single assertions.";
-    	/*
         String result = "";
         try {
-            StringBuilder assertion = new StringBuilder();
-            String safe = StringUtil.replaceUnsafeNamespaceDelimiters(formula);
-            safe = StringUtil.replaceNonAsciiChars(safe);
-            assertion.append("<assertion> ");
-            assertion.append(safe);
-            assertion.append(" </assertion>\n");
-
-            _writer.write(assertion.toString());
+            // String assertion = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,false);
+            String assertion = "";
+            _writer.write(assertion);
             _writer.flush();
-            for (;;) {
-                String line = _reader.readLine();
+            String line;
+            do {
+                line = _reader.readLine();  
                 if (line.indexOf("Error:") != -1) 
                     throw new IOException(line);                
-                // System.out.println("INFO EProver(): Response: " + line);
+                System.out.println("INFO EProver(): Response: " + line);
                 result += line + "\n";
-                if (line.indexOf("</assertionResponse>") != -1) 
+                if (line.indexOf("# Processing finished") != -1) 
                     break;                
-            }
+            } while (line != null);
         }
         catch (Exception ex) {
             System.out.println("Error in EProver.assertFormula(" + formula + ")");
@@ -268,7 +142,6 @@ public class EProver extends InferenceEngine {
             ex.printStackTrace();
         }
         return result;
-        */
     }
 
     /** *************************************************************
@@ -283,7 +156,8 @@ public class EProver extends InferenceEngine {
         System.out.println();
         System.out.println("TERMINATING " + this);
         try {
-            _writer.write("<bye/>\n");
+            _writer.write("quit.\n");
+            _writer.write("go.\n");
             _writer.close();
             _reader.close();
             System.out.println("DESTROYING the Process " + _eprover);
@@ -301,43 +175,51 @@ public class EProver extends InferenceEngine {
      * @param formula query in the KIF syntax
      * @param timeLimit time limit for answering the query (in seconds)
      * @param bindingsLimit limit on the number of bindings
-     * @return answer to the query (in the XML syntax)
+     * @return answer to the query 
      * @throws IOException should not normally be thrown
      */
-    public String submitQuery (String formula, int timeLimit, int bindingsLimit) {
+    public String submitQuery (String formula, KB kb) {
         //public String submitQuery (String formula, int timeLimit, int bindingsLimit) throws IOException {
-    	System.out.println("Error in EProver.assertFormula: E cannot handle queries, they must a conjecture in a file.");
-    	return "Error in EProver.assertFormula: E cannot handle queries, they must a conjecture in a file.";
-    	
-    	/*
+    	    	
         String result = "";
-        String query = ("<query timeLimit='" + timeLimit + "' bindingsLimit='" + bindingsLimit 
-                        + "'> " + formula + " </query>\n");
+        System.out.println("INFO in EProver.submitQuery() formula: " + formula);
+        //Formula f = new Formula();
+        //f.read(formula);
+        //SUMOformulaToTPTPformula sfttptp = new SUMOformulaToTPTPformula();
 
-        System.out.println("INFO in EProver.submitQuery(): " + query);
         try {
-            _writer.write(query);
+            //ArrayList<String> al = sfttptp.tptpParse(f, true, kb);
+            String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
+            System.out.println("INFO in EProver.submitQuery() TPTP formula: " + query);
+            //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + al.get(0));
+            //String conjecture = "fof(conj1,conjecture, " + al.get(0) + ").";
+            String conjecture = "fof(conj1,conjecture, " + query + ").";
+        	//String tptpAssert = "( ( ? [V__X] : s__subclass(V__X,s__Object) ) )";
+            //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + tptpAssert);
+            //String conjecture = "fof(conj1,conjecture, " + tptpAssert + ").";
+            System.out.println("INFO in EProver.submitQuery() conjecture: " + conjecture);
+            _writer.write(conjecture + "\n");
+            _writer.write("go.\n");
             _writer.flush();
+            System.out.println("INFO in EProver.submitQuery() executing query.");
+            String line = null;
+            boolean inProof = false;
+            do {
+                line = _reader.readLine();
+                if (line.indexOf("# Enter job") != -1) 
+                    break;
+                if (line.indexOf("# SZS status") != -1) 
+                    inProof = true;            
+                if (inProof)
+                	result += line + "\n";
+                //System.out.println(line);                         
+            } while (line != null);      
         }
         catch (Exception ex) {
             System.out.println("Error in EProver.submitQuery(): " + ex.getMessage());
             ex.printStackTrace();
         }
-        for (;;) {
-            String line = _reader.readLine();
-            if (line.indexOf("Error:") != -1) 
-                throw new IOException(line);            
-            result += line + "\n";
-            if ((line.indexOf("</queryResponse>") != -1) ||      // result is ok.
-                (line.indexOf("</assertionResponse>") != -1))  { // result is syntax error.
-                System.out.println("INFO in EProver.submitQuery(): ===================================");
-                System.out.println(result);
-                result = result.replaceAll("&lt;","<");
-                result = result.replaceAll("&gt;",">");
-                return result;
-            }
-        }
-        */
+    	return result;
     }
 
     /** *************************************************************
@@ -351,17 +233,34 @@ public class EProver extends InferenceEngine {
      */
     public static void main (String[] args) throws Exception {
 
+    	/*
         String initialDatabase = "SUMO-v.kif";
         EProver eprover = EProver.getNewInstance(initialDatabase);
         eprover.setCommandLineOptions("--cpu-limit=600 --soft-cpu-limit=500 -xAuto -tAuto -l 4 --tptp3-in");
         KBmanager.getMgr().setPref("eprover","/home/apease/Programs/E/Prover/eprover");
         System.out.print(eprover.submitQuery("(holds instance ?X Relation)",5,2));
+*/
+        try {
+            System.out.println("INFO in EProver.main()");
+            //KBmanager.getMgr().initializeOnce();
+            //KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = null;
+            System.out.println("------------- INFO in EProver.main() completed initialization--------");
+        	EProver eprover = new EProver("/home/apease/Programs/E/PROVER/e_ltb_runner",
+        			"/home/apease/Sigma/KBs/SUMO.tptp");
+
+        	System.out.println(eprover.submitQuery("(subclass ?X Object)",kb));
+        	eprover.terminate();
+        } 
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
 
         // System.out.print(eprover.assertFormula("(human Socrates)"));
         // System.out.print(eprover.assertFormula("(holds instance Adam Human)"));
         // System.out.print(eprover.submitQuery("(human ?X)", 1, 2));
         // System.out.print(eprover.submitQuery("(holds instance ?X Human)", 5, 2));
-        eprover.terminate();
+        
     }
     
 }

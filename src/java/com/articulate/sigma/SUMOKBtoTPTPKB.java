@@ -142,13 +142,36 @@ public class SUMOKBtoTPTPKB {
                     String s = f.theFormula.replace(value,key);
                     if (onlyPlainFOL)
                         pr.println("%FOL fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                                   ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s) + ")).");
+                                   ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
                     else
                         pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                                   ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s) + ")).");
+                                   ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
                 }
             }
         }
+    }
+
+    /** *************************************************************
+     *  Sets reasoner and calls writeTPTPFile() below
+     */
+    public String writeTPTPFile(String fileName,
+                                boolean onlyPlainFOL) {
+    	
+        final String reasoner = "EProver";
+        return writeTPTPFile(fileName,onlyPlainFOL,
+        					reasoner);
+    }
+
+    /** *************************************************************
+     *  Sets conjecture and calls writeTPTPFile() below
+     */
+    public String writeTPTPFile(String fileName,
+                                boolean onlyPlainFOL,
+                                String reasoner) {
+    	
+        final Formula conjecture = null;
+        return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
+        					reasoner);
     }
 
     /** *************************************************************
@@ -310,7 +333,7 @@ public class SUMOKBtoTPTPKB {
                 }
                 pr.flush();
                 if (f.getTheTptpFormulas().isEmpty()) {
-                    String addErrStr = "No TPTP formula for:" + f.htmlFormat(kb);
+                    String addErrStr = "No TPTP formula for:" + f.theFormula;
                     kb.errors.add(addErrStr);
                 }
             }

@@ -33,7 +33,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
           <span class="navlinks">
           <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;|&nbsp;
 <%
-              if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userRole") != null && 
+              if (kb.eprover != null && KBmanager.getMgr().getPref("userRole") != null && 
                   KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
                   out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\">Ask/Tell</a>&nbsp;|&nbsp;");
               }

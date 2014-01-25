@@ -153,9 +153,7 @@ public class ProofStep {
     public String toString() {
 
         StringBuffer sb = new StringBuffer();
-        sb.append("Proof step: " + number + " with " + 
-                  premises.size() + " premises: " + premises + "\n");
-        sb.append(axiom);
+        sb.append(number + ". " + axiom + " " + premises + "\n");
         return sb.toString();
     }
 }
