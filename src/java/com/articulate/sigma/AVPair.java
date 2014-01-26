@@ -24,6 +24,6 @@ public class AVPair implements Comparable {
 
     public String toString() {
 
-    	return "[" + attribute + "," + value + "]";
+        return "[" + attribute + "," + value + "]";
     }
 }

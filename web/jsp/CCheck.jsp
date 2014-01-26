@@ -121,13 +121,10 @@ out.println(HTMLformatter.createKBMenu(kbName));
 	show.append("Please set timeout value and choose an inference engine.<br>");
 	show.append("Query time limit: <input TYPE='TEXT' NAME='timeout' VALUE='30'><BR>");
 	show.append("Choose an inference engine:<BR>");
-	if (kb.inferenceEngine == null)
-	    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='Vampire onclick=\"document.getElementById('SoTPTPControl').style.display='none'\" disabled>Vampire<br>");	    
-	else show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='Vampire' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\" checked>Vampire<br>");
-	show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='SInE' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">SInE (+Vampire) (experimental)<BR>");
-    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='STP' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">STP (experimental)<BR>");
-    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='STP2' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">STP2 (experimental)<BR>");
-    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='LeoSine' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">LEO-II with SInE (experimental)<BR>");
+	if (kb.eprover == null)
+	    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='EProver onclick=\"document.getElementById('SoTPTPControl').style.display='none'\" disabled>EProver<br>");	    
+	else show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='EProver' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\" checked>EProver<br>");
+	    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='LeoSine' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">LEO-II with SInE (experimental)<BR>");
     show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='LeoLocal' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">LEO-II local (experimental)<BR>");
     show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='LeoGlobal' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">LEO-II global (experimental)<BR>");
     show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='SoTPTP' onclick=\"document.getElementById('SoTPTPControl').style.display='inline'\">System on TPTP<BR>");

@@ -148,7 +148,7 @@ public class SInE extends InferenceEngine {
      */
     public SInE(Iterable<String> formulaSource) { 
 
-        underlyingEngineFactory = Vampire.getFactory();
+        //underlyingEngineFactory = Vampire.getFactory();
         formSymbols = new Hashtable<String, Set<String>>();
         formulas = new ArrayList<String>();
         mandatoryFormulas = new ArrayList<String>();

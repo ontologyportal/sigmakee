@@ -98,7 +98,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         if (kb.inferenceEngine == null) 
             chosenEngine = "SoTPTP";
         else
-            chosenEngine = "Vampire";
+            chosenEngine = "EProver";
     }
  
     if (request.getParameter("maxAnswers") != null) 
@@ -143,7 +143,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   if (tstpFormat == null) 
       tstpFormat = "";
   
-  String resultVampire = null;        
+  String resultEProver = null;        
   String resultSoTPTP = null;        
   String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'>" +
                       "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
@@ -173,24 +173,20 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     Choose an inference engine for testing:<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (chosenEngine.equals("Vampire")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (chosenEngine.equals("EProver")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
-    Vampire <BR>
+    <% if ( kb.eprover == null ) { %> DISABLED <% } %> >
+    EProver <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (chosenEngine.equals("LEO")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II <BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="STP2" <% if (chosenEngine.equals("STP2")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if ( kb.inferenceEngine == null ) { %> DISABLED <% } %> >
-    STP2 <BR>
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
 <%
 //----System selection
 %>
-  <DIV ID="SoTPTPControl" <% if (chosenEngine.equals("Vampire") || chosenEngine.equals("LEO") || chosenEngine.equals("STP2")) {%>style="display:none;"<%}%>>
+  <DIV ID="SoTPTPControl" <% if (chosenEngine.equals("EProver") || chosenEngine.equals("LEO")) {%>style="display:none;"<%}%>>
     <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
@@ -251,9 +247,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       String test = request.getParameter("test");
       if (test != null && test.equalsIgnoreCase("inference") &&
           req != null && req.equalsIgnoreCase("test")) {
-          if (chosenEngine.equalsIgnoreCase("Vampire")) {
-              out.println("(Testing Vampire-KIF)<br>");
-              sb = sb.append(InferenceTestSuite.test(kb, "KIF-Vampire", timeout));
+          if (chosenEngine.equalsIgnoreCase("EProver")) {
+              out.println("(Testing EProver)<br>");
+              sb = sb.append(InferenceTestSuite.test(kb, "EProver", timeout));
           }               
           //if (chosenEngine.equalsIgnoreCase("LEO")) {
           //    out.println("(Testing LEO)<br>");

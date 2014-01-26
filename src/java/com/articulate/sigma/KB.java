@@ -34,9 +34,6 @@ public class KB {
     /** The inference engine process for this KB. */
     public EProver eprover;
 
-    /** The collection of inference engines for this KB. */
-    //public TreeMap<String, InferenceEngine> engineMap = new TreeMap<String, InferenceEngine>();
-
     /** The name of the knowledge base. */
     public String name;
 
@@ -47,17 +44,8 @@ public class KB {
     /** The natural language in which axiom paraphrases should be presented. */
     public String language = "EnglishLanguage";
 
-    /** The location of preprocessed KIF files, suitable for loading into Vampire. */
+    /** The location of preprocessed KIF files, suitable for loading into EProver. */
     public String kbDir = null;
-
-    /** A HashMap of HashSets, which contain all the parent classes of a given class. */
-    //public HashMap<String,HashSet<String>> parents = new HashMap<String,HashSet<String>>();
-
-    /** A HashMap of HashSets, which contain all the child classes of a given class. */
-    //public HashMap<String,HashSet<String>> children = new HashMap<String,HashSet<String>>();
-
-    /** A HashMap of HashSets, which contain all the disjoint classes of a given class. */
-    //public HashMap<String,HashSet<String>> disjoint = new HashMap<String,HashSet<String>>();
 
     /** The instance of the CELT process. */
     public CELT celt = null;
@@ -106,7 +94,7 @@ public class KB {
     
     /** *************************************************************
      * Constructor which takes the name of the KB and the location
-     * where KBs preprocessed for Vampire should be placed.
+     * where KBs preprocessed for EProver should be placed.
      */
     public KB(String n, String dir) {
         
@@ -2212,7 +2200,7 @@ public class KB {
     /** *************************************************************
      * Add a new KB constituent by reading in the file, and then
      * merging the formulas with the existing set of formulas.  All
-     * assertion caches are rebuilt, the current Vampire process is
+     * assertion caches are rebuilt, the current EProver process is
      * destroyed, and a new one is created.
      *
      * @param filename - the full path of the file being added.
@@ -2227,11 +2215,11 @@ public class KB {
      *
      * @param filename - The full path of the file being added
      * @param buildCachesP - If true, forces the assertion caches to be rebuilt
-     * @param loadVampireP - If true, destroys the old Vampire process and
+     * @param loadEProverP - If true, destroys the old EProver process and
      * starts a new one     
      */    
     public void addConstituent(String filename, boolean buildCachesP,
-            boolean loadVampireP, boolean performArity) {
+            boolean loadEProverP, boolean performArity) {
       
     	String canonicalPath = null;
     	KIF file = new KIF();
@@ -2245,7 +2233,7 @@ public class KB {
 	        
 	        canonicalPath = constituent.getCanonicalPath();
 	        if (constituents.contains(canonicalPath))
-	            errors.add("Error: " + canonicalPath + " already loaded.");        
+	            errors.add("Error. " + canonicalPath + " already loaded.");        
             file.readFile(canonicalPath);
             errors.addAll(file.warningSet);
         }
@@ -2305,7 +2293,7 @@ public class KB {
         clearFormatMaps(); // Clear formatMap and termFormatMap for this KB.
         if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix))
             kbCache.buildRelationCaches(this);
-        if (loadVampireP)
+        if (loadEProverP)
             loadEProver();
     }
 
@@ -3303,7 +3291,7 @@ public class KB {
     }
 
     /** *************************************************************
-     *  Starts Vampire and collects, preprocesses and loads all of the
+     *  Starts EProver and collects, preprocesses and loads all of the
      *  constituents into it.
      */
     public void loadEProver() {

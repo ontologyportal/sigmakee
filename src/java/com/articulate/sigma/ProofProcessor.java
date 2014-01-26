@@ -25,7 +25,7 @@ import com.articulate.sigma.KB;
 /** Process results from the inference engine.
  */
 public class ProofProcessor {
-	
+
      /** An ArrayList of BasicXMLelement (s). */
     private ArrayList<BasicXMLelement> xml = null;
 
@@ -34,8 +34,8 @@ public class ProofProcessor {
      * needed
      */
     public ProofProcessor(ArrayList<BasicXMLelement> xmlInput) {
-    	    	
-        xml = new ArrayList<BasicXMLelement>(xmlInput);
+
+    	xml = new ArrayList<BasicXMLelement>(xmlInput);
     }
     
     /** ***************************************************************
@@ -57,7 +57,7 @@ public class ProofProcessor {
     	if ( bindingSet != null ) {
     		String attr =  (String) bindingSet.attributes.get("type");
     		if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) ) 
-    			return false;	    
+    			return false;    
     		BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(0); 
     		// The bindingSet element should just have one subelement, since non-definite answers are rejected.
     		for (int j = 0; j < binding.subelements.size(); j++) {
@@ -71,62 +71,58 @@ public class ProofProcessor {
     	}
     	return result.toString().equalsIgnoreCase(expectedAnswer);
     }
-    
+
+    /** ***************************************************************
+     
     public String returnAnswer(int answerNum) {
     	return returnAnswer(answerNum, "");
     }
-    
+    */
     /** ***************************************************************
      * Return the variable name and binding for the given answer.
-     */
+     
     public String returnAnswer(int answerNum, String query) {
 
-        StringBuffer result = new StringBuffer();
-        ArrayList<String> skolemTypes = new ArrayList<String>();
-         /** An ArrayList of BasicXMLelements */
-        ArrayList<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
-        BasicXMLelement answer = queryResponseElements.get(answerNum);
-        if (((String) answer.attributes.get("result")).equalsIgnoreCase("no")) 
-            return "no";
-        BasicXMLelement bindingSet = (BasicXMLelement) answer.subelements.get(0);
-        if (bindingSet.tagname.equalsIgnoreCase("proof")) {
-            result = result.append("[" + (String) answer.attributes.get("result") + "] ");
-            return result.toString();
-        }
-        result = result.append("[" + (String) bindingSet.attributes.get("type") + "] ");
-        for (int i = 0; i < bindingSet.subelements.size(); i++) {
-            BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(i);
-            for (int j = 0; j < binding.subelements.size(); j++) {
-                BasicXMLelement variableBinding = (BasicXMLelement) binding.subelements.get(j);
-                String variable = (String) variableBinding.attributes.get("name");
-                String value = (String) variableBinding.attributes.get("value");
-
-                //see if a skolem function is present in the value (skolem functions are labeled sk[0-9]+
-                if(value.matches(".*?sk[0-9]+.*?")) {
-                	//LOGGER.finest("SKOLEM FUNCTION found!");
-                	String skolemType = findSkolemType(answerNum, value, query, variable);
-                	if (skolemType != ""){
-                		skolemTypes.add("; " + value + " is of type " + skolemType);
-                	}
-                }
-
-                result = result.append(variable + " = " + value);
-                if (j < binding.subelements.size()-1) 
-                    result = result.append(",  ");
-            }
-            if (i < bindingSet.subelements.size()-1) 
-                result = result.append(" , ");
-            while(skolemTypes.size() > 0) {
-            	result = result.append(skolemTypes.get(0));
-            	skolemTypes.remove(0);
-            }
-            result.append(";");
-        }
-        
-        //LOGGER.finest("returned answer: " + result.toString());
-        return result.toString();
+    	StringBuffer result = new StringBuffer();
+    	ArrayList<String> skolemTypes = new ArrayList<String>();
+    	//An ArrayList of BasicXMLelements 
+    	ArrayList<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
+    	BasicXMLelement answer = queryResponseElements.get(answerNum);
+    	if (((String) answer.attributes.get("result")).equalsIgnoreCase("no")) 
+    		return "no";
+    	BasicXMLelement bindingSet = (BasicXMLelement) answer.subelements.get(0);
+    	if (bindingSet.tagname.equalsIgnoreCase("proof")) {
+    		result = result.append("[" + (String) answer.attributes.get("result") + "] ");
+    		return result.toString();
+    	}
+    	result = result.append("[" + (String) bindingSet.attributes.get("type") + "] ");
+    	for (int i = 0; i < bindingSet.subelements.size(); i++) {
+    		BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(i);
+    		for (int j = 0; j < binding.subelements.size(); j++) {
+    			BasicXMLelement variableBinding = (BasicXMLelement) binding.subelements.get(j);
+    			String variable = (String) variableBinding.attributes.get("name");
+    			String value = (String) variableBinding.attributes.get("value");
+    			//see if a skolem function is present in the value (skolem functions are labeled sk[0-9]+
+    			if (value.matches(".*?sk[0-9]+.*?")) {
+    				String skolemType = findSkolemType(answerNum, value, query, variable);
+    				if (skolemType != "")
+    					skolemTypes.add("; " + value + " is of type " + skolemType);    				
+    			}
+    			result = result.append(variable + " = " + value);
+    			if (j < binding.subelements.size()-1) 
+    				result = result.append(",  ");
+    		}
+    		if (i < bindingSet.subelements.size()-1) 
+    			result = result.append(" , ");
+    		while (skolemTypes.size() > 0) {
+    			result = result.append(skolemTypes.get(0));
+    			skolemTypes.remove(0);
+    		}
+    		result.append(";");
+    	}
+    	return result.toString();
     }
-
+*/
     /** ***************************************************************
      * Looks for skolem function from proofsteps if query is not given.
      * There are two types of skolem functions:
@@ -135,7 +131,7 @@ public class ProofProcessor {
      * We need to find either of these in the proofs to see what relationship it goes into
      */
     private ArrayList<String> returnSkolemStmt(String skolem, ArrayList<ProofStep> proofSteps) {
-    	
+
     	if (skolem.startsWith("(") && skolem.endsWith(")")) 
     		skolem = skolem.substring(1, skolem.length()-1);
     	skolem = skolem.split(" ")[0];
@@ -145,14 +141,14 @@ public class ProofProcessor {
     	ArrayList<String> matches = new ArrayList<String>();
     	for (int i = 0; i < proofSteps.size(); i++) {
     		ProofStep step = (ProofStep) proofSteps.get(i);
-	  		match = pattern.matcher(step.axiom);
-			while (match.find()) {
-				for (int j = 1; j <= match.groupCount(); j++) {
-					if (!matches.contains(match.group(j)))
-						matches.add(match.group(j));
-				}
-		   	}
-    	}    	    	
+    		match = pattern.matcher(step.axiom);
+    		while (match.find()) {
+    			for (int j = 1; j <= match.groupCount(); j++) {
+    				if (!matches.contains(match.group(j)))
+    					matches.add(match.group(j));
+    			}
+    		}
+    	}        
     	if (matches.size()>0)
     		return matches;
     	return null;
@@ -162,7 +158,7 @@ public class ProofProcessor {
      * looks for skolem variable if a query string is given
      */
     private ArrayList<String> returnSkolemStmt(String query, String variable) {
-    	
+
     	if (!StringUtil.emptyString(query)) {
     		query = query.replaceAll("\\" + variable, "_SKOLEM");
     		Pattern pattern = Pattern.compile("(\\([^\\(\\)]*?_SKOLEM[^\\)\\(]*?\\))");
@@ -174,18 +170,18 @@ public class ProofProcessor {
     				if (!matches.contains(match.group(i)))
     					matches.add(match.group(i));
     			}
-    			return matches;   		
+    			return matches;   
     		}
-    	}    	
+    	}    
     	return null;
     }
 
     /** *********************************************************************************
      * @param answerNum The nth answer in the result set
      * @param value The value in the bindingSet being analyzed
-     */
+     
     private String findSkolemType(int answerNum, String value, String query, String variable) {   
-    	
+
     	ArrayList<ProofStep> proofSteps = getProofSteps(answerNum); 
     	ArrayList<String> skolemRelationArr;
     	// try and look for the skolem function in the proofSteps and determine the 
@@ -195,147 +191,141 @@ public class ProofProcessor {
     	else
     		skolemRelationArr = returnSkolemStmt(query, variable);
 
-    	if (skolemRelationArr != null) {   		
+    	if (skolemRelationArr != null) {   
     		for (int j = 0; j < skolemRelationArr.size(); j++) {
     			String skolemRelation = skolemRelationArr.get(j);
-	        	skolemRelation = skolemRelation.substring(1, skolemRelation.length()-1);
-	
-	        	// prepare skolem function to have the form sk0 .+? or sk0 (for skolem functions that don't have an argument)
-	        	// because value from answer contains an instance and not necessarily a variable
-	        	String skolem = value;
-	        	if(skolem.startsWith("(") && skolem.endsWith(")"))
-	        			skolem = value.substring(1, value.length()-1);
-	        	skolem = skolem.split(" ")[0];
-	        	               	       	
-	           	// remove skolem and replace with temp variable
-	        	skolemRelation = skolemRelation.replaceAll("\\("+ skolem + " [^\\)]+?\\)", "_SKOLEM");
-	        	skolemRelation = skolemRelation.replaceAll(skolem, "_SKOLEM");
-	        	// remove all other skolem functions in the skolemRelation (if present) and replace with temp variable
-	        	skolemRelation = skolemRelation.replaceAll("\\(.+?\\)", "?TEMP");
-	        	//LOGGER.finest("skolemRelation: " + skolemRelation);
+    			skolemRelation = skolemRelation.substring(1, skolemRelation.length()-1);
 
-	        	if (skolemRelation.matches("instance\\s_SKOLEM\\s[^\\s]+")) {
-	        		String[] arguments = skolemRelation.split(" ");
-	        		return arguments[arguments.length-1];
-	        	}
-	        	
-			    // assemble regex for skolemRelation
-	      	    String[] skolemArguments = skolemRelation.split(" ");
-			    StringBuffer regexStmt = new StringBuffer();
-			    		    
-			    for (int i = 0; i < skolemArguments.length; i++) {
-			    	if (skolemArguments[i].equals("_SKOLEM")) 
-			    		regexStmt.append("([^\\s\\(\\)]+) ");			    	
-			    	else if (skolemArguments[i].startsWith("?") || i!=0) 
-			    		regexStmt.append("[^\\s\\(\\)]+ ");			    	
-			    	else 
-			    		regexStmt.append(skolemArguments[i] + " ");			    	
-			    }
-			    	
-			    regexStmt.deleteCharAt(regexStmt.length()-1);
-			    regexStmt.insert(0, "\\(");
-			    regexStmt.insert(regexStmt.length(), "\\)");
-			    	
-			    // resulting regexStmt from something like (relationshipName ?X0 _SKOLEM)
-			    // should be \\(relationshipName [^\\s\\(\\)]+ ([^\\s\\(\\)]+)\\)			    	
-			    Pattern pattern = Pattern.compile(regexStmt.toString());
-			    Matcher match;
-			    
-			    // look for the presence of above pattern in each of the proof steps
-			    for (int i = 0; i < proofSteps.size(); i++){
-			    	ProofStep proof = (ProofStep)proofSteps.get(i);
-			    	String varName = "";
-		    		match = pattern.matcher(proof.axiom);		    		
-		    		boolean varNameFound = false;
-		
-		    		// if it is found, extract the variable name being used
-		    		// and then see if an (instance ?VARNAME ?CLASS) relationship can be found
-		    		// that defines the class membership of varName
-		    		while (match.find()) {
-		    			int k = 1;
-		    			while(k <= match.groupCount() && !varNameFound) {
-		    				varName = match.group(k);
-		    				//LOGGER.finest("candidate varname: " + varName);
-		    				if (varName.startsWith("?"))
-		    					varNameFound = true;
-		    				k++;		    			
-			    			if (varNameFound) {
-				      			String regexString = ".*?\\(instance \\" + varName + " ([^\\s\\)]+)\\).*?";
-				      			Pattern varPattern = Pattern.compile(regexString);
-				      			match = varPattern.matcher(proof.axiom);
-					    		if (match.find()) {
-					    			if (match.group(1) != null)
-					    				return match.group(1);	    
-					    			else varNameFound = false;					    		
-					    		}
-					    		else varNameFound = false;
-				    		}
-		    			}
-		    		}
-			    }
-		    }
+    			// prepare skolem function to have the form sk0 .+? or sk0 (for skolem functions that don't have an argument)
+    			// because value from answer contains an instance and not necessarily a variable
+    			String skolem = value;
+    			if(skolem.startsWith("(") && skolem.endsWith(")"))
+    				skolem = value.substring(1, value.length()-1);
+    			skolem = skolem.split(" ")[0];
+
+    			// remove skolem and replace with temp variable
+    			skolemRelation = skolemRelation.replaceAll("\\("+ skolem + " [^\\)]+?\\)", "_SKOLEM");
+    			skolemRelation = skolemRelation.replaceAll(skolem, "_SKOLEM");
+    			// remove all other skolem functions in the skolemRelation (if present) and replace with temp variable
+    			skolemRelation = skolemRelation.replaceAll("\\(.+?\\)", "?TEMP");
+    			//LOGGER.finest("skolemRelation: " + skolemRelation);
+
+    			if (skolemRelation.matches("instance\\s_SKOLEM\\s[^\\s]+")) {
+    				String[] arguments = skolemRelation.split(" ");
+    				return arguments[arguments.length-1];
+    			}
+
+    			// assemble regex for skolemRelation
+    			String[] skolemArguments = skolemRelation.split(" ");
+    			StringBuffer regexStmt = new StringBuffer();
+
+    			for (int i = 0; i < skolemArguments.length; i++) {
+    				if (skolemArguments[i].equals("_SKOLEM")) 
+    					regexStmt.append("([^\\s\\(\\)]+) ");    
+    				else if (skolemArguments[i].startsWith("?") || i!=0) 
+    					regexStmt.append("[^\\s\\(\\)]+ ");    
+    				else 
+    					regexStmt.append(skolemArguments[i] + " ");    
+    			}
+
+    			regexStmt.deleteCharAt(regexStmt.length()-1);
+    			regexStmt.insert(0, "\\(");
+    			regexStmt.insert(regexStmt.length(), "\\)");
+
+    			// resulting regexStmt from something like (relationshipName ?X0 _SKOLEM)
+    			// should be \\(relationshipName [^\\s\\(\\)]+ ([^\\s\\(\\)]+)\\)    
+    			Pattern pattern = Pattern.compile(regexStmt.toString());
+    			Matcher match;
+
+    			// look for the presence of above pattern in each of the proof steps
+    			for (int i = 0; i < proofSteps.size(); i++){
+    				ProofStep proof = (ProofStep)proofSteps.get(i);
+    				String varName = "";
+    				match = pattern.matcher(proof.axiom);    
+    				boolean varNameFound = false;
+
+    				// if it is found, extract the variable name being used
+    				// and then see if an (instance ?VARNAME ?CLASS) relationship can be found
+    				// that defines the class membership of varName
+    				while (match.find()) {
+    					int k = 1;
+    					while(k <= match.groupCount() && !varNameFound) {
+    						varName = match.group(k);
+    						if (varName.startsWith("?"))
+    							varNameFound = true;
+    						k++;    
+    						if (varNameFound) {
+    							String regexString = ".*?\\(instance \\" + varName + " ([^\\s\\)]+)\\).*?";
+    							Pattern varPattern = Pattern.compile(regexString);
+    							match = varPattern.matcher(proof.axiom);
+    							if (match.find()) {
+    								if (match.group(1) != null)
+    									return match.group(1);    
+    								else varNameFound = false;    
+    							}
+    							else varNameFound = false;
+    						}
+    					}
+    				}
+    			}
+    		}
     	}
     	return "cannot be determined.";
     }
-
+*/
     /** ***************************************************************
      * if the answer clause is found, return null
      */
     private static Formula removeNestedAnswerClauseRecurse(Formula f) {
-        	
-    	//System.out.println("INFO in ProofProcessor.removeNestedAnswerClauseRecurse(): checking: '" + f.theFormula + "'");
+
     	if (StringUtil.emptyString(f.theFormula.trim()))
     		return null;
     	if (f.theFormula.indexOf("answer") == -1)
     		return f;
     	String relation = f.car(); 
-    	//System.out.println("relation:" + relation);
     	if (relation.equals("answer")) 
     		return null;
     	if (relation.equals("not")) {
-    		//System.out.println("relation is not");
     		Formula fcdar = f.cdrAsFormula().carAsFormula();
-	    	//System.out.println("INFO in ProofProcessor.removeNestedAnswerClauseRecurse(): '" + fcdar + "'");
     		if (fcdar == null) {
-    	    	System.out.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.theFormula + "'");
-    	    	return null;
+    			System.out.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.theFormula + "'");
+    			return null;
     		}
     		Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
     		if (fnew == null)
     			return null;
     		else {
     			Formula result = new Formula();
-    			result.read("(not " + fnew.theFormula + ")");    		
+    			result.read("(not " + fnew.theFormula + ")");    
     			return result;
-    		}			
+    		}
     	}
     	boolean connective = false;
     	if (relation.equals("or") || relation.equals("and"))
     		connective = true;
-		ArrayList<Formula> arglist = new ArrayList<Formula>();
-		int arg = 1;
-		boolean foundAnswer = false;
-		String strArgs = "";
-		while (!StringUtil.emptyString(f.getArgument(arg))) {
-			Formula argForm = new Formula();
-			argForm.read(f.getArgument(arg));
-			//System.out.println("argform: " + argForm);
-			Formula argRes = removeNestedAnswerClauseRecurse(argForm);
-			if (argRes == null) 
-				foundAnswer = true;    				
-			else {
-				if (arg > 1)
-					 strArgs = strArgs + " ";
-				strArgs = strArgs + argRes.theFormula;
-			}
-			arg = arg + 1;
-		}
-		Formula result = new Formula();		
-		if (connective && foundAnswer && arg < 4)
-			result.read(strArgs);
-		else
-			result.read("(" + relation + " " + strArgs + ")");    		
-		return result;
+    	ArrayList<Formula> arglist = new ArrayList<Formula>();
+    	int arg = 1;
+    	boolean foundAnswer = false;
+    	String strArgs = "";
+    	while (!StringUtil.emptyString(f.getArgument(arg))) {
+    		Formula argForm = new Formula();
+    		argForm.read(f.getArgument(arg));
+    		Formula argRes = removeNestedAnswerClauseRecurse(argForm);
+    		if (argRes == null) 
+    			foundAnswer = true;    
+    		else {
+    			if (arg > 1)
+    				strArgs = strArgs + " ";
+    			strArgs = strArgs + argRes.theFormula;
+    		}
+    		arg = arg + 1;
+    	}
+    	Formula result = new Formula();
+    	if (connective && foundAnswer && arg < 4)
+    		result.read(strArgs);
+    	else
+    		result.read("(" + relation + " " + strArgs + ")");    
+    	return result;
     }
     
     /** ***************************************************************
@@ -344,113 +334,113 @@ public class ProofProcessor {
      */
     public static String removeNestedAnswerClause(String st) {
 
-        if (st.indexOf("answer") == -1)
-        	return st;
-       	// clean the substring with "answer" in it
-        Formula f = new Formula();
-        f.read(st);
-        return removeNestedAnswerClauseRecurse(f).theFormula;   	
+    	if (st.indexOf("answer") == -1)
+    		return st;
+    	// clean the substring with "answer" in it
+    	Formula f = new Formula();
+    	f.read(st);
+    	return removeNestedAnswerClauseRecurse(f).theFormula;   
     }
 
     /** ***************************************************************
      * Remove the $answer clause that Vampire returns, including any
      * surrounding "or".
-     */
+     
     private static String removeAnswerClause(String st) {
 
-        if (st.indexOf("$answer") == -1)
-        	return st;
-       	// clean the substring with "answer" in it
-        st = st.replaceAll("\\(\\$answer\\s[\\(sk[0-9]+\\s[^\\)]+?\\)|[^\\(\\)]+?]+?\\)", "");
+    	if (st.indexOf("$answer") == -1)
+    		return st;
+    	// clean the substring with "answer" in it
+    	st = st.replaceAll("\\(\\$answer\\s[\\(sk[0-9]+\\s[^\\)]+?\\)|[^\\(\\)]+?]+?\\)", "");
 
-        //count number of nested statements if statement starts with (or
-        //if nested statements is more than 2, keep or. If it is exactly 2 --
-        //which means it's just (or plus one other statement, remove or.
-        if (st.substring(0,3).equalsIgnoreCase("(or") || st.substring(0,3).equalsIgnoreCase("(and")){
-        	boolean done = false;
-	        String substr = st.substring(4, st.length()-1);
-	        while (!done) {
-	        	String statement = " SUMO-AXIOM";
-	        	substr = substr.replaceAll("\\([^\\(|^\\)]+\\)", statement);
-	        	substr = substr.replaceAll("\\(not\\s[^\\(|^\\)]+\\)", statement);
-	        	if (substr.indexOf("(") == -1) 
-	        		done = true;	        		
-	        }	        
-	        substr = substr.trim();	        
-	        if (substr.split(" ").length <= 2) {
-	        	st = st.substring(4, st.length()-1);
-	        }
-        }         
-        return st;     	
+    	//count number of nested statements if statement starts with (or
+    	//if nested statements is more than 2, keep or. If it is exactly 2 --
+    	//which means it's just (or plus one other statement, remove or.
+    	if (st.substring(0,3).equalsIgnoreCase("(or") || st.substring(0,3).equalsIgnoreCase("(and")){
+    		boolean done = false;
+    		String substr = st.substring(4, st.length()-1);
+    		while (!done) {
+    			String statement = " SUMO-AXIOM";
+    			substr = substr.replaceAll("\\([^\\(|^\\)]+\\)", statement);
+    			substr = substr.replaceAll("\\(not\\s[^\\(|^\\)]+\\)", statement);
+    			if (substr.indexOf("(") == -1) 
+    				done = true;        
+    		}        
+    		substr = substr.trim();        
+    		if (substr.split(" ").length <= 2) {
+    			st = st.substring(4, st.length()-1);
+    		}
+    	}         
+    	return st;     
     }
-
+*/
     /** ***************************************************************
      * Return an ArrayList of ProofSteps. It expects that the member variable
      * xml will contain a set of <answer> tags.
-     */
+     
     public ArrayList<ProofStep> getProofSteps(int answerNum) {
-        
-        BasicXMLelement proof;
-        ArrayList<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
-        ArrayList<ProofStep> proofSteps = new ArrayList<ProofStep>();
-        BasicXMLelement answer = (BasicXMLelement) queryResponseElements.get(answerNum);
 
-        if (!((String) answer.attributes.get("result")).equalsIgnoreCase("no")) {
-            BasicXMLelement bindingOrProof = (BasicXMLelement) answer.subelements.get(0);
-            if (bindingOrProof.tagname.equalsIgnoreCase("proof")) 
-                proof = bindingOrProof;            // No binding set if query is for a true/false answer
-            else 
-                proof = (BasicXMLelement) answer.subelements.get(1);
-                
-            ArrayList<BasicXMLelement> steps = proof.subelements;
-            for (int i = 0; i < steps.size(); i++) {
-                BasicXMLelement step = (BasicXMLelement) steps.get(i);
-                BasicXMLelement premises = (BasicXMLelement) step.subelements.get(0);
-                BasicXMLelement conclusion = (BasicXMLelement) step.subelements.get(1);
-                BasicXMLelement conclusionFormula = (BasicXMLelement) conclusion.subelements.get(0);
-                ProofStep processedStep = new ProofStep();
-                processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
-                processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
-                
-                if (i == steps.size() - 1) 
-                	processedStep.axiom = processedStep.axiom.replaceAll("\\$answer[\\s|\\n|\\r]+", "");                	
-                else
-                	processedStep.axiom = removeAnswerClause(processedStep.axiom);
-                //----If there is a conclusion role, record
-                if (conclusion.subelements.size() > 1) {
-                    BasicXMLelement conclusionRole = (BasicXMLelement) conclusion.subelements.get(1);
-                    if (conclusionRole.attributes.containsKey("type")) 
-                            processedStep.formulaRole = (String) conclusionRole.attributes.get("type");                        
-                }
-                if (conclusionFormula.attributes.containsKey("number")) {
-                    processedStep.number = new Integer(Integer.parseInt((String) conclusionFormula.attributes.get("number")));
-                }
-                for (int j = 0; j < premises.subelements.size(); j++) {
-                    BasicXMLelement premise = (BasicXMLelement) premises.subelements.get(j);
-                    BasicXMLelement formula = (BasicXMLelement) premise.subelements.get(0);
-                    Integer premiseNum = new Integer(Integer.parseInt((String) formula.attributes.get("number"),10));
-                    processedStep.premises.add(premiseNum);
-                }
-                proofSteps.add(processedStep);
-            }
-        }
-        return proofSteps;
+    	BasicXMLelement proof;
+    	ArrayList<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
+    	ArrayList<ProofStep> proofSteps = new ArrayList<ProofStep>();
+    	BasicXMLelement answer = (BasicXMLelement) queryResponseElements.get(answerNum);
+
+    	if (!((String) answer.attributes.get("result")).equalsIgnoreCase("no")) {
+    		BasicXMLelement bindingOrProof = (BasicXMLelement) answer.subelements.get(0);
+    		if (bindingOrProof.tagname.equalsIgnoreCase("proof")) 
+    			proof = bindingOrProof;            // No binding set if query is for a true/false answer
+    		else 
+    			proof = (BasicXMLelement) answer.subelements.get(1);
+
+    		ArrayList<BasicXMLelement> steps = proof.subelements;
+    		for (int i = 0; i < steps.size(); i++) {
+    			BasicXMLelement step = (BasicXMLelement) steps.get(i);
+    			BasicXMLelement premises = (BasicXMLelement) step.subelements.get(0);
+    			BasicXMLelement conclusion = (BasicXMLelement) step.subelements.get(1);
+    			BasicXMLelement conclusionFormula = (BasicXMLelement) conclusion.subelements.get(0);
+    			ProofStep processedStep = new ProofStep();
+    			processedStep.formulaType = ((BasicXMLelement) conclusion.subelements.get(0)).tagname;
+    			processedStep.axiom = Formula.postProcess(conclusionFormula.contents);
+
+    			if (i == steps.size() - 1) 
+    				processedStep.axiom = processedStep.axiom.replaceAll("\\$answer[\\s|\\n|\\r]+", "");                
+    			else
+    				processedStep.axiom = removeAnswerClause(processedStep.axiom);
+    			//----If there is a conclusion role, record
+    			if (conclusion.subelements.size() > 1) {
+    				BasicXMLelement conclusionRole = (BasicXMLelement) conclusion.subelements.get(1);
+    				if (conclusionRole.attributes.containsKey("type")) 
+    					processedStep.formulaRole = (String) conclusionRole.attributes.get("type");                        
+    			}
+    			if (conclusionFormula.attributes.containsKey("number")) {
+    				processedStep.number = new Integer(Integer.parseInt((String) conclusionFormula.attributes.get("number")));
+    			}
+    			for (int j = 0; j < premises.subelements.size(); j++) {
+    				BasicXMLelement premise = (BasicXMLelement) premises.subelements.get(j);
+    				BasicXMLelement formula = (BasicXMLelement) premise.subelements.get(0);
+    				Integer premiseNum = new Integer(Integer.parseInt((String) formula.attributes.get("number"),10));
+    				processedStep.premises.add(premiseNum);
+    			}
+    			proofSteps.add(processedStep);
+    		}
+    	}
+    	return proofSteps;
     }
-
+*/
     /** ***************************************************************
      * Return the number of answers contained in this proof.
      */
     public int numAnswers() {
 
-        if (xml == null || xml.size() == 0) 
-            return 0;
-        BasicXMLelement queryResponse = (BasicXMLelement) xml.get(0);
-        if (queryResponse.tagname.equalsIgnoreCase("queryResponse")) 
-            return queryResponse.subelements.size()-1;   
-              // Note that there is a <summary> element under the queryResponse element that shouldn't be counted, hence the -1
-        else
-            System.out.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
-        return 0;
+    	if (xml == null || xml.size() == 0) 
+    		return 0;
+    	BasicXMLelement queryResponse = (BasicXMLelement) xml.get(0);
+    	if (queryResponse.tagname.equalsIgnoreCase("queryResponse")) 
+    		return queryResponse.subelements.size()-1;   
+    	// Note that there is a <summary> element under the queryResponse element that shouldn't be counted, hence the -1
+    	else
+    		System.out.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
+    	return 0;
     }
 
     /** ***************************************************************
@@ -458,106 +448,106 @@ public class ProofProcessor {
      */
     public static String tptpProof(ArrayList<ProofStep> proofSteps) {
 
-        StringBuffer result = new StringBuffer();
-        try {
-            for (int j = 0; j < proofSteps.size(); j++) {
-                ProofStep step = (ProofStep) proofSteps.get(j);
-                boolean isLeaf = step.premises.isEmpty() || 
-                    (step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
-                //----All are fof because the conversion from SUO-KIF quantifies the variables
-                result.append("fof(");
-                result.append(step.number);
-                result.append(",");
-                if (isLeaf) 
-                    result.append("axiom");                
-                else 
-                    result.append("plain");                
-                result.append(",");
-                result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom,false));                       
+    	StringBuffer result = new StringBuffer();
+    	try {
+    		for (int j = 0; j < proofSteps.size(); j++) {
+    			ProofStep step = (ProofStep) proofSteps.get(j);
+    			boolean isLeaf = step.premises.isEmpty() || 
+    					(step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
+    			//----All are fof because the conversion from SUO-KIF quantifies the variables
+    			result.append("fof(");
+    			result.append(step.number);
+    			result.append(",");
+    			if (isLeaf) 
+    				result.append("axiom");                
+    			else 
+    				result.append("plain");                
+    			result.append(",");
+    			result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom,false));                       
 
-                if (!isLeaf) {
-                    result.append(",inference(rule,[],[" + step.premises.get(0));
-                    for (int parent = 1; parent < step.premises.size(); parent++) 
-                        result.append("," + step.premises.get(parent));                    
-                    result.append("])");
-                }
-                result.append("  ).\n");
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return(result.toString());
+    			if (!isLeaf) {
+    				result.append(",inference(rule,[],[" + step.premises.get(0));
+    				for (int parent = 1; parent < step.premises.size(); parent++) 
+    					result.append("," + step.premises.get(parent));                    
+    				result.append("])");
+    			}
+    			result.append("  ).\n");
+    		}
+    	}
+    	catch (Exception ex) {
+    		ex.printStackTrace();
+    	}
+    	return(result.toString());
     }
 
     /** ***************************************************************
      *  A method used only for testing.  It should not be called
      *  during normal operation.
-     */
-     public static void test (String[] args) {
-
-        try {
-            FileReader r = new FileReader(args[0]);
-            LineNumberReader lr = new LineNumberReader(r);
-            String line;
-            StringBuffer result = new StringBuffer();
-            while ((line = lr.readLine()) != null) 
-                result.append(line + "\n");            
-
-            BasicXMLparser res = new BasicXMLparser(result.toString());
-            result = new StringBuffer();
-            ProofProcessor pp = new ProofProcessor(res.elements);
-            for (int i = 0; i < pp.numAnswers(); i++) {
-                ArrayList<ProofStep> proofSteps = pp.getProofSteps(i);
-                proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
-                if (i != 0) 
-                    result.append("\n");               
-                result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i,"") + "\n");
-                if (!pp.returnAnswer(i).equalsIgnoreCase("no")) 
-                    result.append(tptpProof(proofSteps));               
-            }
-            System.out.println(result.toString());
-         }
-         catch (IOException ioe) {
-             System.out.println("Error in ProofProcessor.main(): IOException: " + ioe.getMessage());
-         }     
-     }   
      
+    public static void test (String[] args) {
+
+    	try {
+    		FileReader r = new FileReader(args[0]);
+    		LineNumberReader lr = new LineNumberReader(r);
+    		String line;
+    		StringBuffer result = new StringBuffer();
+    		while ((line = lr.readLine()) != null) 
+    			result.append(line + "\n");            
+
+    		BasicXMLparser res = new BasicXMLparser(result.toString());
+    		result = new StringBuffer();
+    		ProofProcessor pp = new ProofProcessor(res.elements);
+    		for (int i = 0; i < pp.numAnswers(); i++) {
+    			ArrayList<ProofStep> proofSteps = pp.getProofSteps(i);
+    			proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
+    			if (i != 0) 
+    				result.append("\n");               
+    			result.append("%----Answer " + (i+1) + " " + pp.returnAnswer(i,"") + "\n");
+    			if (!pp.returnAnswer(i).equalsIgnoreCase("no")) 
+    				result.append(tptpProof(proofSteps));               
+    		}
+    		System.out.println(result.toString());
+    	}
+    	catch (IOException ioe) {
+    		System.out.println("Error in ProofProcessor.main(): IOException: " + ioe.getMessage());
+    	}     
+    }   
+     */
      /** ***************************************************************
       */
-      public static void testRemoveAnswer() {
-    	  
-    	  String stmt = "(not (exists (?VAR1) (and (subclass ?VAR1 Object) " +
-    		            "(not (answer (esk1_1 ?VAR1))))))";
-    	  System.out.println(removeNestedAnswerClause(stmt));
-    	  stmt = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) " +
-    			        "(answer (esk1_1 ?VAR1))))";
-    	  System.out.println(removeNestedAnswerClause(stmt));
-      }
-    	
+     public static void testRemoveAnswer() {
+
+    	 String stmt = "(not (exists (?VAR1) (and (subclass ?VAR1 Object) " +
+    			 "(not (answer (esk1_1 ?VAR1))))))";
+    	 System.out.println(removeNestedAnswerClause(stmt));
+    	 stmt = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) " +
+    			 "(answer (esk1_1 ?VAR1))))";
+    	 System.out.println(removeNestedAnswerClause(stmt));
+     }
+
       /** ***************************************************************
        */
-       public static void testFormatProof() {
-     	  
-           try {
-               KBmanager.getMgr().initializeOnce();
-               KB kb = KBmanager.getMgr().getKB("SUMO");
-               String stmt = "(subclass ?X Entity)";
-               String result = kb.ask(stmt, 30, 3);
-               result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n","SUMO","EnglishLanguage");
-               System.out.println(result);
-           } 
-           catch (Exception ex) {
-               System.out.println(ex.getMessage());
-           }
-       }
-     
+      public static void testFormatProof() {
+
+    	  try {
+    		  KBmanager.getMgr().initializeOnce();
+    		  KB kb = KBmanager.getMgr().getKB("SUMO");
+    		  String stmt = "(subclass ?X Entity)";
+    		  String result = kb.ask(stmt, 30, 3);
+    		  result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n","SUMO","EnglishLanguage");
+    		  System.out.println(result);
+    	  } 
+    	  catch (Exception ex) {
+    		  System.out.println(ex.getMessage());
+    	  }
+      }
+
      /** ***************************************************************
       *  A main method, used only for testing.  It should not be called
       *  during normal operation.
       */
-      public static void main (String[] args) {
+       public static void main (String[] args) {
 
-    	  testRemoveAnswer();
-      }
+    	   testRemoveAnswer();
+       }
 }

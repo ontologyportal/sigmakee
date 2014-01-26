@@ -130,7 +130,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         KBmanager.getMgr().writeConfiguration();
 	    if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) 
 	        kb.kbCache.cache();	    
-	    kb.loadVampire();
+	    kb.loadEProver();
     }
 %>
 <HTML>

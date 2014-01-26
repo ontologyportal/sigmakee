@@ -121,7 +121,7 @@ else {
                 kb.addNewConstituent(outfile.getCanonicalPath());
                 if (mgr.getPref("cache").equalsIgnoreCase("yes")) 
                     kb.kbCache.cache();                          
-                kb.loadVampire();
+                kb.loadEProver();
                 KBmanager.getMgr().writeConfiguration();              
             }              
         }

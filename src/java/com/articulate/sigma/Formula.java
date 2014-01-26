@@ -89,7 +89,7 @@ public class Formula implements Comparable {
                                                                            LT,
                                                                            LTET);
 
-    /** The SUO-KIF mathematical functions are implemented in Vampire. */
+    /** The SUO-KIF mathematical functions are implemented in Vampire, but not yet EProver. */
     private static final List<String> MATH_FUNCTIONS = Arrays.asList(PLUSFN,
                                                                      MINUSFN,
                                                                      TIMESFN,
@@ -115,6 +115,9 @@ public class Formula implements Comparable {
      *  count on it being set to a value other than -1L.
      */
     public long endFilePosition = -1L;
+    
+    // An ArrayList of String messages with a message that has a reserved character of ':' 
+    // dividing the message from a formula or term that will be hyperlinked and formmated
 	public ArrayList<String> errors = new ArrayList<String>();
 
     /** The formula. */
@@ -837,14 +840,14 @@ public class Formula implements Comparable {
             location = "near line " + lineNo + " in " + filename;
         if (pred.equals(AND) || pred.equals(OR)) {
             if (argCount < 2) {            	
-                String errString = "Too few arguments for 'and' or 'or'at " + location + ": " + f.toString();
+                String errString = "Too few arguments for 'and' or 'or' at " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(UQUANT) || pred.equals(EQUANT)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for quantifer at " + location + ":" + f.toString();
+                String errString = "Wrong number of arguments for quantifer at " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
@@ -852,7 +855,7 @@ public class Formula implements Comparable {
                 Formula quantF = new Formula();
                 quantF.read(rest);
                 if (!listP(quantF.car())) {
-                    String errString = "No var list for quantifier at " + location + ":" + f.toString();
+                    String errString = "No var list for quantifier at " + location + ": " + f.toString();
                     errors.add(errString);
                     return errString;
                 }
@@ -860,14 +863,14 @@ public class Formula implements Comparable {
         }
         else if (pred.equals(IFF) || pred.equals(IF)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for '<=>' or '=>' at " + location + ":" + f.toString();
+                String errString = "Wrong number of arguments for '<=>' or '=>' at " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(EQUAL)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for 'equals' at " + location + ":" + f.toString();
+                String errString = "Wrong number of arguments for 'equals' at " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }

@@ -33,35 +33,33 @@ public class EProver {
      *  */
     public static void writeBatchConfig(String inputFilename) {
 
-	    try {
-	    	System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
-	        //File initFile = new File(KBmanager.getMgr().getPref("kbDir"), "EBatchConfig.txt");
-	        File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
-	        PrintWriter pw = new PrintWriter(initFile);
-	
-	        pw.println("% SZS start BatchConfiguration");
-		    pw.println("division.category LTB.SMO");
-		    pw.println("output.required Assurance");
-		    pw.println("output.desired Proof Answer");
-		    pw.println("limit.time.problem.wc 60");
-		    pw.println("% SZS end BatchConfiguration");
-		    pw.println("% SZS start BatchIncludes");
-		    pw.println("include('" + inputFilename + "').");
-		    pw.println("% SZS end BatchIncludes");
-		    pw.println("% SZS start BatchProblems");
-		    pw.println("% SZS end BatchProblems");
-	        pw.close();
-	    }
-	    catch (Exception e1) {
-	    	e1.printStackTrace();
-	    	System.out.println("Error in EProver.writeBatchFile()");
-	    	System.out.println(e1.getMessage());
-	    }
+        try {
+            System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
+            //File initFile = new File(KBmanager.getMgr().getPref("kbDir"), "EBatchConfig.txt");
+            File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
+            PrintWriter pw = new PrintWriter(initFile);
+    
+            pw.println("% SZS start BatchConfiguration");
+            pw.println("division.category LTB.SMO");
+            pw.println("output.required Assurance");
+            pw.println("output.desired Proof Answer");
+            pw.println("limit.time.problem.wc 60");
+            pw.println("% SZS end BatchConfiguration");
+            pw.println("% SZS start BatchIncludes");
+            pw.println("include('" + inputFilename + "').");
+            pw.println("% SZS end BatchIncludes");
+            pw.println("% SZS start BatchProblems");
+            pw.println("% SZS end BatchProblems");
+            pw.close();
+        }
+        catch (Exception e1) {
+            e1.printStackTrace();
+            System.out.println("Error in EProver.writeBatchFile()");
+            System.out.println(e1.getMessage());
+        }
     }
     
     /** *************************************************************
-     * To obtain a new instance of Vampire, use the static factory
-     * method EProver.getNewInstance().
      */
     private EProver () {
     }
@@ -84,26 +82,26 @@ public class EProver {
      */
     public EProver (String executable, String kbFile) throws IOException {
 
-    	writeBatchConfig(kbFile);
-    	System.out.println("INFO in EProver(): executable: " + executable);
-    	System.out.println("INFO in EProver(): kbFile: " + kbFile);
-    	// String execString = executable + " --interactive " + 
-    			// KBmanager.getMgr().getPref("kbDir") + File.separator + "EBatchConfig.txt";
-    	String execString = executable + " --interactive " + 
-    			__dummyKBdir + File.separator + "EBatchConfig.txt";
-    	System.out.println("INFO in EProver(): executing: " + execString);
+        writeBatchConfig(kbFile);
+        System.out.println("INFO in EProver(): executable: " + executable);
+        System.out.println("INFO in EProver(): kbFile: " + kbFile);
+        // String execString = executable + " --interactive " + 
+                // KBmanager.getMgr().getPref("kbDir") + File.separator + "EBatchConfig.txt";
+        String execString = executable + " --interactive " + 
+                __dummyKBdir + File.separator + "EBatchConfig.txt";
+        System.out.println("INFO in EProver(): executing: " + execString);
         _eprover = Runtime.getRuntime().exec(execString);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()));
         System.out.println("INFO in EProver(): initializing process");
         String line = null; 
         while (true) {
-        	line = _reader.readLine(); 
+            line = _reader.readLine(); 
             System.out.println("INFO in EProver(): Return string: " + line);
             if (line.indexOf("Error:") != -1)
                 throw new IOException(line);     
             if (line.indexOf("# Enter job") != -1) {
-            	break;
+                break;
             }
         }
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
@@ -180,7 +178,7 @@ public class EProver {
      */
     public String submitQuery (String formula, KB kb) {
         //public String submitQuery (String formula, int timeLimit, int bindingsLimit) throws IOException {
-    	    	
+                
         String result = "";
         System.out.println("INFO in EProver.submitQuery() formula: " + formula);
         //Formula f = new Formula();
@@ -194,7 +192,7 @@ public class EProver {
             //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + al.get(0));
             //String conjecture = "fof(conj1,conjecture, " + al.get(0) + ").";
             String conjecture = "fof(conj1,conjecture, " + query + ").";
-        	//String tptpAssert = "( ( ? [V__X] : s__subclass(V__X,s__Object) ) )";
+            //String tptpAssert = "( ( ? [V__X] : s__subclass(V__X,s__Object) ) )";
             //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + tptpAssert);
             //String conjecture = "fof(conj1,conjecture, " + tptpAssert + ").";
             System.out.println("INFO in EProver.submitQuery() conjecture: " + conjecture);
@@ -211,7 +209,7 @@ public class EProver {
                 if (line.indexOf("# SZS status") != -1) 
                     inProof = true;            
                 if (inProof)
-                	result += line + "\n";
+                    result += line + "\n";
                 //System.out.println(line);                         
             } while (line != null);      
         }
@@ -219,7 +217,7 @@ public class EProver {
             System.out.println("Error in EProver.submitQuery(): " + ex.getMessage());
             ex.printStackTrace();
         }
-    	return result;
+        return result;
     }
 
     /** *************************************************************
@@ -233,7 +231,7 @@ public class EProver {
      */
     public static void main (String[] args) throws Exception {
 
-    	/*
+        /*
         String initialDatabase = "SUMO-v.kif";
         EProver eprover = EProver.getNewInstance(initialDatabase);
         eprover.setCommandLineOptions("--cpu-limit=600 --soft-cpu-limit=500 -xAuto -tAuto -l 4 --tptp3-in");
@@ -246,11 +244,11 @@ public class EProver {
             //KB kb = KBmanager.getMgr().getKB("SUMO");
             KB kb = null;
             System.out.println("------------- INFO in EProver.main() completed initialization--------");
-        	EProver eprover = new EProver("/home/apease/Programs/E/PROVER/e_ltb_runner",
-        			"/home/apease/Sigma/KBs/SUMO.tptp");
+            EProver eprover = new EProver("/home/apease/Programs/E/PROVER/e_ltb_runner",
+                    "/home/apease/Sigma/KBs/SUMO.tptp");
 
-        	System.out.println(eprover.submitQuery("(subclass ?X Object)",kb));
-        	eprover.terminate();
+            System.out.println(eprover.submitQuery("(subclass ?X Object)",kb));
+            eprover.terminate();
         } 
         catch (Exception e) {
             System.out.println(e.getMessage());

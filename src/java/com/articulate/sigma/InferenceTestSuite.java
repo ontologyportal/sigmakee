@@ -285,8 +285,8 @@ public class InferenceTestSuite {
                     while (q.hasNext()) {
                         processedStmt = ((Formula)q.next()).theFormula;
                         long start = System.currentTimeMillis();
-                        if (systemChosen != null && systemChosen.equals("KIF-Vampire")) {
-                            System.out.println("INFO in InferenceTestSuite.test(): Query is posed to Vampire ");
+                        if (systemChosen != null && systemChosen.equals("EProver")) {
+                            System.out.println("INFO in InferenceTestSuite.test(): Query is posed to EProver ");
                             proof = kb.ask(processedStmt,timeout,maxAnswers);                        
                         }
                         else  // SoTPTP:

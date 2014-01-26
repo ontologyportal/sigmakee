@@ -33,7 +33,7 @@ public class ProofStep {
       *  expressing the conclusion of this proof step. */
     public String axiom = null;
 
-     /** The number assigned to this proof step, initially by Vampire and
+     /** The number assigned to this proof step, initially by EProver and
       *  then normalized by ProofStep.normalizeProofStepNumbers() */
     public Integer number = new Integer(0);
 

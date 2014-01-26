@@ -30,7 +30,6 @@ import com.articulate.sigma.KB;
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
-	private static Logger logger = Logger.getLogger("com.articulate.sigma.HTMLformatter");
     public static String htmlDivider =
         ("<table align=\"left\" width=\"50%\">"
                 + "<tr><td bgcolor=\"#A8BACF\">"
@@ -688,7 +687,7 @@ public class HTMLformatter {
             else
                 begin = err;
 
-			result.append(begin + end + "<P>\\n");
+			result.append(begin + end + "<P>");
         }
         return result.toString();
     }
@@ -856,11 +855,7 @@ public class HTMLformatter {
      */    
     public static String formatConsistencyCheck(String msg, String ccheckResult, 
     		String language, int page) {
-
-    	if (logger.isLoggable(Level.FINER)) {
-    		String[] params = {"msg = " + msg, "ccheckResult=" + ccheckResult, "language=" + language};
-    		logger.entering("HTMLformatter", "formatConsistencyCheck", params);
-    	}    	
+	
     	StringBuilder html = new StringBuilder();
     	String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";    	
     	html.append(msg);
@@ -877,13 +872,10 @@ public class HTMLformatter {
 	    			for (int i = 0; i < subElements.size(); i++) {
 	    				BasicXMLelement item = (BasicXMLelement) subElements.get(i);
 	    				
-	    				logger.finer("item: " + item);
-	    				logger.finer("item-tagname: " + item.tagname);
 	    				if (item.tagname.equals("kb")) 
 	    					kbName = item.contents;
 	    				else if (item.tagname.equals("entries")) {
-	    					ArrayList entries = ((BasicXMLelement) subElements.get(i)).subelements;
-	    					logger.finer("entries: " + entries);		    					
+	    					ArrayList entries = ((BasicXMLelement) subElements.get(i)).subelements;	    					
     	    	    		html.append("<br/><b><u>Consistency Check Results:</u></b><br />");		    					
 	    					if (page == 0) {
 	    						String pagelink = "CCheck.jsp?kb=" + kbName + "&lang=" + language + "&page=";
@@ -897,8 +889,7 @@ public class HTMLformatter {
 		    						String type = null;
 		    						String sourceFile = null;
 		    						for (int k=0; k < entry.size(); k++) {
-		    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);				    						
-		    							logger.finer("entryItem: " + entryItem);			    							
+		    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);				    								    							
 		    							if (entryItem.tagname.equals("query")) 
 		    								query = entryItem.contents;
 		    							else if (entryItem.tagname.equals("type"))
@@ -916,15 +907,13 @@ public class HTMLformatter {
 	    					else if (page >= 1 && page <= entries.size()) {		    						
 	    						int j = page - 1;		    						
 	    						ArrayList<BasicXMLelement> entry = ((BasicXMLelement) entries.get(j)).subelements;
-	    						logger.finer("entry: " + entry);
 	    						String query = null;
 	    						String type = null;
     							String processedQ = null;
 	    						String proof = null;
 	    						String sourceFile = null;	    							
 	    						for (int k=0; k < entry.size(); k++) {
-	    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);			    						
-	    							logger.finer("entryItem: " + entryItem);		    							
+	    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);			    							    							
 	    							if (entryItem.tagname.equals("query")) 
 	    								query = entryItem.contents;
 	    							else if (entryItem.tagname.equals("type"))
@@ -935,14 +924,12 @@ public class HTMLformatter {
 	    								sourceFile = entryItem.contents;
 	    							else if (entryItem.tagname.equals("proof")) {
 	    								if (type.indexOf("Error") == -1)
-	    									if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("Vampire"))
+	    									if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("EProver"))
 	    										proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
 										else {
 											proof = entryItem.contents;
-											proof = proof.replaceAll("%3C",
-													"<");
-											proof = proof.replaceAll("%3E",
-													">");
+											proof = proof.replaceAll("%3C","<");
+											proof = proof.replaceAll("%3E",">");
 										}
 	    								else proof = entryItem.contents;
 	    							}
@@ -972,10 +959,9 @@ public class HTMLformatter {
     			}
     		}
     		catch (Exception ex) {
-    			logger.warning(ex.getMessage());
+    			System.out.println(ex.getMessage());
     		}
-       	}    	    	
-    	logger.exiting("HTMLformatter", "formatConsistencyCheck", html.toString());    	
+       	}    	    	    	
     	return html.toString();
     }
     

@@ -289,7 +289,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           logDir = "";
   }
           
-
   String logLevel = request.getParameter("logLevel");
   if (logLevel != null) {
       changed = true;
@@ -300,8 +299,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       if (logLevel == null)
           logLevel = "warning";
   }
-          
-          
+                    
   if (changed == true) 
       KBmanager.getMgr().writeConfiguration();
 
@@ -335,11 +333,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
               akb = KBmanager.getMgr().getKB(akbName);
               if (akb != null) {
                   boolean callReload = false;
-                  boolean callLoadVampire = false;
+                  boolean callLoadEProver = false;
                   boolean callCache = false;
                   boolean callTptpParse = false;
                   if (useCacheChanged) {
-                      callLoadVampire = true;
+                      callLoadEProver = true;
                       int oldCacheSetting = (oldBitVal & KBmanager.USE_CACHE);
                       int newCacheSetting = (newBitVal & KBmanager.USE_CACHE);
                       boolean cachingTurnedOn = (newCacheSetting > oldCacheSetting);
@@ -351,19 +349,19 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                           callReload = true;                    
                   }
                   if (ieChanged || useTypePrefixChanged || useHoldsPrefixChanged) 
-                      callLoadVampire = true;                        
+                      callLoadEProver = true;                        
                   if (callReload) {
                       System.out.println("INFO in Properties.jsp: reloading the entire KB");
                       kb.reload();
                   }
                   else if (callCache) {
-                      System.out.println("INFO in Properties.jsp: writing the cache file and reloading Vampire");                      
+                      System.out.println("INFO in Properties.jsp: writing the cache file and reloading EProver");                      
                       kb.kbCache.cache();
-                      kb.loadVampire();
+                      kb.loadEProver();
                   }
-                  else if (callLoadVampire) {
-                      System.out.println("INFO in Properties.jsp: reloading Vampire");
-                      kb.loadVampire();
+                  else if (callLoadEProver) {
+                      System.out.println("INFO in Properties.jsp: reloading EProver");
+                      kb.loadEProver();
                   }
                   else if (useTptpTurnedOn) {
                       // If we reach this point, the only action required is that a TPTP translation be

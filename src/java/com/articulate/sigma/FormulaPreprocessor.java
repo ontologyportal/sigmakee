@@ -19,12 +19,12 @@ public class FormulaPreprocessor {
      */
     private static final int AXIOM_EXPANSION_LIMIT = 2000;
 
-	public Formula _f;
-	
-	public FormulaPreprocessor(Formula f) {
-		_f = f;
-	}
-	
+    public Formula _f;
+    
+    public FormulaPreprocessor(Formula f) {
+        _f = f;
+    }
+    
     /** ***************************************************************
      * A + is appended to the type if the parameter must be a class
      *
@@ -78,7 +78,6 @@ public class FormulaPreprocessor {
         int clPos = 2;
         for (int i = 0; i < al.size(); i++) {
             Formula f = (Formula) al.get(i);
-			// logger.finest("theFormula: " + f.theFormula);
             if (f.theFormula.startsWith("(domain")) {
                 argnum = Integer.parseInt(f.getArgument(2));
                 clPos = 3;
@@ -87,8 +86,8 @@ public class FormulaPreprocessor {
             String errStr = null;
             String mgrErrStr = null;
             if ((argnum < 0) || (argnum >= result.length)) {
-                errStr = "Possible arity confusion for " + pred;
-				_f.errors.add(errStr);
+                errStr = "Possible arity confusion for: " + pred;
+                _f.errors.add(errStr);
             }
             else if (StringUtil.emptyString(result[argnum])) {
                 if (classP) { cl += "+"; }
@@ -98,7 +97,7 @@ public class FormulaPreprocessor {
                 if (!cl.equals(result[argnum])) {
                     errStr = ("Multiple types asserted for argument " + argnum
                               + " of " + pred + ": " + cl + ", " + result[argnum]);
-					_f.errors.add(errStr);
+                    _f.errors.add(errStr);
                 }
             }
         }
@@ -205,7 +204,7 @@ public class FormulaPreprocessor {
      */
     private void winnowTypeList(List types, KB kb) {
 
-		long t1 = 0L;
+        long t1 = 0L;
         if ((types instanceof List) && (types.size() > 1)) {
             Object[] valArr = types.toArray();
             String clX = null;
@@ -251,7 +250,7 @@ public class FormulaPreprocessor {
      */
     private void computeTypeRestrictions(List<String> ios, List<String> scs, String var, KB kb) {
 
-		String pred = null;
+        String pred = null;
         if (!_f.listP() || !_f.theFormula.contains(var))
             return;
         Formula f = new Formula();
@@ -318,8 +317,8 @@ public class FormulaPreprocessor {
                 }
             }            
             if (pred.equals("equal")) {   // Special treatment for equal
-            	String arg1 = f.getArgument(1);
-            	String arg2 = f.getArgument(2);
+                String arg1 = f.getArgument(1);
+                String arg2 = f.getArgument(2);
                 String term = null;
                 if (var.equals(arg1)) { term = arg2; }
                 else if (var.equals(arg2)) { term = arg1; }
@@ -355,7 +354,7 @@ public class FormulaPreprocessor {
                         if ((instanceOfs != null) && !instanceOfs.isEmpty()) {
                             Iterator<String> it = instanceOfs.iterator();
                             while (it.hasNext()) {
-                            	String io = (String) it.next();
+                                String io = (String) it.next();
                                 if (!io.equals("Entity") && !ios.contains(io)) 
                                     ios.add(io);                                    
                             }
@@ -366,8 +365,8 @@ public class FormulaPreprocessor {
             // Special treatment for instance or subclass, only if var.equals(arg1)
             // and arg2 is a functional term.
             else if (Arrays.asList("instance", "subclass").contains(pred)) {
-            	String arg1 = f.getArgument(1);
-            	String arg2 = f.getArgument(2);
+                String arg1 = f.getArgument(1);
+                String arg2 = f.getArgument(2);
                 if (var.equals(arg1) && Formula.listP(arg2)) {
                     Formula nextF = new Formula();
                     nextF.read(arg2);
@@ -412,7 +411,7 @@ public class FormulaPreprocessor {
      */
     private String insertTypeRestrictionsU(List shelf, KB kb) {
 
-    	String result = _f.theFormula;
+        String result = _f.theFormula;
         String varlist = _f.getArgument(1);
         Formula varlistF = new Formula();
         varlistF.read(varlist);
@@ -505,7 +504,7 @@ public class FormulaPreprocessor {
      * restrictions added.
      */
     private String insertTypeRestrictionsE(List shelf, KB kb) {
-	
+    
         String result = _f.theFormula;
         String varlist = _f.getArgument(1);
         Formula varlistF = new Formula();
@@ -759,7 +758,7 @@ public class FormulaPreprocessor {
      */
     private String addTypeRestrictions(KB kb) {
 
-    	String result = _f.theFormula;
+        String result = _f.theFormula;
         Formula f = new Formula();
         f.read(_f.makeQuantifiersExplicit(false));
         FormulaPreprocessor fp = new FormulaPreprocessor(f);
@@ -877,12 +876,10 @@ public class FormulaPreprocessor {
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
                                      boolean translateIneq, boolean translateMath) {
 
-		StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         if (f.listP() && !f.empty()) {
             String prefix = "";
             String pred = f.car();
-            // Formula predF = new Formula();
-            // predF.read(pred);
             if (Formula.isQuantifier(pred)) {
                 // The list of quantified variables.
                 result.append(" ");
@@ -900,7 +897,6 @@ public class FormulaPreprocessor {
                 while (!restF.empty()) {
                     argCount++;
                     String arg = restF.car();
-                    //System.out.println("INFO in preProcessRecurse(): arg: " + arg);
                     Formula argF = new Formula();
                     argF.read(arg);
                     if (argF.listP()) {
@@ -962,11 +958,9 @@ public class FormulaPreprocessor {
      */
     private ArrayList<Formula> replacePredVarsAndRowVars(KB kb, boolean addHoldsPrefix) {
 
-		ArrayList<Formula> result = new ArrayList<Formula>();
+        ArrayList<Formula> result = new ArrayList<Formula>();
         Formula startF = new Formula();
         startF.read(_f.theFormula);
-
-        long t1 = 0L;
         LinkedHashSet<Formula> accumulator = new LinkedHashSet<Formula>();
         accumulator.add(startF);
         ArrayList<Formula> working = new ArrayList<Formula>();
@@ -983,7 +977,7 @@ public class FormulaPreprocessor {
                 while (it.hasNext()) {
                     f = (Formula) it.next();
                     List<Formula> instantiations = PredVarInst.instantiatePredVars(f,kb);
-					_f.errors.addAll(f.getErrors());
+                    _f.errors.addAll(f.getErrors());
                     if (instantiations.isEmpty()) {
                         // If the accumulator is empty -- no pred var instantiations were possible -- add
                         // the original formula to the accumulator for possible row var expansion below.
@@ -992,11 +986,11 @@ public class FormulaPreprocessor {
                     else {
                         // If the formula can't be instantiated at all and so has been marked "reject",
                         // don't add anything.
-                    	Formula obj0 = instantiations.get(0);
-						String errStr = "No predicate instantiations for ";
+                        Formula obj0 = instantiations.get(0);
+                        String errStr = "No predicate instantiations for ";
                         if (instantiations == null || instantiations.size() == 0) {
-							errStr += f.theFormula;
-							_f.errors.add(errStr);
+                            errStr += f.theFormula;
+                            _f.errors.add(errStr);
                         }
                         else {
                             // It might not be possible to instantiate all pred vars until
@@ -1011,19 +1005,15 @@ public class FormulaPreprocessor {
             // doing row var expansion on each.  If no predicate instantiations can be generated, the accumulator
             // will contain just the original input formula.
             if (!accumulator.isEmpty() && (accumulator.size() < AXIOM_EXPANSION_LIMIT)) {
-                t1 = System.currentTimeMillis();
                 working.clear();
                 working.addAll(accumulator);
                 accumulator.clear();
                 Iterator<Formula> it2 = working.iterator(); 
                 while (it2.hasNext()) {
-					f = (Formula) it2.next();
-                    //System.out.println("Formula.replacePredVarsAndRowVars(): iterator2: f == " + f);
+                    f = (Formula) it2.next();
                     accumulator.addAll(f.expandRowVars(kb));
-					// logger.finest("f == " + f);
-					// logger.finest("accumulator == " + accumulator);
                     if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
-						System.out.println("  AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
+                        System.out.println("  AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
                         break;
                     }
                 }
@@ -1107,10 +1097,8 @@ public class FormulaPreprocessor {
                 Formula f = null;
                 for (Iterator it = variableReplacements.iterator(); it.hasNext();) {
                     f = (Formula) it.next();
-                    formulae.add(f);
-
-                    // Make sure every SetOrClass is stated to be such.
-                    if (f.listP() && !f.empty()) {
+                    formulae.add(f);                    
+                    if (f.listP() && !f.empty()) {  // Make sure every SetOrClass is stated to be such
                         arg0 = f.car();
                         int start = -1;
                         if (arg0.equals("subclass")) start = 0;
@@ -1169,14 +1157,13 @@ public class FormulaPreprocessor {
      */
     public ArrayList<Formula> preProcess(boolean isQuery, KB kb) {
 
-    	if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + _f.theFormula);
+        if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + _f.theFormula);
         ArrayList<Formula> results = new ArrayList<Formula>();
         if (!StringUtil.emptyString(_f.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
             if (!_f.isBalancedList()) {
-				String errStr = "Unbalanced parentheses or quotes in "
-						+ _f.theFormula;
-				_f.errors.add(errStr);
+                String errStr = "Unbalanced parentheses or quotes in: " + _f.theFormula;
+                _f.errors.add(errStr);
                 return results;
             }
             boolean ignoreStrings = false;
@@ -1189,7 +1176,7 @@ public class FormulaPreprocessor {
 
             boolean addHoldsPrefix = mgr.getPref("holdsPrefix").equalsIgnoreCase("yes");
             ArrayList variableReplacements = replacePredVarsAndRowVars(kb, addHoldsPrefix);
-			_f.errors.addAll(f.getErrors());
+            _f.errors.addAll(f.getErrors());
 
             ArrayList accumulator = addInstancesOfSetOrClass(kb, isQuery, variableReplacements);
             // Iterate over the formulae resulting from predicate variable instantiation and row variable expansion,
@@ -1202,24 +1189,23 @@ public class FormulaPreprocessor {
                 while (it.hasNext()) {
                     fnew = (Formula) it.next();
                     if (addSortals && !isQuery && fnew.theFormula.matches(".*\\?\\w+.*")) { // isLogicalOperator(arg0) ||    
-                    	FormulaPreprocessor fp = new FormulaPreprocessor(fnew);
+                        FormulaPreprocessor fp = new FormulaPreprocessor(fnew);
                         fnew.read(fp.addTypeRestrictions(kb));                           
                     }
                     FormulaPreprocessor fp = new FormulaPreprocessor(fnew);
                     theNewFormula = fp.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath);
                     fnew.read(theNewFormula);
-					_f.errors.addAll(fnew.getErrors());                        
+                    _f.errors.addAll(fnew.getErrors());                        
                     if (isOkForInference(fnew,isQuery, kb)) {
                         fnew.sourceFile = _f.sourceFile;
                         results.add(fnew);
                     }
                     else 
-						_f.errors.add("Formula rejected for inference: \n" + f.theFormula);                        
+                        _f.errors.add("Formula rejected for inference: " + f.theFormula);                        
                 }
             }
         }
         if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         return results;
     }
-
 }

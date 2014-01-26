@@ -406,7 +406,7 @@ public class SUMOformulaToTPTPformula {
             if (kb == null)
                 kb = new KB("",mgr.getPref("kbDir"));
             if (!_f.isBalancedList()) {
-				String errStr = "Unbalanced parentheses or quotes in " + _f.theFormula;
+				String errStr = "Unbalanced parentheses or quotes in: " + _f.theFormula;
 				_f.errors.add(errStr);
                 return;
             }
