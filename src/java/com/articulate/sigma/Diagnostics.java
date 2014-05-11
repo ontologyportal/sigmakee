@@ -735,7 +735,6 @@ public class Diagnostics {
     /** *****************************************************************
      * Returns "" if answer is OK, otherwise reports it. 
      */
-
     private static String reportAnswer(KB kb, String proof, Formula query, String pQuery, String testType) {
 
         String language = kb.language;
@@ -762,7 +761,9 @@ public class Diagnostics {
             
         BasicXMLparser res = new BasicXMLparser(proof);
         ProofProcessor pp = new ProofProcessor(res.elements);
-        if (!pp.returnAnswer(0).equalsIgnoreCase("no")) {
+        String ansstr = null;
+        //ansstr = pp.returnAnswer(0);
+        if (!ansstr.equalsIgnoreCase("no")) {
             html = html.append(testType + ": <br><br>");
             html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
             result = HTMLformatter.formatProofResult(proof,query.theFormula,
