@@ -48,7 +48,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             String prologFile = null;
             try {
                 pfcp = plFile.getCanonicalPath();
-                prologFile = kb.writePrologFile(pfcp);
+                Prolog.kb = kb;
+                prologFile = Prolog.writePrologFile(pfcp);
             }
             catch (Exception pfe) {
                 pfe.printStackTrace();
