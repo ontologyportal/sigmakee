@@ -100,9 +100,8 @@ public class EProver {
             System.out.println("INFO in EProver(): Return string: " + line);
             if (line.indexOf("Error:") != -1)
                 throw new IOException(line);     
-            if (line.indexOf("# Enter job") != -1) {
-                break;
-            }
+            if (line.indexOf("# Enter job") != -1) 
+                break;            
         }
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
