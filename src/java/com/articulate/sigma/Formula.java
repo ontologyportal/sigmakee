@@ -228,6 +228,12 @@ public class Formula implements Comparable {
      */
 	public Formula() {
 	}	
+
+    /** *****************************************************************
+     */
+	public Formula(String f) {
+		theFormula = f;
+	}	
 	
     /** ***************************************************************
      * Returns a List of the clauses that together constitute the
@@ -668,6 +674,7 @@ public class Formula implements Comparable {
         }
         return null;
     }
+    
     /** ***************************************************************
      * Returns the LISP 'cadr' (the second list element) of the
      * formula.
@@ -1219,7 +1226,7 @@ public class Formula implements Comparable {
      *
      * @return An ArrayList of String variable names
      */
-    private ArrayList<String> collectQuantifiedVariables() {
+    public ArrayList<String> collectQuantifiedVariables() {
     	    
     	ArrayList<String> result = new ArrayList<String>();
     	HashSet<String> resultSet = new HashSet<String>();
@@ -2608,13 +2615,32 @@ public class Formula implements Comparable {
     	System.out.println("Unquantified variables: " + f.collectUnquantifiedVariables());
     	System.out.println("Terms: " + f.collectTerms());
     }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void testIsSimpleClause() {
+    	
+    	Formula f1 = new Formula();
+    	f1.read("(not (instance ?X Human))");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	f1.read("(instance ?X Human)");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+        f1.read("(=> (attribute ?Agent Investor) (exists (?Investing) (agent ?Investing ?Agent)))");  
+    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+        f1.read("(member (SkFn 1 ?X3) ?X3)");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+        f1.read("(member ?VAR1 Org1-1)");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    }
     
     /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
 
-    	testCollectVariables();
+    	testIsSimpleClause();
+    	//testCollectVariables();
     	//testTptpParse();
         //Formula.resolveTest3();
         //Formula.unifyTest1();
