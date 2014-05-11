@@ -1352,7 +1352,7 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    private static Formula universalsOut(Formula f) {  
+    public static Formula universalsOut(Formula f) {  
 
         Clausifier temp = new Clausifier(f.theFormula);
         return temp.universalsOut();
