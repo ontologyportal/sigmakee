@@ -2941,10 +2941,10 @@ public class KB {
      * @param classNames A Set of String, containing SUO-KIF class names    
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
-    protected TreeSet<String> getAllInstances(Set<String> classNames) {
+    protected TreeSet<String> getAllInstances(TreeSet<String> classNames) {
 
         TreeSet<String> ans = new TreeSet<String>();
-        if ((classNames instanceof Set) && !classNames.isEmpty()) {
+        if ((classNames instanceof TreeSet) && !classNames.isEmpty()) {
             String name = null;
             Iterator<String> it = classNames.iterator();
             while (it.hasNext()) {
@@ -3379,75 +3379,6 @@ public class KB {
         return newTreeSet;
     }
 
-    /** *************************************************************
-     */
-    private void writePrologFormulas(ArrayList<Formula> forms, PrintWriter pw) {
-
-        TreeSet<Formula> ts = new TreeSet<Formula>();
-        ts.addAll(forms);
-        if (forms != null) {
-            Formula formula = null;
-            String result = null;
-            Iterator<Formula> it = ts.iterator(); 
-            while (it.hasNext()) {
-                formula = it.next();
-                result = formula.toProlog();
-                if (result != null && result != "")
-                    pw.println(result);
-            }
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * @param fname - the name of the file to write, including full path.
-     */
-    public String writePrologFile(String fname) {
-
-        File file = null;
-        PrintWriter pr = null;
-        String result = null;
-
-        try {
-            file = new File(fname);
-            if ((WordNet.wn != null) && WordNet.wn.wordFrequencies.isEmpty())
-                WordNet.wn.readWordFrequencies();
-            pr = new PrintWriter(new FileWriter(file));
-            pr.println("% Copyright (c) 2006-2009 Articulate Software Incorporated");
-            pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
-            pr.println("% This is a very lossy translation to prolog of the KIF ontologies available at www.ontologyportal.org\n");
-
-            pr.println("% subAttribute");
-            writePrologFormulas(ask("arg",0,"subAttribute"),pr);
-            pr.println("\n% subrelation");
-            writePrologFormulas(ask("arg",0,"subrelation"),pr);
-            pr.println("\n% disjoint");
-            writePrologFormulas(ask("arg",0,"disjoint"),pr);
-            pr.println("\n% partition");
-            writePrologFormulas(ask("arg",0,"partition"),pr);
-            pr.println("\n% instance");
-            writePrologFormulas(ask("arg",0,"instance"),pr);
-            pr.println("\n% subclass");
-            writePrologFormulas(ask("arg",0,"subclass"),pr);
-            System.out.println(" ");
-
-            pr.flush();
-            result = file.getCanonicalPath();
-        }
-        catch (Exception e) {
-            System.out.println("Error in KB.writePrologFile(): " + e.getMessage());
-            e.printStackTrace();
-        }
-        finally {
-            try {
-                if (pr != null) pr.close();
-            }
-            catch (Exception e1) {
-            }
-        }
-        return result;
-    }
-     
     /** *************************************************************
      * List all terms that don't have an externalImage link
      */
