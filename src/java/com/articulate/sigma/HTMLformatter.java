@@ -819,7 +819,8 @@ public class HTMLformatter {
     	StringBuilder html = new StringBuilder();
     	ProofProcessor pp = new ProofProcessor(proof);           
     	for (int i = 0; i < pp.numAnswers(); i++) {
-    		ArrayList<ProofStep> proofSteps = pp.getProofSteps(i);
+    		ArrayList<ProofStep> proofSteps = null;
+    		// proofSteps = pp.getProofSteps(i);
     		proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
     		proofSteps = new ArrayList<ProofStep>(ProofStep.removeDuplicates(proofSteps));
 
@@ -828,10 +829,13 @@ public class HTMLformatter {
     		html = html.append("Answer " + "\n");
     		html = html.append(i+answerOffset);                
     		html = html.append(". ");
-    		String[] answer = pp.returnAnswer(i, processedStmt).split(";");
+    		String[] answer = null;
+    		//answer = pp.returnAnswer(i, processedStmt).split(";");
     		for(int k=0; k<answer.length; k++) {
     			html.append(answer[k]+ "<br/>");
-    			if (!pp.returnAnswer(i, processedStmt).equalsIgnoreCase("no")) {
+    			String answerstr = null;
+    			//answerstr = pp.returnAnswer(i, processedStmt);
+    			if (!answerstr.equalsIgnoreCase("no")) {
     				html = html.append("<p><table width=\"95%\">" + "\n");
     				for (int l = 0; l < proofSteps.size(); l++) {
     					if (l % 2 == 1)
