@@ -1982,6 +1982,29 @@ public class Formula implements Comparable {
         }
         return ans;
     }
+    /** ***************************************************************
+     * Returns true only if this Formula, is a horn clause or is simply
+     * modified to be horn by breaking out a conjunctive conclusion.
+     */
+    public boolean isHorn() {
+        
+        if (!isRule()) {
+            System.out.println("Error in Formula.isHorn(): Formula is not a rule: " + this);
+            return false;
+        }
+        if (isHigherOrder()) 
+            return false;
+        if (theFormula.contains("exists") || theFormula.contains("forall")) 
+            return false;        
+        
+        Formula antecedent = cdrAsFormula().carAsFormula();
+        if (!antecedent.isSimpleClause() && !antecedent.car().equals("and"))
+            return false;
+        Formula consequent = cdrAsFormula().cdrAsFormula().carAsFormula();
+        if (!consequent.isSimpleClause() && !consequent.car().equals("and"))
+            return false;  
+        return true;
+    }
 
     /** ***************************************************************
      * Test whether a list with a predicate is a quantifier list
