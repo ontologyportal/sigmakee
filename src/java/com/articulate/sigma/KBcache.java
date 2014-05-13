@@ -15,8 +15,7 @@ http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
-import java.io.File;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -73,7 +72,7 @@ public class KBcache {
      * included in the relation cache tables. */
     private boolean cacheReflexiveAssertions = false;
     
-    public HashMap relnsWithRelnArgs = null;
+    public HashMap<String,Object> relnsWithRelnArgs = null;
     
     private KB kb = null;
     
@@ -85,13 +84,16 @@ public class KBcache {
     }
     
     /** ***************************************************
-    * Return ArrayList of all nonrelTerms in an ArrayList
+    * Return ArrayList of all terms in an ArrayList that
+    * are not relations.  Note that this only tests for
+    * whether the first character is lower case, which
+    * is only a convention.
     *
     * @return An ArrayList of nonrelTerms
     */
-    public static ArrayList<String> getAllNonRelTerms(ArrayList list) {
+    public static ArrayList<String> getAllNonRelTerms(ArrayList<String> list) {
         
-        ArrayList<String> nonRelTerms = new ArrayList();
+        ArrayList<String> nonRelTerms = new ArrayList<String>();
         Iterator<String> itr = list.iterator();
         while(itr.hasNext()) {
             String t = itr.next();
@@ -102,13 +104,15 @@ public class KBcache {
     }
     
     /** ******************************************************
-    * Return ArrayList of all relTerms in an ArrayList
-    *
+    * Return ArrayList of all terms in an ArrayList that are relations
+    * Note that this only tests for
+    * whether the first character is lower case, which
+    * is only a convention.
     * @return An ArrayList of relTerms
     */
-    public static ArrayList<String> getAllRelTerms(ArrayList list) {
+    public static ArrayList<String> getAllRelTerms(ArrayList<String> list) {
         
-        ArrayList<String> relTerms = new ArrayList();
+        ArrayList<String> relTerms = new ArrayList<String>();
         Iterator<String> itr = list.iterator();
         while(itr.hasNext()) {
             String t = itr.next();
@@ -144,7 +148,7 @@ public class KBcache {
      */
     private ArrayList<String> getCachedRelationNames() {
         
-        ArrayList<String> relationNames = new ArrayList();
+        ArrayList<String> relationNames = new ArrayList<String>();
         try {
             LinkedHashSet<String> reduced = new LinkedHashSet<String>(cachedRelationNames);
             reduced.addAll(getCachedTransitiveRelationNames());
@@ -188,7 +192,7 @@ public class KBcache {
         
         ArrayList<String> ans = new ArrayList<String>();
         try {
-            Set symmset = kb.getAllInstancesWithPredicateSubsumption("SymmetricRelation");
+            Set<String> symmset = kb.getAllInstancesWithPredicateSubsumption("SymmetricRelation");
             // symmset.addAll(getTermsViaPredicateSubsumption("subrelation",2,"inverse",1,true));
             symmset.add("inverse");
             ans.addAll(symmset);
@@ -204,7 +208,7 @@ public class KBcache {
      */
     private ArrayList<String> getCachedReflexiveRelationNames() {
         
-        ArrayList<String> ans = new ArrayList();
+        ArrayList<String> ans = new ArrayList<String>();
         try {
             List<String> allcached = getCachedRelationNames();
             List<String> reflexives = new ArrayList<String>(cachedReflexiveRelationNames);
@@ -262,7 +266,8 @@ public class KBcache {
         try {
             //logger.info("Clearing " + getSortalTypeCache().size() + " entries");
             Object obj = null;
-            for (Iterator it = getSortalTypeCache().values().iterator(); it.hasNext();) {
+            Iterator<Object> it = getSortalTypeCache().values().iterator();
+            while (it.hasNext()) {
                 obj = it.next();
                 if (obj instanceof Collection) 
                     ((Collection) obj).clear();                
@@ -313,7 +318,7 @@ public class KBcache {
             }            
             getRelationCaches().clear();  // Discard all cache maps.
         }
-        List symmetric = getCachedSymmetricRelationNames();
+        List<String> symmetric = getCachedSymmetricRelationNames();
         Iterator<String> it2 = getCachedRelationNames().iterator();
         while (it2.hasNext()) {
             String relname = it2.next();
@@ -512,7 +517,7 @@ public class KBcache {
     public HashSet<String> getCachedRelationValues(String relation, String term,
                                            int keyArg, int valueArg) {
         
-        HashSet<String> ans = new HashSet();
+        HashSet<String> ans = new HashSet<String>();
         try {
             RelationCache cache = getRelationCache(relation, keyArg, valueArg);
             if (cache != null) {
@@ -795,7 +800,7 @@ public class KBcache {
 
     /** *************************************************************
      *  */
-    public HashMap relationValences = new HashMap();
+    public HashMap<String,Object> relationValences = new HashMap<String,Object>();
 
     /** *************************************************************
      *  */
@@ -1129,5 +1134,19 @@ public class KBcache {
      */
     public static void main(String[] args) {
 
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        kb.kbCache.buildRelationCaches(kb);
+        ArrayList<RelationCache> rcs = kb.kbCache.getRelationCaches();
+        for (int i = 0; i < rcs.size(); i++) {
+            RelationCache rc = rcs.get(i);
+            System.out.println(rc.relationName);
+        }
+        
+        HashMap<String,Object> stc = kb.kbCache.getSortalTypeCache();
+        for (int i = 0; i < rcs.size(); i++) {
+            RelationCache rc = rcs.get(i);
+            System.out.println(rc.relationName);
+        }
     }
 }
