@@ -264,7 +264,7 @@ public class KIF {
                             if (StringUtil.emptyString(validArgs))
                                 validArgs = f.badQuantification();                      
                             if (StringUtil.isNonEmptyString(validArgs)) {
-                                errStr = (errStart + ": Invalid number of arguments near line " + f.startLine);
+                                errStr = (errStart + ": Invalid number of arguments near line " + f.startLine + " : " + validArgs);
                                 throw new ParseException(errStr, f.startLine);  
                             }
                         }
