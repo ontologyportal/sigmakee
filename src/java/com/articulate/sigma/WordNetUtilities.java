@@ -892,12 +892,33 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     */
+    private static boolean excludedStringsForMeronymy(String s1, String s2) {
+        
+        if (s1.indexOf("genus_") > -1 ||
+            s2.indexOf("genus_") > -1 ||
+            s1.indexOf("order_") > -1 ||
+            s2.indexOf("order_") > -1 ||
+            s1.indexOf("family_") > -1 ||
+            s2.indexOf("family_") > -1 ||
+            s1.indexOf("_family") > -1 ||
+            s2.indexOf("_family") > -1 ||
+            s1.indexOf("division_") > -1 ||
+            s2.indexOf("division_") > -1)
+            return true;
+        else
+            return false;
+    }
+
+    /** ***************************************************************
      *  A utility to extract meronym relations as relations between
-     *  SUMO terms.
+     *  SUMO terms.  Filter out relations between genus and species,
+     *  which shouldn't be meronyms
      */
     public static void extractMeronyms() {
 
-        Iterator it = WordNet.wn.relations.keySet().iterator();
+        System.out.println("; All meronym relations from WordNet other than genus membership is filtered out");
+        Iterator<String> it = WordNet.wn.relations.keySet().iterator();
         while (it.hasNext()) {
             String key = (String) it.next();
             ArrayList al = (ArrayList) WordNet.wn.relations.get(key);
@@ -906,12 +927,19 @@ public class WordNetUtilities {
                 if (avp.attribute.equals("member meronym") ||
                         avp.attribute.equals("substance meronym") ||
                         avp.attribute.equals("part meronym")) {
+                    avp.attribute = avp.attribute.replaceAll(" ", "_");
                     String value = avp.value;
                     String SUMO1 = WordNet.wn.getSUMOMapping(key);
                     String SUMO2 = WordNet.wn.getSUMOMapping(value);
-                    if (SUMO1 != null && SUMO2 != null && SUMO1.endsWith("=") && SUMO2.endsWith("="))
-                        System.out.println("(" + avp.attribute + " " + SUMO2.substring(2,SUMO2.length()-1) +
-                                " " + SUMO1.substring(2,SUMO1.length()-1) + ")");
+                    String keywordlist = WordNet.wn.synsetsToWords.get(key).toString();
+                    String valuewordlist = WordNet.wn.synsetsToWords.get(value).toString();
+                    if (!excludedStringsForMeronymy(keywordlist,valuewordlist)) {
+                        System.out.println("; " + WordNet.wn.synsetsToWords.get(key)); //ArrayList<String>
+                        System.out.println("; " + WordNet.wn.synsetsToWords.get(value));                    
+                        if (SUMO1 != null && SUMO2 != null)
+                            System.out.println("(" + avp.attribute + " " + SUMO2.substring(2,SUMO2.length()-1) +
+                                    " " + SUMO1.substring(2,SUMO1.length()-1) + ")");
+                    }
                 }
             }
         }
@@ -1002,10 +1030,10 @@ public class WordNetUtilities {
 
         try {
 	        KBmanager.getMgr().initializeOnce();
-	        //generateOMWformat(KBmanager.getMgr().getPref("kbDir") + "/wn-data-smo.tab");
+	        extractMeronyms();
         }
         catch (Exception e) {
-            System.out.println("Error in WordNet.main(): Exception: " + e.getMessage());
+            System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
         }
 
     }
