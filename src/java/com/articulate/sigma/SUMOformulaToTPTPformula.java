@@ -14,8 +14,8 @@ import java.util.logging.Level;
 
 public class SUMOformulaToTPTPformula {
 
-	public Formula _f = null;
-	
+    public Formula _f = null;
+    
     /** ***************************************************************
      * Encapsulates translateWord_1, which translates the logical
      * operators and inequalities in SUO-KIF to their TPTP
@@ -33,7 +33,7 @@ public class SUMOformulaToTPTPformula {
                 result = "'" + result + "'";            
         }
         catch (Exception ex) {
-        	System.out.println("INFO in Formula.translateWord():" + ex.getMessage());
+            System.out.println("INFO in Formula.translateWord():" + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -47,12 +47,12 @@ public class SUMOformulaToTPTPformula {
      */
     private static String translateWord_1(StreamTokenizer_s st, boolean hasArguments) {      
 
-    	//System.out.println("INFO in Formula.translateWord_1(): st: " + st.sval);
+        //System.out.println("INFO in Formula.translateWord_1(): st: " + st.sval);
         int translateIndex;
 
         List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT, 
-        		Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF, 
-        		Formula.EQUAL);
+                Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF, 
+                Formula.EQUAL);
         List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
 
         List<String> kifPredicates =
@@ -65,7 +65,7 @@ public class SUMOformulaToTPTPformula {
                                                     "lesseq","less","greater","greatereq");
 
         List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN, 
-        		Formula.PLUSFN, Formula.MINUSFN);
+                Formula.PLUSFN, Formula.MINUSFN);
         List<String> tptpFunctions = Arrays.asList("times","divide","plus","minus");
 
         List<String> kifRelations = new ArrayList<String>();
@@ -154,7 +154,7 @@ public class SUMOformulaToTPTPformula {
 
         int translateIndex;
         String kifOps[] = {Formula.UQUANT, Formula.EQUANT, Formula.NOT, 
-        		Formula.AND, Formula.OR, Formula.IF, Formula.IFF};
+                Formula.AND, Formula.OR, Formula.IF, Formula.IFF};
 
         translateIndex = 0;
         while (translateIndex < kifOps.length &&
@@ -184,7 +184,7 @@ public class SUMOformulaToTPTPformula {
     private static void addVariable(StreamTokenizer_s st,Vector<String> variables) {
 
         if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
-        	String tptpVariable = translateWord(st,false);
+            String tptpVariable = translateWord(st,false);
             if (variables.indexOf(tptpVariable) == -1) 
                 variables.add(tptpVariable);            
         }
@@ -195,14 +195,21 @@ public class SUMOformulaToTPTPformula {
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
         
-        Formula tempF = new Formula();      // Special case to renam Foo for (instance Foo SetOrClass)
-        tempF.read(suoString);              // so a symbol can't be both a class and an instance.
+        Formula tempF = new Formula();      // Special case to rename Foo for (instance Foo SetOrClass)
+        tempF.read(suoString);              // so a symbol can't be both a class and an instance. However,
+                                            // this may not be needed and we might just not allow a class 
+                                            // to be an instance of itself
         if (tempF.getArgument(0).equals("instance") &&
             tempF.getArgument(2).equals("SetOrClass")) {
             String arg1 = tempF.getArgument(1);
-            suoString = "(instance " + arg1 + Formula.classSymbolSuffix + " SetOrClass)";
+            // suoString = "(instance " + arg1 + Formula.classSymbolSuffix + " SetOrClass)";
+            suoString = "(instance " + arg1 + " SetOrClass)";
         }
-
+        if (tempF.getArgument(0).equals("instance") &&
+                tempF.getArgument(2).equals(tempF.getArgument(1))) {
+            return null;
+        }
+        
         StreamTokenizer_s st = null;
         String translatedFormula = null;
         try {
@@ -243,8 +250,8 @@ public class SUMOformulaToTPTPformula {
                 } 
                 else if (st.ttype == StreamTokenizer.TT_WORD &&  //----Operators
                            (((arity = operatorArity(st)) > 0) || st.sval.equals(Formula.EQUAL))) {                    
-                	if (st.sval.equals(Formula.EQUAL))
-                		arity = 2;
+                    if (st.sval.equals(Formula.EQUAL))
+                        arity = 2;
                     if (!lastWasOpen)              //----Operators must be preceded by a (
                         return(null);                    
                     //----This is the start of a new term - put in the infix operator if not the
@@ -351,10 +358,10 @@ public class SUMOformulaToTPTPformula {
                         //findFreeVariables(allVariables,quantifiedVariables);
                         allVariables.removeAll(quantifiedVariables);
                         if (allVariables.size() > 0) {
-                        	if (query)
-                        		quantification = "? [";
-                        	else
-                        		quantification = "! [";
+                            if (query)
+                                quantification = "? [";
+                            else
+                                quantification = "! [";
                             for (index = 0; index < allVariables.size(); index++) {
                                 if (index > 0)
                                     quantification += ",";
@@ -371,12 +378,12 @@ public class SUMOformulaToTPTPformula {
                     } 
                     else if (parenLevel < 0) {
                         throw new ParseException("Parsing error in " + suoString + 
-                        		"Extra closing bracket at " + tptpFormula.toString(),0);
+                                "Extra closing bracket at " + tptpFormula.toString(),0);
                     }
                 } 
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
                     throw new ParseException("Parsing error in " + suoString +
-                    		"Illegal character '" +
+                            "Illegal character '" +
                             (char)st.ttype + "' at " + tptpFormula.toString(),0);
                 }
             } while (st.ttype != StreamTokenizer.TT_EOF);
@@ -386,8 +393,8 @@ public class SUMOformulaToTPTPformula {
                 translatedFormula = tptpFormula.toString();
         }
         catch (Exception ex2) {
-			System.out.println("Error in SUMOformulaToTPTPformula: " + ex2.getMessage());
-			ex2.printStackTrace();
+            System.out.println("Error in SUMOformulaToTPTPformula: " + ex2.getMessage());
+            ex2.printStackTrace();
         }
         return translatedFormula;
     }
@@ -399,20 +406,20 @@ public class SUMOformulaToTPTPformula {
     public void tptpParse(Formula input, boolean query, KB kb, List<Formula> preProcessedForms)
         throws ParseException, IOException {
 
-    	if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
-    	_f = input;
-		try {
+        if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
+        _f = input;
+        try {
             KBmanager mgr = KBmanager.getMgr();
             if (kb == null)
                 kb = new KB("",mgr.getPref("kbDir"));
             if (!_f.isBalancedList()) {
-				String errStr = "Unbalanced parentheses or quotes in: " + _f.theFormula;
-				_f.errors.add(errStr);
+                String errStr = "Unbalanced parentheses or quotes in: " + _f.theFormula;
+                _f.errors.add(errStr);
                 return;
             }
             List<Formula> processed = preProcessedForms;
             if (processed == null) {
-            	FormulaPreprocessor fp = new FormulaPreprocessor(_f);
+                FormulaPreprocessor fp = new FormulaPreprocessor(_f);
                 processed = fp.preProcess(query, kb);
             }
             if (processed != null) {
@@ -420,24 +427,24 @@ public class SUMOformulaToTPTPformula {
                 //----Performs function on each current processed axiom
                 Iterator<Formula> g = processed.iterator();
                 while (g.hasNext()) {
-                	Formula f = (Formula) g.next();
-					if (!f.theFormula.contains("@")) {
-						String tptpStr = tptpParseSUOKIFString(f.theFormula,query);
-						if (StringUtil.isNonEmptyString(tptpStr)) 
-							_f.getTheTptpFormulas().add(tptpStr);						
-					}
+                    Formula f = (Formula) g.next();
+                    if (!f.theFormula.contains("@")) {
+                        String tptpStr = tptpParseSUOKIFString(f.theFormula,query);
+                        if (StringUtil.isNonEmptyString(tptpStr)) 
+                            _f.getTheTptpFormulas().add(tptpStr);                        
+                    }
                 }
             }
         }
         catch (Exception ex) {
-			System.out.println(ex.getMessage());
+            System.out.println(ex.getMessage());
             ex.printStackTrace();
             if (ex instanceof ParseException)
                 throw (ParseException) ex;
             if (ex instanceof IOException)
                 throw (IOException) ex;
         }
-    	if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
+        if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
         return;
     }
 
@@ -454,10 +461,37 @@ public class SUMOformulaToTPTPformula {
      * A test method.
      */
     public static void testTptpParse() {
-    	
-    	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(agent ?VAR4 ?VAR1)",false));
-    	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(equal ?VAR4 ?VAR1)",false));    	
-    	System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(=> " +
+        
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        
+        String teststr = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
+                "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
+        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr,false));
+        //note we should expect
+        /*  fof(kb_SUMO_3489,axiom,(
+        ! [V__SET2,V__SET1] :
+            ( ( s__instance(V__SET1,s__Set)
+              & s__instance(V__SET2,s__Set) )
+               => ( ! [V__ELEMENT] :
+                      ( s__element(V__ELEMENT,V__SET1)
+                    <=> s__element(V__ELEMENT,V__SET2) )
+                 => V__SET1 = V__SET2 ) ) )).
+                 
+                 and not
+                 
+                 fof(kb_SUMO_3515,axiom,(( (
+      ! [V__SET2,V__SET1,V__ELEMENT] :
+          ((! [V__ELEMENT] :
+              ((s__instance(V__SET1,s__Set)
+              & s__instance(V__SET2,s__Set))
+               => (s__element(V__ELEMENT,V__SET1) <=>
+                   s__element(V__ELEMENT,V__SET2))))
+                   => (V__SET1 = V__SET2))) ))).
+                   
+        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(agent ?VAR4 ?VAR1)",false));
+        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(equal ?VAR4 ?VAR1)",false));        
+        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(=> " +
                 "  (and " +
                 "    (attribute ?H Muslim) " +
                 "    (equal " +
@@ -476,12 +510,13 @@ public class SUMOformulaToTPTPformula {
                 "      (monetaryValue ?T ?C) " +
                 "      (greaterThan ?C " +
                 "        (MultiplicationFn ?W 0.025)))) Obligation)) ",false));
+                */
     }
     
     /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
-    	testTptpParse();
+        testTptpParse();
     }
 }
