@@ -64,7 +64,8 @@ public class InferenceTestSuite {
     
         System.out.println("INFO in InferenceTestSuite.compareAnswers(): num answers: " + String.valueOf(pp.numAnswers()));
         for (int j = 0; j < pp.numAnswers(); j++) {
-            System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: " + pp.returnAnswer(j, "") + " expected: " + (String) answerList.get(j));
+            //System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: " + pp.returnAnswer(j, "") + " expected: " + (String) answerList.get(j));
+            System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: " + "" + " expected: " + (String) answerList.get(j));
             if (!pp.equalsAnswer(j,(String) answerList.get(j)))
                 return true;
         }
