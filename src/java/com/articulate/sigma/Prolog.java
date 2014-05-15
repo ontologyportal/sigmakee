@@ -32,38 +32,92 @@ public class Prolog {
     }
 
     /** *************************************************************
+     */
+    private static void writeOneHornClause(Formula f, PrintWriter pw) {
+        
+        System.out.println("INFO in Prolog.writeOneHornClause(): formula: " + f);
+        StringBuffer sb = new StringBuffer();
+        Formula antecedent = f.cdrAsFormula().carAsFormula();
+        System.out.println("INFO in Prolog.writeOneHornClause(): antecedent: " + antecedent);
+        sb.append(" :- ");
+        if (antecedent.isSimpleClause()) {
+            String clause = antecedent.toProlog();
+            if (clause == null)
+                return;
+            sb.append(clause);
+        }
+        if (antecedent.car().equals("and")) {
+            Formula consList = antecedent.cdrAsFormula();
+            System.out.println("INFO in Prolog.writeOneHornClause(): consList: " + consList);
+            while (!consList.empty()) {
+                Formula car = consList.carAsFormula();     
+                String clause = car.toProlog();
+                if (clause == null)
+                    return;
+                sb.append(clause);
+                consList = consList.cdrAsFormula();
+                System.out.println("INFO in Prolog.writeOneHornClause(): consList: " + consList);
+                if (!consList.empty())
+                    sb.append(", ");
+            }
+        }
+
+        Formula consequent = f.cdrAsFormula().cdrAsFormula().carAsFormula();
+        System.out.println("INFO in Prolog.writeOneHornClause(): consequent: " + consequent);
+        if (consequent.isSimpleClause()) {
+            String clause = consequent.toProlog();
+            if (clause == null)
+                return;
+            pw.println(clause + sb.toString() + ".");
+        }
+        if (consequent.car().equals("and")) {
+              Formula consList = consequent.cdrAsFormula();
+              boolean first = true;
+              while (!consList.empty()) {
+                  Formula car = consList.carAsFormula();                  
+                  consList = consList.cdrAsFormula();
+                  String carst = car.toProlog();  
+                  if (carst == null)
+                      return;
+                  pw.println(carst + sb.toString() + ".");
+              }
+        }
+    }
+    
+    /** *************************************************************
+     */
+    private static void writeClauses(PrintWriter pw) {
+        
+        Iterator<Formula> it = kb.formulaMap.values().iterator();
+        while (it.hasNext()) {
+            Formula f = it.next();
+            if (f.isRule() && f.isHorn() && !f.theFormula.contains("exists") &&
+                !f.theFormula.contains("forall")) 
+                writeOneHornClause(f,pw);  
+            else if (f.isSimpleClause())
+                pw.println(f.toProlog() + ".");
+        }
+    }
+    
+    /** *************************************************************
      * @param fname - the name of the file to write, including full path.
      */
     public static String writePrologFile(String fname) {
 
         File file = null;
-        PrintWriter pr = null;
+        PrintWriter pw = null;
         String result = null;
 
         try {
             file = new File(fname);
             if ((WordNet.wn != null) && WordNet.wn.wordFrequencies.isEmpty())
                 WordNet.wn.readWordFrequencies();
-            pr = new PrintWriter(new FileWriter(file));
-            pr.println("% Copyright (c) 2006-2009 Articulate Software Incorporated");
-            pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
-            pr.println("% This is a very lossy translation to prolog of the KIF ontologies available at www.ontologyportal.org\n");
-
-            pr.println("% subAttribute");
-            writePrologFormulas(kb.ask("arg",0,"subAttribute"),pr);
-            pr.println("\n% subrelation");
-            writePrologFormulas(kb.ask("arg",0,"subrelation"),pr);
-            pr.println("\n% disjoint");
-            writePrologFormulas(kb.ask("arg",0,"disjoint"),pr);
-            pr.println("\n% partition");
-            writePrologFormulas(kb.ask("arg",0,"partition"),pr);
-            pr.println("\n% instance");
-            writePrologFormulas(kb.ask("arg",0,"instance"),pr);
-            pr.println("\n% subclass");
-            writePrologFormulas(kb.ask("arg",0,"subclass"),pr);
-            System.out.println(" ");
-
-            pr.flush();
+            pw = new PrintWriter(new FileWriter(file));
+            pw.println("% Copyright (c) 2006-2009 Articulate Software Incorporated");
+            pw.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
+            pw.println("% This is a very lossy translation to prolog of the KIF ontologies available at www.ontologyportal.org\n");
+            writeClauses(pw);
+            pw.flush();
             result = file.getCanonicalPath();
         }
         catch (Exception e) {
@@ -72,7 +126,7 @@ public class Prolog {
         }
         finally {
             try {
-                if (pr != null) pr.close();
+                if (pw != null) pw.close();
             }
             catch (Exception e1) {
             }
@@ -88,7 +142,7 @@ public class Prolog {
        String pfcp = null;
        try {
           KBmanager.getMgr().initializeOnce();
-          KB kb = KBmanager.getMgr().getKB("pTest");
+          KB kb = KBmanager.getMgr().getKB("SUMO");
           plFile = new File(KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ".pl");
           pfcp = plFile.getCanonicalPath();
           Prolog.kb = kb;
