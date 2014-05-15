@@ -2482,35 +2482,46 @@ public class Formula implements Comparable {
      */
     public String toProlog() {
 
+        System.out.println("INFO in Formula.toProlog(): formula: " + theFormula);
         if (!listP()) {
-			System.out.println("Not a formula: " + theFormula);
-            return "";
+			System.out.println("Error in Formula.toProlog(): Not a formula: " + theFormula);
+            return null;
         }
         if (empty()) {
-        	System.out.println("Empty formula: " + theFormula);
-            return "";
+        	System.out.println("Error in Formula.toProlog(): Empty formula: " + theFormula);
+            return null;
         }
         StringBuilder result = new StringBuilder();
         String relation = car();
         Formula f = new Formula();
         f.theFormula = cdr();
         if (!Formula.atom(relation)) {
-        	System.out.println("Relation not an atom: " + relation);
-            return "";
+        	System.out.println("Error in Formula.toProlog(): Relation not an atom: " + relation);
+            return null;
         }
-        result.append(relation + "('");
+        result.append(relation + "(");
+        System.out.println("INFO in Formula.toProlog(): result so far: " + result.toString());
+        System.out.println("INFO in Formula.toProlog(): remaining formula: " + f);
         while (!f.empty()) {
             String arg = f.car();
+            System.out.println("INFO in Formula.toProlog(): argForm: " + arg);
             f.theFormula = f.cdr();
             if (!Formula.atom(arg)) {
-            	System.out.println("Argument not an atom: " + arg);
-                return "";
+            	System.out.println("Error in Formula.toProlog(): Argument not an atom: " + arg);
+                return null;
             }
-            result.append(arg + "'");
-            if (!f.empty())
-                result.append(",'");
+            if (Formula.isVariable(arg)) {
+                String newVar = Character.toUpperCase(arg.charAt(1)) + arg.substring(2);
+                result.append(newVar);
+            }
+            else if (StringUtil.isQuotedString(arg))
+                result.append(arg);
             else
-                result.append(").");
+                result.append("'" + arg + "'");
+            if (!f.empty())
+                result.append(",");
+            else
+                result.append(")");            
         }
         return result.toString();
     }
