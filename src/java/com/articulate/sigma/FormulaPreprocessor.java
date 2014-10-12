@@ -9,6 +9,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FormulaPreprocessor {
 
@@ -18,14 +20,8 @@ public class FormulaPreprocessor {
      * has been exceeded.  The default value is 2000.
      */
     private static final int AXIOM_EXPANSION_LIMIT = 2000;
-
-    public Formula _f;
     
     private static boolean debug = false;
-    
-    public FormulaPreprocessor(Formula f) {
-        _f = f;
-    }
     
     /** ***************************************************************
      * A + is appended to the type if the parameter must be a class
@@ -34,8 +30,10 @@ public class FormulaPreprocessor {
      * ArrayList element 0 is the result, if a function, 1 is the
      * first argument, 2 is the second etc.
      */
-    private ArrayList<Object> getTypeList(String pred, KB kb) {
+    private ArrayList<String> getTypeList(String pred, KB kb) {
 
+        return kb.kbCache.signatures.get(pred);
+        /*
         // build the sortalTypeCache key.
         StringBuilder sb = new StringBuilder("gtl");
         sb.append(pred);
@@ -64,13 +62,14 @@ public class FormulaPreprocessor {
             for (int i = 0; i < r.length; i++)
                 result.add(r[i]);
             stc.put(key, result);
-        }
+        }        
         return result;
+        */
     }
 
     /** ***************************************************************
      * A utility helper method for computing predicate data types.
-     */
+     
     private String[] addToTypeList(String pred, ArrayList al, String[] result, boolean classP) {
 
         // If the relations in al start with "(range", argnum will
@@ -105,16 +104,31 @@ public class FormulaPreprocessor {
         }
         return result;
     }
-
+*/
     /** ***************************************************************
      * Find the argument type restriction for a given predicate and
      * argument number that is inherited from one of its
      * super-relations.  A "+" is appended to the type if the
      * parameter must be a class.  Argument number 0 is used for the
-     * return type of a Function.
+     * return type of a Function.  Asking for a non-existent arg
+     * will return null;
      */
     public static String findType(int numarg, String pred, KB kb) {
 
+        //HashMap<String,ArrayList<String>>
+        ArrayList<String> sig = kb.kbCache.signatures.get(pred);
+        if (sig == null) {
+        	if (!kb.isInstanceOf(pred, "VariableArityRelation"))
+        		System.out.println("Error in FormulaPreprocessor.findType(): no type information for predicate " + pred);
+            return null;
+        }
+        if (numarg >= sig.size())
+        	return null;
+        //System.out.println("INFO in FormulaPreprocessor.findType(): signature for " + pred + " is: " + sig);
+        //System.out.println("INFO in FormulaPreprocessor.findType(): arg " + numarg);
+        
+        return sig.get(numarg);
+        /*
         String result = null;
         boolean isCached = false;
         boolean cacheResult = false;
@@ -138,7 +152,7 @@ public class FormulaPreprocessor {
                 relations.clear();
                 relations.addAll(accumulator);
                 accumulator.clear();
-                Iterator it = relations.iterator();
+                Iterator<String> it = relations.iterator();
                 while (!found && it.hasNext()) {
                     String r = (String) it.next();
                     List<Formula> formulas = null;
@@ -188,8 +202,9 @@ public class FormulaPreprocessor {
             }
             if (cacheResult && (result != null))
                 stc.put(key, result);
-        }
+        }        
         return result;
+        */
     }
 
     /** ***************************************************************
@@ -204,10 +219,10 @@ public class FormulaPreprocessor {
      *
      * @return void
      */
-    private void winnowTypeList(List<String> types, KB kb) {
+    private void winnowTypeList(HashSet<String> types, KB kb) {
 
         long t1 = 0L;
-        if ((types instanceof List) && (types.size() > 1)) {
+        if (types.size() > 1) {
             Object[] valArr = types.toArray();
             String clX = null;
             String clY = null;
@@ -249,7 +264,7 @@ public class FormulaPreprocessor {
      * types.
      *
      * @return void
-     */
+     
     private void computeTypeRestrictions(List<String> ios, List<String> scs, String var, KB kb) {
 
         if (debug) 
@@ -354,7 +369,7 @@ public class FormulaPreprocessor {
                         }
                     }
                     else {
-                        Set<String> instanceOfs = kb.kbCache.getCachedRelationValues("instance", term, 1, 2);
+                        HashSet<String> instanceOfs = kb.kbCache.instances.get(term);
                         if ((instanceOfs != null) && !instanceOfs.isEmpty()) {
                             Iterator<String> it = instanceOfs.iterator();
                             while (it.hasNext()) {
@@ -403,7 +418,7 @@ public class FormulaPreprocessor {
         }
         return;
     }
-
+*/
     /** ***************************************************************
      * When invoked on a Formula that begins with explicit universal
      * quantification, this method returns a String representation of
@@ -417,7 +432,7 @@ public class FormulaPreprocessor {
      * types.     
      * @return A String representation of a Formula, with type
      * restrictions added.
-     */
+     
     private String insertTypeRestrictionsU(List shelf, KB kb) {
 
         String result = _f.theFormula;
@@ -497,7 +512,7 @@ public class FormulaPreprocessor {
         result = sb.toString();
         return result;
     }
-
+*/
     /** ***************************************************************
      * When invoked on a Formula that begins with explicit existential
      * quantification, this method returns a String representation of
@@ -511,7 +526,7 @@ public class FormulaPreprocessor {
      * types.     
      * @return A String representation of a Formula, with type
      * restrictions added.
-     */
+     
     private String insertTypeRestrictionsE(List shelf, KB kb) {
     
         String result = _f.theFormula;
@@ -602,7 +617,7 @@ public class FormulaPreprocessor {
         result = sb.toString();
         return result;
     }
-
+*/
     /** ***************************************************************
      * When invoked on a Formula, this method returns a String
      * representation of the Formula with type constraints added for
@@ -617,7 +632,7 @@ public class FormulaPreprocessor {
      * types.     
      * @return A String representation of a Formula, with type
      * restrictions added.
-     */
+     
     private String insertTypeRestrictionsR(List shelf, KB kb) {
 
         String result = _f.theFormula;
@@ -670,9 +685,9 @@ public class FormulaPreprocessor {
         }
         return result;
     }
-    
+    */
     /** ***************************************************************
-     */
+     
     private void addVarDataQuad(String var, String quantToken, List shelf) {
         
         ArrayList quad = new ArrayList();
@@ -683,9 +698,9 @@ public class FormulaPreprocessor {
         shelf.add(0, quad);
         return;
     }
-    
+    */
     /** ***************************************************************
-     */
+     
     private ArrayList getIosForVar(String var, List shelf) {
         
         ArrayList result = null;
@@ -699,9 +714,9 @@ public class FormulaPreprocessor {
         }
         return result;
     }
-
+*/
     /** ***************************************************************
-     */
+     
     private ArrayList getScsForVar(String var, List shelf) {
         
         ArrayList result = null;
@@ -715,9 +730,9 @@ public class FormulaPreprocessor {
         }
         return result;
     }
-
+*/
     /** ***************************************************************
-     */
+     
     private void addIoForVar(String var, String io, List shelf) {
         
         if (StringUtil.isNonEmptyString(io)) {
@@ -727,9 +742,9 @@ public class FormulaPreprocessor {
         }
         return;
     }
-
+*/
     /** ***************************************************************
-     */
+     
     private void addScForVar(String var, String sc, List shelf) {
         
         if (StringUtil.isNonEmptyString(sc)) {
@@ -739,14 +754,14 @@ public class FormulaPreprocessor {
         }
         return;
     }
-
+*/
     /** ***************************************************************
-     */
+     
     private ArrayList makeNewShelf(List shelf) {
         
         return new ArrayList(shelf);
     }
-
+*/
     /** ***************************************************************
      * Add clauses for every variable in the antecedent to restrict its
      * type to the type restrictions defined on every relation in which
@@ -764,7 +779,7 @@ public class FormulaPreprocessor {
      *   (=>
      *     (foo ?A B)
      *     (bar B ?A)))
-     */
+     
     private String addTypeRestrictions(KB kb) {
 
         String result = _f.theFormula;
@@ -775,7 +790,7 @@ public class FormulaPreprocessor {
         result = fp.insertTypeRestrictionsR(new ArrayList(), kb);
         return result;
     }
-
+*/
     /** ***************************************************************
      * Add clauses for every variable in the antecedent to restrict its
      * type to the type restrictions defined on every relation in which
@@ -794,41 +809,49 @@ public class FormulaPreprocessor {
      *     (foo ?A B)
      *     (bar B ?A)))
      */
-    private Formula addTypeRestrictionsNew(KB kb) {
+    private Formula addTypeRestrictionsNew(Formula form, KB kb) {
 
     	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew()");
-        String result = _f.theFormula;
+        String result = form.theFormula;
         Formula f = new Formula();
         f.read(result);
-        f = Clausifier.universalsOut(f);
-    	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): removed universals: \n" + f);
-        ArrayList<String> existentials = f.collectQuantifiedVariables();
-    	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): existentials: \n" + existentials);
-        FormulaPreprocessor fp = new FormulaPreprocessor(f);
-        HashMap<String,ArrayList<String>> instmap = new HashMap<String,ArrayList<String>>();
-        HashMap<String,ArrayList<String>> classmap = new HashMap<String,ArrayList<String>>();
+        FormulaPreprocessor fp = new FormulaPreprocessor();
 
-    	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): before computer varialbe types");
-        fp.computeVariableTypesNew(kb,instmap,classmap);
-    	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): instance membership: \n" + instmap);
-    	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): class membership: \n" + classmap);
+    	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): before computer variable types");
+        HashMap<String,HashSet<String>> varmap = fp.computeVariableTypes(f,kb);
+    	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): variable types: \n" + varmap);
         StringBuffer sb = new StringBuffer();
-        if (instmap.size() > 0 || classmap.size() > 0) {
+        if (varmap.size() > 0) {
 	        sb.append("(=> (and ");
-	        Iterator<String> it = instmap.keySet().iterator();
+	        Iterator<String> it = varmap.keySet().iterator();
 	        while (it.hasNext()) {
 	        	String var = it.next();	        
-	       		ArrayList<String> insts = instmap.get(var);
+	        	HashSet<String> types = varmap.get(var);
+	       		HashSet<String> insts = new HashSet<String>();
+	       		HashSet<String> classes = new HashSet<String>();
+	       		Iterator<String> it2 = types.iterator();
+	       		while (it2.hasNext()) {
+	       		    String type = it2.next();
+	       		    if (type.endsWith("+")) 
+	       		        classes.add(type.substring(0,type.length()-1));	       		    
+	       		    else
+	       		        insts.add(type);
+	       		}
 	       		if (insts != null) {
 		       		winnowTypeList(insts,kb);
-		       		for (int i = 0; i < insts.size(); i++) 
-		       			sb.append("(instance " + var + " " + insts.get(i) + ")");
+		       		Iterator<String> it3 = insts.iterator();
+		       		while (it3.hasNext()) {
+		       		    String s = it3.next();
+	                     sb.append("(instance " + var + " " + s + ")");
+		       		}
 	       		}
-	       		ArrayList<String> classes = classmap.get(var);
 	       		if (classes != null) {
 		       		winnowTypeList(classes,kb);
-		       		for (int i = 0; i < classes.size(); i++) 
-		       			sb.append("(subclass " + var + " " + classes.get(i) + ")");
+	                Iterator<String> it3 = classes.iterator();
+	                while (it3.hasNext()) {
+	                    String s = it3.next();	                
+	                    sb.append("(subclass " + var + " " + s + ")");
+		       		}
 	       		}
 	        }
 	        sb.append(") " + f + ")");
@@ -838,36 +861,77 @@ public class FormulaPreprocessor {
         return f;
     }
     
-    /** ***************************************************************
-     * This method returns a HashMap that maps each String variable in this
-     * Formula to an ArrayList that contains a pair of ArrayLists.
-     * The first ArrayList of the pair contains the names of types
-     * (classes) of which the variable must be an instance.  The
-     * second ArrayList of the pair contains the names of types of
-     * which the variable must be a subclass.  Either list in the pair
-     * could be empty.  If the only instance or subclass sortal that
-     * can be computed for a variable is Entity, the lists will be
-     * empty.
-     *
-     * @param kb The KB used to compute the sortal constraints for
-     * each variable.     
-     * @return A HashMap
+    /***************************************************************** 
+     * This method returns a HashMap that maps each String variable in this the names
+     * of types (classes) of which the variable must be an instance or the names
+     * of types of which the variable must be a subclass. If the only instance
+     * or subclass sortal that can be computed for a variable is Entity, the
+     * lists will be empty.  Note that this does not capture explicit type
+     * assertions such as (=> (instance ?Foo Bar) ...) just the restrictions
+     * implicit from the arg types of relations.
+     * 
+     * @param kb is the KB used to compute the sortal constraints for each
+     *            variable.
+     * @return A HashMap of variable names and their types. Subclass
+     *         restrictions are marked with a '+'. Instance restrictions have no
+     *         special mark.
      */
-    public void computeVariableTypesNew(KB kb, HashMap<String,ArrayList<String>> instmap, 
-    		HashMap<String,ArrayList<String>> classmap) {
+    public HashMap<String,HashSet<String>> computeVariableTypes(Formula form, KB kb) {
 
-        if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesNew(): \n" + _f);
+        if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): \n" + form);
         Formula f = new Formula();
-        f.read(_f.theFormula);
+        f.read(form.theFormula);
         //f.read(_f.makeQuantifiersExplicit(false));
-        FormulaPreprocessor fp = new FormulaPreprocessor(f);
-        computeVariableTypesRecurseNew(kb,f,instmap,classmap);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+        return computeVariableTypesRecurse(kb,form,result);
     }
+    
+    /***************************************************************** 
+     * Collect the types of any variables that are specifically defined
+     * in the antecedent of a rule with an instance or subclass expression.
+     * TODO: This may ultimately require CNF conversion and then checking negative
+     * literals, but for now it's just a hack to grab preconditions.
+     */
+    public HashMap<String,HashSet<String>> findExplicitTypes(Formula form) {
 
+        if (debug) System.out.println("INFO in FormulaPreprocessor.findExplicitTypes(): \n" + form);
+        if (!form.isRule())
+            return null;
+        Formula f = new Formula();
+        f.read(form.theFormula);
+        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+        Formula antecedent = f.cdrAsFormula().carAsFormula();
+        Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-_]+)");
+        Matcher m = p.matcher(antecedent.theFormula);
+        while (m.find()) {
+            String var = m.group(1);
+            String cl = m.group(2);
+            HashSet<String> hs = new HashSet<String>();
+            if (result.containsKey(var))
+                hs = result.get(var);
+            hs.add(cl);
+            result.put(var, hs);
+        }
+        
+        p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-]+)");
+        m = p.matcher(f.theFormula);
+        while (m.find()) {
+            String var = m.group(1);
+            String cl = m.group(2);
+            HashSet<String> hs = new HashSet<String>();
+            if (result.containsKey(var))
+                hs = result.get(var);
+            hs.add(cl + "+");
+            result.put(var, hs);
+        }
+        return result;
+    }
+    
     /** ***************************************************************
      * utility method to add a String element to a HashMap of String
      * keys and a value of an ArrayList of Strings
-     */
+     
     private static void addToMap(HashMap<String,ArrayList<String>> map, String key, String element) {
     	
 		ArrayList<String> al = map.get(key);
@@ -876,46 +940,86 @@ public class FormulaPreprocessor {
 		al.add(element);
 		map.put(key, al);
     }
+    */
+    /** ***************************************************************
+     * utility method to add a String element to a HashMap of String
+     * keys and a value of an ArrayList of Strings
+     */
+    private static void addToMap(HashMap<String,HashSet<String>> map, String key, String element) {
+        
+        HashSet<String> al = map.get(key);
+        if (al == null)
+            al = new HashSet<String>();
+        al.add(element);
+        map.put(key, al);
+    }
+    
+    /** ***************************************************************
+     * utility method to merge two HashMaps of String
+     * keys and a values of an HashSet of Strings
+     */
+    private static HashMap<String,HashSet<String>> mergeToMap(HashMap<String,HashSet<String>> map1, 
+            HashMap<String,HashSet<String>> map2) {
+        
+        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+        result.putAll(map1);
+        Iterator<String> it = map2.keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            HashSet<String> value = new HashSet<String>();
+            if (result.containsKey(key)) {
+                value = result.get(key);
+            }
+            value.addAll(map2.get(key));
+            result.put(key, value);
+        }
+        return result;
+    }
     
     /** ***************************************************************
      */
-    public static void computeVariableTypesRecurseNew(KB kb, Formula f, HashMap<String,ArrayList<String>> instmap, 
-    		HashMap<String,ArrayList<String>> classmap) {
+    public HashMap<String,HashSet<String>> computeVariableTypesRecurse(KB kb, Formula f,
+            HashMap<String,HashSet<String>> input) {
 
-    	if (f == null)
-    		return;
-        //if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurseNew(): \n" + f);
+        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+    	if (f == null || StringUtil.emptyString(f.theFormula) || f.empty())
+    		return result;
+        //System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): \n" + f);
         String carstr = f.car();
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {// equals may require special treatment
+            result.putAll(input);
     		for (int i = 1; i < f.listLength(); i++) 
-    			computeVariableTypesRecurseNew(kb,new Formula(f.getArgument(i)),instmap,classmap);        		
+    			result = mergeToMap(result,computeVariableTypesRecurse(kb,new Formula(f.getArgument(i)),input));        		
         }
         else if (f.isSimpleClause()) {
-        	if (f.theFormula.indexOf("?") > -1) {
-	        	String pred = carstr;
+            String pred = carstr;
+        	if (f.theFormula.indexOf("?") > -1 && !Formula.isVariable(pred)) {	        	
 	        	Formula newf = f.cdrAsFormula();
 	        	int argnum = 1;
 	        	while (!newf.empty()) {
 	        		String arg = newf.car();
 	        		if (Formula.isVariable(arg)) {
-	        			String cl = kb.getArgTypeClass(pred, argnum);
-	        			if (StringUtil.emptyString(cl))
-	        				System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurseNew(): no type information for arg " +
-	        						argnum + " of relation " + pred);
-	        			else if (cl.endsWith("+")) 
-	        				addToMap(classmap,arg,cl.substring(0,cl.length()-1));	        			
-	        			else 
-	        				addToMap(instmap,arg,cl);	        			
+	        			String cl = findType(argnum,pred,kb);
+	        			//System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
+	        			if (StringUtil.emptyString(cl)) {
+	        				if (!kb.kbCache.transInstOf(pred, "VariableArityRelation"))
+	        					System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): no type information for arg " +
+	        						argnum + " of relation " + pred + " in formula: \n" + f);
+	        			}
+	        			else
+	        			    addToMap(result,arg,cl);	        			
 	        		}
 	        		newf = newf.cdrAsFormula();
-	        		argnum++;
+	        		argnum++;  // note that this will try an argument that doesn't exist, and terminate when it does
 	        	}	
         	}
         }
         else {
-        	computeVariableTypesRecurseNew(kb,f.carAsFormula(),instmap,classmap);
-        	computeVariableTypesRecurseNew(kb,f.cdrAsFormula(),instmap,classmap);
+        	result = mergeToMap(input,computeVariableTypesRecurse(kb,f.carAsFormula(),input));
+        	result = mergeToMap(result,computeVariableTypesRecurse(kb,f.cdrAsFormula(),input));
         }        	
+        //System.out.println("result: " + result);
+        return result;
     }
     
     /** ***************************************************************
@@ -932,7 +1036,7 @@ public class FormulaPreprocessor {
      * @param kb The KB used to compute the sortal constraints for
      * each variable.     
      * @return A HashMap
-     */
+     
     public void computeVariableTypes(KB kb, HashMap<String,ArrayList<String>> instmap, 
     		HashMap<String,ArrayList<String>> classmap) {
 
@@ -952,7 +1056,7 @@ public class FormulaPreprocessor {
      * @param kb The KB used to compute the sortal constraints for
      * each variable.     
      * @return void
-     */
+     
     private void computeVariableTypesR(HashMap<String,ArrayList<String>> instmap, HashMap<String,ArrayList<String>> classmap, KB kb) {
 
         if (_f.listP() && !_f.empty()) {
@@ -982,7 +1086,7 @@ public class FormulaPreprocessor {
      * @param kb The KB used to compute the sortal constraints for
      * each variable.     
      * @return void
-     */
+     
     private void computeVariableTypesQ(HashMap<String,ArrayList<String>> instmap, HashMap<String,ArrayList<String>> classmap, KB kb) {
 
         Formula varlistF = new Formula();
@@ -1106,11 +1210,11 @@ public class FormulaPreprocessor {
      *
      * @return an ArrayList of Formula(s), which could be empty.
      */
-    private ArrayList<Formula> replacePredVarsAndRowVars(KB kb, boolean addHoldsPrefix) {
+    private ArrayList<Formula> replacePredVarsAndRowVars(Formula form, KB kb, boolean addHoldsPrefix) {
 
         ArrayList<Formula> result = new ArrayList<Formula>();
         Formula startF = new Formula();
-        startF.read(_f.theFormula);
+        startF.read(form.theFormula);
         LinkedHashSet<Formula> accumulator = new LinkedHashSet<Formula>();
         accumulator.add(startF);
         ArrayList<Formula> working = new ArrayList<Formula>();
@@ -1127,7 +1231,7 @@ public class FormulaPreprocessor {
                 while (it.hasNext()) {
                     f = (Formula) it.next();
                     List<Formula> instantiations = PredVarInst.instantiatePredVars(f,kb);
-                    _f.errors.addAll(f.getErrors());
+                    form.errors.addAll(f.getErrors());
                     if (instantiations.isEmpty()) {
                         // If the accumulator is empty -- no pred var instantiations were possible -- add
                         // the original formula to the accumulator for possible row var expansion below.
@@ -1140,7 +1244,7 @@ public class FormulaPreprocessor {
                         String errStr = "No predicate instantiations for ";
                         if (instantiations == null || instantiations.size() == 0) {
                             errStr += f.theFormula;
-                            _f.errors.add(errStr);
+                            form.errors.add(errStr);
                         }
                         else {
                             // It might not be possible to instantiate all pred vars until
@@ -1235,18 +1339,19 @@ public class FormulaPreprocessor {
      * @return an ArrayList of Formula(s), which could be larger than
      * the input List, variableReplacements, or could be empty.
      */
-    private ArrayList addInstancesOfSetOrClass(KB kb,boolean isQuery, List variableReplacements) {
+    private ArrayList<Formula> addInstancesOfSetOrClass(Formula form, KB kb,
+    		boolean isQuery, ArrayList<Formula> variableReplacements) {
 
-        ArrayList result = new ArrayList();
+        ArrayList<Formula> result = new ArrayList<Formula>();
         if ((variableReplacements != null) && !variableReplacements.isEmpty()) {
             if (isQuery)
                 result.addAll(variableReplacements);
             else {
-                Set formulae = new LinkedHashSet();
+                HashSet<Formula> formulae = new HashSet<Formula>();
                 String arg0 = null;
                 Formula f = null;
-                for (Iterator it = variableReplacements.iterator(); it.hasNext();) {
-                    f = (Formula) it.next();
+                for (Iterator<Formula> it = variableReplacements.iterator(); it.hasNext();) {
+                    f = it.next();
                     formulae.add(f);                    
                     if (f.listP() && !f.empty()) {  // Make sure every SetOrClass is stated to be such
                         arg0 = f.car();
@@ -1254,13 +1359,14 @@ public class FormulaPreprocessor {
                         if (arg0.equals("subclass")) start = 0;
                         else if (arg0.equals("instance")) start = 1;
                         if (start > -1) {
-                            List args = Arrays.asList(f.getArgument(1),f.getArgument(2));
+                            ArrayList<String> args = 
+                                    new ArrayList<String>(Arrays.asList(f.getArgument(1),f.getArgument(2)));
                             int argslen = args.size();
                             String ioStr = null;
                             Formula ioF = null;
                             String arg = null;
                             for (int i = start; i < argslen; i++) {
-                                arg = (String) args.get(i);
+                                arg = args.get(i);
                                 if (!Formula.isVariable(arg) && !arg.equals("SetOrClass") && Formula.atom(arg)) {
                                     StringBuilder sb = new StringBuilder();
                                     sb.setLength(0);
@@ -1270,13 +1376,13 @@ public class FormulaPreprocessor {
                                     ioF = new Formula();
                                     ioStr = sb.toString().intern();
                                     ioF.read(ioStr);
-                                    ioF.sourceFile = _f.sourceFile;
+                                    ioF.sourceFile = form.sourceFile;
                                     if (!kb.formulaMap.containsKey(ioStr)) {
-                                        Map<String,Object> stc = kb.kbCache.getSortalTypeCache();
-                                        if (stc.get(ioStr) == null) {
-                                            stc.put(ioStr, ioStr);
+                                        //Map<String,Object> stc = kb.kbCache.getSortalTypeCache();
+                                        //if (stc.get(ioStr) == null) {
+                                            //stc.put(ioStr, ioStr);
                                             formulae.add(ioF);
-                                        }
+                                        //}
                                     }
                                 }
                             }
@@ -1305,53 +1411,50 @@ public class FormulaPreprocessor {
      * @return an ArrayList of Formula(s), which could be empty.
      *
      */
-    public ArrayList<Formula> preProcess(boolean isQuery, KB kb) {
+    public ArrayList<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
-        if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + _f.theFormula);
+        if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + form.theFormula);
         ArrayList<Formula> results = new ArrayList<Formula>();
-        if (!StringUtil.emptyString(_f.theFormula)) {
+        if (!StringUtil.emptyString(form.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
-            if (!_f.isBalancedList()) {
-                String errStr = "Unbalanced parentheses or quotes in: " + _f.theFormula;
-                _f.errors.add(errStr);
+            if (!form.isBalancedList()) {
+                String errStr = "Unbalanced parentheses or quotes in: " + form.theFormula;
+                form.errors.add(errStr);
                 return results;
             }
             boolean ignoreStrings = false;
             boolean translateIneq = true;
             boolean translateMath = true;
             Formula f = new Formula();
-            f.read(_f.theFormula);
+            f.read(form.theFormula);
             if (StringUtil.containsNonAsciiChars(f.theFormula))
                 f.theFormula = StringUtil.replaceNonAsciiChars(f.theFormula);
 
             boolean addHoldsPrefix = mgr.getPref("holdsPrefix").equalsIgnoreCase("yes");
-            ArrayList variableReplacements = replacePredVarsAndRowVars(kb, addHoldsPrefix);
-            _f.errors.addAll(f.getErrors());
+            ArrayList<Formula> variableReplacements = replacePredVarsAndRowVars(form,kb, addHoldsPrefix);
+            form.errors.addAll(f.getErrors());
 
-            ArrayList accumulator = addInstancesOfSetOrClass(kb, isQuery, variableReplacements);
+            ArrayList<Formula> accumulator = addInstancesOfSetOrClass(form,kb, isQuery, variableReplacements);
             // Iterate over the formulae resulting from predicate variable instantiation and row variable expansion,
             // passing each to preProcessRecurse for further processing.
             if (!accumulator.isEmpty()) {
-                boolean addSortals = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
+                //boolean addSortals = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
                 Formula fnew = null;
                 String theNewFormula = null;
-                Iterator it = accumulator.iterator(); 
+                Iterator<Formula> it = accumulator.iterator(); 
                 while (it.hasNext()) {
                     fnew = (Formula) it.next();
-                    if (addSortals && !isQuery && fnew.theFormula.matches(".*\\?\\w+.*")) { // isLogicalOperator(arg0) ||    
-                        FormulaPreprocessor fp = new FormulaPreprocessor(fnew);
-                        //fnew.read(fp.addTypeRestrictions(kb));                           
-                    }
-                    FormulaPreprocessor fp = new FormulaPreprocessor(fnew);
+                    FormulaPreprocessor fp = new FormulaPreprocessor();
                     theNewFormula = fp.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath);
                     fnew.read(theNewFormula);
-                    _f.errors.addAll(fnew.getErrors());                        
+                    form.errors.addAll(fnew.getErrors());                        
                     if (isOkForInference(fnew,isQuery, kb)) {
-                        fnew.sourceFile = _f.sourceFile;
-                        results.add(fnew);
+                        fnew.sourceFile = form.sourceFile;
+                        if (!StringUtil.emptyString(theNewFormula))
+                        	results.add(fnew);
                     }
                     else 
-                        _f.errors.add("Formula rejected for inference: " + f.theFormula);                        
+                    	form.errors.add("Formula rejected for inference: " + f.theFormula);                        
                 }
             }
         }
@@ -1359,8 +1462,8 @@ public class FormulaPreprocessor {
         Iterator<Formula> it = results.iterator();
         while (it.hasNext()) {
         	Formula f = it.next();
-            FormulaPreprocessor fp = new FormulaPreprocessor(f);
-            f.read(fp.addTypeRestrictions(kb));
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            f.read(fp.addTypeRestrictionsNew(f,kb).theFormula);
         }
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
@@ -1369,39 +1472,112 @@ public class FormulaPreprocessor {
 
     /** ***************************************************************
      */
+    public static void testFindTypes() {
+       
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        
+        System.out.println();
+        String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
+                "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        System.out.println("Formula: " + f);
+        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+               
+        System.out.println();
+        strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" + 
+                " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        System.out.println("Formula: " + f);
+        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+        
+        System.out.println();
+        strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
+                "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and " +
+                "(instance ?Y ?WHOLE) (part ?X ?Y))))) (equal ?NOTPARTPROB " +
+                "(ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) " +
+                "(part ?X ?Z))))))) (greaterThan ?PARTPROB ?NOTPARTPROB))";
+        f.read(strf);
+        fp = new FormulaPreprocessor();        
+        System.out.println("Formula: " + f);
+        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+        
+        System.out.println();
+        strf = "(<=> (instance ?REL TransitiveRelation) " +
+                "(forall (?INST1 ?INST2 ?INST3) " + 
+                "(=> (and (?REL ?INST1 ?INST2) " +
+                "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
+        f.read(strf);
+        fp = new FormulaPreprocessor();        
+        System.out.println("Formula: " + f);
+        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+        System.out.println("Explicit types: " + fp.findExplicitTypes(f));        
+    }
+    
+    /** ***************************************************************
+     */
+    public static void testFindExplicit() {
+       
+        String formStr = "(<=> (instance ?REL TransitiveRelation) " +
+                "(forall (?INST1 ?INST2 ?INST3) " + 
+                "(=> (and (?REL ?INST1 ?INST2) " +
+                "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
+        Formula f = new Formula(formStr);
+        FormulaPreprocessor fp = new FormulaPreprocessor();        
+        System.out.println("Formula: " + f);
+        Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-_]+)");
+        Matcher m = p.matcher(formStr);
+        m.find();
+        String var = m.group(1);
+        String cl = m.group(2);
+        System.out.println("FormulaPreprocessor.testExplicit(): " + var + " " + cl);
+        System.out.println("Explicit types: " + fp.findExplicitTypes(f));
+    }
+    
+    /** ***************************************************************
+     */
     public static void testAddTypes() {
        
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB("SUMO");
+        
+        System.out.println();
     	String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
     	Formula f = new Formula();
     	f.read(strf);
-    	FormulaPreprocessor fp = new FormulaPreprocessor(f);
+    	FormulaPreprocessor fp = new FormulaPreprocessor();
     	FormulaPreprocessor.debug = true;
-    	System.out.println(fp.addTypeRestrictionsNew(kb));
+    	System.out.println(fp.addTypeRestrictionsNew(f,kb));
     	
+    	System.out.println();
     	strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" + 
     			" (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
     	f.read(strf);
-    	fp = new FormulaPreprocessor(f);
-    	System.out.println(fp.addTypeRestrictionsNew(kb));
+    	fp = new FormulaPreprocessor();
+    	System.out.println(fp.addTypeRestrictionsNew(f,kb));
     	
+    	System.out.println();
     	strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
     			"(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and " +
                 "(instance ?Y ?WHOLE) (part ?X ?Y))))) (equal ?NOTPARTPROB " +
                 "(ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) " +
                 "(part ?X ?Z))))))) (greaterThan ?PARTPROB ?NOTPARTPROB))";
     	f.read(strf);
-    	fp = new FormulaPreprocessor(f);    	
-    	System.out.println(fp.addTypeRestrictionsNew(kb));
+    	fp = new FormulaPreprocessor();    	
+    	System.out.println(fp.addTypeRestrictionsNew(f,kb));
     }
     
     /** ***************************************************************
      */
     public static void main(String[] args) {
        
-        testAddTypes();
+        //testFindTypes();
+        //testAddTypes();
+        testFindExplicit();
     }
 
 }
