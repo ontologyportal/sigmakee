@@ -148,7 +148,7 @@ public class EProver {
      *
      * @throws IOException should not normally be thrown
      */
-    public void terminate () throws IOException {
+    public void terminate() throws IOException {
 
         System.out.println();
         System.out.println("TERMINATING " + this);
@@ -175,7 +175,7 @@ public class EProver {
      * @return answer to the query 
      * @throws IOException should not normally be thrown
      */
-    public String submitQuery (String formula, KB kb) {
+    public String submitQuery(String formula, KB kb) {
         //public String submitQuery (String formula, int timeLimit, int bindingsLimit) throws IOException {
                 
         String result = "";
@@ -228,7 +228,7 @@ public class EProver {
      *   <li>terminate E</li>
      *</ol>
      */
-    public static void main (String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
         /*
         String initialDatabase = "SUMO-v.kif";
