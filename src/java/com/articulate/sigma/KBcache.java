@@ -1,425 +1,670 @@
-/** This code is copyright Articulate Software (c) 2003.  Some
-portions copyright Teknowledge (c) 2003 and reused under the termsof the GNU
-license.  This software is released under the GNU Public License
-<http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
-by use of this code, to credit Articulate Software and Teknowledge in any
-writings, briefings, publications, presentations, or other representations
-of any software which incorporates, builds on, or uses this code.  Please
-cite the following article in any publication with references:
-
-Pease, A., (2003). The Sigma Ontology Development Environment, in Working
-Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. see also
-http://sigmakee.sourceforge.net
-*/
-
 package com.articulate.sigma;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import com.articulate.sigma.KB;
-
-/** *****************************************************************
- *  Contains methods for reading, writing knowledge bases and their
- *  configurations.  Also contains the inference engine process for
- *  the knowledge base.
- */
 public class KBcache {
 
-    /** A threshold limiting the number of values that will be added to
-     * a single relation cache table. */
-    private static final long MAX_CACHE_SIZE = 1000000;
-
-    /** A List of the names of cached transitive relations. */
-    private List<String> cachedTransitiveRelationNames = Arrays.asList("subclass",
-                                                               "subset",
-                                                               "subrelation",
-                                                               "subAttribute",
-                                                               "subOrganization",
-                                                               "subCollection",
-                                                               "subProcess",
-                                                               "geographicSubregion",
-                                                               "geopoliticalSubdivision");
-
-    /** A List of the names of cached reflexive relations. */
-    private List<String> cachedReflexiveRelationNames = Arrays.asList("subclass",
-                                                              "subset",
-                                                              "subrelation",
-                                                              "subAttribute",
-                                                              "subOrganization",
-                                                              "subCollection",
-                                                              "subProcess");
-
-    /** A List of the names of cached relations. */
-    private List<String> cachedRelationNames = Arrays.asList("instance", "disjoint");
-
-    /** An ArrayList of RelationCache objects. */
-    private ArrayList<RelationCache> relationCaches = new ArrayList<RelationCache>();
-
+    public KB kb = null;
+    
     /** The String constant that is the suffix for files of cached assertions. */
     public static final String _cacheFileSuffix      = "_Cache.kif";
-
-    /** If true, assertions of the form (predicate x x) will be
-     * included in the relation cache tables. */
-    private boolean cacheReflexiveAssertions = false;
     
-    public HashMap<String,Object> relnsWithRelnArgs = null;
+    // all the relations in the kb 
+    public HashSet<String> relations = new HashSet<String>();
     
-    private KB kb = null;
+    // all the transitive relations in the kb
+    public HashSet<String> transRels = new HashSet<String>();
+
+    // all the transitive relations between instances in the kb
+    public HashSet<String> instTransRels = new HashSet<String>();
     
-    /** *************************************************************
-    * @return An ArrayList of RelationCache objects.
-    */
-    protected ArrayList<RelationCache> getRelationCaches() {
-        return this.relationCaches;
+    /** All the cached "parent" relations of all transitive relations
+     * meaning the relations between all first arguments and the 
+     * transitive closure of second arguments.  The external HashMap
+     * pairs relation name String keys to values that are the parent
+     * relationships.  The interior HashMap is the set of terms and
+     * their transitive closure of parents. */
+    public HashMap<String,HashMap<String,HashSet<String>>> parents = 
+            new HashMap<String,HashMap<String,HashSet<String>>>();
+    
+    /** Parent relations from instances, including those that are
+     * transitive through (instance,instance) relations, such as
+     * subAttribute and subrelation */
+    public HashMap<String,HashSet<String>> instances = 
+            new HashMap<String,HashSet<String>>();
+    
+    // A temporary list of instances built during creation of the
+    // @see children map, in order to efficiently create the
+    // @see instances map.
+    // TODO: make private
+    public HashSet<String> insts = new HashSet<String>();
+    
+    /** All the cached "child" relations of all transitive relations
+     * meaning the relations between all first arguments and the 
+     * transitive closure of second arguments.  The external HashMap
+     * pairs relation name String keys to values that are the child
+     * relationships.  The interior HashMap is the set of terms and
+     * their transitive closure of children. */
+    public HashMap<String,HashMap<String,HashSet<String>>> children = 
+            new HashMap<String,HashMap<String,HashSet<String>>>();
+    
+    // Relation name keys and argument types with 0th arg always "".
+    // Variable arity relations may have a type for the last argument,
+    // which will be the type repeated for all extended arguments.
+    // Note that types can be functions, rather than just terms.
+    public HashMap<String,ArrayList<String>> signatures =
+            new HashMap<String,ArrayList<String>>();
+    
+    // The number of arguments to each relation.  Variable arity is -1
+    public HashMap<String,Integer> valences = new HashMap<String,Integer>();
+
+    /** ***************************************************************
+     * Constructor
+     */
+    public KBcache(KB kb) {
+        
+        this.kb = kb;
     }
     
-    /** ***************************************************
-    * Return ArrayList of all terms in an ArrayList that
-    * are not relations.  Note that this only tests for
-    * whether the first character is lower case, which
-    * is only a convention.
-    *
-    * @return An ArrayList of nonrelTerms
-    */
-    public static ArrayList<String> getAllNonRelTerms(ArrayList<String> list) {
+    /** ***************************************************************
+     * An ArrayList utility method
+     */
+    private void arrayListReplace(ArrayList<String> al, int index, String newEl) {
         
-        ArrayList<String> nonRelTerms = new ArrayList<String>();
-        Iterator<String> itr = list.iterator();
-        while(itr.hasNext()) {
-            String t = itr.next();
-            if (Character.isUpperCase(t.charAt(0))) 
-                nonRelTerms.add(t);
+        if (index > al.size()) {
+            System.out.println("Error in KBcache.arrayListReplace(): index " + index +
+                    " out of bounds.");
+            return;
         }
-        return nonRelTerms;
+        al.remove(index);
+        al.add(index,newEl);
     }
     
-    /** ******************************************************
-    * Return ArrayList of all terms in an ArrayList that are relations
-    * Note that this only tests for
-    * whether the first character is lower case, which
-    * is only a convention.
-    * @return An ArrayList of relTerms
-    */
-    public static ArrayList<String> getAllRelTerms(ArrayList<String> list) {
+    /** ***************************************************************
+     * Find whether the given child has the given parent for the given
+     * transitive relation.  Return false if they are equal
+     */
+    public boolean childOfP(String rel, String parent, String child) {
         
-        ArrayList<String> relTerms = new ArrayList<String>();
-        Iterator<String> itr = list.iterator();
-        while(itr.hasNext()) {
-            String t = itr.next();
-            if (Character.isLowerCase(t.charAt(0))) 
-                relTerms.add(t);
+        if (parent.equals(child))
+            return false;
+        //System.out.println("INFO in KBcache.childOfP(): rel,parent,child: " + rel + " " + parent + " " + child);
+        HashMap<String,HashSet<String>> childMap = children.get(rel);
+        HashSet<String> childSet = childMap.get(parent);
+        if (childSet == null) {
+        	System.out.println("INFO in KBcache.childOfP(): null childset for rel, parent, child: "  
+                + rel + " " + parent + " " + child);
+        	return false;
         }
-        return relTerms;
-    }
-
-    /** *************************************************************
-     * Sets the private instance variable cacheReflexiveAssertions to
-     * val.
-     * @param val true or false
-     * @return void
-     */
-    public void setCacheReflexiveAssertions(boolean val) {
-        cacheReflexiveAssertions = val;
-        return;
-    }
-
-    /** *************************************************************
-     * If this method returns true, then reflexive assertions will be
-     * included in the relation caches built when Sigma starts up.
-     *
-     * @return true or false
-     */
-    public boolean getCacheReflexiveAssertions() {
-        return cacheReflexiveAssertions;
-    }
-
-    /** *************************************************************
-     * @return An ArrayList of relation names (Strings).
-     */
-    private ArrayList<String> getCachedRelationNames() {
-        
-        ArrayList<String> relationNames = new ArrayList<String>();
-        try {
-            LinkedHashSet<String> reduced = new LinkedHashSet<String>(cachedRelationNames);
-            reduced.addAll(getCachedTransitiveRelationNames());
-            reduced.addAll(getCachedSymmetricRelationNames());
-            relationNames.addAll(reduced);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return relationNames;
-    }
-
-    /** *************************************************************
-     * Returns a list of the names of cached transitive relations.
-     *
-     * @return An ArrayList of relation names (Strings).
-     */
-    private ArrayList<String> getCachedTransitiveRelationNames() {
-        
-        ArrayList<String> ans = new ArrayList<String>(cachedTransitiveRelationNames);
-        try {
-            Set<String> trset = kb.getAllInstancesWithPredicateSubsumption("TransitiveRelation");
-            String name = null;
-            for (Iterator<String> it = trset.iterator(); it.hasNext();) {
-                name = it.next();
-                if (!ans.contains(name)) ans.add(name);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
-    }
-
-    /** *************************************************************
-     * Returns a list of the names of cached symmetric relations.
-     *
-     * @return An ArrayList of relation names (Strings).
-     */
-    private ArrayList<String> getCachedSymmetricRelationNames() {
-        
-        ArrayList<String> ans = new ArrayList<String>();
-        try {
-            Set<String> symmset = kb.getAllInstancesWithPredicateSubsumption("SymmetricRelation");
-            // symmset.addAll(getTermsViaPredicateSubsumption("subrelation",2,"inverse",1,true));
-            symmset.add("inverse");
-            ans.addAll(symmset);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
-    }
-
-    /** *************************************************************
-     * @return An ArrayList of relation names (Strings).
-     */
-    private ArrayList<String> getCachedReflexiveRelationNames() {
-        
-        ArrayList<String> ans = new ArrayList<String>();
-        try {
-            List<String> allcached = getCachedRelationNames();
-            List<String> reflexives = new ArrayList<String>(cachedReflexiveRelationNames);
-            Iterator<String> it = kb.getAllInstancesWithPredicateSubsumption("ReflexiveRelation").iterator();
-            while (it.hasNext()) {
-                String name = it.next();
-                if (!reflexives.contains(name)) 
-                    reflexives.add(name);
-            }
-            it = reflexives.iterator();
-            while (it.hasNext()) {
-                String name = (String) it.next();
-                if (allcached.contains(name)) 
-                    ans.add(name);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
+        if (childSet.contains(child))
+            return true;
+        else
+            return false;
     }
 
     /** ***************************************************************
-     * This Map is used to cache sortal predicate argument type data
-     * whenever Formula.findType() or Formula.getTypeList() will be
-     * called hundreds of times inside KB.preProcess(), or to
-     * accomplish another expensive computation tasks.  The Map is
-     * cleared after each use in KB.preProcess(), but may retain its
-     * contents when used in other contexts.
+     * Find whether the given instance has the given parent class.  
+     * Include paths the have transitive relations between instances such
+     * as an Attribute that is a subAttribute of another instance, which
+     * in turn then is an instance of the given class.
+     * Return false if they are equal.
      */
-    private HashMap<String, Object> sortalTypeCache = null;
-
-    /** ***************************************************************
-     * Returns the Map is used to cache sortal predicate argument type
-     * data whenever Formula.findType() or Formula.getTypeList() will
-     * be called hundreds of times inside KB.preProcess(), or to
-     * accomplish another expensive computation tasks.  The Map is
-     * cleared after each use in KB.preProcess(), but may retain its
-     * contents when used in other contexts.
-     */
-    public HashMap<String, Object> getSortalTypeCache() {
-        
-        if (sortalTypeCache == null) 
-            sortalTypeCache = new HashMap<String, Object>();        
-        return sortalTypeCache;
-    }
-
-    /** ***************************************************************
-     * Clears the Map returned by KB.getSortalTypeCache().
-     *
-     * @return void
-     */
-    protected void clearSortalTypeCache() {
-        
-        try {
-            //logger.info("Clearing " + getSortalTypeCache().size() + " entries");
-            Object obj = null;
-            Iterator<Object> it = getSortalTypeCache().values().iterator();
-            while (it.hasNext()) {
-                obj = it.next();
-                if (obj instanceof Collection) 
-                    ((Collection) obj).clear();                
-            }
-            getSortalTypeCache().clear();
-        }
-        catch (Exception ex) {
-            //logger.warning(ex.getStackTrace().toString());
-            ex.printStackTrace();
-        }
-        return;
-    }
-
-    /** ***************************************************************
-     * Clears the Map returned by KB.getSortalTypeCache(), or creates
-     * it if it does not already exist.
-     *
-     * @return void
-     */
-    protected void resetSortalTypeCache() {
-        
-        if (getSortalTypeCache().isEmpty()) 
-            // logger.info("KB.getSortalTypeCache() == " + getSortalTypeCache());   
-            System.out.println("KB.getSortalTypeCache() == " + getSortalTypeCache());
-        else 
-            clearSortalTypeCache();        
-        return;
-    }
-
-    /** *************************************************************
-     * Initializes all RelationCaches.  Creates the RelationCache
-     * objects if they do not yet exist, and clears all existing
-     * RelationCache objects if clearExistingCaches is true.
-     *
-     * @param clearExistingCaches If true, all existing RelationCache
-     * maps are cleared and the List of RelatonCaches is cleared, else
-     * all existing RelationCache objects and their contents are
-     * reused
-     */
-    protected void initRelationCaches(boolean clearExistingCaches) {
-
-        System.out.println("KBcache.initRelationCaches(): clearExistingCaches = " + clearExistingCaches);
-        if (clearExistingCaches) {  // Clear all cache maps. 
-            Iterator<RelationCache> it = getRelationCaches().iterator();
-            while (it.hasNext()) {
-                RelationCache rc = it.next();
-                rc.clear();
-            }            
-            getRelationCaches().clear();  // Discard all cache maps.
-        }
-        List<String> symmetric = getCachedSymmetricRelationNames();
-        Iterator<String> it2 = getCachedRelationNames().iterator();
-        while (it2.hasNext()) {
-            String relname = it2.next();
-            getRelationCache(relname, 1, 2);
-            System.out.println("  " + relname);
-            // We put each symmetric relation -- disjoint and a
-            // few others -- into just one RelationCache table
-            // apiece.  All transitive binary relations are cached
-            // in two RelationCaches, one that looks "upward" from
-            // the keys, and another that looks "downward" from
-            // the keys.
-            if (!symmetric.contains(relname)) 
-                getRelationCache(relname, 2, 1);            
-        }
-        return;
-    }
-
-    /** *************************************************************     
-     */
-    public HashSet<String> getParents(String term) {
-        return getRelationCache("subclass", 1, 2).get(term);
-    }
-
-    /** *************************************************************     
-     */
-    public HashSet<String> getChildren(String term) {
-        return getRelationCache("subclass", 2, 1).get(term);
+    public boolean transInstOf(String child, String parent) {
+    
+        HashSet<String> prents = instances.get(child);
+        if (prents != null)
+            return prents.contains(parent);
+        else
+            return false;
     }
     
-    /** *************************************************************     
+    /** ***************************************************************
+     * Find whether the given class has the given parent class.  
      */
-    public HashSet<String> getDisjoint(String term) {
-        return getRelationCache("disjoint", 1, 2).get(term);
+    public boolean subclassOf(String child, String parent) {
+    
+    	HashMap<String,HashSet<String>> prentsForRel = parents.get("subclass");
+    	if (prentsForRel != null) {
+	    	HashSet<String> prents = prentsForRel.get(child);
+	        if (prents != null)
+	            return prents.contains(parent);
+	        else
+	            return false;
+	    	}
+    	return false;
+    }
+ 
+    /** ***************************************************************
+     * Record instances and their explicitly defined parent classes
+     */
+    private void buildDirectInstances() {
+    	
+        ArrayList<Formula> forms = kb.ask("arg",0,"instance");
+        for (int i = 0; i < forms.size(); i++) {
+            Formula f = forms.get(i);
+            String child = f.getArgument(1);
+            String parent = f.getArgument(2);
+            HashSet<String> iset = new HashSet<String>();
+            if (instances.get(child) != null)
+                iset = instances.get(child);
+            iset.add(parent);
+        	instances.put(child, iset);
+        }
     }
     
-    /** *************************************************************
-     * Returns the RelationCache object identified by the input
-     * arguments: relation name, key argument position, and value
-     * argument position.
-     *
-     * @param relName The name of the cached relation.
-     *
-     * @param keyArg An int value that indicates the argument position
-     * of the cache keys.     
-     * @param valueArg An int value that indicates the argument
-     * position of the cache values.     
-     * @return a RelationCache object, or null if there is no cache
-     * corresponding to the input arguments.
+    /** ***************************************************************
+     * Cache whether a given instance has a given parent class.  
+     * Include paths the have transitive relations between instances such
+     * as an Attribute that is a subAttribute of another instance, which
+     * in turn then is an instance of the given class.
+     * TODO: make sure that direct instances are recorded too
      */
-    private RelationCache getRelationCache(String relName, int keyArg, int valueArg) {
-        
-        RelationCache result = null;
-        if (StringUtil.isNonEmptyString(relName)) {
-            RelationCache cache = null;
-            Iterator<RelationCache> it = getRelationCaches().iterator();
-            while (it.hasNext()) {
-                cache = it.next();
-                if (cache.getRelationName().equals(relName)
-                    && (cache.getKeyArgument() == keyArg)
-                    && (cache.getValueArgument() == valueArg)) {
-                    result = cache;
-                    break;
+    private void buildTransInstOf() {
+    
+        Iterator<String> titer = insts.iterator();     // Iterate through the temporary list of instances built 
+                                                       // during creation of the @see children map
+        while (titer.hasNext()) {
+            String child = titer.next();
+            //System.out.println();
+            //System.out.println("INFO in KBcache.buildTransInstOf(): child: " + child);
+            ArrayList<Formula> forms = kb.ask("arg",1,child);
+            for (int i = 0; i < forms.size(); i++) {
+                Formula f = forms.get(i);
+                String rel = f.getArgument(0);
+                if (instTransRels.contains(rel) && !rel.equals("subclass")) {
+                    //System.out.println("INFO in KBcache.buildTransInstOf(): considering formula: " + f);
+                    HashMap<String,HashSet<String>> prentList = parents.get(rel);
+                    if (prentList != null) {
+                        HashSet<String> prents = prentList.get(f.getArgument(1));  // include all parents of the child 
+                        if (prents != null) {
+                            //System.out.println("INFO in KBcache.buildTransInstOf(): prents: " + prents);
+                            Iterator<String> it = prents.iterator();
+                            while (it.hasNext()) {
+                                String p = it.next();
+                                //System.out.println("INFO in KBcache.buildTransInstOf(): parent: " + p);
+                                ArrayList<Formula> forms2 = kb.askWithRestriction(0,"instance",1,p);
+                                for (int j = 0; j < forms2.size(); j++) {
+                                    Formula f2 = forms2.get(j);
+                                    //System.out.println("INFO in KBcache.buildTransInstOf(): formula: " + f2);
+                                    String cl = f2.getArgument(2);
+                                    HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
+                                    HashSet<String> pset = new HashSet<String>();
+                                    if (instances.get(child) != null)
+                                        pset = instances.get(child);
+                                    pset.add(cl);
+                                    pset.addAll(superclasses.get(cl));
+                                    //System.out.println("INFO in KBcache.buildTransInstOf(): child,pset: " + child +
+                                    //        ": " + pset);
+                                    instances.put(child, pset);
+                                    //System.out.println("INFO in KBcache.buildTransInstOf(): size: " + instances.keySet().size());
+                                }
+                            }
+                        }
+                    }
                 }
+                else if (rel.equals("instance")) {
+                	if (child.equals("exhaustiveAttribute"))
+                		System.out.println("INFO in KBcache.buildTransInstOf(): f: " + f);
+                	String cl = f.getArgument(2);
+                    HashSet<String> iset = new HashSet<String>();
+                    if (instances.get(child) != null)
+                        iset = instances.get(child);
+                    iset.add(cl);
+                	instances.put(child, iset);
+                }
+            }            
+        }
+        buildDirectInstances();
+    }
+    
+    /** ***************************************************************    
+     */
+    public HashSet<String> getParentClasses(String cl) {
+        
+        HashMap<String,HashSet<String>> ps = parents.get("subclass");
+        if (ps != null)
+            return ps.get(cl);
+        else
+            return null;
+    }
+    
+    /** ***************************************************************    
+     */
+    public HashSet<String> getChildClasses(String cl) {
+        
+        HashMap<String,HashSet<String>> ps = children.get("subclass");
+        if (ps != null)
+            return ps.get(cl);
+        else
+            return null;
+    }
+
+    /** ***************************************************************    
+     */
+    public HashSet<String> getInstances(String cl) {
+        
+        HashSet<String> ps = instances.get(cl);
+        if (ps != null)
+            return ps;
+        else
+            return new HashSet<String>();
+    }
+    
+    /** ***************************************************************
+     * Get the HashSet of the given arguments from an ArrayList of Formulas.
+     */
+    public static HashSet<String> collectArgFromFormulas(int arg, ArrayList<Formula> forms) {
+        
+        HashSet<String> subs = new HashSet<String>();
+        for (int i = 0; i < forms.size(); i++) {
+            Formula f = forms.get(i);
+            String sub = f.getArgument(arg);
+            subs.add(sub);
+        }
+        return subs;
+    }
+   
+    /** ***************************************************************
+     * Do a proper search for relations (including Functions), utilizing
+     * the formal definitions, rather than the convention of initial
+     * lower case letter.  This means getting any instance of Relation
+     * tracing back through subclasses as well.
+     */
+    public void buildTransitiveRelationsSet() {
+        
+        HashSet<String> rels = new HashSet<String>();  
+        rels.add("TransitiveRelation");
+        while (!rels.isEmpty()) {
+            //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): rels: " + rels);
+            //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): transRels: " + transRels);
+            HashSet<String> relSubs = new HashSet<String>();
+            Iterator<String> it = rels.iterator();
+            while (it.hasNext()){
+                String rel = it.next();
+                //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): checking rel: " + rel);
+                relSubs = new HashSet<String>();
+                ArrayList<Formula> forms = kb.askWithRestriction(0,"subclass",2,rel);
+                ArrayList<Formula> forms2 = kb.ask("arg",2,rel);
+                //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): formulas: " + forms2);
+
+                if (forms != null) {
+                    //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): subclasses: " + forms);
+                    relSubs.addAll(collectArgFromFormulas(1,forms));
+                }
+                //else
+                //    System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): no subclasses for : " + rels);
+                forms = kb.askWithRestriction(0,"instance",2,rel);
+                if (forms != null) 
+                    transRels.addAll(collectArgFromFormulas(1,forms));
+                forms = kb.askWithRestriction(0,"subrelation",2,rel);
+                if (forms != null) 
+                    transRels.addAll(collectArgFromFormulas(1,forms));
             }
-            if (result == null) {
-                cache = new RelationCache(relName, keyArg, valueArg);
-                getRelationCaches().add(cache);
-                result = cache;
+            rels = new HashSet<String>();
+            rels.addAll(relSubs);
+        }
+    }
+    
+    /** ***************************************************************
+     * Do a proper search for relations (including Functions), utilizing
+     * the formal definitions, rather than the convention of initial
+     * lower case letter.  This means getting any instance of Relation
+     * tracing back through subclasses as well.
+     */
+    public void buildRelationsSet() {
+        
+        HashSet<String> rels = new HashSet<String>();  
+        rels.add("Relation");
+        while (!rels.isEmpty()) {
+            //System.out.println();
+            //System.out.println("INFO in KBcache.buildRelationsSet(): rels: " + rels);
+            HashSet<String> relSubs = new HashSet<String>();
+            Iterator<String> it = rels.iterator();
+            while (it.hasNext()) {
+                String rel = it.next();
+                //System.out.println("INFO in KBcache.buildRelationsSet(): rel: " + rel);
+                ArrayList<Formula> forms = kb.askWithRestriction(0,"subclass",2,rel);
+                if (forms != null) 
+                    relSubs.addAll(collectArgFromFormulas(1,forms));
+                
+                forms = kb.askWithRestriction(0,"instance",2,rel);
+                if (forms != null) {
+                    relations.addAll(collectArgFromFormulas(1,forms));
+                    relSubs.addAll(collectArgFromFormulas(1,forms));
+                }    
+                forms = kb.askWithRestriction(0,"subrelation",2,rel);
+                if (forms != null) { 
+                    relations.addAll(collectArgFromFormulas(1,forms));
+                    relSubs.addAll(collectArgFromFormulas(1,forms));
+                }    
+                //System.out.println("INFO in KBcache.buildRelations(): subs: " + relSubs);
             }
-        }        
+            rels = new HashSet<String>();
+            rels.addAll(relSubs);
+        }
+    }
+
+    /** ***************************************************************
+     * Find the parent "roots" of any transitive relation - terms that
+     * appear only as argument 2
+     */
+    private HashSet<String> findRoots(String rel) {
+        
+        HashSet<String> result = new HashSet<String>();
+        ArrayList<Formula> forms = kb.ask("arg",0,rel);
+        HashSet<String> arg1s = collectArgFromFormulas(1,forms);
+        HashSet<String> arg2s = collectArgFromFormulas(2,forms);
+        arg2s.removeAll(arg1s);
+        result.addAll(arg2s);
+        //System.out.println("INFO in KBcache.findRoots(): " + result);
         return result;
     }
-
-    /** *************************************************************
+    
+    /** ***************************************************************
+     * Find the child "roots" of any transitive relation - terms that
+     * appear only as argument 1
      */
-    private boolean isClosureComputed(ArrayList<RelationCache> caches) {
+    private HashSet<String> findLeaves(String rel) {
         
-        if (caches == null) 
-            return false;
-        boolean isClosureComputed = false;
-        RelationCache rc = null;
-        Iterator<RelationCache> it = caches.iterator();
-        while (it.hasNext()) {
-            rc = (RelationCache) it.next();
-            if (rc.getIsClosureComputed()) {
-                isClosureComputed = true;
-                break;
+        HashSet<String> result = new HashSet<String>();
+        ArrayList<Formula> forms = kb.ask("arg",0,rel);
+        HashSet<String> arg1s = collectArgFromFormulas(1,forms);
+        HashSet<String> arg2s = collectArgFromFormulas(2,forms);
+        arg1s.removeAll(arg2s);
+        result.addAll(arg1s);
+        //System.out.println("INFO in KBcache.findRoots(): " + result);
+        return result;
+    }
+    
+    /** ***************************************************************
+     */
+    private void breadthFirstBuildParents(String root, String rel) {
+        
+        HashMap<String,HashSet<String>> relParents = parents.get(rel);
+        if (relParents == null) {
+            System.out.println("Error in KBcache.breadthFirstBuildParents(): no relation " + rel);
+            return;
+        }
+        //else
+        //    System.out.println("INFO in KBcache.breadthFirst(): trying relation " + rel);
+        ArrayDeque<String> Q = new ArrayDeque<String>();
+        HashSet<String> V = new HashSet<String>();
+        Q.add(root);
+        V.add(root);
+        while (!Q.isEmpty()) {
+            String t = Q.remove();
+            //System.out.println("visiting " + t);
+            ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
+            if (forms != null) {
+                HashSet<String> relSubs = collectArgFromFormulas(1,forms);
+                //System.out.println("visiting subs of t: " + relSubs);
+                Iterator<String> it = relSubs.iterator();
+                while (it.hasNext()) {
+                    String newTerm = it.next();
+                    HashSet<String> newParents = new HashSet<String>();
+                    HashSet<String> oldParents = relParents.get(t);
+                    if (oldParents == null) {
+                        oldParents = new HashSet<String>();
+                        relParents.put(t, oldParents);        
+                    }
+                    newParents.addAll(oldParents);
+                    newParents.add(t);
+                    HashSet<String> newTermParents = relParents.get(newTerm);
+                    if (newTermParents != null)
+                        newParents.addAll(newTermParents);
+                    relParents.put(newTerm, newParents);
+                    //System.out.println(newTerm + ": " + newParents);
+                    if (!V.contains(newTerm)) {
+                        V.add(newTerm);
+                        Q.addFirst(newTerm);
+                    }
+                }
             }
         }
-        return isClosureComputed;
+    }
+    
+    /** ***************************************************************
+     */
+    private void breadthFirstBuildChildren(String root, String rel) {
+        
+        HashMap<String,HashSet<String>> relChildren = children.get(rel);
+        if (relChildren == null) {
+            System.out.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
+            return;
+        }
+        //else
+        //    System.out.println("INFO in KBcache.breadthFirst(): trying relation " + rel);
+        ArrayDeque<String> Q = new ArrayDeque<String>();
+        HashSet<String> V = new HashSet<String>();
+        Q.add(root);
+        V.add(root);
+        while (!Q.isEmpty()) {
+            String t = Q.remove();
+            //System.out.println("visiting " + t);
+            ArrayList<Formula> forms = kb.askWithRestriction(0,rel,1,t);
+            if (forms != null) {
+                HashSet<String> relSubs = collectArgFromFormulas(2,forms);
+                //System.out.println("visiting subs of t: " + relSubs);
+                Iterator<String> it = relSubs.iterator();
+                while (it.hasNext()) {
+                    String newTerm = it.next();
+                    HashSet<String> newChildren = new HashSet<String>();
+                    HashSet<String> oldChildren = relChildren.get(t);
+                    if (oldChildren == null) {
+                        oldChildren = new HashSet<String>();
+                        relChildren.put(t, oldChildren);        
+                    }
+                    newChildren.addAll(oldChildren);
+                    newChildren.add(t);
+                    HashSet<String> newTermChildren = relChildren.get(newTerm);
+                    if (newTermChildren != null)
+                        newChildren.addAll(newTermChildren);
+                    relChildren.put(newTerm, newChildren);
+                    //System.out.println(newTerm + ": " + newParents);
+                    if (!V.contains(newTerm)) {
+                        V.add(newTerm);
+                        Q.addFirst(newTerm);
+                    }
+                }
+            }
+        }
+        insts.addAll(relChildren.keySet());
+    }
+    
+    /** ***************************************************************
+     * For each transitive relation, find its transitive closure.  If
+     * rel is transitive, and (rel A B) and (rel B C) then the entry for
+     * rel is a HashMap where the key A has value ArrayList of {B,C}.
+     *     public HashMap<String,HashMap<String,ArrayList<String>>> parents = 
+            new HashMap<String,HashMap<String,ArrayList<String>>>();
+     */
+    public void buildParents() {
+    
+        Iterator<String> it = transRels.iterator();
+        while (it.hasNext()) {
+            String rel = it.next();
+            HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>();
+            HashSet<String> roots = findRoots(rel);
+            parents.put(rel, value);
+            Iterator<String> it1 = roots.iterator();
+            while (it1.hasNext()) {
+                String root = it1.next();
+                breadthFirstBuildParents(root,rel);
+            }
+        }
+    }
+
+    /** ***************************************************************
+     * For each transitive relation, find its transitive closure.  If
+     * rel is transitive, and (rel A B) and (rel B C) then the entry for
+     * rel is a HashMap where the key A has value ArrayList of {B,C}.
+     *     public HashMap<String,HashMap<String,ArrayList<String>>> children = 
+            new HashMap<String,HashMap<String,ArrayList<String>>>();
+     */
+    public void buildChildren() {
+    
+        Iterator<String> it = transRels.iterator();
+        while (it.hasNext()) {
+            String rel = it.next();
+            HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>();
+            HashSet<String> leaves = findLeaves(rel);
+            children.put(rel, value);
+            Iterator<String> it1 = leaves.iterator();
+            while (it1.hasNext()) {
+                String root = it1.next();
+                breadthFirstBuildChildren(root,rel);
+            }
+        }
+    }
+    
+    /** ***************************************************************
+     * Fill an array of String with the specified String up to but
+     * not including the index, starting from the 1st argument and
+     * ignoring the 0th argument.
+     */
+    private static void fillArray(String st, String[] ar, int start, int end) {
+    
+        for (int i = start; i < end; i++) 
+            if (StringUtil.emptyString(ar[i]))
+                ar[i] = st;        
+    }
+    
+    /** ***************************************************************
+     * Fill an array of String with the specified String up to but
+     * not including the index, starting from the end of the array
+     */
+    private static void fillArrayList(String st, ArrayList<String> ar, int start, int end) {
+    
+        for (int i = start; i < end; i++) 
+            if (i > ar.size()-1 || StringUtil.emptyString(ar.get(i)))
+                ar.add(st);        
+    }
+    
+    /** ***************************************************************
+     * Build the argument type list for every relation. If the argument
+     * is a domain subclass, append a "+" to the argument type.  If
+     * no domain is defined for the given relation and argument position,
+     * inherit it from the parent.  If there is no argument type, send
+     * an error to the Sigma error list.
+     * Relation name keys and argument types with 0th arg always ""
+     * public HashMap<String,ArrayList<String>> signatures =
+     *      new HashMap<String,ArrayList<String>>();
+     *      
+     *      TODO: Function range
+     *      TODO: Variable arity relations, which requires a new predicate
+     *      in SUMO that will define the type of a row variable
+     */
+    public void collectDomains() {
+        
+        Iterator<String> it = relations.iterator();
+        while (it.hasNext()) {
+            String rel = it.next();
+            //System.out.println("INFO in KBcache.collectDomains(): trying relation " + rel);
+            String[] domainArray = new String[Formula.MAX_PREDICATE_ARITY];
+            int maxIndex = 0;
+            domainArray[0] = "";
+            ArrayList<Formula> forms = kb.askWithRestriction(0,"domain",1,rel);
+            if (forms != null) {
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula form = forms.get(i);
+                    //System.out.println("INFO in KBcache.collectDomains(): form " + form);
+                    int arg = Integer.valueOf(form.getArgument(2));
+                    String type = form.getArgument(3); 
+                    domainArray[arg] = type; 
+                    if (arg > maxIndex)
+                        maxIndex = arg;
+                }
+            }
+            forms = kb.askWithRestriction(0,"domainSubclass",1,rel);
+            if (forms != null) {
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula form = forms.get(i);
+                    //System.out.println("INFO in KBcache.collectDomains(): form " + form);
+                    int arg = Integer.valueOf(form.getArgument(2));
+                    String type = form.getArgument(3);                
+                    domainArray[arg] = type + "+";
+                    if (arg > maxIndex)
+                        maxIndex = arg;
+                }
+            }
+            //System.out.println("INFO in KBcache.collectDomains(): domains " + domains);
+            fillArray("Entity",domainArray,1,maxIndex);                    
+            ArrayList<String> domains = new ArrayList<String>();
+            for (int i = 0; i <= maxIndex; i++)
+                domains.add(domainArray[i]);
+            signatures.put(rel,domains);
+            valences.put(rel, new Integer(maxIndex));
+        }
+        inheritDomains();
+    }
+    
+    /** ***************************************************************
+     * Note that this routine forces child relations to have arguments
+     * that are the same or more specific than their parent relations.
+     */
+    private void breadthFirstInheritDomains(String root) {
+        
+        String rel = "subrelation";
+        HashMap<String,HashSet<String>> relParents = parents.get("subrelation");
+        if (relParents == null) {
+            System.out.println("Error in KBcache.breadthFirst(): no relation subrelation");
+            return;
+        }
+        //else
+            //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): trying relation " + rel);
+        ArrayDeque<String> Q = new ArrayDeque<String>();
+        HashSet<String> V = new HashSet<String>();
+        Q.add(root);
+        V.add(root);
+        while (!Q.isEmpty()) {
+            String t = Q.remove();
+            ArrayList<String> tdomains = signatures.get(t);
+            //System.out.println("visiting " + t);
+            ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
+            if (forms != null) {
+                HashSet<String> relSubs = collectArgFromFormulas(1,forms);
+                //System.out.println("visiting subs of t: " + relSubs);
+                Iterator<String> it = relSubs.iterator();
+                while (it.hasNext()) {
+                    String newTerm = it.next();                    
+                    ArrayList<String> newDomains = signatures.get(newTerm);
+                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): valence for " + 
+                    //    newTerm + ":" + valences.get(newTerm));
+                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): valence for " + 
+                    //        t + ":" + valences.get(t));
+                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newTerm + " : " + newDomains);
+                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + t + ": " + tdomains);
+                    if (valences.get(newTerm) < valences.get(t)) {
+                        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newDomains);
+                        fillArrayList("Entity",newDomains,valences.get(newTerm)+1,valences.get(t)+1);
+                        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newDomains);
+                        valences.put(newTerm, valences.get(t));
+                    }
+                    for (int i = 1; i < valences.get(t); i++) {
+                        String childArgType = newDomains.get(i);
+                        String parentArgType = tdomains.get(i);
+                        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): comparing child to parent: " + childArgType + " " + parentArgType);
+                        if (!childOfP("subclass",parentArgType,childArgType)) {
+                            //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): replacing");
+                            arrayListReplace(newDomains,i,parentArgType);
+                        }
+                    }
+                    if (!V.contains(newTerm)) {
+                        V.add(newTerm);
+                        Q.addFirst(newTerm);
+                    }
+                }
+            }
+        }
     }
     
     /** *************************************************************
      * Delete and writes the cache .kif file then call addConstituent() so
      * that the file can be processed and loaded by the inference engine.
      */
-    public void cache() {
-                     
-        ArrayList<RelationCache> caches = getRelationCaches();
-        if (!isClosureComputed(caches)) // Don't bother writing the cache file cache closure not computed
-            return;        
+    public void writeCacheFile() {
+                           
         FileWriter fw = null;
         try {
             File dir = new File(KBmanager.getMgr().getPref("kbDir"));
@@ -428,41 +673,33 @@ public class KBcache {
                 f.delete();                                           
             String filename = f.getCanonicalPath();
             fw = new FileWriter(f, true);
-            Iterator<RelationCache> it = caches.iterator();
+            Iterator<String> it = parents.keySet().iterator();
             while (it.hasNext()) {
-                RelationCache rc = it.next();
-                if (rc.getKeyArgument() == 1) {
-                    String relation = rc.getRelationName();                    
-                    if (!relation.equals("disjoint")) {  // Too many disjoint classes to cache
-                        Iterator<String> it2 = null;
-                        it2 = rc.keySet().iterator();
-                        while (it2.hasNext()) {
-                            String arg1 = it2.next();
-                            Set valSet = (Set) rc.get(arg1);
-                            Iterator<String> it3 = null;
-                            it3 = valSet.iterator();
-                            while (it3.hasNext()) {
-                                String arg2 = it3.next();
-                                StringBuilder sb = new StringBuilder();
-                                sb.append("(" + relation + " " + arg1 + " " + arg2 + ")");
-                                String tuple = sb.toString();
-                                if (!kb.formulaMap.containsKey(tuple.intern())
-                                    && (getCacheReflexiveAssertions() || !arg1.equals(arg2))) {
-                                    fw.write(tuple);
-                                    fw.write(System.getProperty("line.separator"));
-                                }
-                            }
+                String rel = it.next();
+                HashMap<String,HashSet<String>> valSet = parents.get(rel);
+                Iterator<String> it2 = valSet.keySet().iterator();
+                while (it2.hasNext()) {
+                    String child = it2.next();
+                    HashSet<String> prents = valSet.get(child);
+                    Iterator<String> it3 = prents.iterator();
+                    while (it3.hasNext()) {
+                        String parent = it3.next();
+                        String tuple = "(" + rel + " " + child + " " + parent + ")";
+                        if (!kb.formulaMap.containsKey(tuple)) {
+                            fw.write(tuple);
+                            fw.write(System.getProperty("line.separator"));
                         }
                     }
-                }
+                }                
             }
             if (fw != null) {
                 fw.close();
                 fw = null;
             }
             kb.constituents.remove(filename);
-            kb.addConstituent(filename, false, false, true);
-            KBmanager.getMgr().writeConfiguration();
+            kb.addConstituent(filename);
+            //kb.addConstituent(filename, false, false, false);
+            //KBmanager.getMgr().writeConfiguration();
         }                   
         catch (Exception ex) {
             ex.printStackTrace();
@@ -478,656 +715,60 @@ public class KBcache {
         }
     }
 
-    /** *************************************************************
-     * Adds one value to the cache, indexed under keyTerm.
-     *
-     * @param cache The RelationCache object to be updated.
-     * @param keyTerm The String that is the key for this entry.
-     * @param valueTerm The String that is the value for this entry.
-     * @return The int value 1 if a new entry is added, else 0.
+    /** ***************************************************************
+     * Find domain and domainSubclass definitions that impact a child
+     * relation.  If the type of an argument is less specific than
+     * the same type of a parent's argument, use that of the parent.
      */
-    private int addRelationCacheEntry(RelationCache cache, String keyTerm, String valueTerm) {
+    public void inheritDomains() {
         
-        int count = 0;
-        if ((cache != null) && StringUtil.isNonEmptyString(keyTerm) && StringUtil.isNonEmptyString(valueTerm)) {
-            HashSet<String> valueSet = cache.get(keyTerm);
-            if (valueSet == null) {
-                valueSet = new HashSet<String>();
-                cache.put(keyTerm, valueSet);
-            }
-            if (valueSet.add(valueTerm)) 
-                count++;            
+        HashSet<String> roots = findRoots("subrelation");
+        Iterator<String> it = roots.iterator();
+        while (it.hasNext()) {
+            String root = it.next();
+            breadthFirstInheritDomains(root);
         }
-        return count;
     }
 
-    /** *************************************************************
-     * Returns the HashSet indexed by term in the RelationCache
-     * identified by relation, keyArg, and valueArg.
-     *
-     * @param relation A String, the name of a relation
-     * @param term A String (key) that indexes a HashSet
-     * @param keyArg An int value that, with relation and valueArg,
-     * identifies a RelationCache
-     * @param valueArg An int value that, with relation and keyArg,
-     * identifies a RelationCache
-     *
-     * @return A HashSet, which could be empty
+    /** ***************************************************************
+     * Compile the set of transitive relations that are between instances  
      */
-    public HashSet<String> getCachedRelationValues(String relation, String term,
-                                           int keyArg, int valueArg) {
+    public void buildInstTransRels() {
         
-        HashSet<String> ans = new HashSet<String>();
-        try {
-            RelationCache cache = getRelationCache(relation, keyArg, valueArg);
-            if (cache != null) {
-                HashSet<String> values = cache.get(term);
-                if (values != null) 
-                    ans.addAll(values);
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
-    }
-
-    /** *************************************************************
-     * This method computes the transitive closure for the relation
-     * identified by relationName.  The results are stored in the
-     * RelationCache object for the relation and "direction" (looking
-     * from the arg1 keys toward arg2 parents, or looking from the
-     * arg2 keys toward arg1 children).
-     *
-     * @param relationName The name of a relation
-     */
-    private void computeTransitiveCacheClosure(String relationName) {
-
-        // System.out.print(" " + relationName);
-        if (getCachedTransitiveRelationNames().contains(relationName)) {
-            RelationCache c1 = getRelationCache(relationName, 1, 2);
-            RelationCache c2 = getRelationCache(relationName, 2, 1);
-            if ((c1 != null) && (c2 != null)) {
-                RelationCache inst1 = null;
-                RelationCache inst2 = null;
-                boolean isSubrelationCache = relationName.equals("subrelation");
-                if (isSubrelationCache) {
-                    inst1 = getRelationCache("instance", 1, 2);
-                    inst2 = getRelationCache("instance", 2, 1);
-                }
-                Set c1Keys = c1.keySet();
-                Object[] valArr = null;
-                boolean changed = true;
-                while (changed) {
-                    changed = false;
-                    Iterator<String> it1 = c1Keys.iterator();
-                    while (it1.hasNext()) {
-                        String keyTerm = it1.next();
-                        String valTerm = null;
-                        if (StringUtil.emptyString(keyTerm)) 
-                            System.out.println("Error in KB.computeTransitiveCacheClosure(" + relationName + ") \n   keyTerm == " +
-                                           ((keyTerm == null) ? null : "\"" + keyTerm + "\""));
-                        else {
-                            HashSet<String> valSet = c1.get(keyTerm);
-                            valArr = valSet.toArray();
-                            for (int i = 0; i < valArr.length; i++) {
-                                valTerm = (String) valArr[i];
-                                HashSet<String> valSet2 = c1.get(valTerm);
-                                long count = 0L;
-                                if (valSet2 != null) {
-                                    Iterator<String> it2 = valSet2.iterator();
-                                    while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
-                                        if (valSet.add(it2.next())) {
-                                            changed = true;
-                                            count++;
-                                        }
-                                    }
-                                }
-                                if (count < MAX_CACHE_SIZE) {
-                                    valSet2 = c2.get(valTerm);
-                                    if (valSet2 == null) {
-                                        valSet2 = new HashSet<String>();
-                                        c2.put(valTerm, valSet2);
-                                    }
-                                    if (valSet2.add(keyTerm)) {
-                                        changed = true;
-                                        count++;
-                                    }
-                                }
-                            }
-                            // Here we try to ensure that instances of Relation have at least some entry in the
-                            // "instance" caches, since this information is sometimes considered
-                            // redundant and so could be left out of .kif files.
-                            if (isSubrelationCache) {
-                                valTerm = "Relation";
-                                if (keyTerm.endsWith("Fn")) 
-                                    valTerm = "Function";                                    
-                                else {                                        
-                                    if (Character.isLowerCase(keyTerm.charAt(0)) && !keyTerm.contains("(")) 
-                                        valTerm = "Predicate";                                        
-                                }
-                                addRelationCacheEntry(inst1, keyTerm, valTerm);
-                                addRelationCacheEntry(inst2, valTerm, keyTerm);
-                            }
-                        }
-                    }
-                    if (changed) {
-                        c1.setIsClosureComputed(true);
-                        c2.setIsClosureComputed(true);
-                    }
-                }
-            }
-        }      
-        return;
-    }
-
-    /** *************************************************************
-     * This method computes the closure for the cache of the instance
-     * relation, in both directions.
-     */
-    private void computeInstanceCacheClosure() {
-
-        try {
-            RelationCache ic1 = getRelationCache("instance", 1, 2);
-            RelationCache ic2 = getRelationCache("instance", 2, 1);
-            RelationCache sc1 = getRelationCache("subclass", 1, 2);
-            Set ic1KeySet = ic1.keySet();
-            Iterator it1 = ic1KeySet.iterator();
-            Object[] ic1ValArr = null;
-            String ic1ValTerm = null;
-            while (it1.hasNext()) {
-                String ic1KeyTerm = (String) it1.next();
-                HashSet<String> ic1ValSet = ic1.get(ic1KeyTerm);
-                long count = 0L;
-                ic1ValArr = ic1ValSet.toArray();
-                for (int i = 0 ; i < ic1ValArr.length ; i++) {
-                    ic1ValTerm = (String) ic1ValArr[i];
-                    if (ic1ValTerm != null) {
-                        HashSet<String> sc1ValSet = sc1.get(ic1ValTerm);
-                        if (sc1ValSet != null) {
-                            Iterator<String> it2 = sc1ValSet.iterator();
-                            while (it2.hasNext() && (count < MAX_CACHE_SIZE)) {
-                                if (ic1ValSet.add(it2.next())) 
-                                    count++;                                
-                            }
-                        }
-                    }
-                }
-                if (count < MAX_CACHE_SIZE) {
-                    Iterator<String> it2 = ic1ValSet.iterator();
-                    while (it2.hasNext()) {
-                        ic1ValTerm = (String) it2.next();
-                        HashSet<String> ic2ValSet = ic2.get(ic1ValTerm);
-                        if (ic2ValSet == null) {
-                            ic2ValSet = new HashSet();
-                            ic2.put(ic1ValTerm, ic2ValSet);
-                        }
-                        if (ic2ValSet.add(ic1KeyTerm)) 
-                            count++;                        
-                    }
-                }
-            }
-            ic1.setIsClosureComputed(true);
-            ic2.setIsClosureComputed(true);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }       
-        return;
-    }
-
-    /** *************************************************************
-     * This method computes the closure for the caches of symmetric
-     * relations.  As currently implemented, it really applies to only
-     * disjoint.
-     */
-    private void computeSymmetricCacheClosure(String relationName) {
-
-    	System.out.println("INFO in KBcache.cacheRelnsWithRelnArgs(): " + relationName);
-        RelationCache dc1 = getRelationCache(relationName, 1, 2);
-        RelationCache sc2 = (relationName.equals("disjoint")
-                             ? getRelationCache("subclass", 2, 1)
-                             : null);
-        if (sc2 != null) {
-            boolean changed = true;
-            while (changed) {
-                changed = false;
-                Set dc1KeySet = dc1.keySet();
-                Object[] dc1KeyArr = dc1KeySet.toArray();
-                for (int i = 0; (i < dc1KeyArr.length); i++) {
-                    String dc1KeyTerm = (String) dc1KeyArr[i];
-                    HashSet<String> dc1ValSet = dc1.get(dc1KeyTerm);
-                    Object[] dc1ValArr = dc1ValSet.toArray();
-                    for (int j = 0 ; j < dc1ValArr.length ; j++) {
-                        String dc1ValTerm = (String) dc1ValArr[j];
-                        Set sc2ValSet = sc2.get(dc1ValTerm);
-                        if (sc2ValSet != null) {
-                            if (dc1ValSet.addAll(sc2ValSet)) 
-                                changed = true;                            
-                        }
-                    }
-                    Set sc2ValSet = sc2.get(dc1KeyTerm);
-                    if (sc2ValSet != null) {
-                        Iterator<String> it3 = sc2ValSet.iterator();
-                        while (it3.hasNext()) {
-                            String sc2ValTerm = it3.next();
-                            HashSet<String> dc1ValSet2 = dc1.get(sc2ValTerm);
-                            if (dc1ValSet2 == null) {
-                                dc1ValSet2 = new HashSet<String>();
-                                dc1.put(sc2ValTerm, dc1ValSet2);
-                            }
-                            if (dc1ValSet2.addAll(dc1ValSet)) 
-                                changed = true;                                
-                        }
-                    }
-                }
-                if (changed)
-                    dc1.setIsClosureComputed(true);
-            }
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * This method builds a cache of all Relations in the current KB
-     * for which at least one argument must be filled by a relation
-     * name (or a variable denoting a relation name).  This method
-     * should be called only after the subclass cache has been built.
-     */
-    private void cacheRelnsWithRelnArgs() {
-
-    	System.out.println("INFO in KBcache.cacheRelnsWithRelnArgs()");
-        if (relnsWithRelnArgs == null) 
-            relnsWithRelnArgs = new HashMap();            
-        relnsWithRelnArgs.clear();
-        Set relnClasses = getCachedRelationValues("subclass", "Relation", 2, 1);
-        if (relnClasses != null)
-            relnClasses.add("Relation");
-        if (relnClasses != null) {
-            boolean[] signature = null;
-            Iterator<String> it = relnClasses.iterator();
-            while (it.hasNext()) {
-                String relnClass = it.next();
-                ArrayList<Formula> formulas = kb.askWithRestriction(3, relnClass, 0, "domain");
-                if (formulas != null) {
-                    Iterator<Formula> it2 = formulas.iterator();
-                    while (it2.hasNext()) {
-                        Formula f = it2.next();
-                        String reln = f.getArgument(1);
-                        int valence = kb.getValence(reln);
-                        if (valence < 1) 
-                            valence = Formula.MAX_PREDICATE_ARITY;                            
-                        signature = (boolean[]) relnsWithRelnArgs.get(reln);
-                        if (signature == null) {
-                            signature = new boolean[ valence + 1 ];
-                            for (int j = 0 ; j < signature.length ; j++) 
-                                signature[j] = false;                                
-                            relnsWithRelnArgs.put(reln, signature);
-                        }
-                        int argPos = Integer.parseInt(f.getArgument(2));
-                        signature[argPos] = true;
-                    }
-                }
-            }
-            // This is a kluge.  "format" (and "termFormat", which
-            // is not directly relevant here) should be defined as
-            // predicates (meta-predicates) in Merge.kif, or in
-            // some language-independent paraphrase scaffolding
-            // .kif file.
-            signature = (boolean[]) relnsWithRelnArgs.get("format");
-            if (signature == null) {
-                signature = new boolean[4];
-                // signature = { false, false, true, false };
-                for (int i = 0 ; i < signature.length ; i++) 
-                    signature[i] = (i == 2);                    
-                relnsWithRelnArgs.put("format", signature);
-            }
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * Returns a boolean[] if the input relation has at least one
-     * argument that must be filled by a relation name.
-     */
-    protected boolean[] getRelnArgSignature(String relation) {
-
-        if (relnsWithRelnArgs != null) {
-            return (boolean[]) relnsWithRelnArgs.get(relation);
-        }
-        return null;
-    }
-
-    /** *************************************************************
-     *  */
-    public HashMap<String,Object> relationValences = new HashMap<String,Object>();
-
-    /** *************************************************************
-     *  */
-    private void cacheRelationValences() {
-
-    	System.out.println("INFO in KBcache.cacheRelationValences()");
-        HashSet<String> relations = getCachedRelationValues("instance", "Relation", 2, 1);
-        if (relations != null) {
-            List<String> namePrefixes = Arrays.asList("VariableArity","Unary","Binary",
-                                                      "Ternary","Quaternary","Quintary");
-            int nplen = namePrefixes.size();
-            RelationCache ic1 = getRelationCache("instance", 1, 2);
-            RelationCache ic2 = getRelationCache("instance", 2, 1);
-            Iterator<String> it = relations.iterator();
-            while (it.hasNext()) {
-                String reln = it.next();
-                // Evaluate getValence() to build the relationValences cache, and use its 
-                // return value to fill in any info that might be missing from the "instance" cache.
-                int valence = kb.getValence(reln);
-                if ((valence > -1) && (valence < nplen)) {
-                    StringBuilder sb = new StringBuilder();
-                    if (reln.endsWith("Fn")) {
-                        if ((valence > 0) && (valence < 5)) {
-                            sb.append(namePrefixes.get(valence));
-                            sb.append("Function");
-                        }
-                    }
-                    else {
-                        sb.append(namePrefixes.get(valence));
-                        sb.append("Relation");
-                    }
-                    String className = sb.toString();
-                    if (StringUtil.isNonEmptyString(className)) {
-                        addRelationCacheEntry(ic1, reln, className);
-                        addRelationCacheEntry(ic2, className, reln);
-                    }
-                }
-            }    
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * Populates all caches with ground assertions, from which
-     * closures can be computed.
-     */
-    private void cacheGroundAssertions() {
-
-    	System.out.println("INFO in KBcache.cacheGroundAssertions()");
-        ArrayList<String> symmetric = getCachedSymmetricRelationNames();
-        ArrayList<String> reflexive = getCachedReflexiveRelationNames();
-        HashSet<String> subInverses = 
-                new HashSet<String>(kb.getTermsViaPredicateSubsumption("subrelation",
-                                                                      2, "inverse", 1,true));
-        subInverses.add("inverse");
-        Iterator<String> it = getCachedRelationNames().iterator();
+        Iterator<String> it = transRels.iterator();
         while (it.hasNext()) {
-            String relation = it.next();
-            ArrayList<Formula> forms = kb.ask("arg", 0, relation);
-            if (forms != null) {
-                RelationCache c1 = getRelationCache(relation, 1, 2);
-                RelationCache c2 = getRelationCache(relation, 2, 1);
-                RelationCache inv1 = (subInverses.contains(relation)
-                                    ? getRelationCache("inverse", 1, 2)
-                                    : null);
-                boolean isSubInverse = (inv1 != null);
-                Iterator<Formula> formsIt = forms.iterator();
-                while (formsIt.hasNext()) {
-                    Formula formula = formsIt.next();
-                    if ((formula.theFormula.indexOf("(",2) == -1)
-                        && !formula.sourceFile.endsWith(_cacheFileSuffix)) {
-                        String arg1 = formula.getArgument(1).intern();
-                        String arg2 = formula.getArgument(2).intern();
-                        if (StringUtil.isNonEmptyString(arg1)
-                            && StringUtil.isNonEmptyString(arg2)) {
-                            addRelationCacheEntry(c1, arg1, arg2);
-                            addRelationCacheEntry(c2, arg2, arg1);
-                            // Special cases.
-                            if (getCacheReflexiveAssertions()
-                                && reflexive.contains(relation)) {
-                                addRelationCacheEntry(c1, arg1, arg1);
-                                addRelationCacheEntry(c1, arg2, arg2);
-                                addRelationCacheEntry(c2, arg1, arg1);
-                                addRelationCacheEntry(c2, arg2, arg2);
-                            }
-                            if (symmetric.contains(relation))
-                                addRelationCacheEntry(c1, arg2, arg1);
-                            if (isSubInverse) {
-                                addRelationCacheEntry(c1, arg2, arg1);
-                                addRelationCacheEntry(inv1, arg1, arg2);
-                                addRelationCacheEntry(inv1, arg2, arg1);
-                            }
-                        }
+            String rel = it.next();
+            boolean instrel = true;
+            ArrayList<String> sig = signatures.get(rel);
+            if (sig == null) {
+                System.out.println("Error in KBcache.buildInstTransRels(): Error " + rel + " not found.");
+            }
+            else {
+                for (int i = 0; i < sig.size(); i++) {
+                    if (sig.get(i).endsWith("+")) {
+                        instrel = false;
+                        break;
                     }
                 }
+                if (instrel)
+                    instTransRels.add(rel);
             }
-            // More ways of collecting implied disjointness assertions.
-            if (relation.equals("disjoint")) {
-                ArrayList<Formula> partitions = kb.ask("arg", 0, "partition");
-                ArrayList<Formula> decompositions = kb.ask("arg", 0, "disjointDecomposition");
-                HashSet<Formula> formset = new HashSet<Formula>();
-                if (partitions != null)
-                    formset.addAll(partitions);
-                if (decompositions != null)
-                    formset.addAll(decompositions);
-                RelationCache c1 = getRelationCache(relation, 1, 2);
-                Iterator<Formula> formsIt = formset.iterator();
-                while (formsIt.hasNext()) {
-                    Formula formula = (Formula) formsIt.next();
-                    if ((formula.theFormula.indexOf("(",2) == -1)
-                        && !formula.sourceFile.endsWith(_cacheFileSuffix)) {
-                        ArrayList<String> arglist = formula.argumentsToArrayList(2);
-                        for (int i = 0 ; i < arglist.size() ; i++) {
-                            for (int j = 0 ; j < arglist.size() ; j++) {
-                                if (i != j) {
-                                    String arg1 = ((String) arglist.get(i)).intern();
-                                    String arg2 = ((String) arglist.get(j)).intern();
-                                    if (StringUtil.isNonEmptyString(arg1)
-                                        && StringUtil.isNonEmptyString(arg2)) {
-                                        addRelationCacheEntry(c1, arg1, arg2);
-                                        addRelationCacheEntry(c1, arg2, arg1);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return;
-    }
-
-    /** *************************************************************
-     * Populates all caches with ground assertions, from which
-     * closures can be computed.
-     */
-    private void cacheGroundAssertionsAndPredSubsumptionEntailments() {
-
-    	System.out.println("INFO in KBcache.cacheGroundAssertionsAndPredSubsumptionEntailments()");
-        ArrayList<String> symmetric = getCachedSymmetricRelationNames();
-        ArrayList<String> reflexive = getCachedReflexiveRelationNames();
-        Iterator<String> it = getCachedRelationNames().iterator();
-        while (it.hasNext()) {
-            String relation = it.next();
-            ArrayList<String> relationSet = 
-                    kb.getTermsViaPredicateSubsumption("subrelation", 2, relation, 1, true);
-            relationSet.add(relation);
-            HashSet<Formula> formulae = new HashSet<Formula>();
-            Iterator<String> itr = relationSet.iterator();
-            while (itr.hasNext()) {
-                ArrayList<Formula> forms = kb.ask("arg", 0, (String) itr.next());
-                if (forms != null) 
-                    formulae.addAll(forms);
-            }
-            if (!formulae.isEmpty()) {
-                RelationCache c1 = getRelationCache(relation, 1, 2);
-                RelationCache c2 = getRelationCache(relation, 2, 1);
-                Iterator<Formula> itf = formulae.iterator();
-                while (itf.hasNext()) {
-                    Formula f = itf.next();
-                    if ((f.theFormula.indexOf("(",2) == -1)
-                        && !f.sourceFile.endsWith(_cacheFileSuffix)) {
-                        String arg1 = f.getArgument(1).intern();
-                        String arg2 = f.getArgument(2).intern();
-                        if (StringUtil.isNonEmptyString(arg1) && StringUtil.isNonEmptyString(arg2)) {
-                            addRelationCacheEntry(c1, arg1, arg2);
-                            addRelationCacheEntry(c2, arg2, arg1);
-                            if (symmetric.contains(relation)) {
-                                addRelationCacheEntry(c1, arg2, arg1);
-                                addRelationCacheEntry(c2, arg1, arg2);
-                            }
-                            if (getCacheReflexiveAssertions()
-                                && reflexive.contains(relation)) {
-                                addRelationCacheEntry(c1, arg1, arg1);
-                                addRelationCacheEntry(c1, arg2, arg2);
-                                addRelationCacheEntry(c2, arg1, arg1);
-                                addRelationCacheEntry(c2, arg2, arg2);
-                            }
-                        }
-                    }
-                }
-            }
-            // More ways of collecting implied disjointness assertions.
-            if (relation.equals("disjoint")) {
-                formulae.clear();
-                ArrayList<Formula> partitions = kb.ask("arg", 0, "partition");
-                ArrayList<Formula> decompositions = kb.ask("arg", 0, "disjointDecomposition");
-                if (partitions != null)
-                    formulae.addAll(partitions);
-                if (decompositions != null)
-                    formulae.addAll(decompositions);
-                RelationCache c1 = getRelationCache(relation, 1, 2);
-                Iterator<Formula> itf = formulae.iterator();
-                while (itf.hasNext()) {
-                    Formula f = (Formula) itf.next();
-                    if ((f.theFormula.indexOf("(",2) == -1) && !f.sourceFile.endsWith(_cacheFileSuffix)) {
-                        ArrayList<String> arglist = f.argumentsToArrayList(2);
-                        for (int i = 0 ; i < arglist.size(); i++) {
-                            for (int j = 0; j < arglist.size(); j++) {
-                                if (i != j) {
-                                    String arg1 = arglist.get(i).intern();
-                                    String arg2 = arglist.get(j).intern();
-                                    if (StringUtil.isNonEmptyString(arg1)
-                                        && StringUtil.isNonEmptyString(arg2)) {
-                                        addRelationCacheEntry(c1, arg1, arg2);
-                                        addRelationCacheEntry(c1, arg2, arg1);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }               
-        }
-        return;
+        }        
     }
     
-    /** *************************************************************
-     * Builds all of the relation caches for the current KB.  If
-     * RelationCache Map objects already exist, they are cleared and
-     * discarded.  New RelationCache Maps are created, and all caches
-     * are rebuilt.
+    /** ***************************************************************
+     * Main entry point for the class.  
      */
-    public void buildRelationCaches() {
-
-    	System.out.println("INFO in KBcache.buildRelationCaches()");
-        long t1 = System.currentTimeMillis();
-        long totalCacheEntries = 0L;
-        initRelationCaches(true);
-        boolean changed = false;
-        for (int i = 1; i < 5; i++) {
-            changed = false;
-            cacheGroundAssertionsAndPredSubsumptionEntailments();  // 1
-            Iterator<String> it = getCachedTransitiveRelationNames().iterator();
-            while (it.hasNext()) {
-                String relationName = (String) it.next();
-                computeTransitiveCacheClosure(relationName);  //2
-            }
-            computeInstanceCacheClosure();
-            it = getCachedSymmetricRelationNames().iterator();
-            while (it.hasNext()) {
-                String relationName = it.next();
-                if (Arrays.asList("disjoint").contains(relationName))
-                    computeSymmetricCacheClosure(relationName); // 3
-            }
-            cacheRelnsWithRelnArgs(); // 4
-            cacheRelationValences();  // 5
-            long entriesAfterThisIteration = 0L;
-            Iterator<RelationCache> it2 = getRelationCaches().iterator();
-            while (it2.hasNext()) {
-                RelationCache relationCache = it2.next();
-                if (!relationCache.isEmpty()) {
-                    Iterator itv = relationCache.values().iterator();
-                    while (itv.hasNext()) 
-                        entriesAfterThisIteration += ((Set) itv.next()).size();                        
-                }
-            }
-            if (entriesAfterThisIteration > totalCacheEntries)
-                totalCacheEntries = entriesAfterThisIteration;
-            else
-                return;
-        }
-        System.out.println("Error: KBcache.buildRelationCaches() terminated early.");
-        return;
-    }
-
-    /** *************************************************************
-     * Builds all of the relation caches for the current KB.  If
-     * RelationCache Map objects already exist, they are cleared and
-     * discarded.  New RelationCache Maps are created, and all caches
-     * are rebuilt.
-     *
-     * @return void
-     */
-    public void buildRelationCaches(KB kb) {
-
-        this.kb = kb;
-        buildRelationCaches();
-        return;
-    }
-    
-    /** *************************************************************
-     * Instances of RelationCache hold the cached extensions and, when
-     * possible, the computed closures, of selected relations.
-     * Canonical examples are the caches for subclass and instance.   
-     * The key is the name of the term and the values are the terms
-     * that exist in the transitive closure of the relation for that term.    
-     */
-    class RelationCache extends HashMap<String,HashSet<String>> {
-
-        private String relationName = "";
-
-        public String getRelationName() {
-            return relationName;
-        }
-
-        private int keyArgument = -1;
-
-        public int getKeyArgument() {
-            return keyArgument;
-        }
-
-        private int valueArgument = -1;
-
-        public int getValueArgument() {
-            return valueArgument;
-        }
-
-        private boolean isClosureComputed = false;
-
-        public boolean getIsClosureComputed() {
-            return isClosureComputed;
-        }
-
-        public void setIsClosureComputed(boolean computed) {
-            isClosureComputed = computed;
-            return;
-        }
-
-        private RelationCache() {
-        }
-
-        public RelationCache(String predName, int keyArg, int valueArg) {
-            relationName = predName;
-            keyArgument = keyArg;
-            valueArgument = valueArg;
-        }
+    public void buildCaches() {
+        
+        buildRelationsSet();
+        buildTransitiveRelationsSet();
+        buildParents();
+        buildChildren(); // note that buildTransInstOf() depends on this
+        collectDomains();  // note that buildInstTransRels() depends on this
+        buildInstTransRels();
+        buildTransInstOf();
+        System.out.println("INFO in KBcache.buildCaches(): size: " + instances.keySet().size());
     }
     
     /** *************************************************************
@@ -1136,17 +777,83 @@ public class KBcache {
 
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        kb.kbCache.buildRelationCaches(kb);
-        ArrayList<RelationCache> rcs = kb.kbCache.getRelationCaches();
-        for (int i = 0; i < rcs.size(); i++) {
-            RelationCache rc = rcs.get(i);
-            System.out.println(rc.relationName);
+        System.out.println("**** Finished loading KB ***");
+        //KBcache nkbc = new KBcache(kb);
+        KBcache nkbc = kb.kbCache;
+        //nkbc.buildCaches();
+        //nkbc.buildRelationsSet();
+        System.out.println("-------------- relations ----------------");
+        Iterator<String> it = nkbc.relations.iterator();
+        while (it.hasNext()) 
+            System.out.print(it.next() + " ");
+        System.out.println();
+        //nkbc.buildTransitiveRelationsSet();
+        System.out.println("-------------- transitives ----------------");
+        it = nkbc.transRels.iterator();
+        while (it.hasNext()) 
+            System.out.print(it.next() + " ");
+        System.out.println();
+        System.out.println("-------------- parents ----------------");
+        //nkbc.buildParents();
+        it = nkbc.parents.keySet().iterator();
+        while (it.hasNext()) {
+            String rel = it.next();
+            System.out.println("Relation: " + rel);
+            HashMap<String,HashSet<String>> relmap = nkbc.parents.get(rel);
+            Iterator<String> it2 = relmap.keySet().iterator();
+            while (it2.hasNext()) {
+                String term = it2.next();
+                System.out.println(term + ": " + relmap.get(term));
+            }
+            System.out.println();
+        }
+        System.out.println();
+        System.out.println("-------------- children ----------------");
+        //nkbc.buildChildren();
+        it = nkbc.children.keySet().iterator();
+        while (it.hasNext()) {
+            String rel = it.next();
+            System.out.println("Relation: " + rel);
+            HashMap<String,HashSet<String>> relmap = nkbc.children.get(rel);
+            Iterator<String> it2 = relmap.keySet().iterator();
+            while (it2.hasNext()) {
+                String term = it2.next();
+                System.out.println(term + ": " + relmap.get(term));
+            }
+            System.out.println();
+        }
+        System.out.println();
+        System.out.println("-------------- domains ----------------");
+        //nkbc.collectDomains();
+        Iterator<String> it3 = nkbc.relations.iterator();
+        while (it3.hasNext()) {
+            String rel = it3.next();
+            ArrayList<String> domains = nkbc.signatures.get(rel);
+            System.out.println(rel + ": " + domains);
+        }
+        System.out.println();
+        System.out.println("-------------- valences ----------------");
+        Iterator<String> it4 = nkbc.valences.keySet().iterator();
+        while (it4.hasNext()) {
+            String rel = it4.next();
+            Integer arity = nkbc.valences.get(rel);
+            System.out.println(rel + ": " + arity);
+        }
+        System.out.println();
+        System.out.println("-------------- insts ----------------");
+        Iterator<String> it5 = nkbc.insts.iterator();
+        while (it5.hasNext()) {
+            String inst = it5.next();
+            System.out.print(inst + ", ");
+        }
+        System.out.println();
+        System.out.println();
+        System.out.println("-------------- instances ----------------");
+        Iterator<String> it6 = nkbc.instances.keySet().iterator();
+        while (it6.hasNext()) {
+            String inst = it6.next();
+            System.out.println(inst + ": " + nkbc.instances.get(inst));
         }
         
-        HashMap<String,Object> stc = kb.kbCache.getSortalTypeCache();
-        for (int i = 0; i < rcs.size(); i++) {
-            RelationCache rc = rcs.get(i);
-            System.out.println(rc.relationName);
-        }
     }
 }
