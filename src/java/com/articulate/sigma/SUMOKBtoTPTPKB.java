@@ -50,7 +50,7 @@ public class SUMOKBtoTPTPKB {
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in KB.tptpParse(): " + ex.getMessage());
+            System.out.println("Error in SUMOKBtoTPTPKB.tptpParse(): " + ex.getMessage());
             ex.printStackTrace();
         }
         return goodCount;
@@ -202,6 +202,26 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     */
+    public class OrderedFormulae extends TreeSet<Formula> {
+        
+        public int compare(Object o1, Object o2) {
+            Formula f1 = (Formula) o1;
+            Formula f2 = (Formula) o2;
+            int fileCompare = f1.sourceFile.compareTo(f2.sourceFile);
+            if (fileCompare == 0) {
+                fileCompare = (new Integer(f1.startLine))
+                    .compareTo(new Integer(f2.startLine));
+                if (fileCompare == 0) {
+                    fileCompare = (new Long(f1.endFilePosition))
+                        .compareTo(new Long(f2.endFilePosition));
+                }
+            }
+            return fileCompare;
+        }
+    }
+    
+    /** *************************************************************
      *  Write all axioms in the KB to TPTP format.
      *
      * @param fileName - the full pathname of the file to write
@@ -209,12 +229,13 @@ public class SUMOKBtoTPTPKB {
     public String writeTPTPFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
                                 String reasoner, boolean isQuestion, PrintWriter pw) {
 
+        //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile()");
         String result = null;
         PrintWriter pr = null;
         try {
             File outputFile;
             int axiomIndex = 1;   // a count appended to axiom names to make a unique ID
-            TreeMap<String,String> relationMap = new TreeMap<String,String>(); // A Map of varaible arity relations keyed by new name
+            TreeMap<String,String> relationMap = new TreeMap<String,String>(); // A Map of variable arity relations keyed by new name
             String sanitizedKBName = kb.name.replaceAll("\\W","_");
             //----If file name is a directory, create filename therein
             if (fileName == null) {
@@ -239,6 +260,7 @@ public class SUMOKBtoTPTPKB {
                 pr.println("% This is a translation to TPTP of KB " + sanitizedKBName);
                 pr.println("");
             }
+            /*
             TreeSet<Formula> orderedFormulae = new TreeSet<Formula>(new Comparator() {
                     public int compare(Object o1, Object o2) {
                         Formula f1 = (Formula) o1;
@@ -254,15 +276,18 @@ public class SUMOKBtoTPTPKB {
                         }
                         return fileCompare;
                     } });
+                    */
+            OrderedFormulae orderedFormulae = new OrderedFormulae();
             orderedFormulae.addAll(kb.formulaMap.values());
-            kb.kbCache.resetSortalTypeCache();
+            //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
+            //kb.kbCache.buildCaches();
             List<String> tptpFormulas = null;
             String oldSourceFile = "";
             String sourceFile = "";
             File sf = null;
             Iterator<Formula> ite = orderedFormulae.iterator();
             String theTPTPFormula = null;
-            System.out.print("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): writing file");
+            //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): writing file: " + sanitizedKBName);
             int counter = 0;
             while (ite.hasNext()) {
                 Formula f = ite.next();
@@ -285,24 +310,24 @@ public class SUMOKBtoTPTPKB {
                 //if (onlyPlainFOL && !tptpFormulas.isEmpty()
                 //    && !mgr.getPref("holdsPrefix").equalsIgnoreCase("yes")
                 //    && f.containsVariableArityRelation(kb)) {
-                    Formula tmpF = new Formula();
-                    tmpF.read(f.theFormula);
-                    //System.out.println("Form: " + f.theFormula);
-                    FormulaPreprocessor fp = new FormulaPreprocessor(tmpF);
-                    List<Formula> processed = fp.preProcess(false, kb);
-                    if (!processed.isEmpty()) {
-                    	ArrayList<Formula> withRelnRenames = new ArrayList<Formula>();
-                        Iterator<Formula> procit = processed.iterator();
-                        while (procit.hasNext()) {
-                        	Formula f2 = procit.next();
-                            withRelnRenames.add(f2.renameVariableArityRelations(kb,relationMap));
-                        }
-                        SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                    	stptp._f = tmpF;
-                    	stptp.tptpParse(tmpF,false, kb, withRelnRenames);
-                        tptpFormulas = tmpF.getTheTptpFormulas();
-                        //System.out.println(tptpFormulas);
+                Formula tmpF = new Formula();
+                tmpF.read(f.theFormula);
+                //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): " + f.theFormula);
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                List<Formula> processed = fp.preProcess(tmpF,false, kb);
+                if (!processed.isEmpty()) {
+                	ArrayList<Formula> withRelnRenames = new ArrayList<Formula>();
+                    Iterator<Formula> procit = processed.iterator();
+                    while (procit.hasNext()) {
+                    	Formula f2 = procit.next();
+                        withRelnRenames.add(f2.renameVariableArityRelations(kb,relationMap));
                     }
+                    SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                	stptp._f = tmpF;
+                	stptp.tptpParse(tmpF,false, kb, withRelnRenames);
+                    tptpFormulas = tmpF.getTheTptpFormulas();
+                    //System.out.println(tptpFormulas);
+                }
                 //}
                 Iterator<String> tptpIt = tptpFormulas.iterator();
                 while (tptpIt.hasNext()) {
@@ -354,12 +379,12 @@ public class SUMOKBtoTPTPKB {
             result = canonicalPath;
         }
         catch (Exception ex) {
-        	System.out.println("Error in KB.writeTPTPfile(): " + ex.getMessage());
+        	System.out.println("Error in SUMOKBtoTPTPKB.writeTPTPfile(): " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
             try {
-                kb.kbCache.clearSortalTypeCache();
+                //kb.kbCache.clearSortalTypeCache();
                 if (pr != null) pr.close();
             }
             catch (Exception ioe) {
