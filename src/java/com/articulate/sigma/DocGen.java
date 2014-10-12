@@ -470,7 +470,7 @@ public class DocGen {
                 // Ontology, using predicate subsumption to take
                 // advantage of any predicates that have been
                 // liked with SUMO's predicates.
-                for (it = kb.getAllInstancesWithPredicateSubsumption("Ontology")
+                for (it = kb.kbCache.instances.get("Ontology")
                         .iterator(); it.hasNext();) {
                     candidates.add((String) it.next());
                 }
@@ -566,8 +566,8 @@ public class DocGen {
                 codedIdentifiers = new TreeSet();
             }
             if (codedIdentifiers.isEmpty()) {
-                Set codes = kb.getAllInstancesWithPredicateSubsumption("CodedIdentifier");
-                Set classNames = kb.getAllSubClassesWithPredicateSubsumption("CodedIdentifier");
+                Set codes = kb.kbCache.instances.get("CodedIdentifier");
+                Set classNames = kb.kbCache.instances.get("CodedIdentifier");
                 classNames.add("CodedIdentifier");
                 Object[] namesArr = classNames.toArray();
                 if (namesArr != null) {
@@ -1642,7 +1642,7 @@ public class DocGen {
                 result.append("    <td valign=\"top\" class=\"title\">");
                 result.append(StringUtil.getLineSeparator());
                 result.append("      ");
-                result.append(showTermName(kb,term,language,true));
+                result.append(showTermName(kb,term,language));
                 result.append(StringUtil.getLineSeparator());
                 result.append("    </td>");
                 result.append(StringUtil.getLineSeparator());
@@ -1924,7 +1924,7 @@ public class DocGen {
             result.append("    <td valign=\"top\" class=\"title\">");
             result.append(StringUtil.getLineSeparator());
             result.append("      ");
-            result.append(showTermName(kb,term,language,true));
+            result.append(showTermName(kb,term,language));
             result.append(StringUtil.getLineSeparator());
             result.append("      ");
             result.append(StringUtil.getLineSeparator());
@@ -2394,7 +2394,7 @@ public class DocGen {
                         kb = (KB) it.next();
                         reduce.addAll(kb.getTermsViaAsk(0,"inNamespace",2));
                         reduce.addAll(kb.getTermsViaAsk(0,"ontologyNamespace",2));
-                        reduce.addAll(kb.getAllInstancesWithPredicateSubsumption("Namespace"));
+                        reduce.addAll(kb.kbCache.instances.get("Namespace"));
                     }
                     if (!reduce.isEmpty()) 
                         namespaces.addAll(reduce);
@@ -2445,7 +2445,7 @@ public class DocGen {
                     if (StringUtil.isNonEmptyString(ontology)) {
                         reduce.addAll(getOntologyNamespaces(kb, ontology));
                     }
-                    reduce.addAll(kb.getAllInstancesWithPredicateSubsumption("Namespace"));
+                    reduce.addAll(kb.kbCache.instances.get("Namespace"));
                     namespaces.addAll(reduce);
                     if (namespaces.size() > 1)
                         sortByTermLength(namespaces);
@@ -2621,7 +2621,7 @@ public class DocGen {
             cached = (ArrayList) getRelationsByKB().get(kb);
             if (cached == null) {
                 TreeSet predSet = new TreeSet();
-                Set classNames = kb.getAllSubClassesWithPredicateSubsumption("Predicate");
+                Set classNames = kb.kbCache.instances.get("Predicate");
                 classNames.add("Predicate");
                 classNames.add("BinaryPredicate");
                 Iterator it = classNames.iterator();
@@ -3655,7 +3655,7 @@ public class DocGen {
                     hrefSB.append(StringUtil.toSafeNamespaceDelimiter(kbHref, extended));
                     hrefSB.append(suffix);
                     hrefSB.append("\">");
-                    hrefSB.append(showTermName(kb, extended, language, true));
+                    hrefSB.append(showTermName(kb, extended, language));
                     hrefSB.append("</a>");
                     if (isFirst) {
                         result.append("  <td valign=\"top\" class=\"cell\">");
@@ -3736,7 +3736,7 @@ public class DocGen {
                             hrefSB.append(StringUtil.toSafeNamespaceDelimiter(kbHref, extension));
                             hrefSB.append(suffix);
                             hrefSB.append("\">");
-                            hrefSB.append(showTermName(kb, extension, language, true));
+                            hrefSB.append(showTermName(kb, extension, language));
                             hrefSB.append("</a>");
                             if (isFirst) {
                                 result.append("  <td valign=\"top\" class=\"cell\">");
@@ -3835,7 +3835,7 @@ public class DocGen {
                         hrefSB.append(StringUtil.toSafeNamespaceDelimiter(kbHref, parent));
                         hrefSB.append(suffix);
                         hrefSB.append("\">");
-                        hrefSB.append(showTermName(kb, parent, language, true));
+                        hrefSB.append(showTermName(kb, parent, language));
                         hrefSB.append("</a>");
                         if (!isFirst) {
                             sb.append("<tr>");
@@ -3939,7 +3939,7 @@ public class DocGen {
                                        + StringUtil.toSafeNamespaceDelimiter(kbHref, s)
                                        + suffix 
                                        + "\">" 
-                                       + showTermName(kb, s, language, true) 
+                                       + showTermName(kb, s, language) 
                                        + "</a>");
                     if (!isFirst) result.append("<tr><td>&nbsp;</td>");                
                     result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td>");
@@ -4026,7 +4026,7 @@ public class DocGen {
                     }
                 }
 
-                instances.addAll(kb.getAllInstancesWithPredicateSubsumption(term, false));
+                instances.addAll(kb.kbCache.instances.get(term));
                 Set instSet = new HashSet();
                 for (Iterator its = instances.iterator(); its.hasNext();) {
                     inst = (String) its.next();
@@ -4052,9 +4052,9 @@ public class DocGen {
                             result.append("<tr><td>&nbsp;</td>");
                         }
                         inst = (String) instances.get(j);
-                        displayName = showTermName(kb, inst, language, true);
+                        displayName = showTermName(kb, inst, language);
                         if (displayName.contains(inst)) {
-                            xmlName = showTermName(kb, inst, "XMLLabel", true);
+                            xmlName = showTermName(kb, inst, "XMLLabel");
                             if (!StringUtil.emptyString(xmlName)) 
                                 displayName = xmlName;
                         }
@@ -4189,7 +4189,7 @@ public class DocGen {
                 sb.append(StringUtil.toSafeNamespaceDelimiter(kbHref, currentTerm));
                 sb.append(suffix);
                 sb.append("\">");
-                sb.append(showTermName(kb, currentTerm, context, true));
+                sb.append(showTermName(kb, currentTerm, context));
                 sb.append("</a>");
             }
             result = sb.toString();
@@ -4300,7 +4300,7 @@ public class DocGen {
                                      + StringUtil.toSafeNamespaceDelimiter(kbHref, relation)
                                      + suffix 
                                      + "\">" 
-                                     + showTermName(kb,relation,language,true) 
+                                     + showTermName(kb,relation,language) 
                                      + "</a>");
                                 int m = 0;
                                 for (Iterator itv = vals.iterator(); itv.hasNext(); m++) {
@@ -4530,7 +4530,7 @@ public class DocGen {
             sb.append("  <td valign=\"top\" class=\"cell\">");
             String dataTypeName = getFirstDatatype(kb, term);
             if (StringUtil.isNonEmptyString(dataTypeName)) {
-                String dtToPrint = showTermName(kb, dataTypeName, language, true);                
+                String dtToPrint = showTermName(kb, dataTypeName, language);                
                 sb.append("<a href=\"");
                 sb.append(kbHref);
                 sb.append(StringUtil.toSafeNamespaceDelimiter(kbHref, dataTypeName));
@@ -4582,57 +4582,54 @@ public class DocGen {
      * context-specific form can be found or produced
      * 
      */
-    public String showTermName(KB kb, String term, String language, boolean withSpanTags) {
+    public String showTermName(KB kb, String term, String language) {
+    	//, boolean withSpanTags) {    
 
         String ans = term;
-        try {
-            ans = StringUtil.removeEnclosingQuotes(ans);
-            String termFormat = getFirstTermFormat(kb, term, Arrays.asList(language));
-            if (StringUtil.emptyString(termFormat)) {
-                termFormat = (String) kb.getTermFormatMap(language).get(term);
-            }
-            if (StringUtil.emptyString(termFormat)) {
-                termFormat = (String) kb.getTermFormatMap("EnglishLanguage").get(term);
-            }
-            if (StringUtil.isNonEmptyString(termFormat)) {
-                ans = StringUtil.removeEnclosingQuotes(termFormat);
+        ans = StringUtil.removeEnclosingQuotes(ans);
+        String termFormat = getFirstTermFormat(kb, term, Arrays.asList(language));
+        if (StringUtil.emptyString(termFormat)) {
+            termFormat = (String) kb.getTermFormatMap(language).get(term);
+        }
+        if (StringUtil.emptyString(termFormat)) {
+            termFormat = (String) kb.getTermFormatMap("EnglishLanguage").get(term);
+        }
+        if (StringUtil.isNonEmptyString(termFormat)) {
+            ans = StringUtil.removeEnclosingQuotes(termFormat);
+        }
+        /*else {
+            String namespace = getTermNamespace(kb, term);
+            if (StringUtil.isNonEmptyString(namespace) 
+                && (namespace.equals(language)
+                    || namespace.equals(getDefaultNamespace()))) {
+                ans = stripNamespacePrefix(kb, term);
             }
             else {
-                String namespace = getTermNamespace(kb, term);
-                if (StringUtil.isNonEmptyString(namespace) 
-                    && (namespace.equals(language)
-                        || namespace.equals(getDefaultNamespace()))) {
-                    ans = stripNamespacePrefix(kb, term);
-                }
-                else {
-                    ans = StringUtil.kifToW3c(term);
-                }
+                ans = StringUtil.kifToW3c(term);
             }
-            if (getCodedIdentifiers(kb).contains(term)) {  //(term, "IsoCode")) {
-                List<String> delims = Arrays.asList(StringUtil.getW3cNamespaceDelimiter(), 
-                                                    StringUtil.getKifNamespaceDelimiter());
-                for (String delim : delims) {
-                    int idx = ans.indexOf(delim);
-                    if (idx > -1) {
-                        idx += delim.length();
-                        if (idx < ans.length()) {
-                            ans = ans.substring(idx);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (withSpanTags) {
-                if (StringUtil.isNonEmptyString(ans)) {
-                    if (isXmlAttribute(kb, term)) {
-                        ans = ("<span class=\"attribute\">" + ans + "</span>");
+        }
+        if (getCodedIdentifiers(kb).contains(term)) {  //(term, "IsoCode")) {
+            List<String> delims = Arrays.asList(StringUtil.getW3cNamespaceDelimiter(), 
+                                                StringUtil.getKifNamespaceDelimiter());
+            for (String delim : delims) {
+                int idx = ans.indexOf(delim);
+                if (idx > -1) {
+                    idx += delim.length();
+                    if (idx < ans.length()) {
+                        ans = ans.substring(idx);
+                        break;
                     }
                 }
             }
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
+        if (withSpanTags) {
+            if (StringUtil.isNonEmptyString(ans)) {
+                if (isXmlAttribute(kb, term)) {
+                    ans = ("<span class=\"attribute\">" + ans + "</span>");
+                }
+            }
         }
+        */        
         return ans;
     }
 
@@ -4652,11 +4649,11 @@ public class DocGen {
      * @return A String providing a context-specific name for term,
      * possibly including HTML markup, or just term
      * 
-     */
+     
     public String showTermName(KB kb, String term, String language) {
         return showTermName(kb, term, language, false);
     }
-
+*/
     /** *************************************************************
      * Returns a String containing HTML markup for a hierarchy or tree
      * display of terms that denote nested composite components.
@@ -4880,7 +4877,7 @@ public class DocGen {
                         sb.append(StringUtil.toSafeNamespaceDelimiter(kbHref, containingComp));
                         sb.append(suffix);
                         sb.append("\">");
-                        sb.append(showTermName(kb,containingComp,language,true));
+                        sb.append(showTermName(kb,containingComp,language));
                         sb.append("</a></td>");
                         sb.append(StringUtil.getLineSeparator());
                         sb.append("  <td valign=\"top\" class=\"cell\">");
@@ -5076,7 +5073,7 @@ public class DocGen {
                 result.append(StringUtil.toSafeNamespaceDelimiter(kbHref, className));
                 result.append(suffix); 
                 result.append("\">");
-                result.append(showTermName(kb, className, language, true));
+                result.append(showTermName(kb, className, language));
                 result.append("</a>");        
                 result.append("  </td>");
                 result.append(StringUtil.getLineSeparator());
@@ -5527,7 +5524,7 @@ public class DocGen {
                         // continue;
                         docString = "[missing definition]";
                     }
-                    termToPrint = showTermName(kb, realTermName, language, true);
+                    termToPrint = showTermName(kb, realTermName, language);
                     sb.append("  <tr>");
                     sb.append(StringUtil.getLineSeparator());
 
@@ -6070,7 +6067,7 @@ public class DocGen {
                             // Term
                             pw.println("    <td valign=\"top\" class=\"cell\">");
                             printableTerm = (getSimplified()
-                                             ? showTermName(kb, term, language, true)
+                                             ? showTermName(kb, term, language)
                                              : term);
                             pw.print("      <a href=\"");
                             pw.print(StringUtil.toSafeNamespaceDelimiter(term));
@@ -6388,19 +6385,8 @@ public class DocGen {
      * @return true or false
      */
     protected static boolean isInstanceOf(KB kb, String i, String c) {
-        boolean ans = false;
-        try {
-            Set classes = (Set) isInstanceOfCache.get(i);
-            if (classes == null) {
-                classes = kb.getAllInstanceOfsWithPredicateSubsumption(i);
-                isInstanceOfCache.put(i, classes);
-            }
-            ans = classes.contains(c);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
+
+        return kb.kbCache.instances.get(i).contains(c);
     }
 
     /** *************************************************************
