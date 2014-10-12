@@ -205,8 +205,8 @@ public class Mapping {
                 int tab3 = line.indexOf("\t",tab2+1);
                 String term1 = line.substring(tab1+1,tab2);
                 String term2 = line.substring(tab2+1,tab3);
-                term1 = OWLtranslator.StringToKIFid(term1);
-                term2 = OWLtranslator.StringToKIFid(term2);
+                term1 = StringUtil.StringToKIFid(term1);
+                term2 = StringUtil.StringToKIFid(term2);
                 System.out.println("(" + relName + " " + term1 + " " + term2 + ")");
             }
         }

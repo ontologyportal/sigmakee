@@ -169,7 +169,7 @@ public class OWLtranslator {
 
         String result = removeQuotes(s);
         result = result.substring(1,s.length()-1);  // remove outer parens
-        result = StringToKIFid(result);
+        result = StringUtil.StringToKIFid(result);
         functionTable.put(s,result);
         return result;
     }
@@ -222,35 +222,6 @@ public class OWLtranslator {
     }
 
     /** ***************************************************************
-     *  Convert an arbitrary string to a legal KIF identifier by
-     *  substituting dashes for illegal characters. ToDo:
-     *  isJavaIdentifierPart() isn't sufficient, since it allows
-     *  characters KIF doesn't
-     */
-    public static String StringToKIFid(String s) {
-
-        if (s == null) 
-            return s;
-        s = s.trim();
-        if (s.length() < 1)
-            return s;
-        if (s.length() > 1 && s.charAt(0) == '"' && s.charAt(s.length()-1) == '"') 
-            s = s.substring(1,s.length()-1);        
-        if (s.charAt(0) != '?' &&
-            (!Character.isJavaIdentifierStart(s.charAt(0)) || 
-               s.charAt(0) > 122))
-               s = "S" + s.substring(1);
-        int i = 1;
-        while (i < s.length()) {
-            if (!Character.isJavaIdentifierPart(s.charAt(i)) || 
-                s.charAt(i) > 122) 
-                s = s.substring(0,i) + "-" + s.substring(i+1);
-            i++;
-        }
-        return s;
-    }
-
-    /** ***************************************************************
      */
     private static String getParentReference(SimpleElement se) {
 
@@ -273,7 +244,7 @@ public class OWLtranslator {
                     value = value.substring(value.indexOf("#") + 1);
             }
         }
-        return StringToKIFid(value);
+        return StringUtil.StringToKIFid(value);
     }
 
     /** ***************************************************************
@@ -314,7 +285,7 @@ public class OWLtranslator {
                     }
                 }
             }
-            parentTerm = StringToKIFid(parentTerm);
+            parentTerm = StringUtil.StringToKIFid(parentTerm);
             // pw.println(";; parentTerm" + parentTerm);
             if ((tag.equals("owl:ObjectProperty") || tag.equals("owl:DatatypeProperty") || 
                  tag.equals("owl:InverseFunctionalProperty")) && parentTerm != null) 
@@ -331,7 +302,7 @@ public class OWLtranslator {
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                value = StringToKIFid(value);
+                value = StringUtil.StringToKIFid(value);
                 if (value != null && parentTerm != null) 
                     pw.println(indent + "(domain " + parentTerm + " 1 " + value + ")");
             }
@@ -341,7 +312,7 @@ public class OWLtranslator {
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                value = StringToKIFid(value);
+                value = StringUtil.StringToKIFid(value);
                 if (value != null && parentTerm != null) 
                     pw.println(indent + "(domain " + parentTerm + " 2 " + value + ")");
             }
@@ -375,13 +346,13 @@ public class OWLtranslator {
                         value = value.substring(value.indexOf("#") + 1);
                 }
             }
-            value = StringToKIFid(value);
+            value = StringUtil.StringToKIFid(value);
             if (value != null && parentTerm != null) 
                 pw.println(indent + "(inverse " + parentTerm + " " + value + ")");
         }
         else if (tag.equals("rdfs:subClassOf")) {
             value = getParentReference(se);
-            value = StringToKIFid(value);
+            value = StringUtil.StringToKIFid(value);
             if (value != null) 
                 pw.println(indent + "(subclass " + parentTerm + " " + value + ")");           
             else
@@ -398,7 +369,7 @@ public class OWLtranslator {
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                value = StringToKIFid(value);
+                value = StringUtil.StringToKIFid(value);
                 pw.println(indent + "(instance " + value + " SingleValuedRelation)");
             }
         }
@@ -406,7 +377,7 @@ public class OWLtranslator {
         else if (tag.equals("owl:maxCardinality")) { }
         else if (tag.equals("rdf:type")) {
             value = getParentReference(se);
-            value = StringToKIFid(value);
+            value = StringUtil.StringToKIFid(value);
             if (value != null) 
                 pw.println(indent + "(instance " + parentTerm + " " + value + ")"); 
             else
@@ -417,8 +388,8 @@ public class OWLtranslator {
             if (value != null) {                
                 if (value.indexOf("#") > -1) 
                     value = value.substring(value.indexOf("#") + 1);
-                value = StringToKIFid(value);
-                tag = StringToKIFid(tag);
+                value = StringUtil.StringToKIFid(value);
+                tag = StringUtil.StringToKIFid(tag);
                 if (value != null && parentTerm != null) 
                     pw.println(indent + "(" + tag + " " + parentTerm + " " + value + ")");
             }
@@ -429,7 +400,7 @@ public class OWLtranslator {
                 if (datatype == null || 
                     (!datatype.endsWith("integer") && !datatype.endsWith("decimal"))) 
                     text = "\"" + text + "\"";
-                tag = StringToKIFid(tag);
+                tag = StringUtil.StringToKIFid(tag);
                 if (!DB.emptyString(text) && !text.equals("\"\"")) {
                     if (parentTerm != null && tag != null && text != null)  
                         pw.println(indent + "(" + tag + " " + parentTerm + " " + text + ")"); 
@@ -558,7 +529,7 @@ public class OWLtranslator {
             for (int i = 0; i < syn.size(); i++) {
                 Formula form = (Formula) syn.get(i);
                 String st = form.getArgument(1);
-                st = StringToKIFid(st);
+                st = StringUtil.StringToKIFid(st);
                 String lang = form.getArgument(3);
                 if (termType.equals("relation")) 
                     pw.println("  <owl:equivalentProperty rdf:resource=\"" + (lang.equals("Entity") ? "&owl;Thing" : "#" + lang) + ":" + st + "\" />");
@@ -891,7 +862,7 @@ public class OWLtranslator {
             for (int i = 0; i < syn.size(); i++) {
                 Formula form = (Formula) syn.get(i);
                 String st = form.getArgument(1);
-                st = StringToKIFid(st);
+                st = StringUtil.StringToKIFid(st);
                 String lang = form.getArgument(3);
                 pw.println("  <owl:equivalentClass rdf:resource=\"" + (lang.equals("Entity") ? "&owl;Thing" : "#" + lang) + ":" + st + "\" />");
             }
@@ -1239,7 +1210,7 @@ public class OWLtranslator {
                 pw.println("  <rdfs:label>" + ((String) al.get(0)) + "</rdfs:label>");
             for (int i = 0; i < al.size(); i++) {
                 String word = (String) al.get(i);
-                String wordAsID = StringToKIFid(word);
+                String wordAsID = StringUtil.StringToKIFid(word);
                 pw.println("  <wnd:word rdf:resource=\"#WN30Word-" + wordAsID + "\"/>");
             }
             String doc = null;
@@ -1255,7 +1226,7 @@ public class OWLtranslator {
             if (al != null) {
                 for (int i = 0; i < al.size(); i++) {
                     AVPair avp = (AVPair) al.get(i);
-                    String rel = StringToKIFid(avp.attribute);
+                    String rel = StringUtil.StringToKIFid(avp.attribute);
                     pw.println("  <wnd:" + rel + " rdf:resource=\"#WN30-" + avp.value + "\"/>");
                 }
             }
@@ -1298,7 +1269,7 @@ public class OWLtranslator {
      */
     private void writeOneWordToSenses(PrintWriter pw, String word) {
 
-        String wordAsID = StringToKIFid(word);
+        String wordAsID = StringUtil.StringToKIFid(word);
         pw.println("<owl:Thing rdf:about=\"#WN30Word-" + wordAsID + "\">");
         pw.println("  <rdf:type rdf:resource=\"#Word\"/>");
         pw.println("  <rdfs:label xml:lang=\"en\">" + word + "</rdfs:label>");
