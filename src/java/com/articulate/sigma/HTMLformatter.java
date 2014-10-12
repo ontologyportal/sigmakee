@@ -351,6 +351,28 @@ public class HTMLformatter {
     }
 
     /** *****************************************************
+    */
+    public static ArrayList<String> getAllRelTerms(KB kb, ArrayList<String> matchesList) {
+        
+        ArrayList<String> result = new ArrayList<String>();
+        for (int i = 0; i < matchesList.size(); i++) 
+            if (kb.kbCache.relations.contains(matchesList.get(i)))
+                result.add(matchesList.get(i));
+        return result;
+    }
+    
+    /** *****************************************************
+    */
+    public static ArrayList<String> getAllNonRelTerms(KB kb, ArrayList<String> matchesList) {
+        
+        ArrayList<String> result = new ArrayList<String>();
+        for (int i = 0; i < matchesList.size(); i++) 
+            if (!kb.kbCache.relations.contains(matchesList.get(i)))
+                result.add(matchesList.get(i));
+        return result;
+    }
+   
+    /** *****************************************************
     * Show list of 30 relation & nonRelation terms that contain a match to the input RE term. The inputed Strings 
     * relREmatch and nonRelREmatch are the two relation and nonRelation terms respectively that are the first terms
     * at the top of the list. They are passed into the method to keep track of what 30 terms are being viewed. 
@@ -361,12 +383,12 @@ public class HTMLformatter {
         try {	
         	StringBuilder show = new StringBuilder();
         	ArrayList<String> matchesList = kb.getREMatch(term);
-        	ArrayList<String> relTermsList = KBcache.getAllRelTerms(matchesList);
-        	ArrayList<String> nonRelTermsList = KBcache.getAllNonRelTerms(matchesList);
+        	ArrayList<String> relTermsList = getAllRelTerms(kb,matchesList);
+        	ArrayList<String> nonRelTermsList = getAllNonRelTerms(kb,matchesList);
         	ArrayList<String> largerList = (relTermsList.size()>nonRelTermsList.size())?relTermsList:nonRelTermsList;
         	ArrayList<String> smallerList = (relTermsList.size()>nonRelTermsList.size())?nonRelTermsList:relTermsList;
         	int sizeDiff = largerList.size() - smallerList.size();
-        	for (int i = 0; i<sizeDiff ; i++) {				//buffer smaller list
+        	for (int i = 0; i < sizeDiff; i++) {				//buffer smaller list
         		smallerList.add("");
         	} 
         	show.append("<table><tr><td>");
@@ -478,9 +500,9 @@ public class HTMLformatter {
         for (int i = start; i < localLimit; i++) {
         	System.out.println(forms.get(i).getClass().getName());
         	String strForm = forms.get(i).theFormula;
-        	System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
+        	//System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
             Formula f = (Formula) kb.formulaMap.get(strForm);
-        	System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
+        	//System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
             if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
                 String arg0 = f.getArgument(0);
@@ -667,8 +689,10 @@ public class HTMLformatter {
      * a colon, and then the axiom.  There must be no other colon
      * characters.
      */
-    public static String formatErrors(KB kb, String kbHref) {
-    	
+    //public static String formatErrors(KB kb, String kbHref) {
+    public static String formatErrors(KB kb) {
+        
+        System.out.println("INFO in HTMLformatter.formatErrors(): href: " + kbHref);
         StringBuilder result = new StringBuilder();
         Iterator<String> it = kb.errors.iterator();
         while (it.hasNext()) {
@@ -682,7 +706,8 @@ public class HTMLformatter {
                 end = err.substring(p + 1);
                 Formula f = new Formula();
                 f.theFormula = end;
-                end = f.htmlFormat(kbHref);
+                //end = f.htmlFormat(kbHref);
+                end = f.htmlFormat(kb);
             }
             else
                 begin = err;
