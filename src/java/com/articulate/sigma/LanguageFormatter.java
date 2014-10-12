@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ import com.articulate.sigma.KB;
  */
 public class LanguageFormatter {
 
-    private static HashMap keywordMap = null;
+    private static HashMap<String,HashMap<String,String>> keywordMap = null;
 
     private static final String PHRASES_FILENAME = "language.txt";
 
@@ -51,9 +52,9 @@ public class LanguageFormatter {
             System.out.println("Error in LanguageFormatter.getKeyword(): keyword map is null");
             return ans;
         }
-        HashMap hm = (HashMap) keywordMap.get(englishWord);
+        HashMap<String,String> hm = keywordMap.get(englishWord);
         if (hm != null) {
-            String tmp = (String) hm.get(language);
+            String tmp = hm.get(language);
             if (tmp != null)
                 ans = tmp;
         }
@@ -69,7 +70,6 @@ public class LanguageFormatter {
         String comma = getKeyword(",", language);
         String space = " ";
         String[] arr = strseq.split(space);
-        String connector = null;
         int last = (arr.length - 1);
         for (int i = 0; i < arr.length; i++) {
             if (i > 0) {
@@ -104,11 +104,11 @@ public class LanguageFormatter {
      *  English phrase, and the interior HashMap has a key of the two letter
      *  language identifier.
      */
-    public static HashMap readKeywordMap(String dir) {
+    public static HashMap<String,HashMap<String,String>> readKeywordMap(String dir) {
 
         System.out.println("INFO in LanguageFormatter.readKeywordMap(" + dir + ")");
         if (keywordMap == null)
-            keywordMap = new HashMap();
+            keywordMap = new HashMap<String,HashMap<String,String>>();
         int lc = 0;
         BufferedReader br = null;
         File phrasesFile = null;
@@ -121,9 +121,9 @@ public class LanguageFormatter {
                     throw new Exception("Cannot read \"" + phrasesFile.getCanonicalPath() + "\"");
                 br = new BufferedReader(new InputStreamReader(new FileInputStream(phrasesFile),
                 "UTF-8"));
-                HashMap phrasesByLang = null;
-                List phraseList = null;
-                List languageKeys = null;
+                HashMap<String,String> phrasesByLang = null;
+                List<String> phraseList = null;
+                List<String> languageKeys = null;
                 String delim = "|";
                 String key = null;
                 String line = null;
@@ -138,7 +138,7 @@ public class LanguageFormatter {
                             languageKeys = Arrays.asList(line.split("\\" + delim));
                         else {
                             phraseList = Arrays.asList(line.split("\\" + delim));
-                            phrasesByLang = new HashMap();
+                            phrasesByLang = new HashMap<String,String>();
                             key = (String) phraseList.get(0);
                             int plLen = phraseList.size();
                             for (int i = 0; i < plLen; i++)
@@ -176,7 +176,7 @@ public class LanguageFormatter {
      * spaces for readability.  Return variable unaltered.  Add
      * term format string to all other atoms.
      */
-    private static String processAtom(String atom, Map termMap, String language) {
+    private static String processAtom(String atom, Map<String,String> termMap, String language) {
 
         String result = atom;
         String unquoted = StringUtil.removeEnclosingQuotes(atom);
@@ -239,8 +239,8 @@ public class LanguageFormatter {
      *  @param depth An in indicating the level of nesting, for control of indentation.
      *  @return A String, which is the paraphrased statement.
      */
-    public static String nlStmtPara(String stmt, boolean isNegMode, KB kb, Map phraseMap,
-    				    Map termMap, String language, int depth) {
+    public static String nlStmtPara(String stmt, boolean isNegMode, KB kb, Map<String,String> phraseMap,
+    				    Map<String,String> termMap, String language, int depth) {
 
         //System.out.println("INFO in LanguageFormatter.nlStmtPara(): stmt: " + stmt);
         if (Formula.empty(stmt)) {
@@ -333,7 +333,7 @@ public class LanguageFormatter {
     /** ***************************************************************
      * Return the NL format of an individual word.
      */
-    private static String translateWord(Map termMap, String word, String language) {
+    private static String translateWord(Map<String,String> termMap, String word, String language) {
 
         String ans = word;
         try {
@@ -362,13 +362,13 @@ public class LanguageFormatter {
      * @return The natural language paraphrase as a String, or null if the predicate was not a logical operator.
      */
     private static String paraphraseLogicalOperator(String stmt, boolean isNegMode, KB kb,
-                                                    Map phraseMap, Map termMap, String language, int depth) {
+                                                    Map<String,String> phraseMap, Map<String,String> termMap, String language, int depth) {
         try {
             if (keywordMap == null) {
                 System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
                 return null;
             }
-            ArrayList args = new ArrayList();
+            ArrayList<String> args = new ArrayList<String>();
             Formula f = new Formula();
             f.read(stmt);
             String pred = f.getArgument(0);
@@ -392,7 +392,7 @@ public class LanguageFormatter {
                 f.read(f.cdr());
             }
             String COMMA = getKeyword(",",language);
-            String QUESTION = getKeyword("?",language);
+            //String QUESTION = getKeyword("?",language);
             String IF = getKeyword("if",language);
             String THEN = getKeyword("then",language);
             String AND = getKeyword("and",language);
@@ -588,7 +588,7 @@ public class LanguageFormatter {
      * @return the paraphrased statement.
      */
     public static String paraphraseWithFormat(String stmt,boolean isNegMode,KB kb,
-                                               Map phraseMap,Map termMap,String language) {
+                                               Map<String,String> phraseMap, Map<String,String> termMap,String language) {
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
         //System.out.println("neg mode: " + isNegMode);
@@ -598,7 +598,7 @@ public class LanguageFormatter {
         String strFormat = (String) phraseMap.get(pred);
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 1 format: " + strFormat);
         // System.out.println("str format: " + strFormat);
-        int index;
+        //int index;
 
         if (strFormat.contains("&%"))                    // setup the term hyperlink
             strFormat = strFormat.replaceAll("&%(\\w+)","&%" + pred + "\\$\"$1\"");
@@ -717,7 +717,7 @@ public class LanguageFormatter {
     private static String expandStar(Formula f, String strFormat, String lang) {
 
         String result = strFormat;
-        ArrayList problems = new ArrayList();
+        ArrayList<String> problems = new ArrayList<String>();
         try {
             int flen = f.listLength();
             if (StringUtil.isNonEmptyString(strFormat) && (flen > 1)) {
@@ -858,7 +858,7 @@ public class LanguageFormatter {
             String errStr = KBmanager.getMgr().getError();
             String str = null;
             if (errStr == null) { errStr = ""; }
-            Iterator it = problems.iterator();
+            Iterator<String> it = problems.iterator();
             while (it.hasNext()) {
                 str = (String) it.next();
                 System.out.println("Error in LanguageFormatter.expandStar(): ");
@@ -883,8 +883,8 @@ public class LanguageFormatter {
      * @param termMap the set of NL statements for terms that will be passed to nlStmtPara.
      * @param language the natural language in which the paraphrase should be generated.
      */
-    public static String htmlParaphrase(String href, String stmt, Map phraseMap,
-                                        Map termMap, KB kb, String language) {
+    public static String htmlParaphrase(String href, String stmt, Map<String,String> phraseMap,
+                                        Map<String,String> termMap, KB kb, String language) {
 
         String nlFormat = "";
         try {
@@ -893,11 +893,34 @@ public class LanguageFormatter {
                 String anchorStart = ("<a href=\"" + href + "&term=");
                 Formula f = new Formula();
                 f.read(stmt);
-                FormulaPreprocessor fp = new FormulaPreprocessor(f);
+                FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
-                HashMap<String,ArrayList<String>> instMap = new HashMap<String,ArrayList<String>>();
-                HashMap<String,ArrayList<String>> classMap = new HashMap<String,ArrayList<String>>();
-                fp.computeVariableTypes(kb,instMap, classMap);
+                HashMap<String,HashSet<String>> instMap = new HashMap<String,HashSet<String>>();
+                HashMap<String,HashSet<String>> classMap = new HashMap<String,HashSet<String>>();
+                HashMap<String,HashSet<String>> types = fp.computeVariableTypes(f,kb);
+                Iterator<String> it = types.keySet().iterator();
+                while (it.hasNext()) {
+                    String var = it.next();
+                    HashSet<String> typeList = types.get(var);
+                    Iterator<String> it2 = typeList.iterator();
+                    while (it2.hasNext()) {
+                        String t = it2.next();
+                        if (t.endsWith("+")) {
+                            HashSet<String> values = new HashSet<String>();
+                            if (classMap.containsKey(var))
+                                values = classMap.get(var);
+                            values.add(t.substring(0,t.length()-1));
+                            classMap.put(t,values);
+                        }
+                        else {
+                            HashSet<String> values = new HashSet<String>();
+                            if (instMap.containsKey(var))
+                                values = instMap.get(var);
+                            values.add(t.substring(0,t.length()-1));
+                            instMap.put(t,values);  
+                        }
+                    }
+                }
                 if ((instMap != null && !instMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
                     template = variableReplace(template, instMap, classMap, kb, language);
                 StringBuilder sb = new StringBuilder(template);
@@ -1047,7 +1070,7 @@ public class LanguageFormatter {
      */
     private static String incrementalVarReplace(String form, String varString, String varType,
                                                 String varPretty, String language,
-                                                boolean isClass, HashMap typeMap) {
+                                                boolean isClass, HashMap<String,Integer> typeMap) {
 
         String result = new String(form);
         boolean isArabic = (language.matches(".*(?i)arabic.*")
@@ -1104,12 +1127,12 @@ public class LanguageFormatter {
      * Collect all the variables occurring in a formula in order.  Return
      * an ArrayList of Strings.
      */
-    private static ArrayList collectOrderedVariables(String form) {
+    private static ArrayList<String> collectOrderedVariables(String form) {
 
         boolean inString = false;
         boolean inVar = false;
         String var = "";
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
         for (int i = 0; i < form.length(); i++) {
             char ch = form.charAt(i);
             switch (ch) {
@@ -1133,26 +1156,26 @@ public class LanguageFormatter {
      * Replace variables in a formula with paraphrases expressing their
      * type.
      */
-    public static String variableReplace(String form, HashMap<String,ArrayList<String>> instmap, 
-    		HashMap<String,ArrayList<String>> classmap, KB kb, String language) {
+    public static String variableReplace(String form, HashMap<String, HashSet<String>> instMap, 
+    		HashMap<String, HashSet<String>> classMap, KB kb, String language) {
 
         String result = form;
-        HashMap typeMap = new HashMap();
-        ArrayList varList = collectOrderedVariables(form);
-        Iterator it = varList.iterator();
+        HashMap<String,Integer> typeMap = new HashMap<String,Integer>();
+        ArrayList<String> varList = collectOrderedVariables(form);
+        Iterator<String> it = varList.iterator();
         while (it.hasNext()) {
             String varString = (String) it.next();
             if (StringUtil.isNonEmptyString(varString)) {
-                ArrayList<String> instanceArray = instmap.get(varString);
-                ArrayList<String> subclassArray = classmap.get(varString);
+                HashSet<String> instanceArray = instMap.get(varString);
+                HashSet<String> subclassArray = classMap.get(varString);
                 if (subclassArray.size() > 0) {
-                    String varType = (String) subclassArray.get(0);
+                    String varType = (String) subclassArray.toArray()[0];
                     String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                     result = incrementalVarReplace(result,varString,varType,varPretty,language,true,typeMap);
                 }
                 else {
                     if (instanceArray.size() > 0) {
-                        String varType = (String) instanceArray.get(0);
+                        String varType = (String) instanceArray.toArray()[0];
                         String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                         result = incrementalVarReplace(result,varString,varType,varPretty,language,false,typeMap);
                     }
@@ -1293,7 +1316,7 @@ public class LanguageFormatter {
     private String allTerms(KB kb) {
 
         StringBuilder result = new StringBuilder();
-        for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+        for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
             String term = (String) it.next();
             result.append("(termFormat EnglishLanguage ");
             result.append(term);
@@ -1331,13 +1354,11 @@ public class LanguageFormatter {
         if (parent == "")
             return "";
         StringBuffer result = new StringBuffer();
-        for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
-            String term = (String) it.next();
-            if (kb.childOf(term,parent))
-                result.append("(format EnglishLanguage "
-                              + term + " \""
-                              + functionFormat(term,i)
-                              + "\")\n");
+        for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
+            String term = it.next();
+            if (kb.kbCache.transInstOf(term,parent))
+                result.append("(format EnglishLanguage " + term + " \"" + 
+                    functionFormat(term,i) + "\")\n");
         }        
         return result.toString();
     }
@@ -1349,9 +1370,7 @@ public class LanguageFormatter {
         switch (i) {
             case 2: return ("%2 is %n "
                             + LanguageFormatter.getArticle(term,1,1,"EnglishLanguage")
-                            + "&%"
-                            + prettyPrint(term)
-                            + " of %1");
+                            + "&%" + prettyPrint(term) + " of %1");
             case 3: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3";
             case 4: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4";
             case 5: return "%1 %n{doesn't} &%" + prettyPrint(term) + " %2 for %3 with %4 and %5";
@@ -1373,9 +1392,9 @@ public class LanguageFormatter {
         if (parent == "")
             return "";
         StringBuffer result = new StringBuffer();
-        for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
+        for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
             String term = (String) it.next();
-            if (kb.childOf(term,parent))
+            if (kb.kbCache.transInstOf(term,parent))
                 result.append("(format EnglishLanguage " + term + " \"" + relationFormat(term,i) + "\")\n");
         }        
         return result.toString();
@@ -1402,7 +1421,8 @@ public class LanguageFormatter {
 
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
