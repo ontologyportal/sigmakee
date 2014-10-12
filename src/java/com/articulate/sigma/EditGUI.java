@@ -169,7 +169,7 @@ public class EditGUI {
         HashMap<String,Integer> arity = new HashMap<String,Integer>();
         for (int i = 0; i < relations.size(); i++) {
             String r = relations.get(i);
-            int a = kb.getValence(r);
+            int a = kb.kbCache.valences.get(r);
             arity.put(r,new Integer(a));
         }
 
@@ -182,7 +182,7 @@ public class EditGUI {
                 ArrayList al2 = new ArrayList();
                 String className = kb.getArgTypeClass(r,j);
                 if (className.endsWith("+"))
-                    al2.addAll(kb.kbCache.getChildren(className.substring(0,className.length()-1)));
+                    al2.addAll(kb.kbCache.getChildClasses(className.substring(0,className.length()-1)));
                 else
                     al2.addAll(kb.getAllInstances(className));
                 al.add(al2);
@@ -220,7 +220,7 @@ public class EditGUI {
         HashMap<String,Integer> arity = new HashMap<String,Integer>();
         for (int i = 0; i < relations.size(); i++) {
             String r = relations.get(i);
-            int a = kb.getValence(r);
+            int a = kb.kbCache.valences.get(r);
             arity.put(r,new Integer(a));
         }
 
@@ -233,7 +233,7 @@ public class EditGUI {
                 ArrayList al2 = new ArrayList();
                 String className = kb.getArgTypeClass(r,j);
                 if (className.endsWith("+"))
-                    al2.addAll(kb.kbCache.getChildren(className.substring(0,className.length()-1)));
+                    al2.addAll(kb.kbCache.getChildClasses(className.substring(0,className.length()-1)));
                 else
                     al2.addAll(kb.getAllInstances(className));
                 al.add(al2);
