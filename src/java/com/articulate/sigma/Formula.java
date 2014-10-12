@@ -358,7 +358,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Copy the Formula.  This is in effect a deep copy.
      */
-    private Formula copy() {
+    public Formula copy() {
 
         Formula result = new Formula();
         if (sourceFile != null)
@@ -372,7 +372,7 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      */
-    private Formula deepCopy() {
+    public Formula deepCopy() {
         return copy();
     }
 
@@ -382,6 +382,10 @@ public class Formula implements Comparable {
      */
     public int compareTo(Object f) throws ClassCastException {
     	
+    	if (f == null) {
+    		System.out.println("Error in Formula.compareTo(): null formula");
+    		throw new ClassCastException("Error in Formula.compareTo(): null formula");
+    	}
         if (!f.getClass().getName().equalsIgnoreCase("com.articulate.sigma.Formula"))
             throw new ClassCastException("Error in Formula.compareTo(): "
                                          + "Class cast exception for argument of class: "
@@ -1149,6 +1153,29 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Return all the arguments in a simple formula as a list, starting
+     * at the given argument.  If the starting
+     * argument is greater than the number of arguments, or if the Formula
+     * is not a simple clause, return null.
+     */
+    public ArrayList<String> complexArgumentsToArrayList(int start) {
+
+        if (!isSimpleClause())
+            return null;
+        int index = start;
+        ArrayList<String> result = new ArrayList<String>();
+        String arg = getArgument(index);
+        while (arg != null && arg != "" && arg.length() > 0) {
+            result.add(arg.intern());
+            index++;
+            arg = getArgument(index);
+        }
+        if (index == start)
+            return null;
+        return result;
+    }
+    
+    /** ***************************************************************
      * Translate SUMO inequalities to the typical inequality symbols that
      * some theorem provers require.
      */
@@ -1193,7 +1220,7 @@ public class Formula implements Comparable {
      *
      * @return An ArrayList of String variable names
      */
-    private ArrayList<String> collectAllVariables() {
+    public ArrayList<String> collectAllVariables() {
     	    
     	ArrayList<String> result = new ArrayList<String>();
     	HashSet<String> resultSet = new HashSet<String>();
@@ -1359,24 +1386,21 @@ public class Formula implements Comparable {
      *
      * @return Returns true if this Formula contains any variable
      * arity relations, else returns false.
-     */
+     
     protected boolean containsVariableArityRelation(KB kb) {
 
-        boolean ans = false;
-        Set relns = kb.kbCache.getCachedRelationValues("instance", "VariableArityRelation", 2, 1);
-        if (relns == null)
-            relns = new HashSet();
-        relns.addAll(KB.VA_RELNS);
-        String r = null;
-        Iterator it = relns.iterator();
-        while (it.hasNext()) {
-            r = (String) it.next();
-            ans = (this.theFormula.indexOf(r) != -1);
-            if (ans) { break; }
-        }
-        return ans;
-    }
+        HashSet<String> relns = gatherRelationConstants();
 
+        Iterator<String> it = relns.iterator();
+        while (it.hasNext()) {
+            String r = it.next();
+            HashSet classes = kb.kbCache.instances.get(r);
+            if (classes != null && classes.contains("VariableArityRelation"))
+                return true;
+        }
+        return false;
+    }
+*/
     /** ***************************************************************
      * @param kb - The KB used to compute variable arity relations.
      * @param relationMap is a Map of String keys and values where
@@ -1403,7 +1427,7 @@ public class Formula implements Comparable {
                 arg = f.getArgument(i);
                 if (i > 0)
                     sb.append(" ");
-                if ((i == 0) && kb.isVariableArityRelation(arg) && !arg.endsWith(suffix)) {
+                if ((i == 0) && kb.kbCache.transInstOf(arg,"VariableArityRelation") && !arg.endsWith(suffix)) {
                     relationMap.put(arg + suffix, arg);
                     arg += suffix;
                 }
@@ -1659,6 +1683,8 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * TODO: Need to rewrite all the row variable pre-processing
+     * 
      * Applied to a SUO-KIF Formula with row variables, this method
      * returns a Map containing an int[] of length 2 for each row var
      * that indicates the minimum and maximum number of row var
@@ -1705,7 +1731,6 @@ public class Formula implements Comparable {
                     litF.computeRowVarsWithRelations(rowVarRelns, varMap);
                 }
             }
-			// logger.finest("rowVarRelns == " + rowVarRelns);
             if (!rowVarRelns.isEmpty()) {
                 for (Iterator kit = rowVarRelns.keySet().iterator(); kit.hasNext();) {
                     String rowVar = (String) kit.next();
@@ -1717,10 +1742,10 @@ public class Formula implements Comparable {
                         minMax[1] = 8;
                         ans.put(origRowVar, minMax);
                     }
-                    TreeSet val = (TreeSet) rowVarRelns.get(rowVar);
-                    for (Iterator vit = val.iterator(); vit.hasNext();) {
-                        String reln = (String) vit.next();
-                        int arity = kb.getValence(reln);
+                    TreeSet<String> val = (TreeSet) rowVarRelns.get(rowVar);
+                    for (Iterator<String> vit = val.iterator(); vit.hasNext();) {
+                        String reln = vit.next();
+                        int arity = kb.kbCache.valences.get(reln);
                         if (arity < 1) {
                             // It's a VariableArityRelation or we
                             // can't find an arity, so do nothing.
@@ -1847,8 +1872,8 @@ public class Formula implements Comparable {
             kifLists.addAll(accumulator);
             accumulator.clear();
             String klist = null;
-            for (Iterator it = kifLists.iterator(); it.hasNext();) {
-                klist = (String) it.next();
+            for (Iterator<String> it = kifLists.iterator(); it.hasNext();) {
+                klist = it.next();
                 if (listP(klist)) {
                     f = new Formula();
                     f.read(klist);
@@ -1879,15 +1904,15 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      * Convert an ArrayList of Formulas to an ArrayList of Strings.
-     */
-    private ArrayList formulasToStrings(ArrayList list) {
+     
+    private ArrayList<String> formulasToStrings(ArrayList<Formula> list) {
 
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
         for (int i = 0; i < list.size(); i++) 
             result.add(((Formula) list.get(i)).theFormula);        
         return result;
     }
-
+*/
     /** ***************************************************************
      * Test whether a Formula is a functional term.  Note this assumes
      * the textual convention of all functions ending with "Fn".
@@ -1921,9 +1946,9 @@ public class Formula implements Comparable {
         if (this.listP()) {
             String pred = this.car();
             boolean logop = isLogicalOperator(pred);
-            ArrayList al = literalToArrayList();
+            ArrayList<String> al = literalToArrayList();
             for (int i = 1; i < al.size(); i++) {
-                String arg = (String) al.get(i);
+                String arg = al.get(i);
                 Formula f = new Formula();
                 f.read(arg);
                 if (!atom(arg) && !f.isFunctionalTerm()) {
@@ -1940,19 +1965,19 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Test whether an Object is a variable
+     * Test whether a String formula is a variable
      */
-    public static boolean isVariable(Object term) {
+    public static boolean isVariable(String term) {
 
         return (!StringUtil.emptyString(term)
-                && (((String)term).startsWith(V_PREF)
-                    || ((String)term).startsWith(R_PREF)));
+                && (term.startsWith(V_PREF)
+                    || term.startsWith(R_PREF)));
     }
 
     /** ***************************************************************
-     * Test whether the formula is a variable
+     * Test whether the Formula is a variable
      */
-    public  boolean isVariable() {
+    public boolean isVariable() {
         return isVariable(theFormula);
     }
 
@@ -2021,19 +2046,21 @@ public class Formula implements Comparable {
      */
     public boolean isSimpleClause() {
 
-        Formula f = new Formula();
-        f.read(theFormula);
-        while (!f.empty()) {
-            if (listP(f.car())) {
-                Formula f2 = new Formula();
-                f2.read(f.car());
-                if (!Formula.isFunction(f2.car()))
-                    return false;
-                else if (!f2.isSimpleClause())
+        if (!listP(this.theFormula))
+        	return false;
+        if (!atom(this.car()))
+        	return false;
+        String arg = null;
+        int argnum = 1;
+        do {
+        	arg = this.getArgument(argnum);
+        	argnum++;        	
+            if (listP(arg)) {
+            	Formula f = new Formula(arg);
+                if (!Formula.isFunction(f.car()))
                     return false;
             }
-            f.read(f.cdr());
-        }
+        } while (!StringUtil.emptyString(arg));
         return true;
     }
 
@@ -2043,10 +2070,10 @@ public class Formula implements Comparable {
      */
     public boolean isSimpleNegatedClause() {
 
+        if (!listP(this.theFormula))
+        	return false;
         Formula f = new Formula();
         f.read(theFormula);
-        if (f == null || f.empty() || f.atom())
-            return false;
         if (f.car().equals("not")) {
             f.read(f.cdr());
             if (empty(f.cdr())) {
@@ -2233,10 +2260,18 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     *  Replace v with term
+     *  Replace v with term.
+     *  TODO: See if a regex replace is faster (commented out buggy code below)
      */
     public Formula replaceVar(String v, String term) {
 
+        //Pattern p = Pattern.compile("\\" + var + "([^a-zA-Z0-9])");
+        //Matcher m = p.matcher(input.theFormula);
+        //String fstr = m.replaceAll(rel + "$1");
+    	
+    	//System.out.println("INFO in Formula.replaceVar(): formula: " + theFormula);
+    	if (StringUtil.emptyString(this.theFormula) || this.empty())
+    		return this;
         Formula newFormula = new Formula();
         newFormula.read("()");
         if (this.isVariable()) {
@@ -2244,17 +2279,19 @@ public class Formula implements Comparable {
                 theFormula = term;
             return this;
         }
+        if (this.atom())
+        	return this;
         if (!this.empty()) {
             Formula f1 = new Formula();
             f1.read(this.car());
-			// logger.finest("car: " + f1.theFormula);
+            //System.out.println("INFO in Formula.replaceVar(): car: " + f1.theFormula);
             if (f1.listP())
                 newFormula = newFormula.cons(f1.replaceVar(v,term));
             else
                 newFormula = newFormula.append(f1.replaceVar(v,term));
             Formula f2 = new Formula();
             f2.read(this.cdr());
-			// logger.finest("cdr: " + f2);
+			//System.out.println("INFO in Formula.replaceVar(): cdr: " + f2);
             newFormula = newFormula.append(f2.replaceVar(v,term));
         }
         return newFormula;
@@ -2434,13 +2471,13 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      * Format a formula for text presentation.
-     * @deprecated
-     */
+     
+     
     public String textFormat() {
 
         return format("","  ",new Character((char) 10).toString());
     }
-
+*/
     /** ***************************************************************
      * Format a formula for text presentation.
      */
@@ -2561,7 +2598,6 @@ public class Formula implements Comparable {
         BufferedWriter bw = null;
         try {
             long t1 = System.currentTimeMillis();
-            int count = 0;
             String inpath = args[0];
             String outpath = args[1];
             if (!StringUtil.emptyString(inpath) && !StringUtil.emptyString(outpath)) {
@@ -2586,7 +2622,6 @@ public class Formula implements Comparable {
                                 if (clausalForm != null) {
                                     bw.write(clausalForm.theFormula);
                                     bw.newLine();
-                                    count++;
                                 }
                             }
                         }
@@ -2666,6 +2701,32 @@ public class Formula implements Comparable {
     	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
         f1.read("(member ?VAR1 Org1-1)");
     	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	f1.read("(capability (KappaFn ?HEAR (and (instance ?HEAR Hearing) (agent ?HEAR ?HUMAN) " +
+        	    "(destination ?HEAR ?HUMAN) (origin ?HEAR ?OBJ))) agent ?HUMAN)");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    }
+    
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void testReplaceVar() {
+            	      
+        Formula f1 = new Formula();
+        f1.read("(<=> (instance ?REL TransitiveRelation) (forall (?INST1 ?INST2 ?INST3) " +
+    	    " (=> (and (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))");
+        System.out.println("Input: " + f1);
+        System.out.println(f1.replaceVar("?REL","part"));
+    }
+    
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void testComplexArgs() {       
+    	      
+        Formula f1 = new Formula();
+        f1.read("(during ?Y (WhenFn ?H))");
+        System.out.println("Input: " + f1);
+        System.out.println(f1.complexArgumentsToArrayList(1));
     }
     
     /** ***************************************************************
@@ -2673,141 +2734,8 @@ public class Formula implements Comparable {
      */
     public static void main(String[] args) {
 
-    	testIsSimpleClause();
-    	//testCollectVariables();
-    	//testTptpParse();
-        //Formula.resolveTest3();
-        //Formula.unifyTest1();
-        //Formula.unifyTest2();
-        //Formula.unifyTest3();
-        //Formula.unifyTest4();
-        //Formula.unifyTest5();
-        //Formula f1 = new Formula();
-        //Formula f2 = new Formula();
-        //Formula f3 = new Formula();
-        /**
-        f1.read("(=> (attribute ?Agent Investor) (exists (?Investing) (agent ?Investing ?Agent)))");
-        System.out.println(f1);
-        System.out.println(f1.clausify());
-        f2.read("(attribute Bob Investor)");
-        TreeMap tm = f1.unify(f2);
-        if (tm != null)
-            System.out.println(f1.substitute(tm));
-        f3.read("(attribute ?X Investor)");
-        tm = f3.unify(f2);
-        System.out.println(tm);
-        if (tm != null)
-            System.out.println(f3.substitute(tm));
-        f1.read("(=> (and (instance ?CITY AmericanCity) (part ?CITY California) " +
-                "(not (equal ?CITY LosAngelesCalifornia))) (greaterThan (CardinalityFn " +
-                "(ResidentFn LosAngelesCalifornia)) (CardinalityFn (ResidentFn ?CITY))))");
-        System.out.println(f1);
-        System.out.println(f1.clausify());
-        f1.read("(not (instance ?X Human))");
-        System.out.println(f1);
-        System.out.println(f1.clausify());
-        f1.read("(not (and (instance ?X Human) (attribute ?X Male)))");
-        System.out.println(f1);
-        System.out.println(f1.clausify());
-        f1.read("(not (instance ?X2 Human))");
-        System.out.println(f1.isSimpleNegatedClause());
-
-        System.out.println(f1.append(f3));
- * */
-
-        //f1.read("(not (and (exists (?MEMBER) (member ?MEMBER Org1-1)) (instance Org1-1 Foo))");
-        //f1.read("(not (attribute ?VAR1 Criminal))");
-        //f2.read("(or (not (attribute ?X5 American)) (not (instance ?X6 Weapon)) (not (instance ?X7 Nation)) " +
-        //        "(not (attribute ?X7 Hostile)) (not (instance ?X8 Selling)) (not (agent ?X8 ?X5)) (not (patient ?X8 ?X6)) " +
-        //        "(not (recipient ?X8 ?X7)) (attribute ?X5 Criminal))");
-        //f1.read("(or (not (attribute ?VAR1 American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?VAR4 Selling)) (not (agent ?VAR4 ?VAR1)) (not (patient ?VAR4 ?VAR2)) (not (recipient ?VAR4 ?VAR3)))");
-        // (or
-        //   (not
-        //     (attribute ?VAR1 American))
-        //   (not
-        //     (instance ?VAR2 Weapon))
-        //   (not
-        //     (instance ?VAR3 Nation))
-        //   (not
-        //     (attribute ?VAR3 Hostile))
-        //   (not
-        //     (instance ?VAR4 Selling))
-        //   (not
-        //     (agent ?VAR4 ?VAR1))
-        //   (not
-        //     (patient ?VAR4 ?VAR2))
-        //   (not
-        //     (recipient ?VAR4 ?VAR3)))
-        //f2.read("(or (agent ?X15 West) (not (possesses Nono ?X16)) (not (instance ?X16 Missile)))");
-        //f1 = f1.clausify();
-        //f2.read("(=> (instance ?X290 Collection) (exists (?X12) (and (instance ?X290 Foo) (member ?X12 ?X290))))");
-        //System.out.println(f2.toNegAndPosLitsWithRenameInfo());
-        //f2 = f2.clausify();
-        //System.out.println(f2);
-        //f3.read("(member (SkFn 1 ?X290) ?X290))");
-        //System.out.println(f3.isSimpleClause());
-        //Formula result = new Formula();
-        //TreeMap mappings = f1.resolve(f2,result);
-        //System.out.println(mappings);
-        //System.out.println(result);
-        //f1.read("(not (p a))");
-        //f2.read("(not (p a))");
-        //System.out.println(f1.unify(f2));
-        //f1.read("(not (q a))");
-        //f2.read("(not (p a))");
-        //System.out.println(f1.unify(f2));
-
-        //f1.read("(s O C)");
-        //f2.read("(or (not (s ?X7 C)) (not (s O C)))");
-        //Formula newResult = new Formula();
-        //System.out.println(f1.resolve(f2,newResult));
-        //System.out.println(newResult);
-
-        //f1.read("(or (not (possesses Nono ?X16)) (not (instance ?X16 Missile)) (not (attribute West American)) (not (instance ?VAR2 Weapon)) (not (instance ?VAR3 Nation)) (not (attribute ?VAR3 Hostile)) (not (instance ?X15 Selling)) (not (patient ?X15 ?VAR2)) (not (recipient ?X15 ?VAR3))) ");
-        //System.out.println(f1.toCanonicalClausalForm());
-
-        /*
-        f1.read("(not (enemies Nono America))");
-        f2.read("(enemies Nono America)");
-        System.out.println(f1.resolve(f2,f3));
-        System.out.println(f3);
-        f1.read("(or (not (agent ?VAR1 West)) (not (enemies Nono America)) (not (instance ?VAR1 Selling)) " +
-                "(not (instance ?VAR2 Weapon)) (not (patient ?VAR1 ?VAR2)) (not (recipient ?VAR1 Nono)))");
-        System.out.println(f1.resolve(f2,f3));
-        System.out.println(f3); */
-
-/*
-        f1.read("()");
-        f2.read("()");
-        System.out.println(f1.appendClauseInCNF(f2));
-        f2.read("(foo A B)");
-        System.out.println(f1.appendClauseInCNF(f2));   // yields (foo A B)
-        f1.read("(foo A B)");
-        f2.read("(bar B C)");
-        System.out.println(f1.appendClauseInCNF(f2));   // yields (or (foo A B) (bar B C))
-        f1.read("(or (foo A B) (not (bar B C)))");
-        f2.read("(not (baz D E))");
-        System.out.println(f2.appendClauseInCNF(f1));   // yields (or (not (baz D E)) (foo A B) (not (bar B C)))
-        System.out.println(f1.appendClauseInCNF(f2));   // yields (or (foo A B) (not (bar B C)) (not baz D E)))
-        f1.read("(or (foo A B) (bar B C))");
-        f2.read("(or (baz D E) (bop F G))");
-        System.out.println(f1.appendClauseInCNF(f2));   // yields (or (foo A B) (bar B C) (baz D E) (bop F G))
-*/
-        /**
-        f1.read("(member (SkFn 1 ?X3) ?X3)");
-        f3.read("(member ?VAR1 Org1-1)");
-        tm = f1.unify(f3);
-        System.out.println(tm);
-        System.out.println(f1.substitute(tm));
-        System.out.println(f3.substitute(tm));
-
-        f1.read("(attribute West American)");
-        f3.read("(attribute ?VAR1 Criminal)");
-        System.out.println(f1);
-        System.out.println(f3);
-        System.out.println(f1.unify(f3));
-         * */
-
+        // testIsSimpleClause();
+        testReplaceVar();
     }
 
-}  // Formula.java
+}
