@@ -28,10 +28,10 @@ public class WNdiagnostics {
      * @return an ArrayList of Strings which are WordNet synsets that don't
      * have a corresponding term in the knowledge base
      */
-    public static ArrayList synsetsWithoutTerms() {
+    public static ArrayList<String> synsetsWithoutTerms() {
 
-        ArrayList result = new ArrayList();
-        Iterator it = WordNet.wn.synsetsToWords.keySet().iterator();
+        ArrayList<String> result = new ArrayList<String>();
+        Iterator<String> it = WordNet.wn.synsetsToWords.keySet().iterator();
         while (it.hasNext()) {
             String synset = (String) it.next();
             String POS = synset.substring(0,1);
@@ -66,11 +66,11 @@ public class WNdiagnostics {
      * @return an ArrayList of Strings which are terms that don't
      * have a corresponding synset
      */
-    public static ArrayList nonRelationTermsWithoutSynsets() {
+    public static ArrayList<String> nonRelationTermsWithoutSynsets() {
 
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        Iterator it = kb.terms.iterator();
+        Iterator<String> it = kb.terms.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
             if (!WordNet.wn.SUMOHash.containsKey(term) & !Formula.isFunction(term) && 
@@ -85,12 +85,12 @@ public class WNdiagnostics {
      * an identified term but that doesn't exist in the currently loaded
      * knowledge base
      */
-    public static ArrayList synsetsWithoutFoundTerms(KB kb) {
+    public static ArrayList<String> synsetsWithoutFoundTerms(KB kb) {
 
-        ArrayList result = new ArrayList();
-        Iterator it = WordNet.wn.synsetsToWords.keySet().iterator();
+        ArrayList<String> result = new ArrayList<String>();
+        Iterator<String> it = WordNet.wn.synsetsToWords.keySet().iterator();
         while (it.hasNext()) {
-            String synset = (String) it.next();
+            String synset = it.next();
             String POS = synset.substring(0,1);
             String term = "";
             synset = synset.substring(1);
@@ -110,7 +110,7 @@ public class WNdiagnostics {
             }
             if (term != null) {
                 synchronized (kb.getTerms()) {
-                    ArrayList termList = WordNetUtilities.convertTermList(term);
+                    ArrayList<String> termList = WordNetUtilities.convertTermList(term);
                     for (int i = 0; i < termList.size(); i++) {
                         String newterm = (String) termList.get(i);
                         if (newterm.charAt(0) != '(') {
@@ -135,28 +135,28 @@ public class WNdiagnostics {
      * terms. Currently, this just examines nouns and needs to be expanded
      * to examine verbs too.
      */
-    public static ArrayList nonMatchingTaxonomy(String kbName, String language) {
+    public static ArrayList<String> nonMatchingTaxonomy(String kbName, String language) {
 
         String synsetHTML = "<a href=\"WordNet.jsp?";
         String termHTML = "<a href=\"Browse.jsp?kb=" + kbName + "&lang=" + language + "&";
-        ArrayList result = new ArrayList();
-        Iterator it = WordNet.wn.nounSUMOHash.keySet().iterator();
+        ArrayList<String> result = new ArrayList<String>();
+        Iterator<String> it = WordNet.wn.nounSUMOHash.keySet().iterator();
         while (it.hasNext()) {
             //System.out.println();
-            String synset = (String) it.next();                         // not a prefixed synset
+            String synset = it.next();                         // not a prefixed synset
             if (WordNet.wn.nounSUMOHash.get(synset) != null) {
-                ArrayList words = (ArrayList) WordNet.wn.synsetsToWords.get("1"+synset);
+                ArrayList<String> words = WordNet.wn.synsetsToWords.get("1"+synset);
                 String sumoTerm = (String) WordNet.wn.nounSUMOHash.get(synset);
                 String word = (String) words.get(0);
                 //System.out.println("Source word: " + word);
-                ArrayList rels = (ArrayList) WordNet.wn.relations.get("1"+synset);   // relations requires prefixes
+                ArrayList<AVPair> rels = WordNet.wn.relations.get("1"+synset);   // relations requires prefixes
                 if (rels != null) {
-                    Iterator it2 = rels.iterator();
+                    Iterator<AVPair> it2 = rels.iterator();
                     while (it2.hasNext()) {
                         AVPair avp = (AVPair) it2.next();
                         if (avp.attribute.equals("hypernym") || avp.attribute.equals("hyponym")) {
                             String targetSynset = avp.value; 
-                            ArrayList targetWords = (ArrayList) WordNet.wn.synsetsToWords.get(targetSynset);
+                            ArrayList<String> targetWords = WordNet.wn.synsetsToWords.get(targetSynset);
                             String targetWord = (String) targetWords.get(0);
                             //System.out.println("Target word: " + targetWord);                            
                             String targetBareSynset = avp.value.substring(1);               
@@ -167,12 +167,12 @@ public class WNdiagnostics {
                             String bareTargetSUMO = WordNetUtilities.getBareSUMOTerm(targetSUMO);
                             if (sumoTerm != null) {
                                 KB kb = KBmanager.getMgr().getKB("SUMO");
-                                HashSet SUMOtaxonomy = new HashSet();
+                                HashSet<String> SUMOtaxonomy = new HashSet<String>();
                                 String arrow = "->";
                                 if (avp.attribute.equals("hypernym")) 
-                                    SUMOtaxonomy = (HashSet) kb.kbCache.getParents(bareSUMOterm);                                                                  
+                                    SUMOtaxonomy = kb.kbCache.getParentClasses(bareSUMOterm);                                                                  
                                 if (avp.attribute.equals("hyponym")) {
-                                    SUMOtaxonomy = (HashSet) kb.kbCache.getChildren(bareSUMOterm);                                
+                                    SUMOtaxonomy = kb.kbCache.getChildClasses(bareSUMOterm);                                
                                     arrow = "<-";
                                 }
                                 //System.out.println("taxonomy: " + SUMOtaxonomy);
@@ -210,7 +210,7 @@ public class WNdiagnostics {
         int leftbr = 0;
         int rightbr = 0;
         int colon = 0;
-        Iterator it = WordNet.wn.nounSUMOHash.keySet().iterator(); // Keys are synset Strings, values are SUMO 
+        Iterator<String> it = WordNet.wn.nounSUMOHash.keySet().iterator(); // Keys are synset Strings, values are SUMO 
                                                       // terms with the &% prefix and =, +, @ or [ suffix. 
         while (it.hasNext()) {
             String key = (String) it.next();
