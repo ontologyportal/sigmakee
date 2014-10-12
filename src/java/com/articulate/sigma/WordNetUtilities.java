@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -41,6 +43,8 @@ public class WordNetUtilities {
      *  one. */
     HashMap mappings = new HashMap();
 
+    public static int TPTPidCounter = 1;
+    
     /** ***************************************************************
      *  Get a SUMO term minus its &% prefix and one character mapping
      * suffix.
@@ -1015,11 +1019,352 @@ public class WordNetUtilities {
                     System.out.println("UID: " + uid + " Sentiment: " + DB.computeSentiment(comment));
                 }
             }
+            lr.close();
         }
         catch (IOException ioe) {
             System.out.println(ioe.getMessage());
             ioe.printStackTrace();
         }
+    }
+    
+    /** ***************************************************************
+     */
+    private static void writeTPTPWordNetClassDefinitions(PrintWriter pw) throws IOException {
+
+        ArrayList<String> WordNetClasses = 
+            new ArrayList<String>(Arrays.asList("s__Synset","s__NounSynset","s__VerbSynset","s__AdjectiveSynset","s__AdverbSynset"));
+        Iterator<String> it = WordNetClasses.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (!term.equals("s__Synset")) {
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__subclass(" + term + ",s__Synset))).");   
+                String POS = term.substring(0,term.indexOf("Synset"));
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                        ",axiom,(s__documentation(" + term + ",s__EnglishLanguage,\"A group of " + POS + 
+                        "s having the same meaning.\"))).");
+            }
+        }
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__WordSense,s__EnglishLanguage,\"A particular sense of a word.\"))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__Word,s__EnglishLanguage,\"A particular word.\"))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__VerbFrame,s__EnglishLanguage,\"A string template showing allowed form of use of a verb.\"))).");
+    }
+
+    /** ***************************************************************
+     */
+    private static void writeTPTPVerbFrames(PrintWriter pw) throws IOException {
+
+        ArrayList<String> VerbFrames = new ArrayList<String>(Arrays.asList("Something ----s",
+          "Somebody ----s",
+          "It is ----ing",
+          "Something is ----ing PP",
+          "Something ----s something Adjective/Noun",
+          "Something ----s Adjective/Noun",
+          "Somebody ----s Adjective",
+          "Somebody ----s something",
+          "Somebody ----s somebody",
+          "Something ----s somebody",
+          "Something ----s something",
+          "Something ----s to somebody",
+          "Somebody ----s on something",
+          "Somebody ----s somebody something",
+          "Somebody ----s something to somebody",
+          "Somebody ----s something from somebody",
+          "Somebody ----s somebody with something",
+          "Somebody ----s somebody of something",
+          "Somebody ----s something on somebody",
+          "Somebody ----s somebody PP",
+          "Somebody ----s something PP",
+          "Somebody ----s PP",
+          "Somebody's (body part) ----s",
+          "Somebody ----s somebody to INFINITIVE",
+          "Somebody ----s somebody INFINITIVE",
+          "Somebody ----s that CLAUSE",
+          "Somebody ----s to somebody",
+          "Somebody ----s to INFINITIVE",
+          "Somebody ----s whether INFINITIVE",
+          "Somebody ----s somebody into V-ing something",
+          "Somebody ----s something with something",
+          "Somebody ----s INFINITIVE",
+          "Somebody ----s VERB-ing",
+          "It ----s that CLAUSE",
+          "Something ----s INFINITIVE"));
+
+        for (int i = 0; i < VerbFrames.size(); i ++) {
+            String frame = VerbFrames.get(i);
+            String numString = String.valueOf(i);
+            if (numString.length() == 1) 
+                numString = "0" + numString;           
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                    ",axiom,(s__documentation(s__WN30VerbFrame_" + numString + ",s__EnglishLanguage,\"" + frame + "\"))).");
+        }
+    }
+
+    protected static ArrayList<String> WordNetRelations = new ArrayList<String>(Arrays.asList("antonym",
+            "hypernym", "instance_hypernym", "hyponym", "instance_hyponym", 
+            "member_holonym", "substance_holonym", "part_holonym", "member_meronym", 
+            "substance_meronym", "part_meronym", "attribute", "derivationally_related", 
+            "domain_topic", "member_topic", "domain_region", "member_region", 
+            "domain_usage", "member_usage", "entailment", "cause", "also_see", 
+            "verb_group", "similar_to", "participle", "pertainym"));
+    
+    /** ***************************************************************
+     */
+    private static void writeTPTPWordNetRelationDefinitions(PrintWriter pw) throws IOException {
+
+        Iterator<String> it = WordNetRelations.iterator();
+        while (it.hasNext()) {
+            String rel = (String) it.next();
+            String tag = null;
+            if (rel.equals("antonym") || rel.equals("similar-to") ||
+                rel.equals("verb-group") || rel.equals("derivationally-related")) 
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + rel + "__m,s__SymmetricRelation))).");
+            else
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + rel + "__m,s__BinaryRelation))).");
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__domain(s__" + rel + "__m,1,s__Synset))).");
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__domain(s__" + rel + "__m,2,s__Synset))).");
+        }
+
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__instance(s__word__m,s__BinaryRelation))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__word__m,1,s__Synset))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__word__m,2,s__Literal))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__word__m,s__EnglishLanguage,\"A relation between a WordNet synset and a word " +
+                   "which is a member of the synset\"))).");
+
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__instance(s__singular__m,s__BinaryRelation))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__singular__m,1,s__Word))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__singular__m,2,s__Literal))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__singular__m,s__EnglishLanguage,\"A relation between a WordNet synset and a word " +
+                   "which is a member of the synset.\"))).");
+
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__instance(s__infinitive__m,s__BinaryRelation))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__infinitive__m,1,s__Word))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__infinitive__m,2,s__Literal))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__infinitive__m,s__EnglishLanguage,\"A relation between a word " +
+                   " in its past tense and infinitive form.\"))).");
+
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__instance(s__senseKey__m,s__BinaryRelation))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__senseKey__m,1,s__Word))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__senseKey__m,2,s__WordSense))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__senseKey__m,s__EnglishLanguage,\"A relation between a word " +
+                   "and a particular sense of the word.\"))).");
+
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__instance(s__synset__m,s__BinaryRelation))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__synset__m,1,s__WordSense))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__synset__m,2,s__Synset))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__synset__m,s__EnglishLanguage,\"A relation between a sense of a particular word " +
+                   "and the synset in which it appears.\"))).");
+
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__instance(s__verbFrame__m,s__BinaryRelation))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__verbFrame__m,1,s__WordSense))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__domain(s__verbFrame__m,2,s__VerbFrame))).");
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+                ",axiom,(s__documentation(s__verbFrame__m,s__EnglishLanguage,\"A relation between a verb word sense and a template that "+
+                   "describes the use of the verb in a sentence.\"))).");      
+    }
+
+    /** ***************************************************************
+     * Write OWL format for SUMO-WordNet mappings.
+     * @param synset is a POS prefixed synset number
+     */
+    private static void writeTPTPWordNetSynset(PrintWriter pw, String synset) {
+
+        //if (synset.startsWith("WN30-")) 
+        //    synset = synset.substring(5);
+        ArrayList<String> al = WordNet.wn.synsetsToWords.get(synset);
+        if (al != null) {
+            String parent = "Noun";
+            switch (synset.charAt(0)) {
+              case '1': parent = "NounSynset"; break;
+              case '2': parent = "VerbSynset"; break;
+              case '3': parent = "AdjectiveSynset"; break;
+              case '4': parent = "AdverbSynset"; break;
+            }
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__WN30_" + 
+                    synset + ",s__" + parent + "))).\n");
+            for (int i = 0; i < al.size(); i++) {
+                String word = al.get(i);
+                String wordAsID = StringUtil.StringToPrologID(word);
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__word(s__WN30_" + 
+                        synset + ",s__WN30Word_" + wordAsID + "))).\n");
+            }
+            String doc = null;
+            switch (synset.charAt(0)) {
+              case '1': doc = (String) WordNet.wn.nounDocumentationHash.get(synset.substring(1)); break;
+              case '2': doc = (String) WordNet.wn.verbDocumentationHash.get(synset.substring(1)); break;
+              case '3': doc = (String) WordNet.wn.adjectiveDocumentationHash.get(synset.substring(1)); break;
+              case '4': doc = (String) WordNet.wn.adverbDocumentationHash.get(synset.substring(1)); break;
+            }
+
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30_" + 
+            //        synset + ",s__EnglishLanguage,\"" + StringUtil.escapeQuoteChars(doc) + "\")))."); 
+            ArrayList<AVPair> al2 = WordNet.wn.relations.get(synset);
+            if (al2 != null) {
+                for (int i = 0; i < al2.size(); i++) {
+                    AVPair avp = al2.get(i);
+                    String rel = StringUtil.StringToPrologID(avp.attribute);
+                    pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__" + rel + "(s__WN30_" + 
+                            synset + ",s__WN30_" + avp.value + "))).\n");
+                }
+            }
+        }
+    }
+
+
+    /** ***************************************************************
+     */
+    private static void writeTPTPWordNetExceptions(PrintWriter pw) throws IOException {
+
+        Iterator<String> it = WordNet.wn.exceptionNounHash.keySet().iterator();
+        while (it.hasNext()) {
+            String plural = it.next();
+            String singular = WordNet.wn.exceptionNounHash.get(plural);
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + 
+                    StringUtil.StringToPrologID(singular) + ",s__Word))).\n");
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__singular(s__" + 
+                    StringUtil.StringToPrologID(singular) + ",s__" + StringUtil.StringToPrologID(plural) + "))).\n");
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
+            //        StringUtil.StringToPrologID(singular) + ",s__EnglishLanguage,\"'" + 
+            //        singular + "', is the singular form" +
+            //           " of the irregular plural '" + plural + "'\"))).\n");
+        }
+        it = WordNet.wn.exceptionVerbHash.keySet().iterator();
+        while (it.hasNext()) {
+            String past = it.next();
+            String infinitive = (String) WordNet.wn.exceptionVerbHash.get(past);
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + 
+                    StringUtil.StringToPrologID(infinitive) + ",s__Word))).\n");
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__past(s__" + 
+                    StringUtil.StringToPrologID(infinitive) + ",s__" + StringUtil.StringToPrologID(past) + "))).\n");
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
+            //        StringUtil.StringToPrologID(past) + ",s__EnglishLanguage,\"'" + 
+            //        past + "', is the irregular past tense form" +
+            //           " of the infinitive '" + infinitive + "'\"))).\n");
+        }
+    }
+
+    /** ***************************************************************
+     */
+    private static void writeTPTPOneWordToSenses(PrintWriter pw, String word) {
+
+        String wordAsID = StringUtil.StringToPrologID(word);
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__WN30Word_" + wordAsID + ",s__Word))).\n");
+        String wordOrPhrase = "word";
+        if (word.indexOf("_") != -1) 
+            wordOrPhrase = "phrase";
+        //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30Word_" + 
+        //        wordAsID + ",s__EnglishLanguage,\"The English " + wordOrPhrase + " '" + word + "'\"))).\n");
+        ArrayList<String> senses = WordNet.wn.wordsToSenses.get(word);
+        if (senses != null) {
+            for (int i = 0; i < senses.size(); i++) {
+                String sense = StringUtil.StringToPrologID(senses.get(i));
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__senseKey(s__WN30Word_" + 
+                        wordAsID + ",s__WN30WordSense_" + sense + "))).\n");
+            }
+        }
+        else
+            System.out.println("Error in WordNetUtilities.writeTPTPOneWordToSenses(): no senses for word: " + word);
+    }
+
+    /** ***************************************************************
+     */
+    private static void writeTPTPWordsToSenses(PrintWriter pw) throws IOException {
+
+        Iterator<String> it = WordNet.wn.wordsToSenses.keySet().iterator();
+        while (it.hasNext()) {
+            String word = (String) it.next();
+            writeTPTPOneWordToSenses(pw,word);
+        }
+    }
+
+    /** ***************************************************************
+     */
+    private static void writeTPTPSenseIndex(PrintWriter pw) throws IOException {
+
+        Iterator<String> it = WordNet.wn.senseIndex.keySet().iterator();
+        while (it.hasNext()) {
+            String sense = it.next();
+            String synset = StringUtil.StringToPrologID(WordNet.wn.senseIndex.get(sense));
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + 
+                    StringUtil.StringToPrologID(sense) + ",s__WordSense))).\n");
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
+            //        StringUtil.StringToPrologID(sense) + ",s__EnglishLanguage,\"The WordNet word sense '" + 
+            //       sense + "'\"))).\n");
+            String pos = WordNetUtilities.getPOSfromKey(sense);
+            String word = WordNetUtilities.getWordFromKey(sense);
+            String posNum = WordNetUtilities.posLettersToNumber(pos);
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__synset(s__" + 
+                    StringUtil.StringToPrologID(sense) + ",s__WN30_" + posNum + synset + "))).\n");
+            if (posNum.equals("2")) {
+                ArrayList<String> frames = WordNet.wn.verbFrames.get(synset + "-" + word);
+                if (frames != null) {
+                    for (int i = 0; i < frames.size(); i++) {
+                        String frame = frames.get(i);
+                        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__verbFrame(s__" + 
+                                StringUtil.StringToPrologID(sense) + ",\"" + frame + "\"))).\n");
+                    }
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
+    private static void writeTPTPWordNetHeader(PrintWriter pw) {
+
+        pw.println("# An expression of the Princeton WordNet " +
+                   "( http://wordnet.princeton.edu ) " +
+                   "in TPTP.  Use is subject to the Princeton WordNet license at " +
+                   "http://wordnet.princeton.edu/wordnet/license/");
+        Date d = new Date();
+        pw.println("#Produced on date: " + d.toString());
+    }
+
+    /** ***************************************************************
+     * Write TPTP format for WordNet
+     */
+    public static void writeTPTPWordNet(PrintWriter pw) throws IOException {
+
+        System.out.println("INFO in WordNetUtilities.writeTPTPWordNet()");
+
+        writeTPTPWordNetHeader(pw);
+        writeTPTPWordNetRelationDefinitions(pw);
+        writeTPTPWordNetClassDefinitions(pw);
+          // Get POS-prefixed synsets.
+        Iterator<String> it = WordNet.wn.synsetsToWords.keySet().iterator();
+        while (it.hasNext()) {
+            String synset = it.next();
+            writeTPTPWordNetSynset(pw,synset);
+        }
+        //writeTPTPWordNetExceptions(pw);
+        //writeTPTPVerbFrames(pw);
+        writeTPTPWordsToSenses(pw);
+        writeTPTPSenseIndex(pw);
     }
     
     /** ***************************************************************
@@ -1030,7 +1375,12 @@ public class WordNetUtilities {
 
         try {
 	        KBmanager.getMgr().initializeOnce();
-	        extractMeronyms();
+	        //extractMeronyms();
+            FileWriter fw = new FileWriter("WNout.tptp");
+            PrintWriter pw = new PrintWriter(fw);
+            pw.flush();
+	        writeTPTPWordNet(pw);
+            pw.flush();
         }
         catch (Exception e) {
             System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
