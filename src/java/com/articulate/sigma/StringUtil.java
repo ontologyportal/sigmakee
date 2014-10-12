@@ -356,6 +356,61 @@ public class StringUtil {
     }
 
     /** ***************************************************************
+     *  Convert an arbitrary string to a legal KIF identifier by
+     *  substituting dashes for illegal characters. TODO:
+     *  isJavaIdentifierPart() isn't sufficient, since it allows
+     *  characters KIF doesn't
+     */
+    public static String StringToKIFid(String s) {
+
+        if (s == null) 
+            return s;
+        s = s.trim();
+        if (s.length() < 1)
+            return s;
+        if (s.length() > 1 && s.charAt(0) == '"' && s.charAt(s.length()-1) == '"') 
+            s = s.substring(1,s.length()-1);        
+        if (s.charAt(0) != '?' &&
+            (!Character.isJavaIdentifierStart(s.charAt(0)) || 
+               s.charAt(0) > 122))
+               s = "S" + s.substring(1);
+        int i = 1;
+        while (i < s.length()) {
+            if (!Character.isJavaIdentifierPart(s.charAt(i)) || 
+                s.charAt(i) > 122) 
+                s = s.substring(0,i) + "-" + s.substring(i+1);
+            i++;
+        }
+        return s;
+    }
+    
+    /** ***************************************************************
+     *  Convert an arbitrary string to a legal Prolog identifier by
+     *  substituting dashes for illegal characters. 
+     */
+    public static String StringToPrologID(String s) {
+
+        if (s == null) 
+            return s;
+        s = s.trim();
+        if (s.length() < 1)
+            return s;         
+        if (Character.isUpperCase(s.charAt(0)))
+            s = Character.toLowerCase(s.charAt(0)) + s.substring(1);
+        if (!Character.isLetter(s.charAt(0)))
+               s = "s" + s.substring(1);
+        int i = 1;
+        while (i < s.length()) {
+            if (!Character.isLetter(s.charAt(i)) && 
+                    !Character.isDigit(s.charAt(i)) &&
+                    s.charAt(i) != '_')
+                s = s.substring(0,i) + "_" + s.substring(i+1);
+            i++;
+        }
+        return s;
+    }
+    
+    /** ***************************************************************
      * @param str A String
      * @return A String with all double quote characters properly
      * escaped with a left slash character.
@@ -779,7 +834,21 @@ public class StringUtil {
 
         return isNonEmptyString(input) && !input.matches(".*\\D+.*");
     }
-
+    
+    /** ***************************************************************
+     */
+	public static boolean isNumeric(String input) {
+		
+		try {
+			Integer.parseInt(input);
+			return true;
+		} 
+		catch (NumberFormatException e) {
+			// s is not numeric
+			return false;
+		}
+	}
+    
     /** ***************************************************************
      * Returns a String formed from n concatenations of input.
      *
