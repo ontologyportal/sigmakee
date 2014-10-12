@@ -333,8 +333,8 @@ public class CCheck implements Runnable {
             pw.println("  <entries>");            
             while (it.hasNext()) {
                 Formula query = (Formula) it.next();
-                FormulaPreprocessor fp = new FormulaPreprocessor(query);
-                ArrayList<Formula> processedQueries = fp.preProcess(false, kb);
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                ArrayList<Formula> processedQueries = fp.preProcess(query,false, kb);
                 
                 String processedQuery = null;
                 String sourceFile = null;
