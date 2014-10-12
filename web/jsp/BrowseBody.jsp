@@ -136,8 +136,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  else if (kb != null && term != null && kb.containsRE(term) && 
          KBPOS.equals("2") && relREmatch == null) {
  	ArrayList<String> matches = kb.getREMatch(term);
- 	ArrayList<String> relMatches = kb.kbCache.getAllRelTerms(matches);
- 	ArrayList<String> nonRelMatches = kb.kbCache.getAllNonRelTerms(matches);
+ 	ArrayList<String> relMatches = HTMLformatter.getAllRelTerms(kb,matches);
+ 	ArrayList<String> nonRelMatches = HTMLformatter.getAllNonRelTerms(kb,matches);
  	relREmatch = relMatches.size()>0?relMatches.get(0):"";
  	nonRelREmatch = nonRelMatches.size()>0?nonRelMatches.get(0):"";
  	show.append(HTMLformatter.showREMatches(kb, relREmatch, nonRelREmatch, term));
