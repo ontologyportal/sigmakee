@@ -107,20 +107,24 @@ else {
                 kb = mgr.getKB(kbName);
                            
             if (newKB) {
-                ArrayList list = new ArrayList();
+                ArrayList<String> list = new ArrayList<String>();
                 list.add(outfile.getCanonicalPath());
                 mgr.loadKB(kbName, list);
             } 
             else { // Remove the constituent, if it is already present.    
-                ListIterator<String> lit = kb.constituents.listIterator();
-                while (lit.hasNext()) {
-                    String constituent = lit.next();
-                    if (StringUtil.isNonEmptyString(baseName) && constituent.contains(baseName))
-                        lit.remove();
-                }                         
-                kb.addNewConstituent(outfile.getCanonicalPath());
-                if (mgr.getPref("cache").equalsIgnoreCase("yes")) 
-                    kb.kbCache.cache();                          
+                //ListIterator<String> lit = kb.constituents.listIterator();
+                //while (lit.hasNext()) {
+                //    String constituent = lit.next();
+                //    if (StringUtil.isNonEmptyString(baseName) && constituent.contains(baseName))
+                //        lit.remove();
+                //}                         
+                //kb.addNewConstituent(outfile.getCanonicalPath());
+                kb.addConstituent(outfile.getCanonicalPath());           
+                kb.checkArity();
+                if (mgr.getPref("cache").equalsIgnoreCase("yes")) {
+                    kb.kbCache.buildCaches();      
+                    kb.kbCache.writeCacheFile();
+                }
                 kb.loadEProver();
                 KBmanager.getMgr().writeConfiguration();              
             }              
