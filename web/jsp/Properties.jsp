@@ -308,10 +308,10 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   int oldBitVal = KBmanager.getMgr().getOldInferenceBitValue();
   int newBitVal = KBmanager.getMgr().getInferenceBitValue();
   boolean bitsChanged = false;
-  Set kbNames = KBmanager.getMgr().getKBnames();
+  HashSet<String> kbNames = KBmanager.getMgr().getKBnames();
   String akbName = null;
   KB akb = null;
-  Iterator it = null;
+  Iterator<String> it = null;
   if ((kbNames != null) && !(kbNames.isEmpty())) {
       if (oldBitVal != newBitVal) {
           if (oldBitVal != -1) 
@@ -356,7 +356,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                   }
                   else if (callCache) {
                       System.out.println("INFO in Properties.jsp: writing the cache file and reloading EProver");                      
-                      kb.kbCache.cache();
+                      kb.kbCache = new KBcache(kb);
+                      kb.kbCache.buildCaches();
+                      kb.kbCache.writeCacheFile();
                       kb.loadEProver();
                   }
                   else if (callLoadEProver) {
