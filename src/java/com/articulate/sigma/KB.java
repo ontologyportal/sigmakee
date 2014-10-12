@@ -90,7 +90,7 @@ public class KB {
      * included in the relation cache tables. */
     private boolean cacheReflexiveAssertions = false;
 
-    public KBcache kbCache = new KBcache();
+    public KBcache kbCache = null;
     
     /** *************************************************************
      * Constructor which takes the name of the KB and the location
@@ -146,7 +146,7 @@ public class KB {
     }
 
     /** ************************************************************
-     * Returns a synchronized SortedSet of Strings, which are all
+     * Returns a SortedSet of Strings, which are all
      * the terms in the KB. */
     public SortedSet<String> getTerms() {
         
@@ -266,7 +266,7 @@ public class KB {
     public void checkArity() {
         
         ArrayList<String> toRemove = new ArrayList<String>();
-        System.out.print("Performing Arity Check");
+        System.out.print("INFO in KB.checkArity(): Performing Arity Check");
         if (formulaMap != null && formulaMap.size() > 0) {
         	int counter = 0;
             Iterator<String> formulas = formulaMap.keySet().iterator();
@@ -276,17 +276,18 @@ public class KB {
                     System.out.print(".");
                     counter = 0;
                 }
-                if (!PredVarInst.hasCorrectArity(f.theFormula,this)) {
+                String term = PredVarInst.hasCorrectArity(f,this);
+                if (!StringUtil.emptyString(term)) {
                     errors.add("Formula in " + f.sourceFile + 
-                            " rejected due to arity error: " + f.theFormula);
+                            " rejected due to arity error of predicate " + term +
+                            " in formula: \n" + f.theFormula);
                     toRemove.add(f.theFormula);
-                }
-                
+                }                
             }
             System.out.println();
         }
-        for (int i = 0; i < toRemove.size(); i++) 
-            formulaMap.remove(toRemove.get(i));        
+        //for (int i = 0; i < toRemove.size(); i++) 
+        //    formulaMap.remove(toRemove.get(i));        
     }
 
     /** *************************************************************
@@ -346,7 +347,7 @@ public class KB {
      * <strong>not</strong> be relied upon for any other purpose,
      * since it is not automatically generated and might be out of
      * date.
-     */
+     
     public static final List<String> VA_RELNS = Arrays.asList("AssignmentFn",
                                                       "GreatestCommonDivisorFn",
                                                       "LatitudeFn",
@@ -359,7 +360,7 @@ public class KB {
                                                       "exhaustiveDecomposition",
                                                       "partition",
                                                       "processList");
-
+*/
     /** *************************************************************
      * Returns true if relnName is the name of a relation that is
      * known to be, or computed to be, a variable arity relation.
@@ -368,7 +369,7 @@ public class KB {
      * or Function).
      *
      * @return boolean
-     */
+     
     public boolean isVariableArityRelation(String relnName) {
         
         boolean ans = false;
@@ -377,9 +378,9 @@ public class KB {
                || isInstanceOf(relnName, "VariableArityRelation"));
         return ans;
     }
-
+*/
     /** *************************************************************
-     */
+     
     protected ArrayList listRelnsWithRelnArgs() {
         
         if (kbCache.relnsWithRelnArgs != null)
@@ -388,7 +389,7 @@ public class KB {
     }
 
     /** *************************************************************
-     */
+     *
     protected boolean containsRelnWithRelnArg(String input) {
         
         if (StringUtil.isNonEmptyString(input)) {
@@ -405,7 +406,7 @@ public class KB {
         }
         return false;
     }
-
+*/
     /** *************************************************************
      * debugging utility
      
@@ -473,10 +474,19 @@ public class KB {
      */
     public boolean isInstanceOf(String i, String c) {
         
-        boolean ans = false;
-        ans = kbCache.getCachedRelationValues("instance", i, 1, 2).contains(c);
-        // was: getAllInstancesWithPredicateSubsumption(c);
-        return ans;
+        ArrayList<Formula> al = askWithRestriction(0,"instance",1,i);
+        HashSet<String> classes = KBcache.collectArgFromFormulas(2,al);
+        Iterator<String> it = classes.iterator();
+        while (it.hasNext()) {
+            String cl = it.next();
+            HashSet<String> parents = kbCache.getParentClasses(cl);
+            if (parents == null) {
+                System.out.println("Error in KB.isInstanceOf(): no parents for " + cl);
+            }
+            else if (parents.contains(c))
+                return true;
+        }
+        return false;
     }
 
     /** *************************************************************
@@ -500,20 +510,19 @@ public class KB {
      * @param c A String denoting a Class.
      * @return true or false.
      */
-    public static boolean isInstanceOfInAnyKB(String i, String c) {
+    public static boolean isRelationInAnyKB(String i) {
         
-        boolean ans = false;
         HashMap<String,KB> kbs = KBmanager.getMgr().kbs;
         if (!kbs.isEmpty()) {
             KB kb = null;
             Iterator<KB> it = kbs.values().iterator();
             while (it.hasNext()) {
                 kb = it.next();
-                ans = kb.isInstanceOf(i, c);
-                if (ans) break;
+                if (kb.kbCache.relations.contains(i)) 
+                    return true;
             }
         }
-        return ans;
+        return false;
     }
 
     /** *************************************************************
@@ -535,16 +544,15 @@ public class KB {
      */
     public boolean childOf(String child, String parent) {
         
-        boolean ans = child.equals(parent);
-        if (!ans) {
-            List<String> preds = Arrays.asList("instance", "subclass", "subrelation");
-            for (String pred : preds) {
-            	Set<String> parents = kbCache.getCachedRelationValues(pred, child, 1, 2);
-                ans = parents.contains(parent);
-                if (ans) break;
-            }
-        }
-        return ans;
+        if (child.equals(parent))
+            return true;
+        if (kbCache.transInstOf(parent,child))
+            return true;
+        if (kbCache.childOfP("instance",parent,child) ||
+            kbCache.childOfP("subclass",parent,child) || 
+            kbCache.childOfP("subrelation",parent,child))
+            return true;
+        return false;
     }
 
     /** *************************************************************
@@ -557,11 +565,9 @@ public class KB {
      */
     public boolean isSubclass(String c1, String c2) {
         
-        boolean ans = false;
         if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(c2)) 
-            ans = kbCache.getCachedRelationValues("subclass", c1, 1, 2).contains(c2);
-            // was: getAllSubClassesWithPredicateSubsumption(c2);            
-        return ans;
+            return kbCache.childOfP("subclass",c2,c1);
+        return false;
     }
     
     /** *************************************************************
@@ -740,7 +746,9 @@ public class KB {
        if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)) {
            ArrayList<Formula> partial1 = ask("arg", argnum1, term1);
            ArrayList<Formula> partial2 = ask("arg", argnum2, term2);
+           //System.out.println("INFO in KB.askWithRestriction(): partial 2: " + partial2);
            ArrayList<Formula> partial = partial1;
+           // partial.retainAll(partial2); - this should be faster than below
            int arg = argnum2;
            String term = term2;
            if (partial1.size() > partial2.size()) {
@@ -752,7 +760,13 @@ public class KB {
            int plen = partial.size();
            for (int i = 0; i < plen; i++) {
                f = (Formula) partial.get(i);
-               if (f.getArgument(arg).equals(term))
+               if (f == null) 
+                   System.out.println("Error in KB.askWithRestriction(): null formula searching on term: " + term);
+               String thisArg = f.getArgument(arg);
+               if (thisArg == null) {
+                   System.out.println("Error in KB.askWithRestriction(): null argument: " + f);
+               }
+               else if (f.getArgument(arg).equals(term))
                    result.add(f);
            }
        }
@@ -928,12 +942,18 @@ public class KB {
 
     /** *************************************************************
      */
-    private ArrayList<Formula> StringsToFormulas(ArrayList<String> strings) {
+    private ArrayList<Formula> stringsToFormulas(ArrayList<String> strings) {
     
         ArrayList<Formula> result = new ArrayList<Formula>();
         if (strings == null) return result;
-        for (int i = 0; i < strings.size(); i++) 
-            result.add(formulaMap.get(strings.get(i)));
+        for (int i = 0; i < strings.size(); i++) {
+        	String s = strings.get(i);
+        	Formula f = formulaMap.get(s);
+        	if (f != null)
+        		result.add(f);
+        	else
+        		System.out.println("Error in KB.stringsToFormulas(): null formula for key: " + s);
+        }
         return result;
     }
     
@@ -974,7 +994,8 @@ public class KB {
         else 
             key = kind + "-" + term;            
         ArrayList<String> alstr = formulas.get(key);
-        tmp = StringsToFormulas(alstr);
+        
+        tmp = stringsToFormulas(alstr);
         if (tmp != null) 
             result.addAll(tmp);                        
         return result;
@@ -1442,6 +1463,31 @@ public class KB {
     }
 
     /** *************************************************************
+     *  Writes all the terms in the knowledge base to a file
+     */
+    public void writeTerms() throws IOException {
+
+        String fname = KBmanager.getMgr().getPref("kbDir") + File.separator + "terms.txt";
+        FileWriter fr = null;
+        try {
+            File file = new File(fname);
+            fr = new FileWriter(file,true);
+            Iterator<String> it = terms.iterator();
+            while (it.hasNext()) {
+                String term = it.next();
+                fr.write(term);
+                fr.write("\n");
+            }
+        }
+        catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (fr != null) fr.close();
+        }        
+    }
+    
+    /** *************************************************************
      * Adds a formula to the knowledge base.  Returns an XML formatted
      * String that contains the response of the inference engine.  It
      * should be of the form "<assertionResponse>...</assertionResponse>"
@@ -1480,9 +1526,13 @@ public class KB {
                 Iterator<Formula> it = kif.formulaMap.values().iterator();
                 while (it.hasNext()) { // 2. Confirm that the input has been converted into
                                        // at least one Formula object and stored in this.formulaMap.
-                    Formula parsedF = it.next();    
-                    if (!PredVarInst.hasCorrectArity(parsedF.theFormula,this))
-                        result = result + "Arity error: " + parsedF.theFormula;                        
+                    Formula parsedF = it.next();   
+                    String term = PredVarInst.hasCorrectArity(parsedF,this);
+                    if (!StringUtil.emptyString(term)) {
+                    	result = result + "Formula in " + parsedF.sourceFile + 
+                                " rejected due to arity error of predicate " + term +
+                                " in formula: \n" + parsedF.theFormula;
+                    }                       
                     else 
                         parsedFormulas.add(parsedF);                        
                 }
@@ -1491,7 +1541,7 @@ public class KB {
                         if (file.exists())  // 3. If the assertions file exists, delete it.
                             file.delete();
                         constituents.add(filename);
-                        mgr.writeConfiguration();
+                        //mgr.writeConfiguration();
                     }
                     Iterator<Formula> pfit = parsedFormulas.iterator();
                     while (pfit.hasNext()) {
@@ -1507,8 +1557,8 @@ public class KB {
                     while (it2.hasNext()) {
                         processedFormulas.clear();
                         Formula parsedF = it2.next();          // 5. Preproccess the formula.   
-                        FormulaPreprocessor fp = new FormulaPreprocessor(parsedF);
-                        processedFormulas.addAll(fp.preProcess(false, this));
+                        FormulaPreprocessor fp = new FormulaPreprocessor();
+                        processedFormulas.addAll(fp.preProcess(parsedF,false, this));
                         errors.addAll(parsedF.getErrors());
                         if (processedFormulas.isEmpty()) 
                             allAdded = false;                            
@@ -1578,8 +1628,8 @@ public class KB {
     	if (StringUtil.isNonEmptyString(suoKifFormula)) {
     		Formula query = new Formula();
     		query.read(suoKifFormula);
-    		FormulaPreprocessor fp = new FormulaPreprocessor(query);
-    		ArrayList<Formula> processedStmts = fp.preProcess(true, this);
+    		FormulaPreprocessor fp = new FormulaPreprocessor();
+    		ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
 
     		if (!processedStmts.isEmpty() && this.eprover != null) {
     			String strQuery = processedStmts.get(0).theFormula;                
@@ -1616,8 +1666,8 @@ public class KB {
         if (!StringUtil.emptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor(query);
-            ArrayList<Formula> processedStmts = fp.preProcess(true, this);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
             try {
                 if (!processedStmts.isEmpty()) {
                     String strQuery = processedStmts.get(0).theFormula;                
@@ -1835,7 +1885,7 @@ public class KB {
      */
     public int getCountRelations() {
 
-        return this.getAllInstances("Relation").size();
+        return kbCache.relations.size();
     }
 
     /** ***************************************************************
@@ -2192,35 +2242,36 @@ public class KB {
     }
 
     /** *************************************************************
-     */
+     
     public void addNewConstituent(String filename) throws IOException {
         addConstituent(filename, true, false, true);
     }
     
-    /** *************************************************************
+    ** *************************************************************
      * Add a new KB constituent by reading in the file, and then
      * merging the formulas with the existing set of formulas.  All
      * assertion caches are rebuilt, the current EProver process is
      * destroyed, and a new one is created.
      *
      * @param filename - the full path of the file being added.
-     */
+     
     public void addConstituent(String filename) throws IOException {
         addConstituent(filename, true, true, false);
     }
-
+*/
     /** *************************************************************
      * Add a new KB constituent by reading in the file, and then merging
      * the formulas with the existing set of formulas.
      *
      * @param filename - The full path of the file being added
-     * @param buildCachesP - If true, forces the assertion caches to be rebuilt
+     * @param buildCachesP - If true, forces the assertion caches to be rebuilt - deprecated
+     * @param performArity - Perform arity check - deprecated since this can't be dont until all relations are defined
      * @param loadEProverP - If true, destroys the old EProver process and
-     * starts a new one     
+     * starts a new one     - deprecated
      */    
-    public void addConstituent(String filename, boolean buildCachesP,
-            boolean loadEProverP, boolean performArity) {
-      
+    public void addConstituent(String filename) {
+    //, boolean buildCachesP, boolean loadEProverP, boolean performArity) {
+
     	String canonicalPath = null;
     	KIF file = new KIF();
     	try {
@@ -2245,40 +2296,86 @@ public class KB {
             error.append(" in file " + canonicalPath);
             errors.add(error.toString());
         }
-                
+
         Iterator<String> it = file.formulas.keySet().iterator();
         int count = 0;
         while (it.hasNext()) { // Iterate through keys.
             String key = it.next();                 
             if ((count++ % 100) == 1)  
                 System.out.print("."); 
-            ArrayList<String> list = file.formulas.get(key);
-            formulas.put(key, list);            
+            ArrayList<String> newlist = file.formulas.get(key);
+            
+         // temporary debug test to find nulls
+            for (int i = 0; i < newlist.size(); i++) {
+            	String form = newlist.get(i);
+            	if (StringUtil.emptyString(form))
+            		System.out.println("Error in KB.addConstituent() 1: formula is null ");
+            }
+            ArrayList<String> list = formulas.get(key);   
+            
+            if (list != null) {
+                // temporary debug test to find nulls
+                for (int i = 0; i < list.size(); i++) {
+                	String form = list.get(i);
+                	if (StringUtil.emptyString(form))
+                		System.out.println("Error in KB.addConstituent() 2: formula is null ");
+                }
+                newlist.addAll(list);
+            }                 
+            formulas.put(key, newlist);            
         }
+          
+        count = 0;
+        Iterator<Formula> it2 = file.formulaMap.values().iterator();
+        while (it2.hasNext()) { // Iterate through values
+            Formula f = (Formula) it2.next();
+            String internedFormula = f.theFormula.intern();
+            if ((count++ % 100) == 1)  
+                System.out.print(".");
+            if (!formulaMap.containsKey(internedFormula))
+                formulaMap.put(internedFormula, f);
+        }
+
+        this.getTerms().addAll(file.terms);
+        if (!constituents.contains(canonicalPath))
+            constituents.add(canonicalPath);            
+        //clearFormatMaps(); // Clear formatMap and termFormatMap for this KB.
+        //if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) {
+        //    kbCache = new KBcache(this);
+        //    kbCache.buildCaches();
+        //}
+        //if (loadEProverP)
+        //    loadEProver();
+    }
+
+    /** ***************************************************************
+     * deprecated code
+     
+    private void oldArityCheck(KIF file) {
         
         Iterator<Formula> it2 = file.formulaMap.values().iterator();
-        while (it2.hasNext()) {   //  Iterate through values
+        while (it2.hasNext()) { // Iterate through values
             Formula f = (Formula) it2.next();
             boolean correctArity = true;
-            if (performArity) {
-                if (!PredVarInst.hasCorrectArity(f.theFormula,this)) {
-                    errors.add("Incorrect arity:\n" + f.htmlFormat(this));
-                    System.out.println("Incorrect arity: " + f.theFormula);
-                    correctArity = false;
-                }
+            if (!PredVarInst.hasCorrectArity(f, this)) {
+                errors.add("Incorrect arity:\n" + f.htmlFormat(this));
+                System.out.println("Incorrect arity: " + f.theFormula);
+                correctArity = false;
             }
             if (correctArity) {
                 String internedFormula = f.theFormula.intern();
-                if (!formulaMap.containsKey(internedFormula)) 
-                    formulaMap.put(internedFormula, f);                    
+                if (!formulaMap.containsKey(internedFormula))
+                    formulaMap.put(internedFormula, f);
                 else {
                     StringBuilder error = new StringBuilder();
                     error.append("Warning: Duplicate axiom in ");
-                    error.append(f.sourceFile + " at line " + f.startLine + "<br />");
+                    error.append(f.sourceFile + " at line " + f.startLine
+                            + "<br />");
                     error.append(f.theFormula + "<p>");
-                    Formula existingFormula = (Formula) formulaMap.get(internedFormula);
+                    Formula existingFormula = (Formula) formulaMap
+                            .get(internedFormula);
                     error.append("Warning: Existing formula appears in ");
-                    error.append(existingFormula.sourceFile + " at line "); 
+                    error.append(existingFormula.sourceFile + " at line ");
                     error.append(existingFormula.startLine + "<br />");
                     error.append("<p>");
                     System.out.println("Duplicate detected.");
@@ -2286,17 +2383,8 @@ public class KB {
                 }
             }
         }
-                
-        this.getTerms().addAll(file.terms);
-        if (!constituents.contains(canonicalPath))
-            constituents.add(canonicalPath);            
-        clearFormatMaps(); // Clear formatMap and termFormatMap for this KB.
-        if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix))
-            kbCache.buildRelationCaches(this);
-        if (loadEProverP)
-            loadEProver();
     }
-
+    */
     /** ***************************************************************
      * Reload all the KB constituents.
      */
@@ -2320,13 +2408,16 @@ public class KB {
             if (nci.hasNext()) System.out.println("INFO in KB.reload()");
             while (nci.hasNext()) {
                 String cName = (String) nci.next();                
-                addConstituent(cName, false, false, false);
+                addConstituent(cName);
+                //addConstituent(cName, false, false, false);
             }            
             checkArity();  // Reperform arity checks on everything            
-            kbCache.buildRelationCaches(this);  // Rebuild the in-memory relation caches.
+            kbCache = new KBcache(this);
+            kbCache.buildCaches();
             // If cache == yes, write the cache file.
-            if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
-                kbCache.cache();
+            if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
+                kbCache.writeCacheFile();
+            }
             // At this point, we have reloaded all constituents, have
             // rebuilt the relation caches, and, if cache == yes, have
             // written out the _Cache.kif file.  Now we reload the
@@ -2585,7 +2676,7 @@ public class KB {
                 int valence = 0;
                 while (it.hasNext()) {
                 	String inst = (String) it.next();
-                    valence = getValence(inst);
+                    valence = kbCache.valences.get(inst);
                     if (valence > 0) {
                     	String fStr = ("(valence " + inst + " " + valence + ")");
                         Formula f = new Formula();
@@ -2697,7 +2788,7 @@ public class KB {
         Iterator<String> it = classNames.iterator();
         while (it.hasNext()) {
             String term = it.next();
-            ans.addAll(kbCache.getParents(term));
+            ans.addAll(kbCache.getParentClasses(term));
         }
         return ans;    
     }
@@ -2709,7 +2800,7 @@ public class KB {
      * @param className The name of a Class.
      *
      * @return A Set of String terms, which could be empty.
-     */
+     
     public TreeSet<String> getAllSubClassesWithPredicateSubsumption(String className) {
 
         TreeSet<String> ans = new TreeSet<String>();
@@ -2733,7 +2824,7 @@ public class KB {
         }
         return ans;
     }
-
+*/
     /** ***************************************************************
      * This method retrieves all superclasses of className, using both
      * class and predicate (subrelation) subsumption.
@@ -2741,7 +2832,7 @@ public class KB {
      * @param className The name of a Class.
      *
      * @return A Set of String terms, which could be empty.
-     */
+     
     public TreeSet<String> getAllSuperClassesWithPredicateSubsumption(String className) {
 
     	TreeSet<String> ans = new TreeSet<String>();
@@ -2765,7 +2856,7 @@ public class KB {
         }
         return ans;
     }
-
+*/
     /** ***************************************************************
      * This method retrieves all instances of className, using both
      * predicate (subrelation) and class subsumption.
@@ -2773,7 +2864,7 @@ public class KB {
      * @param className The name of a Class
      *
      * @return A Set of String terms, which could be empty
-     */
+     
     public Set<String> getAllInstancesWithPredicateSubsumption(String className) {
         return getAllInstancesWithPredicateSubsumption(className, true);
     }
@@ -2791,7 +2882,7 @@ public class KB {
      * returned terms
      *
      * @return A Set of String terms, which could be empty
-     */
+     
     public TreeSet<String> getAllInstancesWithPredicateSubsumption(String className,
                                                        boolean gatherSubclasses) {
     	TreeSet<String> ans = new TreeSet<String>();
@@ -2830,14 +2921,14 @@ public class KB {
         }
         return ans;
     }
-
+*/
     /** ***************************************************************
      * This method retrieves all classes of which term is an instance,
      * using both class and predicate (subrelation) subsumption.
      *
      * @param term The name of a SUO-KIF term.     
      * @return A Set of terms (class names), which could be empty.
-     */
+     
     public Set<String> getAllInstanceOfsWithPredicateSubsumption(String term) {
 
         TreeSet<String> ans = new TreeSet<String>();
@@ -2870,7 +2961,7 @@ public class KB {
         }
         return ans;
     }
-
+*/
     /** ***************************************************************
      * This method retrieves the downward transitive closure of all Class
      * names contained in the input set.  The members of the input set are
@@ -2922,18 +3013,18 @@ public class KB {
      * @param classNames A Set object containing SUO-KIF class names
      * (Strings).     
      * @return A Set of SUO-KIF class names, which could be empty.
-     */
+     
     private Set<String> getAllSubClasses(Set<String> classNames) {
 
         Set<String> ans = new HashSet<String>();
         Iterator<String> it = classNames.iterator();
         while (it.hasNext()) {
             String term = it.next();
-            ans.addAll(kbCache.getChildren(term));
+            ans.addAll(kbCache.getChildClasses(term));
         }
         return ans;
     }
-
+*/
     /** ***************************************************************
      * This method retrieves all instances of the classes named in the
      * input set.
@@ -2949,7 +3040,7 @@ public class KB {
             Iterator<String> it = classNames.iterator();
             while (it.hasNext()) {
                 name = it.next();
-                ans.addAll(kbCache.getCachedRelationValues("instance", name, 2, 1));
+                ans.addAll(kbCache.getInstances(name));
             }
         }
         return ans;
@@ -2983,78 +3074,21 @@ public class KB {
      */
     public int getValence(String relnName) {
 
-        int ans = -1;
-        if (StringUtil.isNonEmptyString(relnName)) {
-            // First, see if the valence has already been cached.
-            if (kbCache.relationValences != null) {
-                int[] rv = (int[]) kbCache.relationValences.get(relnName);
-                if (rv != null) {
-                    ans = rv[0];
-                    return ans;
-                }
-            }
-            // Grab all of the superrelations too, since we have already computed them.
-            Set<String> relnSet = kbCache.getCachedRelationValues("subrelation", relnName, 1, 2);
-            relnSet.add(relnName);
-
-            Iterator<String> it = relnSet.iterator();
-            while (it.hasNext() && (ans < 0)) {
-                String relation = it.next();
-                // First, check to see if the KB actually contains an
-                // explicit valence value.  This is unlikely.
-                List<Formula> literals = askWithRestriction(1, relation, 0, "valence");
-                if ((literals != null) && !(literals.isEmpty())) {
-                    Formula f = literals.get(0);
-                    String digit = f.getArgument(2);
-                    if (StringUtil.isNonEmptyString(digit)) {
-                        ans = Integer.parseInt(digit);
-                        if (ans >= 0) 
-                            break;                            
-                    }
-                }
-                // See which valence-determining class the relation belongs to.
-                Set<String> classNames = kbCache.getCachedRelationValues("instance", relation, 1, 2);
-                if (classNames != null) {
-                    String[][] tops = { {"VariableArityRelation", "0"},
-                                        {"UnaryFunction",         "1"},
-                                        {"BinaryRelation",        "2"},
-                                        {"TernaryRelation",       "3"},
-                                        {"QuaternaryRelation",    "4"},
-                                        {"QuintaryRelation",      "5"},
-                    };
-                    for (int i = 0; (ans < 0) && (i < tops.length); i++) {
-                        if (classNames.contains(tops[i][0])) {
-                            ans = Integer.parseInt(tops[i][1]);
-                            // The kluge below is to deal with the fact that a
-                            // function, by definition, has a valence
-                            // one less than the corresponding
-                            // predicate.  An instance of
-                            // TernaryRelation that is also an instance
-                            // of Function has a valence of 2, not 3.
-                            if ((i > 1)
-                                && (relation.endsWith("Fn") || classNames.contains("Function"))
-                                && !(tops[i][0]).endsWith("Function")) {
-                                --ans;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }            
-            if (ans >= 0) {   // Cache the answer, if there is one.
-                int[] rv = new int[1];
-                rv[0] = ans;
-                kbCache.relationValences.put(relnName, rv);
-            }
+        if (kbCache.valences.get(relnName) == null) {
+            if (Formula.isLogicalOperator(relnName)) // logical operator arity is checked in KIF.parse()
+                return -1;
+            System.out.println("Error in KB.getValence(): No valence found for " + relnName);
+            return -1;
         }
-        return ans;
+        else
+            return kbCache.valences.get(relnName);
     }
 
     /** ***************************************************************     
      * @return an ArrayList containing all predicates in this KB.     
      */
-    public ArrayList collectPredicates() {
-        return new ArrayList(kbCache.getCachedRelationValues("instance", "Predicate", 2, 1));
+    public ArrayList<String> collectPredicates() {
+        return new ArrayList<String>(kbCache.instances.get("Predicate"));
     }
 
     /** ***************************************************************     
@@ -3167,9 +3201,7 @@ public class KB {
                     j--;
                 }
                 if (j > i) {
-                    formToPrint = DocGen.getInstance(this.name).showTermName(this,
-                                                                             term,
-                                                                             language);
+                    formToPrint = DocGen.getInstance(this.name).showTermName(this,term,language);
                     StringBuilder hsb = new StringBuilder("<a href=\"");
                     hsb.append(href);
                     hsb.append(isStaticFile
@@ -3335,7 +3367,8 @@ public class KB {
 
         TreeSet<String> newTreeSet = new TreeSet<String>();
         KBmanager mgr = KBmanager.getMgr();
-        kbCache.resetSortalTypeCache();
+        kbCache.kb = this;
+        kbCache.buildCaches();
         boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         Iterator<String> it = forms.iterator(); 
         while (it.hasNext()) {
@@ -3347,8 +3380,8 @@ public class KB {
             }
             //System.out.println("INFO in KB.preProcess(): form : " + form);
             //System.out.println("INFO in KB.preProcess(): f : " + f);
-            FormulaPreprocessor fp = new FormulaPreprocessor(f);
-            ArrayList<Formula> processed = fp.preProcess(false, this);   // not queries
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            ArrayList<Formula> processed = fp.preProcess(f,false, this);   // not queries
             if (tptpParseP) {
                 try {
                 	SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
@@ -3373,15 +3406,18 @@ public class KB {
                     newTreeSet.add(p.theFormula);
                     errors.addAll(p.getErrors());
                 }
+                else {
+                	System.out.println("Error in KB.preProcess(): empty formula: " + p);
+                }
             }
         }
-        kbCache.clearSortalTypeCache();
+        //kbCache.clearSortalTypeCache();
         return newTreeSet;
     }
 
     /** *************************************************************
      * List all terms that don't have an externalImage link
-     */
+     
     private void termsWithNoPictureLinks() {
 
        synchronized (this.getTerms()) {
@@ -3393,7 +3429,7 @@ public class KB {
             }
         }
     }
-
+*/
     /** *************************************************************
      *  Turn SUMO into a semantic network by extracting all ground
      *  binary relations, turning all higher arity relations into a
@@ -3590,7 +3626,7 @@ public class KB {
             Iterator<String> it = kb.terms.iterator();
             while (it.hasNext()) {
                 String term = it.next();
-                if (Character.isLowerCase(term.charAt(0)) && kb.getValence(term) <= 2) {
+                if (Character.isLowerCase(term.charAt(0)) && kb.kbCache.valences.get(term) <= 2) {
                     /*
                     ArrayList<Formula> forms = kb.askWithRestriction(0,"domain",1,term);
                     for (int i = 0; i < forms.size(); i++) {
@@ -3642,17 +3678,19 @@ public class KB {
      */
     public static void main(String[] args) {
 
-        generateTPTPTestAssertions();       
+        //generateTPTPTestAssertions();       
         // testTPTP(args);
-        /*
+        
           try {
-          KBmanager.getMgr().initializeOnce();
-          } catch (IOException ioe ) {
-          System.out.println(ioe.getMessage());
+              KBmanager.getMgr().initializeOnce();
+              KB kb = KBmanager.getMgr().getKB("SUMO");
+              kb.writeTerms();
+          } 
+          catch (IOException ioe ) {
+              System.out.println(ioe.getMessage());
           }
-          KB kb = KBmanager.getMgr().getKB("SUMO");
-          kb.termsWithNoPictureLinks();
-        */
+
+        
         
         //kb.generateSemanticNetwork();
         //kb.generateRandomProof();
