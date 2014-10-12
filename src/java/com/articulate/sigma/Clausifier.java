@@ -148,7 +148,7 @@ public class Clausifier  {
     }
 
     /** ***************************************************************
-     * Note mixed types in return List!  Fixme!
+     * TODO: Note mixed types in return List!  Fixme!
      * 
      * This method converts the SUO-KIF Formula to an ArrayList of
      * clauses.  Each clause is an ArrayList containing an ArrayList
