@@ -12,27 +12,16 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforget.net
 */
 package com.articulate.sigma;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
+import java.io.*;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.logging.Logger;
+import java.util.*;
 
 /** *****************************************************************
  * A class designed to read a file in SUO-KIF format into memory.
- * See <http://suo.ieee.org/suo-kif.html> for a language specification.
- * readFile() and writeFile() are the primary methods.
+ * See <http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/suo-kif.pdf> 
+ * for a language specification.
+ * readFile() and writeFile() are the primary entry points and parse()
+ * does all the real work.
  * @author Adam Pease
  */
 public class KIF {
@@ -55,10 +44,16 @@ public class KIF {
     /** The set of all terms in the knowledge base.  This is a set of Strings. */
     public TreeSet<String> terms = new TreeSet<String>();
 
-    /** A HashMap of ArrayLists of Formulas.  @see KIF.createKey for key format. */
+    /** A HashMap of ArrayLists of Formulas.  Each String key points to a list of
+     * String formulas that correspond to that key. For example, 
+     * "arg-1-Foo" would be one of several keys for "(instance Foo Bar)".
+     * @see KIF.createKey for key format. */
     public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();    
 
-    /** A HashMap of String keys representing the formula, and Formula values */
+    /** A HashMap of String keys representing the formula, and Formula values.
+     * For example, "(instance Foo Bar)" is a String key that might point to
+     * a Formula that is that string, along with information about at what
+     * line number and in what file it appears.*/
     public HashMap<String, Formula> formulaMap = new HashMap<String, Formula>();    
    
     /** A "raw" HashSet of unique Strings which are the formulas from the file without 
@@ -71,21 +66,15 @@ public class KIF {
 
     /** warnings generated during parsing */
     public TreeSet<String> warningSet = new TreeSet<String>();
-    private static Logger logger = null;
-    
-    public KIF() {
-    	if (logger == null)
-    		logger = Logger.getLogger(this.getClass().getName());    	
-    }
     
     /** ***************************************************************
-     */
+     
     public String getFilename() {
         return this.filename;
     }
 
     /** ***************************************************************
-     */
+     
     public void setFilename(String canonicalPath) {
         this.filename = canonicalPath;
         return;
@@ -159,13 +148,11 @@ public class KIF {
 		result.append(st.toString());
 		result.append("\t");
 		result.append(key);
-
-		logger.fine(result.toString());
     }
 
     /** ***************************************************************
      *  This method has the side effect of setting the contents of
-     *  formulaSet and formulas as it parses the file.  It throws a
+     *  formulaMap and formulas as it parses the file.  It throws a
      *  ParseException with file line numbers if fatal errors are
      *  encountered during parsing.  Keys in variable "formulas" include 
      *  the string representation of the formula.
@@ -199,13 +186,13 @@ public class KIF {
             boolean inAntecedent = false;
             boolean inConsequent = false;
             HashSet<String> keySet = new HashSet<String>();
-            int lineStart = 0;
+            //int lineStart = 0;
             boolean isEOL = false;
             do {
                 lastVal = st.ttype;
                 st.nextToken();
                 // check the situation when multiple KIF statements read as one
-                // This relies on extra blank line to seperate KIF statements
+                // This relies on extra blank line to separate KIF statements
                 if (st.ttype == StreamTokenizer.TT_EOL) {
                     if (isEOL) { 
                         // Two line seperators in a row shows a new KIF
@@ -226,7 +213,7 @@ public class KIF {
                     isEOL = false;   // Turn off isEOL if a non-space token encountered                                                                      
                 if (st.ttype==40) {  // Open paren                                                   
                     if (parenLevel == 0) {
-                        lineStart = st.lineno();
+                        //lineStart = st.lineno();
                         f = new Formula();
                         f.startLine = st.lineno() + totalLinesForComments;
                         f.sourceFile = filename;
@@ -277,13 +264,18 @@ public class KIF {
                             if (formulas.containsKey(fkey)) {
                                 if (!formulaMap.keySet().contains(f.theFormula)) {  // don't add keys if formula is already present                                    
                                     ArrayList<String> list = formulas.get(fkey);
-                                    if (!list.contains(f.theFormula)) 
+                                    if (StringUtil.emptyString(f.theFormula))
+                                    	System.out.println("Error in KIF.parse(): Storing empty formula from line: " + f.startLine); 
+                                    else if (!list.contains(f.theFormula)) 
                                         list.add(f.theFormula);
                                 }
                             }
                             else {
                                 ArrayList<String> list = new ArrayList<String>();
-                                list.add(f.theFormula);
+                                if (StringUtil.emptyString(f.theFormula))
+                                	System.out.println("Error in KIF.parse(): Storing empty formula from line: " + f.startLine); 
+                                else if (!list.contains(f.theFormula)) 
+                                    list.add(f.theFormula);                               		
                                 formulas.put(fkey,list);
                             }
                         }
@@ -291,7 +283,7 @@ public class KIF {
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
-                        lineStart = (st.lineno() + 1);    // start next statement from next line                     
+                        //lineStart = (st.lineno() + 1);    // start next statement from next line                     
                         expression = new StringBuilder();
                         keySet.clear();
                     }
@@ -420,11 +412,10 @@ public class KIF {
     }
 
     /** ***************************************************************
-     * Count the number of appearences of a certain character in a string.
+     * Count the number of appearances of a certain character in a string.
      * @param str - the string to be tested.
      * @param c - the character to be counted.
      */
-
     private int countChar(String str, char c) {
 
         int len = 0;
@@ -442,9 +433,6 @@ public class KIF {
      */
     public void readFile(String fname) throws Exception {
 
-        //System.out.println("INFO in KIF.readFile()");
-    	logger.entering("KIF", "readFile", fname);
-
         FileReader fr = null;
         Exception exThr = null;
         try {
@@ -458,7 +446,6 @@ public class KIF {
             String er = ex.getMessage() + ((ex instanceof ParseException)
                                            ? " at line " + ((ParseException)ex).getErrorOffset()
                                            : "");
-            logger.severe("ERROR in KIF.readFile(\"" + fname + "\"):" + "  " + er);
             KBmanager.getMgr().setError(KBmanager.getMgr().getError() 
                                         + "\n<br/>" + er + " in file " + fname + "\n<br/>");
         }
@@ -471,7 +458,6 @@ public class KIF {
                 }
             }
         }
-        logger.exiting("KIF", "readFile");
         if (exThr != null) 
             throw exThr;        
         return;
@@ -493,7 +479,7 @@ public class KIF {
                 pr.println(it.next().theFormula);          
         }
         catch (Exception ex) {
-        	logger.severe(ex.getMessage());
+        	System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -518,18 +504,16 @@ public class KIF {
             isError = !parse(r).isEmpty();
             if (isError) {
                 String msg = "Error parsing " + formula;
-                logger.warning(msg);
                 return msg;
             }
         }
         catch (Exception e) {
-            logger.warning("Error parsing " + formula);
-            logger.severe(e.getStackTrace().toString());
+            System.out.println("Error parsing " + formula);
+            e.printStackTrace();
             return e.getMessage();
         }
         return null;
     }
-
 
     /** ***************************************************************
      * Writes the TPTP output to a file.
@@ -544,7 +528,7 @@ public class KIF {
         catch (Exception e1) {
             String msg = e1.getMessage();
             if (e1 instanceof ParseException) 
-                msg += (" in statement starting at line " + ((ParseException)e1).getErrorOffset());            
+                msg = msg + (" in statement starting at line " + ((ParseException)e1).getErrorOffset());            
         }
         FileWriter fw = null;
         PrintWriter pw = null;
@@ -584,7 +568,7 @@ public class KIF {
     public static void main(String[] args) throws IOException {
     	
         // tptpOutputTest(args[0]);
-        String exp = "(documentation foo \"(written by Claude François).\")";
+        String exp = "(documentation foo \"(written by John Smith).\")";
         System.out.println(exp);
         KIF kif = new KIF();
         Reader r = new StringReader(exp);
