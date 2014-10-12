@@ -137,7 +137,7 @@ public class SUMOformulaToTPTPformula {
                       && Character.isLowerCase(ch0))
                      || term.endsWith("Fn")
                      // The semantic test below works only if a KB is loaded.
-                     || KB.isInstanceOfInAnyKB(term, "Relation")))) {
+                     || KB.isRelationInAnyKB(term)))) {
                 term += mentionSuffix;
             }
         }
@@ -242,7 +242,7 @@ public class SUMOformulaToTPTPformula {
                 st.nextToken();
                 if (st.ttype==40) {         //----Open bracket
                     if (lastWasOpen)      //----Should not have ((in KIF
-                        throw new ParseException("Parsing error in " + suoString,0);                                       
+                        throw new ParseException("Parsing error in " + suoString + ". Doubled open parentheses.",0);                                       
                     if (inHOL)              //----Track nesting of ()s for hol__, so I know when to close the '
                         inHOLCount++;
                     lastWasOpen = true;
@@ -381,10 +381,16 @@ public class SUMOformulaToTPTPformula {
                                 "Extra closing bracket at " + tptpFormula.toString(),0);
                     }
                 } 
-                else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    throw new ParseException("Parsing error in " + suoString +
-                            "Illegal character '" +
-                            (char)st.ttype + "' at " + tptpFormula.toString(),0);
+                else if (st.ttype != StreamTokenizer.TT_EOF && st.ttype != StreamTokenizer.TT_EOL) {
+                	String error = null;
+                	switch (st.ttype) {
+                	case StreamTokenizer.TT_EOL : error = "End of line (which should not be an error)"; break;
+                	case StreamTokenizer.TT_NUMBER : error = "\nIllegal token '" + st.nval + "'"; break;
+                	case StreamTokenizer.TT_WORD : error = "\nIllegal token '" + st.sval + "'"; break;
+                	default : error = "\nUnknown illegal token"; break;
+                	}
+                    throw new ParseException("Parsing error in\n" + suoString + "\n" +
+                            error + " with TPTP so far:\n " + tptpFormula.toString(),0);
                 }
             } while (st.ttype != StreamTokenizer.TT_EOF);
 
@@ -419,8 +425,8 @@ public class SUMOformulaToTPTPformula {
             }
             List<Formula> processed = preProcessedForms;
             if (processed == null) {
-                FormulaPreprocessor fp = new FormulaPreprocessor(_f);
-                processed = fp.preProcess(query, kb);
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                processed = fp.preProcess(_f,query, kb);
             }
             if (processed != null) {
                 _f.clearTheTptpFormulas();
