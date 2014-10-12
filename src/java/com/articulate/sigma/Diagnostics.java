@@ -18,6 +18,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +40,7 @@ public class Diagnostics {
 
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not 
-     * have a specifed relation.
+     * have a specified relation.
      * @param kb the knowledge base
      * @param rel the relation name
      * @param argnum the argument position of the term
@@ -51,45 +52,38 @@ public class Diagnostics {
 
         ArrayList<String> result = new ArrayList<String>();
         Iterator<String> it = kb.getTerms().iterator();
-        synchronized (kb.getTerms()) {
-            while (it.hasNext()) {
-                String term = it.next();                
-                if (LOG_OPS.contains(term))  // Exclude the logical operators.
-                    continue;                
-                boolean isNaN = true;  // Exclude numbers.v
-                try {
-                    double dval = Double.parseDouble(term);
-                    isNaN = Double.isNaN(dval);
+        while (it.hasNext()) {
+            String term = it.next();                
+            if (LOG_OPS.contains(term) || StringUtil.isNumeric(term))  // Exclude the logical operators and numbers
+                continue;                
+        	ArrayList<Formula> forms = kb.ask("arg",argnum,term);
+            if (forms == null || forms.isEmpty()) {
+                if (letter < 'A' || term.charAt(0) == letter) 
+                    result.add(term);                
+            }
+            else {
+                boolean found = false;
+                Iterator<Formula> it2 = forms.iterator();
+                while (it2.hasNext()) {
+                	Formula formula = (Formula) it2.next();
+                	if (formula != null) {
+	                    String pred = formula.car();
+	                    if (pred.equals(rel)) {
+	                        found = true;
+	                        break;
+	                    }
+                	}
+                	else
+                		System.out.println("Error in Diagnostics.termsWithoutRelation(): null formula for: " + term);
                 }
-                catch (Exception nex) {
+                if (!found) {
+                    if (letter < 'A' || term.charAt(0) == letter) 
+                        result.add(term);                    
                 }
-                if (isNaN) {
-                	ArrayList<Formula> forms = kb.ask("arg",argnum,term);
-                    if (forms == null || forms.isEmpty()) {
-                        if (letter < 'A' || term.charAt(0) == letter) 
-                            result.add(term);                
-                    }
-                    else {
-                        boolean found = false;
-                        Iterator<Formula> it2 = forms.iterator();
-                        while (it2.hasNext()) {
-                        	Formula formula = (Formula) it2.next();
-                            String pred = formula.car();
-                            if (pred.equals(rel)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            if (letter < 'A' || term.charAt(0) == letter) 
-                                result.add(term);                    
-                        }
-                    }
-                }
-                if (limit > 0 && result.size() > limit) {
-                    result.add("limited to " + limit + " results");
-                    break;
-                }
+            }
+            if (limit > 0 && result.size() > limit) {
+                result.add("limited to " + limit + " results");
+                break;
             }
         }
         return result;
@@ -145,62 +139,44 @@ public class Diagnostics {
      * Returns true if term has an explicitly stated parent, or a
      * parent can be inferred from the transitive relation caches,
      * else returns false.
-     */
+     
     private static boolean hasParent(KB kb, String term) {
         
-        boolean ans = false;
-        List<String> preds = Arrays.asList("instance", 
-                                           "subclass", 
-                                           "subAttribute", 
-                                           "subrelation", 
-                                           "subCollection",
-                                           "subentity");
-        Set cached = null;
         Iterator<String> it = preds.iterator();
         while (it.hasNext()) {
         	String pred = it.next();
-            cached = kb.kbCache.getCachedRelationValues(pred, term, 1, 2);
-            if ((cached != null) && !cached.isEmpty()) {
-                ans = true;
-                break;
+        	HashMap<String,HashSet<String>> predvals = kb.kbCache.parents.get(term);
+            if (predvals != null) {
+                HashSet<String> cached = predvals.get(term);
+                if ((cached != null) && !cached.isEmpty()) 
+                    return true;                
             }
         }
-        return ans;
+        return false;
     }
-
+*/
     /** *****************************************************************
-     * Return a list of terms that do not have a parent term.
+     * Return a list of terms that do not have Entity as a parent term.
      */
-    public static ArrayList<String> termsWithoutParent(KB kb) {
+    public static ArrayList<String> termsNotBelowEntity(KB kb) {
 
-        ArrayList<String> excluded = new ArrayList<String>(LOG_OPS);
-        excluded.add("Entity");
-        System.out.println("INFO in Diagnostics.termsWithoutParent(): "); 
+        System.out.println("INFO in Diagnostics.termsNotBelowEntity(): "); 
         ArrayList<String> result = new ArrayList<String>();
         int count = 0;
         Iterator<String> it = kb.getTerms().iterator();
-        synchronized (kb.getTerms()) {
-            while (it.hasNext() && (count < 100)) {
-                String term = it.next();
-                if (excluded.contains(term)) 
-                    continue;
-                boolean isNaN = true;
-                try {
-                    double dval = Double.parseDouble(term);
-                    isNaN = Double.isNaN(dval);
+        while (it.hasNext() && (count < 100)) {
+            String term = it.next();
+            if (LOG_OPS.contains(term) || term.equals("Entity") || StringUtil.isNumeric(term)) 
+                continue;
+            else {
+                if (kb.kbCache.subclassOf(term,"Entity") || kb.kbCache.transInstOf(term,"Entity")) {
+                    result.add(term); 
+                    count++;
                 }
-                catch (Exception nex) {
-                }
-                if (isNaN) {
-                    if (!hasParent(kb,term)) {
-                        result.add(term); 
-                        count++;
-                    }
-                }
-                if (count > 99) 
-                    result.add("limited to 100 results");            
             }
-        }
+            if (count > 99) 
+                result.add("limited to 100 results");            
+        }        
         return result;
     }
 
@@ -210,6 +186,8 @@ public class Diagnostics {
     public static ArrayList<String> childrenOfDisjointParents(KB kb) {
 
         ArrayList<String> result = new ArrayList<String>();
+        
+        /*
         int count = 0;
         Iterator<String> it = kb.getTerms().iterator();
         synchronized (kb.getTerms()) {
@@ -224,7 +202,7 @@ public class Diagnostics {
                 catch (Exception nex) {
                 }
                 if (isNaN) {
-                	Set<String> parentSet = kb.kbCache.getCachedRelationValues("subclass", term, 1, 2);
+                	HashSet<String> parentSet = kb.kbCache.getParentClasses(term);
                 	Object[] parents = null;
                     if ((parentSet != null) && !parentSet.isEmpty())
                         parents = parentSet.toArray();            
@@ -252,6 +230,7 @@ public class Diagnostics {
                 }
             }
         }
+        */
         return result;
     }
 
@@ -796,8 +775,8 @@ public class Diagnostics {
             Iterator it = allFormulas.iterator();
             while (it.hasNext()) {
                 Formula query = (Formula) it.next();
-                FormulaPreprocessor fp = new FormulaPreprocessor(query);
-                ArrayList processedQueries = fp.preProcess(false,kb); // may be multiple because of row vars.
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                ArrayList processedQueries = fp.preProcess(query,false,kb); // may be multiple because of row vars.
                 //System.out.println(" query = " + query);
                 //System.out.println(" processedQueries = " + processedQueries);
 
@@ -842,7 +821,7 @@ public class Diagnostics {
         //try {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println(termsWithoutParent(kb));
+            System.out.println(termsNotBelowEntity(kb));
 
         //}
         //catch (IOException ioe) {
