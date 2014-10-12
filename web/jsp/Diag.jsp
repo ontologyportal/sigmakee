@@ -56,7 +56,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
 
 <%
   // Terms without parents
-  ArrayList<String> termsWithoutParent = Diagnostics.termsWithoutParent(kb);
+  ArrayList<String> termsWithoutParent = Diagnostics.termsNotBelowEntity(kb);
   out.println(HTMLformatter.htmlDivider("Error: Terms without a root at Entity"));
   out.println(HTMLformatter.termList(termsWithoutParent,kbHref));
 
