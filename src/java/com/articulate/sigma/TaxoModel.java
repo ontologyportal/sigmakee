@@ -50,7 +50,12 @@ public class TaxoModel {
         ArrayList<Formula> result = new ArrayList<Formula>();
         for (int i = 0; i < forms.size(); i++) {
             Formula f = (Formula) forms.get(i);
-            if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) 
+            //if (f == null || f.sourceFile == null) {
+            //	System.out.println("Error in TaxoModel.removeCached(): null formula or sourceFile field: " + f);
+            //	System.out.println(f.sourceFile);
+            //	System.out.println(KB._cacheFileSuffix);
+            //}
+            if (f == null || f.sourceFile == null || !f.sourceFile.endsWith(KB._cacheFileSuffix)) 
                 result.add(f);
         }
         return result;
