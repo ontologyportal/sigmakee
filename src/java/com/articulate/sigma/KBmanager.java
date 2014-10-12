@@ -265,37 +265,42 @@ public class KBmanager {
      */
     public boolean loadKB(String kbName, List<String> constituents) {
         
+        boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
+        KB kb = null;
         try {
             if (existsKB(kbName))
                 removeKB(kbName);
             addKB(kbName);
-            KB kb = getKB(kbName);
-            boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
+            kb = getKB(kbName);
+
             if (!(constituents.isEmpty())) {
                 Iterator<String> it = constituents.iterator();
                 while (it.hasNext()) {
                     String filename = it.next();
                     try {
-                        kb.addConstituent(filename, false, false, false);
+                        //kb.addConstituent(filename, false, false, false);
+                        kb.addConstituent(filename);
                     } 
                     catch (Exception e1) {
                     	System.out.println("Error in KBmanager.loadKB():  " + e1.getMessage());
+                    	e1.printStackTrace();
                         return false;
                     }
                 }
-                kb.kbCache.buildRelationCaches(kb);
-                if (useCacheFile) 
-                    kb.kbCache.cache();                
-                kb.checkArity();
-                kb.loadEProver();
             }
-            writeConfiguration();
+            //writeConfiguration();
         } 
         catch (Exception e) {
         	System.out.println("Error in KBmanager.loadKB(): Unable to save configuration: " + e.getMessage());
+        	e.printStackTrace();
             return false;
         }
-        System.out.println("INFO in KBmanager.loadKB(): " + kbName);
+        kb.kbCache = new KBcache(kb);
+        kb.kbCache.buildCaches();
+        if (useCacheFile) 
+            kb.kbCache.writeCacheFile();                
+        kb.checkArity();
+        kb.loadEProver();
         return true;
     }
     
@@ -546,7 +551,7 @@ public class KBmanager {
         }
         kbs.remove(name);
         try {
-            writeConfiguration();
+            //writeConfiguration();
         }
         catch (Exception ioe) {
         	System.out.println("Error in KBmanager.removeKB(): ");
@@ -561,6 +566,7 @@ public class KBmanager {
      */
     public void writeConfiguration() throws IOException {
         
+        System.out.println("INFO in KBmanager.writeConfiguration()");
         FileWriter fw = null;
         PrintWriter pw = null;
         String dir = (String) preferences.get("kbDir");
@@ -667,7 +673,7 @@ public class KBmanager {
     /** ***************************************************************
      * Get the Set of KB names in this manager.
      */
-    public Set<String> getKBnames() {
+    public HashSet<String> getKBnames() {
         
         HashSet<String> names = new HashSet<String>();        
         Iterator<String> it = kbs.keySet().iterator();
@@ -774,7 +780,7 @@ public class KBmanager {
         KB kb = KBmanager.getMgr().getKB("SUMO");
         Formula f = new Formula();
         f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
-        FormulaPreprocessor fp = new FormulaPreprocessor(f);
-        System.out.println(fp.preProcess(false,kb));
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        System.out.println(fp.preProcess(f,false,kb));
     }
 }
