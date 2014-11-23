@@ -2471,13 +2471,13 @@ public class Formula implements Comparable {
 
     /** ***************************************************************
      * Format a formula for text presentation.
-     
-     
-    public String textFormat() {
+     */          
+    public static String textFormat(String input) {
 
-        return format("","  ",new Character((char) 10).toString());
+        Formula f = new Formula(input);
+        return f.format("","  ",new Character((char) 10).toString());
     }
-*/
+
     /** ***************************************************************
      * Format a formula for text presentation.
      */
