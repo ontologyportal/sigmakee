@@ -106,7 +106,8 @@ public class LanguageFormatter {
      */
     public static HashMap<String,HashMap<String,String>> readKeywordMap(String dir) {
 
-        System.out.println("INFO in LanguageFormatter.readKeywordMap(" + dir + ")");
+        System.out.println("INFO in LanguageFormatter.readKeywordMap(" + dir + "/" + 
+                PHRASES_FILENAME + ")");
         if (keywordMap == null)
             keywordMap = new HashMap<String,HashMap<String,String>>();
         int lc = 0;
@@ -119,8 +120,7 @@ public class LanguageFormatter {
                 phrasesFile = new File(dirFile, PHRASES_FILENAME);
                 if (!phrasesFile.canRead())
                     throw new Exception("Cannot read \"" + phrasesFile.getCanonicalPath() + "\"");
-                br = new BufferedReader(new InputStreamReader(new FileInputStream(phrasesFile),
-                "UTF-8"));
+                br = new BufferedReader(new InputStreamReader(new FileInputStream(phrasesFile),"UTF-8"));
                 HashMap<String,String> phrasesByLang = null;
                 List<String> phraseList = null;
                 List<String> languageKeys = null;
