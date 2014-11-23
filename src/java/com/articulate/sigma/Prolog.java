@@ -110,8 +110,8 @@ public class Prolog {
 
         try {
             file = new File(fname);
-            if ((WordNet.wn != null) && WordNet.wn.wordFrequencies.isEmpty())
-                WordNet.wn.readWordFrequencies();
+            if ((WordNet.wn != null) && WordNet.wn.wordCoFrequencies.isEmpty())
+                WordNet.wn.readWordCoFrequencies();
             pw = new PrintWriter(new FileWriter(file));
             pw.println("% Copyright (c) 2006-2009 Articulate Software Incorporated");
             pw.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
