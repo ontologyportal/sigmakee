@@ -65,7 +65,8 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
-     * Extract the POS from a word_POS_num sense key
+     * Extract the POS from a word_POS_num sense key.  Should be an
+     * alpha key, such as "VB".
      */
     public static String getPOSfromKey (String senseKey) {
 
@@ -278,12 +279,13 @@ public class WordNetUtilities {
      *  @return is a boolean indicating whether the result of the substitution
      *  was found in the hashtable.
      */
-    public static boolean substTest(String result, String match, String subst, Hashtable hash) {
+    public static boolean substTest(String result, String match, String subst, Hashtable<String,String> hash) {
 
         Pattern p = Pattern.compile(match);
         Matcher m = p.matcher(result);
         if (m.find()) {
             result = m.replaceFirst(subst);
+            //System.out.println("Info in WordNetUtilities.substTest(): replacement result: " + result);
             if (hash.containsKey(result)) {
                 return true;
             }
