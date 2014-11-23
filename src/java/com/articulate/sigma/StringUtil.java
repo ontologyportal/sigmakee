@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SimpleTimeZone;
+import java.util.regex.*;
 
 /** ***************************************************************
  * A utility class that defines static methods for common string
@@ -333,6 +334,90 @@ public class StringUtil {
         }
         return sb.toString();
     }
+    /** ***************************************************************
+     * Remove punctuation and contractions from a sentence.
+     */
+    public static String removePunctuation(String sentence) {
+
+        Matcher m = null;
+        if (StringUtil.emptyString(sentence))
+            return sentence;
+        m = Pattern.compile("(\\w)\\'re").matcher(sentence);
+        //m = regexPatterns[19].matcher(sentence);
+        while (m.find()) {
+            //System.out.println("matches");
+            String group = m.group(1);
+            sentence = m.replaceFirst(group).toString();
+            m.reset(sentence);
+        }
+        m = Pattern.compile("(\\w)\\'m").matcher(sentence);
+        //m = regexPatterns[20].matcher(sentence);
+        while (m.find()) {
+            //System.out.println("matches");
+            String group = m.group(1);
+            sentence = m.replaceFirst(group).toString();
+            m.reset(sentence);
+        }
+        m = Pattern.compile("(\\w)n\\'t").matcher(sentence);
+        //m = regexPatterns[21].matcher(sentence);
+        while (m.find()) {
+            //System.out.println("matches");
+            String group = m.group(1);
+            sentence = m.replaceFirst(group).toString();
+            m.reset(sentence);
+        }
+        m = Pattern.compile("(\\w)\\'ll").matcher(sentence);
+        //m = regexPatterns[22].matcher(sentence);
+        while (m.find()) {
+            //System.out.println("matches");
+            String group = m.group(1);
+            sentence = m.replaceFirst(group).toString();
+            m.reset(sentence);
+        }
+        m = Pattern.compile("(\\w)\\'s").matcher(sentence);
+        //m = regexPatterns[23].matcher(sentence);
+        while (m.find()) {
+            //System.out.println("matches");
+            String group = m.group(1);
+            sentence = m.replaceFirst(group).toString();
+            m.reset(sentence);
+        }
+        m = Pattern.compile("(\\w)\\'d").matcher(sentence);
+        //m = regexPatterns[24].matcher(sentence);
+        while (m.find()) {
+            //System.out.println("matches");
+            String group = m.group(1);
+            sentence = m.replaceFirst(group).toString();
+            m.reset(sentence);
+        }
+        m = Pattern.compile("(\\w)\\'ve").matcher(sentence);
+        //m = regexPatterns[25].matcher(sentence);
+        while (m.find()) {
+            //System.out.println("matches");
+            String group = m.group(1);
+            sentence = m.replaceFirst(group).toString();
+            m.reset(sentence);
+        }
+        sentence = sentence.replaceAll("\\'","");
+        sentence = sentence.replaceAll("\"","");
+        sentence = sentence.replaceAll("\\.","");
+        sentence = sentence.replaceAll("\\;","");
+        sentence = sentence.replaceAll("\\:","");
+        sentence = sentence.replaceAll("\\?","");
+        sentence = sentence.replaceAll("\\!","");
+        sentence = sentence.replaceAll("\\, "," ");
+        sentence = sentence.replaceAll("\\,[^ ]",", ");
+        sentence = sentence.replaceAll("  "," ");
+        return sentence;
+    }
+
+    /** ***************************************************************
+     * Remove HTML markup from a sentence.
+     */
+    public static String removeHTML(String sentence) {
+
+        return sentence.replaceAll("<[^>]+>","");
+    }
 
     /** ***************************************************************
      * @param str A String
@@ -354,7 +439,26 @@ public class StringUtil {
         }
         return ans;
     }
-
+    
+    /** ***************************************************************
+     *  Convert an arbitrary string to a legal KIF identifier by
+     *  substituting dashes for illegal characters. TODO:
+     *  isJavaIdentifierPart() isn't sufficient, since it allows
+     *  characters KIF doesn't
+     */
+    public static String arrayListToSpacedString(ArrayList<String> al) {
+        
+        if (al == null || al.size() < 1)
+            return "";
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < al.size(); i++) {
+            if (i != 0)
+                sb.append(" ");
+            sb.append(al.get(i));
+        }
+        return sb.toString();
+    }
+    
     /** ***************************************************************
      *  Convert an arbitrary string to a legal KIF identifier by
      *  substituting dashes for illegal characters. TODO:
@@ -696,7 +800,7 @@ public class StringUtil {
      * If the input String contains the sequence {date}pattern{date},
      * replaces the first occurrence of this sequence with a UTC
      * date/time string formatted according to pattern.  If the input
-     * String does not contain the squence, it is returned unaltered.
+     * String does not contain the sequence, it is returned unaltered.
      *
      * @param input The input String into which a formatted date/time
      * will be inserted
@@ -1282,10 +1386,30 @@ public class StringUtil {
     }
     
     /** *****************************************************************
+     * Fill a string with the desired character up to the totalLength.
+     * If string is null return a completely filled string.
+     */
+    public static String fillString(String st, char fillchar, int totalLength, boolean prepend) {
+        
+        StringBuffer result = null;
+        if (st != null)
+            result = new StringBuffer(st);
+        else
+            result = new StringBuffer("");
+        for (int i = 0; i < totalLength - st.length(); i++) {
+            if (prepend)
+                result.insert(0, fillchar);
+            else
+                result.append(fillchar);
+        }
+        return result.toString();
+    }
+    
+    /** *****************************************************************
      */
     public static void main(String args[]) {
 
-        System.out.println(StringUtil.isNonEmptyString("foo"));
+        System.out.println(StringUtil.fillString("111",'0',8,true));
 
     }
 } // StringUtil
