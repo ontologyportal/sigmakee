@@ -19,6 +19,8 @@ public class AVPair implements Comparable {
             throw new ClassCastException("Error in AVPair.compareTo(): "
                                          + "Class cast exception for argument of class: "
                                          + avp.getClass().getName());
+        //System.out.println("Info in AVPair.compareTo(): comparing: " + attribute +
+        //        "to: " + ((AVPair) avp).attribute);
         return attribute.compareTo(((AVPair) avp).attribute);
     }
 
