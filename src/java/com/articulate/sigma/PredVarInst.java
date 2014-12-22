@@ -314,8 +314,11 @@ public class PredVarInst {
             //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() rel, val,actual: " + rel + "," + val + ": " + l.size());
             //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() l: " + l);
 
-            if (val > 0 && val != l.size())
+            if (val > 0 && val != l.size()) {
+                System.out.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " + 
+                        val + " but found " + l.size() + " for relation " + rel);
                 return rel;
+            }
         }
         else {
             if (Formula.isQuantifier(f.car())) 
