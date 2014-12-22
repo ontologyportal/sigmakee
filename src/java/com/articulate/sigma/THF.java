@@ -378,13 +378,15 @@ public class THF {
         Iterator<Formula> iter = axiomsC.iterator();
         while (iter.hasNext()) {
             Formula ax = iter.next();
-            axioms.addAll(ax.expandRowVars(kb));
+            RowVars rv = new RowVars();
+            axioms.addAll(rv.expandRowVars(kb,ax));
         }
 
         Iterator<Formula> iter2 = conjecturesC.iterator();
         while (iter2.hasNext()) {
             Formula con = iter2.next();
-            conjectures.addAll(con.expandRowVars(kb));
+            RowVars rv = new RowVars();
+            conjectures.addAll(rv.expandRowVars(kb,con));
         }
         // not sort the formulas
         // Collection axioms = axiomsC;
