@@ -1265,7 +1265,8 @@ public class FormulaPreprocessor {
                 Iterator<Formula> it2 = working.iterator(); 
                 while (it2.hasNext()) {
                     f = (Formula) it2.next();
-                    accumulator.addAll(f.expandRowVars(kb));
+                    RowVars rv = new RowVars();
+                    accumulator.addAll(RowVars.expandRowVars(kb,f));
                     if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
                         System.out.println("  AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
                         break;
