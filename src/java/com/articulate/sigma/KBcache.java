@@ -357,7 +357,6 @@ public class KBcache {
         HashSet<String> arg2s = collectArgFromFormulas(2,forms);
         arg2s.removeAll(arg1s);
         result.addAll(arg2s);
-        //System.out.println("INFO in KBcache.findRoots(): " + result);
         return result;
     }
     
@@ -605,6 +604,7 @@ public class KBcache {
      */
     private void breadthFirstInheritDomains(String root) {
         
+        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): trying relation " + root);
         String rel = "subrelation";
         HashMap<String,HashSet<String>> relParents = parents.get("subrelation");
         if (relParents == null) {
@@ -629,13 +629,13 @@ public class KBcache {
                 while (it.hasNext()) {
                     String newTerm = it.next();                    
                     ArrayList<String> newDomains = signatures.get(newTerm);
-                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): valence for " + 
+                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): valence for new term " + 
                     //    newTerm + ":" + valences.get(newTerm));
                     //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): valence for " + 
                     //        t + ":" + valences.get(t));
                     //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newTerm + " : " + newDomains);
                     //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + t + ": " + tdomains);
-                    if (valences.get(newTerm) < valences.get(t)) {
+                    if (valences.get(newTerm) == null || valences.get(newTerm) < valences.get(t)) {
                         //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newDomains);
                         fillArrayList("Entity",newDomains,valences.get(newTerm)+1,valences.get(t)+1);
                         //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newDomains);
