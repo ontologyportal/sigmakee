@@ -383,6 +383,8 @@ public class WSD {
     public static String getBestDefaultSense(String word) {
 
         //System.out.println("WSD.getBestDefaultSense(1): " + word);
+        if (StringUtil.isDigitString(word))
+            return null;
         String bestSense = "";
         int bestScore = -1;
         for (int pos = 1; pos <= 4; pos++) {
@@ -434,6 +436,8 @@ public class WSD {
     public static String getBestDefaultSense(String word, int pos) {
 
         //System.out.println("WSD.getBestDefaultSense(2): " + word + " POS: " + pos);
+        if (StringUtil.isDigitString(word))
+            return null;
         String synset = "";
         String newWord = "";
         if (pos == 1)
@@ -442,7 +446,7 @@ public class WSD {
             newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
         if (StringUtil.emptyString(newWord))
             newWord = word;
-        //System.out.println("WSD.getBestDefaultSense(): word: " + newWord);
+        System.out.println("WSD.getBestDefaultSense(): word: " + newWord);
         TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord);
         //System.out.println("WSD.getBestDefaultSense(): sensekeys: " + senseKeys);
         if (senseKeys != null) {
@@ -455,37 +459,40 @@ public class WSD {
                     return numPOS + WordNet.wn.senseIndex.get(avp.value);
             }        
         }
-        else {
-            ArrayList<String> al = WordNet.wn.wordsToSenses.get(newWord);
-            //System.out.println("WSD.getBestDefaultSense(): al: " + al);
-            //System.out.println("WSD.getBestDefaultSense(): verbs: " + WordNet.wn.verbSynsetHash.get(newWord));
-            if (al == null || al.size() == 0) {
-                al = new ArrayList<String>();
-                switch (pos) {
-                    case 1: al.addAll(Arrays.asList(WordNet.wn.nounSynsetHash.get(newWord).split(" "))); 
-                            break;
-                    case 2: al.addAll(Arrays.asList(WordNet.wn.verbSynsetHash.get(newWord).split(" "))); 
-                            break;
-                    case 3: al.addAll(Arrays.asList(WordNet.wn.adjectiveSynsetHash.get(newWord).split(" "))); 
-                            break;
-                    case 4: al.addAll(Arrays.asList(WordNet.wn.adverbSynsetHash.get(newWord).split(" "))); 
-                            break;
-                }
-                //System.out.println("WSD.getBestDefaultSense(): al: " + al);
-                if (al == null || al.size() == 0)
-                    return "";
-                else
-                    return Integer.toString(pos) + al.get(0);
+        // if none of the sensekeys are the right pos, fall through to here
+        ArrayList<String> al = WordNet.wn.wordsToSenses.get(newWord);
+        //System.out.println("WSD.getBestDefaultSense(): al: " + al);
+        //System.out.println("WSD.getBestDefaultSense(): nouns: " + WordNet.wn.nounSynsetHash.get(newWord));
+        if (al == null || al.size() == 0) {
+            al = new ArrayList<String>();
+            String synsets = "";
+            switch (pos) {
+                case 1: synsets = WordNet.wn.nounSynsetHash.get(newWord);                        
+                        break;
+                case 2: synsets = WordNet.wn.verbSynsetHash.get(newWord);  
+                        break;
+                case 3: synsets = WordNet.wn.adjectiveSynsetHash.get(newWord); 
+                        break;
+                case 4: synsets = WordNet.wn.adverbSynsetHash.get(newWord); 
+                        break;
             }
-            Iterator<String> it = al.iterator();
-            while (it.hasNext()) {
-                String key = it.next();
-                String POS = WordNetUtilities.getPOSfromKey(key);
-                String numPOS = WordNetUtilities.posLettersToNumber(POS);
-                if (Integer.toString(pos).equals(numPOS))
-                    return numPOS + WordNet.wn.senseIndex.get(key);
-            }  
+            if (!StringUtil.emptyString(synsets)) 
+                al.addAll(Arrays.asList(synsets.split(" "))); 
+            //System.out.println("WSD.getBestDefaultSense(): al: " + al);
+            if (al == null || al.size() == 0)
+                return "";
+            else
+                return Integer.toString(pos) + al.get(0);
         }
+        Iterator<String> it = al.iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            String POS = WordNetUtilities.getPOSfromKey(key);
+            String numPOS = WordNetUtilities.posLettersToNumber(POS);
+            if (Integer.toString(pos).equals(numPOS))
+                return numPOS + WordNet.wn.senseIndex.get(key);
+        }  
+
         return synset;
     }
     
@@ -576,7 +583,8 @@ public class WSD {
         //ArrayList<String> al = WordNet.wn.collectWordSenses("A four stroke engine is a beautiful thing.");
 
         ArrayList<String> al = WordNet.splitToArrayList(sentence);;
-        String synset = findWordSenseInContext("runs",al);
-        System.out.println("INFO in WSD.main(): " + synset);
+        //String synset = findWordSenseInContext("runs",al);
+        //System.out.println("INFO in WSD.main(): " + synset);
+        System.out.println("INFO in WSD.main(): sense for 'pin': " + WSD.getBestDefaultSUMOsense("pin",1));
     }
 }
