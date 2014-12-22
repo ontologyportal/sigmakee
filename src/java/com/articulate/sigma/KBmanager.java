@@ -13,21 +13,8 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.KB;
@@ -423,7 +410,8 @@ public class KBmanager {
                     copyFile(global_config, configFile);
                     configFile = global_config;
                 }
-                else writeConfiguration();
+                else 
+                    writeConfiguration();
             }
             br = new BufferedReader(new FileReader(configFile));
             SimpleDOMParser sdp = new SimpleDOMParser();
@@ -450,10 +438,11 @@ public class KBmanager {
      * Reads in the KBs and other parameters defined in the XML
      * configuration file, or uses the default parameters.  
      */
-    public void initializeOnce() {
+    public boolean initializeOnce() {
         
-        initializeOnce(null);
-        return;
+        System.out.println("Info in KBmanager.initializeOnce()");
+        String base = System.getenv("SIGMA_HOME");
+        return initializeOnce(base + File.separator + "KBs");
     }
 
     /** ***************************************************************
@@ -462,18 +451,22 @@ public class KBmanager {
      * configFileDir is not null and a configuration file can be read
      * from the directory, reinitialization is forced.
      */
-    public synchronized void initializeOnce(String configFileDir) {
+    public boolean initializeOnce(String configFileDir) {
 
+        boolean performedInit = false;
+        if (initialized)
+            return false;
         try {
             initializing = true;
-            if (!initialized || StringUtil.isNonEmptyString(configFileDir)) {    
+            if (StringUtil.isNonEmptyString(configFileDir)) {    
                 setDefaultAttributes();
                 SimpleElement configuration = readConfiguration(configFileDir);
                 if (configuration == null) 
                     throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");                
-                preferencesFromXML(configuration);                
+                preferencesFromXML(configuration);        
                 kbsFromXML(configuration);
                 String kbDir = (String) preferences.get("kbDir");
+                //System.out.println("Info in KBmanager.initializeOnce(): Using kbDir: " + kbDir);
                 LanguageFormatter.readKeywordMap(kbDir);
                 WordNet.wn.initOnce();
                 OMWordnet.readOMWfiles();
@@ -488,6 +481,9 @@ public class KBmanager {
                 else
                     System.out.println("Error in KBmanager.initOnce(): No kbs");
             }
+            else
+                setDefaultAttributes();
+            performedInit = true;
         }
         catch (Exception ex) {
         	System.out.println(ex.getMessage());
@@ -495,7 +491,7 @@ public class KBmanager {
         }        
         initialized = true;
         initializing = false;           
-        return;
+        return performedInit;
     }
 
     /** ***************************************************************
