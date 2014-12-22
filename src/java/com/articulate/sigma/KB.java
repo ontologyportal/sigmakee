@@ -3201,7 +3201,8 @@ public class KB {
                     j--;
                 }
                 if (j > i) {
-                    formToPrint = DocGen.getInstance(this.name).showTermName(this,term,language);
+                    //formToPrint = DocGen.getInstance(this.name).showTermName(this,term,language);
+                    formToPrint = term;
                     StringBuilder hsb = new StringBuilder("<a href=\"");
                     hsb.append(href);
                     hsb.append(isStaticFile
