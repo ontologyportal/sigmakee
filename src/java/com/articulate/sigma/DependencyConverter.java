@@ -205,6 +205,7 @@ public class DependencyConverter {
                 else if (prep.equals("dobj")) {
                     context.put("ProcessType", WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg1,2)));
                     context.put("ObjectType",WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg2,1)));
+                    System.out.println("Info in DependencyConverter.processDependency(): object: " + context.get("ObjectType"));
                     context.put("ObjectInstance",arg2);
                     context.put("ProcessInstance",arg1);
                     output.append("(instance " + arg1 + " " + context.get("ProcessType") + ") ");
@@ -318,12 +319,19 @@ public class DependencyConverter {
                     }
                     else if (StringUtil.isNumeric(bareArg2) && bareArg2.length() == 4)
                         output.append("(during " + context.get("SubjectInstance") + " (YearFn " + bareArg2 + ")) ");
-                    context.put("ProcessType", WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg1+"_"+bareArg2,2)));
+                }
+                else if (prep.equals("prep_into")) {
+                    context.put("ObjectType",WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg2,1)));
+                    if (kb.isChildOf(context.get("ObjectType"),"Region")) {
+                        output.append("(location " + context.get("SubjectInstance") + " " + context.get("ObjectInstance") + ") ");
+                    }
+                    else if (StringUtil.isNumeric(bareArg2) && bareArg2.length() == 4)
+                        output.append("(during " + context.get("SubjectInstance") + " (YearFn " + bareArg2 + ")) ");
                 }
                 else if (prep.equals("prep_until")) {
                     context.put("ProcessType", WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg1,2)));
                     context.put("ObjectInstance",WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg2,1)));
-                    if (kb.isChildOf(context.get("ObjectInstance"),"TimePosition")) {
+                    if (context.get("ObjectInstance") != null && kb.isChildOf(context.get("ObjectInstance"),"TimePosition")) {
                         output.append("(earlier " + context.get("SubjectInstance") + " " + context.get("ObjectInstance") + ") ");
                     }
                     else if (StringUtil.isNumeric(bareArg2) && bareArg2.length() == 4)
@@ -332,16 +340,18 @@ public class DependencyConverter {
                 else if (prep.equals("prep_through")) {
                     context.put("ProcessType", WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg1,2)));
                     context.put("ObjectInstance",WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense(bareArg2,1)));
-                    System.out.println("# " + context.get("ObjectInstance"));
+                    System.out.println("# through: " + context.get("ObjectInstance"));
                     if (kb.isChildOf(context.get("ObjectInstance"),"TimePosition")) {
                         output.append("(earlier " + context.get("SubjectInstance") + " " + context.get("ObjectInstance") + ") ");
                     }
                     else if (StringUtil.isNumeric(bareArg2) && bareArg2.length() == 4)
                         output.append("(earlier " + context.get("SubjectInstance") + " (YearFn " + bareArg2 + ")) ");
                     else {
-                        context.put("ObjectInstance",arg2);
-                        if (kb.isChildOf(context.get("ObjectInstance"),"Region"))                    
-                            output.append("(traverses " + context.get("SubjectInstance") + " " + context.get("ObjectInstance") + ") ");
+                        //context.put("ObjectInstance",arg2);
+                        if (kb.isChildOf(context.get("ObjectInstance"),"Region")) {                           
+                            output.append("(traverses " + context.get("SubjectInstance") + " " + context.get("ObjectInstance") + ") "); 
+                        }
+
                     }
                 }
                 else if (prep.equals("ref")) {
@@ -368,7 +378,6 @@ public class DependencyConverter {
                 }
             }
         }
-
         if (context.get("Close") != null)
             output.append(")");
         return context;
@@ -517,19 +526,23 @@ public class DependencyConverter {
             //System.out.println("Africa: " + WSD.getBestDefaultSUMOsense("Africa",1));
             //System.out.println("Africa: " + WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense("Africa",1)));
 
-            System.out.println("Info in DependencyConverter.main(): simplification: " + WordNetUtilities.subst("rolls","s$",""));
-            System.out.println("Info in DependencyConverter.main(): is there a substitution: " + WordNetUtilities.substTest("rolls","s$","",WordNet.wn.verbSynsetHash)); 
-            System.out.println("Info in DependencyConverter.main(): synsets for roll: " + WordNet.wn.verbSynsetHash.get("roll")); 
-            System.out.println("Info in DependencyConverter.main(): root form: " + WordNet.wn.verbRootForm("rolls","rolls")); 
+            //System.out.println("Info in DependencyConverter.main(): simplification: " + WordNetUtilities.subst("rolls","s$",""));
+            //System.out.println("Info in DependencyConverter.main(): is there a substitution: " + WordNetUtilities.substTest("rolls","s$","",WordNet.wn.verbSynsetHash)); 
+            //System.out.println("Info in DependencyConverter.main(): synsets for roll: " + WordNet.wn.verbSynsetHash.get("roll")); 
+            //System.out.println("Info in DependencyConverter.main(): root form: " + WordNet.wn.verbRootForm("rolls","rolls")); 
             DependencyConverter dc = new DependencyConverter();
-            //ArrayList<String> results = getDependencies("After an unsuccessful Baltimore theatrical debut in 1856, John played minor roles in Philadelphia until 1859, when he joined a Shakespearean stock company in Richmond, Va.");
-            ArrayList<String> results = getDependencies("John rolls the ball through Africa.");
+            // ArrayList<String> results = getDependencies("After an unsuccessful Baltimore theatrical debut in 1856, John played minor roles in Philadelphia until 1859, when he joined a Shakespearean stock company in Richmond, Va.");
+            ArrayList<String> results = getDependencies("The bank hired John.");
+            //ArrayList<String> results = getDependencies("John rolls the ball through Africa.");/
+            //ArrayList<String> results = getDependencies("John sticks the pin through the apple.");
             System.out.println(results);
             
             Node n = dc.createGraph(results);
             dc.traverseNodes(n);
             output.append(")");
             System.out.println(Formula.textFormat(output.toString()));
+            //System.out.println("Info in DependencyConverter.main(): " + WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense("pin",1)));
+            //System.out.println(kb.isChildOf("Africa","Region"));
         }
         catch (Exception ex) {
             System.out.println(ex.getMessage());
