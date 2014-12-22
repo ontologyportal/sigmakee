@@ -1168,13 +1168,13 @@ public class LanguageFormatter {
             if (StringUtil.isNonEmptyString(varString)) {
                 HashSet<String> instanceArray = instMap.get(varString);
                 HashSet<String> subclassArray = classMap.get(varString);
-                if (subclassArray.size() > 0) {
+                if (subclassArray != null && subclassArray.size() > 0) {
                     String varType = (String) subclassArray.toArray()[0];
                     String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                     result = incrementalVarReplace(result,varString,varType,varPretty,language,true,typeMap);
                 }
                 else {
-                    if (instanceArray.size() > 0) {
+                    if (instanceArray != null && instanceArray.size() > 0) {
                         String varType = (String) instanceArray.toArray()[0];
                         String varPretty = (String) kb.getTermFormatMap(language).get(varType);
                         result = incrementalVarReplace(result,varString,varType,varPretty,language,false,typeMap);
