@@ -3141,6 +3141,9 @@ TptpParserOutput.UnaryConnective connective
 		else if (((LA(1)==RPR||LA(1)==COMMA))&&(lw.getText().equals("ac"))) {
 			str = new String("ac");
 		}
+		else if (((LA(1)==RPR||LA(1)==COMMA))&&(lw.getText().equals("answers"))) {
+			str = new String("answers");
+		}
 		else if ((LA(1)==RPR||LA(1)==COMMA)) {
 			throw new antlr.RecognitionException("unknown theory name: '"
 			+ lw.getText() + "'",

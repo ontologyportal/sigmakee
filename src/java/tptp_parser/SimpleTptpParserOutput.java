@@ -773,8 +773,20 @@ implements TptpParserOutput
                 };
             }
 
-
-            public String getPredicate() { return _predicate; }
+            public Atomic(String predicate,
+                    LinkedList<Term> arguments)
+            {
+                _kind = Formula.Kind.Atomic;
+                _predicate = predicate;
+                if (arguments != null) {
+                    _arguments = new LinkedList<Term>();
+                    for (TptpParserOutput.Term arg : arguments) {
+                        _arguments.add((Term)arg);
+                    };
+                };
+            }
+            
+			public String getPredicate() { return _predicate; }
 
             public int getNumberOfArguments() {
                 return (_arguments == null)? 0 : _arguments.size();
@@ -1286,6 +1298,12 @@ implements TptpParserOutput
             return res;
         }
 
+        public SimpleTptpParserOutput.Formula.Atomic toAtom() {
+        	
+        	SimpleTptpParserOutput.Formula.Atomic atom = new SimpleTptpParserOutput.Formula.Atomic(_topSymbol.toString(), _arguments);
+            return atom;
+        }
+        
         private Symbol _topSymbol;
 
         private LinkedList<Term> _arguments = null;
