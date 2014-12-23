@@ -58,6 +58,8 @@ public class InterfaceTPTP {
 		
 	}
 	
+	/** ***************************************************************
+	 */
 	public static void init() {
 		if (logger == null)
 			logger = Logger.getLogger(InterfaceTPTP.class.getName().toString());
@@ -135,7 +137,8 @@ public class InterfaceTPTP {
 		}
 	}
 
-
+	/** ***************************************************************
+	 */
 	public static String callTPTP(String location, 
 			String systemChosen, 
 			String problemFile,
@@ -177,6 +180,7 @@ public class InterfaceTPTP {
 	 * @return A String with any unexpected leading text removed
 	 */
 	private static String trimUnexpectedTokens(String input) {
+		
 		String output = input;
 		String trimmed = null;
 		try {
@@ -192,9 +196,8 @@ public class InterfaceTPTP {
 				int nextIdx = -1;
 				for (String token : highLevelForms) {
 					nextIdx = output.indexOf(token);
-					if ((nextIdx > -1) && ((idx == -1) || (nextIdx < idx))) {
-						idx = nextIdx;
-					}
+					if ((nextIdx > -1) && ((idx == -1) || (nextIdx < idx))) 
+						idx = nextIdx;					
 				}
 				if (idx == -1) {
 					trimmed = output;
@@ -221,11 +224,14 @@ public class InterfaceTPTP {
 		return output;
 	}
 
+	/** ***************************************************************
+	 */
 	public static ATPResult callRemoteTPTP (String systemChosen, 
 			String problemFile, 
 			int timeout,
 			String quietFlag, 
 			String tstpFormat) {
+		
 		ATPResult atpOut = new ATPResult ();
 		BufferedReader reader = null;
 		try {
@@ -238,10 +244,12 @@ public class InterfaceTPTP {
 				URLParameters.put("IDV","-T");
 				URLParameters.put("QuietFlag","-q4");
 				URLParameters.put("X2TPTP",tstpFormat);
-			} else if (quietFlag.equals("hyperlinkedKIF")) {
+			} 
+			else if (quietFlag.equals("hyperlinkedKIF")) {
 				URLParameters.put("QuietFlag","-q3");
 				URLParameters.put("X2TPTP","-S");
-			} else {
+			} 
+			else {
 				URLParameters.put("QuietFlag",quietFlag);
 				URLParameters.put("X2TPTP",tstpFormat);
 			}
@@ -260,21 +268,17 @@ public class InterfaceTPTP {
 			while ((responseLine = reader.readLine()) != null) {
 				responseLine = trimUnexpectedTokens(responseLine);
 				responseLine = StringUtil.safeToKifNamespaceDelimiters(responseLine);
-				if (responseLine.startsWith("Loading IDV")) {
-					tptpEnd = true;
-				}
+				if (responseLine.startsWith("Loading IDV")) 
+					tptpEnd = true;				
 				if (StringUtil.isNonEmptyString(responseLine)
 						&& !responseLine.startsWith("%") 
-						&& !tptpEnd) {
-					atpOut.cleanResult += responseLine + "\n";
-				}           
-				if (tptpEnd && quietFlag.equals("IDV")) {
-					atpOut.idvResult += responseLine + "\n";
-				}
+						&& !tptpEnd) 
+					atpOut.cleanResult += responseLine + "\n";				   
+				if (tptpEnd && quietFlag.equals("IDV")) 
+					atpOut.idvResult += responseLine + "\n";				
 				atpOut.originalResult += responseLine + "\n";
-				if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
-					atpOut.printResult += responseLine + "\n";
-				}
+				if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) 
+					atpOut.printResult += responseLine + "\n";				
 			}
 			atpOut.idvResult += "</PRE>\n";
 			atpOut.printResult += "</PRE>";
@@ -295,6 +299,8 @@ public class InterfaceTPTP {
 		return atpOut; 
 	}
 
+	/** ***************************************************************
+	 */
 	public static ATPResult callLocalTPTP (String systemChosen, 
 			String problemFile, 
 			int timeout,
@@ -319,14 +325,16 @@ public class InterfaceTPTP {
 				timeout      + " " +
 				"-S"         + " " +  //tstpFormat
 				problemFile;
-			} else if (quietFlag.equals("IDV")) {
+			} 
+			else if (quietFlag.equals("IDV")) {
 				command = SoTPTP + " " +
 				"-q4"        + " " +  // quietFlag
 				systemChosen + " " + 
 				timeout      + " " +
 				"-S"           + " " +  //tstpFormat
 				problemFile;            
-			} else {
+			} 
+			else {
 				command = SoTPTP + " " + 
 				quietFlag    + " " + 
 				systemChosen + " " + 
@@ -346,12 +354,10 @@ public class InterfaceTPTP {
 				atpOut.originalResult += responseLine + "\n";
 
 				if (StringUtil.isNonEmptyString(responseLine) 
-					&& !responseLine.startsWith("%")) {					
-						atpOut.cleanResult += responseLine + "\n";
-				}
-				if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) { 
+					&& !responseLine.startsWith("%")) 				
+						atpOut.cleanResult += responseLine + "\n";				
+				if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) 
 					atpOut.printResult += responseLine + "\n"; 
-				}
 			}
 			atpOut.printResult += "</PRE>";
 		}
@@ -373,11 +379,14 @@ public class InterfaceTPTP {
 		return atpOut;
 	}
 
+	/** ***************************************************************
+	 */
 	public static ATPResult callBuiltInTPTP (String systemChosen, 
 			String problemFile, 
 			int timeout,
 			String quietFlag, 
 			String tstpFormat) { 
+		
 		ATPResult atpOut = new ATPResult ();
 		try {
 			String qq;
@@ -386,10 +395,12 @@ public class InterfaceTPTP {
 			if (quietFlag.equals("IDV")) {
 				qq = "-q4";
 				format = "-S";
-			} else if (quietFlag.equals("hyperlinkedKIF")) {
+			} 
+			else if (quietFlag.equals("hyperlinkedKIF")) {
 				qq = "-q4";
 				format = "-S";
-			} else {
+			} 
+			else {
 				qq = quietFlag;
 				format = tstpFormat;
 			}
@@ -405,23 +416,21 @@ public class InterfaceTPTP {
 
 			atpOut.originalResult = result;
 			atpOut.printResult += "<PRE>";
-			if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) {
-				atpOut.printResult += result;
-			} 
+			if (!quietFlag.equals("hyperlinkedKIF") && !quietFlag.equals("IDV")) 
+				atpOut.printResult += result;			
 			if (quietFlag.equals("IDV")) {
 				// IDV can't handle comments?
 						StringTokenizer st = new StringTokenizer(result,"\n");
 						String temp = "";
 						while (st.hasMoreTokens()) {
 							String next = st.nextToken(); 
-							if (StringUtil.isNonEmptyString(next) && !next.startsWith("%")) {
-								temp += next + "\n";   
-							}
+							if (StringUtil.isNonEmptyString(next) && !next.startsWith("%")) 
+								temp += next + "\n";   							
 						}
 						atpOut.cleanResult = temp;
-			} else {
-				atpOut.cleanResult = result;
-			}
+			} 
+			else 
+				atpOut.cleanResult = result;			
 			atpOut.printResult += "</PRE>";
 		}
 		catch (Exception ex) {
@@ -431,6 +440,8 @@ public class InterfaceTPTP {
 		return atpOut;
 	}
 	
+	/** ***************************************************************
+	 */
 	public static String queryTPTP (String stmt, 
 			int timeout, 
 			int maxAnswers, 
@@ -448,10 +459,8 @@ public class InterfaceTPTP {
 					"quietFlag = " + quietFlag, "kbName = " + kbName, "language = " + language};
 			logger.entering("InterfaceTPTP", "queryTPTP", params);
 		}
-
 		logger.finest("BuiltIn Exists? : " + builtInExists);
 		logger.finest("TPTP World Exists? :" + tptpWorldExists);
-
 		//----Setup
 		String resultAll = "";
 		String tstpFormat = "-S";
@@ -483,29 +492,24 @@ public class InterfaceTPTP {
 		conjectureFormula = new Formula();
 		conjectureFormula.theFormula = stmt;
 
-
 		String oldConjecture = conjectureFormula.theFormula;
 		conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
 		boolean suppressAnswerExtraction = oldConjecture.equals(conjectureFormula.theFormula);
-
 		logger.finest("conjectureFormula.theFormula == " + conjectureFormula.theFormula + "\nsuppressAnswerExtraction == " + suppressAnswerExtraction);
-
 		//if (suppressAnswerExtraction) resultAll += "suppress definite answers<br/>";
-
-		conjectureFormula.tptpParse(true, kb);
-		Iterator it = conjectureFormula.getTheTptpFormulas().iterator();
+		SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+    	stptp._f = conjectureFormula;
+    	stptp.tptpParse(conjectureFormula,true, kb);
+		Iterator<String> it = conjectureFormula.getTheTptpFormulas().iterator();
 		String theTPTPFormula = (String) it.next();
 		String originalConjecture = theTPTPFormula;
-		if (isQuestion) {
+		if (isQuestion) 
 			conjectureTPTPFormula =  "fof(1" + ",question,(" + theTPTPFormula + ")).";
-		} else {
-			conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
-		}
-		originalKBFileName = kb.writeTPTPFile(null,
-				null,
-				true,
-				systemChosen,
-				isQuestion);
+		else 
+			conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";		
+		SUMOKBtoTPTPKB stptpkb = new SUMOKBtoTPTPKB();
+    	stptpkb.kb = kb;
+		originalKBFileName = stptpkb.writeTPTPFile(null,null,true,systemChosen,isQuestion);
 		ArrayList<Binding> lastAnswer = null;
 		ArrayList<Binding> originalAnswer = null;
 		int numAnswers = 0;
@@ -518,10 +522,8 @@ public class InterfaceTPTP {
 		//----Add while loop to check for more answers
 		//----If # of answers == maximum answers, exit loop
 		//----If last check for an answer failed (no answer found or empty answer list), exit loop
-		//----Each loop around, add ld axioms
-
-		//----While loop start:
-		do {
+		//----Each loop around, add ld axioms		
+		do {  //----While loop start:
 			originalResult = "";
 			result = "";
 			//----If we found a new set of answers, update query and axiom list
@@ -541,43 +543,46 @@ public class InterfaceTPTP {
 				//----Add last answer to conjecture
 				theTPTPFormula = LooksDifferent.addToConjecture(theTPTPFormula, lastAnswer);
 				//----Create new conjectureTPTPFormula
-				if (isQuestion) {
+				if (isQuestion) 
 					conjectureTPTPFormula = "fof(1" + ",question,(" + theTPTPFormula + ")).";
-				} else {
-					conjectureTPTPFormula = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";
-				}
+				else 
+					conjectureTPTPFormula = "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";				
 				//----keep originalKBFile intact so that we do not
 				//----have to keep recreating it, just copy and append
 				//----to copy then delete copy, only delete original
 				//----at the end of run delete last kbFileName
-				if (kbFileName != null) {
-					(new File(kbFileName)).delete();
-				}
+				if (kbFileName != null) 
+					(new File(kbFileName)).delete();				
 				//----kbFileName = originalKBFileName + all ld axioms + conjectureTPTPFormula;
 				//----Copy original kb file
-				kbFileName = kb.copyFile(originalKBFileName);
+				
+				stptpkb = new SUMOKBtoTPTPKB();
+		    	stptpkb.kb = kb;
+				kbFileName = stptpkb.copyFile(originalKBFileName);
 
 				//----Append ld axioms and conjecture to the end
-				kb.addToFile(kbFileName, ldAxiomsSoFar, conjectureTPTPFormula);
+				stptpkb = new SUMOKBtoTPTPKB();
+		    	stptpkb.kb = kb;
+		    	stptpkb.addToFile(kbFileName, ldAxiomsSoFar, conjectureTPTPFormula);
 				//----Reset last answer
 				lastAnswer = null;
-			} else {
+			} 
+			else {
 				//----kbFileName = originalKBFileName + conjectureTPTPFormula
 				//----Copy original kb file and append conjecture to the end
-				kbFileName = kb.copyFile(originalKBFileName);
+				stptpkb = new SUMOKBtoTPTPKB();
+		    	stptpkb.kb = kb;
+				kbFileName = stptpkb.copyFile(originalKBFileName);
 				System.out.println("  kbFileName == " + kbFileName);
-				kb.addToFile(kbFileName, null, conjectureTPTPFormula);
-			}
-			
-			
+				SUMOKBtoTPTPKB.addToFile(kbFileName, null, conjectureTPTPFormula);
+			}					
 			//----Call RemoteSoT
 			if (location.equals("remote")) {
-				if (systemChosen.equals("Choose%20system")) {
+				if (systemChosen.equals("Choose%20system")) 
 					resultAll += "No system chosen";            
-				} else {
-					if (numAnswers == 0) {
-						resultAll += "(Remote SystemOnTPTP call)";
-					}
+				else {
+					if (numAnswers == 0) 
+						resultAll += "(Remote SystemOnTPTP call)";					
 					atpOut = callRemoteTPTP (systemChosen, kbFileName, timeout,
 							quietFlag, tstpFormat);
 					resultAll += atpOut.printResult;
@@ -588,12 +593,11 @@ public class InterfaceTPTP {
 			} 
 			else if (location.equals("local") && tptpWorldExists) {
 				//----Call local copy of TPTPWorld instead of using RemoteSoT
-				if (systemChosen.equals("Choose%20system")) {
+				if (systemChosen.equals("Choose%20system")) 
 					resultAll += "No system chosen";
-				} else {
-					if (numAnswers == 0) {
-						resultAll += "(Local SystemOnTPTP call)";
-					}
+				else {
+					if (numAnswers == 0) 
+						resultAll += "(Local SystemOnTPTP call)";					
 					atpOut = callLocalTPTP (systemChosen, kbFileName, timeout,
 							quietFlag, tstpFormat);
 					resultAll += atpOut.printResult;
@@ -608,24 +612,19 @@ public class InterfaceTPTP {
 			} 
 			else if (location.equals("local") && builtInExists && !tptpWorldExists) {
 				//----Call built in SystemOnTPTP instead of using RemoteSoT or local
-				if (systemChosen.equals("Choose%20system")) {
+				if (systemChosen.equals("Choose%20system")) 
 					resultAll += "No system chosen";
-				} else {
-					if (numAnswers == 0) {
-						resultAll += "(Built-In SystemOnTPTP call)";
-					}
+				else {
+					if (numAnswers == 0) 
+						resultAll += "(Built-In SystemOnTPTP call)";					
 					atpOut = callBuiltInTPTP (systemChosen, kbFileName, timeout,
 							quietFlag, tstpFormat);
 					resultAll += atpOut.printResult;
 					idvResult += atpOut.idvResult;
 					result += atpOut.cleanResult;
-
 					logger.finest("result == " + result);
-
 					originalResult += atpOut.originalResult;    
-
 					logger.finest("originalResult == " + originalResult);
-
 				}            
 			}
 			else {
@@ -649,9 +648,8 @@ public class InterfaceTPTP {
 					result = answerResult;
 				} 
 				//----If ERROR is answer result, report to user
-				if (answerResult.startsWith("% ERROR:")) {
-					resultAll += ("==" + answerResult);
-				} 
+				if (answerResult.startsWith("% ERROR:")) 
+					resultAll += ("==" + answerResult);				
 			}
 			
 			if (systemChosen.startsWith(TPTP_QUESTION_SYSTEM)) {
@@ -660,7 +658,8 @@ public class InterfaceTPTP {
 				ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conj, originalResult);
 				lastAnswer = answer;
 				newResult = TPTP2SUMO.convert(result, answer, false);
-			} else {
+			} 
+			else {
 				//----Procedure if not SNARK (call one answer system: Metis)
 				try {
 					logger.finest("Parsing the following result from Metis = " + result);
@@ -679,15 +678,15 @@ public class InterfaceTPTP {
 			if (quietFlag.equals("IDV") && location.equals("remote")) {
 				if (SystemOnTPTP.isTheorem(originalResult)) {
 					int size = SystemOnTPTP.getTPTPFormulaSize(result);
-					if (size == 0) {
+					if (size == 0) 
 						resultAll += "No solution output by system.  IDV tree unavaiable.";
-					} else {
-						resultAll += idvResult;
-					}
-				} else {
-					resultAll += "Not a theorem.  IDV tree unavailable.";
-				}
-			} else if (quietFlag.equals("IDV") && !location.equals("remote")) {
+					else 
+						resultAll += idvResult;					
+				} 
+				else 
+					resultAll += "Not a theorem.  IDV tree unavailable.";				
+			} 
+			else if (quietFlag.equals("IDV") && !location.equals("remote")) {
 				if (SystemOnTPTP.isTheorem(originalResult)) {
 					int size = SystemOnTPTP.getTPTPFormulaSize(result);
 					if (size > 0) {
@@ -695,17 +694,15 @@ public class InterfaceTPTP {
 						if (StringUtil.emptyString(port))
 							port = "8080";
 						String hostname = KBmanager.getMgr().getPref("hostname");
-						if (StringUtil.emptyString(hostname)) {
-							hostname = "localhost";
-						}
+						if (StringUtil.emptyString(hostname)) 
+							hostname = "localhost";						
 						StringTokenizer st = new StringTokenizer(result,"\n");
 						String temp = "";
 						while (st.hasMoreTokens()) {
 							String next = st.nextToken();
 							if (StringUtil.isNonEmptyString(next) 
-									&& !next.startsWith("%")) {
-								temp += next + "\n";
-							}
+									&& !next.startsWith("%")) 
+								temp += next + "\n";							
 						}
 						result=temp;
 						String libHref = "http://" + hostname + ":" + port + "/sigma/lib";
@@ -714,37 +711,29 @@ public class InterfaceTPTP {
 						resultAll += "  <PARAM NAME=\"TPTP\" VALUE=\"" + result + "\">\n";
 						resultAll += "  Hey, you cant see my applet!!!\n";
 						resultAll += "</APPLET>\n";
-					} else {
-						resultAll += "No solution output by system.  IDV tree unavaiable.";
-					}
-				} else {
-					resultAll += "Not a theorem.  IDV tree unavailable.";
-				}
-			} else if (quietFlag.equals("hyperlinkedKIF")) {
-				if (originalAnswer == null) {
+					} 
+					else 
+						resultAll += "No solution output by system.  IDV tree unavaiable.";					
+				} 
+				else 
+					resultAll += "Not a theorem.  IDV tree unavailable.";				
+			} 
+			else if (quietFlag.equals("hyperlinkedKIF")) {
+				if (originalAnswer == null) 
 					originalAnswer = lastAnswer;
-				} //else {
-
-				
 				//----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
 				if (!lastAnswer.equals("")) {
 					//resultAll += "<br>There was an Answer before! <br>";
 					String bindConjecture = ("fof(bindConj, conjecture,(" 
 							+ LooksDifferent.bindConjecture(originalConjecture, 
-									originalAnswer, 
-									lastAnswer) 
-									+ ")).");
+									originalAnswer,	lastAnswer)	+ ")).");
 									//----With new bindConjecture, take last result, filter out anything with LDs in it, put in prover
 					String axioms = LooksDifferent.filterLooksDifferent(originalResult);
 					//----Redo proof using OneAnswerSystem again
 					String bindProblem = axioms + " " + bindConjecture;
 					String bindResult = AnswerFinder.findProof(bindProblem, BuiltInDir);
-
 					newResult = TPTP2SUMO.convert(bindResult, lastAnswer, true);
 				}
-
-				//}
-
 				boolean isTheorem = SystemOnTPTP.isTheorem(originalResult);
 				boolean isCounterSatisfiable = SystemOnTPTP.isCounterSatisfiable(originalResult); 
 				boolean proofExists = SystemOnTPTP.proofExists(originalResult);
@@ -752,7 +741,6 @@ public class InterfaceTPTP {
 				if (isTheorem) { 
 					if (proofExists) {
 						try {
-
 							//----Remove bindings, if no existential quantifiers have been 
 							//----made explicit, i.e., the query is closed
 							if (suppressAnswerExtraction) {
@@ -773,42 +761,35 @@ public class InterfaceTPTP {
 							// System.out.println(newResult);
 							//----If a proof exists, print out as hyperlinked kif
 							resultAll += HTMLformatter.formatProofResult(newResult,
-									stmt,
-									stmt,
-									lineHtml,
-									kbName,
-									language,
-									numAnswers+1);
-						} catch (Exception e) {}
-					} else {
-						//----Proof does not exist, but was a theorem
-						resultAll += "Answer "+(numAnswers+1)+". Yes [Theorem]<br>";
+									stmt,stmt,lineHtml,kbName,language,numAnswers+1);
+						} 
+						catch (Exception e) {}
 					} 
-				} else if (isCounterSatisfiable) {
+					else 
+						//----Proof does not exist, but was a theorem
+						resultAll += "Answer "+(numAnswers+1)+". Yes [Theorem]<br>";			
+				} 
+				else if (isCounterSatisfiable) 
 					resultAll += "Answer "+(numAnswers+1)+". No [CounterSatisfiable]<br>";
-				} else {
-					if (numAnswers == 0) 
-						resultAll += "Answer "+(numAnswers+1)+". No<br>";
-				}
+				else if (numAnswers == 0) 
+						resultAll += "Answer "+(numAnswers+1)+". No<br>";				
 			}
 			//----If lastAnswer != null (we found an answer) && there is an answer (lastAnswer.size() > 0)
-			if (lastAnswer != null && lastAnswer.size() > 0) {
+			if (lastAnswer != null && lastAnswer.size() > 0) 
 				numAnswers++;
-			} else {
-				//         out.println("No luck finding new answer");
-			} 
 			//----Add query time limit to while loop break
 		} while (numAnswers < maxAnswers && lastAnswer != null && lastAnswer.size() > 0);
 		
 		//----Delete the kbFile
-		if (originalKBFileName != null) {
-			(new File(originalKBFileName)).delete();
-		}
+		if (originalKBFileName != null) 
+			(new File(originalKBFileName)).delete();		
 
 		logger.exiting("InterfaceTPTP", "queryTPTP", resultAll);
 		return resultAll;
 	}
 
+	/** ***************************************************************
+	 */
 	public static void main () {
 	}
 }
