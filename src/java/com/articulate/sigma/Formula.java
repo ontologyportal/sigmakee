@@ -1095,7 +1095,7 @@ public class Formula implements Comparable {
         String ans = "";
         Formula form = new Formula();
         form.read(theFormula);
-        for (int i = 0 ; form.listP() ; i++) {
+        for (int i = 0; form.listP(); i++) {
             ans = form.car();
             if (i == argnum) break;
             form.read(form.cdr());
@@ -1149,15 +1149,12 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Return all the arguments in a simple formula as a list, starting
+     * Return all the arguments in a formula as a list, starting
      * at the given argument.  If the starting
-     * argument is greater than the number of arguments, or if the Formula
-     * is not a simple clause, return null.
+     * argument is greater than the number of arguments, return null.
      */
     public ArrayList<String> complexArgumentsToArrayList(int start) {
 
-        if (!isSimpleClause())
-            return null;
         int index = start;
         ArrayList<String> result = new ArrayList<String>();
         String arg = getArgument(index);
