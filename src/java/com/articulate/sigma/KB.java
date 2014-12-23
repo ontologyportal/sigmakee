@@ -3366,14 +3366,18 @@ public class KB {
      */
     public TreeSet<String> preProcess(HashSet<String> forms) {
 
+        System.out.println("INFO in FormulaPreprocessor.preProcess(): ");
         TreeSet<String> newTreeSet = new TreeSet<String>();
         KBmanager mgr = KBmanager.getMgr();
         kbCache.kb = this;
         kbCache.buildCaches();
         boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         Iterator<String> it = forms.iterator(); 
+        int counter = 0;
         while (it.hasNext()) {
             String form = it.next();
+            if ((counter++ % 100) == 1)  
+                System.out.print(".");
             Formula f = formulaMap.get(form);
             if (f == null) {
             	System.out.println("Error in KB.preProcess(): No formula for : " + form);
@@ -3412,6 +3416,7 @@ public class KB {
                 }
             }
         }
+        System.out.println();
         //kbCache.clearSortalTypeCache();
         return newTreeSet;
     }
