@@ -116,7 +116,7 @@ public class KIF {
         st.wordChars(95,95);       // _
         st.ordinaryChar(96);       // `
         st.wordChars(97,122);      // a-z
-        st.ordinaryChars(123,255); // {|}~
+        st.ordinaryChars(123,255); // {|}~
         // st.parseNumbers();
         st.quoteChar('"');
         st.commentChar(';');
@@ -195,7 +195,7 @@ public class KIF {
                 // This relies on extra blank line to separate KIF statements
                 if (st.ttype == StreamTokenizer.TT_EOL) {
                     if (isEOL) { 
-                        // Two line seperators in a row shows a new KIF
+                        // Two line separators in a row shows a new KIF
                         // statement is to start.  Check if a new statement
                         // has already been generated, otherwise report error
                         if (!keySet.isEmpty() || (expression.length() > 0)) {
