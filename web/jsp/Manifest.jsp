@@ -245,8 +245,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   String er = KBmanager.getMgr().getError();
   if (!kb.errors.isEmpty()) {
       out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
-      out.println(HTMLformatter.formatErrors(kb,HTMLformatter.kbHref + 
-                  "language=" + language + "&kb=" + kb.name));  
+      out.println(HTMLformatter.formatErrors(kb));  
   }
   
   if (StringUtil.isNonEmptyString(er)) 
