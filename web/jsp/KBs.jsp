@@ -49,7 +49,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 // available to, or permitted for, each user.  NS: 09/14/2009.
 
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
-    KBmanager.getMgr().initializeOnce();
+    boolean performedInit = KBmanager.getMgr().initializeOnce();
+    if (performedInit) {
+        response.sendRedirect("KBs.jsp");
+        return;
+    }
 /*
     if (request.getParameter("userName") != null)
        KBmanager.getMgr().setPref("userName",Login.validateUser(request.getParameter("userName"), request.getParameter("password")));
