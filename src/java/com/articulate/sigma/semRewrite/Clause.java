@@ -32,6 +32,7 @@ import com.articulate.sigma.*;
  */
 public class Clause {
 
+    public boolean negated = false;
     public String pred;
     public String arg1;
     public String arg2;
