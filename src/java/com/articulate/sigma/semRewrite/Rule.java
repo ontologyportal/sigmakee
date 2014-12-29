@@ -50,14 +50,14 @@ public class Rule {
         
         StringBuffer sb = new StringBuffer();
         if (operator == RuleOp.CLAUSE) 
-            sb.append("/- " + rhs.toString() + ".");                    
+            sb.append("/- " + clause.toString() + ".");                    
         else {
             sb.append(lhs.toString());
             if (operator == RuleOp.IMP)
                 sb.append(" ==> ");
             if (operator == RuleOp.OPT)
                 sb.append(" ?=> ");
-            sb.append(rhs.toString() + ".");
+            sb.append("{" + rhs.toString() + "}.");
         }
         return sb.toString();
     }
@@ -80,7 +80,18 @@ public class Rule {
                 r.clause = Clause.parse(lex,r.startLine);  
             }
             else {
-                r.lhs = LHS.parse(lex,r.startLine);                    
+                do {
+                    r.lhs = LHS.parse(lex,r.startLine);     
+                    if (lex.testTok(Lexer.Comma)) {
+                        lex.next();
+                        LHS newlhs = new LHS();
+                        newlhs.lhs1 = r.lhs;
+                        newlhs.operator = LHS.LHSop.AND;
+                        newlhs.lhs2 = LHS.parse(lex, r.startLine);
+                        r.lhs = newlhs;
+                    }
+                } while (lex.testTok(Lexer.Comma));
+                    
                 if (lex.testTok(Lexer.Implies))  
                     r.operator = RuleOp.IMP;
                 else if (lex.testTok(Lexer.OptImplies)) 
@@ -104,6 +115,7 @@ public class Rule {
             System.out.println("Error in RULE.parse(): " + message);
             ex.printStackTrace();
         }
+        System.out.println("Info in Rule.parse(): returning: " + r);
         return r;
     }
     

@@ -56,7 +56,7 @@ public class RHS {
             if (lex.testTok(Lexer.Stop)) {
                 rhs.stop = true;
                 lex.next();
-                System.out.println("Info in RHS.parse(): " + lex.look());
+                //System.out.println("Info in RHS.parse(): " + lex.look());
                 if (!lex.testTok(Lexer.Stop)) {
                     errStr = (errStart + ": Invalid end token '" + lex.next() + "' near line " + startLine);
                     throw new ParseException(errStr, startLine);
@@ -70,12 +70,13 @@ public class RHS {
                 String st = lex.nextUnfiltered();
                 while (!st.equals("}")) {
                     st = lex.nextUnfiltered();
-                    sb.append(st);
+                    if (!st.equals("}"))
+                        sb.append(st);
                 }
                 rhs.form = new Formula(sb.toString()); 
-                System.out.println("Info in RHS.parse(): SUMO: " + sb.toString());
+                //System.out.println("Info in RHS.parse(): SUMO: " + sb.toString());
             }
-            System.out.println("Info in RHS.parse(): " + lex.look());
+            //System.out.println("Info in RHS.parse(): " + lex.look());
         }
         catch (Exception ex) {
             String message = ex.getMessage();

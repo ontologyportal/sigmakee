@@ -49,7 +49,7 @@ public class LHS {
         
         StringBuffer sb = new StringBuffer();
         if (operator == LHSop.AND) 
-            sb.append(lhs1.toString() + ", " + lhs2.toString());
+            sb.append("[" + lhs1.toString() + ", " + lhs2.toString() + "]");
         else if (operator == LHSop.OR)
             sb.append("(" + lhs1.toString() + " | " + lhs2.toString() + ")");
         else if (operator == LHSop.DELETE)
@@ -97,6 +97,7 @@ public class LHS {
             }
             else if (lex.testTok(Lexer.Negation)) {
                 lhs.operator = LHSop.NOT;
+                lex.next();
                 lhs.lhs1 = LHS.parse(lex,startLine);
                 return lhs;
             }
@@ -107,19 +108,28 @@ public class LHS {
             }
             // Now it's either just a clause or a left hand side
             Clause c = Clause.parse(lex,startLine);
+            System.out.println("INFO in LHS.parse(): found a clause: " + c);
             System.out.println("INFO in LHS.parse(): " + lex.look());
             if (lex.testTok(Lexer.Comma)) {
+                LHS left = new LHS();
+                left.operator = LHSop.DELETE;
+                left.clause = c;
+                lhs.operator = LHSop.AND;
+                lhs.lhs1 = left;
                 lex.next();
                 lhs.lhs2 = LHS.parse(lex, startLine);
             }
-            else
+            else {
                 lhs.clause = c;
+                lhs.operator = LHSop.DELETE;
+            }
         }
         catch (Exception ex) {
             String message = ex.getMessage();
             System.out.println("Error in LHS.parse(): " + message);
             ex.printStackTrace();
         }
+        //System.out.println("INFO in LHS.parse(): returning: " + lhs);
         return lhs;
     }
     
