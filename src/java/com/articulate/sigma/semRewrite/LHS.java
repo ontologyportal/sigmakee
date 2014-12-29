@@ -65,13 +65,26 @@ public class LHS {
     
     /** ***************************************************************
      */
+    public LHS deepCopy() {
+        
+        LHS newlhs = new LHS();
+        newlhs.clause = clause;
+        newlhs.lhs1 = lhs1;
+        newlhs.lhs2 = lhs2;
+        newlhs.operator = operator;
+        newlhs.method = method;
+        return newlhs;
+    }
+    
+    /** ***************************************************************
+     */
     public static LHS parse(Lexer lex, int startLine) {
         
         String errStart = "Parsing error in " + RuleSet.filename;
         String errStr;
         LHS lhs = new LHS();
         try {
-            System.out.println("INFO in LHS.parse(): " + lex.look());
+            //System.out.println("INFO in LHS.parse(): " + lex.look());
             if (lex.testTok(Lexer.Plus)) {
                 lex.next();
                 lhs.operator = LHSop.PRESERVE;
@@ -108,8 +121,8 @@ public class LHS {
             }
             // Now it's either just a clause or a left hand side
             Clause c = Clause.parse(lex,startLine);
-            System.out.println("INFO in LHS.parse(): found a clause: " + c);
-            System.out.println("INFO in LHS.parse(): " + lex.look());
+            //System.out.println("INFO in LHS.parse(): found a clause: " + c);
+            //System.out.println("INFO in LHS.parse(): " + lex.look());
             if (lex.testTok(Lexer.Comma)) {
                 LHS left = new LHS();
                 left.operator = LHSop.DELETE;
