@@ -78,6 +78,8 @@ public class RuleSet {
                     "(agent ?E ?X) " +
                     "(patient ?E ?Y)))}.";
         Rule r = new Rule();
-        r.parseString(rule);
+        r = Rule.parseString(rule);
+        System.out.println(r.toString());
+        Clausifier.clausify(r.lhs);
     }
 }
