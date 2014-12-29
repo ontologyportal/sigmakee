@@ -33,6 +33,7 @@ import com.articulate.sigma.*;
 public class Clause {
 
     public boolean negated = false;
+    public boolean preserve = true;
     public String pred;
     public String arg1;
     public String arg2;
@@ -42,6 +43,8 @@ public class Clause {
     public String toString() {
         
         StringBuffer sb = new StringBuffer();
+        if (negated)
+            sb.append("~");
         sb.append(pred + "(" + arg1 + "," + arg2 + ")");
         return sb.toString();
     }
@@ -55,25 +58,25 @@ public class Clause {
         String errStr;
         Clause cl = new Clause();
         try {
-            System.out.println("INFO in Clause.parse(): " + lex.look());
+            //System.out.println("INFO in Clause.parse(): " + lex.look());
             cl.pred = lex.next();
-            System.out.println("INFO in Clause.parse(): " + lex.look());
+            //System.out.println("INFO in Clause.parse(): " + lex.look());
             if (!lex.testTok(Lexer.OpenPar)) {
                 errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine);
                 throw new ParseException(errStr, startLine);
             }
             lex.next();
-            System.out.println("INFO in Clause.parse(): " + lex.look());
+            //System.out.println("INFO in Clause.parse(): " + lex.look());
             cl.arg1 = lex.next();
-            System.out.println("INFO in Clause.parse(): " + lex.look());
+            //System.out.println("INFO in Clause.parse(): " + lex.look());
             if (!lex.testTok(Lexer.Comma)) {
                 errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine);
                 throw new ParseException(errStr, startLine);
             }
             lex.next();
-            System.out.println("INFO in Clause.parse(): " + lex.look());
+            //System.out.println("INFO in Clause.parse(): " + lex.look());
             cl.arg2 = lex.next();
-            System.out.println("INFO in Clause.parse(): " + lex.look());
+            //System.out.println("INFO in Clause.parse(): " + lex.look());
             if (!lex.testTok(Lexer.ClosePar)) {
                 errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine);
                 throw new ParseException(errStr, startLine);
