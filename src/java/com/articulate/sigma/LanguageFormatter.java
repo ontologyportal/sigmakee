@@ -35,6 +35,8 @@ import com.articulate.sigma.KB;
  *  formatting language.
  */
 public class LanguageFormatter {
+    private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
+    private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
 
     private static HashMap<String,HashMap<String,String>> keywordMap = null;
 
@@ -1456,7 +1458,7 @@ public class LanguageFormatter {
 
         String stmt = "(=> (and (instance ?REL ObjectAttitude) (?REL ?AGENT ?THING)) (instance ?THING Physical))";
 
-        readKeywordMap("/Users/geraldkurlandski/Documents/workspace_Sigma/cvs/KBs");
+        readKeywordMap(KB_PATH);
 
         //collectOrderedVariables(stmt);
         //System.out.println("INFO in main: format: " + ((String) kb.getFormatMap("EnglishLanguage").get("domain")));
