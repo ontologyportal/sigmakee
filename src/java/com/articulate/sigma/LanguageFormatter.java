@@ -105,9 +105,18 @@ public class LanguageFormatter {
      *  language identifier.
      */
     public static HashMap<String,HashMap<String,String>> readKeywordMap(String dir) {
-
         System.out.println("INFO in LanguageFormatter.readKeywordMap(" + dir + "/" + 
                 PHRASES_FILENAME + ")");
+
+        if(dir == null || dir.isEmpty())    {
+            throw new IllegalArgumentException("Parameter dir is null or empty.");
+        }
+
+        File dirFile = new File(dir);
+        if(! dirFile.exists())  {
+            throw new IllegalArgumentException("Parameter dir points to non-existent path: " + dir);
+        }
+
         if (keywordMap == null)
             keywordMap = new HashMap<String,HashMap<String,String>>();
         int lc = 0;
@@ -116,7 +125,7 @@ public class LanguageFormatter {
         try {
             if (keywordMap.isEmpty()) {
                 System.out.println("Filling keywordMap");
-                File dirFile = new File(dir);
+
                 phrasesFile = new File(dirFile, PHRASES_FILENAME);
                 if (!phrasesFile.canRead())
                     throw new Exception("Cannot read \"" + phrasesFile.getCanonicalPath() + "\"");
@@ -1286,6 +1295,16 @@ public class LanguageFormatter {
         return ans;
     }
 
+    /**
+     * Remove HTML from input string.
+     * @param input
+     * @return
+     */
+    public static String filterHtml(String input)  {
+        // Note use of non-greedy matching.
+        return input.replaceAll("<.*?>", "");
+    }
+
     /** *************************************************************
      */
     private String prettyPrint(String term) {
@@ -1434,10 +1453,14 @@ public class LanguageFormatter {
         //String stmt = "(<=> (instance ?OBJ Substance) (exists (?ATTR) (and (instance ?ATTR PhysicalState) (attribute ?OBJ ?ATTR))))";
         //String stmt = "(domain date 1 Physical)";
         // String format = "(format EnglishLanguage domain \"the number %2 argument of %1 is %n an &%instance of %3\")";
+
         String stmt = "(=> (and (instance ?REL ObjectAttitude) (?REL ?AGENT ?THING)) (instance ?THING Physical))";
-        readKeywordMap("/home/apease/Sigma/KBs");
+
+        readKeywordMap("/Users/geraldkurlandski/Documents/workspace_Sigma/cvs/KBs");
+
         //collectOrderedVariables(stmt);
         //System.out.println("INFO in main: format: " + ((String) kb.getFormatMap("EnglishLanguage").get("domain")));
+
         Formula f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.theFormula);
