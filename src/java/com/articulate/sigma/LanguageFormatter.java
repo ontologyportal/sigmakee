@@ -1461,19 +1461,6 @@ public class LanguageFormatter {
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
 
-        //String stmt = "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
-        //String stmt = "(=> (and (instance ?OBJ1 Object) (partlyLocated ?OBJ1 ?OBJ2)) (exists (?SUB) (and (part ?SUB ?OBJ1) (located ?SUB ?OBJ2))))";
-        //String stmt = "(partition Substance PureSubstance Mixture)";
-        //String stmt = "(subclass BiologicallyActiveSubstance Substance)";
-        //String stmt = "(<=> (instance ?OBJ Substance) (exists (?ATTR) (and (instance ?ATTR PhysicalState) (attribute ?OBJ ?ATTR))))";
-        //String stmt = "(domain date 1 Physical)";
-        // String format = "(format EnglishLanguage domain \"the number %2 argument of %1 is %n an &%instance of %3\")";
-
-        //readKeywordMap(KB_PATH);
-
-        //collectOrderedVariables(stmt);
-        //System.out.println("INFO in main: format: " + ((String) kb.getFormatMap("EnglishLanguage").get("domain")));
-
         String stmt = "( patient Leaving ?ENTITY )";
         Formula f = new Formula();
         f.read(stmt);
