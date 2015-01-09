@@ -63,19 +63,35 @@ public class LanguageFormatter {
         return ans;
     }
 
-    /** ***************************************************************
-     * Format a list of variables which are not enclosed by parens
+    /**
+     * Format a list of variables which are not enclosed by parens.
+     * Formatting includes inserting the appropriate separator between the elements (usually a comma), as well as
+     * inserting the conjunction ("and" or its equivalent in another language) if the conjunction doesn't already exist.
+     * @param strseq
+     *  the list of variables
+     * @param language
+     *  the target language (used for the conjunction "and")
+     * @return
+     *  the formatted string
      */
-    private static String formatList(String strseq, String language) {
+    public static String formatList(String strseq, String language) {
+        if(language == null || language.isEmpty())    {
+            throw new IllegalArgumentException("Parameter language is empty or null.");
+        }
 
         StringBuilder result = new StringBuilder();
         String comma = getKeyword(",", language);
         String space = " ";
         String[] arr = strseq.split(space);
-        int last = (arr.length - 1);
+        int lastIdx = (arr.length - 1);
         for (int i = 0; i < arr.length; i++) {
+            String val = arr[i];
             if (i > 0) {
-                if (i == last) {
+                if(val.equals(getKeyword("and", language))) {
+                    // Make behavior for lists that include "and" the same as for those that don't.
+                    continue;
+                }
+                if (i == lastIdx) {
                     result.append(space);
                     result.append(getKeyword("and", language));
                 }
@@ -84,7 +100,7 @@ public class LanguageFormatter {
                 }
                 result.append(space);
             }
-            result.append(arr[i]);
+            result.append(val);
         }
         return result.toString();
     }
@@ -247,7 +263,7 @@ public class LanguageFormatter {
      *  @param phraseMap An association list of relations and their natural language format statements.
      *  @param termMap An association list of terms and their natural language format statements.
      *  @param language A String denoting a natural language, such as EnglishLanguage.
-     *  @param depth An in indicating the level of nesting, for control of indentation.
+     *  @param depth An int indicating the level of nesting, for control of indentation.
      *  @return A String, which is the paraphrased statement.
      */
     public static String nlStmtPara(String stmt, boolean isNegMode, KB kb, Map<String,String> phraseMap,
@@ -548,9 +564,7 @@ public class LanguageFormatter {
                 sb.append(" ");
                 if (((String) args.get(0)).contains(" ")) {
                     // If more than one variable ...
-                    sb.append(translateWord(termMap,formatList((String) args.get(0),
-                                                               language),
-                                            language));
+                    sb.append(translateWord(termMap,formatList((String) args.get(0), language), language));
                 }
                 else {
                     // If just one variable ...
@@ -566,8 +580,7 @@ public class LanguageFormatter {
                     // If more than one variable ...
                     sb.append(isNegMode ? NOTEXIST : EXIST);
                     sb.append(" ");
-                    sb.append(translateWord(termMap,
-                                            formatList((String) args.get(0),language),language));
+                    sb.append(translateWord(termMap, formatList((String) args.get(0), language), language));
                 }
                 else {
                     // If just one variable ...
@@ -1456,19 +1469,78 @@ public class LanguageFormatter {
         //String stmt = "(domain date 1 Physical)";
         // String format = "(format EnglishLanguage domain \"the number %2 argument of %1 is %n an &%instance of %3\")";
 
-        String stmt = "(=> (and (instance ?REL ObjectAttitude) (?REL ?AGENT ?THING)) (instance ?THING Physical))";
-
-        readKeywordMap(KB_PATH);
+        //readKeywordMap(KB_PATH);
 
         //collectOrderedVariables(stmt);
         //System.out.println("INFO in main: format: " + ((String) kb.getFormatMap("EnglishLanguage").get("domain")));
 
+        String stmt = "( patient Leaving ?ENTITY )";
         Formula f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.theFormula);
-        System.out.println("result: " + htmlParaphrase("",stmt, kb.getFormatMap("EnglishLanguage"),
-                                                       kb.getTermFormatMap("EnglishLanguage"),
-                                                       kb,"EnglishLanguage"));
+        System.out.println("result: " + filterHtml(htmlParaphrase("",stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage")));
+        System.out.println();
+
+        stmt = "( agent Leaving John )";
+        f = new Formula();
+        f.read(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        System.out.println("result: " + filterHtml(htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
+        System.out.println();
+
+        stmt = "(exists (?D ?H)\n" +
+                "   (and\n" +
+                "       (instance ?D Driving)\n" +
+                "       (instance ?H Human)\n" +
+                "       (agent ?D ?H)))";
+        f = new Formula();
+        f.read(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        System.out.println("result: " + filterHtml(htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
+        System.out.println();
+
+        stmt = "(exists (?D ?H)\n" +
+                "   (and\n" +
+                "       (instance ?D Driving)\n" +
+                "       (instance ?H Human)\n" +
+                "       (names ?H \"John\")\n" +
+                "       (agent ?D ?H)))";
+        f = new Formula();
+        f.read(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        System.out.println("result: " + filterHtml(htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
+        System.out.println();
+
+        stmt = "(exists (?D ?H ?Car)\n" +
+                "   (and\n" +
+                "       (instance ?D Driving)\n" +
+                "       (instance ?H Human)\n" +
+                "       (names ?H \"John\")\n" +
+                "       (instance ?Car Automobile)\n" +
+                "       (agent ?D ?H)\n" +
+                "       (instrument ?D ?Car)))";
+        f = new Formula();
+        f.read(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        System.out.println("result: " + filterHtml(htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
+        System.out.println();
+
+        stmt = "(exists (?D ?H ?C ?A)\n" +
+                "   (and\n" +
+                "       (instance ?D Driving)\n" +
+                "       (instance ?H Human)\n" +
+                "       (names ?H \"John\")\n" +
+                "       (instance ?C Automobile)\n" +
+                "       (instance ?A Airport)\n" +
+                "       (agent ?D ?H)\n" +
+                "       (destination ?D ?A)\n" +
+                "       (instrument ?D ?C)))";
+        f = new Formula();
+        f.read(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        System.out.println("result: " + filterHtml(htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
+        System.out.println();
+
     }
 }
 
