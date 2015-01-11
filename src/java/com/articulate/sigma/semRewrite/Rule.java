@@ -37,6 +37,7 @@ import com.articulate.sigma.*;
  */
 public class Rule {
 
+    public CNF cnf;
     public enum RuleOp {IMP, OPT, CLAUSE}
     public LHS lhs;
     public RuleOp operator;  
@@ -49,7 +50,15 @@ public class Rule {
     public String toString() {
         
         StringBuffer sb = new StringBuffer();
-        if (operator == RuleOp.CLAUSE) 
+        if (cnf != null) {
+            sb.append(cnf.toString());
+            if (operator == RuleOp.IMP)
+                sb.append(" ==> ");
+            if (operator == RuleOp.OPT)
+                sb.append(" ?=> ");
+            sb.append("{" + rhs.toString() + "}.");
+        }
+        else if (operator == RuleOp.CLAUSE) 
             sb.append("/- " + clause.toString() + ".");                    
         else {
             sb.append(lhs.toString());

@@ -22,6 +22,7 @@ MA  02111-1307 USA
 */
 
 import java.text.ParseException;
+import java.util.*;
 
 import com.articulate.sigma.*;
 
@@ -80,9 +81,27 @@ public class RHS {
         }
         catch (Exception ex) {
             String message = ex.getMessage();
-            RuleSet.warningSet.add("Error in KIF.parse() " + message);
+            System.out.println("Error in RHS.parse() " + message);
             ex.printStackTrace();
         }
+        return rhs;
+    }
+ 
+    /** ***************************************************************
+     * Apply variable substitutions to this set of clauses  
+     * TODO: note that a replace for ?A will erroneously match ?AB
+     */
+    public RHS applyBindings(HashMap<String,String> bindings) {
+        
+        RHS rhs = new RHS();
+        Iterator<String> it = bindings.keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            String value = bindings.get(key);
+            form.theFormula = form.theFormula.replaceAll("\\"+key,value);
+            //System.out.println("INFO in RHS.applyBindings(): " + form.theFormula);
+        }
+        rhs.form = form;
         return rhs;
     }
     

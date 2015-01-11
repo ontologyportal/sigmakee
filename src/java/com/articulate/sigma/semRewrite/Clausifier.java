@@ -1,9 +1,10 @@
 package com.articulate.sigma.semRewrite;
 
 import java.lang.reflect.Method;
+import com.articulate.sigma.semRewrite.*;
 
-import com.articulate.sigma.semRewrite.LHS.LHSop;
-
+// Note that because the language is so simple we only have to 
+// handle moving negations and disjunctions.
 public class Clausifier {
 
     public static boolean changed = false;
@@ -71,21 +72,21 @@ public class Clausifier {
      */
     private static LHS distributeAndOverOrRecurse(LHS form) {
     
-        System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): " + form);
+        //System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): " + form);
         LHS result = form.deepCopy();
         if (form.lhs1 != null)
             result.lhs1 = distributeAndOverOr(form.lhs1);
         if (form.lhs2 != null)
             result.lhs2 = distributeAndOverOr(form.lhs2);
         //System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): (2): " + KIF.format(form.toKIFString()));
-        if (form.operator.equals(LHSop.OR)) {
-            System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): top level or: " + form);
-            if (result.lhs1 != null && result.lhs1.operator.equals(LHSop.AND)) {
-                System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): lhs1 and: " + form);
+        if (form.operator.equals(LHS.LHSop.OR)) {
+            //System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): top level or: " + form);
+            if (result.lhs1 != null && result.lhs1.operator.equals(LHS.LHSop.AND)) {
+                //System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): lhs1 and: " + form);
                 LHS newParent = new LHS();
-                newParent.operator = LHSop.AND;
+                newParent.operator = LHS.LHSop.AND;
                 LHS newChild1 = new LHS();
-                newChild1.operator = LHSop.OR;
+                newChild1.operator = LHS.LHSop.OR;
                 if (result.lhs1.lhs1 != null)
                     newChild1.lhs1 = result.lhs1.lhs1;
                 if (result.lhs1.clause != null)
@@ -93,7 +94,7 @@ public class Clausifier {
                 if (result.lhs2 != null)
                     newChild1.lhs2 = result.lhs2;
                 LHS newChild2 = new LHS();
-                newChild2.operator = LHSop.OR;
+                newChild2.operator = LHS.LHSop.OR;
                 if (result.lhs1.lhs2 != null)
                     newChild2.lhs1 = result.lhs1.lhs2;
                 if (result.lhs1.clause != null)
@@ -105,15 +106,15 @@ public class Clausifier {
                 newParent.lhs1 = newChild1;
                 newParent.lhs2 = newChild2;
                 changed = true;
-                System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): result: " + form);
+                //System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): result: " + form);
                 return newParent;
             }
-            else if (result.lhs2 != null && result.lhs2.operator.equals(LHSop.AND)) {
-                System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): lhs2 and: " + form);
+            else if (result.lhs2 != null && result.lhs2.operator.equals(LHS.LHSop.AND)) {
+                //System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): lhs2 and: " + form);
                 LHS newParent = new LHS();
-                newParent.operator = LHSop.AND;
+                newParent.operator = LHS.LHSop.AND;
                 LHS newChild1 = new LHS();
-                newChild1.operator = LHSop.OR;
+                newChild1.operator = LHS.LHSop.OR;
                 if (result.lhs2.lhs1 != null)
                     newChild1.lhs1 = result.lhs2.lhs1;
                 if (result.lhs2.clause != null)
@@ -123,7 +124,7 @@ public class Clausifier {
                 if (result.clause != null)
                     newChild1.clause = result.clause;
                 LHS newChild2 = new LHS();
-                newChild2.operator = LHSop.OR;
+                newChild2.operator = LHS.LHSop.OR;
                 if (result.lhs2.lhs2 != null)
                     newChild2.lhs1 = result.lhs2.lhs2;
                 if (result.lhs2.clause != null)
@@ -135,7 +136,7 @@ public class Clausifier {
                 newParent.lhs1 = newChild1;
                 newParent.lhs2 = newChild2;
                 changed = true;
-                System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): result: " + form);
+                //System.out.println("INFO in Clausifier.distributeAndOverOrRecurse(): result: " + form);
                 return newParent;
             }   
         }
@@ -161,7 +162,7 @@ public class Clausifier {
     private static CNF separateConjunctions(LHS lhs) {  
         
         CNF cnf = new CNF();
-        if (lhs.operator.equals(LHSop.AND)) {
+        if (lhs.operator.equals(LHS.LHSop.AND)) {
             if (lhs.lhs1.clause != null) {
                 Disjunct d = new Disjunct();
                 d.disjuncts.add(lhs.lhs1.clause);
@@ -177,7 +178,7 @@ public class Clausifier {
             else
                 cnf.clauses.addAll(separateConjunctions(lhs.lhs2).clauses);
         }
-        else if (lhs.operator.equals(LHSop.OR)) {
+        else if (lhs.operator.equals(LHS.LHSop.OR)) {
             Disjunct d = new Disjunct();
             d.disjuncts.add(lhs.lhs1.clause);
             d.disjuncts.add(lhs.lhs2.clause);
@@ -197,6 +198,21 @@ public class Clausifier {
         LHS result = moveNegationsIn(lhs);
         result = distributeAndOverOr(result);
         return separateConjunctions(result);
+    }
+    
+    /** ***************************************************************
+     */
+    public static RuleSet clausify(RuleSet rs) {  
+        
+        RuleSet newrs = new RuleSet();
+        for (int i = 0; i < rs.rules.size(); i++) {
+            Rule r = rs.rules.get(i);
+            LHS result = moveNegationsIn(r.lhs);
+            result = distributeAndOverOr(result);
+            r.cnf = separateConjunctions(result);
+            newrs.rules.add(r);
+        }
+        return newrs;
     }
     
     /** ***************************************************************

@@ -29,8 +29,8 @@ import com.articulate.sigma.StreamTokenizer_s;
 
 public class RuleSet {
 
-    public static ArrayList<Rule> rules = new ArrayList<Rule>();
-    public static ArrayList<String> warningSet = new ArrayList<String>();
+    public ArrayList<Rule> rules = new ArrayList<Rule>();
+    public ArrayList<String> warningSet = new ArrayList<String>();
     public static String filename = "";
     
     /** ***************************************************************
@@ -45,8 +45,9 @@ public class RuleSet {
 
     /** ***************************************************************
      */
-    public static void parse(Lexer lex) {
+    public RuleSet parse(Lexer lex) {
         
+        RuleSet rs = new RuleSet();
         String errStart = "Parsing error in " + filename;
         String errStr = null;
         boolean isEOL = false;
@@ -54,7 +55,7 @@ public class RuleSet {
             do {
                 Rule r = Rule.parse(lex);
                 if (r != null)
-                    rules.add(r);
+                    rs.rules.add(r);
             } while (!lex.testTok(Lexer.EOFToken));
         }
         catch (Exception ex) {
@@ -62,6 +63,60 @@ public class RuleSet {
             warningSet.add("Error in RuleSet.parse() " + message);
             ex.printStackTrace();
         }
+        return rs;
+    }
+    
+    /** ***************************************************************
+     */
+    public static RuleSet readFile(String fname) throws Exception {
+
+        filename = fname;
+        FileReader fr = null;
+        Exception exThr = null;
+        try {
+            File file = new File(fname);
+            Lexer lex = new Lexer(file);
+            RuleSet rs = new RuleSet();
+            return rs.parse(lex);
+        }
+        catch (Exception ex) {
+            exThr = ex;
+            String er = ex.getMessage() + ((ex instanceof ParseException)
+                                           ? " at line " + ((ParseException)ex).getErrorOffset()
+                                           : "");
+            System.out.println("Error in RuleSet.readFile(): " + er + " in file " + fname);
+        }
+        finally {
+            if (fr != null) {
+                try {
+                    fr.close();
+                }
+                catch (Exception ex2) {
+                }
+            }
+        }
+        if (exThr != null) 
+            throw exThr;        
+        return null;
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
+    public static CNF testRuleSet() {
+        
+        String rule = "sense(212345678,?E), nsubj(?E,?X), dobj(?E,?Y) ==> " +
+                "{(exists (?X ?E ?Y) " + 
+                  "(and " +
+                    "(instance ?X Organization) " +
+                    "(instance ?Y Human)" +
+                    "(instance ?E Hiring)" +
+                    "(agent ?E ?X) " +
+                    "(patient ?E ?Y)))}.";
+        Rule r = new Rule();
+        r = Rule.parseString(rule);
+        //System.out.println(r.toString());
+        return Clausifier.clausify(r.lhs);
     }
     
     /** *************************************************************

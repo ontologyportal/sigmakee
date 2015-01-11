@@ -382,6 +382,7 @@ public class Lexer {
      */
     public String nextUnfiltered() throws ParseException {
 
+        //System.out.println("INFO in Lexer.nextUnfiltered(): " + line);
         if (tokenStack.size() > 0)
             return tokenStack.pop();
         else {
@@ -410,9 +411,9 @@ public class Lexer {
                 String key = it.next();
                 Pattern value = tokenDefs.get(key);
                 Matcher m = value.matcher(line.substring(pos));
-                //System.out.println("INFO in Lexer.nextUnfiltered(): checking: " + key + " against: " + source.substring(pos));
+                //System.out.println("INFO in Lexer.nextUnfiltered(): checking: " + key + " against: " + line.substring(pos));
                 if (m.lookingAt()) {
-                    //System.out.println("INFO in Lexer.nextUnfiltered(): got token against source: " + source.substring(pos));
+                    //System.out.println("INFO in Lexer.nextUnfiltered(): got token against source: " + line.substring(pos));
                     literal = line.substring(pos + m.start(),pos + m.end());
                     pos = pos + m.end();
                     type = key;
@@ -442,7 +443,7 @@ public class Lexer {
         ArrayList<String> res = new ArrayList<String>();
         while (!testTok(EOFToken)) {
             String tok = next();
-            //System.out.println("INFO in Lexer.lex(): " + tok);
+            System.out.println("INFO in Lexer.lex(): " + tok);
             res.add(tok);
         }
         return res;
@@ -460,17 +461,22 @@ public class Lexer {
                 "(agent ?E ?X) " +
                 "(patient ?E ?Y)))}.";
     
+    private static String example2 = "bank2";
+    
     /** ***************************************************************
      * Test that comments and whitespace are normally ignored. 
      */
     private static void testLex() {
 
         System.out.println("-------------------------------------------------");
-        System.out.println("INFO in Lexer.testLex()");
+        System.out.println("INFO in Lexer.testLex(): example2: " + example2);
         Lexer lex1 = new Lexer(example1);
+        Lexer lex2 = new Lexer(example2);
         try {
             ArrayList<String> res1 = lex1.lex();
             System.out.println("INFO in Lexer.testLex(): completed parsing example 1: " + example1);
+            ArrayList<String> res2 = lex2.lex();
+            System.out.println("INFO in Lexer.testLex(): completed parsing example 1: " + example2);
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -580,8 +586,8 @@ public class Lexer {
     public static void main(String[] args) {
         
         testLex();
-        testTerm();
-        testAcceptLit();
-        testErrors();
+        //testTerm();
+        //testAcceptLit();
+        //testErrors();
     }
 }

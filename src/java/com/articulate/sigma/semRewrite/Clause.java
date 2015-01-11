@@ -22,6 +22,7 @@ MA  02111-1307 USA
 */
 
 import java.text.ParseException;
+import java.util.*;
 
 import com.articulate.sigma.*;
 
@@ -47,6 +48,129 @@ public class Clause {
             sb.append("~");
         sb.append(pred + "(" + arg1 + "," + arg2 + ")");
         return sb.toString();
+    }
+    
+    /** ***************************************************************
+     */
+    public Clause deepCopy() {
+        
+        Clause newc = new Clause();
+        newc.negated = negated;
+        newc.preserve = preserve;
+        newc.pred = pred;
+        newc.arg1 = arg1;
+        newc.arg2 = arg2;
+        return newc;
+    }
+    
+    /** ***************************************************************
+     * Apply variable substitutions to a clause  
+     */
+    public void applyBindingSelf(HashMap<String,String> bindings) {
+        
+        if (arg1.startsWith("?")) {
+            if (bindings.containsKey(arg1))
+                arg1 = bindings.get(arg1);
+        }
+        if (arg2.startsWith("?")) {
+            if (bindings.containsKey(arg2))
+                arg2 = bindings.get(arg2);
+        }
+    }
+    
+    /** ***************************************************************
+     * Apply variable substitutions to a clause  
+     */
+    public Clause applyBindings(HashMap<String,String> bindings) {
+        
+        Clause c = new Clause();
+        c.pred = pred;
+        if (arg1.startsWith("?")) {
+            if (bindings.containsKey(arg1))
+                c.arg1 = bindings.get(arg1);
+            else
+                c.arg1 = arg1;
+        }
+        if (arg2.startsWith("?")) {
+            if (bindings.containsKey(arg2))
+                c.arg2 = bindings.get(arg2);
+            else
+                c.arg2 = arg2;
+        }
+        c.negated = negated;
+        c.preserve = preserve;
+        return c;
+    }
+    
+    /** ***************************************************************
+     * A degenerate case of an occurs check since we have no functions
+     * and argument lists are always of length 2.
+     */
+    private static boolean occursCheck(String t, Clause c) {
+        
+        if (t.equals(c.arg1) || t.equals(c.arg2))
+            return true;
+        else
+            return false;
+    }
+    
+    /** ***************************************************************
+     * Unify all terms in term1 with the corresponding terms in term2 with a
+     * common substitution. Note that unlike general unification, we have
+     * a fixed argument list of 2.   
+     */
+    public HashMap<String,String> mguTermList(Clause l2) {
+
+        //System.out.println("INFO in Clause.mguTermList(): attempting to unify " + this + " and " + l2);
+        HashMap<String,String> subst = new HashMap<String,String>();
+        
+        if (!pred.equals(l2.pred)) 
+            return null;        
+        for (int arg = 1; arg < 3; arg++) {           
+            String t1 = arg1; // Pop the first term pair to unify off the lists            
+            String t2 = l2.arg1; // (removes and returns the denoted elements).
+            if (arg == 2) {
+                t1 = arg2;            
+                t2 = l2.arg2;
+            }
+            //System.out.println("INFO in Clause.mguTermList(): attempting to unify arguments " + t1 + " and " + t2); 
+            if (t1.startsWith("?")) {
+                if (t1.equals(t2))
+                    // We could always test this upfront, but that would
+                    // require an expensive check every time. 
+                    // We descend recursively anyway, so we only check this on
+                    // the terminal case.  
+                    continue;
+                if (occursCheck(t1,this))
+                    return null;
+                // We now create a new substitution that binds t2 to t1, and
+                // apply it to the remaining unification problem. We know
+                // that every variable will only ever be bound once, because
+                // we eliminate all occurrences of it in this step - remember
+                // that by the failed occurs-check, t2 cannot contain t1.
+                HashMap<String,String> newBinding = new HashMap<String,String>();
+                newBinding.put(t1,t2);                
+                applyBindingSelf(newBinding);
+                l2 = l2.applyBindings(newBinding);
+                subst.put(t1, t2);
+            }
+            else if (t2.startsWith("?")) {
+                // Symmetric case - We know that t1!=t2, so we can drop this check
+                if (occursCheck(t2, this))
+                    return null;
+                HashMap<String,String> newBinding = new HashMap<String,String>();
+                newBinding.put(t2, t1);          
+                applyBindingSelf(newBinding);
+                l2 = l2.applyBindings(newBinding);
+                subst.put(t2, t1);
+            }
+            else {
+                if (!t1.equals(t2))
+                    return null;
+            }
+        }
+        //System.out.println("INFO in Clause.mguTermList(): subst on exit: " + subst);
+        return subst;
     }
     
     /** ***************************************************************
@@ -85,7 +209,7 @@ public class Clause {
         }
         catch (Exception ex) {
             String message = ex.getMessage();
-            RuleSet.warningSet.add("Error in KIF.parse() " + message);
+            System.out.println("Error in Clause.parse() " + message);
             ex.printStackTrace();
         }	
         return cl;
@@ -95,5 +219,9 @@ public class Clause {
      * A test method
      */
     public static void main (String args[]) {
+        
+        String input = "det(bank-2, The-1";
+        Lexer lex = new Lexer(input);
+        System.out.println(Clause.parse(lex, 0));
     }
 }
