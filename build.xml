@@ -24,10 +24,13 @@
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpath="lib/antlr-2.7.5.jar:lib/mail.jar">
+    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpath="lib/antlr-2.7.5.jar:lib/mail.jar:lib/owlapi-distribution-3.4.5.jar">
         <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
+    <copy todir="${build.lib}">
+        <fileset dir="${basedir}/lib" />
+    </copy>
 </target>
 
 <target name="web_deploy" depends="compile,compile" description="Create the deploy structure and add the contents.">
@@ -59,6 +62,7 @@
         <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
         <fileset file="${basedir}/lib/mail.jar" />
         <fileset file="${basedir}/lib/TptpParser.jar" />
+        <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
         <!-- fileset file="${basedir}/lib/ClientHttpRequest.jar" /-->
     </copy>
 
@@ -72,7 +76,7 @@
 	<mkdir dir="${deploy.lib}"/>
 	<copy todir="${deploy.lib}">
           <fileset dir="${basedir}/lib" />
-        </copy>
+    </copy>
 
 </target>
 
@@ -109,9 +113,9 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
+    <pathelement path="src/java/com/articulate/sigma/semRewrite"/>
     <pathelement path="src/java/TPTPWorld"/>
     <pathelement path="src/java/tptp_parser"/>
-    <pathelement path="src/java/ClientHttpRequest"/>
 </path>
 
 <path id="compile.classpath">
