@@ -611,7 +611,7 @@ public class LanguageFormatter {
      * @param isNegMode whether the statement is negated, and therefore requiring special formatting.
      * @return the paraphrased statement.
      */
-    public static String paraphraseWithFormat(String stmt,boolean isNegMode,KB kb,
+    public static String paraphraseWithFormat(String stmt, boolean isNegMode, KB kb,
                                                Map<String,String> phraseMap, Map<String,String> termMap,String language) {
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
@@ -660,12 +660,13 @@ public class LanguageFormatter {
             // strFormat = strFormat.replaceAll("%n\\{[\\w\\']+\\} "," ");
             strFormat = strFormat.replaceAll(" %n\\{.+?\\} "," ");
             strFormat = strFormat.replaceAll("%n\\{.+?\\} "," ");
+
             if (strFormat.contains("%p{")) {
                 int start = strFormat.indexOf("%p{") + 3;
-                int end = strFormat.indexOf("}",start);
-                strFormat = (strFormat.substring(0,start-3)
-                        + strFormat.substring(start,end)
-                        + strFormat.substring(end+1,strFormat.length()));
+                int end = strFormat.indexOf("}", start);
+                strFormat = (strFormat.substring(0, start-3)
+                        + strFormat.substring(start, end)
+                        + strFormat.substring(end+1, strFormat.length()));
             }
         }
 
