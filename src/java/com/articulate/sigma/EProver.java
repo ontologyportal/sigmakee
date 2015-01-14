@@ -27,8 +27,8 @@ public class EProver {
     private BufferedReader _reader; 
     private BufferedWriter _writer; 
     private BufferedReader _error;
-    private static String __dummyKBdir = "/home/apease/Sigma/KBs";
-    
+    private static String __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+
     /** *************************************************************
      *  */
     public static void writeBatchConfig(String inputFilename) {
@@ -87,21 +87,26 @@ public class EProver {
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
         // String execString = executable + " --interactive " + 
                 // KBmanager.getMgr().getPref("kbDir") + File.separator + "EBatchConfig.txt";
-        String execString = executable + " --interactive " + 
-                __dummyKBdir + File.separator + "EBatchConfig.txt";
+        // Qingqing: modify executable string using e_ltb_runner
+        String execString = executable + " --interactive "
+                + __dummyKBdir + File.separator + "EBatchConfig.txt "
+                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover "
+                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "epclextract";
         System.out.println("INFO in EProver(): executing: " + execString);
         _eprover = Runtime.getRuntime().exec(execString);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()));
         System.out.println("INFO in EProver(): initializing process");
-        String line = null; 
-        while (true) {
-            line = _reader.readLine(); 
+
+        // Qingqing: another way to write while-loop to avoid NullPointerException
+        String line = _reader.readLine();
+        while (line != null) {
             System.out.println("INFO in EProver(): Return string: " + line);
             if (line.indexOf("Error:") != -1)
-                throw new IOException(line);     
-            if (line.indexOf("# Enter job") != -1) 
-                break;            
+                throw new IOException(line);
+            if (line.indexOf("# Enter job") != -1)
+                break;
+            line = _reader.readLine();
         }
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
@@ -170,8 +175,7 @@ public class EProver {
      * Submit a query.
      *
      * @param formula query in the KIF syntax
-     * @param timeLimit time limit for answering the query (in seconds)
-     * @param bindingsLimit limit on the number of bindings
+     * @param kb current knowledge base
      * @return answer to the query 
      * @throws IOException should not normally be thrown
      */
