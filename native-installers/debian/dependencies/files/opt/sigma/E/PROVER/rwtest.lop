@@ -1,0 +1,4 @@
+add(X,0)=X.
+add(X,s(Y))=s(add(X,Y)).
+mult(X,0)=0.
+mult(X,s(Y))=add(X, mult(X,Y)).

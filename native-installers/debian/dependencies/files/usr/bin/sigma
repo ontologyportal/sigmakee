@@ -1,0 +1,13 @@
+#!/bin/sh
+export SIGMA_HOME="/usr/share/sigma"
+if [ "$1" = "start" ]; then
+	echo "Starting Sigma..."
+	sudo service tomcat7 start
+else
+	if [ "$1" = "stop" ]; then
+		echo "Stopping Sigma..."
+		sudo service tomcat7 stop
+	else
+		echo "Usage : ./sigma start|stop"
+	fi
+fi

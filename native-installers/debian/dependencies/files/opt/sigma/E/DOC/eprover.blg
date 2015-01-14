@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2011/Fink)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: eprover.aux
+The style file: alpha.bst
+Database file #1: stsbib.bib
+You've used 35 entries,
+            2543 wiz_defined-function locations,
+            815 strings with 10057 characters,
+and the built_in function-call counts, 17258 in all, are:
+= -- 1762
+> -- 772
+< -- 54
++ -- 247
+- -- 245
+* -- 1249
+:= -- 2668
+add.period$ -- 131
+call.type$ -- 35
+change.case$ -- 217
+chr.to.int$ -- 33
+cite$ -- 35
+duplicate$ -- 724
+empty$ -- 1286
+format.name$ -- 290
+if$ -- 3709
+int.to.chr$ -- 3
+int.to.str$ -- 0
+missing$ -- 31
+newline$ -- 185
+num.names$ -- 143
+pop$ -- 218
+preamble$ -- 1
+purify$ -- 254
+quote$ -- 0
+skip$ -- 636
+stack$ -- 0
+substring$ -- 1021
+swap$ -- 248
+text.length$ -- 54
+text.prefix$ -- 13
+top$ -- 0
+type$ -- 272
+warning$ -- 0
+while$ -- 182
+width$ -- 37
+write$ -- 503

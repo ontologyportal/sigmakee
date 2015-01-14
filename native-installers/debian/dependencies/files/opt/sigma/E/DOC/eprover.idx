@@ -1,0 +1,83 @@
+\indexentry{SETHEO}{3}
+\indexentry{Otter}{3}
+\indexentry{SPASS}{3}
+\indexentry{Vampire}{3}
+\indexentry{xyzzy}{4}
+\indexentry{TPTP!language}{5}
+\indexentry{terms}{6}
+\indexentry{variables}{6}
+\indexentry{subterm}{6}
+\indexentry{equations}{6}
+\indexentry{literal}{6}
+\indexentry{ordering}{7}
+\indexentry{reduction ordering}{7}
+\indexentry{selection functions}{7}
+\indexentry{literal!eligible}{7}
+\indexentry{eligible for paramodulation|see{literal, eligible}}{7}
+\indexentry{eligible for resolution|see{literal, eligible}}{7}
+\indexentry{eligible literals|see{literal, eligible}}{7}
+\indexentry{literal!eligible}{7}
+\indexentry{SP@\textbf{SP} (calculus)}{8}
+\indexentry{equality resolution}{8}
+\indexentry{superposition!inference rule}{8}
+\indexentry{superposition!inference rule}{8}
+\indexentry{simultaneous superposition}{8}
+\indexentry{simultaneous superposition}{9}
+\indexentry{equality factoring}{9}
+\indexentry{rewriting}{9}
+\indexentry{rewriting}{9}
+\indexentry{subsumption}{9}
+\indexentry{E (theorem prover)}{9}
+\indexentry{SPASS}{9}
+\indexentry{subsumption}{10}
+\indexentry{simplify-reflect}{10}
+\indexentry{simplify-reflect}{10}
+\indexentry{tautology deletion}{10}
+\indexentry{equality      resolution}{10}
+\indexentry{contextual literal      cutting}{11}
+\indexentry{condensing}{11}
+\indexentry{clause splitting}{11}
+\indexentry{clause splitting}{11}
+\indexentry{DISCOUNT}{11}
+\indexentry{SPASS}{11}
+\indexentry{relevancy pruning}{12}
+\indexentry{SInE}{12}
+\indexentry{TPTP}{12}
+\indexentry{clausification}{13}
+\indexentry{TPTP!language}{13}
+\indexentry{equational definition}{14}
+\indexentry{interreduction}{14}
+\indexentry{given clause}{14}
+\indexentry{term   ordering}{14}
+\indexentry{proof procedure}{15}
+\indexentry{literal!selection}{16}
+\indexentry{term ordering}{17}
+\indexentry{given clause}{17}
+\indexentry{literal!selection}{17}
+\indexentry{clause evaluation}{21}
+\indexentry{term ordering}{23}
+\indexentry{literal!selection}{27}
+\indexentry{LOP}{29}
+\indexentry{TPTP!language}{29}
+\indexentry{LOP}{31}
+\indexentry{SETHEO}{31}
+\indexentry{SETHEO}{31}
+\indexentry{TPTP}{32}
+\indexentry{TPTP!language}{32}
+\indexentry{PCL}{33}
+\indexentry{Otter}{34}
+\indexentry{PCL}{35}
+\indexentry{TPTP!language}{35}
+\indexentry{common options}{39}
+\indexentry{eground|texttt}{39}
+\indexentry{enormalizer|texttt}{41}
+\indexentry{e\_ltb\_runner|texttt}{41}
+\indexentry{batch processing}{41}
+\indexentry{batch specifications}{42}
+\indexentry{interactive queries}{44}
+\indexentry{e\_axfilter|texttt}{44}
+\indexentry{SInE}{44}
+\indexentry{GPL}{48}
+\indexentry{GNU General Public     License}{48}
+\indexentry{LGPL}{48}
+\indexentry{GNU Lesser General Public License}{48}

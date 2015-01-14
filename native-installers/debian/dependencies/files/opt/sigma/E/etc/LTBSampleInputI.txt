@@ -1,0 +1,12 @@
+% SZS start BatchConfiguration
+division.category LTB.SMO
+output.required Assurance
+output.desired Proof Answer
+limit.time.problem.wc 60
+% SZS end BatchConfiguration
+% SZS start BatchIncludes
+include('Axioms/CSR003+2.ax').
+include('Axioms/CSR003+5.ax').
+% SZS end BatchIncludes
+% SZS start BatchProblems
+% SZS end BatchProblems

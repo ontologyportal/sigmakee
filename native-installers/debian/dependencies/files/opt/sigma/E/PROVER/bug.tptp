@@ -1,0 +1,4 @@
+input_clause(i_0_1,axiom,[++equal(b, a),++equal(c, a),++equal(e, a)]).
+input_clause(i_0_23,hypothesis,[--equal(e, a)]).
+input_clause(i_0_24,hypothesis,[--equal(c, a)]).
+input_clause(i_0_25,hypothesis,[--equal(b, a)]).

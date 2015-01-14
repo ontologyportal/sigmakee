@@ -1,0 +1,376 @@
+(contraryAttribute Dry Damp)
+
+(documentation AnatomicalStructure "A normal or pathological part 
+of the anatomy or structural organization of an &%Organism.  This 
+class covers &%BodyParts, as well as structures that are given off 
+by &%Organisms, e.g. &%ReproductiveBodies.")
+
+(documentation Contest "A &%SocialInteraction where the &%agent and 
+&%patient are &%CognitiveAgents who are trying to defeat one another.  
+Note that this concept is often applied in a metaphorical sense in natural 
+language, when we speak, e.g., of the struggle of plants for space or 
+sunlight, or of bacteria for food resources in some environment.")
+
+(documentation GraphArc "&%Graphs are comprised of &%GraphNodes 
+and &%GraphArcs.  Every &%GraphArc links two &%GraphNodes.")
+
+(documentation NonFloweringPlant "A &%Plant that reproduces with spores and 
+does not produce flowers.")
+
+(documentation NounPhrase "A &%Phrase that has the same function as a 
+&%Noun.")
+
+(documentation Phrase "A set of &%Words in a &%Language which form a unit, 
+i.e. express a meaning in the &%Language.")
+
+(documentation Poisoning "A &%Poisoning is caused by an external 
+substance.  Since &%Poisoning is not possible without some biologic 
+function which affects the &%Organism being injured, it is a subclass 
+of &%BiologicalProcess.")
+
+(documentation Primate "The &%Class of &%Mammals which are 
+&%Primates.")
+
+(documentation RealNumber "Any &%Number that can be expressed as a 
+(possibly infinite) decimal, i.e. any &%Number that has a position 
+on the number line.")
+
+(documentation SubtractionFn "If ?NUMBER1 and ?NUMBER2 are &%Numbers, 
+then (&%SubtractionFn ?NUMBER1 ?NUMBER2) is the arithmetical difference 
+between ?NUMBER1 and ?NUMBER2, i.e. ?NUMBER1 minus ?NUMBER2.  An 
+exception occurs when ?NUMBER1 is equal to 0, in which case 
+(&%SubtractionFn ?NUMBER1 ?NUMBER2) is the negation of ?NUMBER2.")
+
+(documentation connected "(connected ?OBJ1 ?OBJ2) means that ?OBJ1 
+&%meetsSpatially ?OBJ2 or that ?OBJ1 &%overlapsSpatially ?OBJ2.")
+
+(documentation consistent "(&%consistent ?PROP1 ?PROP2) means that the two 
+&%Propositions ?PROP1 and ?PROP2 are consistent with one another, i.e. it 
+is possible for both of them to be true at the same time.")
+
+(documentation familyRelation "A very general &%Predicate for biological 
+relationships. (&%familyRelation ?ORGANISM1 ?ORGANISM2) means that 
+?ORGANISM1 and ?ORGANISM2 are biologically derived from a common ancestor.")
+
+(documentation meetsTemporally "(&%meetsTemporally ?INTERVAL1 ?INTERVAL2) 
+means that the terminal point of the &%TimeInterval ?INTERVAL1 is the 
+initial point of the &%TimeInterval ?INTERVAL2.")
+
+(domain DensityFn 2 VolumeMeasure)
+
+(domain PowerSetFn 1 SetOrClass)
+
+(domain desires 2 Formula)
+
+(domain exploits 1 Object)
+
+(domain hasPurpose 1 Physical)
+
+(domain part 2 Object)
+
+(forall (?HOLE1 ?OBJ1 ?HOLE2 ?OBJ2) (=> (and (hole ?HOLE1 ?OBJ1) (hole ?HOLE2 ?OBJ2) (overlapsSpatially ?HOLE1 ?HOLE2)) (overlapsSpatially ?OBJ1 ?OBJ2)))
+
+(forall (?INT) (=> (instance ?INT Integer) (lessThan ?INT (SuccessorFn ?INT))))
+
+(forall (?INT1 ?INT2) (=> (equal (SuccessorFn ?INT1) (SuccessorFn ?INT2)) (equal ?INT1 ?INT2)))
+
+(forall (?NODE1 ?NODE2 ?ARC) (=> (links ?NODE1 ?NODE2 ?ARC) (links ?NODE2 ?NODE1 ?ARC)))
+
+(forall (?NUMBER) (=> (instance ?NUMBER RealNumber) (equal (MeasureFn ?NUMBER AngularDegree) (MeasureFn (MultiplicationFn ?NUMBER (DivisionFn Pi 180)) Radian))))
+
+(forall (?POISON) (=> (instance ?POISON Poisoning) (exists (?THING) (and (patient ?POISON ?THING) (or (instance ?THING Organism) (instance ?THING AnatomicalStructure))))))
+
+(forall (?TRANSPORT ?MOVE ?TO) (=> (and (instance ?TRANSPORT Vehicle) (instance ?MOVE Translocation) (instrument ?MOVE ?TRANSPORT) (destination ?MOVE ?TO)) (holdsDuring (BeginFn (WhenFn ?MOVE)) `(located ?TRANSPORT ?TO))))
+
+(format en EndNodeFn "the &%end of %1")
+
+(format en GigaFn "1 &%billion %1s")
+
+(format en subclass "%1 is %n a &%subclass of %2")
+
+(instance DivisionFn BinaryRelation)
+
+(instance GigaFn Relation)
+
+(instance Horizontal RelationalAttribute)
+
+(instance InitialNodeFn Entity)
+
+(instance IntervalFn SingleValuedRelation)
+
+(instance Left Attribute)
+
+(instance MegaFn TotalValuedRelation)
+
+(instance MereologicalProductFn BinaryFunction)
+
+(instance RemainderFn Function)
+
+(instance SecondFn Relation)
+
+(instance SuccessorFn TotalValuedRelation)
+
+(instance WhereFn SingleValuedRelation)
+
+(instance between Predicate)
+
+(instance completelyFills IrreflexiveRelation)
+
+(instance deprivesNorm Abstract)
+
+(instance direction Predicate)
+
+(instance earlier TemporalRelation)
+
+(instance exhaustiveAttribute Relation)
+
+(instance familyRelation Predicate)
+
+(instance fills Predicate)
+
+(instance grasps Entity)
+
+(instance instance BinaryPredicate)
+
+(instance part TransitiveRelation)
+
+(instance partiallyFills AsymmetricRelation)
+
+(instance refers Entity)
+
+(instance sibling Predicate)
+
+(instance spouse Predicate)
+
+(instance spouse SymmetricRelation)
+
+(instance subsumesContentClass Entity)
+
+(instance superficialPart Predicate)
+
+(instance temporalPart PartialOrderingRelation)
+
+(instance temporallyBetween TernaryRelation)
+
+(instance transactionAmount Relation)
+
+(instance uses BinaryPredicate)
+
+(range PicoFn UnitOfMeasure)
+
+(range RelativeComplementFn SetOrClass)
+
+(relatedInternalConcept Second SecondFn)
+
+(relatedInternalConcept relatedExternalConcept relatedInternalConcept)
+
+(subclass Abstract Abstract)
+
+(subclass AgeGroup AgeGroup)
+
+(subclass AgeGroup GroupOfPeople)
+
+(subclass Agent Agent)
+
+(subclass Ampere Ampere)
+
+(subclass Ampere FunctionQuantity)
+
+(subclass Attribute Attribute)
+
+(subclass BodyVessel BodyVessel)
+
+(subclass BodyVessel Entity)
+
+(subclass Boiling Boiling)
+
+(subclass Boiling Process)
+
+(subclass Buying Buying)
+
+(subclass Buying Physical)
+
+(subclass Centimeter Centimeter)
+
+(subclass Centimeter ConstantQuantity)
+
+(subclass Centimeter LengthMeasure)
+
+(subclass Communication Communication)
+
+(subclass ConstantQuantity ConstantQuantity)
+
+(subclass Counting Counting)
+
+(subclass Counting PsychologicalProcess)
+
+(subclass Day Day)
+
+(subclass DayDuration ConstantQuantity)
+
+(subclass DayDuration DayDuration)
+
+(subclass DirectionChange DirectionChange)
+
+(subclass DirectionChange Entity)
+
+(subclass Disseminating Communication)
+
+(subclass Disseminating Disseminating)
+
+(subclass Entity Entity)
+
+(subclass Freezing Freezing)
+
+(subclass FunctionQuantity FunctionQuantity)
+
+(subclass GroupOfPeople GroupOfPeople)
+
+(subclass Hotel Hotel)
+
+(subclass Hotel Physical)
+
+(subclass Hour Hour)
+
+(subclass Hour Quantity)
+
+(subclass Human Human)
+
+(subclass IntentionalProcess IntentionalProcess)
+
+(subclass IntentionalPsychologicalProcess IntentionalPsychologicalProcess)
+
+(subclass InternalChange Entity)
+
+(subclass InternalChange InternalChange)
+
+(subclass Investigating IntentionalPsychologicalProcess)
+
+(subclass Investigating Investigating)
+
+(subclass LegalDecision IntentionalProcess)
+
+(subclass LegalDecision LegalDecision)
+
+(subclass LengthMeasure ConstantQuantity)
+
+(subclass LengthMeasure LengthMeasure)
+
+(subclass Liter Entity)
+
+(subclass Liter Liter)
+
+(subclass MeasuringDevice MeasuringDevice)
+
+(subclass Microorganism Entity)
+
+(subclass Microorganism Microorganism)
+
+(subclass Microorganism SelfConnectedObject)
+
+(subclass Mineral Mineral)
+
+(subclass Mineral Substance)
+
+(subclass Minute Minute)
+
+(subclass Minute TimeMeasure)
+
+(subclass Mollusk Mollusk)
+
+(subclass Mollusk Object)
+
+(subclass Object Object)
+
+(subclass Physical Physical)
+
+(subclass Primate Physical)
+
+(subclass Primate Primate)
+
+(subclass Process Process)
+
+(subclass PsychologicalProcess PsychologicalProcess)
+
+(subclass Quantity Quantity)
+
+(subclass ReligiousProcess Physical)
+
+(subclass ReligiousProcess ReligiousProcess)
+
+(subclass Requesting Requesting)
+
+(subclass Rodent Entity)
+
+(subclass Rodent Rodent)
+
+(subclass SelfConnectedObject Entity)
+
+(subclass SelfConnectedObject SelfConnectedObject)
+
+(subclass ShapeAttribute ShapeAttribute)
+
+(subclass Solution Entity)
+
+(subclass Solution Solution)
+
+(subclass StateOfMind Attribute)
+
+(subclass StateOfMind StateOfMind)
+
+(subclass Substance Substance)
+
+(subclass Sunday Day)
+
+(subclass Sunday Sunday)
+
+(subclass TemporaryResidence Object)
+
+(subclass TemporaryResidence TemporaryResidence)
+
+(subclass ThreeDimensionalFigure ShapeAttribute)
+
+(subclass ThreeDimensionalFigure ThreeDimensionalFigure)
+
+(subclass TimeDependentQuantity Quantity)
+
+(subclass TimeDependentQuantity TimeDependentQuantity)
+
+(subclass TimeMeasure TimeMeasure)
+
+(subclass UnilateralGetting IntentionalProcess)
+
+(subclass UnilateralGetting UnilateralGetting)
+
+(subclass ValidDeductiveArgument Abstract)
+
+(subclass ValidDeductiveArgument ValidDeductiveArgument)
+
+(subclass WarmBloodedVertebrate Agent)
+
+(subclass WarmBloodedVertebrate WarmBloodedVertebrate)
+
+(subclass Woman Human)
+
+(subclass Woman Woman)
+
+(subrelation familyRelation familyRelation)
+
+(subrelation fills fills)
+
+(subrelation sibling familyRelation)
+
+(subrelation sibling sibling)
+
+(subrelation spouse spouse)
+
+(subrelation superficialPart superficialPart)
+
+(termFormat en Boiling "boiling")
+
+(termFormat en FieldOfStudy "field of study")
+
+(termFormat en Game "game")
+
+(termFormat en TasteAttribute "taste attribute")
+

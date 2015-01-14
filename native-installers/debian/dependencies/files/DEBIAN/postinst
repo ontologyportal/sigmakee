@@ -1,0 +1,7 @@
+#!/bin/sh
+
+chmod +x /usr/bin/sigma
+touch /usr/share/tomcat7/bin/setenv.sh
+echo "export SIGMA_HOME=/usr/share/sigma" >> /usr/share/tomcat7/bin/setenv.sh
+
+exit 0
