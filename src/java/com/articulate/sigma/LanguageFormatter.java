@@ -63,7 +63,7 @@ public class LanguageFormatter {
         return ans;
     }
 
-    /**
+    /** ***************************************************************
      * Format a list of variables which are not enclosed by parens.
      * Formatting includes inserting the appropriate separator between the elements (usually a comma), as well as
      * inserting the conjunction ("and" or its equivalent in another language) if the conjunction doesn't already exist.
@@ -920,9 +920,9 @@ public class LanguageFormatter {
                 f.read(stmt);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
-                HashMap<String,HashSet<String>> instMap = new HashMap<String,HashSet<String>>();
-                HashMap<String,HashSet<String>> classMap = new HashMap<String,HashSet<String>>();
-                HashMap<String,HashSet<String>> types = fp.computeVariableTypes(f,kb);
+                HashMap<String, HashSet<String>> instanceMap = new HashMap<String, HashSet<String>>();
+                HashMap<String, HashSet<String>> classMap = new HashMap<String, HashSet<String>>();
+                HashMap<String, HashSet<String>> types = fp.computeVariableTypes(f, kb);
                 Iterator<String> it = types.keySet().iterator();
                 while (it.hasNext()) {
                     String var = it.next();
@@ -931,23 +931,25 @@ public class LanguageFormatter {
                     while (it2.hasNext()) {
                         String t = it2.next();
                         if (t.endsWith("+")) {
+                            // FIXME: We never seem to hit this snippet. (#15911)
                             HashSet<String> values = new HashSet<String>();
                             if (classMap.containsKey(var))
                                 values = classMap.get(var);
-                            values.add(t.substring(0,t.length()-1));
-                            classMap.put(t,values);
+                            values.add(t.substring(0, t.length()-1));
+                            // FIXME: suspected bug here; try the following instead: classMap.put(var, values);
+                            classMap.put(t, values);
                         }
                         else {
                             HashSet<String> values = new HashSet<String>();
-                            if (instMap.containsKey(var))
-                                values = instMap.get(var);
-                            values.add(t.substring(0,t.length()-1));
-                            instMap.put(t,values);  
+                            if (instanceMap.containsKey(var))
+                                values = instanceMap.get(var);
+                                values.add(t);
+                                instanceMap.put(var, values);
                         }
                     }
                 }
-                if ((instMap != null && !instMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
-                    template = variableReplace(template, instMap, classMap, kb, language);
+                if ((instanceMap != null && !instanceMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
+                    template = variableReplace(template, instanceMap, classMap, kb, language);
                 StringBuilder sb = new StringBuilder(template);
                 int sblen = sb.length();
                 String titok = "&%";
@@ -1193,6 +1195,7 @@ public class LanguageFormatter {
             if (StringUtil.isNonEmptyString(varString)) {
                 HashSet<String> instanceArray = instMap.get(varString);
                 HashSet<String> subclassArray = classMap.get(varString);
+
                 if (subclassArray != null && subclassArray.size() > 0) {
                     String varType = (String) subclassArray.toArray()[0];
                     String varPretty = (String) kb.getTermFormatMap(language).get(varType);
@@ -1311,7 +1314,7 @@ public class LanguageFormatter {
         return ans;
     }
 
-    /**
+    /** ***************************************************************
      * Remove HTML from input string.
      * @param input
      * @return

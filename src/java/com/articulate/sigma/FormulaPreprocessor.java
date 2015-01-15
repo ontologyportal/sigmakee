@@ -115,7 +115,7 @@ public class FormulaPreprocessor {
      *     (foo ?A B)
      *     (bar B ?A)))
      */
-    private Formula addTypeRestrictionsNew(Formula form, KB kb) {
+    Formula addTypeRestrictionsNew(Formula form, KB kb) {
 
     	//System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew()");
         String result = form.theFormula;
@@ -170,27 +170,24 @@ public class FormulaPreprocessor {
     /***************************************************************** 
      * This method returns a HashMap that maps each String variable in this the names
      * of types (classes) of which the variable must be an instance or the names
-     * of types of which the variable must be a subclass. If the only instance
-     * or subclass sortal that can be computed for a variable is Entity, the
-     * lists will be empty.  Note that this does not capture explicit type
+     * of types of which the variable must be a subclass. Note that this does not capture explicit type
      * assertions such as (=> (instance ?Foo Bar) ...) just the restrictions
      * implicit from the arg types of relations.
-     * 
      * @param kb is the KB used to compute the sortal constraints for each
      *            variable.
      * @return A HashMap of variable names and their types. Subclass
      *         restrictions are marked with a '+'. Instance restrictions have no
      *         special mark.
      */
-    public HashMap<String,HashSet<String>> computeVariableTypes(Formula form, KB kb) {
+    public HashMap<String, HashSet<String>> computeVariableTypes(Formula form, KB kb) {
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): \n" + form);
         Formula f = new Formula();
         f.read(form.theFormula);
         //f.read(_f.makeQuantifiersExplicit(false));
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
-        return computeVariableTypesRecurse(kb,form,result);
+        HashMap<String, HashSet<String>> result = new HashMap<String, HashSet<String>>();
+        return computeVariableTypesRecurse(kb, form, result);
     }
     
     /***************************************************************** 
@@ -199,10 +196,11 @@ public class FormulaPreprocessor {
      * TODO: This may ultimately require CNF conversion and then checking negative
      * literals, but for now it's just a hack to grab preconditions.
      */
-    public HashMap<String,HashSet<String>> findExplicitTypes(Formula form) {
+    public HashMap<String, HashSet<String>> findExplicitTypes(Formula form) {
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.findExplicitTypes(): \n" + form);
         if (!form.isRule())
+            // TODO: Consider returning empty map instead of null. Check callers for special behavior on null.
             return null;
         Formula f = new Formula();
         f.read(form.theFormula);
@@ -302,6 +300,7 @@ public class FormulaPreprocessor {
 	        			else
 	        			    addToMap(result,arg,cl);	        			
 	        		}
+                    // FIXME: else if formula is function then recurse (#15911)
 	        		newf = newf.cdrAsFormula();
 	        		argnum++;  // note that this will try an argument that doesn't exist, and terminate when it does
 	        	}	
@@ -772,8 +771,8 @@ public class FormulaPreprocessor {
     public static void main(String[] args) {
        
         //testFindTypes();
-        //testAddTypes();
-        testFindExplicit();
+        testAddTypes();
+        //testFindExplicit();
     }
 
 }
