@@ -310,14 +310,14 @@ public class StringUtil {
      */
     public static String removeEnclosingQuotes(String s) {
 
-        return removeEnclosingQuotes(s, Integer.MAX_VALUE);
+        return removeEnclosingChar(s, Integer.MAX_VALUE, '"');
     }
 
     /** ***************************************************************
      *  Removes n layers of balanced ASCII double-quote characters from each
      *  end of the String s, if any are present.
      */
-    public static String removeEnclosingQuotes(String s, int n) {
+    public static String removeEnclosingChar(String s, int n, char c) {
 
         StringBuilder sb = new StringBuilder();
         if (isNonEmptyString(s)) {
@@ -325,8 +325,8 @@ public class StringUtil {
             int lasti = (sb.length() - 1);
             for (int count = 0; ((count < n)
                                  && (lasti > 0)
-                                 && (sb.charAt(0) == '"')
-                                 && (sb.charAt(lasti) == '"')); count++) {
+                                 && (sb.charAt(0) == c)
+                                 && (sb.charAt(lasti) == c)); count++) {
                 sb.deleteCharAt(lasti);
                 sb.deleteCharAt(0);
                 lasti = (sb.length() - 1);
@@ -334,6 +334,51 @@ public class StringUtil {
         }
         return sb.toString();
     }
+    
+    /** ***************************************************************
+     *  Removes n layers of balanced characters from each
+     *  end of the String s, if any are present.
+     */
+    public static String removeEnclosingChars(String s, int n, char c) {
+
+        StringBuilder sb = new StringBuilder();
+        if (isNonEmptyString(s)) {
+            sb.append(s);
+            int lasti = (sb.length() - 1);
+            for (int count = 0; ((count < n)
+                                 && (lasti > 0)
+                                 && (sb.charAt(0) == c)
+                                 && (sb.charAt(lasti) == c)); count++) {
+                sb.deleteCharAt(lasti);
+                sb.deleteCharAt(0);
+                lasti = (sb.length() - 1);
+            }
+        }
+        return sb.toString();
+    }
+    
+    /** ***************************************************************
+     *  Removes n layers of balanced characters from each
+     *  end of the String s, if any are present.
+     */
+    public static String removeEnclosingCharPair(String s, int n, char c1, char c2) {
+
+        StringBuilder sb = new StringBuilder();
+        if (isNonEmptyString(s)) {
+            sb.append(s);
+            int lasti = (sb.length() - 1);
+            for (int count = 0; ((count < n)
+                                 && (lasti > 0)
+                                 && (sb.charAt(0) == c1)
+                                 && (sb.charAt(lasti) == c2)); count++) {
+                sb.deleteCharAt(lasti);
+                sb.deleteCharAt(0);
+                lasti = (sb.length() - 1);
+            }
+        }
+        return sb.toString();
+    }
+    
     /** ***************************************************************
      * Remove punctuation and contractions from a sentence.
      */
