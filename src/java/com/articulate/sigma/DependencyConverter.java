@@ -1,16 +1,8 @@
 package com.articulate.sigma;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
+import java.text.ParseException;
 
 public class DependencyConverter {
 
@@ -20,6 +12,8 @@ public class DependencyConverter {
 
     public static KB kb;
     public static StringBuffer output = new StringBuffer();
+    public static HashSet<String> maleNames = new HashSet<String>();
+    public static HashSet<String> femaleNames = new HashSet<String>();
     
     /** *************************************************************
      */
@@ -49,6 +43,17 @@ public class DependencyConverter {
         if (argnum == 2)
             return line.substring(line.indexOf(',') + 2,line.indexOf(')'));
         return result;
+    }
+    
+    /** *************************************************************
+     * remove punctuation
+     */
+    private static String processInput(String st) {
+        
+        if (st.indexOf("'") > -1)
+            return st.replace("'", "");
+        else
+            return st;
     }
     
     /** *************************************************************
@@ -102,8 +107,8 @@ public class DependencyConverter {
                 break;
 
             if (!StringUtil.emptyString(line) && recording) {
-                System.out.println("INFO in DependencyConverter.getDependencies(): line: " + line);
-                result.add(line);
+                //System.out.println("INFO in DependencyConverter.getDependencies(): line: " + line);
+                result.add(processInput(line));
             }
             if (line != null && line.startsWith("Parsing ["))
                 recording = true;
@@ -141,6 +146,62 @@ public class DependencyConverter {
         }
         _writer = new BufferedWriter(new OutputStreamWriter(_nlp.getOutputStream()));        
         return result;
+    }
+
+    /** ***************************************************************
+     */
+    public static void readFirstNames() {
+
+        System.out.println("INFO in DependencyConverter.readFirstNames(): Reading first names");
+        LineNumberReader lr = null;
+        File swFile = null;
+        String canonicalPath = "";
+        try {
+            String baseDir = KBmanager.getMgr().getPref("kbDir");
+            swFile = new File(baseDir + File.separator + "FirstNames.csv");
+            if (swFile == null) {
+                System.out.println("Error in DependencyConverter.readFirstNames(): " + 
+                                    "The first names file does not exist in " + baseDir);
+                return;
+            }
+            canonicalPath = swFile.getCanonicalPath();
+            long t1 = System.currentTimeMillis();
+            FileReader r = new FileReader(swFile);
+            lr = new LineNumberReader(r);
+            String line;
+            lr.readLine(); // throw away the header
+            while ((line = lr.readLine()) != null) {
+                int comma = line.indexOf(',');
+                if (comma < 0)
+                    throw new Exception("missing comma in '" + line + '"');
+                String name = StringUtil.removeEnclosingChars(line.substring(0,comma).trim(),Integer.MAX_VALUE,'"');
+                String gender = StringUtil.removeEnclosingChars(line.substring(comma+1,line.length()).trim(),Integer.MAX_VALUE,'"');
+                //System.out.println("INFO in DependencyConverter.readFirstNames(): gender: " + gender);
+                if (gender.equals("M"))
+                    maleNames.add(name);   
+                else if (gender.equals("F"))
+                    femaleNames.add(name); 
+                else 
+                    throw new Exception("bad gender tag in '" + line + "'");
+            }
+            System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
+                    + " seconds to process " + canonicalPath );
+        }
+        catch (Exception i) {
+            System.out.println("Error in DependencyConverter.readFirstNames() reading file "
+                    + canonicalPath + ": " + i.getMessage());
+            i.printStackTrace();
+        }
+        finally {
+            try {
+                if (lr != null) {
+                    lr.close();
+                }
+            }
+            catch (Exception ex) {
+            }
+        }
+        return;
     }
 
     /** *************************************************************
