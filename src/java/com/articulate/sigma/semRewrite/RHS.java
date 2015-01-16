@@ -28,7 +28,8 @@ import com.articulate.sigma.*;
 
 public class RHS {
 
-    public Formula form;
+    public Formula form = null;
+    public CNF cnf = null;
     boolean stop;
     
     /** ***************************************************************
@@ -38,10 +39,12 @@ public class RHS {
         StringBuffer sb = new StringBuffer();
         if (stop)
             sb.append("stop");
+        else if (cnf != null)
+            sb.append("(" + cnf + ")");
         else if (form == null)
             sb.append("0");
         else 
-            sb.append(form.toString());
+            sb.append("{"+form.toString()+"}");
         return sb.toString();
     }
     
@@ -57,7 +60,7 @@ public class RHS {
             if (lex.testTok(Lexer.Stop)) {
                 rhs.stop = true;
                 lex.next();
-                //System.out.println("Info in RHS.parse(): " + lex.look());
+                System.out.println("Info in RHS.parse(): 1 " + lex.look());
                 if (!lex.testTok(Lexer.Stop)) {
                     errStr = (errStart + ": Invalid end token '" + lex.next() + "' near line " + startLine);
                     throw new ParseException(errStr, startLine);
@@ -75,9 +78,14 @@ public class RHS {
                         sb.append(st);
                 }
                 rhs.form = new Formula(sb.toString()); 
-                //System.out.println("Info in RHS.parse(): SUMO: " + sb.toString());
+                System.out.println("Info in RHS.parse(): SUMO: " + sb.toString());
             }
-            //System.out.println("Info in RHS.parse(): " + lex.look());
+            else if (lex.testTok(Lexer.OpenPar)) {
+                lex.next();
+                rhs.cnf = CNF.parseSimple(lex);
+                //lex.next();
+            }
+            System.out.println("Info in RHS.parse(): 2 " + lex.look());
         }
         catch (Exception ex) {
             String message = ex.getMessage();
@@ -94,14 +102,21 @@ public class RHS {
     public RHS applyBindings(HashMap<String,String> bindings) {
         
         RHS rhs = new RHS();
-        Iterator<String> it = bindings.keySet().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
-            String value = bindings.get(key);
-            form.theFormula = form.theFormula.replaceAll("\\"+key,value);
-            //System.out.println("INFO in RHS.applyBindings(): " + form.theFormula);
+        if (cnf != null) {
+            rhs.cnf = cnf.applyBindings(bindings);
+            return rhs;
         }
-        rhs.form = form;
+        else {
+            Iterator<String> it = bindings.keySet().iterator();
+            while (it.hasNext()) {
+                String key = it.next();
+                String value = bindings.get(key);
+                if (form != null)
+                    form.theFormula = form.theFormula.replaceAll("\\"+key,value);
+                //System.out.println("INFO in RHS.applyBindings(): " + form.theFormula);
+            }
+            rhs.form = form;
+        }
         return rhs;
     }
     

@@ -103,7 +103,7 @@ public class RuleSet {
     /** *************************************************************
      * A test method
      */
-    public static CNF testRuleSet() {
+    public static CNF testRuleAndClausify() {
         
         String rule = "sense(212345678,?E), nsubj(?E,?X), dobj(?E,?Y) ==> " +
                 "{(exists (?X ?E ?Y) " + 
@@ -122,9 +122,25 @@ public class RuleSet {
     /** *************************************************************
      * A test method
      */
+    public static void testReadRuleSet() {
+    
+        String filename = "/home/apease/IPsoft/SemRewrite.txt";
+        try {
+            RuleSet rs = RuleSet.readFile(filename);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
     public static void main (String args[]) {
         
-        String rule = "sense(212345678,?E), nsubj(?E,?X), dobj(?E,?Y) ==> " +
+        testReadRuleSet();
+        /*String rule = "sense(212345678,?E), nsubj(?E,?X), dobj(?E,?Y) ==> " +
                 "{(exists (?X ?E ?Y) " + 
                   "(and " +
                     "(instance ?X Organization) " +
@@ -132,9 +148,11 @@ public class RuleSet {
                     "(instance ?E Hiring)" +
                     "(agent ?E ?X) " +
                     "(patient ?E ?Y)))}.";
+        String rule = "neg(?X,?Y) ==> (not(?X,?Y)).";
         Rule r = new Rule();
         r = Rule.parseString(rule);
         System.out.println(r.toString());
         Clausifier.clausify(r.lhs);
+        */
     }
 }

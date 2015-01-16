@@ -33,6 +33,40 @@ public class Disjunct {
             newd.disjuncts.add(disjuncts.get(i).deepCopy());        
         return newd;
     }
+
+    /** ***************************************************************
+     */
+    public boolean empty() {
+        
+        if (disjuncts.size() == 0)
+            return true;
+        else
+            return false;
+    }
+  
+    /** ***************************************************************
+     */
+    public void clearBound() {
+        
+        for (int i = 0; i < disjuncts.size(); i++) {
+            Clause c = disjuncts.get(i);
+            if (c.bound)
+                c.bound = false;
+        }
+    }
+    
+    /** ***************************************************************
+     */
+    public void removeBound() {
+        
+        ArrayList<Clause> newdis = new ArrayList<Clause>();
+        for (int i = 0; i < disjuncts.size(); i++) {
+            Clause c = disjuncts.get(i);
+            if (!c.bound)
+                newdis.add(c);
+        }
+        disjuncts = newdis;
+    }
     
     /** *************************************************************
      */
@@ -47,6 +81,7 @@ public class Disjunct {
     }
         
     /** *************************************************************
+     * argument is the rule and this is the sentence
      */
     public HashMap<String,String> unify(Disjunct d) {
         
@@ -56,8 +91,11 @@ public class Disjunct {
                 Clause d2 = disjuncts.get(j);
                 HashMap<String,String> bindings = d2.mguTermList(d1);
                 //System.out.println("INFO in Disjunct.unify(): checking " + d1 + " against " + d2);
-                if (bindings != null)
+                if (bindings != null) {
+                    d2.bound = true; // mark as bound in case the rule consumes the clauses ( a ==> rule not a ?=>)
+                    //System.out.println("INFO in Disjunct.unify(): bound: " + d2);
                     return bindings;
+                }
             }
         }
         return null;

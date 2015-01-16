@@ -35,6 +35,7 @@ public class Clause {
 
     public boolean negated = false;
     public boolean preserve = true;
+    public boolean bound = false; // bound clauses in a delete rule get deleted
     public String pred;
     public String arg1;
     public String arg2;
@@ -44,6 +45,8 @@ public class Clause {
     public String toString() {
         
         StringBuffer sb = new StringBuffer();
+        if (bound)
+            sb.append("X");
         if (negated)
             sb.append("~");
         sb.append(pred + "(" + arg1 + "," + arg2 + ")");
@@ -57,6 +60,7 @@ public class Clause {
         Clause newc = new Clause();
         newc.negated = negated;
         newc.preserve = preserve;
+        newc.bound = bound;
         newc.pred = pred;
         newc.arg1 = arg1;
         newc.arg2 = arg2;
@@ -83,6 +87,8 @@ public class Clause {
      */
     public Clause applyBindings(HashMap<String,String> bindings) {
         
+        //System.out.println("INFO in Clause.applyBindings(): this: " + this);
+        //System.out.println("INFO in Clause.applyBindings(): bindings: " + bindings);
         Clause c = new Clause();
         c.pred = pred;
         if (arg1.startsWith("?")) {
@@ -91,14 +97,19 @@ public class Clause {
             else
                 c.arg1 = arg1;
         }
+        else
+            c.arg1 = arg1;
         if (arg2.startsWith("?")) {
             if (bindings.containsKey(arg2))
                 c.arg2 = bindings.get(arg2);
             else
                 c.arg2 = arg2;
         }
+        else
+            c.arg2 = arg2;
         c.negated = negated;
         c.preserve = preserve;
+        //System.out.println("INFO in Clause.applyBindings(): returning this: " + c);
         return c;
     }
     
@@ -135,13 +146,14 @@ public class Clause {
             }
             //System.out.println("INFO in Clause.mguTermList(): attempting to unify arguments " + t1 + " and " + t2); 
             if (t1.startsWith("?")) {
+                //System.out.println("INFO in Clause.mguTermList(): here 1");
                 if (t1.equals(t2))
                     // We could always test this upfront, but that would
                     // require an expensive check every time. 
                     // We descend recursively anyway, so we only check this on
                     // the terminal case.  
                     continue;
-                if (occursCheck(t1,this))
+                if (occursCheck(t1,l2))
                     return null;
                 // We now create a new substitution that binds t2 to t1, and
                 // apply it to the remaining unification problem. We know
@@ -155,6 +167,7 @@ public class Clause {
                 subst.put(t1, t2);
             }
             else if (t2.startsWith("?")) {
+                //System.out.println("INFO in Clause.mguTermList(): here 2");
                 // Symmetric case - We know that t1!=t2, so we can drop this check
                 if (occursCheck(t2, this))
                     return null;
@@ -165,6 +178,7 @@ public class Clause {
                 subst.put(t2, t1);
             }
             else {
+                //System.out.println("INFO in Clause.mguTermList(): here 3");
                 if (!t1.equals(t2))
                     return null;
             }
@@ -212,7 +226,34 @@ public class Clause {
             System.out.println("Error in Clause.parse() " + message);
             ex.printStackTrace();
         }	
+        //System.out.println("INFO in Clause.parse(): returning " + cl);
         return cl;
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
+    public static void testUnify() {
+        
+        String s1 = "sumo(Human,Mary-1)";
+        String s2 = "sumo(?O,Mary-1)";
+        Clause c1 = null;
+        Clause c2 = null;
+        try {
+            Lexer lex = new Lexer(s1);
+            lex.look();
+            c1 = Clause.parse(lex, 0);
+            lex.look();
+            lex = new Lexer(s2);
+            c2 = Clause.parse(lex, 0);
+        }
+        catch (Exception ex) {
+            String message = ex.getMessage();
+            System.out.println("Error in Clause.parse() " + message);
+            ex.printStackTrace();
+        }   
+        System.out.println("INFO in Clause.testUnify(): " + c1.mguTermList(c2));
+        System.out.println("INFO in Clause.testUnify(): " + c2.mguTermList(c1));
     }
     
     /** *************************************************************
@@ -220,8 +261,17 @@ public class Clause {
      */
     public static void main (String args[]) {
         
-        String input = "det(bank-2, The-1";
-        Lexer lex = new Lexer(input);
-        System.out.println(Clause.parse(lex, 0));
+        try {
+            testUnify();
+            String input = "det(bank-2, The-1)";
+            Lexer lex = new Lexer(input);
+            lex.look();
+            System.out.println(Clause.parse(lex, 0));
+        }
+        catch (Exception ex) {
+            String message = ex.getMessage();
+            System.out.println("Error in Clause.parse() " + message);
+            ex.printStackTrace();
+        }   
     }
 }

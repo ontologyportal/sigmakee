@@ -184,10 +184,14 @@ public class Clausifier {
             d.disjuncts.add(lhs.lhs2.clause);
             cnf.clauses.add(d);
         }
+        else if (lhs.clause != null) {
+            Disjunct d = new Disjunct();
+            d.disjuncts.add(lhs.clause);
+            cnf.clauses.add(d);
+        }
         else {
             System.out.println("Error in Clausifier.separateConjunctions(): bad operator: " + lhs.operator);
-        }
-            
+        }    
         return cnf;
     }
     
@@ -195,6 +199,7 @@ public class Clausifier {
      */
     public static CNF clausify(LHS lhs) {  
         
+        System.out.println("INFO in RuleSet.clausify(): (lhs) " + lhs);
         LHS result = moveNegationsIn(lhs);
         result = distributeAndOverOr(result);
         return separateConjunctions(result);
@@ -207,6 +212,7 @@ public class Clausifier {
         RuleSet newrs = new RuleSet();
         for (int i = 0; i < rs.rules.size(); i++) {
             Rule r = rs.rules.get(i);
+            System.out.println("INFO in RuleSet.clausify(): " + r.lhs);
             LHS result = moveNegationsIn(r.lhs);
             result = distributeAndOverOr(result);
             r.cnf = separateConjunctions(result);
