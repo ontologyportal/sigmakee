@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.articulate.sigma.KB;
-
 /** ***************************************************************
  *  A class that handles the generation of natural language from logic.
  *
@@ -413,9 +411,11 @@ public class LanguageFormatter {
                 String result = nlStmtPara(arg,false,kb,phraseMap,termMap,language,depth+1);
                 if (StringUtil.isNonEmptyString(result))
                     args.add(result);
-                else
+                else {
                     System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): "
-                                       + "bad result for \"" + arg + "\": " + result);
+                            + "bad result for \"" + arg + "\": " + result);
+                    // TODO: We should probably return empty string at this point, like nlStmtPara( ), instead of continuing processing.
+                }
                 f.read(f.cdr());
             }
             String COMMA = getKeyword(",",language);
@@ -931,13 +931,11 @@ public class LanguageFormatter {
                     while (it2.hasNext()) {
                         String t = it2.next();
                         if (t.endsWith("+")) {
-                            // FIXME: We never seem to hit this snippet. (#15911)
                             HashSet<String> values = new HashSet<String>();
                             if (classMap.containsKey(var))
                                 values = classMap.get(var);
                             values.add(t.substring(0, t.length()-1));
-                            // FIXME: suspected bug here; try the following instead: classMap.put(var, values);
-                            classMap.put(t, values);
+                            classMap.put(var, values);
                         }
                         else {
                             HashSet<String> values = new HashSet<String>();
@@ -1321,7 +1319,14 @@ public class LanguageFormatter {
      */
     public static String filterHtml(String input)  {
         // Note use of non-greedy matching.
-        return input.replaceAll("<.*?>", "");
+        String out = input.replaceAll("<.*?>", "");
+
+        // Clean up.
+        out = out.replaceAll(" +", " ");
+        // Insert a space anywhere a comma isn't followed by a space.
+        out = out.replaceAll(",(\\S)", ", $1");
+
+        return out;
     }
 
     /** *************************************************************

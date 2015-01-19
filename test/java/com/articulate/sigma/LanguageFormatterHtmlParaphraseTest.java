@@ -1,10 +1,7 @@
 package com.articulate.sigma;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +43,7 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
     public void testHtmlParaphraseInstanceRELObjectAttitude()     {
         String stmt = "(=> (and (instance ?REL ObjectAttitude) (?REL ?AGENT ?THING)) (instance ?THING Physical))";
 
-        String expectedResult = "if an entity is an instance of object attitude and the entity another entity and a third entity," +
+        String expectedResult = "if an entity is an instance of object attitude and the entity another entity and a third entity, " +
                 "then the third entity is an instance of physical";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
@@ -95,7 +92,7 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
     public void testHtmlParaphrasePartlyLocated()     {
         String stmt = "(=> (and (instance ?OBJ1 Object) (partlyLocated ?OBJ1 ?OBJ2)) (exists (?SUB) (and (part ?SUB ?OBJ1) (located ?SUB ?OBJ2))))";
 
-        String expectedResult = "if a  physical is an instance of object and the physical is partly located in an object," +
+        String expectedResult = "if a physical is an instance of object and the physical is partly located in an object, " +
                 "then there exists another physical such that the other physical is a part of the physical and the other physical is located at the object";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
@@ -110,8 +107,8 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
     public void testHtmlParaphraseDefinePhysical()     {
         String stmt = "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
 
-        String expectedResult = "a  physical is an instance of physical if and only if there exist an entity and " +
-                "a  time position such that the physical is located at the entity and the physical exists during the time position";
+        String expectedResult = "a physical is an instance of physical if and only if there exist an entity and " +
+                "a time position such that the physical is located at the entity and the physical exists during the time position";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
@@ -159,7 +156,7 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
 
-        String expectedResult = "there exist a  process and an agent such that the process is an instance of driving and " +
+        String expectedResult = "there exist a process and an agent such that the process is an instance of driving and " +
                 "the agent is an instance of human and the agent is an agent of the process";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
@@ -176,7 +173,7 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "           (names \"John\" ?H)\n" +
                 "           (agent ?D ?H)))";
 
-        String expectedResult = "there exist a  process and an agent such that the process is an instance of driving and " +
+        String expectedResult = "there exist a process and an agent such that the process is an instance of driving and " +
                 "the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
@@ -195,7 +192,7 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "           (agent ?D ?H)\n" +
                 "           (instrument ?D ?Car)))";
 
-        String expectedResult = "there exist a  process, an agent and an object such that the process is an instance of driving and " +
+        String expectedResult = "there exist a process, an agent and an object such that the process is an instance of driving and " +
                 "the agent is an instance of human and the agent has name \"John\" and " +
                 "the object is an instance of Automobile and the agent is an agent of the process and " +
                 "the object is an instrument for the process";
@@ -211,42 +208,57 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "           (subclass ?Cougar Feline) " +
                 "           (subclass ?Cougar Carnivore))";
 
-        String expectedResult = "if a  set or class is a subclass of feline,then the set or class is a subclass of carnivore";
+        String expectedResult = "if a set or class is a subclass of feline, then the set or class is a subclass of carnivore";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
-    @Ignore
     @Test
     public void testHtmlParaphraseSubclassMonthFn()     {
         String stmt =   "(exists (?M) " +
                 "           (time JohnsBirth (MonthFn ?M (YearFn 2000))))";
 
-        String expectedResult = "there exists a month such that JohnsBirth exists during the month a month";
+        String expectedResult = "there exists a kind of month such that JohnsBirth exists during the month a kind of month";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
-//    @Test
-//    public void testHtmlParaphraseElementSetIf()     {
-//        String stmt =   "(=>" +
-//                "           (forall (?ELEMENT)" +
-//                "               (<=>" +
-//                "                   (element ?ELEMENT ?SET1)" +
-//                "                   (element ?ELEMENT ?SET2)))" +
-//                "           (equal ?SET1 ?SET2))";
-//
-//        String expectedResult = "if for all an entity the entity is an element of a  set if and only if the entity is an element of another set," +
-//                "then the set is equal to the other set";
-//        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-//                kb.getTermFormatMap("EnglishLanguage"),
-//                kb, "EnglishLanguage");
-//        assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
-//    }
+    /**
+     * See what happens when you call htmlParaphrase( ) with a syntactically incorrect statement.
+     * TODO: Probably this test should expect an exception, but currently the exception is being swallowed--see the output
+     * in the console when you run this test.
+     */
+    @Test
+    public void testWrongNbrParens()     {
+        String stmt =   "(exists (?Place) " +
+                "           (=> " +
+                                // The next line has too many right parens.
+                "               (instance (GovernmentFn ?Place) StateGovernment)) " +
+                "               (instance ?Place StateOrProvince))) ";
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "EnglishLanguage");
+        String expectedResult = "there exists a geopolitical area such that the geopolitical area is an instance of state or province";
+        assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testHtmlParaphraseTypesGovFn()     {
+        String stmt =   "(exists (?Place) " +
+                "           (=> " +
+                "               (instance (GovernmentFn ?Place) StateGovernment) " +
+                "               (instance ?Place StateOrProvince))) ";
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "EnglishLanguage");
+        String expectedResult = "there exists a geopolitical area such that if the government of the geopolitical area is an instance of StateGovernment, " +
+                "then the geopolitical area is an instance of state or province";
+        assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
+    }
 
     @Test
     public void testHtmlParaphraseElementSetIf()     {
@@ -257,7 +269,7 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                   (element ?ELEMENT ?SET2))) " +
                 "           (equal ?SET1 ?SET2))";
 
-        String expectedResult = "if for all an entity the entity is an element of a  set if and only if the entity is an element of another set," +
+        String expectedResult = "if for all an entity the entity is an element of a set if and only if the entity is an element of another set, " +
                 "then the set is equal to the other set";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),

@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,12 +37,12 @@ public class FormulaPreprocessor {
      * Find the argument type restriction for a given predicate and
      * argument number that is inherited from one of its
      * super-relations.  A "+" is appended to the type if the
-     * parameter must be a class.  Argument number 0 is used for the
+     * parameter must be a class, meaning that a domainSubclass is defined for
+     * this argument in one of the loaded .kif files.  Argument number 0 is used for the
      * return type of a Function.  Asking for a non-existent arg
      * will return null;
      */
     public static String findType(int numarg, String pred, KB kb) {
-
         ArrayList<String> sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
         	if (!kb.isInstanceOf(pred, "VariableArityRelation"))
@@ -176,7 +174,8 @@ public class FormulaPreprocessor {
      * @param kb is the KB used to compute the sortal constraints for each
      *            variable.
      * @return A HashMap of variable names and their types. Subclass
-     *         restrictions are marked with a '+'. Instance restrictions have no
+     *         restrictions are marked with a '+', meaning that a domainSubclass is defined for this
+     *         argument in one of the loaded .kif files. Instance restrictions have no
      *         special mark.
      */
     public HashMap<String, HashSet<String>> computeVariableTypes(Formula form, KB kb) {
@@ -280,7 +279,7 @@ public class FormulaPreprocessor {
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {// equals may require special treatment
             result.putAll(input);
     		for (int i = 1; i < f.listLength(); i++) 
-    			result = mergeToMap(result,computeVariableTypesRecurse(kb,new Formula(f.getArgument(i)),input));        		
+    			result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input));
         }
         else if (f.isSimpleClause()) {
             String pred = carstr;
@@ -290,7 +289,7 @@ public class FormulaPreprocessor {
 	        	while (!newf.empty()) {
 	        		String arg = newf.car();
 	        		if (Formula.isVariable(arg)) {
-	        			String cl = findType(argnum,pred,kb);
+	        			String cl = findType(argnum, pred, kb);
 	        			//System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
 	        			if (StringUtil.emptyString(cl)) {
 	        				if (!kb.kbCache.transInstOf(pred, "VariableArityRelation"))
@@ -300,15 +299,18 @@ public class FormulaPreprocessor {
 	        			else
 	        			    addToMap(result,arg,cl);	        			
 	        		}
-                    // FIXME: else if formula is function then recurse (#15911)
+                    // If formula is function then recurse.
+                    else if(Formula.isFunctionalTerm(arg))  {
+                        result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input));
+                    }
 	        		newf = newf.cdrAsFormula();
 	        		argnum++;  // note that this will try an argument that doesn't exist, and terminate when it does
 	        	}	
         	}
         }
         else {
-        	result = mergeToMap(input,computeVariableTypesRecurse(kb,f.carAsFormula(),input));
-        	result = mergeToMap(result,computeVariableTypesRecurse(kb,f.cdrAsFormula(),input));
+        	result = mergeToMap(input,computeVariableTypesRecurse(kb, f.carAsFormula(), input));
+        	result = mergeToMap(result,computeVariableTypesRecurse(kb, f.cdrAsFormula(), input));
         }        	
         //System.out.println("result: " + result);
         return result;
