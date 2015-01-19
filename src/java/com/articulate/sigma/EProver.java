@@ -101,7 +101,6 @@ public class EProver {
         // Qingqing: another way to write while-loop to avoid NullPointerException
         String line = _reader.readLine();
         while (line != null) {
-            System.out.println("INFO in EProver(): Return string: " + line);
             if (line.indexOf("Error:") != -1)
                 throw new IOException(line);
             if (line.indexOf("# Enter job") != -1)
@@ -202,19 +201,21 @@ public class EProver {
             _writer.write(conjecture + "\n");
             _writer.write("go.\n");
             _writer.flush();
-            System.out.println("INFO in EProver.submitQuery() executing query.");
-            String line = null;
+
+            // Qingqing: another way to write while-loop to avoid NullPointerException
+            //System.out.println("INFO in EProver.submitQuery() writing executing results.");
+            String line = _reader.readLine();
             boolean inProof = false;
-            do {
-                line = _reader.readLine();
-                if (line.indexOf("# Enter job") != -1) 
+            while (line != null) {
+                if (line.indexOf("# Enter job") != -1)
                     break;
-                if (line.indexOf("# SZS status") != -1) 
-                    inProof = true;            
+                if (line.indexOf("# SZS status") != -1)
+                    inProof = true;
                 if (inProof)
                     result += line + "\n";
-                //System.out.println(line);                         
-            } while (line != null);      
+
+                line = _reader.readLine();
+            }
         }
         catch (Exception ex) {
             System.out.println("Error in EProver.submitQuery(): " + ex.getMessage());
