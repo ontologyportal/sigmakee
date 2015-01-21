@@ -196,10 +196,26 @@
 		        <tarfileset dir="${debian.folder}/temp/package">
 		        </tarfileset>
 		        </deb>
-
+		<mkdir dir="${debian.folder}/temp/repository"/>
+		<gzip src="${debian.folder}/dependencies/repo-config/Packages"
+			  destfile="${debian.folder}/temp/repository/Packages.gz"/>
+		<move todir="${debian.folder}/temp/repository">
+			<fileset dir="${debian.folder}/temp">
+				<include name="*.deb"/>
+			</fileset>
+		</move>
 	</target>
 	
-	
+<target name="uploadRepository" depends="" >
+	<input message="SourceForge Username :" addproperty="sfusername"></input>
+	<input message="SourceForge Password :" addproperty="sfpassword" ></input>
+	<scp remoteTodir="${sfusername}@web.sourceforge.net:/home/project-web/sigmakee/htdocs/" 
+		verbose="true"
+		password="${sfpassword}"
+		trust="true" >
+	 	<fileset dir="native-installers/debian/temp/repository"></fileset>
+	</scp>
+</target>	
 	
 <path id="javadoc.classpath">
     <pathelement path="classes:${basedir}/lib/cos.jar:"/>

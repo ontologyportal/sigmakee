@@ -1,0 +1,20 @@
+Package: sigma
+Version: 1.0-1
+Architecture: amd64
+Maintainer: Adam Pease <Adam.Pease@ipsoft.com>
+Installed-Size: 138465
+Depends: tomcat7
+Filename: ./sigma_1.0-1_amd64.deb
+Size: 40303386
+MD5sum: e88ae69ea5d97925fad751da07da5484
+SHA1: bdea3c8fd6db7bbdefb1079bc68ef729293dcb89
+SHA256: 9e8dc7be46041f3df5693b36b6cde3c94df5b6815a362d2ddc9d3771048d4ec4
+Section: utils
+Priority: optional
+Description: Sigma - The SUMO management tool.
+ Sigma knowledge engineering system is an system for developing,
+ viewing and debugging theories in first order logic.
+ It works with Knowledge Interchange Format (KIF) and
+ is optimized for the Suggested Upper Merged Ontology (SUMO).
+ For details vist  http://www.adampease.org/OP/
+
