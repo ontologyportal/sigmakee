@@ -1,13 +1,15 @@
 package com.articulate.sigma;
 
+import TPTPWorld.TPTPFormula;
+import TPTPWorld.TPTPParser;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.io.StringReader;
-import java.util.*;
-
-import TPTPWorld.TPTPFormula;
-import TPTPWorld.TPTPParser;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class TPTP3ProofProcessor {
 
@@ -47,9 +49,10 @@ public class TPTP3ProofProcessor {
      */
 	public static String trimParens (String line) {
 
-		// System.out.println("Info in trimBrackets: " + line);
-		if (line.startsWith("(") && line.endsWith(")"))
-			return line.substring(1,line.length()-1);
+		// line does not always starts with "("; eg: ?[X1]:(s__instance(X1,s__SetOrClass)=>s__subclass(X1,s__Object))
+		if (line.indexOf("(")!=-1 && line.indexOf(")")!=-1) {
+			return line.substring(line.indexOf("(")+1, line.lastIndexOf(")"));
+		}
 		else {
 			System.out.println("Error in TPTP3ProofProcessor.trimParens() bad format: " + line);
 			return null;
@@ -67,8 +70,10 @@ public class TPTP3ProofProcessor {
 		int secondParen = StringUtil.findBalancedParen(firstParen, supportId);
 		int firstComma = supportId.indexOf(",");
 		int secondComma = supportId.indexOf(",",firstComma+1);
-		String supports = supportId.substring(secondComma+1,secondParen);
-		//System.out.println("Info in TPTP3ProofProcessor.parseInferenceObject(): supports: " + supports);
+		String supports = "";
+		if (secondComma+1 >= secondParen)       // supportID = 10997,['proof']
+			supports = "[" + supportId + "]";
+		supports = supportId.substring(secondComma+1,secondParen);
 
 		if (supports.startsWith("inference")) 
 			return parseInferenceObject(supports);
@@ -162,7 +167,7 @@ public class TPTP3ProofProcessor {
 		String formulaType = withoutWrapper.substring(comma1 + 1,comma2).trim();
 		// System.out.println("type     : " + formulaType);
 		String rest = withoutWrapper.substring(comma2+1).trim();
-		int statementEnd = StringUtil.findBalancedParen(0, rest);
+		int statementEnd = StringUtil.findBalancedParen(rest.indexOf("("), rest);	// qingqing: startIndex =  index_of_first_"(", instead of 0;
 		
 		String stmnt = trimParens(rest.substring(0,statementEnd+1).trim());
 		// System.out.println("stmnt    : " + stmnt);
