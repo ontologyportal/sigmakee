@@ -110,9 +110,9 @@ public class Rule {
                     throw new ParseException(errStr, r.startLine); 
                 }
                 lex.next();
-                System.out.println("Info in Rule.parse(): " + lex.look());
+                //System.out.println("Info in Rule.parse(): " + lex.look());
                 r.rhs = RHS.parse(lex,r.startLine);
-                System.out.println("Info in Rule.parse(): 2 " + lex.look());
+                //System.out.println("Info in Rule.parse(): 2 " + lex.look());
                 if (!lex.testTok(Lexer.FullStop))  {
                     errStr = (errStart + ": Invalid end token '" + lex.look() + "' near line " + r.startLine);
                     throw new ParseException(errStr, r.startLine); 
@@ -125,7 +125,7 @@ public class Rule {
             System.out.println("Error in RULE.parse(): " + message);
             ex.printStackTrace();
         }
-        System.out.println("Info in Rule.parse(): returning: " + r);
+        //System.out.println("Info in Rule.parse(): returning: " + r);
         return r;
     }
     
