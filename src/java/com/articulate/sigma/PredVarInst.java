@@ -201,12 +201,22 @@ public class PredVarInst {
     }
 
     /** ***************************************************************
+     * @param input formula
+     * @param kb knowledge base
+     * @return A list of formulas where predicate variables are instantiated;
+     *         There are three possible returns:
+     *         return null if input contains predicate variables but cannot be instantiated;
+     *         return empty if input contains no predicate variables;
+     *         return a list of instantiated formulas if the predicate variables are instantiated;
      */
     public static ArrayList<Formula> instantiatePredVars(Formula input, KB kb) {
     
         ArrayList<Formula> result = new ArrayList<Formula>();
         //System.out.println("INFO in PredVarInst.instantiatePredVars(): formula: " + input);
-        HashMap<String,HashSet<String>> varTypes = findPredVarTypes(input,kb);   
+        // If there are no predicate variables, return empty()
+        if (gatherPredVars(input).size() == 0)
+            return result;
+        HashMap<String,HashSet<String>> varTypes = findPredVarTypes(input,kb);
         varTypes = addExplicitTypes(input,varTypes);
         Iterator<String> it = varTypes.keySet().iterator();
         while (it.hasNext()) {
@@ -227,7 +237,7 @@ public class PredVarInst {
                     Iterator<String> it3 = varTypes.get(var).iterator();
                     while (it3.hasNext()) {
                     	String varType = it3.next();
-                    	//System.out.println("INFO in PredVarInst.instantiatePredVars(): checking rel type: rel, varType: " + 
+                    	//System.out.println("INFO in PredVarInst.instantiatePredVars(): checking rel type: rel, varType: " +
                     	//		rel + ", " + varType);
                         if (!kb.isInstanceOf(rel, varType)) {
                             ok = false;
@@ -250,7 +260,13 @@ public class PredVarInst {
                 }
             }
         }
-
+        // If there are predicate variables but cannot be initialized, return null
+        if (result.size() == 0) {
+            String errStr = "No predicate instantiations for ";
+            errStr += input.theFormula;
+            input.errors.add(errStr);
+            return null;
+        }
         return result;
     }
     
