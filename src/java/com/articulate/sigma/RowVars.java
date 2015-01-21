@@ -66,7 +66,7 @@ public class RowVars {
         }
         return arities;
     }
-    
+
     /** ***************************************************************
      * Merge the key,value pairs for a multiple value ArrayList
      */
@@ -216,16 +216,19 @@ public class RowVars {
      * 
      * @return an ArrayList of Formulas, or an empty ArrayList.
      */
-    public static ArrayList<Formula> expandRowVars(KB kb, Formula f) {       
+    public static ArrayList<Formula> expandRowVars(KB kb, Formula f) {
         
         ArrayList<String> result = new ArrayList<String>();
         ArrayList<Formula> formresult = new ArrayList<Formula>();
-        if (!f.theFormula.contains("@"))
+        if (!f.theFormula.contains("@")) {
+            // If there are no row variables, return the original formula
+            formresult.add(f);
             return formresult;
+        }
         if (DEBUG)
             System.out.println("Info in RowVars.expandRowVars(): f: " +f);
         HashMap<String,HashSet<String>> rels = getRowVarRelations(f);   
-        HashMap<String,Integer> rowVarMaxArities = getRowVarMaxArities(rels,kb);
+        HashMap<String,Integer> rowVarMaxArities = getRowVarMaxArities(rels, kb);
         result.add(f.theFormula);
         HashSet<String> rowvars = findRowVars(f);
         Iterator<String> it = rowvars.iterator();
