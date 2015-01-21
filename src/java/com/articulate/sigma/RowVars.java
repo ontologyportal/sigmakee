@@ -68,6 +68,53 @@ public class RowVars {
     }
 
     /** ***************************************************************
+     * given in @param ar which is a list for each variable of all the
+     * predicates in which it appears as an argument, find the maximum
+     * arity allowed by predicate arities, as given by
+     * @seeAlso kb.kbCache.valences
+     *
+     * TODO: currently we only find the maximum arity allowed by predicate arities;
+     *       we also need to find the minimum predicate arities;
+     */
+    public static HashMap<String,Integer> getRowVarMaxAritiesWithOtherArgs(HashMap<String,HashSet<String>> ar, KB kb, Formula f) {
+
+        HashMap<String,Integer> arities = new HashMap<String,Integer>();
+        Iterator<String> it = ar.keySet().iterator();
+        while (it.hasNext()) {
+            String rowvar = it.next();
+            HashSet<String> preds = ar.get(rowvar);
+            Iterator<String> it2 = preds.iterator();
+            while (it2.hasNext()) {
+                String pred = it2.next();
+
+                // If row variables in an argument list with other arguments,
+                // then #arguments which can be expanded = #arguments in pred - nonRowVar
+                int nonRowVar = 0;
+                int start = f.theFormula.indexOf("("+pred);
+                int end = f.theFormula.indexOf(")", start);
+                String simpleFS = f.theFormula.substring(start, end+1);
+                Formula simpleF = new Formula();
+                simpleF.read(simpleFS);
+                for (int i = 0; i < simpleF.listLength(); i++) {
+                    if(simpleF.getArgument(i).startsWith(Formula.V_PREF))
+                        nonRowVar++;
+                }
+
+                if (kb.kbCache.valences.get(pred) != null) {
+                    int arity = kb.kbCache.valences.get(pred).intValue();
+                    if (arities.containsKey(pred)) {
+                        if (arity < arities.get(rowvar).intValue())
+                            arities.put(rowvar, new Integer(arity)-nonRowVar);
+                    }
+                    else if (arity > 0)
+                        arities.put(rowvar, new Integer(arity)-nonRowVar);
+                }
+            }
+        }
+        return arities;
+    }
+
+    /** ***************************************************************
      * Merge the key,value pairs for a multiple value ArrayList
      */
     private static HashMap<String,HashSet<String>> 
@@ -228,7 +275,7 @@ public class RowVars {
         if (DEBUG)
             System.out.println("Info in RowVars.expandRowVars(): f: " +f);
         HashMap<String,HashSet<String>> rels = getRowVarRelations(f);   
-        HashMap<String,Integer> rowVarMaxArities = getRowVarMaxArities(rels, kb);
+        HashMap<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
         result.add(f.theFormula);
         HashSet<String> rowvars = findRowVars(f);
         Iterator<String> it = rowvars.iterator();
