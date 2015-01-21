@@ -68,6 +68,21 @@ public class Clause {
     }
     
     /** ***************************************************************
+     */
+    public boolean equals(Clause c) {
+    
+        if (negated != c.negated)
+            return false;
+        if (!pred.equals(c.pred))
+            return false;
+        if (!arg1.equals(c.arg1))
+            return false;
+        if (!arg2.equals(c.arg2))
+            return false;
+        return true;
+    }
+    
+    /** ***************************************************************
      * Apply variable substitutions to a clause  
      */
     public void applyBindingSelf(HashMap<String,String> bindings) {
