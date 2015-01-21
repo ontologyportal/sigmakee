@@ -21,6 +21,21 @@ public class CNF {
         //sb.append("]");
         return sb.toString();
     }
+  
+    /** ***************************************************************
+     */
+    public boolean equals(CNF cnf) {
+    
+        if (clauses.size() != cnf.clauses.size())
+            return false;
+        for (int i = 0; i < clauses.size(); i++) {
+            System.out.println("INFO in CNF.equals(): checking disjunct " + clauses.get(i) + 
+                    " " + cnf.clauses.get(i));
+            if (!clauses.get(i).equals(cnf.clauses.get(i)))
+                return false;
+        }
+        return true;
+    }
     
     /** ***************************************************************
      */
@@ -44,24 +59,28 @@ public class CNF {
      */
     public void clearBound() {
         
+        //System.out.println("INFO in CNF.clearBound(): before " + this);
         for (int i = 0; i < clauses.size(); i++) {
             Disjunct d = clauses.get(i);
             d.clearBound();           
         }
+        //System.out.println("INFO in CNF.clearBound(): after " + this);
     }
     
     /** ***************************************************************
      */
-    public void removeBound() {
+    public CNF removeBound() {
         
-        ArrayList<Disjunct> newClauses = new ArrayList<Disjunct>();
+        //System.out.println("INFO in CNF.removeBound(): before " + this);
+        CNF newCNF = new CNF();
         for (int i = 0; i < clauses.size(); i++) {
             Disjunct d = clauses.get(i);
             d.removeBound();
             if (!d.empty())
-                newClauses.add(d);
+                newCNF.clauses.add(d);
         }
-        clauses = newClauses;
+        //System.out.println("INFO in CNF.removeBound(): after " + newCNF);
+        return newCNF;
     }
     
     /** ***************************************************************
@@ -86,7 +105,7 @@ public class CNF {
                     lex.next();
                 else if (lex.testTok(Lexer.ClosePar)) {                    
                     lex.next();
-                    System.out.println("INFO in CNF.parseSimple(): final token: " + lex.look());
+                    //System.out.println("INFO in CNF.parseSimple(): final token: " + lex.look());
                     if (!lex.testTok(Lexer.FullStop))
                         System.out.println("Error in CNF.parseSimple(): Bad token: " + lex.look());
                 }
@@ -99,7 +118,7 @@ public class CNF {
             System.out.println("Error in CNF.parse(): " + message);
             ex.printStackTrace();
         }
-        System.out.println("INFO in CNF.parseSimple(): returning: " + cnf);
+        //System.out.println("INFO in CNF.parseSimple(): returning: " + cnf);
         return cnf;
     }
     
@@ -127,34 +146,86 @@ public class CNF {
     }
     
     /** ***************************************************************
+     * Copy bound flags to this set of clauses  
+     */
+    public void copyBoundFlags(CNF cnf) {
+     
+        for (int i = 0; i < clauses.size(); i++)
+            clauses.get(i).copyBoundFlags(cnf.clauses.get(i));
+    }
+    
+    /** ***************************************************************
      * Unify this CNF with the argument.  Note that the argument should
      * be a superset of clauses of (or equal to) this instance.  The argument
      * is the "sentence" and this is the "rule"
      */
     public HashMap<String,String> unify(CNF cnf) {
         
-        CNF cnfnew = cnf.deepCopy();
+        CNF cnfnew1 = cnf.deepCopy();  // sentence        
+        CNF cnfnew2 = this.deepCopy(); // rule
         //System.out.println("INFO in CNF.unify(): cnf 1 " + cnf);
         //System.out.println("INFO in CNF.unify(): this " + this);
         HashMap<String,String> result = new HashMap<String,String>();
-        for (int i = 0; i < cnf.clauses.size(); i++) {
-            Disjunct d1 = cnf.clauses.get(i);
-            for (int j = 0; j < clauses.size(); j++) {
-                Disjunct d2 = clauses.get(j);
+        for (int i = 0; i < cnfnew1.clauses.size(); i++) {  // sentence
+            Disjunct d1 = cnfnew1.clauses.get(i);
+            for (int j = 0; j < cnfnew2.clauses.size(); j++) {  // rule
+                Disjunct d2 = cnfnew2.clauses.get(j);
                 //System.out.println("INFO in CNF.unify(): checking " + d1 + " against " + d2);
                 HashMap<String,String> bindings = d1.unify(d2);
-                if (bindings != null) {                   
-                    //System.out.println("INFO in CNF.unify(): cnf 2 " + cnf);
-                    cnfnew = this.applyBindings(bindings);
-                    this.clauses = cnfnew.clauses;
+                //System.out.println("INFO in CNF.unify(): d1 " + d1 + " d2 " + d2);
+                if (bindings != null) {        
+                    cnf.copyBoundFlags(cnfnew1);
+                    cnfnew1 = cnfnew1.applyBindings(bindings);
+                    //System.out.println("INFO in CNF.unify(): cnf 1 " + cnfnew1);
+                    //System.out.println("INFO in CNF.unify(): cnf 2 " + cnfnew2);
+                    
+                    cnfnew2 = cnfnew2.applyBindings(bindings);
                     result.putAll(bindings);
                     //System.out.println("INFO in CNF.unify(): bindings " + result);
-                    //System.out.println("INFO in CNF.unify(): cnf3  " + this);
+                    //System.out.println("INFO in CNF.unify(): this  " + this);
                 }
             }
         }
         if (result.keySet().size() == 0)
             result = null;
         return result;
+    }
+
+    /** *************************************************************
+     * A test method
+     */
+    public static void testEquality() {
+        
+        Lexer lex = new Lexer("sumo(BodyMotion,Bob-2), sumo(Human,John-1).");
+        CNF cnf1 = CNF.parseSimple(lex);
+        Lexer lex2 = new Lexer("sumo(BodyMotion,Bob-2), sumo(Human,John-1).");
+        CNF cnf2 = CNF.parseSimple(lex2);        
+        System.out.println("INFO in CNF.testEquality(): should be true: " + cnf1.equals(cnf2));
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
+    public static void testUnify() {
+        
+        String rule = "sense(212345678,?E) ==> " +
+                "(sumo(Foo,?E)).";
+        Rule r = new Rule();
+        r = Rule.parseString(rule);
+        System.out.println(r.toString());
+        CNF cnf1 = Clausifier.clausify(r.lhs);
+        Lexer lex = new Lexer("sense(212345678,Foo).");
+        CNF cnf = CNF.parseSimple(lex);
+        System.out.println("INFO in CNF.main(): " + cnf1.unify(cnf));
+        System.out.println("INFO in CNF.main(): cnf " + cnf);
+        System.out.println("INFO in CNF.main(): cnf1 " + cnf1);
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
+    public static void main (String args[]) {
+        
+        testEquality();
     }
 }
