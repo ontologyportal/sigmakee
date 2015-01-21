@@ -199,7 +199,7 @@ public class Clausifier {
      */
     public static CNF clausify(LHS lhs) {  
         
-        System.out.println("INFO in RuleSet.clausify(): (lhs) " + lhs);
+        //System.out.println("INFO in Clausifier.clausify(): (lhs) " + lhs);
         LHS result = moveNegationsIn(lhs);
         result = distributeAndOverOr(result);
         return separateConjunctions(result);
@@ -212,7 +212,7 @@ public class Clausifier {
         RuleSet newrs = new RuleSet();
         for (int i = 0; i < rs.rules.size(); i++) {
             Rule r = rs.rules.get(i);
-            System.out.println("INFO in RuleSet.clausify(): " + r.lhs);
+            //System.out.println("INFO in Clausifier.clausify(): " + r.lhs);
             LHS result = moveNegationsIn(r.lhs);
             result = distributeAndOverOr(result);
             r.cnf = separateConjunctions(result);
