@@ -36,6 +36,18 @@ public class Disjunct {
 
     /** ***************************************************************
      */
+    public boolean equals(Disjunct d) {
+    
+        if (disjuncts.size() != d.disjuncts.size())
+            return false;
+        for (int i = 0; i < disjuncts.size(); i++)
+            if (!disjuncts.get(i).equals(d.disjuncts.get(i)))
+                return false;
+        return true;
+    }
+    
+    /** ***************************************************************
+     */
     public boolean empty() {
         
         if (disjuncts.size() == 0)
@@ -68,6 +80,15 @@ public class Disjunct {
         disjuncts = newdis;
     }
     
+    /** ***************************************************************
+     * Copy bound flags to this set of clauses  
+     */
+    public void copyBoundFlags(Disjunct d) {
+     
+        for (int i = 0; i < disjuncts.size(); i++)
+            disjuncts.get(i).bound = d.disjuncts.get(i).bound;
+    }
+    
     /** *************************************************************
      */
     public Disjunct applyBindings(HashMap<String,String> bindings) {
@@ -86,18 +107,20 @@ public class Disjunct {
     public HashMap<String,String> unify(Disjunct d) {
         
         for (int i = 0; i < d.disjuncts.size(); i++) {
-            Clause d1 = d.disjuncts.get(i);
+            Clause c1 = d.disjuncts.get(i);
             for (int j = 0; j < disjuncts.size(); j++) {
-                Clause d2 = disjuncts.get(j);
-                HashMap<String,String> bindings = d2.mguTermList(d1);
-                //System.out.println("INFO in Disjunct.unify(): checking " + d1 + " against " + d2);
+                Clause c2 = disjuncts.get(j);
+                HashMap<String,String> bindings = c2.mguTermList(c1);
+                //System.out.println("INFO in Disjunct.unify(): checking " + c1 + " against " + c2);
                 if (bindings != null) {
-                    d2.bound = true; // mark as bound in case the rule consumes the clauses ( a ==> rule not a ?=>)
-                    //System.out.println("INFO in Disjunct.unify(): bound: " + d2);
+                    c2.bound = true; // mark as bound in case the rule consumes the clauses ( a ==> rule not a ?=>)
+                    //System.out.println("INFO in Disjunct.unify(): bound: " + c2);
                     return bindings;
                 }
             }
         }
+        //System.out.println("INFO in Disjunct.unify(): this: " + this);
+        //System.out.println("INFO in Disjunct.unify(): d: " + d);
         return null;
     }
 }
