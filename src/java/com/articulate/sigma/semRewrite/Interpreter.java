@@ -9,7 +9,7 @@ public class Interpreter {
     // Canonicalize rules into CNF then unify.
 
   public RuleSet rs = null;
-  public CNF input = null;
+  //public CNF input = null;
   
   /** *************************************************************
    */
@@ -30,7 +30,7 @@ public class Interpreter {
    */
   public static ArrayList<String> findWSD(ArrayList<String> clauses) {
       
-      System.out.println("INFO in Interpreter.addWSD(): " + clauses);
+      //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
       DependencyConverter.readFirstNames();
       ArrayList<String> results = new ArrayList<String>();
       HashSet<String> words = new HashSet<String>();
@@ -79,7 +79,7 @@ public class Interpreter {
           else
               results.add("sumo(Entity," + purewords.get(pureword) + ")");    
       }
-      System.out.println("INFO in Interpreter.addWSD(): " + results);
+      //System.out.println("INFO in Interpreter.addWSD(): " + results);
       //results.addAll(clauses);
       return results;
   }
@@ -97,50 +97,135 @@ public class Interpreter {
   
   /** *************************************************************
    */
+  public String printKB(ArrayList<CNF> inputs) {
+      
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < inputs.size(); i++)
+          sb.append(inputs.get(i).toString() + "\n");
+      return sb.toString();
+  }
+  
+  /** *************************************************************
+   */
   public void interpret(ArrayList<CNF> inputs) {
       
-      // TODO: when we have multiple inputs, or start generating
-      // intermediate inputs, loop through them
-      ArrayList<CNF> newinputs = new ArrayList<CNF>();
+      ArrayList<String> kifoutput = new ArrayList<String>();
+      System.out.println("INFO in Interpreter.interpret(): # inputs: " + inputs.size()); 
       boolean bindingFound = true;
       int counter = 0;
-      while (bindingFound && counter < 10000 && inputs != null && inputs.size() > 0) {
+      while (bindingFound && counter < 2 && inputs != null && inputs.size() > 0) {
           counter++;
           bindingFound = false;
+          ArrayList<CNF> newinputs = new ArrayList<CNF>();
           for (int j = 0; j < inputs.size(); j++) {
-              CNF input = inputs.get(j);
-              System.out.println("INFO in Interpreter.interpret(): checking assertion: " + input);
+              boolean bindingForInput = false;
+              //System.out.println("INFO in Interpreter.interpret(): # inputs: " + inputs.size());              
+              CNF newInput = inputs.get(j).deepCopy();
+              //System.out.println("INFO in Interpreter.interpret(): checking assertion: " + newInput);
               for (int i = 0; i < rs.rules.size(); i++) {
                   Rule r = rs.rules.get(i);
-                  System.out.println("INFO in Interpreter.interpret(): trying rule: " + r);
-                  HashMap<String,String> bindings = r.cnf.unify(input);
-                  System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
+                  newInput = inputs.get(j).deepCopy();
+                  //System.out.println("INFO in Interpreter.interpret(): trying rule: " + r);
+                  HashMap<String,String> bindings = r.cnf.unify(newInput);
+                  //System.out.println("INFO in Interpreter.interpret(): unify result 1: " + r.cnf);
+                  //System.out.println("INFO in Interpreter.interpret(): unify result 2: " + newInput);
+                  //System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
                   if (bindings != null) {
                       bindingFound = true;
+                      bindingForInput = true;
                       RHS rhs = r.rhs.applyBindings(bindings);
-                      System.out.println("INFO in Interpreter.interpret(): rhs: " + rhs);  
-                      if (rhs.cnf != null)
+                      //System.out.println("INFO in Interpreter.interpret(): rhs: " + rhs);  
+                      if (rhs.cnf != null && !newinputs.contains(rhs.cnf)) {
                           newinputs.add(rhs.cnf);
-                      if (r.operator == Rule.RuleOp.IMP) {
-                          input.removeBound();  
+                          System.out.println("INFO in Interpreter.interpret(): adding: 1 " + rhs.cnf);
                       }
-                      else
-                          input.clearBound();
-                      if (!input.empty())
-                          newinputs.add(input);
+                      if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) {
+                          kifoutput.add(rhs.form.toString());
+                      }
+                      if (r.operator == Rule.RuleOp.IMP) {
+                          //System.out.println("INFO in Interpreter.interpret(): here 1 " + newInput);
+                          CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
+                          //System.out.println("INFO in Interpreter.interpret(): here 2 " + bindingsRemoved);
+                          if (!bindingsRemoved.empty() && !newinputs.contains(bindingsRemoved)) {
+                              newinputs.add(bindingsRemoved);
+                              System.out.println("INFO in Interpreter.interpret(): adding: 2 " + bindingsRemoved);
+                          }
+                      }
+                      else {
+                          newInput.clearBound();
+                          //newinputs.add(newInput);
+                          System.out.println("INFO in Interpreter.interpret(): adding: 3 " + newInput);
+                      }
                   }
               }
+              if (!bindingForInput  && !newinputs.contains(newInput))
+                  newinputs.add(newInput);
           }
-          inputs = newinputs;
+          inputs = new ArrayList<CNF>();
+          inputs.addAll(newinputs);
+          System.out.println("INFO in Interpreter.interpret(): KB: " + printKB(inputs));
+          //System.out.println("INFO in Interpreter.interpret(): KB: " + inputs);
       }
-      System.out.println("INFO in Interpreter.interpret(): result: " + inputs);
+      System.out.println("INFO in Interpreter.interpret(): KIF: " + kifoutput);
+  }
+
+  /** ***************************************************************
+   */
+  public static void testUnify() {
+      
+      String input = "sense(212345678,hired-3), det(bank-2, The-1), nsubj(hired-3, bank-2), root(ROOT-0, hired-3), dobj(hired-3, John-4).";
+      Lexer lex = new Lexer(input);
+      CNF cnfInput = CNF.parseSimple(lex);
+      
+      String rule = "sense(212345678,?E) , nsubj(?E,?X) , dobj(?E,?Y) ==> " +
+              "{(and " +
+                  "(instance ?X Organization) " +
+                  "(instance ?Y Human)" +
+                  "(instance ?E Hiring)" +
+                  "(agent ?E ?X) " +
+                  "(patient ?E ?Y))}.";
+      Rule r = new Rule();
+      r = Rule.parseString(rule);
+      CNF cnf = Clausifier.clausify(r.lhs);
+      System.out.println("INFO in Interpreter.main(): Input: " + cnfInput);
+      System.out.println("INFO in Interpreter.main(): CNF rule antecedent: " + cnf);
+      HashMap<String,String> bindings = cnf.unify(cnfInput);
+      System.out.println("bindings: " + bindings);  
+      System.out.println("result: " + r.rhs.applyBindings(bindings));
+  }
+  
+  /** ***************************************************************
+   */
+  public static void testInterpret() {
+      
+      KBmanager.getMgr().initializeOnce();
+      String filename = "/home/apease/IPsoft/SemRewrite2.txt";
+      try {
+          RuleSet rs = RuleSet.readFile(filename);
+          Interpreter interp = new Interpreter(rs);
+          ArrayList<String> results = new ArrayList<String>();
+          results.add("neg(John-1,Bob-2)");
+          results.add("amod(John-1,Bob-2)");
+          //System.out.println("INFO in Interpreter.main(): deps " + results);
+          ArrayList<String> wsd = findWSD(results);
+          //System.out.println("INFO in Interpreter.main(): wsd " + wsd);
+          results.addAll(wsd);
+          //System.out.println("INFO in Interpreter.main(): combined " + results);             
+          String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
+          //System.out.println("INFO in Interpreter.main(): " + in);
+          interp.interpret(in);              
+      }
+      catch (Exception e) {
+          e.printStackTrace();
+          System.out.println(e.getMessage());
+      }
   }
   
   /** ***************************************************************
    */
   public static void main(String[] args) {  
 
-      if (args[0] != null && args[0].equals("-i")) {
+      if (args != null && args.length > 0 && args[0].equals("-i")) {
           KBmanager.getMgr().initializeOnce();
           String input = args[1];
           String filename = "/home/apease/IPsoft/SemRewrite.txt";
@@ -149,6 +234,9 @@ public class Interpreter {
               RuleSet rs = RuleSet.readFile(filename);
               Interpreter interp = new Interpreter(rs);
               ArrayList<String> results = DependencyConverter.getDependencies(input);
+              //ArrayList<String> results = new ArrayList<String>();
+              //results.add("neg(John-1,Bob-2)");
+              //results.add("amod(John-1,Bob-2)");
               //System.out.println("INFO in Interpreter.main(): deps " + results);
               ArrayList<String> wsd = findWSD(results);
               //System.out.println("INFO in Interpreter.main(): wsd " + wsd);
@@ -164,25 +252,7 @@ public class Interpreter {
           }
       }
       else {
-          String input = "sense(212345678,hired3), det(bank-2, The-1), nsubj(hired-3, bank-2), root(ROOT-0, hired-3), dobj(hired-3, John-4).";
-          Lexer lex = new Lexer(input);
-          CNF cnfInput = CNF.parseSimple(lex);
-          
-          System.out.println("INFO in Interpreter.main(): " + cnfInput);
-          String rule = "sense(212345678,?E) , nsubj(?E,?X) , dobj(?E,?Y) ==> " +
-                  "{(and " +
-                      "(instance ?X Organization) " +
-                      "(instance ?Y Human)" +
-                      "(instance ?E Hiring)" +
-                      "(agent ?E ?X) " +
-                      "(patient ?E ?Y))}.";
-          Rule r = new Rule();
-          r = Rule.parseString(rule);
-          CNF cnf = Clausifier.clausify(r.lhs);
-          System.out.println("INFO in Interpreter.main(): CNF: " + cnf);
-          HashMap<String,String> bindings = cnf.unify(cnfInput);
-          System.out.println(bindings);  
-          System.out.println(r.rhs.applyBindings(bindings));
+          testUnify();
       }
   }
 }
