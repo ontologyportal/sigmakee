@@ -13,14 +13,9 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.articulate.sigma.KB;
 
 /** Process results from the inference engine.
  */
@@ -334,12 +329,17 @@ public class ProofProcessor {
      */
     public static String removeNestedAnswerClause(String st) {
 
-    	if (st.indexOf("answer") == -1)
+    	if (st == null || st.indexOf("answer") == -1)
     		return st;
     	// clean the substring with "answer" in it
     	Formula f = new Formula();
     	f.read(st);
-    	return removeNestedAnswerClauseRecurse(f).theFormula;   
+
+		// if there are no nested answers, return the original one
+		Formula removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
+		if (removeNestedAnswerFormula == null)
+			return st;
+    	return removeNestedAnswerFormula.theFormula;
     }
 
     /** ***************************************************************
