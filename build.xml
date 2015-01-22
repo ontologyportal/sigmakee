@@ -25,7 +25,7 @@
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpath="lib/antlr-2.7.5.jar:lib/mail.jar:lib/owlapi-distribution-3.4.5.jar">
+    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpath="lib/antlr-2.7.5.jar:lib/mail.jar:lib/owlapi-distribution-3.4.5.jar:lib/guava-18.0.jar:lib/junit.jar">
         <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
@@ -62,6 +62,8 @@
         <fileset file="${basedir}/lib/IDV.jar" />
         <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
         <fileset file="${basedir}/lib/mail.jar" />
+        <fileset file="${basedir}/lib/guava-18.0.jar" />
+        <fileset file="${basedir}/lib/junit.jar" />
         <fileset file="${basedir}/lib/TptpParser.jar" />
         <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
         <!-- fileset file="${basedir}/lib/ClientHttpRequest.jar" /-->
@@ -135,6 +137,8 @@
 	        <fileset file="${basedir}/lib/IDV.jar" />
 	        <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
 	        <fileset file="${basedir}/lib/mail.jar" />
+	        <fileset file="${basedir}/lib/guava-18.0.jar" />
+	        <fileset file="${basedir}/lib/junit.jar" />
 	        <fileset file="${basedir}/lib/TptpParser.jar" />
 	    	<fileset file="${basedir}/lib/cos-multipart.jar" />
 	        <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
