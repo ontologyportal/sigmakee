@@ -111,8 +111,14 @@
 </target>
 
 	<taskdef name="deb" classname="com.googlecode.ant_deb_task.Deb" classpath="lib/ant/ant-deb-0.0.1.jar"/>
+	<taskdef name="aptrepo" classname="com.codemarvels.ant.aptrepotask.AptRepoTask" >
+		<classpath>
+			<fileset dir="lib/ant/apt-repo" >
+				 <include name="*.jar"/>
+			</fileset>
+		</classpath>
+	</taskdef>
 
-	
 	<target name="createDEB" depends="compile" description="Create the *.deb file and place in ${debian.folder}/output.">
 		<!-- clean up any existing files in temp-->
 		<delete includeemptydirs="true" failonerror="false">
@@ -201,16 +207,14 @@
 		        </tarfileset>
 		        </deb>
 		<mkdir dir="${debian.folder}/temp/repository"/>
-		<gzip src="${debian.folder}/dependencies/repo-config/Packages"
-			  destfile="${debian.folder}/temp/repository/Packages.gz"/>
 		<move todir="${debian.folder}/temp/repository">
 			<fileset dir="${debian.folder}/temp">
 				<include name="*.deb"/>
 			</fileset>
 		</move>
+		<aptrepo repoDir="${debian.folder}/temp/repository"/>
 	</target>
-	
-<target name="uploadRepository" depends="" >
+<target name="uploadRepository" depends="createDEB" >
 	<input message="SourceForge Username :" addproperty="sfusername"></input>
 	<input message="SourceForge Password :" addproperty="sfpassword" ></input>
 	<scp remoteTodir="${sfusername}@web.sourceforge.net:/home/project-web/sigmakee/htdocs/" 
