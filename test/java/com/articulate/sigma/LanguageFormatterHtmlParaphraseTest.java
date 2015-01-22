@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -9,18 +8,6 @@ import static org.junit.Assert.assertEquals;
  * LanguageFormatter tests specifically targeted toward the htmlParaphrase( ) method.
  */
 public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
-    private static KB kb;
-
-    @BeforeClass
-    public static void setup()  {
-        try {
-            KBmanager.getMgr().initializeOnce();
-        }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        kb = KBmanager.getMgr().getKB("SUMO");
-    }
 
     @Test
     public void testHtmlParaphraseDomainDatePhysical()     {

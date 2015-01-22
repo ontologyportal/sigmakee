@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -10,16 +9,6 @@ import static org.junit.Assert.*;
  * See LanguageFormatterHtmlParaphraseTest for tests that invokce this method.
  */
 public class LanguageFormatterTest extends SigmaTestBase {
-    @BeforeClass
-    public static void setup()  {
-        try {
-            KBmanager.getMgr().initializeOnce();
-        }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        KBmanager.getMgr().getKB("SUMO");
-    }
 
     @Test(expected=IllegalArgumentException.class)
     public void testReadKeywordMapNull() {

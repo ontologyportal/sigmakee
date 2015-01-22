@@ -164,47 +164,36 @@ public class FormulaPreprocessor {
     }
 
     /*****************************************************************
-     * This method returns a HashMap that maps each String variable in this the names
-     * of types (classes) of which the variable must be an instance or the names
-     * of types of which the variable must be a subclass. Note that this does not capture explicit type
-     * assertions such as (=> (instance ?Foo Bar) ...) just the restrictions
-     * implicit from the arg types of relations.
-     * @param kb is the KB used to compute the sortal constraints for each
-     *            variable.
-     * @return A HashMap of variable names and their types. Subclass
-     *         restrictions are marked with a '+', meaning that a domainSubclass is defined for this
-     *         argument in one of the loaded .kif files. Instance restrictions have no
-     *         special mark.
-     */
-    public HashMap<String,HashSet<String>> computeVariableTypes(Formula form, KB kb) {
-
-        if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): \n" + form);
-        Formula f = new Formula();
-        f.read(form.theFormula);
-        //f.read(_f.makeQuantifiersExplicit(false));
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
-        return computeVariableTypesRecurse(kb,form,result);
-    }
-
-    /*****************************************************************
      * Collect the types of any variables that are specifically defined
      * in the antecedent of a rule with an instance or subclass expression.
      * TODO: This may ultimately require CNF conversion and then checking negative
      * literals, but for now it's just a hack to grab preconditions.
      */
-    public HashMap<String,HashSet<String>> findExplicitTypes(Formula form) {
+    public HashMap<String, HashSet<String>> findExplicitTypesInAntecedent(Formula form) {
 
-        if (debug) System.out.println("INFO in FormulaPreprocessor.findExplicitTypes(): \n" + form);
         if (!form.isRule())
             // TODO: Consider returning empty map instead of null. Check callers for special behavior on null.
             return null;
+
         Formula f = new Formula();
         f.read(form.theFormula);
-        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         Formula antecedent = f.cdrAsFormula().carAsFormula();
+
+        return findExplicitTypes(antecedent);
+    }
+
+    /*****************************************************************
+     * Collect the types of any variables with an instance or subclass expression.
+     * TODO: This may ultimately require CNF conversion and then checking negative
+     * literals, but for now it's just a hack to grab preconditions.
+     */
+    public HashMap<String, HashSet<String>> findExplicitTypes(Formula form) {
+        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+
+        if (debug) System.out.println("INFO in FormulaPreprocessor.findExplicitTypes(): \n" + form);
+
         Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-_]+)");
-        Matcher m = p.matcher(antecedent.theFormula);
+        Matcher m = p.matcher(form.theFormula);
         while (m.find()) {
             String var = m.group(1);
             String cl = m.group(2);
@@ -216,7 +205,7 @@ public class FormulaPreprocessor {
         }
 
         p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-]+)");
-        m = p.matcher(f.theFormula);
+        m = p.matcher(form.theFormula);
         while (m.find()) {
             String var = m.group(1);
             String cl = m.group(2);
@@ -262,6 +251,30 @@ public class FormulaPreprocessor {
             result.put(key, value);
         }
         return result;
+    }
+
+    /*****************************************************************
+     * This method returns a HashMap that maps each String variable in this the names
+     * of types (classes) of which the variable must be an instance or the names
+     * of types of which the variable must be a subclass. Note that this does not capture explicit type
+     * assertions such as (=> (instance ?Foo Bar) ...) just the restrictions
+     * implicit from the arg types of relations.
+     * @param kb is the KB used to compute the sortal constraints for each
+     *            variable.
+     * @return A HashMap of variable names and their types. Subclass
+     *         restrictions are marked with a '+', meaning that a domainSubclass is defined for this
+     *         argument in one of the loaded .kif files. Instance restrictions have no
+     *         special mark.
+     */
+    public HashMap<String,HashSet<String>> computeVariableTypes(Formula form, KB kb) {
+
+        if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): \n" + form);
+        Formula f = new Formula();
+        f.read(form.theFormula);
+        //f.read(_f.makeQuantifiersExplicit(false));
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+        return computeVariableTypesRecurse(kb,form,result);
     }
 
     /** ***************************************************************
@@ -701,7 +714,7 @@ public class FormulaPreprocessor {
         fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);
         System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
-        System.out.println("Explicit types: " + fp.findExplicitTypes(f));
+        System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(f));
     }
 
     /** ***************************************************************
@@ -721,7 +734,7 @@ public class FormulaPreprocessor {
         String var = m.group(1);
         String cl = m.group(2);
         System.out.println("FormulaPreprocessor.testExplicit(): " + var + " " + cl);
-        System.out.println("Explicit types: " + fp.findExplicitTypes(f));
+        System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(f));
     }
 
     /** ***************************************************************

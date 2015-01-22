@@ -1,18 +1,9 @@
 package com.articulate.sigma;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.io.IOException;
 
 public class PredVarInst {
 
@@ -185,7 +176,7 @@ public class PredVarInst {
     
     	HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
     	FormulaPreprocessor fp = new FormulaPreprocessor();
-    	HashMap<String,HashSet<String>> explicit = fp.findExplicitTypes(input);
+    	HashMap<String,HashSet<String>> explicit = fp.findExplicitTypesInAntecedent(input);
     	if (explicit == null || explicit.keySet() == null)
     		return types;
     	Iterator<String> it = explicit.keySet().iterator();
@@ -594,7 +585,7 @@ public class PredVarInst {
      * Formula, the HashMap will be empty.  Note that predicate variables
      * must logically be instances (of class Relation).
      */
-    private static HashMap<String,HashSet<String>> findPredVarTypes(Formula f, KB kb) {
+    static HashMap<String, HashSet<String>> findPredVarTypes(Formula f, KB kb) {
         
         HashSet<String> predVars = gatherPredVars(f);        
         FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -929,7 +920,7 @@ public class PredVarInst {
         System.out.println("Pred vars: " + gatherPredVars(f));
         System.out.println("Pred vars with types: " + findPredVarTypes(f,kb));
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        System.out.println("Explicit types: " + fp.findExplicitTypes(f)); 
+        System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(f));
         System.out.println("Instantiated: " + instantiatePredVars(f,kb));
         System.out.println();
         
