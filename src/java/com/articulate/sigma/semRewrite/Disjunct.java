@@ -36,8 +36,12 @@ public class Disjunct {
 
     /** ***************************************************************
      */
-    public boolean equals(Disjunct d) {
+    @Override
+    public boolean equals(Object o) {
     
+        if (!(o instanceof Disjunct))
+            return false;
+        Disjunct d = (Disjunct) o;
         if (disjuncts.size() != d.disjuncts.size())
             return false;
         for (int i = 0; i < disjuncts.size(); i++)

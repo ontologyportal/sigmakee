@@ -24,16 +24,22 @@ public class CNF {
   
     /** ***************************************************************
      */
-    public boolean equals(CNF cnf) {
+    @Override
+    public boolean equals(Object o) {
     
+        if (!(o instanceof CNF))
+            return false;
+        CNF cnf = (CNF) o;
+        //System.out.println("INFO in CNF.equals(): Checking " + cnf + " against " + this);
         if (clauses.size() != cnf.clauses.size())
             return false;
         for (int i = 0; i < clauses.size(); i++) {
-            System.out.println("INFO in CNF.equals(): checking disjunct " + clauses.get(i) + 
-                    " " + cnf.clauses.get(i));
+            //System.out.println("INFO in CNF.equals(): checking disjunct " + clauses.get(i) + 
+            //        " " + cnf.clauses.get(i));
             if (!clauses.get(i).equals(cnf.clauses.get(i)))
                 return false;
         }
+        //System.out.println("INFO in CNF.equals(): true!");
         return true;
     }
     
@@ -110,7 +116,8 @@ public class CNF {
                         System.out.println("Error in CNF.parseSimple(): Bad token: " + lex.look());
                 }
                 else
-                    System.out.println("Error in CNF.parseSimple(): Bad token: " + lex.look());
+                    if (!lex.testTok(Lexer.FullStop))
+                        System.out.println("Error in CNF.parseSimple(): Bad token: " + lex.look());
             }
         }
         catch (Exception ex) {
@@ -203,6 +210,23 @@ public class CNF {
         System.out.println("INFO in CNF.testEquality(): should be true: " + cnf1.equals(cnf2));
     }
     
+
+    /** *************************************************************
+     * A test method
+     */
+    public static void testContains() {
+        
+        Lexer lex = new Lexer("sumo(BodyMotion,Bob-2).");
+        CNF cnf1 = CNF.parseSimple(lex);
+        Lexer lex2 = new Lexer("sumo(BodyMotion,Bob-2).");
+        CNF cnf2 = CNF.parseSimple(lex2);  
+        ArrayList<CNF> al = new ArrayList<CNF>();
+        al.add(cnf1);
+        if (!al.contains(cnf2))
+            al.add(cnf2);
+        System.out.println("INFO in CNF.testEquality(): should be 1: " + al.size());
+    }
+    
     /** *************************************************************
      * A test method
      */
@@ -226,6 +250,7 @@ public class CNF {
      */
     public static void main (String args[]) {
         
-        testEquality();
+        //testEquality();
+        testContains();
     }
 }

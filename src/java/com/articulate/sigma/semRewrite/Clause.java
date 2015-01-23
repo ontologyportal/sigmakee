@@ -69,8 +69,12 @@ public class Clause {
     
     /** ***************************************************************
      */
-    public boolean equals(Clause c) {
+    @Override
+    public boolean equals(Object o) {
     
+        if (!(o instanceof Clause))
+            return false;
+        Clause c = (Clause) o;
         if (negated != c.negated)
             return false;
         if (!pred.equals(c.pred))
