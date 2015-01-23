@@ -197,9 +197,19 @@ public class Clause {
                 subst.put(t2, t1);
             }
             else {
-                //System.out.println("INFO in Clause.mguTermList(): here 3");
-                if (!t1.equals(t2))
-                    return null;
+                //System.out.println("INFO in Clause.mguTermList(): t1 " + t1 + " t2 " + t2);
+                if (!t1.equals(t2)) {
+                    if (t1.indexOf('*') > -1) {
+                        if (!t1.substring(0,t1.lastIndexOf('*')).equals(t2.substring(0,t2.lastIndexOf('-'))))
+                            return null;
+                    }
+                    else if (t2.indexOf('*') > -1) {
+                        if (!t2.substring(0,t2.lastIndexOf('*')).equals(t1.substring(0,t1.lastIndexOf('-'))))
+                            return null;
+                    }
+                    else
+                        return null;
+                }
             }
         }
         //System.out.println("INFO in Clause.mguTermList(): subst on exit: " + subst);
@@ -278,11 +288,39 @@ public class Clause {
     /** *************************************************************
      * A test method
      */
-    public static void main (String args[]) {
+    public static void testRegexUnify() {
+        
+        String s1 = "pobj(at-1,Mary-1).";
+        String s2 = "pobj(at*,?M).";
+        System.out.println("INFO in Clause.testRegexUnify(): attempting parses " + s1);
+        Clause c1 = null;
+        Clause c2 = null;
+        try {
+            Lexer lex = new Lexer(s1);
+            lex.look();
+            c1 = Clause.parse(lex, 0);
+            System.out.println("INFO in Clause.testRegexUnify(): parsed " + c1);
+            lex.look();
+            lex = new Lexer(s2);
+            c2 = Clause.parse(lex, 0);
+            System.out.println("INFO in Clause.testRegexUnify(): parsed " + c2);
+        }
+        catch (Exception ex) {
+            String message = ex.getMessage();
+            System.out.println("Error in Clause.parse() " + message);
+            ex.printStackTrace();
+        }   
+        System.out.println("INFO in Clause.testRegexUnify(): " + c1.mguTermList(c2));
+        System.out.println("INFO in Clause.testRegexUnify(): " + c2.mguTermList(c1));
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
+    public static void testParse() {
         
         try {
-            testUnify();
-            String input = "det(bank-2, The-1)";
+            String input = "det(bank-2, The-1).";
             Lexer lex = new Lexer(input);
             lex.look();
             System.out.println(Clause.parse(lex, 0));
@@ -292,5 +330,14 @@ public class Clause {
             System.out.println("Error in Clause.parse() " + message);
             ex.printStackTrace();
         }   
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
+    public static void main (String args[]) {
+        
+        //testUnify();
+        testRegexUnify();
     }
 }
