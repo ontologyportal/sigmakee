@@ -1,6 +1,10 @@
+# About Vagrant
 
+Vagrant allows easy access to virtualized servers on one's local development environment. See http://www.vagrantup.com/downloads to download Vagrant. Vagrant relies on a virtualizer, such as VMWare or VirtualBox. The current box is setup for use with VirtualBox. To install, see: https://www.virtualbox.org/wiki/Downloads.
 
-# From host
+# Use
+
+To start this Vagrant box, which upon first startup will build sigma and then start it.
 
 ```
 mkdir ~/sigma_vagrant
@@ -14,7 +18,14 @@ mv sigma/build/vagrant/bootstrap.sh ./
 vagrant up
 ```
 
-# From guest
+To restart the guest OS, rebuild and reinstall Sigma, and start Sigma, run `vagrant reload --provision`.
+
+To start and stop Sigma manually, you may need to ssh into the vagrant box, thus.
+
+```
+<host>$ vagrant ssh
+<guest>$ sigma stop
+<guest>$ sigma start
 
 
 
