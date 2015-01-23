@@ -114,5 +114,4 @@ public class FormulaTest {
         cdrF = cdrF.cdrAsFormula();
         assertEquals("()", cdrF.theFormula);
     }
-
 }

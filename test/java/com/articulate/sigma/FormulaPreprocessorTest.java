@@ -1,18 +1,16 @@
 package com.articulate.sigma;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * LanguageFormatter tests specifically targeted toward the htmlParaphrase( ) method.
+ * FormulaPreprocessor tests not focused on findExplicitTypes( ), but requiring that the KBs be loaded.
  */
 public class FormulaPreprocessorTest extends SigmaTestBase  {
 
@@ -244,155 +242,77 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         assertEquals(expected, actual);
     }
 
-
     @Test
-    public void testFindExplicitTypesDomainNotRule()     {
-        String stmt = "(domain date 1 Physical)";
+    public void testFindCaseRolesSimple()   {
+        String stmt = "( patient Driving ?ENTITY )";
         Formula f = new Formula();
         f.read(stmt);
-
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String,HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
 
-        assertEquals(null, actual);
+        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, kb);
+
+        // TODO: not sure what to expect in this case with the unresolved variable
+        SumoProcess expected = new SumoProcess(kb, "patient", "Leaving ?ENTITY");
+
+        assertEquals(1, actualResult.size());
+        assertEquals(expected.toString(), actualResult.get(0).toString());
     }
 
     @Test
-    public void testFindExplicitTypesNames()     {
-        String stmt = "(names \"John\" ?H)";
+    public void testFindCaseRolesSimple2()   {
+        String stmt = "(agent Leaving Human)";
         Formula f = new Formula();
         f.read(stmt);
-
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
 
-        assertEquals(null, actual);
+        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, kb);
+
+        SumoProcess expected = new SumoProcess(kb, "agent", "Leaving Human");
+
+        assertEquals(1, actualResult.size());
+        assertEquals(expected.toString(), actualResult.get(0).toString());
+
+        String expectNLG = "A human leaves.";
+        assertEquals(expectNLG, actualResult.get(0).toNaturalLanguage());
     }
 
     @Test
-    public void testFindExplicitTypesSubclass()     {
-        String stmt = "(subclass ?Cougar Feline)";
-        Formula f = new Formula();
-        f.read(stmt);
-
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
-
-        assertEquals(null, actual);
-    }
-
-
-    @Test
-    public void testFindExplicitTypesSubclassInRule()     {
-        String stmt =   "(=> " +
-                            "(subclass ?C Feline) "  +
-                            "(subclass ?C Carnivore))";
-        Formula f = new Formula();
-        f.read(stmt);
-
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
-
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("Feline+");
-        expected.put("?C", set1);
-
-        assertEquals(expected, actual);
-    }
-
-
-    @Test
-    public void testFindExplicitTransitiveRelation()     {
-        String stmt =   "(<=> (instance ?REL TransitiveRelation) " +
-                "(forall (?INST1 ?INST2 ?INST3) " +
-                "(=> (and (?REL ?INST1 ?INST2) " +
-                "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-        Formula f = new Formula();
-        f.read(stmt);
-
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String,HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
-
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("TransitiveRelation");
-        expected.put("?REL", set1);
-
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testFindExplicitTypesIfJohnLikesSue()     {
-        String stmt =   "(=>\n" +
+    public void testFindCaseRolesComplex()   {
+        String stmt =   "(exists (?D ?H)\n" +
                 "           (and\n" +
-                "               (instance ?J Human)\n" +
-                "               (instance ?S Human)\n" +
-                "               (names \"John\" ?J)\n" +
-                "               (names \"Sue\" ?S)\n" +
-                "               (likes ?J ?S))\n" +
-                "            (like ?S ?J))";
+                "               (instance ?D Driving)\n" +
+                "               (instance ?H Human)\n" +
+                "               (agent ?D ?H)))";
         Formula f = new Formula();
         f.read(stmt);
-
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
 
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("Human");
-        expected.put("?S", set1);
-        HashSet<String> set2 = Sets.newHashSet("Human");
-        expected.put("?J", set2);
+        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, kb);
 
-        assertEquals(expected, actual);
+        SumoProcess expected = new SumoProcess(kb, "agent", "Driving Human");
+
+        assertEquals(1, actualResult.size());
+        assertEquals(expected.toString(), actualResult.get(0).toString());
+
+        String expectNLG = "A human drives.";
+        assertEquals(expectNLG, actualResult.get(0).toNaturalLanguage());
     }
 
+    // TODO: Technically, this should to in the FormulaTest class, but the gatherRelationsWithArgTypes( ) method requires a KB
+    // and none of the other tests in that class do. Maybe move the method to FormulaPreprocessor--it's the only Formula method
+    // requiring a KB.
     @Test
-    public void testFindExplicitTypesIfAndOnlyIfEntity()     {
-        String stmt = "(<=> (instance ?PHYS Entity) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
+    public void testGatherRelationships()   {
+        String stmt = "(agent Leaving Human)";
         Formula f = new Formula();
         f.read(stmt);
 
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
+        HashMap<String, ArrayList> actualMap = f.gatherRelationsWithArgTypes(kb);
 
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("Entity");
-        expected.put("?PHYS", set1);
+        List<String> expectedList = Lists.newArrayList(null, "Process", "Agent", null, null, null, null, null);
+        HashMap<String, List<String>> expectedMap = Maps.newHashMap();
+        expectedMap.put("agent", expectedList);
 
-        assertEquals(expected, actual);
+        assertEquals(expectedMap, actualMap);
     }
-
-    @Test
-    public void testFindExplicitTypesIfAndOnlyIfAutomobile()     {
-        String stmt = "(<=> (instance ?PHYS Automobile) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
-        Formula f = new Formula();
-        f.read(stmt);
-
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.findExplicitTypesInAntecedent(f);
-
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("Automobile");
-        expected.put("?PHYS", set1);
-
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testFindExplicitTypesInAntecedent()     {
-        String stmt = "(<=> (instance ?REL TransitiveRelation) " +
-                "(forall (?INST1 ?INST2 ?INST3) " +
-                "(=> (and (?REL ?INST1 ?INST2) " +
-                "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-
-        Formula f = new Formula();
-        f.read(stmt);
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-
-        Map<String, HashSet<String>> actual = fp.findExplicitTypesInAntecedent(f);
-
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?REL", Sets.newHashSet("TransitiveRelation"));
-        assertEquals(expected, actual);
-    }
-
 }
