@@ -103,6 +103,26 @@ public class KBcache {
             return false;
     }
 
+    /** *************************************************************
+     * Returns true if i is an instance of c, else returns false.
+     *
+     * @param i A String denoting an instance.
+     * @param c A String denoting a Class.
+     * @return true or false.
+     */
+    public boolean isInstanceOf(String i, String c) {
+
+        if (instances.containsKey(i)) {
+            HashSet<String> hashSet = instances.get(i);
+            if (hashSet.contains(c))
+                return true;
+            else
+                return false;
+        }
+        else
+            return false;
+    }
+
     /** ***************************************************************
      * Find whether the given instance has the given parent class.  
      * Include paths the have transitive relations between instances such
