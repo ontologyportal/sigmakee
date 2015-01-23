@@ -92,7 +92,7 @@ public class Interpreter {
       CNF cnf = CNF.parseSimple(lex);
       ArrayList<CNF> inputs = new ArrayList<CNF>();
       inputs.add(cnf);
-      interpret(inputs);
+      interpretNew(inputs);
   }
   
   /** *************************************************************
@@ -102,17 +102,72 @@ public class Interpreter {
       StringBuilder sb = new StringBuilder();
       sb.append("\n------------------------------\n");
       for (int i = 0; i < inputs.size(); i++)
-          sb.append(inputs.get(i).toString() + "\n");
+          sb.append(inputs.get(i).toString() + ".\n");
       sb.append("------------------------------\n");
       return sb.toString();
   }
   
   /** *************************************************************
    */
+  public void interpretNew(ArrayList<CNF> inputs) {
+      
+      ArrayList<String> kifoutput = new ArrayList<String>();
+      System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs); 
+      boolean bindingFound = true;
+      int counter = 0;
+      while (bindingFound && counter < 2 && inputs != null && inputs.size() > 0) {
+          counter++;
+          bindingFound = false;
+          ArrayList<CNF> newinputs = new ArrayList<CNF>();
+          for (int j = 0; j < inputs.size(); j++) {
+              boolean bindingForInput = false;             
+              CNF newInput = inputs.get(j).deepCopy();
+              for (int i = 0; i < rs.rules.size(); i++) {
+                  Rule r = rs.rules.get(i);
+                  HashMap<String,String> bindings = r.cnf.unify(newInput);
+                  if (bindings != null) {
+                      bindingFound = true;
+                      bindingForInput = true;
+                      RHS rhs = r.rhs.applyBindings(bindings);   
+                      System.out.println("INFO in Interpreter.interpret(): rhs: " + rhs);
+                      if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) { // assert a KIF RHS
+                          kifoutput.add(rhs.form.toString());
+                      }
+                      else if (r.operator == Rule.RuleOp.IMP) {
+                          CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
+                          System.out.println("INFO in Interpreter.interpret(): bindings removed: " + bindingsRemoved);
+                          if (!bindingsRemoved.empty() && !newinputs.contains(bindingsRemoved)) {  // assert the input after removing bindings
+                              if (rhs.cnf != null)
+                                  bindingsRemoved.merge(rhs.cnf);
+                              newInput = bindingsRemoved;
+                          }
+                      }
+                      else if (r.operator == Rule.RuleOp.OPT) {
+                          CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
+                          if (!bindingsRemoved.empty() && !newinputs.contains(bindingsRemoved)) {  // assert the input after removing bindings
+                              if (rhs.cnf != null)
+                                  bindingsRemoved.merge(rhs.cnf);
+                              newinputs.add(bindingsRemoved);
+                          }
+                      }
+                      else                                                                         // empty RHS
+                          newInput.clearBound();                      
+                  }
+              }
+          }
+          inputs = new ArrayList<CNF>();
+          inputs.addAll(newinputs);
+          System.out.println("INFO in Interpreter.interpret(): KB: " + printKB(inputs));
+      }
+      System.out.println("INFO in Interpreter.interpret(): KIF: " + kifoutput);
+  }
+
+  /** *************************************************************
+   */
   public void interpret(ArrayList<CNF> inputs) {
       
       ArrayList<String> kifoutput = new ArrayList<String>();
-      //System.out.println("INFO in Interpreter.interpret(): # inputs: " + inputs.size()); 
+      System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs); 
       boolean bindingFound = true;
       int counter = 0;
       while (bindingFound && counter < 2 && inputs != null && inputs.size() > 0) {
@@ -200,18 +255,18 @@ public class Interpreter {
    */
   public static void testInterpret() {
       
-      KBmanager.getMgr().initializeOnce();
+      //KBmanager.getMgr().initializeOnce();
       String filename = "/home/apease/IPsoft/SemRewrite2.txt";
       try {
           RuleSet rs = RuleSet.readFile(filename);
           Interpreter interp = new Interpreter(rs);
           ArrayList<String> results = new ArrayList<String>();
-          results.add("neg(John-1,Bob-2)");
-          results.add("amod(John-1,Bob-2)");
+          results.add("nsubj(arrives-2,Mary-1), root(ROOT-0,arrives-2), prep_at(arrives-2,school-4), sumo(Human,Mary-1).");
+          //results.add("amod(John-1,Bob-2)");
           //System.out.println("INFO in Interpreter.main(): deps " + results);
-          ArrayList<String> wsd = findWSD(results);
+          //ArrayList<String> wsd = findWSD(results);
           //System.out.println("INFO in Interpreter.main(): wsd " + wsd);
-          results.addAll(wsd);
+          //results.addAll(wsd);
           //System.out.println("INFO in Interpreter.main(): combined " + results);             
           String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
           //System.out.println("INFO in Interpreter.main(): " + in);
@@ -254,7 +309,8 @@ public class Interpreter {
           }
       }
       else {
-          testUnify();
+          //testUnify();
+          testInterpret();
       }
   }
 }
