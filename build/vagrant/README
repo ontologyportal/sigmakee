@@ -1,6 +1,36 @@
-http://localhost:8888/sigma/KBs.jsp
 
 
-To install Sigma from a new Ubuntu 14.04 Vagrant box, copy `Vagrantfile` and `bootstrap.sh` to where you want to keep your Vagrant box on the host system, then run `vagrant up`.
+# From host
+
+Go where you want to keep your Vagrant installations and make a new dir for your new box, e.g.:
+
+```
+mkdir -p ~/vagrants/sigma/tmp_sigma
+cd ~/vagrants/sigma/tmp_sigma
+```
+
+Then clone Sigma in order to get the Vagrant files and copy them to your host's main Sigma dir:
+```
+cvs -d:pserver:anonymous@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
+cp sigma/build/vagrant/bootstrap.sh ~/vagrants/sigma/
+cp sigma/build/vagrant/Vagrantfile ~/vagrants/sigma/
+```
+
+And now start the Vagrant box. If you haven't downloaded the box yet, it will be fetched.
+
+```
+cd ~/vagrants/sigma/
+vagrant up
+```
+
+Sigma ought to have been started on the guest box, with port forwarding from 8080 to 8888. So browse to `http://localhost:8888/sigma/login.html` to log in.
+
+
+# From guest
+
+
+
+
+
 
 
