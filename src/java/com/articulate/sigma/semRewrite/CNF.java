@@ -75,6 +75,15 @@ public class CNF {
     
     /** ***************************************************************
      */
+    public void merge(CNF cnf) {
+        
+        for (int i = 0; i < cnf.clauses.size(); i++)
+            if (!clauses.contains(cnf.clauses.get(i)))
+                clauses.add(cnf.clauses.get(i));
+    }
+    
+    /** ***************************************************************
+     */
     public CNF removeBound() {
         
         //System.out.println("INFO in CNF.removeBound(): before " + this);
