@@ -166,7 +166,9 @@ public class Lexer {
         tokenDefs.put(Var,          Pattern.compile("\\?[a-zA-Z][_a-z0-9_A-Z]*"));
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
-        tokenDefs.put(Ident,        Pattern.compile("[a-zA-Z][_\\-a-z0-9_A-Z]*"));
+        tokenDefs.put(Ident,        Pattern.compile("[a-zA-Z][_\\-a-z0-9_A-Z]*\\*?"));
+        tokenDefs.put(Zero,         Pattern.compile("0"));
+        tokenDefs.put(Stop,         Pattern.compile("stop"));
         tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+E?-?[0-9]*"));
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
         tokenDefs.put(QuotedString, Pattern.compile("'[^']*'"));
@@ -462,6 +464,7 @@ public class Lexer {
                 "(patient ?E ?Y)))}.";
     
     private static String example2 = "bank2";
+    private static String example3 = "at*";
     
     /** ***************************************************************
      * Test that comments and whitespace are normally ignored. 
@@ -477,6 +480,22 @@ public class Lexer {
             System.out.println("INFO in Lexer.testLex(): completed parsing example 1: " + example1);
             ArrayList<String> res2 = lex2.lex();
             System.out.println("INFO in Lexer.testLex(): completed parsing example 1: " + example2);
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /** ***************************************************************
+     */
+    private static void testString() {
+
+        System.out.println("-------------------------------------------------");
+        System.out.println("INFO in Lexer.testString()");
+        Lexer lex1 = new Lexer(example3);
+        try {
+            System.out.println(lex1.acceptTok(Ident)); 
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -585,7 +604,8 @@ public class Lexer {
      */
     public static void main(String[] args) {
         
-        testLex();
+        testString();
+        //testLex();
         //testTerm();
         //testAcceptLit();
         //testErrors();
