@@ -6,11 +6,18 @@ sudo apt-get -y install cvs
 
 sudo apt-get -y install cvs ant openjdk-7-jdk tomcat7
 
+
+cd /vagrant
+
 # this should have been made already
 if [ ! -d /vagrant/sigma ]
 then
-  mkdir /vagrant/sigma
+  #mkdir /vagrant/sigma
+  # you can replace this with your credentials, eg:
+  # cvs -d :ext:<SOURCEFORGE_USERNAME>@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
+  cvs -d:pserver:anonymous@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
 fi
+
 
 cd /vagrant/sigma
 
@@ -26,9 +33,7 @@ sudo dpkg -i native-installers/debian/temp/repository/sigma_1.0-1_amd64.deb
 #sudo apt-get -f install
 
 #sigma start
-#sleep 5
-#response=$(curl --write-out %{http_code} --silent --output /dev/null localhost:8080)
-#[ $response == 200 ]; echo $?
+sleep 5
 
 
 # test if Sigma is running on guest
