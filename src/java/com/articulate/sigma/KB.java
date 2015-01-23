@@ -19,8 +19,9 @@ package com.articulate.sigma;
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
-import java.util.regex.*;
-import com.articulate.sigma.InferenceEngine;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /** *****************************************************************
  *  Contains methods for reading, writing knowledge bases and their
@@ -473,20 +474,8 @@ public class KB {
      * @return true or false.
      */
     public boolean isInstanceOf(String i, String c) {
-        
-        ArrayList<Formula> al = askWithRestriction(0,"instance",1,i);
-        HashSet<String> classes = KBcache.collectArgFromFormulas(2,al);
-        Iterator<String> it = classes.iterator();
-        while (it.hasNext()) {
-            String cl = it.next();
-            HashSet<String> parents = kbCache.getParentClasses(cl);
-            if (parents == null) {
-                System.out.println("Error in KB.isInstanceOf(): no parents for " + cl);
-            }
-            else if (parents.contains(c))
-                return true;
-        }
-        return false;
+
+        return kbCache.isInstanceOf(i, c);
     }
 
     /** *************************************************************
@@ -638,7 +627,7 @@ public class KB {
     /** *************************************************************
      * Converts a literal (List object) to a Formula.
      *
-     * @param literal A List representing a SUO-KIF formula.     
+     * @param literal A List representing a SUO-KIF formula.
      * @return A SUO-KIF Formula object, or null if no Formula can be
      * created.
      */
