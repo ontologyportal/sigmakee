@@ -1,0 +1,6 @@
+http://localhost:8888/sigma/KBs.jsp
+
+
+To install Sigma from a new Ubuntu 14.04 Vagrant box, copy `Vagrantfile` and `bootstrap.sh` to where you want to keep your Vagrant box on the host system, then run `vagrant up`.
+
+
