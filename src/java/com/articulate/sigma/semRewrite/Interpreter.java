@@ -100,8 +100,10 @@ public class Interpreter {
   public String printKB(ArrayList<CNF> inputs) {
       
       StringBuilder sb = new StringBuilder();
+      sb.append("\n------------------------------\n");
       for (int i = 0; i < inputs.size(); i++)
           sb.append(inputs.get(i).toString() + "\n");
+      sb.append("------------------------------\n");
       return sb.toString();
   }
   
@@ -110,7 +112,7 @@ public class Interpreter {
   public void interpret(ArrayList<CNF> inputs) {
       
       ArrayList<String> kifoutput = new ArrayList<String>();
-      System.out.println("INFO in Interpreter.interpret(): # inputs: " + inputs.size()); 
+      //System.out.println("INFO in Interpreter.interpret(): # inputs: " + inputs.size()); 
       boolean bindingFound = true;
       int counter = 0;
       while (bindingFound && counter < 2 && inputs != null && inputs.size() > 0) {
@@ -137,7 +139,7 @@ public class Interpreter {
                       //System.out.println("INFO in Interpreter.interpret(): rhs: " + rhs);  
                       if (rhs.cnf != null && !newinputs.contains(rhs.cnf)) {
                           newinputs.add(rhs.cnf);
-                          System.out.println("INFO in Interpreter.interpret(): adding: 1 " + rhs.cnf);
+                          //System.out.println("INFO in Interpreter.interpret(): adding: 1 " + rhs.cnf);
                       }
                       if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) {
                           kifoutput.add(rhs.form.toString());
@@ -148,13 +150,13 @@ public class Interpreter {
                           //System.out.println("INFO in Interpreter.interpret(): here 2 " + bindingsRemoved);
                           if (!bindingsRemoved.empty() && !newinputs.contains(bindingsRemoved)) {
                               newinputs.add(bindingsRemoved);
-                              System.out.println("INFO in Interpreter.interpret(): adding: 2 " + bindingsRemoved);
+                              //System.out.println("INFO in Interpreter.interpret(): adding: 2 " + bindingsRemoved);
                           }
                       }
                       else {
                           newInput.clearBound();
                           //newinputs.add(newInput);
-                          System.out.println("INFO in Interpreter.interpret(): adding: 3 " + newInput);
+                          //System.out.println("INFO in Interpreter.interpret(): adding: 3 " + newInput);
                       }
                   }
               }
@@ -187,8 +189,8 @@ public class Interpreter {
       Rule r = new Rule();
       r = Rule.parseString(rule);
       CNF cnf = Clausifier.clausify(r.lhs);
-      System.out.println("INFO in Interpreter.main(): Input: " + cnfInput);
-      System.out.println("INFO in Interpreter.main(): CNF rule antecedent: " + cnf);
+      System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
+      System.out.println("INFO in Interpreter.testUnify(): CNF rule antecedent: " + cnf);
       HashMap<String,String> bindings = cnf.unify(cnfInput);
       System.out.println("bindings: " + bindings);  
       System.out.println("result: " + r.rhs.applyBindings(bindings));
