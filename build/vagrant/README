@@ -10,8 +10,10 @@ To start this Vagrant box, which upon first startup will build sigma and then st
 mkdir ~/sigma_vagrant
 cd ~/sigma_vagrant
 
-cvs -d :ext:kyjohnsonipsoft@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
-cvs -d :ext:kyjohnsonipsoft@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout KBs
+#cvs -d :ext:<SOURCEFORCE_USERNAME>@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
+#cvs -d :ext:<SOURCEFORCE_USERNAME>@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout KBs
+cvs -d:pserver:anonymous@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
+cvs -d:pserver:anonymous@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout KBs
 mv sigma/build/vagrant/Vagrantfile ./
 mv sigma/build/vagrant/bootstrap.sh ./
 
