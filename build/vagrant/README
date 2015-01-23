@@ -2,29 +2,17 @@
 
 # From host
 
-Go where you want to keep your Vagrant installations and make a new dir for your new box, e.g.:
+```
+mkdir ~/sigma_vagrant
+cd ~/sigma_vagrant
 
-```
-mkdir -p ~/vagrants/sigma/tmp_sigma
-cd ~/vagrants/sigma/tmp_sigma
-```
+cvs -d :ext:kyjohnsonipsoft@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
+cvs -d :ext:kyjohnsonipsoft@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout KBs
+mv sigma/build/vagrant/Vagrantfile ./
+mv sigma/build/vagrant/bootstrap.sh ./
 
-Then clone Sigma in order to get the Vagrant files and copy them to your host's main Sigma dir:
-```
-cvs -d:pserver:anonymous@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee checkout sigma
-cp sigma/build/vagrant/bootstrap.sh ~/vagrants/sigma/
-cp sigma/build/vagrant/Vagrantfile ~/vagrants/sigma/
-```
-
-And now start the Vagrant box. If you haven't downloaded the box yet, it will be fetched.
-
-```
-cd ~/vagrants/sigma/
 vagrant up
 ```
-
-Sigma ought to have been started on the guest box, with port forwarding from 8080 to 8888. So browse to `http://localhost:8888/sigma/login.html` to log in.
-
 
 # From guest
 
