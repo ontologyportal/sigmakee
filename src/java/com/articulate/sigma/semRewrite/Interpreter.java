@@ -232,12 +232,9 @@ public class Interpreter {
    */
   public void interpSingle(String input) {
       
-      String filename = "/home/apease/SourceForge/KBs/WordNetMappings/SemRewrite.txt";
       ArrayList<String> results = null;
       try {
           input = StringUtil.removeEnclosingQuotes(input);
-          RuleSet rs = RuleSet.readFile(filename);
-          Interpreter interp = new Interpreter(rs);
           try {
               results = DependencyConverter.getDependencies(input);
           }
@@ -248,7 +245,7 @@ public class Interpreter {
           ArrayList<String> wsd = findWSD(results);
           results.addAll(wsd);            
           String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-          interp.interpret(in);              
+          interpret(in);              
       }
       catch (Exception e) {
           e.printStackTrace();

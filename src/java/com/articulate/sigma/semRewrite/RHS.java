@@ -49,6 +49,19 @@ public class RHS {
     }
     
     /** ***************************************************************
+     */
+    public RHS deepCopy() {
+        
+        RHS rhs = new RHS();
+        if (form != null)
+            rhs.form = form.deepCopy();
+        if (cnf != null)
+            rhs.cnf = cnf.deepCopy();
+        rhs.stop = stop;
+        return rhs;
+    }
+    
+    /** ***************************************************************
      * The predicate must already have been read
      */
     public static RHS parse(Lexer lex, int startLine) {

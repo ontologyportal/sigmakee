@@ -72,6 +72,24 @@ public class Rule {
     }
     
     /** ***************************************************************
+     */
+    public Rule deepCopy() {
+        
+        Rule r = new Rule();
+        if (cnf != null)
+            r.cnf =  cnf.deepCopy();
+        if (lhs != null)
+            r.lhs = lhs.deepCopy();
+        r.operator = operator;  
+        if (rhs != null)
+            r.rhs = rhs.deepCopy();
+        if (clause != null)
+            r.clause = clause.deepCopy();
+        r.startLine = startLine;
+        return r;
+    }
+    
+    /** ***************************************************************
      * We won't know whether it's a fact or a rule until we read the 
      * first token, so the first token for LHS will always be already
      * in st.sval
@@ -136,7 +154,7 @@ public class Rule {
         Lexer lex = new Lexer(s);
         return parse(lex);
     }
-    
+
     /** *************************************************************
      * A test method
      */

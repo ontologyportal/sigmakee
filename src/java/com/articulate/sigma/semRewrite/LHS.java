@@ -115,9 +115,17 @@ public class LHS {
                 return lhs;
             }
             else if (lex.testTok(Lexer.OpenBracket)) {
+                lex.next();
                 lhs.operator = LHSop.PROC;
-                errStr = (errStart + ": Procedural attachment not implemented, near line " + startLine);
-                throw new ParseException(errStr, startLine);            
+                Clause c = Clause.parse(lex,startLine);
+                lhs.clause = c;
+                //lex.next();
+                if (!lex.testTok(Lexer.CloseBracket)) {
+                    errStr = (errStart + ": Expected end bracket instead of '" + lex.look() + "' near line " + startLine);
+                    throw new ParseException(errStr, startLine);
+                }
+                lex.next();
+                return lhs;
             }
             // Now it's either just a clause or a left hand side
             Clause c = Clause.parse(lex,startLine);
@@ -156,6 +164,19 @@ thisMethod.invoke(iClass, paramsObj);
     /** *************************************************************
      * A test method
      */
+    public static void testParseProc() {
+        
+        String s = "{isCELTclass(?X,Object)} ==> (isCELTclass(?X,Time)).";
+        Lexer lex = new Lexer(s);
+        LHS lhs = new LHS();
+        lhs.parse(lex, 0);
+    }
+
+    /** *************************************************************
+     * A test method
+     */
     public static void main (String args[]) {
+        
+        testParseProc();
     }
 }
