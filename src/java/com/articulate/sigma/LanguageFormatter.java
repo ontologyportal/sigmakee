@@ -40,8 +40,35 @@ public class LanguageFormatter {
 
     private static final String PHRASES_FILENAME = "language.txt";
 
-    // This class should never have any instances.
-    private LanguageFormatter () { }
+
+    private String statement;
+
+    // kb.getFormatMap() for this language
+    private Map<String, String> phraseMap;
+
+    // kb.getTermFormatMap() for this language
+    private Map<String, String> termMap;
+
+    private KB kb;
+    private String language;
+
+    /*******************************************************************************
+     *
+     * @param stmt The statement to be formatted.
+     * @param phraseMap kb.getFormatMap() for this language
+     * @param termMap kb.getTermFormatMap() for this language
+     * @param kb
+     * @param language
+     */
+    public LanguageFormatter(String stmt, Map<String, String> phraseMap, Map<String, String> termMap,
+                             KB kb, String language) {
+        this.statement = stmt;
+        this.phraseMap = phraseMap;
+        this.termMap = termMap;
+        this.kb = kb;
+        this.language = language;
+    }
+
 
     /** ***************************************************************
      */
@@ -253,19 +280,13 @@ public class LanguageFormatter {
     }
 
     /** ***************************************************************
-     *  Create a natural language paraphrase of a logical statement.
-     *
+     * Create a natural language paraphrase of a logical statement.
      *  @param stmt The statement to be paraphrased.
      *  @param isNegMode Whether the statement is negated.
-     *  @param kb The KB from which phraseMap and termMap are computed for language.
-     *  @param phraseMap An association list of relations and their natural language format statements.
-     *  @param termMap An association list of terms and their natural language format statements.
-     *  @param language A String denoting a natural language, such as EnglishLanguage.
      *  @param depth An int indicating the level of nesting, for control of indentation.
      *  @return A String, which is the paraphrased statement.
      */
-    public static String nlStmtPara(String stmt, boolean isNegMode, KB kb, Map<String,String> phraseMap,
-    				    Map<String,String> termMap, String language, int depth) {
+    private String nlStmtPara(String stmt, boolean isNegMode, int depth) {
 
         //System.out.println("INFO in LanguageFormatter.nlStmtPara(): stmt: " + stmt);
         if (Formula.empty(stmt)) {
@@ -310,11 +331,11 @@ public class LanguageFormatter {
             return stmt;
         }
         if (logicalOperator(pred)) {
-            ans = paraphraseLogicalOperator(stmt,isNegMode,kb,phraseMap,termMap,language,depth+1);
+            ans = paraphraseLogicalOperator(stmt, isNegMode, depth+1);
             return ans;
         }
         if (phraseMap.containsKey(pred)) {
-            ans = paraphraseWithFormat(stmt,isNegMode,kb,phraseMap,termMap,language);
+            ans = paraphraseWithFormat(stmt, isNegMode);
             return ans;
         }
         else {                              // predicate has no paraphrase
@@ -342,7 +363,7 @@ public class LanguageFormatter {
                 if (Formula.atom(arg))
                     result.append(processAtom(arg,termMap,language));
                 else
-                    result.append(nlStmtPara(arg,isNegMode,kb,phraseMap,termMap,language,depth+1));
+                    result.append(nlStmtPara(arg, isNegMode, depth+1));
                 if (!f.empty()) {
                     if (f.listLength() > 1)
                         result.append(", ");
@@ -376,18 +397,12 @@ public class LanguageFormatter {
 
     /** ***************************************************************
      * Create a natural language paraphrase for statements involving the logical operators.
-     *
      * @param stmt The logical statement for which we want to paraphrase the operator, arg 0.
      * @param isNegMode Is the expression negated?
-     * @param kb The KB from which phraseMap and termMap are computed for language.
-     * @param phraseMap A Map in which the keys are SUO-KIF constants and the values are format phrases.
-     * @param termMap A Map in which the keys are SUO-KIF constants and the values are termFormat strings.
-     * @param language A String denoting a natural language, such as EnglishLanguage.
      * @param depth The nested operator depth, for controlling indentation.
      * @return The natural language paraphrase as a String, or null if the predicate was not a logical operator.
      */
-    private static String paraphraseLogicalOperator(String stmt, boolean isNegMode, KB kb,
-                                                    Map<String,String> phraseMap, Map<String,String> termMap, String language, int depth) {
+    private String paraphraseLogicalOperator(String stmt, boolean isNegMode, int depth) {
         try {
             if (keywordMap == null) {
                 System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
@@ -401,14 +416,14 @@ public class LanguageFormatter {
 
             String ans = null;
             if (pred.equals("not")) {
-                ans = nlStmtPara(f.car(),true,kb,phraseMap,termMap,language,depth+1);
+                ans = nlStmtPara(f.car(), true, depth+1);
                 return ans;
             }
 
             String arg = null;
             while (!f.empty()) {
                 arg = f.car();
-                String result = nlStmtPara(arg,false,kb,phraseMap,termMap,language,depth+1);
+                String result = nlStmtPara(arg, false, depth+1);
                 if (StringUtil.isNonEmptyString(result))
                     args.add(result);
                 else {
@@ -606,13 +621,11 @@ public class LanguageFormatter {
      * Create a natural language paraphrase of a logical statement, where the
      * predicate is not a logical operator.  Use a printf-like format string to generate
      * the paraphrase.
-     *
      * @param stmt the statement to format
      * @param isNegMode whether the statement is negated, and therefore requiring special formatting.
      * @return the paraphrased statement.
      */
-    public static String paraphraseWithFormat(String stmt, boolean isNegMode, KB kb,
-                                               Map<String,String> phraseMap, Map<String,String> termMap,String language) {
+    private String paraphraseWithFormat(String stmt, boolean isNegMode) {
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
         //System.out.println("neg mode: " + isNegMode);
@@ -688,7 +701,7 @@ public class LanguageFormatter {
             if (Formula.isVariable(arg))
                 para = arg;
             else
-                para = nlStmtPara(arg,isNegMode,kb,phraseMap,termMap,language,1);
+                para = nlStmtPara(arg, isNegMode, 1);
 
             //System.out.println("para: " + para);
             if (!Formula.atom(para)) {
@@ -911,13 +924,31 @@ public class LanguageFormatter {
     public static String htmlParaphrase(String href, String stmt, Map<String,String> phraseMap,
                                         Map<String,String> termMap, KB kb, String language) {
 
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, phraseMap, termMap, kb, language);
+        return languageFormatter.htmlParaphrase(href);
+    }
+
+
+    /***********************************************************************************
+     * Hyperlink terms in a natural language format string.  This assumes that
+     * terms to be hyperlinked are in the form &%termName$termString , where
+     * termName is the name of the term to be browsed in the knowledge base and
+     * termString is the text that should be displayed hyperlinked.
+     *
+     * @param href the anchor string up to the term= parameter, which this method
+     *               will fill in.
+     * @return
+     */
+    public String htmlParaphrase(String href)     {
+
         String nlFormat = "";
         try {
-            String template = nlStmtPara(stmt, false, kb, phraseMap, termMap, language, 1);
+            String template = nlStmtPara(statement, false, 1);
+
             if (StringUtil.isNonEmptyString(template)) {
                 String anchorStart = ("<a href=\"" + href + "&term=");
                 Formula f = new Formula();
-                f.read(stmt);
+                f.read(statement);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
                 HashMap<String, HashSet<String>> instanceMap = new HashMap<String, HashSet<String>>();

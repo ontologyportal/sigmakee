@@ -1017,6 +1017,7 @@ public class HTMLformatter {
             (patient ?CHANGE ?OBJ))))
             */        
         System.out.println("INFO in HTMLformatter.main(): got intersections: " + forms);
+        System.out.println("HTMLformatter.main() ready to call formatFormulaList( )");
         System.out.println(HTMLformatter.formatFormulaList(forms,"",  kb, "EnglishLanguage",  "SUO-KIF", 0, 0, ""));
     }
 }
