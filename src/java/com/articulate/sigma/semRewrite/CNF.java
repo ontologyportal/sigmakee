@@ -77,9 +77,11 @@ public class CNF {
      */
     public void merge(CNF cnf) {
         
+        //System.out.println("INFO in CNF.merge(): before " + this + "\narg: " + cnf);
         for (int i = 0; i < cnf.clauses.size(); i++)
             if (!clauses.contains(cnf.clauses.get(i)))
                 clauses.add(cnf.clauses.get(i));
+        //System.out.println("INFO in CNF.merge(): after " + this);
     }
     
     /** ***************************************************************
@@ -169,6 +171,28 @@ public class CNF {
         for (int i = 0; i < clauses.size(); i++)
             clauses.get(i).copyBoundFlags(cnf.clauses.get(i));
     }
+
+    /** ***************************************************************
+     * Test a disjunct from a rule against a sentence.  It must succeed
+     * for the rule to be bound.  If a binding is found, it can exit
+     * without trying all the options.
+     */
+    private HashMap<String,String> unifyDisjunct(Disjunct d1, CNF cnf2, CNF cnf1, HashMap<String,String> bindings) {
+        
+        //System.out.println("INFO in CNF.unifyDisjunct(): checking " + d1 + " against " + cnf2);
+        HashMap<String,String> result = new HashMap<String,String>();
+        for (Disjunct d2 : cnf2.clauses) {  // sentence
+            //System.out.println("INFO in CNF.unifyDisjunct(): checking " + d1 + " against " + d2);
+            HashMap<String,String> bindings2 = d2.unify(d1);
+            //System.out.println("INFO in CNF.unifyDisjunct(): d1 " + d1 + " d2 " + d2);
+            //System.out.println("INFO in CNF.unifyDisjunct(): checked " + d1 + " against " + d2);
+            //System.out.println("INFO in CNF.unifyDisjunct(): bindings " + bindings2);
+            if (bindings2 != null) {  
+                return bindings2;
+            }
+        }
+        return null;
+    }
     
     /** ***************************************************************
      * Unify this CNF with the argument.  Note that the argument should
@@ -177,34 +201,45 @@ public class CNF {
      */
     public HashMap<String,String> unify(CNF cnf) {
         
-        CNF cnfnew1 = cnf.deepCopy();  // sentence        
-        CNF cnfnew2 = this.deepCopy(); // rule
+        CNF cnfnew2 = cnf.deepCopy();  // sentence        
+        CNF cnfnew1 = this.deepCopy(); // rule
         //System.out.println("INFO in CNF.unify(): cnf 1 " + cnf);
         //System.out.println("INFO in CNF.unify(): this " + this);
         HashMap<String,String> result = new HashMap<String,String>();
-        for (int i = 0; i < cnfnew1.clauses.size(); i++) {  // sentence
+        for (int i = 0; i < cnfnew1.clauses.size(); i++) {  // rule
             Disjunct d1 = cnfnew1.clauses.get(i);
-            for (int j = 0; j < cnfnew2.clauses.size(); j++) {  // rule
-                Disjunct d2 = cnfnew2.clauses.get(j);
-                //System.out.println("INFO in CNF.unify(): checking " + d1 + " against " + d2);
-                HashMap<String,String> bindings = d1.unify(d2);
-                //System.out.println("INFO in CNF.unify(): d1 " + d1 + " d2 " + d2);
-                if (bindings != null) {        
-                    cnf.copyBoundFlags(cnfnew1);
-                    cnfnew1 = cnfnew1.applyBindings(bindings);
-                    //System.out.println("INFO in CNF.unify(): cnf 1 " + cnfnew1);
-                    //System.out.println("INFO in CNF.unify(): cnf 2 " + cnfnew2);
-                    
-                    cnfnew2 = cnfnew2.applyBindings(bindings);
-                    result.putAll(bindings);
-                    //System.out.println("INFO in CNF.unify(): bindings " + result);
-                    //System.out.println("INFO in CNF.unify(): this  " + this);
-                }
+            HashMap<String,String> result2 = unifyDisjunct(d1,cnfnew2,cnfnew1,result);
+            //System.out.println("INFO in CNF.unify(): results2 " + result2);
+            //System.out.println("INFO in CNF.unify(): cnfnew1 " + cnfnew1);
+            //System.out.println("INFO in CNF.unify(): cnfnew2 " + cnfnew2);
+            if (result2 == null)  // every clause in the rule must match to succeed
+                return null;
+            else {
+                cnf.copyBoundFlags(cnfnew2);
+                cnfnew1 = cnfnew1.applyBindings(result2);
+                //System.out.println("INFO in CNF.unify(): cnf 1 " + cnfnew1);
+                //System.out.println("INFO in CNF.unify(): cnf 2 " + cnfnew2);    
+                cnfnew2 = cnfnew2.applyBindings(result2);
+                result.putAll(result2);
+                //System.out.println("INFO in CNF.unify(): bindings " + result); 
             }
         }
         if (result.keySet().size() == 0)
             result = null;
         return result;
+    }
+
+    /** *************************************************************
+     * A test method
+     */
+    public static void testMerge() {
+        
+        Lexer lex = new Lexer("sumo(BodyMotion,Bob-2), sumo(Human,John-1).");
+        CNF cnf1 = CNF.parseSimple(lex);
+        Lexer lex2 = new Lexer("foo(BodyMotion,Bob-2), bar(Human,John-1).");
+        CNF cnf2 = CNF.parseSimple(lex2);        
+        cnf1.merge(cnf2);
+        System.out.println("INFO in CNF.testEquality(): should have four clauses: " + cnf1);
     }
 
     /** *************************************************************
@@ -218,7 +253,6 @@ public class CNF {
         CNF cnf2 = CNF.parseSimple(lex2);        
         System.out.println("INFO in CNF.testEquality(): should be true: " + cnf1.equals(cnf2));
     }
-    
 
     /** *************************************************************
      * A test method
@@ -241,6 +275,7 @@ public class CNF {
      */
     public static void testUnify() {
         
+        System.out.println("INFO in CNF.testUnify(): -------------------------------------");
         String rule = "sense(212345678,?E) ==> " +
                 "(sumo(Foo,?E)).";
         Rule r = new Rule();
@@ -249,9 +284,49 @@ public class CNF {
         CNF cnf1 = Clausifier.clausify(r.lhs);
         Lexer lex = new Lexer("sense(212345678,Foo).");
         CNF cnf = CNF.parseSimple(lex);
-        System.out.println("INFO in CNF.main(): " + cnf1.unify(cnf));
-        System.out.println("INFO in CNF.main(): cnf " + cnf);
-        System.out.println("INFO in CNF.main(): cnf1 " + cnf1);
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+        System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf1);
+        System.out.println("INFO in CNF.testUnify(): bindings: " + cnf1.unify(cnf));
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+        System.out.println("INFO in CNF.testUnify(): expecting: Xsense(212345678,Foo).");
+        
+        System.out.println("INFO in CNF.testUnify(): -------------------------------------");
+        rule = "sense(212345678,?E) ==> " +
+                "(sumo(Foo,?E)).";
+        r = new Rule();
+        r = Rule.parseString(rule);
+        System.out.println(r.toString());
+        cnf1 = Clausifier.clausify(r.lhs);
+        lex = new Lexer("sense(2123,Foo).");
+        cnf = CNF.parseSimple(lex);
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+        System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf1);
+        System.out.println("INFO in CNF.testUnify(): bindings  (should be null): " + cnf1.unify(cnf));
+        
+        System.out.println("INFO in CNF.testUnify(): -------------------------------------");
+        String rule2 = "det(?X,What*), sumo(?O,?X).";
+        lex = new Lexer(rule2);
+        cnf1 = CNF.parseSimple(lex);
+        String clauses = "nsubj(drives-2,John-1), root(ROOT-0,drives-2), sumo(Transportation,drives-2), sumo(Human,John-1).";
+        lex = new Lexer(clauses);
+        cnf = CNF.parseSimple(lex);
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+        System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf1);
+        System.out.println("INFO in CNF.testUnify(): bindings (should be null): " + cnf1.unify(cnf));
+
+        System.out.println("INFO in CNF.testUnify(): -------------------------------------");
+        rule2 = "nsubj(?X,?Y), sumo(?O,?X).";
+        lex = new Lexer(rule2);
+        cnf1 = CNF.parseSimple(lex);
+        clauses = "nsubj(drives-2,John-1), root(ROOT-0,drives-2), sumo(Transportation,drives-2), sumo(Human,John-1).";
+        lex = new Lexer(clauses);
+        cnf = CNF.parseSimple(lex);
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+        System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf1);
+        System.out.println("INFO in CNF.testUnify(): bindings: " + cnf1.unify(cnf));
+        System.out.println("INFO in CNF.testUnify(): expecting: Xnsubj(drives-2,John-1), root(ROOT-0,drives-2), Xsumo(Transportation,drives-2), sumo(Human,John-1).");
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+
     }
     
     /** *************************************************************
@@ -260,6 +335,8 @@ public class CNF {
     public static void main (String args[]) {
         
         //testEquality();
-        testContains();
+        //testContains();
+        //testMerge();
+        testUnify();
     }
 }
