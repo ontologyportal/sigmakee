@@ -34,7 +34,7 @@ import com.articulate.sigma.*;
 public class Clause {
 
     public boolean negated = false;
-    public boolean preserve = true;
+    public boolean preserve = false;
     public boolean bound = false; // bound clauses in a delete rule get deleted
     public String pred;
     public String arg1;
@@ -84,6 +84,16 @@ public class Clause {
         if (!arg2.equals(c.arg2))
             return false;
         return true;
+    }
+    
+    /** ***************************************************************
+     */
+    public boolean isGround() {
+        
+        if (!arg1.startsWith("?") && !arg2.startsWith("?"))
+            return true;
+        else
+            return false;
     }
     
     /** ***************************************************************
@@ -292,9 +302,11 @@ public class Clause {
         
         String s1 = "pobj(at-1,Mary-1).";
         String s2 = "pobj(at*,?M).";
-        System.out.println("INFO in Clause.testRegexUnify(): attempting parses " + s1);
+        String s3 = "pobj(boo-3,?M).";
+        System.out.println("INFO in Clause.testRegexUnify(): attempting parses ");
         Clause c1 = null;
         Clause c2 = null;
+        Clause c3 = null;
         try {
             Lexer lex = new Lexer(s1);
             lex.look();
@@ -304,6 +316,9 @@ public class Clause {
             lex = new Lexer(s2);
             c2 = Clause.parse(lex, 0);
             System.out.println("INFO in Clause.testRegexUnify(): parsed " + c2);
+            lex = new Lexer(s3);
+            c3 = Clause.parse(lex, 0);
+            System.out.println("INFO in Clause.testRegexUnify(): parsed " + c3);
         }
         catch (Exception ex) {
             String message = ex.getMessage();
@@ -312,6 +327,7 @@ public class Clause {
         }   
         System.out.println("INFO in Clause.testRegexUnify(): " + c1.mguTermList(c2));
         System.out.println("INFO in Clause.testRegexUnify(): " + c2.mguTermList(c1));
+        System.out.println("INFO in Clause.testRegexUnify(): should fail: " + c2.mguTermList(c3));
     }
     
     /** *************************************************************
