@@ -72,14 +72,17 @@ public class Disjunct {
     }
     
     /** ***************************************************************
+     * If clause is not marked "preserve" then remove it if bound
      */
     public void removeBound() {
         
         ArrayList<Clause> newdis = new ArrayList<Clause>();
         for (int i = 0; i < disjuncts.size(); i++) {
             Clause c = disjuncts.get(i);
-            if (!c.bound)
+            if (!c.bound || c.preserve) {
+                c.bound = false;
                 newdis.add(c);
+            }
         }
         disjuncts = newdis;
     }
@@ -90,7 +93,8 @@ public class Disjunct {
     public void copyBoundFlags(Disjunct d) {
      
         for (int i = 0; i < disjuncts.size(); i++)
-            disjuncts.get(i).bound = d.disjuncts.get(i).bound;
+            if (d.disjuncts.get(i).bound)
+                disjuncts.get(i).bound = true;
     }
     
     /** *************************************************************
@@ -111,7 +115,11 @@ public class Disjunct {
     public HashMap<String,String> unify(Disjunct d) {
         
         for (int i = 0; i < d.disjuncts.size(); i++) {
-            Clause c1 = d.disjuncts.get(i);
+            Clause c1 = d.disjuncts.get(i);  // rule
+            //System.out.println("INFO in Disjunct.unify(): checking " + c1);
+            if (c1.pred.equals("isCELTclass") && c1.isGround())
+                if (Procedures.isCELTclass(c1).equals("true"))
+                    return new HashMap<String,String>();
             for (int j = 0; j < disjuncts.size(); j++) {
                 Clause c2 = disjuncts.get(j);
                 HashMap<String,String> bindings = c2.mguTermList(c1);
