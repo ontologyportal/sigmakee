@@ -1337,13 +1337,13 @@ public class KB {
             if (formulas.containsKey(key)) {
                 ArrayList<String> oldFormulas = formulas.get(key);
                 for (int i = 0; i < newFormulas.size(); i++) {
-                    Formula newFormula = formulaMap.get(newFormulas.get(i));
+                    Formula newFormula = kif.formulaMap.get(newFormulas.get(i));
                     if (pathname != null) 
                         newFormula.sourceFile = pathname;                    
                     boolean found = false;
                     for (int j = 0; j < oldFormulas.size(); j++) {
                         Formula oldFormula = formulaMap.get(oldFormulas.get(j));
-                        if (newFormula.theFormula.equals(oldFormula.theFormula)) {
+                        if (oldFormula != null && newFormula.theFormula.equals(oldFormula.theFormula)) {
                             found = true;
                             formulasPresent.add(oldFormula);
                         }
@@ -1360,7 +1360,7 @@ public class KB {
                 Formula f = null;
                 while (it2.hasNext()) {
                     f = formulaMap.get(it2.next());
-                    if (StringUtil.isNonEmptyString(f.theFormula))
+                    if (f != null && StringUtil.isNonEmptyString(f.theFormula))
                         formulaMap.put(f.theFormula.intern(), f);                        
                 }
             }
@@ -1566,8 +1566,8 @@ public class KB {
                                 while (it3.hasNext()) {
                                     processedF = it3.next();
                                     ieResult = eprover.assertFormula(processedF.theFormula);
-                                    if (ieResult.indexOf("Formula has been added") < 0) 
-                                        allAdded = false;                                        
+                                    if (ieResult.indexOf("Formula has been added") < 0)
+                                        allAdded = false;
                                 }
                             }
                         }
