@@ -267,19 +267,41 @@ public class Interpreter {
           }
           input = c.readLine("Enter sentence: ");
           if (!StringUtil.emptyString(input)) {
-              try {
-                  results = DependencyConverter.getDependencies(input);
+              if (input.equals("reload"))
+                  loadRules();
+              else {
+                  try {
+                      results = DependencyConverter.getDependencies(input);
+                  }
+                  catch (Exception e) {
+                      e.printStackTrace();
+                      System.out.println(e.getMessage());
+                  }
+                  ArrayList<String> wsd = findWSD(results);
+                  results.addAll(wsd);           
+                  String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
+                  interpret(in); 
               }
-              catch (Exception e) {
-                  e.printStackTrace();
-                  System.out.println(e.getMessage());
-              }
-              ArrayList<String> wsd = findWSD(results);
-              results.addAll(wsd);           
-              String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-              interpret(in); 
           }
       } while (!StringUtil.emptyString(input));
+  }
+  
+  /** ***************************************************************
+   */
+  public void loadRules() {
+
+      String filename = "/home/apease/SourceForge/KBs/WordNetMappings/SemRewrite.txt";
+      String pref = KBmanager.getMgr().getPref("SemRewrite");
+      if (!StringUtil.emptyString(pref))
+          filename = pref;
+      try {
+          rs = RuleSet.readFile(filename);
+      }
+      catch (Exception e) {
+          e.printStackTrace();
+          System.out.println(e.getMessage());
+      }
+      System.out.println("INFO in Interpreter.loadRules(): Rules loaded from " + filename);
   }
   
   /** ***************************************************************
