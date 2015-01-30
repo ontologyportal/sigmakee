@@ -212,8 +212,10 @@ public class CNF {
             //System.out.println("INFO in CNF.unify(): results2 " + result2);
             //System.out.println("INFO in CNF.unify(): cnfnew1 " + cnfnew1);
             //System.out.println("INFO in CNF.unify(): cnfnew2 " + cnfnew2);
-            if (result2 == null)  // every clause in the rule must match to succeed
+            if (result2 == null) { // every clause in the rule must match to succeed
+                cnf.clearBound(); // if no success, wipe all the intermediate bindings.
                 return null;
+            }
             else {
                 cnf.copyBoundFlags(cnfnew2);
                 cnfnew1 = cnfnew1.applyBindings(result2);
@@ -226,6 +228,7 @@ public class CNF {
         }
         if (result.keySet().size() == 0)
             result = null;
+        //cnf.clearBound(); // if no success, wipe all the intermediate bindings.
         return result;
     }
 
@@ -240,6 +243,16 @@ public class CNF {
         CNF cnf2 = CNF.parseSimple(lex2);        
         cnf1.merge(cnf2);
         System.out.println("INFO in CNF.testEquality(): should have four clauses: " + cnf1);
+    }
+
+    /** *************************************************************
+     * A test method
+     */
+    public static void testParseSimple() {
+        
+        Lexer lex = new Lexer("num(?O,?N), +sumo(?C,?O).");
+        CNF cnf1 = CNF.parseSimple(lex);    
+        System.out.println("INFO in CNF.testParseSimple(): " + cnf1);
     }
 
     /** *************************************************************
@@ -326,7 +339,6 @@ public class CNF {
         System.out.println("INFO in CNF.testUnify(): bindings: " + cnf1.unify(cnf));
         System.out.println("INFO in CNF.testUnify(): expecting: Xnsubj(drives-2,John-1), root(ROOT-0,drives-2), Xsumo(Transportation,drives-2), sumo(Human,John-1).");
         System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
-
     }
     
     /** *************************************************************
@@ -337,6 +349,7 @@ public class CNF {
         //testEquality();
         //testContains();
         //testMerge();
-        testUnify();
+        //testUnify();
+        testParseSimple();
     }
 }
