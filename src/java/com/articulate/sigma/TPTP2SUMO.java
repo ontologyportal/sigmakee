@@ -15,17 +15,17 @@ http://sigmakee.sourceforge.net
 /*************************************************************************************************/
 package com.articulate.sigma;
 
+import TPTPWorld.AnswerExtractor;
+import TPTPWorld.Binding;
+import TPTPWorld.TPTPFormula;
+import TPTPWorld.TPTPParser;
+import tptp_parser.SimpleTptpParserOutput;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Vector;
-import tptp_parser.*;
-import TPTPWorld.*;
+import java.util.*;
 
 public class TPTP2SUMO {
 
@@ -323,8 +323,10 @@ public class TPTP2SUMO {
       String res = "";
       LinkedList<SimpleTptpParserOutput.Term> arguments = (LinkedList)atom.getArguments();
       if (arguments != null) 
-          res += "(";      
-      res += transformTerm(removeDollarSign(atom.getPredicate()));
+          res += "(";
+      // "esk" comes up in the function SigGetNewSkolemCode in E's source code, with the form esk<count>_<ar>, standing for Skolemization
+      if (!atom.getPredicate().startsWith("esk"))
+          res += transformTerm(removeDollarSign(atom.getPredicate()));
       if (arguments != null) {
           for (int n = 0; n < arguments.size();  n++) {
               if (((SimpleTptpParserOutput.Term)arguments.get(n)).getTopSymbol().isVariable()) 
