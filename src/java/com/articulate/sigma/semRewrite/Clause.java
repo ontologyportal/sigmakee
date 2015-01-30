@@ -49,6 +49,8 @@ public class Clause {
             sb.append("X");
         if (negated)
             sb.append("~");
+        if (preserve)
+            sb.append("+");
         sb.append(pred + "(" + arg1 + "," + arg2 + ")");
         return sb.toString();
     }
@@ -209,11 +211,11 @@ public class Clause {
             else {
                 //System.out.println("INFO in Clause.mguTermList(): t1 " + t1 + " t2 " + t2);
                 if (!t1.equals(t2)) {
-                    if (t1.indexOf('*') > -1) {
+                    if (t1.indexOf('*') > -1 && t2.indexOf('-') > -1) {
                         if (!t1.substring(0,t1.lastIndexOf('*')).equals(t2.substring(0,t2.lastIndexOf('-'))))
                             return null;
                     }
-                    else if (t2.indexOf('*') > -1) {
+                    else if (t2.indexOf('*') > -1 && t1.indexOf('-') > -1) {
                         if (!t2.substring(0,t2.lastIndexOf('*')).equals(t1.substring(0,t1.lastIndexOf('-'))))
                             return null;
                     }
@@ -235,6 +237,11 @@ public class Clause {
         String errStr;
         Clause cl = new Clause();
         try {
+            //System.out.println("INFO in Clause.parse(): " + lex.look());
+            if (lex.testTok(Lexer.Plus)) {
+                cl.preserve = true;
+                lex.next();
+            }
             //System.out.println("INFO in Clause.parse(): " + lex.look());
             cl.pred = lex.next();
             //System.out.println("INFO in Clause.parse(): " + lex.look());
@@ -336,7 +343,7 @@ public class Clause {
     public static void testParse() {
         
         try {
-            String input = "det(bank-2, The-1).";
+            String input = "+det(bank-2, The-1).";
             Lexer lex = new Lexer(input);
             lex.look();
             System.out.println(Clause.parse(lex, 0));
@@ -353,7 +360,8 @@ public class Clause {
      */
     public static void main (String args[]) {
         
+        testParse();
         //testUnify();
-        testRegexUnify();
+        //testRegexUnify();
     }
 }
