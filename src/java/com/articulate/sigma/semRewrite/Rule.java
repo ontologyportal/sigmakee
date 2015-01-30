@@ -158,6 +158,17 @@ public class Rule {
     /** *************************************************************
      * A test method
      */
+    public static void testParse() {
+        
+        String s = "num(?O,?N), +sumo(?C,?O) ==> (instance(?O,Collection), membersType(?O,?C), membersCount(?O,?N)).";
+        System.out.println("INFO in Rule.testParse(): " + parseString(s));
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
     public static void main (String args[]) {
+        
+        testParse();
     }
 }
