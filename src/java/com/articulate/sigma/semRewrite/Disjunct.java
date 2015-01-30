@@ -72,7 +72,9 @@ public class Disjunct {
     }
     
     /** ***************************************************************
-     * If clause is not marked "preserve" then remove it if bound
+     * If clause is not marked "preserve" then remove it if bound and
+     * then reset the preserve flag.  Note this should only be called
+     * on inputs, not rules.
      */
     public void removeBound() {
         
@@ -81,12 +83,12 @@ public class Disjunct {
             Clause c = disjuncts.get(i);
             if (!c.bound || c.preserve) {
                 c.bound = false;
+                c.preserve = false;
                 newdis.add(c);
             }
         }
         disjuncts = newdis;
     }
-    
     /** ***************************************************************
      * Copy bound flags to this set of clauses  
      */
@@ -120,11 +122,19 @@ public class Disjunct {
             if (c1.pred.equals("isCELTclass") && c1.isGround())
                 if (Procedures.isCELTclass(c1).equals("true"))
                     return new HashMap<String,String>();
+            if (c1.pred.equals("isSubclass") && c1.isGround())
+                if (Procedures.isSubclass(c1).equals("true"))
+                    return new HashMap<String,String>();
+            if (c1.pred.equals("isInstanceOf") && c1.isGround())
+                if (Procedures.isInstanceOf(c1).equals("true"))
+                    return new HashMap<String,String>();
             for (int j = 0; j < disjuncts.size(); j++) {
                 Clause c2 = disjuncts.get(j);
                 HashMap<String,String> bindings = c2.mguTermList(c1);
                 //System.out.println("INFO in Disjunct.unify(): checking " + c1 + " against " + c2);
                 if (bindings != null) {
+                    if (c1.preserve)
+                        c2.preserve = true;
                     c2.bound = true; // mark as bound in case the rule consumes the clauses ( a ==> rule not a ?=>)
                     //System.out.println("INFO in Disjunct.unify(): bound: " + c2);
                     return bindings;
