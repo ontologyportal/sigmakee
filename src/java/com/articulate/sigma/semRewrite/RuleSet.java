@@ -39,7 +39,7 @@ public class RuleSet {
         
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < rules.size(); i++) 
-            sb.append(rules.get(i).toString());
+            sb.append(rules.get(i).toString() + "\n");
         return sb.toString();
     }
 
