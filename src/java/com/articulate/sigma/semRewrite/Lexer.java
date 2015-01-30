@@ -42,6 +42,7 @@ public class Lexer {
     public static final String WhiteSpace     = "White Space";
     public static final String Newline        = "Newline";
     public static final String SemiComment    = "SemiComment";
+    public static final String Directive      = "Directive";
     public static final String Ident          = "Identifier";
     public static final String Number         = "Positive or negative Integer or real";
     public static final String QuotedString   = "Quoted string";   
@@ -79,7 +80,7 @@ public class Lexer {
     public static ArrayList<String> andOr = new ArrayList<String>();
     public static ArrayList<String> binaryRel = new ArrayList<String>();
     public static ArrayList<String> quant = new ArrayList<String>(); 
-
+    
     /** ***************************************************************
      */
     public Lexer() {
@@ -171,6 +172,7 @@ public class Lexer {
         tokenDefs.put(Stop,         Pattern.compile("stop"));
         tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+E?-?[0-9]*"));
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
+        tokenDefs.put(Directive,    Pattern.compile("#[^\\n]*"));
         tokenDefs.put(QuotedString, Pattern.compile("'[^']*'"));
         
         andOr.add(Comma);
