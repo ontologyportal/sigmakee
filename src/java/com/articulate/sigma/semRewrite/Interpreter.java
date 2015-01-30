@@ -10,7 +10,14 @@ public class Interpreter {
 
   public RuleSet rs = null;
   //public CNF input = null;
+  public String fname = "";
   
+  /** *************************************************************
+   */
+  public Interpreter () {
+      
+  }
+
   /** *************************************************************
    */
   public Interpreter (RuleSet rsin) {
@@ -30,7 +37,7 @@ public class Interpreter {
    */
   public static ArrayList<String> findWSD(ArrayList<String> clauses) {
       
-      //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
+      System.out.println("INFO in Interpreter.addWSD(): " + clauses);
       DependencyConverter.readFirstNames();
       ArrayList<String> results = new ArrayList<String>();
       HashSet<String> words = new HashSet<String>();
@@ -123,13 +130,17 @@ public class Interpreter {
           for (int j = 0; j < inputs.size(); j++) {          
               newInput = inputs.get(j).deepCopy();
               for (int i = 0; i < rs.rules.size(); i++) {
-                  Rule r = rs.rules.get(i).deepCopy();
+                  Rule r = rs.rules.get(i).deepCopy();                  
                   //System.out.println("INFO in Interpreter.interpret(): r: " + r);
                   HashMap<String,String> bindings = r.cnf.unify(newInput);
-                  if (bindings != null) {
+                  if (bindings == null) {
+                      newInput.clearBound();
+                  }
+                  else {
                       bindingFound = true;
-                      //System.out.println("INFO in Interpreter.interpret(): new input: " + newInput);
+                      //System.out.println("INFO in Interpreter.interpret(): new input 1: " + newInput);
                       //System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
+                      //System.out.println("INFO in Interpreter.interpret(): r: " + r);
                       RHS rhs = r.rhs.applyBindings(bindings);   
                       if (r.operator == Rule.RuleOp.IMP) {
                           CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
@@ -145,7 +156,7 @@ public class Interpreter {
                           if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) { // assert a KIF RHS
                               kifoutput.add(rhs.form.toString());
                           }
-                          //System.out.println("INFO in Interpreter.interpret(): new input: " + newInput);
+                          //System.out.println("INFO in Interpreter.interpret(): new input 2: " + newInput);
                       }
                       else if (r.operator == Rule.RuleOp.OPT) {
                           CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
@@ -206,21 +217,24 @@ public class Interpreter {
   public static void testInterpret() {
       
       //KBmanager.getMgr().initializeOnce();
-      String filename = "/home/apease/IPsoft/SemRewrite2.txt";
       try {
-          RuleSet rs = RuleSet.readFile(filename);
-          Interpreter interp = new Interpreter(rs);
-          ArrayList<String> results = new ArrayList<String>();
-          results.add("nsubj(arrives-2,Mary-1), root(ROOT-0,arrives-2), prep_at(arrives-2,school-4), sumo(Human,Mary-1).");
-          //results.add("amod(John-1,Bob-2)");
-          //System.out.println("INFO in Interpreter.main(): deps " + results);
-          //ArrayList<String> wsd = findWSD(results);
-          //System.out.println("INFO in Interpreter.main(): wsd " + wsd);
-          //results.addAll(wsd);
-          //System.out.println("INFO in Interpreter.main(): combined " + results);             
+          Interpreter interp = new Interpreter();
+          interp.loadRules();
+          System.out.println("INFO in Interpreter.testInterpret(): " + interp.rs);
+          /*
+          ArrayList<String> results = null;
+          try {
+              results = DependencyConverter.getDependencies("John walks to the river.");
+          }
+          catch (Exception e) {
+              e.printStackTrace();
+              System.out.println(e.getMessage());
+          }
+          ArrayList<String> wsd = findWSD(results);
+          results.addAll(wsd);           
           String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-          //System.out.println("INFO in Interpreter.main(): " + in);
-          interp.interpret(in);              
+          interp.interpret(in);      
+          */
       }
       catch (Exception e) {
           e.printStackTrace();
@@ -269,6 +283,8 @@ public class Interpreter {
           if (!StringUtil.emptyString(input)) {
               if (input.equals("reload"))
                   loadRules();
+              else if (input.startsWith("load "))
+                  loadRules(input.substring(input.indexOf(' ')+1));
               else {
                   try {
                       results = DependencyConverter.getDependencies(input);
@@ -288,43 +304,47 @@ public class Interpreter {
   
   /** ***************************************************************
    */
+  public void loadRules(String f) {
+
+      if (f.indexOf(File.separator) < 0)
+          f = "/home/apease/SourceForge/KBs/WordNetMappings/" + f;
+      try {
+          fname = f;
+          RuleSet rsin = RuleSet.readFile(f);
+          rs = canon(rsin);
+      }
+      catch (Exception e) {
+          e.printStackTrace();
+          System.out.println(e.getMessage());
+      }
+      System.out.println("INFO in Interpreter.loadRules(): " +
+          rs.rules.size() + " rules loaded from " + f);
+  }
+  
+  /** ***************************************************************
+   */
   public void loadRules() {
 
       String filename = "/home/apease/SourceForge/KBs/WordNetMappings/SemRewrite.txt";
       String pref = KBmanager.getMgr().getPref("SemRewrite");
       if (!StringUtil.emptyString(pref))
           filename = pref;
-      try {
-          rs = RuleSet.readFile(filename);
-      }
-      catch (Exception e) {
-          e.printStackTrace();
-          System.out.println(e.getMessage());
-      }
-      System.out.println("INFO in Interpreter.loadRules(): Rules loaded from " + filename);
+      loadRules(filename);
   }
   
   /** ***************************************************************
    */
   public static void main(String[] args) {  
 
-      Interpreter interp = null;
+      Interpreter interp = new Interpreter();
       if (args != null && args.length > 0 && (args[0].equals("-s") || args[0].equals("-i"))) {
           KBmanager.getMgr().initializeOnce();
-          String filename = "/home/apease/SourceForge/KBs/WordNetMappings/SemRewrite.txt";
-          try {
-              RuleSet rs = RuleSet.readFile(filename);
-              interp = new Interpreter(rs);
-          }
-          catch (Exception e) {
-              e.printStackTrace();
-              System.out.println(e.getMessage());
-          }
+          interp.loadRules();
       }
-      if (args[0].equals("-s")) {
+      if (args != null && args.length > 0 && args[0].equals("-s")) {
           interp.interpSingle(args[1]);
       }
-      else if (args[0].equals("-i")) {
+      else if (args != null && args.length > 0 && args[0].equals("-i")) {
           interp.interpInter();
       }
       else {
