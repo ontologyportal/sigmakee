@@ -68,10 +68,10 @@ public class DependencyConverter {
         BufferedWriter _writer; 
         BufferedReader _error;
         String tmpfname = "tmp.txt";
-        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx150m -classpath /home/apease/Programs/stanford-parser-full-2014-08-27" + 
+        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx1000m -classpath /home/apease/Programs/stanford-parser-full-2014-08-27" + 
                 "/stanford-parser.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser " + 
-                "-outputFormat typedDependencies /home/apease/Programs/stanford-parser-full-2014-08-27/englishPCFG.ser.gz " + tmpfname;
-        
+                "-outputFormat typedDependencies /home/apease/Programs/stanford-parser-full-2014-08-27/englishPCFG-mcg.ser.gz " + tmpfname;
+                //"-outputFormat typedDependencies /home/apease/Programs/stanford-parser-full-2014-08-27/englishPCFG.ser.gz " + tmpfname;
         FileWriter fr = null;
         PrintWriter pr = null;
 
@@ -580,34 +580,58 @@ public class DependencyConverter {
      */
     public static void main(String[] args) {
         
-        try{
-            KBmanager.getMgr().initializeOnce();
-            kb = KBmanager.getMgr().getKB("SUMO");
-            WordNet.wn.initOnce();
-            //System.out.println("Africa: " + WSD.getBestDefaultSUMOsense("Africa",1));
-            //System.out.println("Africa: " + WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense("Africa",1)));
-
-            //System.out.println("Info in DependencyConverter.main(): simplification: " + WordNetUtilities.subst("rolls","s$",""));
-            //System.out.println("Info in DependencyConverter.main(): is there a substitution: " + WordNetUtilities.substTest("rolls","s$","",WordNet.wn.verbSynsetHash)); 
-            //System.out.println("Info in DependencyConverter.main(): synsets for roll: " + WordNet.wn.verbSynsetHash.get("roll")); 
-            //System.out.println("Info in DependencyConverter.main(): root form: " + WordNet.wn.verbRootForm("rolls","rolls")); 
-            DependencyConverter dc = new DependencyConverter();
-            // ArrayList<String> results = getDependencies("After an unsuccessful Baltimore theatrical debut in 1856, John played minor roles in Philadelphia until 1859, when he joined a Shakespearean stock company in Richmond, Va.");
-            ArrayList<String> results = getDependencies("The bank hired John.");
-            //ArrayList<String> results = getDependencies("John rolls the ball through Africa.");/
-            //ArrayList<String> results = getDependencies("John sticks the pin through the apple.");
-            System.out.println(results);
-            
-            Node n = dc.createGraph(results);
-            dc.traverseNodes(n);
-            output.append(")");
-            System.out.println(Formula.textFormat(output.toString()));
-            //System.out.println("Info in DependencyConverter.main(): " + WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense("pin",1)));
-            //System.out.println(kb.isChildOf("Africa","Region"));
+        if (args != null && args.length > 0 && args[0].equals("-s")) {
+            String input = args[1];
+            try {
+                System.out.println(splitSentences(input));
+            }
+            catch (Exception ex) {
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+            }
         }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
+        else if (args != null && args.length > 0 && args[0].equals("-d")) {
+            String input = args[1];
+            try {
+                ArrayList<String> sents = splitSentences(input);
+                for (String s : sents)
+                    System.out.println(getDependencies(s));
+            }
+            catch (Exception ex) {
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        else {
+            try {
+                KBmanager.getMgr().initializeOnce();
+                kb = KBmanager.getMgr().getKB("SUMO");
+                WordNet.wn.initOnce();
+                //System.out.println("Africa: " + WSD.getBestDefaultSUMOsense("Africa",1));
+                //System.out.println("Africa: " + WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense("Africa",1)));
+    
+                //System.out.println("Info in DependencyConverter.main(): simplification: " + WordNetUtilities.subst("rolls","s$",""));
+                //System.out.println("Info in DependencyConverter.main(): is there a substitution: " + WordNetUtilities.substTest("rolls","s$","",WordNet.wn.verbSynsetHash)); 
+                //System.out.println("Info in DependencyConverter.main(): synsets for roll: " + WordNet.wn.verbSynsetHash.get("roll")); 
+                //System.out.println("Info in DependencyConverter.main(): root form: " + WordNet.wn.verbRootForm("rolls","rolls")); 
+                DependencyConverter dc = new DependencyConverter();
+                // ArrayList<String> results = getDependencies("After an unsuccessful Baltimore theatrical debut in 1856, John played minor roles in Philadelphia until 1859, when he joined a Shakespearean stock company in Richmond, Va.");
+                ArrayList<String> results = getDependencies("The bank hired John.");
+                //ArrayList<String> results = getDependencies("John rolls the ball through Africa.");/
+                //ArrayList<String> results = getDependencies("John sticks the pin through the apple.");
+                System.out.println(results);
+                
+                Node n = dc.createGraph(results);
+                dc.traverseNodes(n);
+                output.append(")");
+                System.out.println(Formula.textFormat(output.toString()));
+                //System.out.println("Info in DependencyConverter.main(): " + WordNetUtilities.getBareSUMOTerm(WSD.getBestDefaultSUMOsense("pin",1)));
+                //System.out.println(kb.isChildOf("Africa","Region"));
+            }
+            catch (Exception ex) {
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 }
