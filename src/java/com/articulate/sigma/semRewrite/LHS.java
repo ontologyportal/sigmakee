@@ -86,9 +86,9 @@ public class LHS {
         try {
             //System.out.println("INFO in LHS.parse(): " + lex.look());
             if (lex.testTok(Lexer.Plus)) {
-                lex.next();
-                lhs.operator = LHSop.PRESERVE;
-                lhs.lhs1 = LHS.parse(lex,startLine);
+                Clause c = Clause.parse(lex,startLine);
+                lhs.operator = LHSop.DELETE;
+                lhs.clause = c;
                 return lhs;
             }
             else if (lex.testTok(Lexer.OpenPar)) {
@@ -160,7 +160,18 @@ Object iClass = thisClass.newInstance();   // get the method
 Method thisMethod = thisClass.getDeclaredMethod(aMethod, params); // call the method
 thisMethod.invoke(iClass, paramsObj);
 */
-    
+  
+    /** *************************************************************
+     * A test method
+     */
+    public static void testParse() {
+        
+        String s = "{isCELTclass(?X,Object)} ==> (isCELTclass(?X,Time)).";
+        Lexer lex = new Lexer(s);
+        LHS lhs = new LHS();
+        lhs.parse(lex, 0);
+    }
+
     /** *************************************************************
      * A test method
      */
@@ -177,6 +188,6 @@ thisMethod.invoke(iClass, paramsObj);
      */
     public static void main (String args[]) {
         
-        testParseProc();
+        testParse();
     }
 }
