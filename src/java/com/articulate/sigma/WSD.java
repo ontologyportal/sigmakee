@@ -73,7 +73,7 @@ public class WSD {
      */
     public static ArrayList<String> collectWordSenses(String text) {
 
-        //System.out.println("INFO in WordNet.collectWordSenses(): " + text);
+        System.out.println("INFO in WordNet.collectWordSenses(): " + text);
         String newtext = StringUtil.removeHTML(text);
         newtext = StringUtil.removePunctuation(newtext);
         String context = newtext;
@@ -107,7 +107,7 @@ public class WSD {
                 }
             }
         }
-        //System.out.println("INFO in WordNet.collectWordSenses(): result: " + result);
+        System.out.println("INFO in WordNet.collectWordSenses(): result: " + result);
         return result;
     }
 
@@ -155,8 +155,8 @@ public class WSD {
      */
     public static String findWordSenseInContext(String word, ArrayList<String> words) {
 
-        //System.out.println("INFO in findWordSenseInContext(): word, words: " + 
-        //        word + ", " + words);
+        System.out.println("INFO in findWordSenseInContext(): word, words: " + 
+                word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
         for (int i = 1; i <= 4; i++) {
@@ -194,7 +194,7 @@ public class WSD {
         //        word + ", " + POS + ", " + words);
         ArrayList<String> senses = WordNet.wn.wordsToSenses.get(word);
         if (senses == null) {
-            System.out.println("Info in WordNet.findSUMOWordSenseArray(): Word: '" + word + 
+            System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word + 
                     "' not in lexicon as part of speech " + POS);
             return new ArrayList<String>();
         }
@@ -414,13 +414,15 @@ public class WSD {
         if (bestSense == "") {
             //System.out.println("WSD.getBestDefaultSense(): no frequencies for " + word);
             ArrayList<String> al = WordNet.wn.wordsToSenses.get(word);
-            Iterator<String> it = al.iterator();
-            while (it.hasNext()) {
-                String key = it.next();
-                String POS = WordNetUtilities.getPOSfromKey(key);
-                String numPOS = WordNetUtilities.posLettersToNumber(POS);
-                return numPOS + WordNet.wn.senseIndex.get(key);
-            }  
+            if (al != null) {
+                Iterator<String> it = al.iterator();
+                while (it.hasNext()) {
+                    String key = it.next();
+                    String POS = WordNetUtilities.getPOSfromKey(key);
+                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                    return numPOS + WordNet.wn.senseIndex.get(key);
+                }  
+            }
         }
         else
             return bestSense;
@@ -492,7 +494,6 @@ public class WSD {
             if (Integer.toString(pos).equals(numPOS))
                 return numPOS + WordNet.wn.senseIndex.get(key);
         }  
-
         return synset;
     }
     
@@ -529,7 +530,6 @@ public class WSD {
      */
     public static void oldTestWSD (String[] args) {
 
-
         StringBuffer textBuffer = new StringBuffer();
         try {
             FileInputStream fileStream = new FileInputStream(args[0]);
@@ -556,8 +556,7 @@ public class WSD {
             System.out.println("in WSD.oldTestWSD(): synset,words,SUMO: " + 
                     synsets[i] + " " + WordNet.wn.synsetsToWords.get(synsets[i]) + " " + 
                     WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synsets[i])));
-        }
-        
+        }     
         /*String sentence = "Bob likes all living things.";
         String params = "flang=KIF&lang=EnglishLanguage&kb=SUMO";
         WordNet.wn.sumoSentenceDisplay(sentence, sentence, params);
@@ -578,13 +577,16 @@ public class WSD {
         WordNet.initOnce();
         System.out.println("INFO in WSD.main(): done initializing");
 
-        String sentence = "Bob runs around the track.";
+        //String sentence = "Bob runs around the track.";
         //ArrayList<String> al = WordNet.wn.collectWordSenses("A computer is a general purpose device that can be programmed to carry out a finite set of arithmetic or logical operations.");
         //ArrayList<String> al = WordNet.wn.collectWordSenses("A four stroke engine is a beautiful thing.");
 
-        ArrayList<String> al = WordNet.splitToArrayList(sentence);;
+        //ArrayList<String> al = WordNet.splitToArrayList(sentence);
         //String synset = findWordSenseInContext("runs",al);
         //System.out.println("INFO in WSD.main(): " + synset);
-        System.out.println("INFO in WSD.main(): sense for 'pin': " + WSD.getBestDefaultSUMOsense("pin",1));
+        //System.out.println("INFO in WSD.main(): sense for 'pin': " + WSD.getBestDefaultSUMOsense("pin",1));
+        String sentence = "John walks.";
+        //System.out.println("INFO in WSD.main(): " + WSD.collectWordSenses(sentence));
+        System.out.println("INFO in WSD.main(): " + WordNet.wn.sumoSentenceDisplay(sentence,sentence,""));
     }
 }
