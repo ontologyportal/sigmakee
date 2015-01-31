@@ -3355,7 +3355,7 @@ public class KB {
      */
     public TreeSet<String> preProcess(HashSet<String> forms) {
 
-        System.out.println("INFO in FormulaPreprocessor.preProcess(): ");
+        System.out.println("INFO in KB.preProcess(): ");
         TreeSet<String> newTreeSet = new TreeSet<String>();
         KBmanager mgr = KBmanager.getMgr();
         kbCache.kb = this;
