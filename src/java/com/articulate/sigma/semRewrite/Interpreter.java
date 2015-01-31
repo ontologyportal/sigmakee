@@ -1,5 +1,26 @@
 package com.articulate.sigma.semRewrite;
 
+/*
+Copyright 2014-2015 IPsoft
+
+Author: Adam Pease adam.pease@ipsoft.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA 
+*/
+
 import java.util.*;
 import java.io.*;
 import com.articulate.sigma.*;
@@ -93,6 +114,21 @@ public class Interpreter {
 
   /** *************************************************************
    */
+  public String toFOL(ArrayList<String> clauses) {
+      
+      StringBuilder sb = new StringBuilder();
+      sb.append("(and \n");
+      for (int i = 0; i < clauses.size(); i++) {
+          sb.append("  " + clauses.get(i));
+          if (i < clauses.size()-1)
+              sb.append("\n");
+      }
+      sb.append(")\n");
+      return sb.toString();
+  }
+  
+  /** *************************************************************
+   */
   public void interpret(String input) {
       
       Lexer lex = new Lexer(input);
@@ -116,7 +152,7 @@ public class Interpreter {
   
   /** *************************************************************
    */
-  public void interpret(ArrayList<CNF> inputs) {
+  public String interpret(ArrayList<CNF> inputs) {
       
       ArrayList<String> kifoutput = new ArrayList<String>();
       System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs); 
@@ -140,11 +176,11 @@ public class Interpreter {
                       bindingFound = true;
                       //System.out.println("INFO in Interpreter.interpret(): new input 1: " + newInput);
                       //System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
-                      //System.out.println("INFO in Interpreter.interpret(): r: " + r);
+                      System.out.println("INFO in Interpreter.interpret(): r: " + r);
                       RHS rhs = r.rhs.applyBindings(bindings);   
                       if (r.operator == Rule.RuleOp.IMP) {
                           CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
-                          //System.out.println("INFO in Interpreter.interpret(): bindings removed: " + bindingsRemoved);
+                          System.out.println("INFO in Interpreter.interpret(): input with bindings removed: " + bindingsRemoved);
                           if (!bindingsRemoved.empty()) {  // assert the input after removing bindings
                               if (rhs.cnf != null)
                                   bindingsRemoved.merge(rhs.cnf);
@@ -184,7 +220,9 @@ public class Interpreter {
           //System.out.println("INFO in Interpreter.interpret(): newinputs: " + newinputs);
           //System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs);
       }
-      System.out.println("INFO in Interpreter.interpret(): KIF: " + kifoutput);
+      String s = toFOL(kifoutput);
+      System.out.println("INFO in Interpreter.interpret(): KIF: " + s);
+      return s;
   }
   
   /** ***************************************************************
@@ -336,6 +374,7 @@ public class Interpreter {
    */
   public static void main(String[] args) {  
 
+      System.out.println("INFO in Interpreter.main()");
       Interpreter interp = new Interpreter();
       if (args != null && args.length > 0 && (args[0].equals("-s") || args[0].equals("-i"))) {
           KBmanager.getMgr().initializeOnce();
