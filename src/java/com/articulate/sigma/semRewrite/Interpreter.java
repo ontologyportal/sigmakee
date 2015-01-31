@@ -103,9 +103,19 @@ public class Interpreter {
           }
           else if (DependencyConverter.femaleNames.contains(pureword)) {
               results.add("sumo(Human," + purewords.get(pureword) + ")");                 
-          }                            
-          else
-              results.add("sumo(Entity," + purewords.get(pureword) + ")");    
+          }      
+          else {
+              String synset = WSD.getBestDefaultSense(pureword);
+              String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
+              if (!StringUtil.emptyString(sumo)) {
+                  if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
+                      sumo = sumo.substring(0,sumo.indexOf(" ")-1);
+                  }
+                  results.add("sumo(" + sumo + "," + purewords.get(pureword) + ")");
+              }
+              else
+                  results.add("sumo(Entity," + purewords.get(pureword) + ")");
+          }
       }
       //System.out.println("INFO in Interpreter.addWSD(): " + results);
       //results.addAll(clauses);
