@@ -102,7 +102,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         else
             chosenEngine = "EProver";
     }
- 
+    System.out.println("INFO in AskTell.jsp: Engine: " + chosenEngine);
     if (request.getParameter("maxAnswers") != null) 
         maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
     if (request.getParameter("timeout") != null)
@@ -117,7 +117,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         System.out.println("  text box input: " + stmt.trim());
 
     if (stmt == null || stmt.equalsIgnoreCase("null"))   // check if there is an attribute for stmt
-        stmt="(instance ?X Relation)";    
+        stmt = "(instance ?X Relation)";    
     else {
         if (stmt.trim().charAt(0) != '(')
             english = true;
@@ -143,8 +143,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             System.out.println("INFO in AskTell.jsp: kb.celt " + kb.celt);
             stmt = kb.celt.submit(stmt);
         }
+        System.out.println("INFO in AskTell.jsp: Completed translation.");
     }
-    System.out.println("INFO in AskTell.jsp: Completed translation.");
+    
     if (stmt == null || stmt.length() < 2 || stmt.trim().charAt(0) != '(') {
         syntaxError = true;
         status.append("<font color='red'>Error: Syntax Error or parsing failure in statement: " + englishStatement + "</font><br>\n");
@@ -180,7 +181,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             systemChosen = systemChosenLocal;
         else 
             systemChosen = systemChosenBuiltIn;
-    } else
+    } 
+    else
         systemChosen = systemChosenRemote;
 
     if (tstpFormat == null) 
@@ -198,6 +200,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula();
                 statement.theFormula = stmt;
+                System.out.println("INFO in AskTell.jsp: statement: " + stmt);
                 String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
