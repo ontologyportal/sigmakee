@@ -1,7 +1,6 @@
 <%@ include file="Prelude.jsp" %>
 
 <%
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -21,19 +20,16 @@ String sentCounter = request.getParameter("sentCounter");
 StringBuffer show = new StringBuffer();
 String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
 
-	
 if (sentence != null && sentCounter == null) {
-	if (WordNet.wn.isFile(sentence)==false) //This will fail if the input is not supposed to be a file path but contains a / or \
+	if (WordNet.wn.isFile(sentence)==false) // This will fail if the input is not supposed to be a file path but contains a / or \
 		show.append(WordNet.wn.sumoSentenceDisplay(sentence, sentence, params));
 	else 
 		show.append(WordNet.wn.sumoFileDisplay(sentence, "0", params));
 }
 
 if (sentence != null && sentCounter != null) 
-	show.append(WordNet.wn.sumoFileDisplay(sentence, sentCounter, params));
-	
+	show.append(WordNet.wn.sumoFileDisplay(sentence, sentCounter, params));	
 %>
-
 
 <html>
 <head>
@@ -65,7 +61,6 @@ if (sentence != null && sentCounter != null)
   <br>
   <input type="submit" value="Submit">
 </form> 
-
 
 <br>
  <%=show.toString() %><BR>
