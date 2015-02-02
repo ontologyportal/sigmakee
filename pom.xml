@@ -10,6 +10,7 @@
     <properties>
         <tomcat.version>7.0.47</tomcat.version>
         <src.dir>src/java</src.dir>
+        <test.src.dir>test/unit/java</test.src.dir>
     </properties>
 
     <dependencies>
@@ -43,6 +44,7 @@
     </dependencies>
     <build>
         <sourceDirectory>${src.dir}</sourceDirectory>
+        <testSourceDirectory>${test.src.dir}</testSourceDirectory>
         <pluginManagement>
             <plugins>
                 <plugin>
