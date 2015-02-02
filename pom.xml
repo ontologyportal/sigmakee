@@ -55,6 +55,13 @@
                                 <!-- this is relative to the pom.xml directory -->
                                 <directory>web/jsp</directory>
                             </resource>
+                            <resource>
+                                <directory>web/</directory>
+                                <includes>
+                                    <include>*.css</include>
+                                    <include>pixmaps/</include>
+                                </includes>
+                            </resource>
                         </webResources>
 
                     </configuration>
