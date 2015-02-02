@@ -199,31 +199,6 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         assertEquals(expected, actual);
     }
 
-    /**
-     * NOTE: If this test fails, you need to load Mid-level-ontology.kif. One way to do this would be to edit
-     * your config.xml file by putting this line under "<kb name="SUMO" >":
-     *    <constituent filename="/Users/geraldkurlandski/Documents/workspace_Sigma/run/KBs/Mid-level-ontology.kif" />
-     */
-    @Test
-    public void testComputeVariableTypesTypicalPart()     {
-        String stmt =   "(=> " +
-                            "(typicalPart ?X ?Y) " +
-                            "(subclass ?Y Object))";
-
-        Formula f = new Formula();
-        f.read(stmt);
-
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
-
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("SetOrClass", "Object+");
-        expected.put("?Y", set1);
-        expected.put("?X", Sets.newHashSet("Object+"));
-
-        assertEquals(expected, actual);
-    }
-
     @Test
     public void testComputeVariableTypesSubclassIf()     {
         String stmt =   "(=> " +
@@ -240,40 +215,6 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         expected.put("?Cougar", set1);
 
         assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testFindCaseRolesSimple()   {
-        String stmt = "( patient Driving ?ENTITY )";
-        Formula f = new Formula();
-        f.read(stmt);
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-
-        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, kb);
-
-        // TODO: not sure what to expect in this case with the unresolved variable
-        SumoProcess expected = new SumoProcess(kb, "patient", "Leaving ?ENTITY");
-
-        assertEquals(1, actualResult.size());
-        assertEquals(expected.toString(), actualResult.get(0).toString());
-    }
-
-    @Test
-    public void testFindCaseRolesSimple2()   {
-        String stmt = "(agent Leaving Human)";
-        Formula f = new Formula();
-        f.read(stmt);
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-
-        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, kb);
-
-        SumoProcess expected = new SumoProcess(kb, "agent", "Leaving Human");
-
-        assertEquals(1, actualResult.size());
-        assertEquals(expected.toString(), actualResult.get(0).toString());
-
-        String expectNLG = "A human leaves.";
-        assertEquals(expectNLG, actualResult.get(0).toNaturalLanguage());
     }
 
     @Test

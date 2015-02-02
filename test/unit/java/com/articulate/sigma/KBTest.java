@@ -25,12 +25,6 @@ public class KBTest extends SigmaTestBase {
         assertEquals(0, actual.size());
     }
 
-    @Test
-    public void testAskWithTwoRestrictionsDirect2() {
-        ArrayList<Formula> actual = kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Man");
-        assertNotEquals(0, actual.size());
-    }
-
     /**
      * Fails because askWithTwoRestrictions does not go up the class hierarchy.
      */
@@ -38,11 +32,6 @@ public class KBTest extends SigmaTestBase {
     public void testAskWithTwoRestrictionsIndirect2() {
         ArrayList<Formula> actual = kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Entity");
         assertEquals(0, actual.size());
-    }
-
-    @Test
-    public void testIsSubclass1()   {
-        assertTrue(kb.isSubclass("Boy", "Entity"));
     }
 
     @Test
