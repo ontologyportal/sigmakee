@@ -164,7 +164,7 @@ public class Lexer {
         tokenDefs.put(Clause,       Pattern.compile("/-"));
         tokenDefs.put(Negation,     Pattern.compile("-"));    
         tokenDefs.put(Plus,         Pattern.compile("\\+"));
-        tokenDefs.put(Var,          Pattern.compile("\\?[a-zA-Z][_a-z0-9_A-Z]*"));
+        tokenDefs.put(Var,          Pattern.compile("\\?[a-zA-Z][_a-z0-9_A-Z]*\\*?"));
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
         tokenDefs.put(Ident,        Pattern.compile("[a-zA-Z][_\\-a-z0-9_A-Z]*\\*?"));
