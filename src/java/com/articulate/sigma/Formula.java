@@ -1049,6 +1049,7 @@ public class Formula implements Comparable {
      * Test if the contents of the formula are equal to the
      * argument. Normalize all variables.
      */
+    @Override
 	public boolean equals(Object o) {
 
         if (!(o instanceof Formula))
