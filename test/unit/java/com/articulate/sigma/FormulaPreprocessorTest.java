@@ -376,7 +376,8 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         expected.read(expectedString);
 
         Formula actual = fp.addTypeRestrictionsNew(f, kb);
-        assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        assertEquals(expected, actual);
 
     }
 
@@ -394,7 +395,8 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         expected.read(expectedString);
 
         Formula actual = fp.addTypeRestrictionsNew(f, kb);
-        assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -416,6 +418,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
                 "(greaterThan ?PARTPROB ?NOTPARTPROB))) ";
         expected.read(expectedString);
         Formula actual = fp.addTypeRestrictionsNew(f, kb);
-        assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        assertEquals(expected, actual);
     }
 }
