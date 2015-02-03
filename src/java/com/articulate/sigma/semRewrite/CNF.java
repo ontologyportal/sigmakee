@@ -82,6 +82,14 @@ public class CNF {
         return clauses.size() == 0;
     }
 
+    /** *************************************************************
+     */
+    public void preProcessQuestionWords(List<String> qwords) {
+        
+        for (Disjunct d: clauses)
+            d.preProcessQuestionWords(qwords);
+    }
+    
     /** ***************************************************************
      */
     public void clearBound() {

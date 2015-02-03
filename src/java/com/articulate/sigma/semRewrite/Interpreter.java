@@ -174,10 +174,11 @@ public class Interpreter {
   
   /** *************************************************************
    */
-  public static void preProcessQuestionWords(ArrayList<CNF> inputs) {
+  public static void preProcessQuestionWords(CNF inputs) {
       
       List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
       List<String> qphrase = Lists.newArrayList("how much","how many","how often","how far","how come");
+      inputs.preProcessQuestionWords(qwords);
   }
   
   /** *************************************************************
@@ -489,6 +490,18 @@ public class Interpreter {
   
   /** ***************************************************************
    */
+  public static void testQuestionPreprocess() {
+      
+      String input = "advmod(is-2, Where-1), root(ROOT-0, is-2), nsubj(is-2, John-3).";
+      Lexer lex = new Lexer(input);
+      CNF cnfInput = CNF.parseSimple(lex);
+      Rule r = new Rule();
+      preProcessQuestionWords(cnfInput);
+      System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
+  }
+  
+  /** ***************************************************************
+   */
   public static void main(String[] args) {  
 
       System.out.println("INFO in Interpreter.main()");
@@ -506,7 +519,8 @@ public class Interpreter {
       else {
           //testUnify();
           //testInterpret();
-          testPreserve();
+          //testPreserve();
+          testQuestionPreprocess();
       }
   }
 }

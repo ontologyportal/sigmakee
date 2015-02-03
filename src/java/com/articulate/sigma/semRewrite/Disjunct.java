@@ -81,6 +81,14 @@ public class Disjunct {
             return false;
     }
   
+    /** *************************************************************
+     */
+    public void preProcessQuestionWords(List<String> qwords) {
+        
+        for (Clause c: disjuncts)
+            c.preProcessQuestionWords(qwords);
+    }
+    
     /** ***************************************************************
      */
     public void clearBound() {

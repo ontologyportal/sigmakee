@@ -98,6 +98,19 @@ public class Clause {
             return false;
     }
     
+    /** *************************************************************
+     */
+    public void preProcessQuestionWords(List<String> qwords) {
+        
+        for (String s: qwords) {
+            System.out.println("INFO in Clause.preProcessQuestionWords(): " + s + " " + arg1 + " " + arg2);
+            if (arg1.toLowerCase().matches(s.toLowerCase() + "-\\d+"))
+                arg1 = "?" + arg1;
+            if (arg2.toLowerCase().matches(s.toLowerCase() + "-\\d+"))
+                arg2 = "?" + arg2;
+        }
+    }
+    
     /** ***************************************************************
      * Apply variable substitutions to a clause  
      */
