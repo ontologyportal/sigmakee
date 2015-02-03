@@ -1,13 +1,14 @@
 package com.articulate.sigma;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * FormulaPreprocessor tests not focused on findExplicitTypes( ), but requiring that the KBs be loaded.
@@ -255,5 +256,166 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         expectedMap.put("agent", expectedList);
 
         assertEquals(expectedMap, actualMap);
+    }
+
+    //FIXME: Rename me
+    @Test
+    public void testFindTypes1() {
+        Map<String, HashSet<String>> expected = ImmutableMap.of("?ZONE", Sets.newHashSet("Object"), "?SLOPE", Sets.newHashSet("Quantity"), "?AREA", Sets.newHashSet("Object"));
+
+        String strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
+                " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+
+        assertEquals(expected, actualMap);
+
+    }
+
+    //FIXME: Rename me
+    @Test
+    public void testFindTypes2() {
+        Map<String, HashSet<String>> expected = Maps.newHashMap();
+        expected.put("?NOTPARTPROB", Sets.newHashSet("Quantity", "Entity"));
+        expected.put("?PART", Sets.newHashSet("SetOrClass", "Object+"));
+        expected.put("?PARTPROB", Sets.newHashSet("Quantity", "Entity"));
+        expected.put("?X", Sets.newHashSet("Object", "Entity"));
+        expected.put("?WHOLE", Sets.newHashSet("SetOrClass", "Object+"));
+        expected.put("?Y", Sets.newHashSet("Object", "Entity"));
+        expected.put("?Z", Sets.newHashSet("Object", "Entity"));
+
+        String strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
+                "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and " +
+                "(instance ?Y ?WHOLE) (part ?X ?Y))))) (equal ?NOTPARTPROB " +
+                "(ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) " +
+                "(part ?X ?Z))))))) (greaterThan ?PARTPROB ?NOTPARTPROB))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+
+        assertEquals(expected, actualMap);
+    }
+
+    //FIXME: Rename me
+    @Test
+    public void testFindTypes3() {
+        Map<String, HashSet<String>> expected = Maps.newHashMap();
+        expected.put("?REL", Sets.newHashSet("Entity"));
+
+        String strf = "(<=> (instance ?REL TransitiveRelation) " +
+                "(forall (?INST1 ?INST2 ?INST3) " +
+                "(=> (and (?REL ?INST1 ?INST2) " +
+                "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+
+        assertEquals(expected, actualMap);
+    }
+
+
+    //FIXME: Rename me
+    @Test
+    public void testFindTypes4() {
+        Map<String, HashSet<String>> expected = Maps.newHashMap();
+        expected.put("?SET2", Sets.newHashSet("Set", "Entity"));
+        expected.put("?SET1", Sets.newHashSet("Set", "Entity"));
+        expected.put("?ELEMENT", Sets.newHashSet("Entity"));
+
+        String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
+                "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        System.out.println("Formula: " + f);
+        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+
+        assertEquals(expected, actualMap);
+    }
+
+    @Test
+    public void testFindExplicit() {
+        Map<String, HashSet<String>> expected = Maps.newHashMap();
+        expected.put("?REL", Sets.newHashSet("TransitiveRelation"));
+
+        String formStr = "(<=> (instance ?REL TransitiveRelation) " +
+                "(forall (?INST1 ?INST2 ?INST3) " +
+                "(=> (and (?REL ?INST1 ?INST2) " +
+                "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
+        Formula f = new Formula(formStr);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-_]+)");
+        Matcher m = p.matcher(formStr);
+        m.find();
+
+        assertEquals(expected, fp.findExplicitTypesInAntecedent(f));
+    }
+
+    @Test
+    public void testAddTypes1() {
+        String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
+                "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        Formula expected = new Formula();
+        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?ELEMENT Entity) (instance ?SET1 Set)) " +
+                "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
+                "(equal ?SET1 ?SET2)))";
+        expected.read(expectedString);
+
+        Formula actual = fp.addTypeRestrictionsNew(f, kb);
+        assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+
+    }
+
+    @Test
+    public void testAddTypes2() {
+        String strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
+                " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        Formula expected = new Formula();
+        String expectedString = "(=> (and (instance ?ZONE Object) (instance ?SLOPE Quantity) (instance ?AREA Object)) " +
+                "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA) (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE)))";
+        expected.read(expectedString);
+
+        Formula actual = fp.addTypeRestrictionsNew(f, kb);
+        assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+    }
+
+    @Test
+    public void testAddTypes3() {
+        String strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
+                "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and " +
+                "(instance ?Y ?WHOLE) (part ?X ?Y))))) (equal (?NOTPARTPROB " +
+                "(ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) " +
+                "(part ?X ?Z))))))) (greaterThan ?PARTPROB ?NOTPARTPROB))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        Formula expected = new Formula();
+        String expectedString = "(=> (and (instance ?PART SetOrClass) (subclass ?PART Object) (instance ?PARTPROB Entity) (instance ?X Object) (instance ?WHOLE SetOrClass) (subclass ?WHOLE Object) (instance ?Y Object)) " +
+                "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
+                "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and (instance ?Y ?WHOLE) (part ?X ?Y)))))" +
+                "(equal (?NOTPARTPROB (ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) (part ?X ?Z))))))) " +
+                "(greaterThan ?PARTPROB ?NOTPARTPROB))) ";
+        expected.read(expectedString);
+        Formula actual = fp.addTypeRestrictionsNew(f, kb);
+        assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
     }
 }
