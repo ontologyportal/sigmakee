@@ -1,8 +1,6 @@
 package com.articulate.sigma;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -646,6 +644,7 @@ public class FormulaPreprocessor {
                 Formula fnew = null;
                 String theNewFormula = null;
                 Iterator<Formula> it = accumulator.iterator();
+                int counter = 0;
                 while (it.hasNext()) {
                     fnew = (Formula) it.next();
                     FormulaPreprocessor fp = new FormulaPreprocessor();
