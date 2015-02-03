@@ -93,12 +93,24 @@ public class Disjunct {
     }
     
     /** ***************************************************************
+     */
+    public void clearPreserve() {
+        
+        for (int i = 0; i < disjuncts.size(); i++) {
+            Clause c = disjuncts.get(i);
+            if (c.preserve)
+                c.preserve = false;
+        }
+    }
+    
+    /** ***************************************************************
      * If clause is not marked "preserve" then remove it if bound and
      * then reset the preserve flag.  Note this should only be called
      * on inputs, not rules.
      */
     public void removeBound() {
         
+        //System.out.println("INFO in Disjunct.removeBound(): before " + this);
         ArrayList<Clause> newdis = new ArrayList<Clause>();
         for (int i = 0; i < disjuncts.size(); i++) {
             Clause c = disjuncts.get(i);
@@ -109,15 +121,20 @@ public class Disjunct {
             }
         }
         disjuncts = newdis;
+        //System.out.println("INFO in Disjunct.removeBound(): after " + this);
     }
+    
     /** ***************************************************************
      * Copy bound flags to this set of clauses  
      */
     public void copyBoundFlags(Disjunct d) {
      
-        for (int i = 0; i < disjuncts.size(); i++)
+        for (int i = 0; i < disjuncts.size(); i++) {
             if (d.disjuncts.get(i).bound)
                 disjuncts.get(i).bound = true;
+            if (d.disjuncts.get(i).preserve)
+                disjuncts.get(i).preserve = true;
+        }
     }
     
     /** *************************************************************

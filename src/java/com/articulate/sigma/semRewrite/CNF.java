@@ -87,9 +87,27 @@ public class CNF {
     public void clearBound() {
         
         //System.out.println("INFO in CNF.clearBound(): before " + this);
+        ArrayList<Disjunct> newclauses = new ArrayList<Disjunct>();
         for (int i = 0; i < clauses.size(); i++) {
             Disjunct d = clauses.get(i);
-            d.clearBound();           
+            d.clearBound();       
+            if (!d.empty())
+                newclauses.add(d);
+        }
+        //System.out.println("INFO in CNF.clearBound(): after " + this);
+    }
+    
+    /** ***************************************************************
+     */
+    public void clearPreserve() {
+        
+        //System.out.println("INFO in CNF.clearBound(): before " + this);
+        ArrayList<Disjunct> newclauses = new ArrayList<Disjunct>();
+        for (int i = 0; i < clauses.size(); i++) {
+            Disjunct d = clauses.get(i);
+            d.clearPreserve();       
+            if (!d.empty())
+                newclauses.add(d);
         }
         //System.out.println("INFO in CNF.clearBound(): after " + this);
     }
