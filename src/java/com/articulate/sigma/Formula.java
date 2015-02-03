@@ -1049,8 +1049,11 @@ public class Formula implements Comparable {
      * Test if the contents of the formula are equal to the
      * argument. Normalize all variables.
      */
-	public boolean equals(Formula f) {
+	public boolean equals(Object o) {
 
+        if (!(o instanceof Formula))
+            return false;
+        Formula f = (Formula) o;
         String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
         String argString = Clausifier.normalizeVariables(f.theFormula).trim();
         return (thisString.equals(argString));
