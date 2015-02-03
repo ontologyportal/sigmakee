@@ -25,8 +25,9 @@ import com.articulate.sigma.*;
 
 public class Procedures {
     
-    // CELT classes which are not SUMO classes like "person"
-    // but not implemented yet, just using SUMO classes
+    /** ***************************************************************
+     * CELT classes which are not SUMO classes, like "person"
+     */
     public static String isCELTclass(Clause c) {
     
         KB kb = KBmanager.getMgr().getKB("SUMO");  
@@ -48,6 +49,8 @@ public class Procedures {
             return "false";
     }
    
+    /** ***************************************************************
+     */
     public static String isSubclass(Clause c) {
         
         KB kb = KBmanager.getMgr().getKB("SUMO");  
@@ -59,6 +62,8 @@ public class Procedures {
             return "false";
     }
     
+    /** ***************************************************************
+     */
     public static String isInstanceOf(Clause c) {
         
         KB kb = KBmanager.getMgr().getKB("SUMO");
