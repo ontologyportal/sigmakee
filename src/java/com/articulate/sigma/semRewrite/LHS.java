@@ -153,13 +153,6 @@ public class LHS {
         //System.out.println("INFO in LHS.parse(): returning: " + lhs);
         return lhs;
     }
-    
-/*
-String aMethod = "myMethod";
-Object iClass = thisClass.newInstance();   // get the method
-Method thisMethod = thisClass.getDeclaredMethod(aMethod, params); // call the method
-thisMethod.invoke(iClass, paramsObj);
-*/
   
     /** *************************************************************
      * A test method

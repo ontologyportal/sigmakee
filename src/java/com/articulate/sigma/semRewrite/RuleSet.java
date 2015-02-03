@@ -140,19 +140,5 @@ public class RuleSet {
     public static void main (String args[]) {
         
         testReadRuleSet();
-        /*String rule = "sense(212345678,?E), nsubj(?E,?X), dobj(?E,?Y) ==> " +
-                "{(exists (?X ?E ?Y) " + 
-                  "(and " +
-                    "(instance ?X Organization) " +
-                    "(instance ?Y Human)" +
-                    "(instance ?E Hiring)" +
-                    "(agent ?E ?X) " +
-                    "(patient ?E ?Y)))}.";
-        String rule = "neg(?X,?Y) ==> (not(?X,?Y)).";
-        Rule r = new Rule();
-        r = Rule.parseString(rule);
-        System.out.println(r.toString());
-        Clausifier.clausify(r.lhs);
-        */
     }
 }
