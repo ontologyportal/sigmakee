@@ -11,13 +11,8 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -56,6 +51,65 @@ public class EProver {
             e1.printStackTrace();
             System.out.println("Error in EProver.writeBatchFile()");
             System.out.println(e1.getMessage());
+        }
+    }
+
+    /** *************************************************************
+     * Add a new tptp file to EBatching.txt
+     * TODO: This function might not be necessary if we find a way to directly add assertion into opened inference engine (e_ltb_runner)
+     *  */
+    public static void addBatchConfig(String inputFilename) {
+
+        File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
+        ArrayList<String> ebatchfiles = new ArrayList<String>();
+        ebatchfiles.add(inputFilename);
+
+        // Collect existed tptp files
+        try {
+            FileInputStream fis = new FileInputStream(initFile);
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader in = new BufferedReader(isr);
+            String line = in.readLine();
+            while (line != null) {
+
+                String split = "include('";
+                int isEbatchFile = line.indexOf(split);
+                if (isEbatchFile != -1) {
+                    String ebatchfile = line.substring(split.length(), line.lastIndexOf("')"));
+                    ebatchfiles.add(ebatchfile);
+                }
+                line = in.readLine();
+            }
+            fis.close();
+            isr.close();
+            in.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in EProver.addBatchFile()");
+            System.out.println(e.getMessage());
+        }
+
+        // write existed tptp files and new tptpfiles (inputFilename) into EBatching.txt
+        try {
+            PrintWriter pw = new PrintWriter(initFile);
+            pw.println("% SZS start BatchConfiguration");
+            pw.println("division.category LTB.SMO");
+            pw.println("output.required Assurance");
+            pw.println("output.desired Proof Answer");
+            pw.println("limit.time.problem.wc 60");
+            pw.println("% SZS end BatchConfiguration");
+            pw.println("% SZS start BatchIncludes");
+            for (String ebatchfile : ebatchfiles) {
+                pw.println("include('" + ebatchfile + "').");
+            }
+            pw.println("% SZS end BatchIncludes");
+            pw.println("% SZS start BatchProblems");
+            pw.println("% SZS end BatchProblems");
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            System.out.println("Error in EProver.writeBatchFile()");
+            System.out.println(e.getMessage());
         }
     }
     
@@ -109,6 +163,39 @@ public class EProver {
         }
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
+
+    /** Create a running instance of EProver.
+     * Difference from EProver(String executable, String kbFile): move writeBatchConfig out of EProver(String executable)
+     * TODO: This function might not be necessary if we find a way to directly add assertion into opened inference engine (e_ltb_runner)
+     *
+     * @param executable
+     * @throws IOException
+     */
+    public EProver (String executable) throws IOException {
+
+        if (_eprover != null)
+            terminate();
+
+        String execString = executable + " --interactive "
+                + __dummyKBdir + File.separator + "EBatchConfig.txt "
+                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover "
+                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "epclextract";
+        System.out.println("INFO in EProver(): executing: " + execString);
+        _eprover = Runtime.getRuntime().exec(execString);
+        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
+        _error = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()));
+        System.out.println("INFO in EProver(): initializing process");
+
+        String line = _reader.readLine();
+        while (line != null) {
+            if (line.indexOf("Error:") != -1)
+                throw new IOException(line);
+            if (line.indexOf("# Enter job") != -1)
+                break;
+            line = _reader.readLine();
+        }
+        _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
+    }
     
     /** *************************************************************
      * Add an assertion.
@@ -128,13 +215,13 @@ public class EProver {
             _writer.flush();
             String line;
             do {
-                line = _reader.readLine();  
-                if (line.indexOf("Error:") != -1) 
-                    throw new IOException(line);                
+                line = _reader.readLine();
+                if (line.indexOf("Error:") != -1)
+                    throw new IOException(line);
                 System.out.println("INFO EProver(): Response: " + line);
                 result += line + "\n";
-                if (line.indexOf("# Processing finished") != -1) 
-                    break;                
+                if (line.indexOf("# Processing finished") != -1)
+                    break;
             } while (line != null);
         }
         catch (Exception ex) {
@@ -143,6 +230,62 @@ public class EProver {
             ex.printStackTrace();
         }
         return result;
+    }
+
+    /** *************************************************************
+     * Add the axiom's tptp formula to tptp file "userAssertionFilename"
+     *
+     * TODO: This function might not be necessary if we find a way to directly add assertion into opened inference engine (e_ltb_runner)
+     */
+    public boolean assertFormula(String userAssertionTPTP, KB kb, EProver eprover, ArrayList<Formula> parsedFormulas, boolean tptp) {
+
+        boolean allAdded = (eprover != null);
+        PrintWriter pw = null;
+        int axiomIndex = 0;
+        try {
+            pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
+            ArrayList<Formula> processedFormulas = new ArrayList<Formula>();
+            Iterator<Formula> it2 = parsedFormulas.iterator();
+            while (it2.hasNext()) {
+                axiomIndex++;
+                processedFormulas.clear();
+                Formula parsedF = it2.next();          // 1. Preproccess the formula.
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
+                if (processedFormulas.isEmpty())
+                    allAdded = false;
+                else {   // 2. Translate to TPTP.
+                    if (tptp) {
+                        SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                        stptp._f = parsedF;
+                        stptp.tptpParse(parsedF,false, kb, processedFormulas);
+                    }
+                    // 3. Write to new tptp file
+                    if (eprover != null) {
+                        List<String> tptpFormulas = parsedF.getTheTptpFormulas();
+                        Iterator<String> tptpIt = tptpFormulas.iterator();
+                        while (tptpIt.hasNext()) {
+                            String theTPTPFormula = tptpIt.next();
+                            pw.print("fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
+                            pw.println(",axiom,(" + theTPTPFormula + ")).");
+                        }
+                        pw.flush();
+                    }
+                }
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pw != null) pw.close();
+            }
+            catch (Exception ioe) {
+                ioe.printStackTrace();
+            }
+        }
+        return allAdded;
     }
 
     /** *************************************************************
