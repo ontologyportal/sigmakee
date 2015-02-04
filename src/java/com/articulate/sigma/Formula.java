@@ -1282,7 +1282,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Collect all the unquantified variables in a formula
      */
-    private ArrayList collectUnquantifiedVariables() {
+    public ArrayList<String> collectUnquantifiedVariables() {
         return collectVariables().get(1);
     }
 
