@@ -1,5 +1,8 @@
 package com.articulate.sigma;
 
+import TPTPWorld.InterfaceTPTP;
+import TPTPWorld.SystemOnTPTP;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -8,11 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
-
-import TPTPWorld.*;
-
-import com.articulate.sigma.KB;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -68,6 +66,33 @@ public class InferenceTestSuite {
             System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: " + "" + " expected: " + (String) answerList.get(j));
             if (!pp.equalsAnswer(j,(String) answerList.get(j)))
                 return true;
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     * Compare the expected answers to the returned answers.  Return
+     * true if no answers are found in E or if any pair of answers
+     * is different.  Return false otherwise.
+     *
+     * TODO: If both answersList and tpp.bindings are a lit of entities,
+     *       we enforce that all entity pair should be exactly the same;
+     */
+    private static boolean compareAnswers(TPTP3ProofProcessor tpp, ArrayList answerList) {
+
+        if (tpp == null || tpp.proof.size() == 0)
+            return true;         // return true if no answers are found in the inference engine
+        if (answerList != null && !answerList.isEmpty()) {
+            if (answerList.get(0).equals("yes"))
+                return tpp.proof.size() > 0;   // return false if "yes" is expected, and we do find a contradiction (answer)
+            else {
+                for (int i = 0; i < tpp.bindings.size(); i++) {
+                    String actualRes = tpp.bindings.get(i);
+                    if (!answerList.get(i).equals(actualRes))
+                        return true;    // return true if any pair of answers is different
+                }
+            }
+
         }
         return false;
     }
@@ -307,10 +332,12 @@ public class InferenceTestSuite {
                 String rfn = f.getName();
                 String resultsFilename = rfn.substring(0,rfn.length()-3) + "-res.html";
                 File resultsFile = new File(outputDir, resultsFilename);
+                TPTP3ProofProcessor tpp = null;
                 try {
                     fw = new FileWriter(resultsFile);
                     pw = new PrintWriter(fw);
-                    pw.println(HTMLformatter.formatProofResult(proof,query,processedStmt,lineHtml,kb.name,language));
+                    tpp = TPTP3ProofProcessor.parseProofOutput(proof);
+                    pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, query, lineHtml, kb.name, language));
                 }
                 catch (java.io.IOException e) {
                     throw new IOException("Error writing file " + resultsFile.getCanonicalPath());
@@ -325,9 +352,9 @@ public class InferenceTestSuite {
                 }
                 boolean different = true;
                 if (proof != null) {
-                    BasicXMLparser res = new BasicXMLparser(proof);
-                    ProofProcessor pp = new ProofProcessor(res.elements);
-                    different = compareAnswers(pp,answerList);
+        //            BasicXMLparser res = new BasicXMLparser(proof);
+        //            ProofProcessor pp = new ProofProcessor(res.elements);
+                    different = compareAnswers(tpp,answerList);
                 }
                 String resultString = "";
                 if (different) {
