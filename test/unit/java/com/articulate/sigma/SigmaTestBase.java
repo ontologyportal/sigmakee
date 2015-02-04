@@ -1,8 +1,5 @@
 package com.articulate.sigma;
 
-import edu.dlsu.SUMOs.util.ReadWriteTextFile;
-import sun.misc.IOUtils;
-
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -40,7 +37,7 @@ public class SigmaTestBase {
         try {
             URI uri = theClass.getResource(path).toURI();
             File configFile = new File(uri);
-            String contents = ReadWriteTextFile.getContents(configFile);
+            String contents = StringUtil.getContents(configFile);
             contents = contents.replaceAll("\\$SIGMA_HOME", SIGMA_HOME);
             xmlReader = new BufferedReader(new StringReader(contents));
 
