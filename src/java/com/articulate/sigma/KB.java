@@ -1359,9 +1359,14 @@ public class KB {
                 Iterator<String> it2 = newFormulas.iterator();
                 Formula f = null;
                 while (it2.hasNext()) {
-                    f = formulaMap.get(it2.next());
-                    if (f != null && StringUtil.isNonEmptyString(f.theFormula))
-                        formulaMap.put(f.theFormula.intern(), f);                        
+
+                    String newformulaStr = it2.next();
+                    Formula newFormula = kif.formulaMap.get(newformulaStr);
+                    f = formulaMap.get(newformulaStr);
+                    if (f == null)      // If kb.formulaMap does not contain the new formula, should we add it into the kb?
+                        formulaMap.put(newFormula.theFormula.intern(), newFormula);
+                    else if (StringUtil.isNonEmptyString(f.theFormula))
+                        formulaMap.put(f.theFormula.intern(), f);
                 }
             }
         }       
@@ -1483,6 +1488,8 @@ public class KB {
      * where the body should be " Formula has been added to the session
      * database" if all went well.
      *
+     * TODO: If we find a way to directly add assertions into opened inference engine, we can roll back to 1.111 version
+     *
      * @param input The String representation of a SUO-KIF Formula.
      *
      * @return A String indicating the status of the tell operation.
@@ -1502,9 +1509,13 @@ public class KB {
             return result;
         }
         try {  // Make the pathname of the user assertions file.
+            String userAssertionKIF = this.name + _userAssertionsString;
+            String userAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
+
             File dir = new File(this.kbDir);
-            File file = new File(dir, (this.name + _userAssertionsString));
-            String filename = file.getCanonicalPath();
+            File kiffile = new File(dir, (userAssertionKIF));       // create kb.name_UserAssertions.kif
+            File tptpfile = new File(dir, (userAssertionTPTP));     // create kb.name_UserAssertions.tptp
+            String filename = kiffile.getCanonicalPath();
             ArrayList<Formula> formulasAlreadyPresent = merge(kif, filename);
             if (!formulasAlreadyPresent.isEmpty()) {
                 String sf = ((Formula)formulasAlreadyPresent.get(0)).sourceFile;
@@ -1527,8 +1538,10 @@ public class KB {
                 }
                 if (!parsedFormulas.isEmpty()) {
                     if (!constituents.contains(filename)) {                            
-                        if (file.exists())  // 3. If the assertions file exists, delete it.
-                            file.delete();
+                        if (kiffile.exists())  // 3. If the assertions file exists, delete it.
+                            kiffile.delete();
+                        if (tptpfile.exists())
+                            tptpfile.delete();
                         constituents.add(filename);
                         //mgr.writeConfiguration();
                     }
@@ -1540,38 +1553,13 @@ public class KB {
                         parsedF.sourceFile = filename;
                     }
                     result = "The formula has been added for browsing";
-                    boolean allAdded = (eprover != null);
-                    ArrayList<Formula> processedFormulas = new ArrayList<Formula>();
-                    Iterator<Formula> it2 = parsedFormulas.iterator();
-                    while (it2.hasNext()) {
-                        processedFormulas.clear();
-                        Formula parsedF = it2.next();          // 5. Preproccess the formula.   
-                        FormulaPreprocessor fp = new FormulaPreprocessor();
-                        processedFormulas.addAll(fp.preProcess(parsedF,false, this));
-                        errors.addAll(parsedF.getErrors());
-                        if (processedFormulas.isEmpty()) 
-                            allAdded = false;                            
-                        else {   // 6. Translate to TPTP.                            
-                            if (!mgr.getPref("TPTP").equalsIgnoreCase("no")) {
-                            	SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                            	stptp._f = parsedF;
-                            	stptp.tptpParse(parsedF,false, this, processedFormulas);
-                            }
-                            // 7. If there is an inference engine, assert the formula to the
-                            // inference engine's database.
-                            if (eprover != null) {
-                                String ieResult = null;
-                                Formula processedF = null;
-                                Iterator<Formula> it3 = processedFormulas.iterator();
-                                while (it3.hasNext()) {
-                                    processedF = it3.next();
-                                    ieResult = eprover.assertFormula(processedF.theFormula);
-                                    if (ieResult.indexOf("Formula has been added") < 0)
-                                        allAdded = false;
-                                }
-                            }
-                        }
-                    }
+                    // 5. Write the formula to the kb.name_UserAssertions.tptp
+                    boolean allAdded = eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover,
+                            parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                    // 6. Add the new tptp file into EBatching.txt
+                    eprover.addBatchConfig(tptpfile.getCanonicalPath());
+                    // 7. Reload eprover
+                    eprover = new EProver(mgr.getPref("inferenceEngine"));
                     result += (allAdded ? " and inference" : " but not for local inference");
                 }
             }
@@ -1580,11 +1568,6 @@ public class KB {
             ioe.printStackTrace();
             System.out.println(ioe.getMessage());
             result = ioe.getMessage();
-        }
-        catch (ParseException pe) {
-            pe.printStackTrace();
-            System.out.println(pe.getMessage());
-            result = pe.getMessage();
         }
         return result;
     }
@@ -3333,8 +3316,8 @@ public class KB {
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 skb.writeTPTPFile(tptpFilename, true);
-                if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")) && vFileSaved) 
-                	eprover = new EProver(mgr.getPref("inferenceEngine"),tptpFilename);          
+                if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")) && vFileSaved)
+                	eprover = new EProver(mgr.getPref("inferenceEngine"),tptpFilename);
             }
         }
         catch (Exception e) {
