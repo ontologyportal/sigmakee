@@ -191,7 +191,7 @@ public class LanguageFormatter {
      *  @param depth An int indicating the level of nesting, for control of indentation.
      *  @return A String, which is the paraphrased statement.
      */
-    private String nlStmtPara(String stmt, boolean isNegMode, int depth) {
+    protected String nlStmtPara(String stmt, boolean isNegMode, int depth) {
 
         //System.out.println("INFO in LanguageFormatter.nlStmtPara(): stmt: " + stmt);
         if (Formula.empty(stmt)) {

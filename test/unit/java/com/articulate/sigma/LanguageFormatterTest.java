@@ -1,6 +1,14 @@
 package com.articulate.sigma;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -109,6 +117,29 @@ public class LanguageFormatterTest extends SigmaTestBase {
         String actual = LanguageFormatter.filterHtml(input);
         String expected = "if for all an entity the entity is an element of a set if and only if the entity is an element of another set, " +
                 "then the set is equal to the other set";
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testStatementParse() {
+        String input = "(exists (?D ?H) (and (instance ?D Driving) (instance ?H Human) (agent ?D ?H)))";
+        LanguageFormatter lf = new LanguageFormatter(input, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage");
+        String actual = lf.nlStmtPara(input, false, 0);
+        assertEquals("", actual);
+    }
+
+    @Test
+    public void testVariableReplace() {
+        String form = "there exist ?D and ?H such that ?D is an &%instance$\"instance\" of &%Driving$\"driving\" and ?H is an &%instance$\"instance\" of &%Human$\"human\" and ?H is an &%agent$\"agent\" of ?D";
+        HashMap<String, HashSet<String>> instanceMap = Maps.newHashMap();
+        instanceMap.put("?D", Sets.newHashSet("Entity", "Process"));
+        instanceMap.put("?H", Sets.newHashSet("Entity", "Agent"));
+        HashMap<String, HashSet<String>> classMap = Maps.newHashMap();
+
+        String expected = "there exist &%Process$\"a  process\" and &%Agent$\"an agent\" such that &%Process$\"the process\" is an &%instance$\"instance\" of &%Driving$\"driving\" and &%Agent$\"the agent\" is an &%instance$\"instance\" of &%Human$\"human\" and &%Agent$\"the agent\" is an &%agent$\"agent\" of &%Process$\"the process\"";
+
+        String actual = LanguageFormatter.variableReplace(form, instanceMap, classMap, kb, "EnglishLanguage");
+
         assertEquals(expected, actual);
     }
 
