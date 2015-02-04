@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 
-public class HtmlFormatterTest extends SigmaTestBase {
+public class HtmlFormatterTest extends UnitTestBase {
 
     /**
      * This test replicates the two tests found in Htmlformatter.main( ).
@@ -15,7 +15,7 @@ public class HtmlFormatterTest extends SigmaTestBase {
     public void testTermIntersection()   {
 
         // Testing termIntersection().
-        ArrayList<Formula> forms = KButilities.termIntersection(kb, "ShapeChange", "ShapeAttribute");
+        ArrayList<Formula> forms = KButilities.termIntersection(SigmaTestBase.kb, "ShapeChange", "ShapeAttribute");
 
         String expectedFormula = "(=>" +
                 " (and" +
@@ -53,7 +53,7 @@ public class HtmlFormatterTest extends SigmaTestBase {
         assertEquals(f.theFormula, forms.get(0).theFormula);
 
         // Testing formatFormulaList( )
-        String actualHtml = HTMLformatter.formatFormulaList(forms,"",  kb, "EnglishLanguage",  "SUO-KIF", 0, 0, "");
+        String actualHtml = HTMLformatter.formatFormulaList(forms,"",  SigmaTestBase.kb, "EnglishLanguage",  "SUO-KIF", 0, 0, "");
 
         String expectedHtml = "<tr><td width=\"50%\" valign=\"top\">(=><br>\n" +
                 "&nbsp;&nbsp;&nbsp;&nbsp;(and<br>\n" +

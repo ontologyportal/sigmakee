@@ -14,9 +14,9 @@ import static org.junit.Assert.*;
 
 /**
  * LanguageFormatter tests NOT targeted toward the htmlParaphrase( ) method.
- * See LanguageFormatterHtmlParaphraseTest for tests that invokce this method.
+ * See LanguageFormatterHtmlParaphraseTest for tests that invoice this method.
  */
-public class LanguageFormatterTest extends SigmaTestBase {
+public class LanguageFormatterTest extends UnitTestBase {
 
     @Test(expected=IllegalArgumentException.class)
     public void testReadKeywordMapNull() {
@@ -38,7 +38,7 @@ public class LanguageFormatterTest extends SigmaTestBase {
      */
     @Test
     public void testReadKeywordMapCorrectParameter()    {
-        LanguageFormatter.readKeywordMap(KB_PATH);
+        LanguageFormatter.readKeywordMap(SigmaTestBase.KB_PATH);
     }
 
     @Test
@@ -52,7 +52,7 @@ public class LanguageFormatterTest extends SigmaTestBase {
     @Test(expected=IllegalArgumentException.class)
     public void testFormatListNoLanguage()   {
         String input = "?A ?B ?C";
-        String actual = LanguageFormatter.formatList(input, "");
+        LanguageFormatter.formatList(input, "");
     }
 
     @Test

@@ -1,8 +1,6 @@
 package com.articulate.sigma;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -11,32 +9,20 @@ import java.util.*;
 import static org.junit.Assert.assertEquals;
 
 /**
- * These tests follow PredVarInst.test( ), with the exception of that method's call to FormulaPreprocessor.
- * findExplicitTypesInAntecedent( ), which has been put into the FormulaPreprocessorTest class.
- * TODO: See how relevant the line "if (kb.kbCache.transInstOf("exhaustiveAttribute","VariableArityRelation"))"
- * at the start of the original PredVarInst.test( ) method is. Should these tests somehow reflect that?
  */
-public class PredVarInstIntegrationTest extends SigmaTestBase  {
-    private static String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
-            "(forall (?INST1 ?INST2 ?INST3) " +
-            "(=> (and (?REL ?INST1 ?INST2) " +
-            "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-
-    private static String stmt2 = "(=> " +
-            "(instance ?JURY Jury) " +
-            "(holdsRight " +
-            "(exists (?DECISION) " +
-            "(and " +
-            "(instance ?DECISION LegalDecision) " +
-            "(agent ?DECISION ?JURY))) ?JURY))";
+public class PredVarInstIntegrationTest extends IntegrationTestBase  {
 
     @Test
     @Ignore
     public void testInstantiatePredVars1()     {
-        Formula f = new Formula();
-        f.read(stmt1);
+            String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
+                    "(forall (?INST1 ?INST2 ?INST3) " +
+                    "(=> (and (?REL ?INST1 ?INST2) " +
+                    "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
+            Formula f = new Formula();
+            f.read(stmt1);
 
-        ArrayList<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
+        ArrayList<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
 
         String expectedStr = "(<=>\n" +
                 "  (instance lessThanOrEqualTo TransitiveRelation)\n" +

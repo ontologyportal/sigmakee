@@ -1,7 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.SigmaTestBase;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Test;
@@ -13,12 +11,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * FormulaPreprocessor tests not focused on findExplicitTypes( ), but requiring that the KBs be loaded.
  */
-public class FormulaPreprocessorIntegrationTest extends SigmaTestBase {
+public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
 
     /**
      * NOTE: If this test fails, you need to load Mid-level-ontology.kif. One way to do this would be to edit
      * your config.xml file by putting this line under "<kb name="SUMO" >":
-     *    <constituent filename="/Users/geraldkurlandski/Documents/workspace_Sigma/run/KBs/Mid-level-ontology.kif" />
+     *    <constituent filename=".../Mid-level-ontology.kif" />
      */
     @Test
     public void testComputeVariableTypesTypicalPart()     {
@@ -30,7 +28,7 @@ public class FormulaPreprocessorIntegrationTest extends SigmaTestBase {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("SetOrClass", "Object+");

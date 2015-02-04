@@ -15,13 +15,13 @@ import static org.junit.Assert.assertEquals;
  * TODO: See how relevant the line "if (kb.kbCache.transInstOf("exhaustiveAttribute","VariableArityRelation"))"
  * at the start of the original PredVarInst.test( ) method is. Should these tests somehow reflect that?
  */
-public class PredVarInstTest extends SigmaTestBase  {
-    private static String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
+public class PredVarInstTest extends UnitTestBase  {
+    private static final String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
             "(forall (?INST1 ?INST2 ?INST3) " +
             "(=> (and (?REL ?INST1 ?INST2) " +
             "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
 
-    private static String stmt2 = "(=> " +
+    private static final String stmt2 = "(=> " +
             "(instance ?JURY Jury) " +
             "(holdsRight " +
             "(exists (?DECISION) " +
@@ -33,7 +33,7 @@ public class PredVarInstTest extends SigmaTestBase  {
     @Test
     public void testGatherPredVars1()     {
         Formula f = new Formula();
-        f.read(stmt1);
+        f.read(PredVarInstTest.stmt1);
 
         Set<String> actual = PredVarInst.gatherPredVars(f);
 
@@ -44,7 +44,7 @@ public class PredVarInstTest extends SigmaTestBase  {
     @Test
     public void testGatherPredVars2()     {
         Formula f = new Formula();
-        f.read(stmt2);
+        f.read(PredVarInstTest.stmt2);
 
         Set<String> actual = PredVarInst.gatherPredVars(f);
 
@@ -55,9 +55,9 @@ public class PredVarInstTest extends SigmaTestBase  {
     @Test
     public void testFindPredVarTypes()     {
         Formula f = new Formula();
-        f.read(stmt1);
+        f.read(PredVarInstTest.stmt1);
 
-        Map<String, HashSet<String>> actual = PredVarInst.findPredVarTypes(f, kb);
+        Map<String, HashSet<String>> actual = PredVarInst.findPredVarTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?REL", Sets.newHashSet("Entity"));
@@ -67,11 +67,11 @@ public class PredVarInstTest extends SigmaTestBase  {
     @Test
     public void testInstantiatePredVars2()     {
         Formula f = new Formula();
-        f.read(stmt2);
+        f.read(PredVarInstTest.stmt2);
 
-        ArrayList<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
+        ArrayList<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
 
-        List<String> expected = Lists.newArrayList();
+        ArrayList<Formula> expected = Lists.newArrayList();
         assertEquals(expected, actual);
     }
 

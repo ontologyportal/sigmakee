@@ -7,16 +7,16 @@ import static org.junit.Assert.assertEquals;
 /**
  * LanguageFormatter tests specifically targeted toward the htmlParaphrase( ) method.
  */
-public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
+public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
 
     @Test
     public void testHtmlParaphraseDomainDatePhysical()     {
         String stmt = "(domain date 1 Physical)";
 
         String expectedResult = "the number 1 argument of date is an instance of physical";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -32,9 +32,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
 
         String expectedResult = "if an entity is an instance of object attitude and the entity another entity and a third entity, " +
                 "then the third entity is an instance of physical";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -44,9 +44,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
 
         String expectedResult = "an object is an instance of substance if and only if there exists an entity such that " +
                 "the entity is an instance of physical state and the entity is an attribute of the object";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -55,9 +55,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
         String stmt = "(subclass BiologicallyActiveSubstance Substance)";
 
         String expectedResult = "biologically active substance is a subclass of substance";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -66,9 +66,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
         String stmt = "(partition Substance PureSubstance Mixture)";
 
         String expectedResult = "substance is exhaustively partitioned into pure substance and mixture";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -81,9 +81,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
 
         String expectedResult = "if a physical is an instance of object and the physical is partly located in an object, " +
                 "then there exists another physical such that the other physical is a part of the physical and the other physical is located at the object";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -96,9 +96,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
 
         String expectedResult = "a physical is an instance of physical if and only if there exist an entity and " +
                 "a time position such that the physical is located at the entity and the physical exists during the time position";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -109,9 +109,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
         String stmt = "( patient Leaving ?ENTITY )";
 
         String expectedResult = "an entity is a patient of Leaving";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -120,9 +120,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
         String stmt = "(names \"John\" ?H)";
 
         String expectedResult = "an entity has name \"John\"";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -131,9 +131,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
         String stmt = "(not (names \"John\" ?H))";
 
         String expectedResult = "an entity doesn't have name \"John\"";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -147,9 +147,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
 
         String expectedResult = "there exist a process and an agent such that the process is an instance of driving and " +
                 "the agent is an instance of human and the agent is an agent of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -164,9 +164,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
 
         String expectedResult = "there exist a process and an agent such that the process is an instance of driving and " +
                 "the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -185,9 +185,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "the agent is an instance of human and the agent has name \"John\" and " +
                 "the object is an instance of Automobile and the agent is an agent of the process and " +
                 "the object is an instrument for the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -198,9 +198,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "           (subclass ?Cougar Carnivore))";
 
         String expectedResult = "if a set or class is a subclass of feline, then the set or class is a subclass of carnivore";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -210,9 +210,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "           (time JohnsBirth (MonthFn ?M (YearFn 2000))))";
 
         String expectedResult = "there exists a kind of month such that JohnsBirth exists during the month a kind of month";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -223,16 +223,16 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
      */
     @Test
     public void testWrongNbrParens()     {
-        System.out.println("About to perform unit test that throws an IndexOutOfBoundsException.");
+        System.out.println("\nAbout to perform unit test that throws an IndexOutOfBoundsException.");
         System.out.flush();
         String stmt =   "(exists (?Place) " +
                 "           (=> " +
                                 // The next line has too many right parens.
                 "               (instance (GovernmentFn ?Place) StateGovernment)) " +
                 "               (instance ?Place StateOrProvince))) ";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         String expectedResult = "there exists a geopolitical area such that the geopolitical area is an instance of state or province";
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
         System.out.println("Finished performing unit test that throws an IndexOutOfBoundsException.");
@@ -245,9 +245,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "           (=> " +
                 "               (instance (GovernmentFn ?Place) StateGovernment) " +
                 "               (instance ?Place StateOrProvince))) ";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         String expectedResult = "there exists a geopolitical area such that if the government of the geopolitical area is an instance of StateGovernment, " +
                 "then the geopolitical area is an instance of state or province";
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
@@ -264,9 +264,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
 
         String expectedResult = "if for all an entity the entity is an element of a set if and only if the entity is an element of another set, " +
                 "then the set is equal to the other set";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -300,9 +300,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "is an attribute of the object is less than the beginning of the year 2001 and the agent is an instance of agent and " +
                 "the object is an instance of FactualText and the physical is an instance of classifying and the agent is an agent of the physical and " +
                 "the object is a patient of the physical";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -331,9 +331,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                (patient ?event ?document)))";
 
         String expectedResult = "there exist an agent, an object and a physical such that USTopSecret is an attribute of the object holds during the end of the time of existence of the physical and the beginning of the time of existence of USTopSecret is an attribute of the object is less than the beginning of the year 2001 and the agent is an instance of agent and the object is an instance of FactualText and the physical is an instance of classifying and the agent is an agent of the physical and the object is a patient of the physical";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -356,9 +356,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                (destination ?event ?shop)))";
 
         String expectedResult = "there exist a process, an agent and an entity such that the process is an instance of transportation and Hungry is an attribute of the agent and Old is an attribute of the agent and Tall is an attribute of the agent and Thirsty is an attribute of the agent and the agent is an instance of Man and the entity is an instance of RetailStore and the agent is an agent of the process and the process ends at the entity";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -381,9 +381,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                (patient ?event ?card)))";
 
         String expectedResult = "there exist an entity and a process such that Female is an attribute of Mary-1 and Male is an attribute of Robert-1 and Mary-1 is an instance of human and Robert-1 is an instance of human and the entity is an instance of BankCard and Robert-1 is an agent of the process and the process ends at Mary-1 and the process is an instance of directing and the entity is a patient of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -402,9 +402,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                (patient ?event ?telephone)))";
 
         String expectedResult = "there exist a process and an entity such that Bell is an instance of human and Bell is an agent of the process and the process is an instance of process and the entity is an instance of Telephone and the entity is a patient of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -423,9 +423,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                (patient ?event ?city)))";
 
         String expectedResult = "there exist an agent, an entity and a process such that the agent is an instance of agent and the entity is an instance of city and the process is an instance of making and the agent is an agent of the process and the entity is a patient of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -451,9 +451,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                (instance ?event2 Drinking)))";
 
         String expectedResult = "there exist an object, a process and a physical such that Male is an attribute of Robert-1 and there exists another object such that the physical is located at the other object and the other object is On to the object and Robert-1 is an instance of human and the object is an instance of Desk and Robert-1 is an agent of the process and the process is an instance of eating and Robert-1 is an agent of the physical and the physical is an instance of drinking";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -461,7 +461,7 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
      * Ideal: "If John sees a hamburger then he wants it."
      */
     @Test
-    public void testHtmlParaphraseIfJohnSeeHambugerThenWants()     {
+    public void testHtmlParaphraseIfJohnSeeHamburgerThenWants()     {
         String stmt =   "(forall \n" +
                 "              (?event ?hamburger) \n" +
                 "              (=> \n" +
@@ -479,9 +479,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                  (wants John-1 ?hamburger))))";
 
         String expectedResult = "for all a process and a physical if Male is an attribute of John-1 and John-1 is an instance of human and John-1 experiences the process and the process is an instance of seeing and the physical is an instance of Food and the physical is a patient of the process, then Male is an attribute of John-1 and John-1 is an instance of human and the physical is an instance of object and John-1 wants the physical";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -514,9 +514,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                  (patient ?event2 ?book)))))";
 
         String expectedResult = "for all an entity and a process if Male is an attribute of John-1 and Female is an attribute of Mary-1 and John-1 is an instance of human and Mary-1 is an instance of human and the entity is an instance of book and Mary-1 is an agent of the process and the process ends at John-1 and the process is an instance of giving and the entity is a patient of the process, then there exists another process such that Male is an attribute of John-1 and John-1 is an instance of human and the entity is an instance of object and John-1 is an agent of the other process and the other process is an instance of reading and the entity is a patient of the other process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -533,9 +533,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "               (possesses John-1 ?dog)))";
 
         String expectedResult = "there exists an object such that the object is an instance of canine and John-1 is an instance of human and Male is an attribute of John-1 and John-1 possesses the object";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -552,9 +552,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "               (agent ?event John-1)))";
 
         String expectedResult = "there exists a process such that the process is an instance of Arriving and Male is an attribute of John-1 and John-1 is an instance of human and John-1 is an agent of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -576,9 +576,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "               (destination ?event Mary-1)))";
 
         String expectedResult = "there exist an entity and a process such that the process is an instance of giving and Male is an attribute of John-1 and John-1 is an instance of human and John-1 is an agent of the process and the entity is an instance of BankCard and the entity is a patient of the process and Female is an attribute of Mary-1 and Mary-1 is an instance of human and the process ends at Mary-1";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -608,9 +608,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                    (agent ?event ?dog)))";
 
         String expectedResult = "there exist an entity, an agent and a process such that for all an object if the object is an instance of canine and the object is not equal to the agent, then a quantity is greater than another quantity and the age of the agent is the quantity and the age of the object is the other quantity and the entity is an instance of Bank-FinancialOrganization and the agent is an instance of canine and the process is an instance of motion and the entity is a patient of the process and the agent is an agent of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -632,9 +632,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                  (patient ?event ?bank)))";
 
         String expectedResult = "there exist an entity and a process such that FullyFormed is an attribute of MrMiller and Male is an attribute of MrMiller and MrMiller is an instance of human and \"\"\"\" has name MrMiller and the entity is an instance of Bank-FinancialOrganization and MrMiller is an agent of the process and the process is an instance of motion and the entity is a patient of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -652,9 +652,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                    (destination ?event Sudan)))";
 
         String expectedResult = "there exist an agent and a process such that the process is an instance of transportation and Male is an attribute of the agent and the agent is an instance of human and the agent is an agent of the process and the process ends at Sudan";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -675,9 +675,9 @@ public class LanguageFormatterHtmlParaphraseTest extends SigmaTestBase  {
                 "                (agent ?event ?waiter)))";
 
         String expectedResult = "there exist an entity, a process, , , another entity and an agent such that the entity is an instance of artifact and the process is an instance of Pouring and the other entity is an instance of Food and ServicePosition is an attribute of the agent and the process ends at the entity and the other entity is a patient of the process and the agent is an agent of the process";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 

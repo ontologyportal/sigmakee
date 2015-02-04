@@ -6,7 +6,7 @@ import static org.junit.Assert.assertEquals;
 
 // TODO: Test the WordNet class more thoroughly. Start with the test methods called in main( ).
 
-public class WordNetTest extends SigmaTestBase {
+public class WordNetTest extends UnitTestBase {
 
 
     @Test

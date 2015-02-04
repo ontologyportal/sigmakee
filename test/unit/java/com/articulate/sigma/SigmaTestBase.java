@@ -1,8 +1,11 @@
 package com.articulate.sigma;
 
-import org.junit.BeforeClass;
+import edu.dlsu.SUMOs.util.ReadWriteTextFile;
+import sun.misc.IOUtils;
 
-import java.io.File;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class SigmaTestBase {
     static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
@@ -10,14 +13,50 @@ public class SigmaTestBase {
 
     protected static KB kb;
 
-    @BeforeClass
-    public static void setup()  {
-        try {
-            KBmanager.getMgr().initializeOnce();
+    protected static void doSetUp(BufferedReader reader)    {
+        KBmanager manager = KBmanager.getMgr();
+
+        SimpleElement configuration = null;
+
+        if(! manager.initialized) {
+            try {
+                SimpleDOMParser sdp = new SimpleDOMParser();
+                configuration = sdp.parse(reader);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            manager.initializing = true;
+            KBmanager.getMgr().setConfiguration(configuration);
+            manager.initialized = true;
+            manager.initializing = false;
         }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
+
         kb = KBmanager.getMgr().getKB("SUMO");
     }
+
+    protected static BufferedReader getXmlReader(String path, Class theClass)  {
+        BufferedReader xmlReader = null;
+        try {
+            URI uri = theClass.getResource(path).toURI();
+            File configFile = new File(uri);
+            String contents = ReadWriteTextFile.getContents(configFile);
+            contents = contents.replaceAll("\\$SIGMA_HOME", SIGMA_HOME);
+            xmlReader = new BufferedReader(new StringReader(contents));
+
+            //xmlReader = new BufferedReader(new InputStreamReader(theClass.getResourceAsStream(path)));
+        }
+        catch (Exception ex)  {
+            try {
+                URI uri = theClass.getResource(".").toURI();
+                String msg = "Could not find " + path + " in " + uri.toString();
+                throw new IllegalStateException(msg);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return xmlReader;
+    }
+
 }

@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * FormulaPreprocessor tests not focused on findExplicitTypes( ), but requiring that the KBs be loaded.
  */
-public class FormulaPreprocessorTest extends SigmaTestBase  {
+public class FormulaPreprocessorTest extends UnitTestBase  {
 
     @Test
     public void testComputeVariableTypesNoVariables()     {
@@ -22,7 +22,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String,HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String,HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         HashMap<String,HashSet<String>> expected = new HashMap<String,HashSet<String>>();
 
@@ -36,7 +36,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         HashSet<String> set = Sets.newHashSet("Entity");
         HashMap<String, HashSet<String>> expected = Maps.newHashMap();
@@ -57,7 +57,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Agent", "Entity");
@@ -81,7 +81,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Agent");
@@ -107,7 +107,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Agent", "Entity");
@@ -132,7 +132,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Set", "Entity");
@@ -153,7 +153,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("SetOrClass");
@@ -171,7 +171,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Month+");
@@ -191,7 +191,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("GeopoliticalArea", "Entity");
@@ -209,7 +209,7 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("SetOrClass");
@@ -229,9 +229,9 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         f.read(stmt);
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
 
-        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, kb);
+        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, SigmaTestBase.kb);
 
-        SumoProcess expected = new SumoProcess(kb, "agent", "Driving Human");
+        SumoProcess expected = new SumoProcess(SigmaTestBase.kb, "agent", "Driving Human");
 
         assertEquals(1, actualResult.size());
         assertEquals(expected.toString(), actualResult.get(0).toString());
@@ -249,10 +249,10 @@ public class FormulaPreprocessorTest extends SigmaTestBase  {
         Formula f = new Formula();
         f.read(stmt);
 
-        HashMap<String, ArrayList> actualMap = f.gatherRelationsWithArgTypes(kb);
+        HashMap<String, ArrayList> actualMap = f.gatherRelationsWithArgTypes(SigmaTestBase.kb);
 
-        List<String> expectedList = Lists.newArrayList(null, "Process", "Agent", null, null, null, null, null);
-        HashMap<String, List<String>> expectedMap = Maps.newHashMap();
+        ArrayList<String> expectedList = Lists.newArrayList(null, "Process", "Agent", null, null, null, null, null);
+        HashMap<String, ArrayList> expectedMap = Maps.newHashMap();
         expectedMap.put("agent", expectedList);
 
         assertEquals(expectedMap, actualMap);

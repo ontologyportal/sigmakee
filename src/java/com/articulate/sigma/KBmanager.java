@@ -17,7 +17,6 @@ import java.io.*;
 import java.util.*;
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
-import com.articulate.sigma.KB;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -57,7 +56,7 @@ public class KBmanager {
 
     private HashMap<String,String> preferences = new HashMap<String,String>();
     protected HashMap<String,KB> kbs = new HashMap<String,KB>();
-    private boolean initialized = false;
+    boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
     public boolean initializing = false;
@@ -197,7 +196,7 @@ public class KBmanager {
     }
         
     /** ***************************************************************  
-     */    
+     */
     private void preferencesFromXML(SimpleElement configuration) {
         
         if (!configuration.getTagName().equals("configuration")) 
@@ -215,7 +214,7 @@ public class KBmanager {
     }
     
     /** *************************************************************** 
-     */    
+     */
     private void kbsFromXML(SimpleElement configuration) {
         
         if (!configuration.getTagName().equals("configuration")) 
@@ -462,24 +461,9 @@ public class KBmanager {
                 setDefaultAttributes();
                 SimpleElement configuration = readConfiguration(configFileDir);
                 if (configuration == null) 
-                    throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");                
-                preferencesFromXML(configuration);        
-                kbsFromXML(configuration);
-                String kbDir = (String) preferences.get("kbDir");
-                //System.out.println("Info in KBmanager.initializeOnce(): Using kbDir: " + kbDir);
-                LanguageFormatter.readKeywordMap(kbDir);
-                WordNet.wn.initOnce();
-                OMWordnet.readOMWfiles();
-                if (kbs != null && kbs.size() > 0) {
-                    Iterator<String> it = kbs.keySet().iterator();
-                    while (it.hasNext()) {
-                        String kbName = it.next();
-                        System.out.println("INFO in KBmanager.initOnce(): " + kbName);
-                        WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
-                    }          
-                }
-                else
-                    System.out.println("Error in KBmanager.initOnce(): No kbs");
+                    throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
+
+                setConfiguration(configuration);
             }
             else
                 setDefaultAttributes();
@@ -492,6 +476,30 @@ public class KBmanager {
         initialized = true;
         initializing = false;           
         return performedInit;
+    }
+
+    /** ***************************************************************
+     * Sets instance fields by reading the xml found in the configuration file.
+     * @param configuration
+     */
+    void setConfiguration(SimpleElement configuration) {
+        preferencesFromXML(configuration);
+        kbsFromXML(configuration);
+        String kbDir = (String) preferences.get("kbDir");
+        //System.out.println("Info in KBmanager.initializeOnce(): Using kbDir: " + kbDir);
+        LanguageFormatter.readKeywordMap(kbDir);
+        WordNet.wn.initOnce();
+        OMWordnet.readOMWfiles();
+        if (kbs != null && kbs.size() > 0) {
+            Iterator<String> it = kbs.keySet().iterator();
+            while (it.hasNext()) {
+                String kbName = it.next();
+                System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
+                WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
+            }
+        }
+        else
+            System.out.println("Error in KBmanager.setConfiguration(): No kbs");
     }
 
     /** ***************************************************************

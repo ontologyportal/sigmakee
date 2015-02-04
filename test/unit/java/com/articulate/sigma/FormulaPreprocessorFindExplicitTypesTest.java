@@ -10,7 +10,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * FormulaPreprocessor tests specifically targeted on the findExplicitTypes( ) and findExplicitTypesInAntecedent( ) methods.
  */
-public class FormulaPreprocessorFindExplicitTypesTest extends SigmaTestBase  {
+public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
 
     @Test
     public void testFindExplicitTypesDomainNotRule()     {
@@ -328,7 +328,6 @@ public class FormulaPreprocessorFindExplicitTypesTest extends SigmaTestBase  {
 
         Map<String, HashSet<String>> actual = fp.findExplicitTypesInAntecedent(f);
 
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
         assertEquals(null, actual);
     }
 

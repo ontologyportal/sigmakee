@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.SigmaTestBase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -8,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * LanguageFormatter tests specifically targeted toward the htmlParaphrase( ) method.
  */
-public class LanguageFormatterHtmlParaphraseIntegrationTest extends SigmaTestBase {
+public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationTestBase {
 
 
     /**
@@ -40,9 +39,9 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends SigmaTestBas
                 "                    (customer ?customer ?salesperson)))";
 
         String expectedResult = "there exist an object, a cognitive agent, , , a process and another cognitive agent such that for all another object if the other object is an instance of customer and the other object is not equal to the cognitive agent, then a quantity is greater than another quantity and the age of the cognitive agent is the quantity and the age of the other object is the other quantity and Incorrect is an attribute of the object and the object is an instance of BankCard and the cognitive agent is an instance of cognitive agent and the process is an instance of motion and the other cognitive agent is an instance of cognitive agent and the object is a patient of the process and the cognitive agent is an agent of the process and customer the cognitive agent and the other cognitive agent";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 

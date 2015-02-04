@@ -8,14 +8,14 @@ import java.util.Collection;
 import static org.junit.Assert.assertEquals;
 
 // Tests on FormulaPreprocessor that do not require KBs be loaded.
-public class SumoProcessTest extends SigmaTestBase {
+public class SumoProcessTest extends UnitTestBase {
 
     /**
      * KB parameter cannot be null.
      */
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidKB() {
-        SumoProcess process = new SumoProcess(null, "agent", "Process Human");
+        new SumoProcess(null, "agent", "Process Human");
     }
 
     /**
@@ -23,7 +23,7 @@ public class SumoProcessTest extends SigmaTestBase {
      */
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidRole() {
-        SumoProcess process = new SumoProcess(kb, "invalidRole", "hi there");
+        new SumoProcess(SigmaTestBase.kb, "invalidRole", "hi there");
     }
 
     /**
@@ -31,7 +31,7 @@ public class SumoProcessTest extends SigmaTestBase {
      */
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidRoleArgs1() {
-        SumoProcess process = new SumoProcess(kb, "agent", "invalidArgs");
+        new SumoProcess(SigmaTestBase.kb, "agent", "invalidArgs");
     }
 
     /**
@@ -39,7 +39,7 @@ public class SumoProcessTest extends SigmaTestBase {
      */
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidRoleArgs2() {
-        SumoProcess process = new SumoProcess(kb, "agent", "invalidArgs no good");
+        new SumoProcess(SigmaTestBase.kb, "agent", "invalidArgs no good");
     }
 
     /**
@@ -47,14 +47,14 @@ public class SumoProcessTest extends SigmaTestBase {
      */
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidRoleArgs3() {
-        SumoProcess process = new SumoProcess(kb, "agent", "EatingBadTastingOatmeal John");
+        new SumoProcess(SigmaTestBase.kb, "agent", "EatingBadTastingOatmeal John");
     }
 
 
     @Test
     public void testBasicSumoProcessFunctionality() {
         // Test constructor.
-        SumoProcess process = new SumoProcess(kb, "agent", "Driving Human");
+        SumoProcess process = new SumoProcess(SigmaTestBase.kb, "agent", "Driving Human");
         assertEquals(1, process.getAgents().size());
         assertEquals(0, process.getPatients().size());
 
@@ -85,7 +85,7 @@ public class SumoProcessTest extends SigmaTestBase {
     @Test
     public void testAddMultipleRoles() {
         // Test constructor.
-        SumoProcess process = new SumoProcess(kb, "agent", "Driving Human");
+        SumoProcess process = new SumoProcess(SigmaTestBase.kb, "agent", "Driving Human");
         process.addRole(SumoProcess.ThematicRole.BENEFACTIVE, "Sally");
         process.addRole(SumoProcess.ThematicRole.GOAL, "HospitalBuilding");
 
