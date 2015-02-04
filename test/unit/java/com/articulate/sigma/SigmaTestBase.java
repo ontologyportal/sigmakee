@@ -35,7 +35,7 @@ public class SigmaTestBase {
     protected static BufferedReader getXmlReader(String path, Class theClass)  {
         BufferedReader xmlReader = null;
         try {
-            URI uri = theClass.getResource(path).toURI();
+            URI uri = theClass.getClassLoader().getResource(path).toURI();
             File configFile = new File(uri);
             String contents = StringUtil.getContents(configFile);
             contents = contents.replaceAll("\\$SIGMA_HOME", SIGMA_HOME);
@@ -45,7 +45,7 @@ public class SigmaTestBase {
         }
         catch (Exception ex)  {
             try {
-                URI uri = theClass.getResource(".").toURI();
+                URI uri = theClass.getClassLoader().getResource(".").toURI();
                 String msg = "Could not find " + path + " in " + uri.toString();
                 throw new IllegalStateException(msg);
             } catch (URISyntaxException e) {
