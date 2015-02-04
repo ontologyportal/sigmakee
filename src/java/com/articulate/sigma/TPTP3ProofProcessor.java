@@ -167,8 +167,11 @@ public class TPTP3ProofProcessor {
 		String formulaType = withoutWrapper.substring(comma1 + 1,comma2).trim();
 		// System.out.println("type     : " + formulaType);
 		String rest = withoutWrapper.substring(comma2+1).trim();
-		int statementEnd = StringUtil.findBalancedParen(rest.indexOf("("), rest);	// qingqing: startIndex =  index_of_first_"(", instead of 0;
-		
+		int statementEnd = StringUtil.findBalancedParen(rest.indexOf("("), rest);	// startIndex =  index_of_first_"(", instead of 0;
+		// TODO: check if exists "="
+		if (statementEnd == rest.length()-1)    // sepecial case: rest = "s__Class30_1=s__Reptile, file('/var/folders/s4/38700c8541z9h0t0sy_6lmk40000gn/T//epr_diiVH1', i_0_23)"
+			statementEnd = rest.indexOf(",");   // expected: "foo(s__Class30_1,s__Reptile), file('/var/folders/s4/38700c8541z9h0t0sy_6lmk40000gn/T//epr_diiVH1', i_0_23)"
+
 		String stmnt = trimParens(rest.substring(0,statementEnd+1).trim());
 		// System.out.println("stmnt    : " + stmnt);
 		//line = line.replaceAll("\\$answer\\(","answer(");
@@ -284,7 +287,7 @@ public class TPTP3ProofProcessor {
     	catch (Exception ex) {
     		System.out.println(ex.getMessage());
     	}
-    	tpp.proof = ProofStep.removeDuplicates(tpp.proof);
+		tpp.proof = ProofStep.removeDuplicates(tpp.proof);
     	return tpp;
     }
     
