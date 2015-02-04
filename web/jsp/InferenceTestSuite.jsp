@@ -95,7 +95,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     int timeout = 30;
 
     if (chosenEngine == null) {
-        if (kb.inferenceEngine == null) 
+        if (kb.eprover == null)
             chosenEngine = "SoTPTP";
         else
             chosenEngine = "EProver";
