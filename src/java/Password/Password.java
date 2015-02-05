@@ -1,3 +1,5 @@
+package Password;
+
 /**
  *	Password is a class to implement password encryption as used
  *	on Unix systems. It is compatible with the crypt(3c) system function.
