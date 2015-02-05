@@ -15,6 +15,6 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
     // Verify how long the base class's KBmanager initialization took.
     @Test
     public void testInitializationTime()   {
-        assertTrue("Actual time = " + new String(String.valueOf(totalKbMgrInitTime)), totalKbMgrInitTime < 75000);
+        assertTrue("Actual time = " + new String(String.valueOf(totalKbMgrInitTime)), totalKbMgrInitTime < 200000);
     }
 }
