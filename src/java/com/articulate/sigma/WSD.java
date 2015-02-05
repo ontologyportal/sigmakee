@@ -230,13 +230,13 @@ public class WSD {
      */
     public static String getBestDefaultSense(String word) {
 
-        //System.out.println("WSD.getBestDefaultSense(1): " + word);
+        System.out.println("INFO in WSD.getBestDefaultSense(1): " + word);
         if (StringUtil.isDigitString(word))
             return null;
         String bestSense = "";
         int bestScore = -1;
         for (int pos = 1; pos <= 4; pos++) {
-            //System.out.println("WSD.getBestDefaultSense(): pos: " + pos);
+            //System.out.println("INFO in WSD.getBestDefaultSense(): pos: " + pos);
             String newWord = "";
             if (pos == 1)
                 newWord = WordNet.wn.nounRootForm(word,word.toLowerCase());
@@ -244,24 +244,28 @@ public class WSD {
                 newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
             if (newWord == "")
                 newWord = word;
-            TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord);
-            if (senseKeys != null) {
-                Iterator<AVPair> it = senseKeys.descendingIterator();
-                while (it.hasNext()) {
-                    AVPair avp = it.next();
-                    String POS = WordNetUtilities.getPOSfromKey(avp.value);
-                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
-                    int count = Integer.parseInt(avp.attribute.trim());
-                    if (Integer.toString(pos).equals(numPOS) && count > bestScore) {                        
-                        bestSense = numPOS + WordNet.wn.senseIndex.get(avp.value);
-                        bestScore = count;
-                    }
-                }        
+            System.out.println("INFO in WSD.getBestDefaultSense(): word: " + newWord);
+            if (newWord != null) {
+                TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord.toLowerCase());
+                if (senseKeys != null) {
+                    Iterator<AVPair> it = senseKeys.descendingIterator();
+                    while (it.hasNext()) {
+                        AVPair avp = it.next();
+                        String POS = WordNetUtilities.getPOSfromKey(avp.value);
+                        String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                        int count = Integer.parseInt(avp.attribute.trim());
+                        if (Integer.toString(pos).equals(numPOS) && count > bestScore) {                        
+                            bestSense = numPOS + WordNet.wn.senseIndex.get(avp.value);
+                            bestScore = count;
+                        }
+                    }        
+                }
             }
         }
         if (bestSense == "") {
-            System.out.println("WSD.getBestDefaultSense(): no frequencies for " + word);
-            ArrayList<String> al = WordNet.wn.wordsToSenses.get(word);
+            System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
+            ArrayList<String> al = WordNet.wn.wordsToSenses.get(word.toLowerCase());
+            System.out.println("INFO in WSD.getBestDefaultSense(): " + al);
             if (al != null) {
                 Iterator<String> it = al.iterator();
                 while (it.hasNext()) {
@@ -285,7 +289,7 @@ public class WSD {
      */
     public static String getBestDefaultSense(String word, int pos) {
 
-        //System.out.println("WSD.getBestDefaultSense(2): " + word + " POS: " + pos);
+        System.out.println("WSD.getBestDefaultSense(2): " + word + " POS: " + pos);
         if (StringUtil.isDigitString(word))
             return null;
         String synset = "";
@@ -296,21 +300,23 @@ public class WSD {
             newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
         if (StringUtil.emptyString(newWord))
             newWord = word;
-        //System.out.println("WSD.getBestDefaultSense(): word: " + newWord);
-        TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord);
-        //System.out.println("WSD.getBestDefaultSense(): sensekeys: " + senseKeys);
-        if (senseKeys != null) {
-            Iterator<AVPair> it = senseKeys.descendingIterator();
-            while (it.hasNext()) {
-                AVPair avp = it.next();
-                String POS = WordNetUtilities.getPOSfromKey(avp.value);
-                String numPOS = WordNetUtilities.posLettersToNumber(POS);
-                if (Integer.toString(pos).equals(numPOS))
-                    return numPOS + WordNet.wn.senseIndex.get(avp.value);
-            }        
+        System.out.println("WSD.getBestDefaultSense(): word: " + newWord);
+        if (newWord != null) {
+            TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord.toLowerCase());
+            //System.out.println("WSD.getBestDefaultSense(): sensekeys: " + senseKeys);
+            if (senseKeys != null) {
+                Iterator<AVPair> it = senseKeys.descendingIterator();
+                while (it.hasNext()) {
+                    AVPair avp = it.next();
+                    String POS = WordNetUtilities.getPOSfromKey(avp.value);
+                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                    if (Integer.toString(pos).equals(numPOS))
+                        return numPOS + WordNet.wn.senseIndex.get(avp.value);
+                }        
+            }
         }
         // if none of the sensekeys are the right pos, fall through to here
-        ArrayList<String> al = WordNet.wn.wordsToSenses.get(newWord);
+        ArrayList<String> al = WordNet.wn.wordsToSenses.get(newWord.toLowerCase());
         //System.out.println("WSD.getBestDefaultSense(): al: " + al);
         //System.out.println("WSD.getBestDefaultSense(): nouns: " + WordNet.wn.nounSynsetHash.get(newWord));
         if (al == null || al.size() == 0) {
@@ -349,7 +355,22 @@ public class WSD {
      *  A method used only for testing.  It should not be called
      *  during normal operation.
      */
-    public static void testWSD() {
+    public static void testWordWSD() {
+    
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        WordNet.initOnce();
+        System.out.println("INFO in WSD.testWordWSD(): " + WSD.getBestDefaultSense("India"));
+    }
+    
+    /** ***************************************************************
+     *  A method used only for testing.  It should not be called
+     *  during normal operation.
+     */
+    public static void testSentenceWSD() {
         
         try {
             KBmanager.getMgr().initializeOnce();
@@ -380,6 +401,7 @@ public class WSD {
      */
     public static void main (String[] args) {
 
-        testWSD();
+        testWordWSD();
+        testSentenceWSD();
     }
 }
