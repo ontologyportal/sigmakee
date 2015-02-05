@@ -41,7 +41,7 @@ public class WordNetUtilities {
 
     /** POS-prefixed mappings from a new synset number to the old
      *  one. */
-    HashMap mappings = new HashMap();
+    HashMap<String,String> mappings = new HashMap<String,String>();
 
     public static int TPTPidCounter = 1;
     
@@ -52,8 +52,8 @@ public class WordNetUtilities {
     public static String getBareSUMOTerm (String term) {
 
         int start = 0;
-        int finish = term.length();
         if (!StringUtil.emptyString(term)) {
+            int finish = term.length();
             if (term.indexOf("&%") == 0)
                 start = 2;
             if (!Character.isLetter(term.charAt(term.length()-1)) && !Character.isDigit(term.charAt(term.length()-1)))
@@ -94,9 +94,9 @@ public class WordNetUtilities {
      * Convert a list of Terms in the format "&%term1 &%term2" to an ArrayList
      * of bare term Strings
      */
-    public static ArrayList convertTermList (String termList) {
+    public static ArrayList<String> convertTermList (String termList) {
 
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
         String[] list = termList.split(" ");
         for (int i = 0; i < list.length; i++)
             result.add(getBareSUMOTerm(list[i]));
@@ -339,14 +339,14 @@ public class WordNetUtilities {
     /** ***************************************************************
      * HTML format a TreeMap of word senses and their associated synset
      */
-    public static String formatWords(TreeMap words, String kbName) {
+    public static String formatWords(TreeMap<String,String> words, String kbName) {
 
         StringBuffer result = new StringBuffer();
         int count = 0;
-        Iterator it = words.keySet().iterator();
+        Iterator<String> it = words.keySet().iterator();
         while (it.hasNext() && count < 50) {
-            String word = (String) it.next();
-            String synset = (String) words.get(word);
+            String word = it.next();
+            String synset = words.get(word);
             result.append("<a href=\"WordNet.jsp?word=");
             result.append(word);
             result.append("&POS=");
@@ -368,16 +368,16 @@ public class WordNetUtilities {
     /** ***************************************************************
      * HTML format a TreeMap of ArrayLists word senses
      */
-    public static String formatWordsList(TreeMap words, String kbName) {
+    public static String formatWordsList(TreeMap<String,ArrayList<String>> words, String kbName) {
 
         StringBuffer result = new StringBuffer();
         int count = 0;
-        Iterator it = words.keySet().iterator();
+        Iterator<String> it = words.keySet().iterator();
         while (it.hasNext() && count < 50) {
             String word = (String) it.next();
-            ArrayList synsetList = (ArrayList) words.get(word);
+            ArrayList<String> synsetList = words.get(word);
             for (int i = 0; i < synsetList.size(); i++) {
-                String synset = (String) synsetList.get(i);
+                String synset = synsetList.get(i);
                 result.append("<a href=\"WordNet.jsp?word=");
                 result.append(word);
                 result.append("&POS=");
@@ -403,17 +403,18 @@ public class WordNetUtilities {
      * Routine called by mergeUpdates which does the bulk of the work.
      * Should not be called during normal interactive running of Sigma.
      */
-    private static void processMergers (HashMap hm, String fileName, String pattern, String posNum) throws IOException {
+    private static void processMergers (HashMap<String,String> hm, String fileName, String pattern, String posNum) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null;
+        LineNumberReader lr = null;
         try {
             KB kb = KBmanager.getMgr().getKB("SUMO");
             fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
             pw = new PrintWriter(fw);
 
             FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
-            LineNumberReader lr = new LineNumberReader(r);
+            lr = new LineNumberReader(r);
             String line;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
@@ -426,7 +427,7 @@ public class WordNetUtilities {
                     String bareOldTerm = getBareSUMOTerm(oldTerm);
                     String mapType = oldTerm.substring(oldTerm.length()-1);
                     String synset = posNum + m.group(1);
-                    String newTerm = (String) hm.get(synset);
+                    String newTerm = hm.get(synset);
                     if (bareOldTerm.indexOf("&%") < 0 && newTerm != null && newTerm != "" && !newTerm.equals(bareOldTerm) && kb.childOf(newTerm,bareOldTerm)) {
                         pw.println(m.group(1) + m.group(2) + "| " + m.group(3) + " &%" + newTerm + mapType);
                         System.out.println("INFO in WordNet.processMergers(): synset, oldTerm, newterm: " +
@@ -449,6 +450,9 @@ public class WordNetUtilities {
             if (fw != null) {
                 fw.close();
             }
+            if (lr != null) {
+                lr.close();
+            }
         }
     }
 
@@ -460,7 +464,7 @@ public class WordNetUtilities {
      */
     public static void mergeUpdates () throws IOException {
 
-        HashMap hm = new HashMap();
+        HashMap<String,String> hm = new HashMap<String,String>();
 
         String dir = "/Program Files/Apache Software Foundation/Tomcat 5.5/KBs";
         FileReader r = new FileReader(dir + File.separator + "newMappings20.dat");
@@ -502,11 +506,11 @@ public class WordNetUtilities {
      */
     private static String findMappingFromHypernym(String synset) {
 
-        ArrayList rels = (ArrayList) WordNet.wn.relations.get(synset);   // relations requires prefixes
+        ArrayList<AVPair> rels = WordNet.wn.relations.get(synset);   // relations requires prefixes
         if (rels != null) {
-            Iterator it2 = rels.iterator();
+            Iterator<AVPair> it2 = rels.iterator();
             while (it2.hasNext()) {
-                AVPair avp = (AVPair) it2.next();
+                AVPair avp = it2.next();
                 if (avp.attribute.equals("hypernym") || avp.attribute.equals("instance hypernym")) {
                     String mappingChar = "";
                     if (avp.attribute.equals("instance hypernym"))
@@ -541,13 +545,13 @@ public class WordNetUtilities {
 
         FileWriter fw = null;
         PrintWriter pw = null;
+        LineNumberReader lr = null;
         try {
-            KB kb = KBmanager.getMgr().getKB("SUMO");
             fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
             pw = new PrintWriter(fw);
 
             FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
-            LineNumberReader lr = new LineNumberReader(r);
+            lr = new LineNumberReader(r);
             String line;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
@@ -588,6 +592,9 @@ public class WordNetUtilities {
             if (fw != null) {
                 fw.close();
             }
+            if (lr != null) {
+                lr.close();
+            }
         }
     }
 
@@ -627,13 +634,13 @@ public class WordNetUtilities {
 
         FileWriter fw = null;
         PrintWriter pw = null;
+        LineNumberReader lr = null;
         try {
-            KB kb = KBmanager.getMgr().getKB("SUMO");
             fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new");
             pw = new PrintWriter(fw);
 
             FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
-            LineNumberReader lr = new LineNumberReader(r);
+            lr = new LineNumberReader(r);
             String line;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
@@ -680,6 +687,9 @@ public class WordNetUtilities {
             if (fw != null) {
                 fw.close();
             }
+            if (lr != null) {
+                lr.close();
+            }
         }
     }
 
@@ -689,9 +699,10 @@ public class WordNetUtilities {
      */
     public void updateWNversionReading(String fileName, String pattern, String posNum) throws IOException {
 
+        LineNumberReader lr = null;
         try {
             FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
-            LineNumberReader lr = new LineNumberReader(r);
+            lr = new LineNumberReader(r);
             String line;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
@@ -710,6 +721,11 @@ public class WordNetUtilities {
         }
         catch (java.io.IOException e) {
             throw new IOException("Error writing file " + fileName + "\n" + e.getMessage());
+        }
+        finally {
+            if (lr != null) {
+                lr.close();
+            }
         }
     }
 
@@ -769,7 +785,7 @@ public class WordNetUtilities {
      */
     public static String printStatistics() {
 
-        HashSet mappedSUMOterms = new HashSet();
+        HashSet<String> mappedSUMOterms = new HashSet<String>();
         int totalInstanceMappings = 0;
         int totalSubsumingMappings = 0;
         int totalEquivalenceMappings = 0;
@@ -778,9 +794,9 @@ public class WordNetUtilities {
         int equivalenceMappings = 0;
         StringBuffer result = new StringBuffer();
         result.append("<table><tr><td></td><td>instance</td><td>equivalence</td><td>subsuming</td><td></td></tr>\n");
-        Iterator it = WordNet.wn.nounSUMOHash.keySet().iterator();
+        Iterator<String> it = WordNet.wn.nounSUMOHash.keySet().iterator();
         while (it.hasNext()) {
-            String key = (String) it.next();
+            String key = it.next();
             String value = (String) WordNet.wn.nounSUMOHash.get(key);
             if (value.endsWith("="))
                 equivalenceMappings++;
@@ -873,12 +889,14 @@ public class WordNetUtilities {
      *  WordNet and links them to SUMO terms when the synset has a
      *  directly equivalent SUMO term
      */
-    public void imageNetLinks() {
+    public void imageNetLinks() throws IOException {
 
+        String filename = "nounLinks.txt";
+        LineNumberReader lr = null;
         System.out.println("In WordNetUtilities.imageNetLinks()");
         try {
-            FileReader r = new FileReader("nounLinks.txt");
-            LineNumberReader lr = new LineNumberReader(r);
+            FileReader r = new FileReader(filename);
+            lr = new LineNumberReader(r);
             String l;
             while ((l = lr.readLine()) != null) {
                 //System.out.println(";; " + l);
@@ -892,8 +910,17 @@ public class WordNetUtilities {
                 System.out.println("(externalImage " + term + " \"" + url + "\")");
                 //}
             }
-        } catch (Exception e) {
+        } 
+        catch (java.io.IOException e) {
+            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
+        }
+        catch (Exception e) {
             e.printStackTrace();
+        }
+        finally {
+            if (lr != null) {
+                lr.close();
+            }
         }
     }
 
@@ -927,7 +954,7 @@ public class WordNetUtilities {
         Iterator<String> it = WordNet.wn.relations.keySet().iterator();
         while (it.hasNext()) {
             String key = (String) it.next();
-            ArrayList al = (ArrayList) WordNet.wn.relations.get(key);
+            ArrayList<AVPair> al = WordNet.wn.relations.get(key);
             for (int i = 0; i < al.size(); i++) {
                 AVPair avp = (AVPair) al.get(i);
                 if (avp.attribute.equals("member meronym") ||
