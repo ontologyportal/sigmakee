@@ -781,7 +781,8 @@ public class LanguageFormatter {
      *  the formatted string
      */
     public static String formatList(String strseq, String language) {
-        if(language == null || language.isEmpty())    {
+    	
+        if (language == null || language.isEmpty())    {
             throw new IllegalArgumentException("Parameter language is empty or null.");
         }
 
