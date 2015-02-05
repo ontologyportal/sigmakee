@@ -11,15 +11,13 @@ public class WordNetTest extends UnitTestBase {
 
     @Test
     public void testVerbRootFormGoing()  {
-//        WordNet.wn.initOnce();
-        String actual = WordNet.wn.verbRootForm("Going", "going");
+        String actual = WordNet.wn.verbRootForm("going", "going");
         String expected = "go";
         assertEquals(expected, actual);
     }
 
     @Test
     public void testVerbRootFormDriving()  {
-//        WordNet.wn.initOnce();
         String actual = WordNet.wn.verbRootForm("driving", "driving");
         String expected = "drive";
         assertEquals(expected, actual);
