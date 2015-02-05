@@ -45,6 +45,16 @@
     <build>
         <sourceDirectory>${src.dir}</sourceDirectory>
         <testSourceDirectory>${test.src.dir}</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>${test.src.dir}</directory>
+                <includes>
+                    <include>
+                        resources/*
+                    </include>
+                </includes>
+            </testResource>
+        </testResources>
         <pluginManagement>
             <plugins>
                 <plugin>
