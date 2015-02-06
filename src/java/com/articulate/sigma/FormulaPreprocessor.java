@@ -1,6 +1,8 @@
 package com.articulate.sigma;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -662,12 +664,19 @@ public class FormulaPreprocessor {
             }
         }
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
-        Iterator<Formula> it = results.iterator();
-        while (it.hasNext()) {
-            Formula f = it.next();
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            f.read(fp.addTypeRestrictionsNew(f,kb).theFormula);
+
+        // If typePrefix==yes, add a "sortal" antecedent to every axiom
+        KBmanager mgr = KBmanager.getMgr();
+        boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
+        if (typePrefix) {
+            Iterator<Formula> it = results.iterator();
+            while (it.hasNext()) {
+                Formula f = it.next();
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                f.read(fp.addTypeRestrictionsNew(f,kb).theFormula);
+            }
         }
+
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         return results;
