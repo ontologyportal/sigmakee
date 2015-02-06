@@ -13,10 +13,10 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
+import com.articulate.sigma.CCheckManager.CCheckStatus;
+
 import java.io.*;
 import java.util.*;
-
-import com.articulate.sigma.CCheckManager.CCheckStatus;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -154,7 +154,7 @@ public class KBmanager {
             preferences.put("leoExecutable",leoExecFile.getCanonicalPath());
             preferences.put("loadCELT","no");  
             preferences.put("showcached","yes");  
-            preferences.put("typePrefix","yes");  
+            preferences.put("typePrefix","no");
 
             // If no then instantiate variables in predicate position.
             preferences.put("holdsPrefix","no");  
