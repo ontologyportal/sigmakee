@@ -3,6 +3,7 @@ package com.articulate.sigma;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.io.File;
@@ -15,6 +16,7 @@ import java.util.*;
 public class SigmaMockTestBase {
     static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
     static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
+    private static Hashtable<String, String> oldWordNetSynSetTable;
 
     protected KB kbMock = new KBMock("dummyString");
 
@@ -184,8 +186,15 @@ public class SigmaMockTestBase {
         hash.put("eat", "");
         hash.put("give", "");
         hash.put("read", "");
+        hash.put("go", "");
 
+        oldWordNetSynSetTable = WordNet.wn.verbSynsetHash;
         WordNet.wn.verbSynsetHash = hash;
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        WordNet.wn.verbSynsetHash = oldWordNetSynSetTable;
     }
 
 
