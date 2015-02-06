@@ -33,6 +33,10 @@ public class Interpreter {
   public RuleSet rs = null;
   //public CNF input = null;
   public String fname = "";
+  public static boolean inference = false;
+  public static boolean question = false;
+  public static boolean addUnprocessed = false;
+  public static List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
   
   /** *************************************************************
    */
@@ -94,7 +98,7 @@ public class Interpreter {
       pure.addAll(purewords.keySet());
       for (int i = 0; i < pure.size(); i++) {
           String pureword = pure.get(i);
-          if (WordNet.wn.stopwords.contains(pureword))
+          if (WordNet.wn.stopwords.contains(pureword) || qwords.contains(pureword.toLowerCase()))
               continue;
           String id = WSD.findWordSenseInContext(pureword, pure);
           if (!StringUtil.emptyString(id)) {
@@ -176,8 +180,7 @@ public class Interpreter {
    */
   public static void preProcessQuestionWords(CNF inputs) {
       
-      List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
-      List<String> qphrase = Lists.newArrayList("how much","how many","how often","how far","how come");
+      //List<String> qphrase = Lists.newArrayList("how much","how many","how often","how far","how come");
       inputs.preProcessQuestionWords(qwords);
   }
   
@@ -267,7 +270,8 @@ public class Interpreter {
           if (bindingFound)
               newinputs.add(newInput);
           else
-              addUnprocessed(kifoutput,newInput); // a hack to add unprocessed SDP clauses as if they were KIF
+        	  if (addUnprocessed)
+        		  addUnprocessed(kifoutput,newInput); // a hack to add unprocessed SDP clauses as if they were KIF
           inputs = new ArrayList<CNF>();
           inputs.addAll(newinputs);
           System.out.println("INFO in Interpreter.interpret(): KB: " + printKB(inputs));
@@ -278,10 +282,16 @@ public class Interpreter {
       }
       String s = toFOL(kifoutput);
       System.out.println("INFO in Interpreter.interpret(): KIF: " + s);
+      if (inference) {
+    	  KB kb = KBmanager.getMgr().getKB("SUMO");
+    	  if (question)
+    		  System.out.println(kb.ask(s,30,1));
+    	  else
+    		  System.out.println(kb.tell(s));
+      }
       return s;
   }
   
- 
   /** ***************************************************************
    */
   public String interpSingle(String input) {
@@ -323,11 +333,33 @@ public class Interpreter {
           }
           input = c.readLine("Enter sentence: ");
           if (!StringUtil.emptyString(input)) {
-              if (input.equals("reload"))
+              if (input.equals("reload")) {
+            	  System.out.println("reloading semantic rewriting rules");
                   loadRules();
+              }
+              else if (input.equals("inference")) {
+                  inference = true;
+            	  System.out.println("turned inference on");
+              }
+              else if (input.equals("noinference")) {
+                  inference = false;
+            	  System.out.println("turned inference off");
+              }
+              else if (input.equals("addUnprocessed")) {
+                  addUnprocessed = true;
+            	  System.out.println("adding unprocessed clauses");
+              }
+              else if (input.equals("noUnprocessed")) {
+                  addUnprocessed = false;
+            	  System.out.println("not adding unprocessed clauses");
+              }
               else if (input.startsWith("load "))
                   loadRules(input.substring(input.indexOf(' ')+1));
               else {
+            	  if (input.trim().endsWith("?"))
+            		  question = true;
+            	  else
+            		  question = false;
                   try {
                       results = DependencyConverter.getDependencies(input);
                   }
@@ -515,6 +547,19 @@ public class Interpreter {
       }
       else if (args != null && args.length > 0 && args[0].equals("-i")) {
           interp.interpInter();
+      }
+      else if (args != null && args.length > 0 && args[0].equals("-h")) {
+          System.out.println("Semantic Rewriting with SUMO, Sigma and E");
+          System.out.println("  options:");
+          System.out.println("  -s - runs one conversion of one sentence");
+          System.out.println("  -i - runs a loop of conversions of one sentence at a time,");
+          System.out.println("       prompting the user for more.  Empty line to exit.");
+          System.out.println("       'load filename' will load a specified rewriting rule set.");
+          System.out.println("       'reload' (no quotes) will reload the rewriting rule set.");
+          System.out.println("       'inference/noinference' will turn on/off inference.");
+          System.out.println("       'addUnprocessed/noUnprocessed' will add/not add unprocessed clauses.");
+          System.out.println("       Ending a sentence with a question mark will trigger a query,");
+          System.out.println("       otherwise results will be asserted to the KB.");
       }
       else {
           //testUnify();
