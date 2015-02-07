@@ -349,7 +349,7 @@ public class CNF {
         System.out.println("INFO in CNF.testUnify(): bindings: " + cnf1.unify(cnf));
         System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
         System.out.println("INFO in CNF.testUnify(): expecting: Xsense(212345678,Foo).");
-        /*
+        
         System.out.println("INFO in CNF.testUnify(): -------------------------------------");
         rule = "sense(212345678,?E) ==> " +
                 "(sumo(Foo,?E)).";
@@ -386,7 +386,7 @@ public class CNF {
         System.out.println("INFO in CNF.testUnify(): bindings: " + cnf1.unify(cnf));
         System.out.println("INFO in CNF.testUnify(): expecting: Xnsubj(drives-2,John-1), root(ROOT-0,drives-2), Xsumo(Transportation,drives-2), sumo(Human,John-1).");
         System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
-        */
+        
         System.out.println("INFO in CNF.testUnify(): -------------------------------------");
         rule = "nsubj(?V,?Who*).";
         lex = new Lexer(rule);
