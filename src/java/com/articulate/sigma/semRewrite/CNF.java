@@ -349,7 +349,7 @@ public class CNF {
         System.out.println("INFO in CNF.testUnify(): bindings: " + cnf1.unify(cnf));
         System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
         System.out.println("INFO in CNF.testUnify(): expecting: Xsense(212345678,Foo).");
-        
+        /*
         System.out.println("INFO in CNF.testUnify(): -------------------------------------");
         rule = "sense(212345678,?E) ==> " +
                 "(sumo(Foo,?E)).";
@@ -386,6 +386,17 @@ public class CNF {
         System.out.println("INFO in CNF.testUnify(): bindings: " + cnf1.unify(cnf));
         System.out.println("INFO in CNF.testUnify(): expecting: Xnsubj(drives-2,John-1), root(ROOT-0,drives-2), Xsumo(Transportation,drives-2), sumo(Human,John-1).");
         System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+        */
+        System.out.println("INFO in CNF.testUnify(): -------------------------------------");
+        rule = "nsubj(?V,?Who*).";
+        lex = new Lexer(rule);
+        cnf1 = CNF.parseSimple(lex);
+        String cnfstr = "nsubj(kicks-2,John-1), root(ROOT-0,kicks-2), det(cart-4,the-3), dobj(kicks-2,cart-4), sumo(Kicking,kicks-2), sumo(Human,John-1), sumo(Wagon,cart-4).";
+        lex = new Lexer(cnfstr);
+        cnf = CNF.parseSimple(lex);
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
+        System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf1);
+        System.out.println("INFO in CNF.testUnify(): bindings (should be null): " + cnf1.unify(cnf));
     }
     
     /** *************************************************************
@@ -396,7 +407,7 @@ public class CNF {
         //testEquality();
         //testContains();
         //testMerge();
-        //testUnify();
-        testParseSimple();
+        testUnify();
+        //testParseSimple();
     }
 }
