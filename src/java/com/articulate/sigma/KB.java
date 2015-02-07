@@ -11,6 +11,24 @@ Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. see also
 http://sigmakee.sourceforge.net
+
+Note that this class, and therefore, Sigma, depends upon several terms
+being present in the ontology in order to function as intended.  They are:
+  and or forall exists
+  domain
+  EnglishLanguage
+  equal
+  format
+  instance
+  inverse
+  Predicate
+  Relation
+  SetOrClass
+  subclass
+  subrelation
+  termFormat
+  valence
+  VariableArityRelation
 */
 
 /*************************************************************************************************/
@@ -341,116 +359,6 @@ public class KB {
         return className;
     }
 
-    /** *************************************************************
-     * This list contains the names of SUMO Relations known to be
-     * instances of VariableArityRelation in at least some domain.  It
-     * is used only for TPTP generation, and should
-     * <strong>not</strong> be relied upon for any other purpose,
-     * since it is not automatically generated and might be out of
-     * date.
-     
-    public static final List<String> VA_RELNS = Arrays.asList("AssignmentFn",
-                                                      "GreatestCommonDivisorFn",
-                                                      "LatitudeFn",
-                                                      "LeastCommonMultipleFn",
-                                                      "ListFn",
-                                                      "LongitudeFn",
-                                                      "contraryAttribute",
-                                                      "disjointDecomposition",
-                                                      "exhaustiveAttribute",
-                                                      "exhaustiveDecomposition",
-                                                      "partition",
-                                                      "processList");
-*/
-    /** *************************************************************
-     * Returns true if relnName is the name of a relation that is
-     * known to be, or computed to be, a variable arity relation.
-     *
-     * @param relnName A String that names a SUMO Relation (Predicate
-     * or Function).
-     *
-     * @return boolean
-     
-    public boolean isVariableArityRelation(String relnName) {
-        
-        boolean ans = false;
-        ans = (VA_RELNS.contains(relnName)
-               || (getValence(relnName) == 0)
-               || isInstanceOf(relnName, "VariableArityRelation"));
-        return ans;
-    }
-*/
-    /** *************************************************************
-     
-    protected ArrayList listRelnsWithRelnArgs() {
-        
-        if (kbCache.relnsWithRelnArgs != null)
-            return new ArrayList(kbCache.relnsWithRelnArgs.keySet());
-        return null;
-    }
-
-    /** *************************************************************
-     *
-    protected boolean containsRelnWithRelnArg(String input) {
-        
-        if (StringUtil.isNonEmptyString(input)) {
-            List relns = listRelnsWithRelnArgs();
-            if (relns != null) {
-                int len = relns.size();
-                String reln = null;
-                for (int i = 0 ; i < len ; i++) {
-                    reln = (String) relns.get(i);
-                    if (input.indexOf(reln) >= 0)
-                        return true;
-                }
-            }
-        }
-        return false;
-    }
-*/
-    /** *************************************************************
-     * debugging utility
-     
-    private void printParents() {
-
-        logger.finer("Printing parents");
-        Iterator it = parents.keySet().iterator();
-        while (it.hasNext()) {
-            String parent = (String) it.next();
-            logger.finer(parent + " " + 
-                    (HashSet) parents.get(parent));
-        }
-        
-    }
-     */
-    /** *************************************************************
-     * debugging utility
-     
-    private void printChildren() {
-
-        logger.finer("Printing children.");
-        Iterator it = children.keySet().iterator();
-        while (it.hasNext()) {
-            String child = (String) it.next();
-            logger.finer(child + " " +
-                    (HashSet) children.get(child));
-        }
-    }
-    */
-    /** *************************************************************
-     * debugging utility
-     
-    private void printDisjointness() {
-
-        logger.finer("Printing disjoint.");
-        Iterator it = disjoint.keySet().iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            logger.finer(term + " is disjoint with " + 
-                    (Set) disjoint.get(term));
-        }
-    }
-    */
     /** *************************************************************
      * Determine whether a particular term is an immediate instance,
      * which has a statement of the form (instance term otherTerm).
@@ -1007,50 +915,7 @@ public class KB {
      *                each ground Formula to be retrieved     
      * @return an ArrayList of Formulas that satisfy the query, or an
      *         empty ArrayList if no Formulae are retrieved.
-     
-    public ArrayList<Formula> askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
-
-        ArrayList<Formula> ans = new ArrayList<Formula>();
-        if (StringUtil.isNonEmptyString(relation) && StringUtil.isNonEmptyString(idxTerm)
-            && (idxArgnum >= 0) ) {   // && (idxArgnum < 7)
-            HashSet<String> done = new HashSet<String>();
-            HashSet<Formula> accumulator = new HashSet<Formula>();
-            ArrayList<String> relns = new ArrayList<String>();
-            relns.add(relation);
-            ArrayList<Formula> formulae = null;
-            Formula f = null;
-            String arg = null;
-            while (!relns.isEmpty()) {
-                Iterator<String> it = relns.iterator();
-                while (it.hasNext()) {
-                    String reln = it.next();
-                    formulae = askWithRestriction(0, reln, idxArgnum, idxTerm);
-                    ans.addAll(formulae);
-                    formulae = askWithRestriction(0, "subrelation", 2, reln);
-                    for (int i = 0; i < formulae.size(); i++) {
-                        f = (Formula) formulae.get(i);
-                        if (!done.contains(f.theFormula)) {
-                            arg = f.getArgument(1);
-                            if (!reln.equals(arg)) {
-                                accumulator.add(arg);
-                                done.add(f.theFormula);
-                            }
-                        }
-                    }
-                }
-                relns.clear();
-                relns.addAll(accumulator);
-                accumulator.clear();
-            }
-            // Remove duplicates; perhaps not necessary.
-            accumulator.clear();
-            accumulator.addAll(ans);
-            ans.clear();
-            ans.addAll(accumulator);
-        }
-        return ans;
-    }
-*/
+     */
     public ArrayList<Formula> askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
 
         ArrayList<Formula> ans = new ArrayList<Formula>();
@@ -1393,39 +1258,6 @@ public class KB {
         }
     }
 
-    /** *************************************************************
-     *  Writes a list of Formulas to a file.
-     * @param formulas an ArrayList of Strings.
-     * @param fname The fully qualified file name.
-     * @return void
-     
-    private void writeFormulas(ArrayList<String> formulas, String fname) {
-
-        FileWriter fr = null;
-        try {
-            fr = new FileWriter(fname,true);
-            String ls = System.getProperty("line.separator");
-            Iterator<String> it = formulas.iterator();
-            while (it.hasNext()) {
-                fr.write(it.next());
-                fr.write(ls);
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally {
-            try {
-                if (fr != null)
-                    fr.close();
-            }
-            catch (Exception e2) {
-                e2.printStackTrace();
-            }
-        }
-        return;
-    }
-*/
     /** *************************************************************
      *  Writes a single user assertion (String) to the end of a file.
      *
@@ -1930,27 +1762,6 @@ public class KB {
     }
 
     /** ***************************************************************
-     
-    public void rehashFormula(Formula f, String formID) {
-
-        ArrayList<String> al = formulas.get(formID);
-        if ((al != null) && !al.isEmpty()) {
-            if (al.size() == 1) {
-                String newID = f.createID();
-                formulas.remove(formID);
-                al = new ArrayList();
-                al.add(f);
-                if (!formulas.keySet().contains(newID))
-                    formulas.put(newID,al);
-            }
-            else
-                logger.info("Formula hash collision for: " + formID + " and formula " + f.theFormula);
-        }
-        else
-            logger.info("No formula for hash: " + formID + " and formula " + f.theFormula);
-    }
-*/
-    /** ***************************************************************
      *  Count the number of rules in the knowledge base in order to
      *  present statistics to the user. Note that the number of rules
      *  is a subset of the number of formulas.
@@ -2249,24 +2060,6 @@ public class KB {
     }
 
     /** *************************************************************
-     
-    public void addNewConstituent(String filename) throws IOException {
-        addConstituent(filename, true, false, true);
-    }
-    
-    ** *************************************************************
-     * Add a new KB constituent by reading in the file, and then
-     * merging the formulas with the existing set of formulas.  All
-     * assertion caches are rebuilt, the current EProver process is
-     * destroyed, and a new one is created.
-     *
-     * @param filename - the full path of the file being added.
-     
-    public void addConstituent(String filename) throws IOException {
-        addConstituent(filename, true, true, false);
-    }
-*/
-    /** *************************************************************
      * Add a new KB constituent by reading in the file, and then merging
      * the formulas with the existing set of formulas.
      *
@@ -2355,43 +2148,6 @@ public class KB {
         //    loadEProver();
     }
 
-    /** ***************************************************************
-     * deprecated code
-     
-    private void oldArityCheck(KIF file) {
-        
-        Iterator<Formula> it2 = file.formulaMap.values().iterator();
-        while (it2.hasNext()) { // Iterate through values
-            Formula f = (Formula) it2.next();
-            boolean correctArity = true;
-            if (!PredVarInst.hasCorrectArity(f, this)) {
-                errors.add("Incorrect arity:\n" + f.htmlFormat(this));
-                System.out.println("Incorrect arity: " + f.theFormula);
-                correctArity = false;
-            }
-            if (correctArity) {
-                String internedFormula = f.theFormula.intern();
-                if (!formulaMap.containsKey(internedFormula))
-                    formulaMap.put(internedFormula, f);
-                else {
-                    StringBuilder error = new StringBuilder();
-                    error.append("Warning: Duplicate axiom in ");
-                    error.append(f.sourceFile + " at line " + f.startLine
-                            + "<br />");
-                    error.append(f.theFormula + "<p>");
-                    Formula existingFormula = (Formula) formulaMap
-                            .get(internedFormula);
-                    error.append("Warning: Existing formula appears in ");
-                    error.append(existingFormula.sourceFile + " at line ");
-                    error.append(existingFormula.startLine + "<br />");
-                    error.append("<p>");
-                    System.out.println("Duplicate detected.");
-                    errors.add(error.toString());
-                }
-            }
-        }
-    }
-    */
     /** ***************************************************************
      * Reload all the KB constituents.
      */
@@ -2742,52 +2498,6 @@ public class KB {
      * (Strings).
      *
      * @return A Set of SUO-KIF class names, which could be empty.
-     
-    public Set getAllSuperClasses(Set classNames) {
-
-        Set ans = new HashSet();
-        try {
-            if ((classNames instanceof Set) && !(classNames.isEmpty())) {
-                List accumulator = new ArrayList();
-                List working = new ArrayList();
-                String arg2 = null;
-                working.addAll(classNames);
-                while (!(working.isEmpty())) {
-                    for (int i = 0 ; i < working.size() ; i++) {
-                        List nextLits = askWithRestriction(1,(String) working.get(i),0,"subclass");
-                        if (nextLits != null) {
-                            for (int j = 0 ; j < nextLits.size() ; j++) {
-                                Formula f = (Formula) nextLits.get(j);
-                                arg2 = f.getArgument(2);
-                                if (! working.contains(arg2)) {
-                                    accumulator.add(arg2);
-                                }
-                            }
-                        }
-                    }
-                    ans.addAll(accumulator);
-                    working.clear();
-                    working.addAll(accumulator);
-                    accumulator.clear();
-                }
-            }
-        }
-        catch (Exception ex) {
-            logger.warning(ex.getStackTrace().toString());
-            ex.printStackTrace();
-        }
-        return ans;
-    } */
-
-    /** ***************************************************************
-     * This method retrieves the upward transitive closure of all Class
-     * names contained in the input set.  The members of the input set are
-     * not included in the result set.
-     *
-     * @param classNames A Set object containing SUO-KIF class names
-     * (Strings).
-     *
-     * @return A Set of SUO-KIF class names, which could be empty.
      */
     public Set<String> getAllSuperClasses(Set<String> classNames) {
 
@@ -2799,239 +2509,7 @@ public class KB {
         }
         return ans;    
     }
-    
-    /** ***************************************************************
-     * This method retrieves all subclasses of className, using both
-     * class and predicate (subrelation) subsumption.
-     *
-     * @param className The name of a Class.
-     *
-     * @return A Set of String terms, which could be empty.
-     
-    public TreeSet<String> getAllSubClassesWithPredicateSubsumption(String className) {
 
-        TreeSet<String> ans = new TreeSet<String>();
-        if (StringUtil.isNonEmptyString(className)) {
-            // Get all subrelations of subrelation.
-            Set<String> metarelations = kbCache.getCachedRelationValues("subrelation", "subrelation", 2, 1);
-            metarelations.add("subrelation");
-            HashSet<String> relations = new HashSet<String>();
-            Iterator<String> it = metarelations.iterator();        
-            while (it.hasNext()) {   // Get all subrelations of subclass.
-                String pred = it.next();
-                relations.addAll(kbCache.getCachedRelationValues(pred, "subclass", 2, 1));
-            }
-            relations.add("subclass");
-            // Get all subclasses of className.
-            Iterator<String> it2 = relations.iterator();
-            while (it2.hasNext()) {
-                String pred = (String) it2.next();
-                ans.addAll(kbCache.getCachedRelationValues(pred, className, 2, 1));
-            }
-        }
-        return ans;
-    }
-*/
-    /** ***************************************************************
-     * This method retrieves all superclasses of className, using both
-     * class and predicate (subrelation) subsumption.
-     *
-     * @param className The name of a Class.
-     *
-     * @return A Set of String terms, which could be empty.
-     
-    public TreeSet<String> getAllSuperClassesWithPredicateSubsumption(String className) {
-
-    	TreeSet<String> ans = new TreeSet<String>();
-        if (StringUtil.isNonEmptyString(className)) {
-            // Get all subrelations of subrelation.
-            HashSet<String> metarelations = kbCache.getCachedRelationValues("subrelation", "subrelation", 2, 1);
-            metarelations.add("subrelation");
-            HashSet<String> relations = new HashSet<String>();
-            Iterator<String> it = metarelations.iterator();
-            String pred = null;            
-            while (it.hasNext()) {   // Get all subrelations of subclass
-                pred = it.next();
-                relations.addAll(kbCache.getCachedRelationValues(pred, "subclass", 2, 1));
-            }
-            relations.add("subclass");            
-            it = relations.iterator();   
-            while (it.hasNext()) {   // Get all superclasses of className
-                pred = it.next();
-                ans.addAll(kbCache.getCachedRelationValues(pred, className, 1, 2));
-            }
-        }
-        return ans;
-    }
-*/
-    /** ***************************************************************
-     * This method retrieves all instances of className, using both
-     * predicate (subrelation) and class subsumption.
-     *
-     * @param className The name of a Class
-     *
-     * @return A Set of String terms, which could be empty
-     
-    public Set<String> getAllInstancesWithPredicateSubsumption(String className) {
-        return getAllInstancesWithPredicateSubsumption(className, true);
-    }
-
-    /** ***************************************************************
-     * This method retrieves all instances of className, using
-     * predicate (subrelation) subsumption if gatherSubclasses is
-     * false, and using both predicate and subclass subsumption if
-     * gatherSubclasses is true.
-     *
-     * @param className The name of a Class
-     *
-     * @param gatherSubclasses If true, all subclasses of className
-     * are gathered and their local instances are added to the set of
-     * returned terms
-     *
-     * @return A Set of String terms, which could be empty
-     
-    public TreeSet<String> getAllInstancesWithPredicateSubsumption(String className,
-                                                       boolean gatherSubclasses) {
-    	TreeSet<String> ans = new TreeSet<String>();
-        if (StringUtil.isNonEmptyString(className)) {
-            // Get all subrelations of subrelation.
-        	HashSet<String> metarelations = kbCache.getCachedRelationValues("subrelation", "subrelation", 2, 1);
-            metarelations.add("subrelation");
-            TreeSet<String> relations = new TreeSet<String>();
-            Iterator<String> it = metarelations.iterator();
-            // Get all subrelations of instance.
-            while (it.hasNext()) {
-                String pred = it.next();
-                relations.addAll(kbCache.getCachedRelationValues(pred, "instance", 2, 1));
-            }
-            relations.add("instance");
-            // Get all "local" or "immediate" instances of className, using instance and 
-            // all gathered subrelations of instance.
-            Iterator<String> itr = relations.iterator();;
-            while (itr.hasNext()) {
-                String pred = itr.next();
-                ans.addAll(kbCache.getCachedRelationValues(pred, className, 2, 1));
-            }
-            if (gatherSubclasses) {
-                Set<String> subclasses = getAllSubClassesWithPredicateSubsumption(className);
-                // subclasses.add(className);
-                Iterator<String> its = subclasses.iterator();
-                while (its.hasNext()) {
-                    String cl = its.next();
-                    itr = relations.iterator();
-                    while (itr.hasNext()) {
-                        String pred = itr.next();
-                        ans.addAll(getTermsViaAskWithRestriction(0,pred,2,cl,1));
-                    }
-                }
-            }
-        }
-        return ans;
-    }
-*/
-    /** ***************************************************************
-     * This method retrieves all classes of which term is an instance,
-     * using both class and predicate (subrelation) subsumption.
-     *
-     * @param term The name of a SUO-KIF term.     
-     * @return A Set of terms (class names), which could be empty.
-     
-    public Set<String> getAllInstanceOfsWithPredicateSubsumption(String term) {
-
-        TreeSet<String> ans = new TreeSet<String>();
-        if (StringUtil.isNonEmptyString(term)) {
-            // Get all subrelations of subrelation.
-            Set<String> metarelations = kbCache.getCachedRelationValues("subrelation", "subrelation", 2, 1);
-            metarelations.add("subrelation");
-            Set<String> relations = new HashSet<String>();
-            Iterator<String> it = metarelations.iterator();
-            // Get all subrelations of instance.
-            while (it.hasNext()) {
-            	String pred = it.next();
-                relations.addAll(kbCache.getCachedRelationValues(pred, "instance", 2, 1));
-            }
-            relations.add("instance");
-            // Get all classes of which term is an instance.
-            Set<String> classes = new HashSet<String>();
-            it = relations.iterator();
-            while (it.hasNext()) {
-            	String pred = it.next();
-                classes.addAll(kbCache.getCachedRelationValues(pred, term, 1, 2));
-            }
-            ans.addAll(classes);
-            // Get all superclasses of classes.
-            it = classes.iterator();
-            while (it.hasNext()) {
-            	String cl = it.next();
-                ans.addAll(getAllSuperClassesWithPredicateSubsumption(cl));
-            }
-        }
-        return ans;
-    }
-*/
-    /** ***************************************************************
-     * This method retrieves the downward transitive closure of all Class
-     * names contained in the input set.  The members of the input set are
-     * not included in the result set.
-     *
-     * @param classNames A Set object containing SUO-KIF class names
-     * (Strings).     
-     * @return A Set of SUO-KIF class names, which could be empty.     
-    private Set getAllSubClasses(Set classNames) {
-
-        Set ans = new HashSet();
-        try {
-            if ((classNames instanceof Set) && !(classNames.isEmpty())) {
-                List accumulator = new ArrayList();
-                List working = new ArrayList();
-                String arg1 = null;
-                working.addAll(classNames);
-                while (!(working.isEmpty())) {
-                    for (int i = 0 ; i < working.size() ; i++) {
-                        List nextLits = askWithRestriction(2,(String) working.get(i),0,"subclass");
-                        if (nextLits != null) {
-                            for (int j = 0 ; j < nextLits.size() ; j++) {
-                                Formula f = (Formula) nextLits.get(j);
-                                arg1 = f.getArgument(1);
-                                if (! working.contains(arg1))
-                                    accumulator.add(arg1);
-                            }
-                        }
-                    }
-                    ans.addAll(accumulator);
-                    working.clear();
-                    working.addAll(accumulator);
-                    accumulator.clear();
-                }
-            }
-        }
-        catch (Exception ex) {
-            logger.warning(ex.getStackTrace().toString());
-            ex.printStackTrace();
-        }
-        return ans;
-    } */
-    
-    /** ***************************************************************
-     * This method retrieves the downward transitive closure of all Class
-     * names contained in the input set.  The members of the input set are
-     * not included in the result set.
-     *
-     * @param classNames A Set object containing SUO-KIF class names
-     * (Strings).     
-     * @return A Set of SUO-KIF class names, which could be empty.
-     
-    private Set<String> getAllSubClasses(Set<String> classNames) {
-
-        Set<String> ans = new HashSet<String>();
-        Iterator<String> it = classNames.iterator();
-        while (it.hasNext()) {
-            String term = it.next();
-            ans.addAll(kbCache.getChildClasses(term));
-        }
-        return ans;
-    }
-*/
     /** ***************************************************************
      * This method retrieves all instances of the classes named in the
      * input set.
@@ -3108,27 +2586,6 @@ public class KB {
         return (StringUtil.isNonEmptyString(obj) && Formula.empty((String) obj));
     }
 
-    /** ***************************************************************     
-     * A utility method.
-     *
-     * @param objList A list of anything.     
-     * @param label An optional label (String), or null.     
-     * @return void     
-     
-    public static void printAll(List objList, String label) {
-        
-        if (objList instanceof List) {
-            Iterator it = objList.iterator();
-            while (it.hasNext()) {
-                if (StringUtil.isNonEmptyString(label)) 
-                    logger.fine(label + ": " + it.next());                
-                else 
-                    logger.fine(it.next().toString());                
-            }
-        }
-        return;
-    }
-*/
     /** ***************************************************************     
      * A static utility method.
      *
@@ -3228,35 +2685,6 @@ public class KB {
         return formatted;
     }
 
-    /** *************************************************************
-     *  Pull all the formulas into one TreeSet of Strings.
-     
-    private TreeSet<String> collectAllFormulas(HashMap<String,ArrayList<Formula>> forms) {
-
-        TreeSet<String> ts = new TreeSet<String>();
-        ArrayList<ArrayList<Formula>> al = new ArrayList<ArrayList<Formula>>(forms.values());
-
-        Iterator<ArrayList<Formula>> it = al.iterator();
-        while (it.hasNext()) {
-            ArrayList<Formula> al2 = (ArrayList<Formula>) it.next();
-            Iterator<Formula> it2 = al2.iterator();
-            while (it2.hasNext())
-                ts.add(it2.next().theFormula);
-        }
-        return ts;
-    }
-*/
-    /** *************************************************************
-     *  Pull all the formulas in an ArrayList into one TreeSet of Strings.
-     
-    private TreeSet collectFormulasFromList(ArrayList forms) {
-
-        TreeSet ts = new TreeSet();
-        for (Iterator it = forms.iterator(); it.hasNext();)
-            ts.add(((Formula) it.next()).theFormula);
-        return ts;
-    }
-*/
     /** *************************************************************
      * Save the contents of the current KB to a file.
      */
@@ -3428,21 +2856,6 @@ public class KB {
         return newTreeSet;
     }
 
-    /** *************************************************************
-     * List all terms that don't have an externalImage link
-     
-    private void termsWithNoPictureLinks() {
-
-       synchronized (this.getTerms()) {
-            for (Iterator it = getTerms().iterator(); it.hasNext();) {
-                String term = (String) it.next();
-                ArrayList al = askWithRestriction(0,"externalImage",1,term);
-                if (al == null || al.size() < 1)
-                	System.out.println(term + " has no picture links.");
-            }
-        }
-    }
-*/
     /** *************************************************************
      *  Turn SUMO into a semantic network by extracting all ground
      *  binary relations, turning all higher arity relations into a
@@ -3632,10 +3045,10 @@ public class KB {
         
         try {
             int counter = 0;
-            System.out.println("INFO in KB.main()");
+            System.out.println("INFO in KB.generateTPTPTestAssertions()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println("INFO in KB.main(): printing predicates");
+            System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
             Iterator<String> it = kb.terms.iterator();
             while (it.hasNext()) {
                 String term = it.next();
@@ -3672,10 +3085,10 @@ public class KB {
     public static void generateRelationList() {
         
         try {
-            System.out.println("INFO in KB.main()");
+            System.out.println("INFO in KB.generateRelationList()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println("INFO in KB.main(): printing predicates");
+            System.out.println("INFO in KB.generateRelationList(): printing predicates");
             Iterator<String> it = kb.terms.iterator();
             while (it.hasNext()) {
                 String term = it.next();
@@ -3693,19 +3106,16 @@ public class KB {
 
         //generateTPTPTestAssertions();       
         // testTPTP(args);
-        
-          try {
-              KBmanager.getMgr().initializeOnce();
-              KB kb = KBmanager.getMgr().getKB("SUMO");
-              //kb.writeTerms();
-              System.out.println("KB.main(): " + kb.isChildOf("Africa", "Region"));
-          } 
-          catch (Exception ioe ) {
-              System.out.println(ioe.getMessage());
-          }
+    	try {
+    		KBmanager.getMgr().initializeOnce();
+    		KB kb = KBmanager.getMgr().getKB("SUMO");
+    		//kb.writeTerms();
+    		System.out.println("KB.main(): " + kb.isChildOf("Africa", "Region"));
+    	} 
+    	catch (Exception ioe ) {
+    		System.out.println(ioe.getMessage());
+    	}
 
-        
-        
         //kb.generateSemanticNetwork();
         //kb.generateRandomProof();
         //kb.instanceOfInstanceP();
