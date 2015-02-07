@@ -165,6 +165,7 @@ public class TPTP3ProofProcessor {
 
 		int comma2 = withoutWrapper.indexOf(",",comma1+1);
 		String formulaType = withoutWrapper.substring(comma1 + 1,comma2).trim();
+		ps.formulaType = formulaType;
 		// System.out.println("type     : " + formulaType);
 		String rest = withoutWrapper.substring(comma2+1).trim();
 		int statementEnd = StringUtil.findBalancedParen(rest.indexOf("("), rest);	// startIndex =  index_of_first_"(", instead of 0;
@@ -216,9 +217,27 @@ public class TPTP3ProofProcessor {
 			if (answers[i].equals("_"))
 				break;
 			String answer = trimBrackets(answers[i]);
-			if (answer != null)
+			if (answer != null) {
+				answer = removeEsk(answer);
 				bindings.add(answer);
+			}
 		}
+	}
+
+	/** ***************************************************************
+	 * remove skolem symbol with arity n
+	 * Example Input: esk2_1(s__Arc13_1)
+	 * Expected Output: s__Arc13_1
+	 */
+	private String removeEsk(String line) {
+
+		if (line.startsWith("esk")) {
+			int leftParen = line.indexOf("(");
+			int rightParen = line.indexOf(")");
+			if (leftParen != -1 && rightParen != -1)
+				return line.substring(leftParen+1, rightParen);
+		}
+		return line;
 	}
      
      /** ***************************************************************
