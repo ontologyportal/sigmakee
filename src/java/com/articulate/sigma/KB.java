@@ -1612,6 +1612,41 @@ public class KB {
     }
 
     /** *************************************************************
+     * Submits a query to the inference engine.  Returns a list of
+     * answers from inference engine. If no proof is found, return null;
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @return A list of answers from inference engine; If no proof
+     * or answer is found, return null;
+     */
+    public ArrayList<String> askNoProof(String suoKifFormula, int timeout, int maxAnswers) {
+
+        ArrayList<String> answers = new ArrayList<String>();
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
+
+            if (!processedStmts.isEmpty() && this.eprover != null) {
+                String strQuery = processedStmts.get(0).theFormula;
+                String EResult = this.eprover.submitQuery(strQuery,this);
+                TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(EResult);
+                if (tpp.bindings == null)
+                    return null;
+                for (String binding : tpp.bindings) {
+                    String answer = TPTP2SUMO.transformTerm(binding);
+                    answers.add(answer);
+                }
+                return answers;
+            }
+        }
+        return null;
+    }
+
+    /** *************************************************************
      * Submits a query to specified InferenceEngine object.  Returns an XML
      * formatted String that contains the response of the inference
      * engine.  It should be in the form
