@@ -170,6 +170,32 @@ public class Clause {
     }
     
     /** ***************************************************************
+     * @return false if there are wildcards and they don't match (or there's an error)
+     * and true if there are no wildcards.  Only
+     */
+    private static boolean wildcardMatch(String t1, String t2) {
+        
+        String s1 = t1;
+        String s2 = t2;
+        if (!t1.contains("*") && !t2.contains("*")) // no wildcards case should fall through
+            return true;
+        if (t1.contains("*") && t2.contains("*")) {
+            System.out.println("Error in Clause.wildcardMatch(): both arguments have wildcards: " + t1 + " " + t2);
+            return false;
+        }
+        if (t2.contains("*")) {
+            s1 = t2;
+            s2 = t1;
+        }
+        if (s1.indexOf('*') > -1 && s2.indexOf('-') > -1) {  // when wildcard, both have to be matching variables
+                                                             // except for suffix
+            if (!s1.substring(0,s1.lastIndexOf('*')).equals(s2.substring(0,s2.lastIndexOf('-'))))
+                return false;
+        }
+        return true;
+    }
+        
+    /** ***************************************************************
      * Unify all terms in term1 with the corresponding terms in term2 with a
      * common substitution. Note that unlike general unification, we have
      * a fixed argument list of 2.   
@@ -205,6 +231,8 @@ public class Clause {
                 // we eliminate all occurrences of it in this step - remember
                 // that by the failed occurs-check, t2 cannot contain t1.
                 HashMap<String,String> newBinding = new HashMap<String,String>();
+                if (!wildcardMatch(t1,t2)) 
+                    return null;
                 newBinding.put(t1,t2);                
                 applyBindingSelf(newBinding);
                 l2 = l2.applyBindings(newBinding);
@@ -216,6 +244,8 @@ public class Clause {
                 if (occursCheck(t2, this))
                     return null;
                 HashMap<String,String> newBinding = new HashMap<String,String>();
+                if (!wildcardMatch(t1,t2)) 
+                    return null;
                 newBinding.put(t2, t1);          
                 applyBindingSelf(newBinding);
                 l2 = l2.applyBindings(newBinding);
