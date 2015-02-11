@@ -62,8 +62,10 @@
         <fileset file="${basedir}/lib/IDV.jar" />
         <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
         <fileset file="${basedir}/lib/mail.jar" />
-        <fileset file="${basedir}/lib/guava-18.0.jar" />
+        <fileset file="${basedir}/lib/guava-15.0.jar" />
         <fileset file="${basedir}/lib/junit.jar" />
+        <fileset file="${basedir}/lib/java-json.jar" />
+        <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
         <fileset file="${basedir}/lib/TptpParser.jar" />
         <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
         <!-- fileset file="${basedir}/lib/ClientHttpRequest.jar" /-->
@@ -143,8 +145,10 @@
 	        <fileset file="${basedir}/lib/IDV.jar" />
 	        <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
 	        <fileset file="${basedir}/lib/mail.jar" />
-	        <fileset file="${basedir}/lib/guava-18.0.jar" />
+	        <fileset file="${basedir}/lib/guava-15.0.jar" />
 	        <fileset file="${basedir}/lib/junit.jar" />
+	        <fileset file="${basedir}/lib/java-json.jar" />
+	        <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
 	        <fileset file="${basedir}/lib/TptpParser.jar" />
 	    	<fileset file="${basedir}/lib/cos-multipart.jar" />
 	        <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
