@@ -63,7 +63,7 @@
         <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
         <fileset file="${basedir}/lib/mail.jar" />
         <fileset file="${basedir}/lib/guava-15.0.jar" />
-        <fileset file="${basedir}/lib/junit.jar" />
+        <fileset file="${basedir}/lib/junit-4.12.jar" />
         <fileset file="${basedir}/lib/java-json.jar" />
         <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
         <fileset file="${basedir}/lib/TptpParser.jar" />
@@ -146,7 +146,7 @@
 	        <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
 	        <fileset file="${basedir}/lib/mail.jar" />
 	        <fileset file="${basedir}/lib/guava-15.0.jar" />
-	        <fileset file="${basedir}/lib/junit.jar" />
+	        <fileset file="${basedir}/lib/junit-4.12.jar" />
 	        <fileset file="${basedir}/lib/java-json.jar" />
 	        <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
 	        <fileset file="${basedir}/lib/TptpParser.jar" />
