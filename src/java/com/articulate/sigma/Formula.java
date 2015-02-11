@@ -18,17 +18,7 @@ package com.articulate.sigma;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 import com.articulate.sigma.KB;
 
@@ -1051,6 +1041,9 @@ public class Formula implements Comparable {
      */
     @Override
 	public boolean equals(Object o) {
+        if(o == null ) {
+            return false;
+        }
 
         if (!(o instanceof Formula))
             return false;
@@ -1065,6 +1058,9 @@ public class Formula implements Comparable {
      * Normalize all variables.
      */
     public boolean equals(String s) {
+        if(s == null) {
+            return false;
+        }
 
         String f = theFormula;
         Formula form = new Formula();
@@ -1077,16 +1073,85 @@ public class Formula implements Comparable {
 
         form.theFormula = Clausifier.normalizeVariables(theFormula);
         f = form.toString().trim().intern();
-        return (f == s);
+        return (f.equals(s));
     }
 
     /** ***************************************************************
      * Test if the contents of the formula are equal to the argument.
      */
     public boolean deepEquals(Formula f) {
+        //null and simple string equality tests
+        if(f == null) {
+            return false;
+        }
+        // if the strings are equal or any of the formula strings are null, there is no point on comparing deep
+        boolean stringsEqual = Objects.equals(this.theFormula, f.theFormula);
+        if(stringsEqual || (this.theFormula == null || f.theFormula == null)) {
+            return stringsEqual;
+        }
 
-        return (f.theFormula.intern() == theFormula.intern()) &&
-            (f.sourceFile.intern() == sourceFile.intern());
+        Formula f1 = Clausifier.clausify(this);
+        Formula f2 = Clausifier.clausify(f);
+
+        //the normalizeParameterOrder method should be moved to Clausifier
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        String normalized1 = Formula.normalizeParameterOrder(f1.theFormula, kb);
+        String normalized2 = Formula.normalizeParameterOrder(f2.theFormula, kb);
+
+        normalized1 = Clausifier.normalizeVariables(normalized1, true);
+        normalized2 = Clausifier.normalizeVariables(normalized2, true);
+
+        return normalized1.equals(normalized2);
+    }
+
+    private static String normalizeParameterOrder(String formula,KB kb) {
+        System.out.println("\nInput:  " + formula);
+
+        //null test first
+        if(formula == null) {
+            System.out.println("Output: null");
+            return null;
+        }
+
+        //checking formula is a simple tokens
+        if(!Formula.listP(formula)) {
+            System.out.println("Output: " + formula);
+            return formula;
+        }
+
+        //if we got here, the formulas is a list
+        Formula f = new Formula();
+        f.read(formula);
+
+        //normalizing parameters
+        ArrayList<String> args = f.complexArgumentsToArrayList(1);
+        if(args == null || args.size() == 0) {
+            return formula;
+        }
+        List<String> orderedArgs = new ArrayList<String>();
+        for(String arg:args) {
+            orderedArgs.add(Formula.normalizeParameterOrder(arg, kb));
+        }
+
+        //sorting arguments if the predicate permits
+        String head = f.car();
+        if(Formula.isCommutative(head) || (kb != null && kb.isInstanceOf(head, "SymmetricRelation"))) {
+            Collections.sort(orderedArgs);
+        }
+
+        //building result
+        StringBuilder result = new StringBuilder(LP);
+        result.append(head);
+        result.append(SPACE);
+        for(String arg:orderedArgs) {
+            result.append(arg);
+            result.append(SPACE);
+        }
+        result.deleteCharAt(result.length() - 1);
+        result.append(RP);
+
+        System.out.println("Output: " + result.toString());
+        return result.toString();
     }
 
     /** ***************************************************************
