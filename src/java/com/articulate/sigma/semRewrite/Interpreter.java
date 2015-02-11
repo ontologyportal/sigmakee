@@ -229,7 +229,7 @@ public class Interpreter {
                       bindingFound = true;
                       //System.out.println("INFO in Interpreter.interpret(): new input 1: " + newInput);
                       //System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
-                      //System.out.println("INFO in Interpreter.interpret(): r: " + r);
+                      System.out.println("INFO in Interpreter.interpret(): r: " + r);
                       RHS rhs = r.rhs.applyBindings(bindings);   
                       if (r.operator == Rule.RuleOp.IMP) {
                           CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
@@ -285,7 +285,7 @@ public class Interpreter {
       if (inference) {
     	  KB kb = KBmanager.getMgr().getKB("SUMO");
     	  if (question)
-    		  System.out.println(kb.ask(s,30,1));
+    		  System.out.println(kb.askNoProof(s,30,1));
     	  else
     		  System.out.println(kb.tell(s));
       }
