@@ -3,6 +3,7 @@ package com.articulate.sigma;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.Assert.assertFalse;
@@ -14,8 +15,7 @@ public class FormulaTest {
     @Test
     public void testFormulaRead() {
         String stmt = "(domain date 1 Physical)";
-        Formula f = new Formula();
-        f.read(stmt);
+        Formula f = new Formula(stmt);
         assertEquals(stmt, f.theFormula);
 
         stmt = "(=> (and (instance ?REL ObjectAttitude) (?REL ?AGENT ?THING)) (instance ?THING Physical))";
@@ -33,8 +33,7 @@ public class FormulaTest {
     @Test
     public void testRecursiveCdrSimple() {
         String stmt = "(exists (?M))";
-        Formula f = new Formula();
-        f.read(stmt);
+        Formula f = new Formula(stmt);
 
         String car = f.car();
         assertEquals("exists", car);
@@ -60,8 +59,7 @@ public class FormulaTest {
     @Test
     public void testRecursiveCdrComplex() {
         String stmt = "(time JohnsBirth (MonthFn ?M (YearFn 2000)))";
-        Formula f = new Formula();
-        f.read(stmt);
+        Formula f = new Formula(stmt);
 
         String car = f.car();
         assertEquals("time", car);
@@ -328,4 +326,210 @@ public class FormulaTest {
 
         assertEquals(expected, f1.validArgs());
     }
+
+    @Test
+    public void testArgumentsToArrayListGivenComplex0() {
+        String stmt = "(exists (?D ?H)\n" +
+                "               (and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H)))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.argumentsToArrayList(0);
+
+        assertEquals(null, actual);
+    }
+
+    @Test
+    public void testArgumentsToArrayListGivenComplex1() {
+        String stmt = "(exists (?D ?H)\n" +
+                "               (and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H)))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.argumentsToArrayList(1);
+
+        assertEquals(null, actual);
+    }
+
+    @Test
+    public void testArgumentsToArrayListAnd0() {
+        String stmt = "(and\n" +
+                "(instance ?D Driving)\n" +
+                "(instance ?H Human)\n" +
+                "(agent ?D ?H)))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.argumentsToArrayList(0);
+
+        assertEquals(null, actual);
+    }
+
+    @Test
+    public void testArgumentsToArrayInstance0() {
+        String stmt = "(instance ?D Driving)";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.argumentsToArrayList(0);
+        ArrayList<String> expected = Lists.newArrayList("instance", "?D", "Driving");
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListDriving0() {
+        String stmt = "(exists (?D ?H)\n" +
+                "               (and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H)))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(0);
+        String temp = "(and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H))";
+        ArrayList<String> expected = Lists.newArrayList("exists", "(?D ?H)", temp);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListDriving1() {
+        String stmt = "(exists (?D ?H)\n" +
+                "               (and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H)))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(1);
+        String temp = "(and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H))";
+        ArrayList<String> expected = Lists.newArrayList("(?D ?H)", temp);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListDriving2() {
+        String stmt = "(exists (?D ?H)\n" +
+                "               (and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H)))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(2);
+        String temp = "(and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H))";
+        ArrayList<String> expected = Lists.newArrayList(temp);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListDriving3() {
+        String stmt = "(exists (?D ?H)\n" +
+                "               (and\n" +
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (agent ?D ?H)))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(3);
+
+        assertEquals(null, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListAnd0() {
+        String stmt = "(and\n" +
+                "           (instance ?D Driving)\n" +
+                "           (instance ?H Human)\n" +
+                "           (agent ?D ?H))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(0);
+        ArrayList<String> expected = Lists.newArrayList("and", "(instance ?D Driving)", "(instance ?H Human)", "(agent ?D ?H)");
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListAnd1() {
+        String stmt = "(and\n" +
+                "           (instance ?D Driving)\n" +
+                "           (instance ?H Human)\n" +
+                "           (agent ?D ?H))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(1);
+        ArrayList<String> expected = Lists.newArrayList("(instance ?D Driving)", "(instance ?H Human)", "(agent ?D ?H)");
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListAnd2() {
+        String stmt = "(and\n" +
+                "           (instance ?D Driving)\n" +
+                "           (instance ?H Human)\n" +
+                "           (agent ?D ?H))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(2);
+        ArrayList<String> expected = Lists.newArrayList("(instance ?H Human)", "(agent ?D ?H)");
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListAnd3() {
+        String stmt = "(and\n" +
+                "           (instance ?D Driving)\n" +
+                "           (instance ?H Human)\n" +
+                "           (agent ?D ?H))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(3);
+        ArrayList<String> expected = Lists.newArrayList("(agent ?D ?H)");
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexArgumentsToArrayListAnd4() {
+        String stmt = "(and\n" +
+                "           (instance ?D Driving)\n" +
+                "           (instance ?H Human)\n" +
+                "           (agent ?D ?H))";
+
+        Formula f = new Formula(stmt);
+
+        ArrayList<String> actual = f.complexArgumentsToArrayList(4);
+
+        assertEquals(null, actual);
+    }
+
 }

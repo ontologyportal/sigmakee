@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * FormulaPreprocessor tests not focused on findExplicitTypes( ), but requiring that the KBs be loaded.
@@ -218,28 +217,6 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
-    @Test
-    public void testFindCaseRolesComplex()   {
-        String stmt =   "(exists (?D ?H)\n" +
-                "           (and\n" +
-                "               (instance ?D Driving)\n" +
-                "               (instance ?H Human)\n" +
-                "               (agent ?D ?H)))";
-        Formula f = new Formula();
-        f.read(stmt);
-        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-
-        List<SumoProcess> actualResult = formulaPre.findCaseRoles(f, SigmaTestBase.kb);
-
-        SumoProcess expected = new SumoProcess(SigmaTestBase.kb, "agent", "Driving Human");
-
-        assertEquals(1, actualResult.size());
-        assertEquals(expected.toString(), actualResult.get(0).toString());
-
-        String expectNLG = "A human drives.";
-        assertEquals(expectNLG, actualResult.get(0).toNaturalLanguage());
-    }
-
     // TODO: Technically, this should to in the FormulaTest class, but the gatherRelationsWithArgTypes( ) method requires a KB
     // and none of the other tests in that class do. Maybe move the method to FormulaPreprocessor--it's the only Formula method
     // requiring a KB.
@@ -268,7 +245,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
 
@@ -287,9 +264,9 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+        System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
 
-        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }
@@ -309,9 +286,9 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);
-        System.out.println("Var types: " + fp.computeVariableTypes(f,kb));
+        System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
 
-        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }
@@ -349,7 +326,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "(equal ?SET1 ?SET2)))";
         expected.read(expectedString);
 
-        Formula actual = fp.addTypeRestrictionsNew(f, kb);
+        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
         //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
         assertEquals(expected, actual);
 
@@ -368,9 +345,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA) (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE)))";
         expected.read(expectedString);
 
-        Formula actual = fp.addTypeRestrictionsNew(f, kb);
+        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
         //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
         assertEquals(expected, actual);
     }
-
 }

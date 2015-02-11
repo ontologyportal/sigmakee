@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 
 /**
  * LanguageFormatter tests NOT targeted toward the htmlParaphrase( ) method.
- * See LanguageFormatterHtmlParaphraseTest for tests that invoice this method.
+ * See LanguageFormatterHtmlParaphraseTest for tests that invoke this method.
  */
 public class LanguageFormatterTest extends UnitTestBase {
 
@@ -122,7 +122,8 @@ public class LanguageFormatterTest extends UnitTestBase {
     @Test
     public void testStatementParse() {
         String input = "(exists (?D ?H) (and (instance ?D Driving) (instance ?H Human) (agent ?D ?H)))";
-        LanguageFormatter lf = new LanguageFormatter(input, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage");
+        LanguageFormatter lf = new LanguageFormatter(input, SigmaTestBase.kb.getFormatMap("EnglishLanguage"), SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
         String actual = lf.nlStmtPara(input, false, 0);
         assertEquals("", actual);
     }
@@ -137,7 +138,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String expected = "there exist &%Process$\"a  process\" and &%Agent$\"an agent\" such that &%Process$\"the process\" is an &%instance$\"instance\" of &%Driving$\"driving\" and &%Agent$\"the agent\" is an &%instance$\"instance\" of &%Human$\"human\" and &%Agent$\"the agent\" is an &%agent$\"agent\" of &%Process$\"the process\"";
 
-        String actual = LanguageFormatter.variableReplace(form, instanceMap, classMap, kb, "EnglishLanguage");
+        String actual = LanguageFormatter.variableReplace(form, instanceMap, classMap, SigmaTestBase.kb, "EnglishLanguage");
 
         assertEquals(expected, actual);
     }

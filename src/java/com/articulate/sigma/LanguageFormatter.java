@@ -9,21 +9,22 @@ code.  Please cite the following article in any publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
-*/
+
+ This class expects the following to be in the ontology. Their absence won't cause an exception, but will prevent correct behavior.
+   instance
+
+ */
 
 package com.articulate.sigma;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /** ***************************************************************
  *  A class that handles the generation of natural language from logic.
@@ -43,7 +44,6 @@ public class LanguageFormatter {
 
     private String statement;
 
-    // kb.getFormatMap() for this language
     private Map<String, String> phraseMap;
 
     // kb.getTermFormatMap() for this language
@@ -51,6 +51,42 @@ public class LanguageFormatter {
 
     private KB kb;
     private String language;
+
+    HashMap<String, HashSet<String>> variableTypes;
+
+    Map<String, HashSet<String>> variableToInstanceMap;
+
+    // FIXME: Temporarily disable NLG for certain logical operators.
+    static final List<String> notReadyOperators = Lists.newArrayList("not", "=>", "<=>");
+
+    /**
+     * Toggle on and off the latest NLG work.
+     */
+    boolean doNLG = true;
+
+    /**
+     * The stack holds information on the formula being processed, so that successive recursive calls can refer to it.
+     * FIXME: This should probably be moved into a separate object.
+     */
+    private List<StackElement> theStack = Lists.newArrayList();
+
+    private class StackElement  {
+        /**
+         * Holds all the events being processed.
+         */
+        Map<String, SumoProcessCollector> sumoProcessMap;
+
+        /**
+         * Holds the arguments of the current clause. We use it to keep track of which arguments have been processed successfully.
+         */
+        List<String> formulaArgs;
+
+        public StackElement(Map<String, SumoProcessCollector> spm, List<String> args)  {
+            sumoProcessMap = Maps.newHashMap(spm);
+            formulaArgs = Lists.newArrayList(args);
+        }
+    }
+
 
     /*******************************************************************************
      *
@@ -67,6 +103,13 @@ public class LanguageFormatter {
         this.termMap = termMap;
         this.kb = kb;
         this.language = language;
+
+        Formula f = new Formula();
+        f.read(statement);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        variableTypes = fp.computeVariableTypes(f, kb);
+
+        variableToInstanceMap = fp.findExplicitTypes(f);
     }
 
 
@@ -229,16 +272,95 @@ public class LanguageFormatter {
         // non-atomic (list) term formed with the function
         // PredicateFn.
         String pred = f.car();
+
+        // FIXME: test for case role here
+        if(kb.kbCache.isInstanceOf(pred, "CaseRole") && SumoProcessCollector.isKnownRole(pred))    {
+
+            try {
+                if(! theStack.isEmpty())  {
+                    String caseArgument = f.cadr() + " " + f.caddr();
+                    String[] caseArgs = caseArgument.trim().split(" ");
+                    String processInstanceName = caseArgs[0];
+                    String processParticipant = caseArgs[1];
+
+                    if(variableTypes.containsKey(processInstanceName))    {
+
+                        // FIXME: candidate for separate (static?) method that can be unit tested.
+                        HashSet<String> vals = variableTypes.get(processInstanceName);
+                        if(vals.contains("Process")) {
+                            // Does this process already exist on the stack?
+                            StackElement element = theStack.get(theStack.size() - 1);
+                            Map<String, SumoProcessCollector> thisProcessMap = element.sumoProcessMap;
+
+                            // Mark the argument as PROCESSED.
+                            // The relevant args are not held at top of stack, but at top - 1
+                            List<String> stackArgs = theStack.get(theStack.size() - 2).formulaArgs;
+                            if (stackArgs.contains(f.theFormula)) {
+                                int idx = stackArgs.indexOf(f.theFormula);
+                                String temp = "PROCESSED: " + stackArgs.remove(idx);
+                                stackArgs.add(idx, temp);
+                            }
+
+                            if (thisProcessMap.containsKey(processInstanceName)) {
+                                // Already there. Add new information if any exists.
+                                SumoProcessCollector sProcess = thisProcessMap.get(processInstanceName);
+                                String resolvedParticipant = resolveVariable(processParticipant);
+                                sProcess.addRole(pred, resolvedParticipant);
+                            } else {
+                                // Insert into stack.
+                                String resolvedProcessName = resolveVariable(processInstanceName);
+                                String resolvedParticipant = resolveVariable(processParticipant);
+                                SumoProcessCollector sProcess = new SumoProcessCollector(kb, pred, resolvedProcessName, resolvedParticipant);
+                                thisProcessMap.put(processInstanceName, sProcess);
+                            }
+                        }
+                    }
+
+                }
+            } catch (IllegalArgumentException e) {
+                // Recover from exception by turning off full NLG.
+                this.doNLG = false;
+                //theStack.clear();
+                String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
+                        "   Formula:\n       " + statement + "\n";
+                System.out.println(msg);
+            }
+        }
+
+        // Mark the predicate as processed.
+        // FIXME: handle other predicates here: located, orientation, etc.
+        if(pred.equals("instance")) {
+            if(theStack.size() >= 2) {
+                // The relevant args are not held at top of stack, but at top - 1
+                List<String> stackArgs = theStack.get(theStack.size() - 2).formulaArgs;
+                if (stackArgs.contains(stmt)) {
+                    int idx = stackArgs.indexOf(stmt);
+                    String temp = "PROCESSED: " + stackArgs.remove(idx);
+                    stackArgs.add(idx, temp);
+                }
+            }
+        }
+
         if (!Formula.atom(pred)) {
             System.out.println("Error in LanguageFormatter.nlStmtPara(): statement "
                     + stmt
                     + " has a formula in the predicate position.");
             return stmt;
         }
+
         if (logicalOperator(pred)) {
+            if(! theStack.isEmpty()) {
+                // Put the args list into the stack for later reference.
+                List<String> args = f.complexArgumentsToArrayList(1);
+                StackElement element = this.theStack.get(theStack.size() - 1);
+                element.formulaArgs = args;
+            }
+
             ans = paraphraseLogicalOperator(stmt, isNegMode, depth+1);
+
             return ans;
         }
+
         if (phraseMap.containsKey(pred)) {
             ans = paraphraseWithFormat(stmt, isNegMode);
             return ans;
@@ -248,12 +370,6 @@ public class LanguageFormatter {
                 result.append(pred);
             else {
                 result.append(processAtom(pred, termMap, language));
-                /*
-		if (termMap.containsKey(pred))
-		    result.append((String) termMap.get(pred));
-		else
-		    result.append(pred);
-                 */
             }
             f.read(f.cdr());
             while (!f.empty()) {
@@ -282,6 +398,24 @@ public class LanguageFormatter {
     }
 
     /** ***************************************************************
+     * Uses variableToInstanceMap to resolve a given variable.
+     * If more than one entry is in the map, currently takes the first one returned by the iterator.
+     * @param input
+     * @return
+     */
+    private String resolveVariable(String input) {
+        String retVal = input;
+
+        if(variableToInstanceMap.containsKey(input))    {
+            Set<String> values = variableToInstanceMap.get(input);
+            // If more than one entry, take the first one returned by the iterator.
+            retVal = values.iterator().next();
+        }
+
+        return retVal;
+    }
+
+    /** ***************************************************************
      * Create a natural language paraphrase for statements involving the logical operators.
      * @param stmt The logical statement for which we want to paraphrase the operator, arg 0.
      * @param isNegMode Is the expression negated?
@@ -301,24 +435,112 @@ public class LanguageFormatter {
             f.read(f.cdr());
 
             String ans = null;
+
+            if (LanguageFormatter.notReadyOperators.contains(pred))   {
+                doNLG = false;
+            }
+
             if (pred.equals("not")) {
                 ans = nlStmtPara(f.car(), true, depth+1);
                 return ans;
             }
 
-            String arg = null;
-            while (!f.empty()) {
-                arg = f.car();
-                String result = nlStmtPara(arg, false, depth+1);
-                if (StringUtil.isNonEmptyString(result))
-                    args.add(result);
-                else {
-                    System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): "
-                            + "bad result for \"" + arg + "\": " + result);
-                    // TODO: We should probably return empty string at this point, like nlStmtPara( ), instead of continuing processing.
+            // Push new element onto the stack.
+            Map<String, SumoProcessCollector> nextProcessMap = Maps.newHashMap();
+            List<String> argsList = Lists.newArrayList();
+            StackElement inElement = new StackElement(nextProcessMap, argsList);
+            theStack.add(inElement);
+
+            try {
+
+                String arg = null;
+                while (!f.empty()) {
+                    arg = f.car();
+                    String result = nlStmtPara(arg, false, depth + 1);
+                    if (StringUtil.isNonEmptyString(result))
+                        args.add(result);
+                    else {
+                        System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): "
+                                + "bad result for \"" + arg + "\": " + result);
+                        // TODO: We should probably return empty string at this point, like nlStmtPara( ), instead of continuing processing.
+                        return "";
+                    }
+                    f.read(f.cdr());
                 }
-                f.read(f.cdr());
+
+                // Perform natural language output.
+                if (doNLG) {
+                    StackElement outElement = theStack.get(theStack.size() - 1);
+                    Map<String, SumoProcessCollector> thisProcessMap = outElement.sumoProcessMap;
+
+                    if(thisProcessMap != null) {
+
+                        if(! thisProcessMap.isEmpty()) {
+                            // Only perform NLG if the args list has been fully processed.
+                            boolean doIt = false;   // TODO: not sure if this should be true or false
+                            if(theStack.size() >= 2) {
+                                StackElement previousElement = theStack.get(theStack.size() - 2);
+                                doIt = allArgsProcessed(previousElement.formulaArgs);
+                            }
+
+                            if (doIt) {
+                                // Try to do natural language generation on top element of stack.
+                                StringBuilder sb = new StringBuilder();
+                                for (SumoProcessCollector process : thisProcessMap.values()) {
+                                    //SumoProcess process = thisProcessMap.get(thisProcessMap.keySet().iterator().next());
+                                    String naturalLanguage = process.toNaturalLanguage();
+                                    if (!naturalLanguage.isEmpty()) {
+                                        sb.append(naturalLanguage).append(" and ");
+                                    }
+                                }
+                                // Remove last "and" if it exists.
+                                String output = sb.toString().replaceAll(" and $", "");
+                                if (!output.isEmpty()) {
+
+                                    // FIXME: clear the arguments
+//                                    if(theStack.size() >= 2) {
+//                                        StackElement previousElement = theStack.get(theStack.size() - 2);
+//                                        previousElement.formulaArgs.clear();
+//                                    }
+//                                    if (theStack.contains(inElement)) {
+//                                        StackElement thisElement = theStack.get(theStack.indexOf(inElement));
+//                                        thisElement.formulaArgs.clear();
+//                                    }
+
+                                    return output;
+                                }
+                            }
+                        }
+                        else    {
+                            // See if the last recursive call processed all the clause arguments.
+                            if (allArgsProcessed(outElement.formulaArgs)) {
+                                // FIXME: clear the arguments
+//                                if (theStack.size() >= 2) {
+//                                if (theStack.contains(inElement)) {
+//                                    StackElement thisElement = theStack.get(theStack.indexOf(inElement));
+//                                    thisElement.formulaArgs.clear();
+//                                }
+
+                                return args.get(args.size() - 1);
+                            }
+                        }
+                    }
+                }
+
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+            } finally {
+                // Clear the stack.
+                // Something's wrong if the top element of the stack isn't inElement.
+                if(theStack.indexOf(inElement) != theStack.size() - 1) {
+                    throw new IllegalStateException("Current element of stack is not the top element.");
+                }
+                if(! theStack.remove(inElement))   {
+                    throw new IllegalStateException("Unable to pop the stack.");
+                }
             }
+
+            // FIXME: put the below into a separate method
             String COMMA = getKeyword(",",language);
             //String QUESTION = getKeyword("?",language);
             String IF = getKeyword("if",language);
@@ -501,6 +723,31 @@ public class LanguageFormatter {
             ex.printStackTrace();
         }
         return "";
+    }
+
+
+
+    /** ***************************************************************
+     * Check all the arguments for the clause being processed to see if they have all been processed.
+     * FIXME: this should be moved to a separate object with the stack, etc.
+     * @param formulaArgs
+     * @return
+     */
+    private boolean allArgsProcessed(List<String> formulaArgs) {
+        boolean retVal = false;
+
+        if (! formulaArgs.isEmpty()) {
+            boolean isComplete = true;
+            for (String fArg : formulaArgs) {
+                if (! fArg.startsWith(("PROCESSED: "))) {
+                    isComplete = false;
+                    break;
+                }
+            }
+            retVal = isComplete;
+        }
+
+        return retVal;
     }
 
     /** ***************************************************************
@@ -1502,27 +1749,12 @@ public class LanguageFormatter {
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
 
-        String stmt = "( patient Leaving ?ENTITY )";
-        Formula f = new Formula();
-        f.read(stmt);
-        System.out.println("Formula: " + f.theFormula);
-        System.out.println("result: " + filterHtml(htmlParaphrase("",stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb,"EnglishLanguage")));
-        System.out.println();
-
-        stmt = "( agent Leaving John )";
-        f = new Formula();
-        f.read(stmt);
-        System.out.println("Formula: " + f.theFormula);
-        System.out.println("result: " + filterHtml(htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
-        System.out.println();
-
-        stmt = "(exists (?D ?H)\n" +
+        String stmt = "(exists (?D ?H)\n" +
                 "   (and\n" +
                 "       (instance ?D Driving)\n" +
                 "       (instance ?H Human)\n" +
                 "       (agent ?D ?H)))";
-        f = new Formula();
-        f.read(stmt);
+        Formula f = new Formula(stmt);
         System.out.println("Formula: " + f.theFormula);
         System.out.println("result: " + filterHtml(htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println();

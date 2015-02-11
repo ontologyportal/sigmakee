@@ -38,7 +38,7 @@ public class SigmaMockTestBase {
             "goal",
             "patient");
 
-    // JERRY: not sure if instance should be here, or not
+    // FIXME: not sure if instance should be here, or not
     private static final ImmutableList<String> RECOGNIZED_VARIABLE_ARITY_RELATIONS = ImmutableList.of("");
 
     // Add an item to one of these two lists--RECOGNIZED_SUBSTANCES or RECOGNIZED_CORPUSCULAR_OBJECTS--if it is a "participant" in a process and
@@ -50,6 +50,7 @@ public class SigmaMockTestBase {
             "Tea"
             );
     private static final ImmutableList<String> RECOGNIZED_CORPUSCULAR_OBJECTS = ImmutableList.of(
+            "Bell",
             "Book",
             "Human",
             "MedicalDoctor",
@@ -58,7 +59,7 @@ public class SigmaMockTestBase {
             "Telephone",
             "Truck");
 
-    private static final Map<String, List> recognizedMap = Maps.newHashMap();
+    private static final Map<String, List<String>> recognizedMap = Maps.newHashMap();
 
 
     private static final ArrayList<String> INSTANCE_SIGNATURES = Lists.newArrayList(
@@ -176,7 +177,6 @@ public class SigmaMockTestBase {
     }
 
     @BeforeClass
-    // JERRY: do I need to tearDown; i.e. if I don't are other tests messed up?
     public static void setUp() {
         LanguageFormatter.readKeywordMap(KB_PATH);
 
