@@ -20,7 +20,6 @@
   <preference name="systemsDir" value="$SIGMA_HOME/../cvs/sigma" />
   <preference name="tptpHomeDir" value="$SIGMA_HOME/../cvs/sigma" />
   <preference name="graphDir" value="/usr/local/Cellar/tomcat7/7.0.57/libexec/webapps/sigma/graph" />
-  <preference name="inferenceEngine" value="$SIGMA_HOME/../cvs/sigma/kif-linux" />
   <kb name="SUMO" >
     <constituent filename="$SIGMA_HOME/KBs/english_format.kif" />
     <constituent filename="$SIGMA_HOME/KBs/Merge.kif" />
