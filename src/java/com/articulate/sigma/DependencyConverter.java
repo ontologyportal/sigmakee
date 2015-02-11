@@ -68,9 +68,10 @@ public class DependencyConverter {
         BufferedWriter _writer; 
         BufferedReader _error;
         String tmpfname = "tmp.txt";
-        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx1000m -classpath /home/apease/Programs/stanford-parser-full-2014-08-27" + 
-                "/stanford-parser.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser " + 
-                "-outputFormat typedDependencies /home/apease/Programs/stanford-parser-full-2014-08-27/englishPCFG-mcg.ser.gz " + tmpfname;
+//        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx1000m -classpath /home/apease/Programs/stanford-parser-full-2014-08-27" + 
+        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx1000m -classpath /home/apease/Programs/stanford-corenlp-full-2015-01-30" + 
+                "/stanford-corenlp-3.5.1.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser " + 
+                "-outputFormat typedDependencies /home/apease/Programs/stanford-corenlp-full-2015-01-30/englishPCFG-mcg.ser.gz " + tmpfname;
                 //"-outputFormat typedDependencies /home/apease/Programs/stanford-parser-full-2014-08-27/englishPCFG.ser.gz " + tmpfname;
         FileWriter fr = null;
         PrintWriter pr = null;
