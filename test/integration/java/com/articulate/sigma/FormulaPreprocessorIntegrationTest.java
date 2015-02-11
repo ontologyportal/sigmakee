@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.*;
@@ -63,6 +64,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         assertEquals(expected, actualMap);
     }
 
+    @Ignore
     @Test
     public void testAddTypes3() {
         String strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
