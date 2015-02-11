@@ -121,7 +121,16 @@ public class FormulaPreprocessor {
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): before computer variable types");
-        HashMap<String,HashSet<String>> varmap = fp.computeVariableTypes(f,kb);
+        HashMap<String,HashSet<String>> varmap = fp.computeVariableTypes(f, kb);
+        // TODO: Add type restrictions only for variables which don't appear in (instance ?X ...) and (subclass ?X ...);
+        // This solution is trivial; To completely solve this issue, check "SetOrClass" in SUMO
+        ArrayList<String> variables = form.collectAllVariables();
+        for (String v : variables) {
+            if (form.toString().contains("(instance " + v + " ")
+                    || form.toString().contains("(subclass " + v + " ")) {
+                varmap.remove(v);
+            }
+        }
         //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): variable types: \n" + varmap);
         StringBuffer sb = new StringBuffer();
         if (varmap.size() > 0) {
@@ -451,7 +460,7 @@ public class FormulaPreprocessor {
                     if (instantiations != null) {
                         if (instantiations.isEmpty()) {
                             accumulator.add(f);
-                        }
+    }
                         else {
                             accumulator.addAll(instantiations);
                         }
