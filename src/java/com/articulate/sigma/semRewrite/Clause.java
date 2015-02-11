@@ -175,6 +175,7 @@ public class Clause {
      */
     private static boolean wildcardMatch(String t1, String t2) {
         
+        //System.out.println("INFO in Clause.wildcardMatch(): attempting to match: " + t1 + " " + t2);
         String s1 = t1;
         String s2 = t2;
         if (!t1.contains("*") && !t2.contains("*")) // no wildcards case should fall through
