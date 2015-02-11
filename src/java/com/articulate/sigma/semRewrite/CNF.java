@@ -397,6 +397,17 @@ public class CNF {
         System.out.println("INFO in CNF.testUnify(): cnf " + cnf);
         System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf1);
         System.out.println("INFO in CNF.testUnify(): bindings (should be null): " + cnf1.unify(cnf));
+        
+        System.out.println("INFO in CNF.testUnify(): -------------------------------------");
+        String rule3 = "nsubj(?V,Who*).";
+        Lexer lex2 = new Lexer(rule3);
+        CNF cnf12 = CNF.parseSimple(lex2);
+        String cnfstr2 = "nsubj(moves-2,Who-1), root(ROOT-0,kicks-2), det(cart-4,the-3), dobj(kicks-2,cart-4), sumo(Kicking,kicks-2), sumo(Human,John-1), sumo(Wagon,cart-4).";
+        lex2 = new Lexer(cnfstr2);
+        CNF cnf2 = CNF.parseSimple(lex2);
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf2);
+        System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf12);
+        System.out.println("INFO in CNF.testUnify(): bindings (should be null): " + cnf12.unify(cnf2));
     }
     
     /** *************************************************************
