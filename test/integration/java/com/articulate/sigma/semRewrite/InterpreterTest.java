@@ -2,6 +2,7 @@ package com.articulate.sigma.semRewrite;
 
 import static org.junit.Assert.assertEquals;
 
+import com.articulate.sigma.IntegrationTestBase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,7 +18,7 @@ import java.io.*;
 import java.util.*;
 
 @RunWith(Parameterized.class)
-public class InterpreterTest {
+public class InterpreterTest extends IntegrationTestBase {
 
     public static Interpreter interp;
  
@@ -37,8 +38,14 @@ public class InterpreterTest {
     public static Collection<Object[]> prepare() {
    
    	    	ArrayList<Object[]> result = new ArrayList<Object[]>();
+
+		// FIXME: Here's the resources directory as a File object.
+		File jsonTestFile = new File(IntegrationTestBase.RESOURCES_FILE, "translation_tests.json");
+		// FIXME ? Maybe we should verify the file exists?
+		String filename = jsonTestFile.getAbsolutePath();
+
 		//String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + 
-		String filename = "/home/apease/Sigma/KBs" + File.separator + "gold_standard_translations_notense-small-noex.json";
+// FIXME: remove?		String filename = "/home/apease/Sigma/KBs" + File.separator + "gold_standard_translations_notense-small-noex.json";
 		JSONParser parser = new JSONParser();  
 		try {  
 			Object obj = parser.parse(new FileReader(filename));  
