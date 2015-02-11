@@ -1632,7 +1632,7 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    private static Formula standardizeApart(Formula f,Map<String, String> renameMap) {  
+    private static Formula standardizeApart(Formula f, Map<String, String> renameMap) {  
 
         Clausifier temp = new Clausifier(f.theFormula);
         return temp.standardizeApart(renameMap);
@@ -1652,10 +1652,10 @@ public class Clausifier  {
      *
      * @return A Formula.
      */
-    private Formula standardizeApart(Map<String, String> renameMap) {
+    private Formula standardizeApart(Map<String,String> renameMap) {
        
         Formula result = thisFormula;
-        Map<String, String> reverseRenames = null;
+        Map<String,String> reverseRenames = null;
         if (renameMap instanceof Map) 
             reverseRenames = renameMap;            
         else 
@@ -2212,11 +2212,11 @@ public class Clausifier  {
         //testRemoveImpEq();
         //testMoveNegationIn();
         //testMoveQuantifiersLeft();
-        //testStandardizeVariables();
+        testStandardizeVariables();
         //testSkolemization();
         //testDistribute();
         //testClausification();
-        testClausificationSimple();
+        //testClausificationSimple();
     	//testClausifier(args);
     }
 }
