@@ -1,9 +1,5 @@
 package com.articulate.sigma;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,7 +118,7 @@ public class FormulaPreprocessor {
 
         //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): before computer variable types");
         HashMap<String,HashSet<String>> varmap = fp.computeVariableTypes(f, kb);
-        // TODO: Add type restrictions only for variables which don't appear in (instance ?X ...) and (subclass ?X ...);
+        // TODO: Add type restrictions only for variables which don't appear in (instance ?X ...) and (subclass ?X ...)
         // This solution is trivial; To completely solve this issue, check "SetOrClass" in SUMO
         ArrayList<String> variables = form.collectAllVariables();
         for (String v : variables) {
@@ -689,137 +685,6 @@ public class FormulaPreprocessor {
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         return results;
-    }
-
-    /** ***************************************************************
-     * A work in progress.
-     */
-    public List<SumoProcess> findCaseRoles(Formula form, KB kb) {
-
-        Formula f = new Formula();
-        f.read(form.theFormula);
-
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-
-        // TODO: Compare to computeVariableTypes(); do I need the third parameter
-        Multimap<String, String> caseRoleMap = findCaseRolesRecurse(kb, form);
-
-        Map<String, HashSet<String>> varMap = findExplicitTypes(f);
-
-        List<SumoProcess> result = getCaseRoles(varMap, caseRoleMap, kb);
-
-
-        return result;
-    }
-
-    /** ***************************************************************
-     * A work in progress.
-     */
-    List<SumoProcess> getCaseRoles(Map<String, HashSet<String>> varMap, Multimap<String, String> caseRoleMap, KB kb) {
-        List<SumoProcess> result = Lists.newArrayList();
-
-        for(Map.Entry<String, String> mapPair : caseRoleMap.entries())  {
-            String role = mapPair.getKey();
-            String roleArguments = mapPair.getValue();
-
-            // Replace variable role arguments with their constant vals.
-            String[] arguments = roleArguments.split(" ");
-            for(String arg : arguments) {
-                if(arg.startsWith("?"))  {
-                    if(varMap.containsKey(arg)) {
-                        // FIXME: We're assuming varMap has only one constant for a given variable
-                        String constant = varMap.get(arg).iterator().next();
-
-                        // Escape the ? so we don't end up with a regex.
-                        arg = arg.replaceAll("\\?", "\\\\?");
-                        roleArguments = roleArguments.replaceAll(arg, constant);
-                    }
-                    else    {
-                        // FIXME: throw exception; log error?
-                    }
-                }
-            }
-
-            // Create processes.
-            SumoProcess process = new SumoProcess(kb, role, roleArguments);
-            result.add(process);
-        }
-
-        return result;
-    }
-
-    /** ***************************************************************
-     * A work in progress. Originally copied from computeVariableTypesRecurse(), so follows
-     * the same car/cdr recursion into the formula.
-     */
-    public Multimap<String, String> findCaseRolesRecurse(KB kb, Formula f) {
-        Multimap<String, String> recursiveResult = HashMultimap.create();
-        if (f == null || StringUtil.emptyString(f.theFormula) || f.empty())
-            return recursiveResult;
-
-        String carstr = f.car();
-        if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {// equals may require special treatment
-            //recursiveResult.putAll(input);
-            for (int i = 1; i < f.listLength(); i++)
-                //recursiveResult = mergeToMap(recursiveResult, findCaseRolesRecurse(kb, new Formula(f.getArgument(i)), input));
-                recursiveResult = findCaseRolesRecurse(kb, new Formula(f.getArgument(i)));
-        }
-        else if (f.isSimpleClause()) {
-            String pred = carstr;
-            if(SumoProcess.ThematicRole.isThematicRole(pred))    {
-                //addToMap(recursiveResult, "Roles", pred + "=" + f.cdrAsFormula());
-                String args = f.cadr() + " " + f.caddr();
-                recursiveResult.put(pred, args);
-            }
-
-            if (f.theFormula.indexOf("?") > -1 && !Formula.isVariable(pred)) {
-                Formula newf = f.cdrAsFormula();
-                int argnum = 1;
-                while (!newf.empty()) {
-                    String arg = newf.car();
-                    if (Formula.isVariable(arg)) {
-//                        if(kb.isSubclass(newf.cadr(), "Process"))   {
-//                            addToMap(recursiveResult, "Processes", arg + "=" + newf.cadr());
-//                        }
-
-                        String cl = findType(argnum, pred, kb);
-
-                        if (StringUtil.emptyString(cl)) {
-                            if (!kb.kbCache.transInstOf(pred, "VariableArityRelation"))
-                                System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): no type information for arg " +
-                                        argnum + " of relation " + pred + " in formula: \n" + f);
-                        }
-//                        else
-//                            addToMap(recursiveResult, arg, cl);
-                    }
-                    // If formula is function then recurse.
-                    else if(Formula.isFunctionalTerm(arg))  {
-                        //recursiveResult = mergeToMap(recursiveResult, findCaseRolesRecurse(kb, new Formula(arg), input));
-                        recursiveResult = findCaseRolesRecurse(kb, new Formula(arg));
-                    }
-//                    else if(kb.isSubclass(newf.cadr(), "Process"))   {
-//                        addToMap(recursiveResult, "Processes", newf.cadr());
-//                    }
-
-
-                    newf = newf.cdrAsFormula();
-                    argnum++;  // note that this will try an argument that doesn't exist, and terminate when it does
-                }
-            }
-//            else if(kb.isSubclass(f.cadr(), "Process")) {
-//                addToMap(recursiveResult, "Processes", f.cadr());
-//            }
-
-        }
-        else {
-            //recursiveResult = mergeToMap(input, findCaseRolesRecurse(kb, f.carAsFormula(), input));
-            recursiveResult = findCaseRolesRecurse(kb, f.carAsFormula());
-            //recursiveResult = mergeToMap(recursiveResult, findCaseRolesRecurse(kb, f.cdrAsFormula(), input));
-            recursiveResult = findCaseRolesRecurse(kb, f.cdrAsFormula());
-        }
-
-
-        return recursiveResult;
     }
 
     /** ***************************************************************
