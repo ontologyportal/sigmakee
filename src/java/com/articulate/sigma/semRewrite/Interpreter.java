@@ -33,9 +33,16 @@ public class Interpreter {
   public RuleSet rs = null;
   //public CNF input = null;
   public String fname = "";
+  
+  // execution options
   public static boolean inference = false;
   public static boolean question = false;
   public static boolean addUnprocessed = false;
+  
+  // debug options
+  public static boolean showrhs = false;
+  public static boolean showr = true;
+  
   public static List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
   
   /** *************************************************************
@@ -229,21 +236,26 @@ public class Interpreter {
                       bindingFound = true;
                       //System.out.println("INFO in Interpreter.interpret(): new input 1: " + newInput);
                       //System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
-                      System.out.println("INFO in Interpreter.interpret(): r: " + r);
+                      if (showr)
+                    	  System.out.println("INFO in Interpreter.interpret(): r: " + r);
                       RHS rhs = r.rhs.applyBindings(bindings);   
                       if (r.operator == Rule.RuleOp.IMP) {
                           CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
                           //System.out.println("INFO in Interpreter.interpret(): input with bindings removed: " + bindingsRemoved);
                           if (!bindingsRemoved.empty()) {  // assert the input after removing bindings
                               if (rhs.cnf != null) {
-                                  //System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
+                            	  if (showrhs)
+                            		  System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
                                   bindingsRemoved.merge(rhs.cnf);
                               }
                               newInput = bindingsRemoved;
                           }
                           else
-                              if (rhs.cnf != null)
+                              if (rhs.cnf != null) {
+                            	  if (showrhs)
+                            		  System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
                                   newInput = rhs.cnf;
+                              }
                           if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) { // assert a KIF RHS
                               kifoutput.add(rhs.form.toString());
                           }
@@ -352,6 +364,22 @@ public class Interpreter {
               else if (input.equals("noUnprocessed")) {
                   addUnprocessed = false;
             	  System.out.println("not adding unprocessed clauses");
+              }
+              else if (input.equals("noshowr")) {
+                  showr = false;
+            	  System.out.println("not showing rule that are applied");
+              }
+              else if (input.equals("showr")) {
+                  showr = true;
+            	  System.out.println("showing rules that are applied");
+              }
+              else if (input.equals("noshowrhs")) {
+                  showrhs = false;
+            	  System.out.println("not showing right hand sides that are asserted");
+              }
+              else if (input.equals("showrhs")) {
+                  showrhs = true;
+            	  System.out.println("showing right hand sides that are asserted");
               }
               else if (input.startsWith("load "))
                   loadRules(input.substring(input.indexOf(' ')+1));
@@ -558,6 +586,8 @@ public class Interpreter {
           System.out.println("       'reload' (no quotes) will reload the rewriting rule set.");
           System.out.println("       'inference/noinference' will turn on/off inference.");
           System.out.println("       'addUnprocessed/noUnprocessed' will add/not add unprocessed clauses.");
+          System.out.println("       'showr/noshowr' will show/not show what rules get matched.");
+          System.out.println("       'showrhs/noshowrhs' will show/not show what right hand sides get asserted.");
           System.out.println("       Ending a sentence with a question mark will trigger a query,");
           System.out.println("       otherwise results will be asserted to the KB.");
       }
