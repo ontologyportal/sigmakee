@@ -1210,7 +1210,9 @@ public class KB {
                         Formula oldFormula = formulaMap.get(oldFormulas.get(j));
                         if (oldFormula != null && newFormula.theFormula.equals(oldFormula.theFormula)) {
                             found = true;
-                            formulasPresent.add(oldFormula);
+                            // no duplicate formulas are allowed in formulasPresent
+                            if (formulasPresent!=null && !formulasPresent.contains(oldFormula))
+                                formulasPresent.add(oldFormula);
                         }
                     }
                     if (!found) {
@@ -2084,7 +2086,7 @@ public class KB {
 	        
 	        canonicalPath = constituent.getCanonicalPath();
 	        if (constituents.contains(canonicalPath))
-	            errors.add("Error. " + canonicalPath + " already loaded.");        
+	            errors.add("Error. " + canonicalPath + " already loaded.");
             file.readFile(canonicalPath);
             errors.addAll(file.warningSet);
         }
@@ -2769,9 +2771,6 @@ public class KB {
             if (!formulaMap.isEmpty()) {
             	HashSet<String> formulaStrings = new HashSet<String>();
             	formulaStrings.addAll(formulaMap.keySet());
-                TreeSet<String> forms = preProcess(formulaStrings);
-                String filename = writeInferenceEngineFormulas(forms);
-                boolean vFileSaved = StringUtil.isNonEmptyString(filename);
                 if (eprover != null) 
                 	eprover.terminate();                
                 eprover = null;
@@ -2779,7 +2778,7 @@ public class KB {
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 skb.writeTPTPFile(tptpFilename, true);
-                if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")) && vFileSaved)
+                if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
                 	eprover = new EProver(mgr.getPref("inferenceEngine"),tptpFilename);
             }
         }
