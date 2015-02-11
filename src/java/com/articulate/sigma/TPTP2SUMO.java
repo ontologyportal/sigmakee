@@ -319,7 +319,7 @@ public class TPTP2SUMO {
    */
   private static String convertTerm (SimpleTptpParserOutput.Formula.Atomic atom) {
 
-	  System.out.println("INFO in TPTP2SUMO.convertTerm(): " + atom);
+	//  System.out.println("INFO in TPTP2SUMO.convertTerm(): " + atom);
       String res = "";
       LinkedList<SimpleTptpParserOutput.Term> arguments = (LinkedList)atom.getArguments();
       if (arguments != null) 
@@ -349,7 +349,7 @@ public class TPTP2SUMO {
    */
   private static StringBuffer convertFormula (SimpleTptpParserOutput.Formula formula, int indent, int indented) {
 
-	  System.out.println("INFO in TPTP2SUMO.convertFormula(): " + formula);
+	//  System.out.println("INFO in TPTP2SUMO.convertFormula(): " + formula);
       StringBuffer result = new StringBuffer();
       switch(formula.getKind()) {
       case Atomic:
@@ -415,7 +415,7 @@ public class TPTP2SUMO {
    */
   private static StringBuffer convertClause (SimpleTptpParserOutput.Clause clause, int indent, int indented) {
 
-	  System.out.println("INFO in TPTP2SUMO.convertClause(): " + clause);
+	//  System.out.println("INFO in TPTP2SUMO.convertClause(): " + clause);
       StringBuffer result = new StringBuffer();
       LinkedList<SimpleTptpParserOutput.Literal> literals = (LinkedList) clause.getLiterals();
       result.append(addIndent(indent,indented));
@@ -446,7 +446,7 @@ public class TPTP2SUMO {
    */
   private static StringBuffer convertLiteral (SimpleTptpParserOutput.Literal literal, int indent, int indented) {
   
-	  System.out.println("INFO in TPTP2SUMO.convertLiteral(): " + literal);
+	//  System.out.println("INFO in TPTP2SUMO.convertLiteral(): " + literal);
       StringBuffer result = new StringBuffer();
       result.append(addIndent(indent,indented));
       if (literal.isPositive()) 
