@@ -26,6 +26,7 @@ import java.util.regex.*;
 import java.io.*;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.collect.Lists;
 
 public class Interpreter {
@@ -46,6 +47,9 @@ public class Interpreter {
   public static boolean showr = true;
   
   public static List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
+  public static List<String> months = Lists.newArrayList("January","February","March","April","May","June",
+		  "July","August","September","October","November","December");
+  public static List<String> days = Lists.newArrayList("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
   
   /** *************************************************************
    */
@@ -98,16 +102,24 @@ public class Interpreter {
   
   /** *************************************************************
    */
+  public static boolean excluded(String word) {
+	  
+	  return (months.contains(word) || days.contains(word));
+  }
+  
+  /** *************************************************************
+   */
   public static ArrayList<String> findWSD(ArrayList<String> clauses, HashMap<String,String> purewords) {
       
       System.out.println("INFO in Interpreter.addWSD(): " + clauses);
+	  KB kb = KBmanager.getMgr().getKB("SUMO");
       DependencyConverter.readFirstNames();
       ArrayList<String> results = new ArrayList<String>();
       ArrayList<String> pure = new ArrayList<String>();
       pure.addAll(purewords.keySet());
       for (int i = 0; i < pure.size(); i++) {
           String pureword = pure.get(i);
-          if (WordNet.wn.stopwords.contains(pureword) || qwords.contains(pureword.toLowerCase()))
+          if (WordNet.wn.stopwords.contains(pureword) || qwords.contains(pureword.toLowerCase()) || excluded(pureword))
               continue;
           String id = WSD.findWordSenseInContext(pureword, pure);
           if (!StringUtil.emptyString(id)) {
@@ -116,7 +128,10 @@ public class Interpreter {
                   if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
                       sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                   }
-                  results.add("sumo(" + sumo + "," + purewords.get(pureword) + ")");
+                  if (kb.isInstance(sumo))
+                      results.add("equals(" + sumo + "," + purewords.get(pureword) + ")");
+                  else
+                	  results.add("sumo(" + sumo + "," + purewords.get(pureword) + ")");
               }
           }
           else if (DependencyConverter.maleNames.contains(pureword)) {
@@ -165,16 +180,47 @@ public class Interpreter {
   }
   
   /** *************************************************************
+   * Take in a sentence and output a SUO-KIF string
    */
-  public String interpret(String input) {
+  public String interpretSingle(String input) {
       
-      Lexer lex = new Lexer(input);
-      CNF cnf = CNF.parseSimple(lex);
+	  ArrayList<String> results = null;
+      try {
+          results = DependencyConverter.getDependencies(input);
+      }
+      catch (Exception e) {
+          e.printStackTrace();
+          System.out.println(e.getMessage());
+      }
+      HashMap<String,String> purewords = extractWords(results);
+      ArrayList<String> wsd = findWSD(results,purewords);
+      results.addAll(wsd);           
+      //String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
+      
       ArrayList<CNF> inputs = new ArrayList<CNF>();
-      inputs.add(cnf);
-      return interpret(inputs);
+	  for (int i = 0; i < results.size(); i++) {
+	      Lexer lex = new Lexer(results.get(i));
+	      CNF cnf = CNF.parseSimple(lex);
+	      inputs.add(cnf);
+	  }
+      ArrayList<String> kifClauses = interpretCNF(inputs);
+      kifClauses.addAll(InterpretNumerics.getSumoTerms(input));
+      return fromKIFClauses(kifClauses);
   }
   
+  /** *************************************************************
+   
+  public String interpret(ArrayList<String> clauses) {
+      
+      ArrayList<CNF> inputs = new ArrayList<CNF>();
+	  for (int i = 0; i < clauses.size(); i++) {
+	      Lexer lex = new Lexer(clauses.get(i));
+	      CNF cnf = CNF.parseSimple(lex);
+	      inputs.add(cnf);
+	  }
+      return fromKIFClauses(interpretCNF(inputs));
+  }
+ */
   /** *************************************************************
    */
   public String printKB(ArrayList<CNF> inputs) {
@@ -227,7 +273,7 @@ public class Interpreter {
   
   /** *************************************************************
    */
-  public String interpret(ArrayList<CNF> inputs) {
+  public ArrayList<String> interpretCNF(ArrayList<CNF> inputs) {
       
       ArrayList<String> kifoutput = new ArrayList<String>();
       System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs); 
@@ -309,7 +355,14 @@ public class Interpreter {
           //System.out.println("INFO in Interpreter.interpret(): newinputs: " + newinputs);
           //System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs);
       }
-      String s = toFOL(kifoutput);
+      return kifoutput;
+  }
+  
+  /** ***************************************************************
+   */
+  public String fromKIFClauses(ArrayList<String> kifcs) {
+	  
+      String s = toFOL(kifcs);
       System.out.println("INFO in Interpreter.interpret(): KIF: " + s);
       if (inference) {
     	  KB kb = KBmanager.getMgr().getKB("SUMO");
@@ -322,9 +375,10 @@ public class Interpreter {
   }
   
   /** ***************************************************************
-   */
-  public String interpSingle(String input) {
+   
+  public String interpSingleCommandLine(String input) {
       
+	  interpretSingle(input);
       ArrayList<String> results = null;
       try {
           input = StringUtil.removeEnclosingQuotes(input);
@@ -337,9 +391,11 @@ public class Interpreter {
           }
           HashMap<String,String> purewords = extractWords(results);
           ArrayList<String> wsd = findWSD(results,purewords);
+          System.out.println("INFO in Interpreter.interpret(): wsd: " + wsd);
+          System.out.println("INFO in Interpreter.interpret(): results: " + results);
           results.addAll(wsd);            
           String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-          return interpret(in);              
+          return interpret(results);              
       }
       catch (Exception e) {
           e.printStackTrace();
@@ -347,7 +403,7 @@ public class Interpreter {
       }
       return "";
   }
-  
+  */
   /** ***************************************************************
    */
   public void interpInter() {
@@ -405,18 +461,7 @@ public class Interpreter {
             		  question = true;
             	  else
             		  question = false;
-                  try {
-                      results = DependencyConverter.getDependencies(input);
-                  }
-                  catch (Exception e) {
-                      e.printStackTrace();
-                      System.out.println(e.getMessage());
-                  }
-                  HashMap<String,String> purewords = extractWords(results);
-                  ArrayList<String> wsd = findWSD(results,purewords);
-                  results.addAll(wsd);           
-                  String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-                  interpret(in); 
+            	  interpretSingle(input);
               }
           }
       } while (!StringUtil.emptyString(input));
@@ -527,7 +572,7 @@ public class Interpreter {
       CNF cnfInput = CNF.parseSimple(lex);
       ArrayList<CNF> inputs = new ArrayList<CNF>();
       inputs.add(cnfInput);
-      interp.interpret(inputs);
+      interp.interpretCNF(inputs);
       System.out.println("INFO in Interpreter.testPreserve(): result should be KIF for foo and sumo");
       
       interp = new Interpreter();
@@ -544,7 +589,7 @@ public class Interpreter {
       cnfInput = CNF.parseSimple(lex);
       inputs = new ArrayList<CNF>();
       inputs.add(cnfInput);
-      interp.interpret(inputs);
+      interp.interpretCNF(inputs);
       System.out.println("INFO in Interpreter.testPreserve(): result should be KIF for foo");
       
       interp = new Interpreter();
@@ -560,7 +605,7 @@ public class Interpreter {
       cnfInput = CNF.parseSimple(lex);
       inputs = new ArrayList<CNF>();
       inputs.add(cnfInput);
-      interp.interpret(inputs);
+      interp.interpretCNF(inputs);
       System.out.println("INFO in Interpreter.testPreserve(): result should be KIF:");
       System.out.println(" (and (det river-5 the-4) (instance walks-2 Walking) (instance John-1 Human) (instance river-5 River))");
   }
@@ -606,6 +651,46 @@ public class Interpreter {
       System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
   }
   
+	/** ***************************************************************
+	 */
+	public static void testTimeDateExtraction() {
+		
+		System.out.println("INFO in Interpreter.testTimeDateExtraction()");
+		Interpreter interp = new Interpreter();
+		KBmanager.getMgr().initializeOnce();
+		interp.loadRules();
+	          
+		System.out.println("----------------------");
+		String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
+		System.out.println(input);
+		String sumoTerms = interp.interpretSingle(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.";
+		System.out.println(input);
+		sumoTerms = interp.interpretSingle(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
+		System.out.println(input);
+		sumoTerms = interp.interpretSingle(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "She was declared dead on January 5, 1939.";
+		System.out.println(input);
+		sumoTerms = interp.interpretSingle(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "Bob went to work only 5 times in 2003.";
+		System.out.println(input);
+		sumoTerms = interp.interpretSingle(input);
+		System.out.println(sumoTerms);
+	}
+	
   /** ***************************************************************
    */
   public static void main(String[] args) {  
@@ -617,7 +702,7 @@ public class Interpreter {
           interp.loadRules();
       }
       if (args != null && args.length > 0 && args[0].equals("-s")) {
-          interp.interpSingle(args[1]);
+          interp.interpretSingle(args[1]);
       }
       else if (args != null && args.length > 0 && args[0].equals("-i")) {
           interp.interpInter();
@@ -643,7 +728,7 @@ public class Interpreter {
           //testPreserve();
           //testQuestionPreprocess();
     	  //testPostProcess();
-    	  testWSD();
+    	  testTimeDateExtraction();
       }
   }
 }
