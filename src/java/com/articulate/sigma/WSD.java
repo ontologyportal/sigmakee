@@ -101,8 +101,8 @@ public class WSD {
                 }
             }
         }
-        System.out.println("INFO in findWordSenseInContext(): best synset: " + bestSynset);
-        System.out.println("INFO in findWordSenseInContext(): best score: " + bestScore);
+        //System.out.println("INFO in findWordSenseInContext(): best synset: " + bestSynset);
+        //System.out.println("INFO in findWordSenseInContext(): best score: " + bestScore);
         if (bestScore > 5)
             return bestSynset;
         else
@@ -230,7 +230,7 @@ public class WSD {
      */
     public static String getBestDefaultSense(String word) {
 
-        System.out.println("INFO in WSD.getBestDefaultSense(1): " + word);
+        //System.out.println("INFO in WSD.getBestDefaultSense(1): " + word);
         if (StringUtil.isDigitString(word))
             return null;
         String bestSense = "";
@@ -244,7 +244,7 @@ public class WSD {
                 newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
             if (newWord == "")
                 newWord = word;
-            System.out.println("INFO in WSD.getBestDefaultSense(): word: " + newWord + " POS: " + pos);
+            //System.out.println("INFO in WSD.getBestDefaultSense(): word: " + newWord + " POS: " + pos);
             if (newWord != null) {
                 TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord.toLowerCase());
                 if (senseKeys != null) {
@@ -264,12 +264,12 @@ public class WSD {
                     }        
                 }
             }
-            System.out.println("INFO in WSD.getBestDefaultSense(): best sense: " + bestSense + " best score: " + bestScore);
+            //System.out.println("INFO in WSD.getBestDefaultSense(): best sense: " + bestSense + " best score: " + bestScore);
         }
         if (bestSense == "") {
-            System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
+            //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
             ArrayList<String> al = WordNet.wn.wordsToSenses.get(word.toLowerCase());
-            System.out.println("INFO in WSD.getBestDefaultSense(): " + al);
+            //System.out.println("INFO in WSD.getBestDefaultSense(): " + al);
             if (al != null) {
                 Iterator<String> it = al.iterator();
                 while (it.hasNext()) {
@@ -293,7 +293,7 @@ public class WSD {
      */
     public static String getBestDefaultSense(String word, int pos) {
 
-        System.out.println("WSD.getBestDefaultSense(2): " + word + " POS: " + pos);
+        //System.out.println("WSD.getBestDefaultSense(2): " + word + " POS: " + pos);
         if (StringUtil.isDigitString(word))
             return null;
         String synset = "";
@@ -304,7 +304,7 @@ public class WSD {
             newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
         if (StringUtil.emptyString(newWord))
             newWord = word;
-        System.out.println("WSD.getBestDefaultSense(): word: " + newWord);
+        //System.out.println("WSD.getBestDefaultSense(): word: " + newWord);
         if (newWord != null) {
             TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord.toLowerCase());
             //System.out.println("WSD.getBestDefaultSense(): sensekeys: " + senseKeys);
