@@ -1,5 +1,6 @@
 package com.articulate.sigma.semRewrite;
 
+
 /*
 Copyright 2014-2015 IPsoft
 
