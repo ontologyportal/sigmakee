@@ -7,16 +7,22 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 public class SUMOKBtoTPTPKB {
-	   
+
+    // TODO: In future, should turn filterSimpleOnly off
+    public static final boolean filterSimpleOnly = true;
+    private static ArrayList<String> logicalTerms = new ArrayList<String>(Arrays.asList("=>", "<=>", "forall", "exists", "and", "or", "not"));
+    private static ArrayList<String> basicTerms = new ArrayList<String>(Arrays.asList("Entity",
+            "SetOrClass", "SelfConnectedObject", "Agent",
+            "Process", "Class", "Relation",
+            "Object", "Physical", "UnionFn",
+            "Attribute", "Proposition", "ProcessTask",
+            "Quantity", "Abstract", "ContentBearingPhysical",
+            "PositiveInteger", "RealNumber",
+            "Organization", "ContentBearingObject", "Predicate", "BinaryPredicate"));
+
 	public KB kb;
 	
     /** *************************************************************
@@ -353,8 +359,25 @@ public class SUMOKBtoTPTPKB {
                                 pr.print("%FOL ");                            
                         }
                     }
-                    pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
-                    pr.println(",axiom,(" + theTPTPFormula + ")).");
+
+                    // Filter1: only keep simpleClause and basic axioms
+                    // TODO: this should be removed in the future
+                    ArrayList<String> relationConstants = new ArrayList<String> (f.gatherRelationConstants());
+                    ArrayList<String> variables = f.collectAllVariables();
+                    ArrayList<String> terms = f.collectTerms();
+                    if (relationConstants!=null && variables!=null && terms!=null) {
+
+                        ArrayList<String> minimum = new ArrayList<String>();
+                        minimum = removeTermsFromList1WhichAppearInList2(terms, variables);
+                        minimum = removeTermsFromList1WhichAppearInList2(minimum, relationConstants);
+                        minimum = removeTermsFromList1WhichAppearInList2(minimum, logicalTerms);
+                        if (filterSimpleOnly) {
+                            if (f.isSimpleClause() || minimum.isEmpty() || isList1OnlyContainsTermsFromList2(minimum, basicTerms)) {
+                                pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                                pr.println(",axiom,(" + theTPTPFormula + ")).");
+                            }
+                        }
+                    }
                 }
                 pr.flush();
                 if (f.getTheTptpFormulas().isEmpty()) {
@@ -392,6 +415,34 @@ public class SUMOKBtoTPTPKB {
             }
         }
         return result;
+    }
+
+    /**
+     * remove terms from list1 which also appear in list2
+     */
+    private static ArrayList<String> removeTermsFromList1WhichAppearInList2(ArrayList<String> list1, ArrayList<String> list2) {
+
+        if (list1 == null || list1 == null)
+            return list1;
+        ArrayList<String> result = new ArrayList<String>();
+        for (String s : list1) {
+            if (!list2.contains(s)) {
+                result.add(s);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * check if list1 only contains terms in list2
+     */
+    private static boolean isList1OnlyContainsTermsFromList2(ArrayList<String> list1, ArrayList<String> list2) {
+
+        for (String s1 : list1) {
+            if (!list2.contains(s1))
+                return false;
+        }
+        return true;
     }
  
     /** *************************************************************
