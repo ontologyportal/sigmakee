@@ -244,7 +244,7 @@ public class WSD {
                 newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
             if (newWord == "")
                 newWord = word;
-            System.out.println("INFO in WSD.getBestDefaultSense(): word: " + newWord);
+            System.out.println("INFO in WSD.getBestDefaultSense(): word: " + newWord + " POS: " + pos);
             if (newWord != null) {
                 TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord.toLowerCase());
                 if (senseKeys != null) {
@@ -254,13 +254,17 @@ public class WSD {
                         String POS = WordNetUtilities.getPOSfromKey(avp.value);
                         String numPOS = WordNetUtilities.posLettersToNumber(POS);
                         int count = Integer.parseInt(avp.attribute.trim());
-                        if (Integer.toString(pos).equals(numPOS) && count > bestScore) {                        
-                            bestSense = numPOS + WordNet.wn.senseIndex.get(avp.value);
-                            bestScore = count;
+                        if (Integer.toString(pos).equals(numPOS) && count > bestScore) {     
+                        	String baseSyn = WordNet.wn.senseIndex.get(avp.value);
+                        	if (!StringUtil.emptyString(baseSyn)) {
+                        		bestSense = numPOS + WordNet.wn.senseIndex.get(avp.value);
+                        		bestScore = count;
+                        	}
                         }
                     }        
                 }
             }
+            System.out.println("INFO in WSD.getBestDefaultSense(): best sense: " + bestSense + " best score: " + bestScore);
         }
         if (bestSense == "") {
             System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
