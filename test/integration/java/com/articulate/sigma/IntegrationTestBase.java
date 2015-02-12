@@ -39,12 +39,16 @@ public class IntegrationTestBase extends SigmaTestBase {
 
     @BeforeClass
     public static void setup()  {
-            long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
-            SigmaTestBase.doSetUp(xmlReader);
+        SigmaTestBase.doSetUp(xmlReader);
 
-            long endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
+
+        // Update the init time only if it has its initialized value.
+        if(IntegrationTestBase.totalKbMgrInitTime == Long.MAX_VALUE) {
             IntegrationTestBase.totalKbMgrInitTime = endTime - startTime;
+        }
     }
 
 }

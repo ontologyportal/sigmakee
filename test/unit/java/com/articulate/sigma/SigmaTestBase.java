@@ -10,6 +10,10 @@ public class SigmaTestBase {
 
     protected static KB kb;
 
+    /**
+     * Performs the KB load.
+     * @param reader
+     */
     protected static void doSetUp(BufferedReader reader)    {
         KBmanager manager = KBmanager.getMgr();
 
@@ -32,6 +36,12 @@ public class SigmaTestBase {
         kb = KBmanager.getMgr().getKB("SUMO");
     }
 
+    /**
+     * Gets a BufferedReader for the xml file that is this test's configuration.
+     * @param path
+     * @param theClass
+     * @return
+     */
     protected static BufferedReader getXmlReader(String path, Class theClass)  {
         BufferedReader xmlReader = null;
         try {

@@ -2,15 +2,10 @@ package com.articulate.sigma;
 
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
-
-public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
+public class KBmanagerInitTest extends UnitTestBase {
 
     /**
      * Help verify that the correct config file is being run by checking how many kif files have been loaded. You could think
@@ -21,7 +16,7 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
     @Test
     public void testNbrKifFilesLoaded()   {
 
-        int expected = 33;
+        int expected = 2;
         int actual = SigmaTestBase.kb.constituents.size();
         assertEquals(expected, actual);
     }
@@ -31,8 +26,8 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
      */
     @Test
     public void testInitializationTime()   {
-        assertTrue("Actual time = " + new String(String.valueOf(IntegrationTestBase.totalKbMgrInitTime)), IntegrationTestBase.totalKbMgrInitTime < 200000);
+        assertTrue("Actual time = " + new String(String.valueOf(UnitTestBase.totalKbMgrInitTime)), UnitTestBase.totalKbMgrInitTime < 500000);
         // Just in case something whacky's going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + new String(String.valueOf(IntegrationTestBase.totalKbMgrInitTime)), IntegrationTestBase.totalKbMgrInitTime > 50000);
+        assertTrue("Actual time = " + new String(String.valueOf(UnitTestBase.totalKbMgrInitTime)), UnitTestBase.totalKbMgrInitTime > 10000);
     }
 }
