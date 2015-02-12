@@ -22,7 +22,9 @@ MA  02111-1307 USA
 */
 
 import java.util.*;
+import java.util.regex.*;
 import java.io.*;
+
 import com.articulate.sigma.*;
 import com.google.common.collect.Lists;
 
@@ -119,9 +121,11 @@ public class Interpreter {
           }
           else if (DependencyConverter.maleNames.contains(pureword)) {
               results.add("sumo(Human," + purewords.get(pureword) + ")");
+              results.add("attribute(" + purewords.get(pureword) + ",Male)");
           }
           else if (DependencyConverter.femaleNames.contains(pureword)) {
-              results.add("sumo(Human," + purewords.get(pureword) + ")");                 
+              results.add("sumo(Human," + purewords.get(pureword) + ")"); 
+              results.add("attribute(" + purewords.get(pureword) + ",Female)");
           }      
           else {
               String synset = WSD.getBestDefaultSense(pureword);
@@ -181,6 +185,19 @@ public class Interpreter {
           sb.append(inputs.get(i).toString() + ".\n");
       sb.append("------------------------------\n");
       return sb.toString();
+  }
+  
+  /** *************************************************************
+   */
+  public static String postProcess(String s) {
+	  
+	  String pattern = "([^\\?A-Za-z])([A-Za-z0-9_]+\\-[0-9]+)";
+	  Pattern p = Pattern.compile(pattern);
+	  Matcher matcher = p.matcher(s);
+	  while (matcher.find()) {
+		  s = s.replace(matcher.group(1) + matcher.group(2), matcher.group(1) + "?" + matcher.group(2));
+	  }
+	  return s;
   }
   
   /** *************************************************************
@@ -297,7 +314,7 @@ public class Interpreter {
       if (inference) {
     	  KB kb = KBmanager.getMgr().getKB("SUMO");
     	  if (question)
-    		  System.out.println(kb.askNoProof(s,30,1));
+    		  System.out.println(kb.askNoProof(postProcess(s),30,1));
     	  else
     		  System.out.println(kb.tell(s));
       }
@@ -562,6 +579,15 @@ public class Interpreter {
   
   /** ***************************************************************
    */
+  public static void testPostProcess() {
+      
+      String input = "(and (agent kicks-2 John-1) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
+    		  			"(instance John-1 Human) (instance cart-4 Wagon))";
+      System.out.println("INFO in Interpreter.testUnify(): Input: " + postProcess(input));
+  }
+  
+  /** ***************************************************************
+   */
   public static void main(String[] args) {  
 
       System.out.println("INFO in Interpreter.main()");
@@ -595,7 +621,8 @@ public class Interpreter {
           //testUnify();
           //testInterpret();
           //testPreserve();
-          testQuestionPreprocess();
+          //testQuestionPreprocess();
+    	  testPostProcess();
       }
   }
 }
