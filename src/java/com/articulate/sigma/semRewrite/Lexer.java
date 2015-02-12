@@ -61,7 +61,7 @@ public class Lexer {
     public static final String Var            = "Variable";
     public static final String Negation       = "-";
     public static final String Stop           = "stop";
-    public static final String Zero           = "0";
+    public static final String Zero           = "!";
     public static final String EOFToken       = "*EOF*";
 
     public String filename = "";
@@ -167,8 +167,8 @@ public class Lexer {
         tokenDefs.put(Var,          Pattern.compile("\\?[a-zA-Z][_a-z0-9_A-Z]*\\*?"));
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
-        tokenDefs.put(Ident,        Pattern.compile("[a-zA-Z][_\\-a-z0-9_A-Z]*\\*?"));
-        tokenDefs.put(Zero,         Pattern.compile("0"));
+        tokenDefs.put(Ident,        Pattern.compile("[0-9a-zA-Z][_\\-a-z0-9_A-Z]*\\*?"));
+        tokenDefs.put(Zero,         Pattern.compile("\\!"));
         tokenDefs.put(Stop,         Pattern.compile("stop"));
         tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+E?-?[0-9]*"));
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
