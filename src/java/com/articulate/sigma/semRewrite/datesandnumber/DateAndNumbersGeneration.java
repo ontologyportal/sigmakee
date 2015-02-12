@@ -221,13 +221,15 @@ public class DateAndNumbersGeneration {
 		
 		List<String> numDependencyList = new ArrayList<String>();
 		for (String dependency : dependencyList) {
-			if (dependency.contains(token.getWord()+"-"+token.getId())) {
+			if (dependency.contains(token.getWord() + "-" + token.getId())) {
 				numDependencyList.add(dependency);
 			}
 		}
 		if (!numDependencyList.isEmpty()) {
 			for (String numDependencyStr : numDependencyList) {
+				System.out.println("INFO in DateAndNumbersGeneration.processNumber(): " + numDependencyStr);
 				numDependencyStr = numDependencyStr.replace("num(", "").replace(")", "");
+				numDependencyStr = numDependencyStr.replace("number(", "").replace(")", "");
 				String[] tokenizedWords = numDependencyStr.split(", ");			
 
 				int firstTokenId = Integer.valueOf(tokenizedWords[0].split("-")[1]);
