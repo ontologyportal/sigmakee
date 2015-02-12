@@ -23,6 +23,7 @@
   <kb name="SUMO" >
     <constituent filename="$SIGMA_HOME/KBs/Merge.kif" />
     <constituent filename="$SIGMA_HOME/KBs/english_format.kif" />
+    <constituent filename="$SIGMA_HOME/KBs/domainEnglishFormat.kif" />
   </kb>
 </configuration>
 

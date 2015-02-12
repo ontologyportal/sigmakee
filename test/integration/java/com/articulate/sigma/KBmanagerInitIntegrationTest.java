@@ -2,12 +2,6 @@ package com.articulate.sigma;
 
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import static org.junit.Assert.*;
 
 public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
@@ -21,7 +15,7 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
     @Test
     public void testNbrKifFilesLoaded()   {
 
-        int expected = 33;
+        int expected = 34;
         int actual = SigmaTestBase.kb.constituents.size();
         assertEquals(expected, actual);
     }
@@ -31,8 +25,8 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
      */
     @Test
     public void testInitializationTime()   {
-        assertTrue("Actual time = " + new String(String.valueOf(IntegrationTestBase.totalKbMgrInitTime)), IntegrationTestBase.totalKbMgrInitTime < 200000);
-        // Just in case something whacky's going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + new String(String.valueOf(IntegrationTestBase.totalKbMgrInitTime)), IntegrationTestBase.totalKbMgrInitTime > 50000);
+        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime < 200000);
+        // Just in case something whacky is going on, make sure it's greater than some minimum, too.
+        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 50000);
     }
 }

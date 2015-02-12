@@ -16,7 +16,7 @@ public class KBmanagerInitTest extends UnitTestBase {
     @Test
     public void testNbrKifFilesLoaded()   {
 
-        int expected = 2;
+        int expected = 3;
         int actual = SigmaTestBase.kb.constituents.size();
         assertEquals(expected, actual);
     }
@@ -26,8 +26,8 @@ public class KBmanagerInitTest extends UnitTestBase {
      */
     @Test
     public void testInitializationTime()   {
-        assertTrue("Actual time = " + new String(String.valueOf(UnitTestBase.totalKbMgrInitTime)), UnitTestBase.totalKbMgrInitTime < 500000);
-        // Just in case something whacky's going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + new String(String.valueOf(UnitTestBase.totalKbMgrInitTime)), UnitTestBase.totalKbMgrInitTime > 10000);
+        assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime < 30000);
+        // Just in case something whacky is going on, make sure it's greater than some minimum, too.
+        assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime > 10000);
     }
 }
