@@ -38,19 +38,43 @@ public class InterpretNumerics {
 	
 	/** ***************************************************************
 	 */
+	public static void testTimeDateExtraction() {
+		
+		System.out.println("----------------------");
+		String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
+		System.out.println(input);
+		List<String> sumoTerms = getSumoTerms(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.";
+		System.out.println(input);
+		sumoTerms = getSumoTerms(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
+		System.out.println(input);
+		sumoTerms = getSumoTerms(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "She was declared dead on January 5, 1939.";
+		System.out.println(input);
+		sumoTerms = getSumoTerms(input);
+		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "Bob went to work only 5 times in 2003.";
+		System.out.println(input);
+		sumoTerms = getSumoTerms(input);
+		System.out.println(sumoTerms);
+	}
+	
+	/** ***************************************************************
+	 */
 	public static void main(String[] args) {
 		
-		String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
-		List<String> sumoTerms = getSumoTerms(input);
-		boolean start = true;
-		for (String s: sumoTerms) {
-			if (!start) {
-				System.out.print(",\n");
-			}
-			else {
-				start = false;
-			}
-			System.out.print(s);
-		}	
+		testTimeDateExtraction();
 	}
 }
