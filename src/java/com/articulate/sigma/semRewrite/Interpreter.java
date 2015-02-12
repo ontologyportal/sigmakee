@@ -586,6 +586,26 @@ public class Interpreter {
       System.out.println("INFO in Interpreter.testUnify(): Input: " + postProcess(input));
   }
   
+  
+  /** ***************************************************************
+   */
+  public static void testWSD() {
+      
+	  KBmanager.getMgr().initializeOnce();
+      String input = "Amelia is a pilot.";
+      ArrayList<String> results = null;
+      try {
+          results = DependencyConverter.getDependencies(input);
+      }
+      catch (Exception e) {
+          e.printStackTrace();
+          System.out.println(e.getMessage());
+      }
+      HashMap<String,String> purewords = extractWords(results);
+      ArrayList<String> wsd = findWSD(results,purewords);
+      System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
+  }
+  
   /** ***************************************************************
    */
   public static void main(String[] args) {  
@@ -622,7 +642,8 @@ public class Interpreter {
           //testInterpret();
           //testPreserve();
           //testQuestionPreprocess();
-    	  testPostProcess();
+    	  //testPostProcess();
+    	  testWSD();
       }
   }
 }
