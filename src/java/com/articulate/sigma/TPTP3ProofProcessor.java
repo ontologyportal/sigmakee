@@ -23,6 +23,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TPTP3ProofProcessor {
 
@@ -95,7 +97,7 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-     */
+	 */
 	public ArrayList<Integer> parseSupports(String supportId) {
 
 		//System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
@@ -211,7 +213,7 @@ public class TPTP3ProofProcessor {
 		ps.axiom = stmnt;
 		String supportId = rest.substring(statementEnd+2,rest.length()).trim();     	 
 		// System.out.println("supportID: " + supportId);
-		ps.premises.addAll(parseSupports(supportId.trim())); 
+		ps.premises.addAll(parseSupports(supportId.trim()));
 		return ps;
 	}
       
@@ -239,18 +241,32 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 * remove skolem symbol with arity n
-	 * Example Input: esk2_1(s__Arc13_1)
-	 * Expected Output: s__Arc13_1
+	 * Example Input1: esk2_1(s__Arc13_1)
+	 * Expected Output1: s__Arc13_1
+	 *
+	 * Example Input2: s__John_1, esk2_0
+	 * Expected Input2: s__John_1
 	 */
 	private String removeEsk(String line) {
 
-		if (line.startsWith("esk")) {
-			int leftParen = line.indexOf("(");
-			int rightParen = line.indexOf(")");
-			if (leftParen != -1 && rightParen != -1)
-				return line.substring(leftParen+1, rightParen);
+		String answerString = "";
+		String pattern = "esk\\d_\\d";
+
+		String[] answers = line.split(", ");
+		for (String answer : answers) {
+			answer = answer.trim();
+			Pattern r = Pattern.compile(pattern);
+			Matcher m = r.matcher(answer);
+			if (m.find()) {
+				answer = m.replaceAll("");
+				int leftParen = answer.indexOf("(");
+				int rightParen = answer.indexOf(")");
+				if (leftParen != -1 && rightParen != -1)
+					answer = answer.substring(leftParen+1, rightParen);
+			}
+			answerString += answer + " ";
 		}
-		return line;
+		return answerString.trim();
 	}
      
      /** ***************************************************************
