@@ -321,8 +321,9 @@ public class LanguageFormatter {
                 // Recover from exception by turning off full NLG.
                 this.doNLG = false;
                 //theStack.clear();
+                String temp = statement.replaceAll("\\s+", " ");    // clean up, reducing consecutive whitespace to single space
                 String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
-                        "   Formula:\n       " + statement + "\n";
+                        "   Formula:\n       " + temp + "\n";
                 System.out.println(msg);
             }
         }
