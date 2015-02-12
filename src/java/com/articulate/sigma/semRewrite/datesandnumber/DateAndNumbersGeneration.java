@@ -66,18 +66,18 @@ public class DateAndNumbersGeneration {
 			dateMap.put(token.getId(), "MONTH@"+token.getWord());
 		} 
 		else if (DAYS.contains(token.getWord().toLowerCase())) {
-			sumoTerms.add("("+"WeekDayFn"+" "+ token.getWord() +")");
+			sumoTerms.add("(" + "WeekDayFn" + " " + token.getWord() + ")");
 		} 
 		else if (digitalPatternMatcher.find()) {
-			dateMap.put(token.getId(), "YEAR@"+token.getWord());
+			dateMap.put(token.getId(), "YEAR@" + token.getWord());
 		} 
 		else if (westernYearMatcher.find()) {
-			sumoTerms.add("(during" +rootWord+ "("+"DayFn"+" "+ westernYearMatcher.group(3) +
-					"("+"MonthFn"+" "+ MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)
-					+"("+"YearFn"+" "+ westernYearMatcher.group(5) +")"+")"+")"+")");
+			sumoTerms.add("(during" + rootWord + " (" + "DayFn" + " " + westernYearMatcher.group(3) +
+					" (" + "MonthFn" + " " + MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)
+					+ " (" + "YearFn" + " " + westernYearMatcher.group(5) + ")" + ")" + ")" + ")");
 		} 
 		else if (dayMatcher.find()) {
-			dateMap.put(token.getId(), "DAYS@"+token.getWord());
+			dateMap.put(token.getId(), "DAYS@" + token.getWord());
 		}
 	}
 
@@ -197,15 +197,15 @@ public class DateAndNumbersGeneration {
 
 		List<DateInfo> dateList = gatherDateSet();
 		for (DateInfo date : dateList) {
-			String dateFn = "(during"+rootWord;
+			String dateFn = "(during" + rootWord;
 			if (date.getDay() != null) {
-				dateFn = dateFn+"("+"DayFn"+" "+date.getDay();
+				dateFn = dateFn + " (" + "DayFn" + " " + date.getDay();
 			}
 			if (date.getMonth() != null) {
-				dateFn = dateFn+"("+"MonthFn"+" "+date.getMonth();
+				dateFn = dateFn + " (" + "MonthFn" + " " + date.getMonth();
 			}
 			if (date.getYear() != null) {
-				dateFn = dateFn+"("+"YearFn"+" "+date.getYear();
+				dateFn = dateFn + " (" + "YearFn" + " " + date.getYear();
 			}
 			int charCount = dateFn.replaceAll("[^(]", "").length();
 			for (int i = 0; i <charCount; ++i) {
