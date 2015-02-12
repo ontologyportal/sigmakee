@@ -1,5 +1,27 @@
 package com.articulate.sigma.semRewrite.datesandnumber;
 
+/*
+Copyright 2014-2015 IPsoft
+
+Author: Nagaraj Bhat nagaraj.bhat@ipsoft.com
+        Rashmi Rao
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA 
+*/
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,11 +49,16 @@ public class StanfordDateTimeExtractor {
 	
 	private List<String> dependencyList = new ArrayList<String>();
 
+	/** ***************************************************************
+	 */
 	public List<String> getDependencyList() {
 		return dependencyList;
 	}
 
+	/** ***************************************************************
+	 */
 	public List<Tokens> populateParserInfo(String inputSentence) {
+		
 		Properties props = new Properties();
 		props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
@@ -42,10 +69,10 @@ public class StanfordDateTimeExtractor {
 		List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
 		int cnt = 1;
 		List<Tokens> tokenList = new ArrayList<Tokens>();
-		for(CoreMap sentence: sentences) {
+		for (CoreMap sentence: sentences) {
 			for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
 				String namedEntity = token.get(NamedEntityTagAnnotation.class);       
-				if (NUMERICAL_ENTITIES.contains(namedEntity))	{
+				if (NUMERICAL_ENTITIES.contains(namedEntity)) {
 					Tokens tokens = new Tokens();
 					tokens.setId(cnt);
 					tokens.setWord(token.get(TextAnnotation.class));
@@ -57,7 +84,6 @@ public class StanfordDateTimeExtractor {
 				}
 				cnt++;
 			}
-
 			SemanticGraph dependencies = sentence.get(CollapsedDependenciesAnnotation.class);
 			dependencyList = StringUtils.split(dependencies.toList(), "\n");
 		}
