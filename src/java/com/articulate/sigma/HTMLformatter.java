@@ -14,18 +14,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  */
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.articulate.sigma.KB;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
@@ -136,17 +127,25 @@ public class HTMLformatter {
         result.append("<td valign=\"top\" width=\"10%\">");
 
         // System.out.println("Info in HTMLformatter.proofTableFormat(): premises : " + step.premises);
-        for (int i = 0; i < step.premises.size(); i++) {
-            Integer stepNum = (Integer) step.premises.get(i);
-            result.append(stepNum.toString() + " ");
-        }
-        if (step.premises.size() == 0) {
-            if (step.formulaRole != null)
-                result.append(step.formulaRole);
-            else if (Formula.isNegatedQuery(query,f.theFormula))
-                result.append("[Negated Query]");
-            else
-                result.append("[KB]");
+        if (step.inferenceType == null)
+            System.out.println("Debug by qingqing: step.inferenceType = " + null);
+        else
+            System.out.println("Debug by qingqing: step.inferenceType = " + step.inferenceType);
+        if (step.inferenceType!=null && step.inferenceType.equals("assume_negation")) {
+            result.append("[Negated Query]");
+        } else {
+            for (int i = 0; i < step.premises.size(); i++) {
+                Integer stepNum = (Integer) step.premises.get(i);
+                result.append(stepNum.toString() + " ");
+            }
+            if (step.premises.size() == 0) {
+                if (step.formulaType != null && step.formulaType.equals("conjecture"))
+                    result.append("[Query]");
+                else if (step.formulaRole != null)
+                    result.append(step.formulaRole);
+                else
+                    result.append("[KB]");
+            }
         }
         result.append("</td><td width=\"40%\" valign=\"top\">");
         if (StringUtil.isNonEmptyString(language)) {
