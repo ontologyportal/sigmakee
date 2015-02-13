@@ -69,6 +69,12 @@ public class InterpretNumerics {
 		System.out.println(input);
 		sumoTerms = getSumoTerms(input);
 		System.out.println(sumoTerms);
+		
+		System.out.println("----------------------");
+		input = "John kicks the cart.";
+		System.out.println(input);
+		sumoTerms = getSumoTerms(input);
+		System.out.println(sumoTerms);		
 	}
 	
 	/** ***************************************************************
