@@ -274,11 +274,10 @@ public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
     public void testWrongNbrParens()     {
         System.out.println("\nAbout to perform unit test that throws an IndexOutOfBoundsException.");
         System.out.flush();
-        String stmt =   "(exists (?Place) " +
-                "           (=> " +
+        String stmt =   "(=> " +
                                 // The next line has too many right parens.
                 "               (instance (GovernmentFn ?Place) StateGovernment)) " +
-                "               (instance ?Place StateOrProvince))) ";
+                "               (instance ?Place StateOrProvince)) ";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");

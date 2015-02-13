@@ -270,4 +270,21 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationT
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
+    @Test
+    public void testPlaintiff()     {
+        String stmt =   "(exists (?P ?H)\n" +
+                "           (and\n" +
+                "               (instance ?P LegalAction)\n" +
+                "               (instance ?H Human)\n" +
+                "               (plaintiff ?P ?H)))";
+
+
+        //String expectedResult = "there exist a legal action and a cognitive agent such that the legal action is an instance of legal action and the cognitive agent is an instance of human and plaintiff the legal action and the cognitive agent";
+        String expectedResult = "a human performs a legalaction";
+        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
+    }
+
 }

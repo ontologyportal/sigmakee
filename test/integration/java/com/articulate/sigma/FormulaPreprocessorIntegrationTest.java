@@ -59,7 +59,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
-        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, kb);
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }
@@ -83,8 +83,30 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
                 "(equal (?NOTPARTPROB (ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) (part ?X ?Z))))))) " +
                 "(greaterThan ?PARTPROB ?NOTPARTPROB))) ";
         expected.read(expectedString);
-        Formula actual = fp.addTypeRestrictionsNew(f, kb);
+        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
         //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComputeVariableTypesPlaintiff()     {
+        String stmt =   "(exists (?P ?H)\n" +
+                "           (and\n" +
+                "               (instance ?P LegalAction)\n" +
+                "               (instance ?H Human)\n" +
+                "               (plaintiff ?P ?H)))";
+        Formula f = new Formula();
+        f.read(stmt);
+
+        FormulaPreprocessor formulaPre = new FormulaPreprocessor();
+        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+
+        Map<String, HashSet<String>> expected = Maps.newHashMap();
+        HashSet<String> set1 = Sets.newHashSet("CognitiveAgent", "Entity");
+        expected.put("?H", set1);
+        HashSet<String> set2 = Sets.newHashSet("Entity", "LegalAction");
+        expected.put("?P", set2);
+
         assertEquals(expected, actual);
     }
 

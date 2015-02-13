@@ -4,8 +4,6 @@ import com.google.common.collect.*;
 import org.junit.Test;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,6 +11,62 @@ import static org.junit.Assert.assertEquals;
  * FormulaPreprocessor tests not focused on findExplicitTypes( ), but requiring that the KBs be loaded.
  */
 public class FormulaPreprocessorTest extends UnitTestBase  {
+
+    // TODO: Technically, this should to in the FormulaTest class, but the gatherRelationsWithArgTypes( ) method requires a KB
+    // and none of the other tests in that class do. Maybe move the method to FormulaPreprocessor--it's the only Formula method
+    // requiring a KB.
+    @Test
+    public void testGatherRelationships()   {
+        String stmt = "(agent Leaving Human)";
+        Formula f = new Formula();
+        f.read(stmt);
+
+        HashMap<String, ArrayList> actualMap = f.gatherRelationsWithArgTypes(SigmaTestBase.kb);
+
+        ArrayList<String> expectedList = Lists.newArrayList(null, "Process", "Agent", null, null, null, null, null);
+        HashMap<String, ArrayList> expectedMap = Maps.newHashMap();
+        expectedMap.put("agent", expectedList);
+
+        assertEquals(expectedMap, actualMap);
+    }
+
+    @Test
+    public void testAddTypes1() {
+        String stmt = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
+                "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
+        Formula f = new Formula();
+        f.read(stmt);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        Formula expected = new Formula();
+        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?ELEMENT Entity) (instance ?SET1 Set)) " +
+                "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
+                "(equal ?SET1 ?SET2)))";
+        expected.read(expectedString);
+
+        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
+        //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        assertEquals(expected, actual);
+
+    }
+
+    @Test
+    public void testAddTypes2() {
+        String stmt = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
+                " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
+        Formula f = new Formula();
+        f.read(stmt);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        Formula expected = new Formula();
+        String expectedString = "(=> (and (instance ?ZONE Object) (instance ?SLOPE Quantity) (instance ?AREA Object)) " +
+                "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA) (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE)))";
+        expected.read(expectedString);
+
+        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
+        //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
+        assertEquals(expected, actual);
+    }
 
     @Test
     public void testComputeVariableTypesNoVariables()     {
@@ -23,7 +77,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
         HashMap<String,HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
-        HashMap<String,HashSet<String>> expected = new HashMap<String,HashSet<String>>();
+        HashMap<String,HashSet<String>> expected = new HashMap<>();
 
         assertEquals(expected, actual);
     }
@@ -43,7 +97,6 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
         assertEquals(expected, actual);
     }
-
 
     @Test
     public void testComputeVariableTypesInstance()     {
@@ -181,10 +234,9 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
     @Test
     public void testComputeVariableTypesGovFn()     {
-        String stmt =   "(exists (?Place) " +
-                "   (=> " +
-                "       (instance (GovernmentFn ?Place) StateGovernment) " +
-                "       (instance ?Place StateOrProvince))) ";
+        String stmt =   "(=> " +
+                "           (instance (GovernmentFn ?Place) StateGovernment) " +
+                "           (instance ?Place StateOrProvince))) ";
 
         Formula f = new Formula();
         f.read(stmt);
@@ -217,33 +269,14 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
-    // TODO: Technically, this should to in the FormulaTest class, but the gatherRelationsWithArgTypes( ) method requires a KB
-    // and none of the other tests in that class do. Maybe move the method to FormulaPreprocessor--it's the only Formula method
-    // requiring a KB.
     @Test
-    public void testGatherRelationships()   {
-        String stmt = "(agent Leaving Human)";
-        Formula f = new Formula();
-        f.read(stmt);
-
-        HashMap<String, ArrayList> actualMap = f.gatherRelationsWithArgTypes(SigmaTestBase.kb);
-
-        ArrayList<String> expectedList = Lists.newArrayList(null, "Process", "Agent", null, null, null, null, null);
-        HashMap<String, ArrayList> expectedMap = Maps.newHashMap();
-        expectedMap.put("agent", expectedList);
-
-        assertEquals(expectedMap, actualMap);
-    }
-
-    //FIXME: Rename me
-    @Test
-    public void testFindTypes1() {
+    public void testComputeVariableTypesLowTerrain() {
         Map<String, HashSet<String>> expected = ImmutableMap.of("?ZONE", Sets.newHashSet("Object"), "?SLOPE", Sets.newHashSet("Quantity"), "?AREA", Sets.newHashSet("Object"));
 
-        String strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
+        String stmt = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
                 " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
         Formula f = new Formula();
-        f.read(strf);
+        f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
 
@@ -251,18 +284,17 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
     }
 
-    //FIXME: Rename me
     @Test
-    public void testFindTypes3() {
+    public void testComputeVariableTypesIfAndOnlyIfTransitiveRelation() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?REL", Sets.newHashSet("Entity"));
 
-        String strf = "(<=> (instance ?REL TransitiveRelation) " +
+        String stmt = "(<=> (instance ?REL TransitiveRelation) " +
                 "(forall (?INST1 ?INST2 ?INST3) " +
                 "(=> (and (?REL ?INST1 ?INST2) " +
                 "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
         Formula f = new Formula();
-        f.read(strf);
+        f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
 
@@ -271,19 +303,17 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertEquals(expected, actualMap);
     }
 
-
-    //FIXME: Rename me
     @Test
-    public void testFindTypes4() {
+    public void testComputeVariableTypesForAllElementSet() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?SET2", Sets.newHashSet("Set", "Entity"));
         expected.put("?SET1", Sets.newHashSet("Set", "Entity"));
         expected.put("?ELEMENT", Sets.newHashSet("Entity"));
 
-        String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
+        String stmt = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
         Formula f = new Formula();
-        f.read(strf);
+        f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);
         System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
@@ -294,59 +324,28 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
     }
 
     @Test
-    public void testFindExplicit() {
+    public void testComputeVariableTypesAwake() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?REL", Sets.newHashSet("TransitiveRelation"));
+        expected.put("?HUMAN", Sets.newHashSet("Agent", "Object", "Entity"));
+        expected.put("?PROC", Sets.newHashSet("Physical", "Process", "Entity"));
 
-        String formStr = "(<=> (instance ?REL TransitiveRelation) " +
-                "(forall (?INST1 ?INST2 ?INST3) " +
-                "(=> (and (?REL ?INST1 ?INST2) " +
-                "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-        Formula f = new Formula(formStr);
+        String stmt =   "(=>\n" +
+                "           (and\n" +
+                "               (instance ?PROC IntentionalProcess)\n" +
+                "               (agent ?PROC ?HUMAN)\n" +
+                "               (instance ?HUMAN Animal))\n" +
+                "           (holdsDuring\n" +
+                "               (WhenFn ?PROC)\n" +
+                "               (attribute ?HUMAN Awake)))";
+        Formula f = new Formula(stmt);
+
         FormulaPreprocessor fp = new FormulaPreprocessor();
+        System.out.println("Formula: " + f);
+        System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
 
-        Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-_]+)");
-        Matcher m = p.matcher(formStr);
-        m.find();
+        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
 
-        assertEquals(expected, fp.findExplicitTypesInAntecedent(f));
+        assertEquals(expected, actualMap);
     }
 
-    @Test
-    public void testAddTypes1() {
-        String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
-                "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
-        Formula f = new Formula();
-        f.read(strf);
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-
-        Formula expected = new Formula();
-        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?ELEMENT Entity) (instance ?SET1 Set)) " +
-                "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
-                "(equal ?SET1 ?SET2)))";
-        expected.read(expectedString);
-
-        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
-        //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
-        assertEquals(expected, actual);
-
-    }
-
-    @Test
-    public void testAddTypes2() {
-        String strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
-                " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
-        Formula f = new Formula();
-        f.read(strf);
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-
-        Formula expected = new Formula();
-        String expectedString = "(=> (and (instance ?ZONE Object) (instance ?SLOPE Quantity) (instance ?AREA Object)) " +
-                "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA) (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE)))";
-        expected.read(expectedString);
-
-        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
-        //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
-        assertEquals(expected, actual);
-    }
 }

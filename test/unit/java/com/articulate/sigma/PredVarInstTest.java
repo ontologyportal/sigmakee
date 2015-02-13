@@ -31,7 +31,7 @@ public class PredVarInstTest extends UnitTestBase  {
 
 
     @Test
-    public void testGatherPredVars1()     {
+    public void testGatherPredVarsStmt1()     {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt1);
 
@@ -42,7 +42,7 @@ public class PredVarInstTest extends UnitTestBase  {
     }
 
     @Test
-    public void testGatherPredVars2()     {
+    public void testGatherPredVarsStmt2()     {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
 
@@ -53,7 +53,7 @@ public class PredVarInstTest extends UnitTestBase  {
     }
 
     @Test
-    public void testFindPredVarTypes()     {
+    public void testFindPredVarTypesStmt1()     {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt1);
 
@@ -65,7 +65,7 @@ public class PredVarInstTest extends UnitTestBase  {
     }
 
     @Test
-    public void testInstantiatePredVars2()     {
+    public void testInstantiatePredStmt2()     {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
 
@@ -74,6 +74,4 @@ public class PredVarInstTest extends UnitTestBase  {
         ArrayList<Formula> expected = Lists.newArrayList();
         assertEquals(expected, actual);
     }
-
-
 }

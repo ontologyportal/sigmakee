@@ -341,7 +341,9 @@ public class LanguageFormatter {
                     if(variableTypes.containsKey(processInstanceName))    {
 
                         HashSet<String> vals = variableTypes.get(processInstanceName);
-                        if(vals.contains("Process")) {
+                        // FIXME: instead of adding new processes to the if-statement, you need to iterate through all the vals elements
+                        // and see if each one is either Process or a subclass of Process
+                        if(vals.contains("Process") || vals.contains("LegalAction")) {
                             // Mark the argument as PROCESSED.
                             theStack.markFormulaArgAsProcessed(formula.theFormula);
 

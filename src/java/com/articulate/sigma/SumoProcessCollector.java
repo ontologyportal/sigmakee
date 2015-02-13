@@ -10,7 +10,8 @@ import java.util.Set;
  * well as the entities which play that role.
  */
 public class SumoProcessCollector {
-    private static final Set<String> knownRoles = Sets.newHashSet("agent", "patient");
+    // FIXME: Don't list each CaseRole--isKnownRole( ) should use subrelation ("(subrelation plaintiff agent)").
+    private static final Set<String> knownRoles = Sets.newHashSet("agent", "plaintiff", "patient");
 
     private String name;
     public String getName() {
@@ -172,7 +173,9 @@ public class SumoProcessCollector {
      */
     boolean isValid() {
         // Verify there is an agent.
-        if (getRoleEntities("agent").isEmpty())    {
+        // FIXME: Don't list each CaseRole--use subrelation ("(subrelation plaintiff agent)").
+        if (getRoleEntities("agent").isEmpty() && getRoleEntities("plaintiff").isEmpty())    {
+//      if (getRoleEntities("agent").isEmpty())    {
             return false;
         }
 
@@ -252,7 +255,12 @@ public class SumoProcessCollector {
      */
     String formulateNaturalSubject() {
         // FIXME: If empty, find some alternate for the subject, e.g. experiencer.
-        return formulateNaturalCaseRoleNouns("agent");
+        // FIXME: Don't list each CaseRole--use subrelation ("(subrelation plaintiff agent)").
+        String retVal = formulateNaturalCaseRoleNouns("agent");
+        if(retVal.isEmpty())    {
+            retVal = formulateNaturalCaseRoleNouns("plaintiff");
+        }
+        return retVal;
     }
 
     /**************************************************************************************************************
