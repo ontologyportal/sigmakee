@@ -29,6 +29,10 @@ public class ProofStep {
      /** A String of the role of the formula */
     public String formulaRole = null;
 
+     /** A String of the inference type, e.g. add_answer_literal | assume_negation | etc. */
+     public String inferenceType = null;
+
+
      /** A String containing a valid KIF expression, that is the axiom 
       *  expressing the conclusion of this proof step. */
     public String axiom = null;
@@ -110,8 +114,8 @@ public class ProofStep {
             Integer index = new Integer(ps.number);
             reverseFormulaMap.put(index,ps);
             String s = Clausifier.normalizeVariables(ps.axiom);
-            if (formulaMap.keySet().contains(s)) {              // If the step is a duplicate, relate the current step number
-            	Integer fNum = (Integer) formulaMap.get(s);     // to the existing number of the formula 
+            if (formulaMap.keySet().contains(s) && ps.premises.size()==1) {   // If the step is a duplicate, relate the current step number
+            	Integer fNum = (Integer) formulaMap.get(s);                   // to the existing number of the formula
             	numberingMap.put(index,fNum);
             }
             else {
@@ -129,6 +133,7 @@ public class ProofStep {
         	ProofStep psNew = new ProofStep();
         	psNew.formulaRole = ps.formulaRole;
         	psNew.formulaType = ps.formulaType;
+            psNew.inferenceType = ps.inferenceType;
             String s = Clausifier.normalizeVariables(ps.axiom);
         	psNew.axiom = s;
         	psNew.number = newIndex;
@@ -147,6 +152,36 @@ public class ProofStep {
         }
         return newProofSteps;
     }
+
+    /** ***************************************************************
+     * created a new by qingqing
+     * remove unnecessary steps, which should not appear in proof
+     * Unnecessary steps could be:
+     * (1) conjectures;
+     * (2) Successful resolution theorem proving results in a contradiction;
+     */
+    public static ArrayList<ProofStep> removeUnnecessary(ArrayList<ProofStep> proofSteps) {
+
+        ArrayList<ProofStep> results = new ArrayList<ProofStep>();
+        boolean firstTimeSeeFALSE = true;
+        for (int i = 0; i < proofSteps.size(); i++) {
+            ProofStep ps = proofSteps.get(i);
+
+            if (ps.formulaType!= null && !ps.formulaType.equals("conjecture")) {    // conjecture is not allowed in the proof step
+                if (ps.axiom.equalsIgnoreCase("FALSE")) {
+                    if (firstTimeSeeFALSE) {    // only add when it is the first time to see contradiction
+                        results.add(ps);
+                        firstTimeSeeFALSE = false;
+                    }
+                } else {
+                    results.add(ps);
+                }
+            }
+        }
+        results = normalizeProofStepNumbers(results);
+        return results;
+    }
+
 
     /** ***************************************************************
      */
