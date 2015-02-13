@@ -1048,6 +1048,9 @@ public class Formula implements Comparable {
         if (!(o instanceof Formula))
             return false;
         Formula f = (Formula) o;
+        if(f.theFormula == null) {
+            return (this.theFormula == null);
+        }
         String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
         String argString = Clausifier.normalizeVariables(f.theFormula).trim();
         return (thisString.equals(argString));
@@ -1077,6 +1080,102 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Test if this is logically equal with the parameter formula
+     */
+    public boolean logicallyEquals(Formula f) {
+        boolean equalStrings = this.equals(f);
+        if(equalStrings) {
+            return true;
+        } else if (!this.deepEquals(f)) {
+            return false;
+        } else {
+            return this.unifyWith(f);
+        }
+    }
+
+    private boolean unifyWith(Formula f) {
+        return false;
+//        private boolean recursiveCompare(String s1, String s2, BiMap<String,String> symbolMap) {
+//
+//            System.out.println("RC1: " + s1);
+//            System.out.println("RC1: " + s2);
+//            System.out.println("");
+//
+//            //null tests first
+//            if(s1 == null && s2 == null) {
+//                return true;
+//            } else if (s1 == null || s2 == null) {
+//                return false;
+//            }
+//
+//            boolean isToken1 = !listP(s1);
+//            boolean isToken2 = !listP(s2);
+//
+//            //checking formulas are simple tokens
+//            if(isToken1 && isToken2) { //both tokens
+//                return compareTokens(s1, s2, symbolMap);
+//            } else if (isToken1 || isToken2) {
+//                return false;
+//            }
+//
+//            //if we got here, both formulas are lists
+//            Formula f1 = new Formula();
+//            Formula f2 = new Formula();
+//            f1.read(s1);
+//            f2.read(s2);
+//
+//            if(!recursiveCompare(f1.car(), f2.car(), symbolMap)) {
+//                return false;
+//            }
+//
+//
+//            //comparing tails
+//            // going with element by element comparison for now, need to make it more flexible
+//            ArrayList<String> args1 = f1.complexArgumentsToArrayList(1);
+//            ArrayList<String> args2 = f2.complexArgumentsToArrayList(1);
+//
+//            if(args1.size() != args2.size()) {
+//                return false;
+//            }
+//
+//            for(int i = 0; i< args1.size(); i++) {
+//                if(!recursiveCompare(args1.get(i), args2.get(i), symbolMap)) {
+//                    return false;
+//                }
+//            }
+//            return true;
+//        }
+//
+//        private boolean compareTokens(String token1, String token2, BiMap<String,String> symbolMap) {
+//            if((token1 == null) &&(token1 == null)) {
+//                //both null
+//                return true;
+//            } else if((isVariable(token1) && isVariable(token2)) || (isSkolemTerm(token1) && isSkolemTerm(token2))) {
+//                //both variable symbols: checking if the symbols are already paired; adding the pair if the symbols do not occur
+//                String value1 = symbolMap.get(token1);
+//                String value2 = symbolMap.inverse().get(token2);
+//                if(token2.equals(value1) && token1.equals(value2)) {
+//                    //case 1: the two symbols were already paired
+//                    return true;
+//                } else if(value1 != null || value2 != null) {
+//                    //case 2: there already is a value for at least one of the two symbols but it's not the correct one
+//                    return false;
+//                } else {
+//                    // case 3: no entry in the map, add it
+//                    symbolMap.put(token1, token2);
+//                    return true;
+//                }
+//            } else if(token1 != null && token1.equals(token2)){
+//                //not both symbols; straight text comparison
+//                return true;
+//            } else {
+//                //not equal
+//                return false;
+//            }
+//        }
+    }
+
+    /** ***************************************************************
      * Test if the contents of the formula are equal to the argument.
      */
     public boolean deepEquals(Formula f) {
@@ -1095,11 +1194,9 @@ public class Formula implements Comparable {
 
         //the normalizeParameterOrder method should be moved to Clausifier
         KB kb = KBmanager.getMgr().getKB("SUMO");
+
         String normalized1 = Formula.normalizeParameterOrder(f1.theFormula, kb);
         String normalized2 = Formula.normalizeParameterOrder(f2.theFormula, kb);
-
-        normalized1 = Clausifier.normalizeVariables(normalized1, true);
-        normalized2 = Clausifier.normalizeVariables(normalized2, true);
 
         return normalized1.equals(normalized2);
     }
@@ -1115,8 +1212,12 @@ public class Formula implements Comparable {
 
         //checking formula is a simple tokens
         if(!Formula.listP(formula)) {
-            System.out.println("Output: " + formula);
-            return formula;
+            if(isVariable(formula)) {
+                System.out.println("Output: " + "?XYZ");
+                return "?XYZ";
+            } else {
+                return formula;
+            }
         }
 
         //if we got here, the formulas is a list
@@ -1141,6 +1242,9 @@ public class Formula implements Comparable {
 
         //building result
         StringBuilder result = new StringBuilder(LP);
+        if(isSkolemTerm(head)) {
+            head = "?SknFn";
+        }
         result.append(head);
         result.append(SPACE);
         for(String arg:orderedArgs) {
