@@ -27,6 +27,8 @@ public class InterpreterTest extends IntegrationTestBase {
     @Parameterized.Parameter(value= 1)
     public String fExpected;   
    
+    /** ***************************************************************
+     */
     @BeforeClass
     public static void initInterpreter() {
         interp = new Interpreter();
@@ -34,18 +36,15 @@ public class InterpreterTest extends IntegrationTestBase {
         interp.loadRules();
     }
     
+    /** ***************************************************************
+     */
     @Parameters(name="{0}")
     public static Collection<Object[]> prepare() {
    
-   	    	ArrayList<Object[]> result = new ArrayList<Object[]>();
-
-		// FIXME: Here's the resources directory as a File object.
+   	    ArrayList<Object[]> result = new ArrayList<Object[]>();
 		File jsonTestFile = new File(IntegrationTestBase.RESOURCES_FILE, "translation_tests.json");
 		// FIXME ? Maybe we should verify the file exists?
 		String filename = jsonTestFile.getAbsolutePath();
-
-		//String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + 
-// FIXME: remove?		String filename = "/home/apease/Sigma/KBs" + File.separator + "gold_standard_translations_notense-small-noex.json";
 		JSONParser parser = new JSONParser();  
 		try {  
 			Object obj = parser.parse(new FileReader(filename));  
@@ -54,8 +53,8 @@ public class InterpreterTest extends IntegrationTestBase {
 			while (li.hasNext()) {
 				JSONObject jo = li.next();
 				String text = (String) jo.get("text");
-				String tokens = (String) jo.get("tokens");
-				String type = (String) jo.get("type");
+				//String tokens = (String) jo.get("tokens");
+				//String type = (String) jo.get("type");
 				String kif = (String) jo.get("kif");
 				result.add(new Object[]{text,kif});
 			}			 
@@ -73,10 +72,11 @@ public class InterpreterTest extends IntegrationTestBase {
 		return result;    
 	}
     
+    /** ***************************************************************
+     */
     @Test
     public void test() {
         assertEquals(fExpected, interp.interpretSingle(fInput));
     }
-
 }
 
