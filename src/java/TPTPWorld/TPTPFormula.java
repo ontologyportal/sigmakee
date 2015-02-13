@@ -1,8 +1,8 @@
 package TPTPWorld;
 
-import java.io.*;
-import java.util.*;
-import tptp_parser.*;
+import tptp_parser.SimpleTptpParserOutput;
+
+import java.util.ArrayList;
 
 public class TPTPFormula {
   public int id;
@@ -37,7 +37,7 @@ public class TPTPFormula {
 	  this.parent.add(that);
 	  that.child.add(this);
       } else {
-	  System.out.println("%WARNING: Trying to add parent null to "+this.toString());
+	//  System.out.println("%WARNING: Trying to add parent null to "+this.toString());
       }
   }
 
