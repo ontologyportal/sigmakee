@@ -22,11 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -107,10 +103,10 @@ public class DateAndNumbersGeneration {
 		List<DateInfo> dateList = new ArrayList<DateInfo>();
 		DateInfo dateInfoTemp;
 		String wordToken;
-		Iterator<HashMap.Entry<Integer, String>> dateEntries = dateMap.entrySet().iterator();
+		Iterator<Map.Entry<Integer, String>> dateEntries = dateMap.entrySet().iterator();
 		while (dateEntries.hasNext()){
 			
-			HashMap.Entry<Integer, String> dateEntry = dateEntries.next();
+			Map.Entry<Integer, String> dateEntry = dateEntries.next();
 			wordToken = dateEntry.getValue().split("@")[1];
 			
 			if (dateEntry.getValue().contains("MONTH")) {

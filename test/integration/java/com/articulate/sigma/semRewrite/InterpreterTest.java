@@ -75,7 +75,7 @@ public class InterpreterTest extends IntegrationTestBase {
     
     @Test
     public void test() {
-        assertEquals(fExpected, interp.interpSingle(fInput));
+        assertEquals(fExpected, interp.interpretSingle(fInput));
     }
 
 }
