@@ -84,7 +84,7 @@
 {
 "text":"John will take a walk.",
 "kif":
-" (and 
+"(and 
   (agent walk-5 John-1)
   (instance John-1 Human)
   (earlier Now
@@ -105,7 +105,7 @@
 {
 "text":"John takes a drink of water.",
 "kif":
-" (and 
+"(and 
   (agent drink-4 John-1)
   (patient drink-4 water-6)
   (instance John-1 Human)
