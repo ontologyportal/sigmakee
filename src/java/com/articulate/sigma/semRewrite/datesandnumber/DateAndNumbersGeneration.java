@@ -197,21 +197,23 @@ public class DateAndNumbersGeneration {
 
 		List<DateInfo> dateList = gatherDateSet();
 		for (DateInfo date : dateList) {
-			String dateFn = "(during" + rootWord;
+			StringBuffer dateFn = new StringBuffer();
 			if (date.getDay() != null) {
-				dateFn = dateFn + " (" + "DayFn" + " " + date.getDay();
+				dateFn.append(" (" + "DayFn" + " " + date.getDay());
 			}
 			if (date.getMonth() != null) {
-				dateFn = dateFn + " (" + "MonthFn" + " " + date.getMonth();
+				dateFn.append(" (" + "MonthFn" + " " + date.getMonth());
 			}
 			if (date.getYear() != null) {
-				dateFn = dateFn + " (" + "YearFn" + " " + date.getYear();
+				dateFn.append(" (" + "YearFn" + " " + date.getYear());
 			}
-			int charCount = dateFn.replaceAll("[^(]", "").length();
+			if (dateFn.length() == 0)
+				return;
+			int charCount = dateFn.toString().replaceAll("[^(]", "").length();
 			for (int i = 0; i <charCount; ++i) {
-				dateFn = dateFn + ")";
+				dateFn.append(")");
 			}
-			sumoTerms.add(dateFn);
+			sumoTerms.add("(during" + rootWord + dateFn.toString());
 		}
 	}
 
