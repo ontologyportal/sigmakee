@@ -18,7 +18,6 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,55 +36,39 @@ public class LanguageFormatter {
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
     private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
 
-    private static HashMap<String,HashMap<String,String>> keywordMap = null;
+    private static HashMap<String,HashMap<String,String>> keywordMap;
 
     private static final String PHRASES_FILENAME = "language.txt";
 
 
-    private String statement;
+    private final String statement;
 
-    private Map<String, String> phraseMap;
+    private final Map<String, String> phraseMap;
 
     // kb.getTermFormatMap() for this language
-    private Map<String, String> termMap;
+    private final Map<String, String> termMap;
 
-    private KB kb;
-    private String language;
+    private final KB kb;
+    private final String language;
 
-    HashMap<String, HashSet<String>> variableTypes;
+    private final HashMap<String, HashSet<String>> variableTypes;
 
-    Map<String, HashSet<String>> variableToInstanceMap;
+    private final Map<String, HashSet<String>> variableToInstanceMap;
 
-    // FIXME: Temporarily disable NLG for certain logical operators.
-    static final List<String> notReadyOperators = Lists.newArrayList("not", "=>", "<=>");
+    // FIXME: Temporarily disable Informal NLG for certain logical operators.
+    private static final List<String> notReadyOperators = Lists.newArrayList("not", "=>", "<=>");
 
     /**
-     * Toggle on and off the latest NLG work.
+     * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
+     * eliminated--e.g. "a man drives" instead of "there exist a process and an agent such that the process is an instance of driving and
+     * the agent is an instance of human and the agent is an agent of the process".
      */
-    boolean doNLG = true;
+    private boolean doInformalNLG = true;
 
     /**
      * The stack holds information on the formula being processed, so that successive recursive calls can refer to it.
-     * FIXME: This should probably be moved into a separate object.
      */
-    private List<StackElement> theStack = Lists.newArrayList();
-
-    private class StackElement  {
-        /**
-         * Holds all the events being processed.
-         */
-        Map<String, SumoProcessCollector> sumoProcessMap;
-
-        /**
-         * Holds the arguments of the current clause. We use it to keep track of which arguments have been processed successfully.
-         */
-        List<String> formulaArgs;
-
-        public StackElement(Map<String, SumoProcessCollector> spm, List<String> args)  {
-            sumoProcessMap = Maps.newHashMap(spm);
-            formulaArgs = Lists.newArrayList(args);
-        }
-    }
+    private final LanguageFormatterStack theStack = new LanguageFormatterStack();
 
 
     /*******************************************************************************
@@ -127,7 +110,7 @@ public class LanguageFormatter {
 
         String nlFormat = "";
         try {
-            String template = nlStmtPara(statement, false, 1);
+            String template = paraphraseStatement(statement, false, 1);
 
             if (StringUtil.isNonEmptyString(template)) {
                 String anchorStart = ("<a href=\"" + href + "&term=");
@@ -161,8 +144,12 @@ public class LanguageFormatter {
                         }
                     }
                 }
-                if ((instanceMap != null && !instanceMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
+
+                if ( !instanceMap.isEmpty() ||  !classMap.isEmpty() ) {
+                    //if ((instanceMap != null && !instanceMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
                     template = variableReplace(template, instanceMap, classMap, kb, language);
+                }
+
                 StringBuilder sb = new StringBuilder(template);
                 int sblen = sb.length();
                 String titok = "&%";
@@ -234,11 +221,11 @@ public class LanguageFormatter {
      *  @param depth An int indicating the level of nesting, for control of indentation.
      *  @return A String, which is the paraphrased statement.
      */
-    protected String nlStmtPara(String stmt, boolean isNegMode, int depth) {
+    protected String paraphraseStatement(String stmt, boolean isNegMode, int depth) {
 
-        //System.out.println("INFO in LanguageFormatter.nlStmtPara(): stmt: " + stmt);
+        //System.out.println("INFO in LanguageFormatter.paraphraseStatement(): stmt: " + stmt);
         if (Formula.empty(stmt)) {
-            System.out.println("Error in LanguageFormatter.nlStmtPara(): stmt is empty");
+            System.out.println("Error in LanguageFormatter.paraphraseStatement(): stmt is empty");
             return "";
         }
         boolean alreadyTried = kb.loadFormatMapsAttempted.contains(language);
@@ -256,12 +243,12 @@ public class LanguageFormatter {
         f.read(stmt);
 
         if (f.atom()) {
-            ans = processAtom(stmt,termMap,language);
+            ans = processAtom(stmt,termMap);
             return ans;
         }
         else {
             if (!f.listP()) {
-                System.out.println("Error in LanguageFormatter.nlStmtPara(): "
+                System.out.println("Error in LanguageFormatter.paraphraseStatement(): "
                         + " Statement is not an atom or a list: "
                         + stmt);
                 return "";
@@ -273,89 +260,26 @@ public class LanguageFormatter {
         // PredicateFn.
         String pred = f.car();
 
-        // FIXME: test for case role here
-        if(kb.kbCache.isInstanceOf(pred, "CaseRole") && SumoProcessCollector.isKnownRole(pred))    {
-
-            try {
-                if(! theStack.isEmpty())  {
-                    String caseArgument = f.cadr() + " " + f.caddr();
-                    String[] caseArgs = caseArgument.trim().split(" ");
-                    String processInstanceName = caseArgs[0];
-                    String processParticipant = caseArgs[1];
-
-                    if(variableTypes.containsKey(processInstanceName))    {
-
-                        // FIXME: candidate for separate (static?) method that can be unit tested.
-                        HashSet<String> vals = variableTypes.get(processInstanceName);
-                        if(vals.contains("Process")) {
-                            // Does this process already exist on the stack?
-                            StackElement element = theStack.get(theStack.size() - 1);
-                            Map<String, SumoProcessCollector> thisProcessMap = element.sumoProcessMap;
-
-                            // Mark the argument as PROCESSED.
-                            // The relevant args are not held at top of stack, but at top - 1
-                            List<String> stackArgs = theStack.get(theStack.size() - 2).formulaArgs;
-                            if (stackArgs.contains(f.theFormula)) {
-                                int idx = stackArgs.indexOf(f.theFormula);
-                                String temp = "PROCESSED: " + stackArgs.remove(idx);
-                                stackArgs.add(idx, temp);
-                            }
-
-                            if (thisProcessMap.containsKey(processInstanceName)) {
-                                // Already there. Add new information if any exists.
-                                SumoProcessCollector sProcess = thisProcessMap.get(processInstanceName);
-                                String resolvedParticipant = resolveVariable(processParticipant);
-                                sProcess.addRole(pred, resolvedParticipant);
-                            } else {
-                                // Insert into stack.
-                                String resolvedProcessName = resolveVariable(processInstanceName);
-                                String resolvedParticipant = resolveVariable(processParticipant);
-                                SumoProcessCollector sProcess = new SumoProcessCollector(kb, pred, resolvedProcessName, resolvedParticipant);
-                                thisProcessMap.put(processInstanceName, sProcess);
-                            }
-                        }
-                    }
-
-                }
-            } catch (IllegalArgumentException e) {
-                // Recover from exception by turning off full NLG.
-                this.doNLG = false;
-                //theStack.clear();
-                String temp = statement.replaceAll("\\s+", " ");    // clean up, reducing consecutive whitespace to single space
-                String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
-                        "   Formula:\n       " + temp + "\n";
-                System.out.println(msg);
-            }
+        if (kb.kbCache.isInstanceOf(pred, "CaseRole") && SumoProcessCollector.isKnownRole(pred)) {
+            handleCaseRole(f, pred);
         }
 
         // Mark the predicate as processed.
         // FIXME: handle other predicates here: located, orientation, etc.
-        if(pred.equals("instance")) {
-            if(theStack.size() >= 2) {
-                // The relevant args are not held at top of stack, but at top - 1
-                List<String> stackArgs = theStack.get(theStack.size() - 2).formulaArgs;
-                if (stackArgs.contains(stmt)) {
-                    int idx = stackArgs.indexOf(stmt);
-                    String temp = "PROCESSED: " + stackArgs.remove(idx);
-                    stackArgs.add(idx, temp);
-                }
-            }
+        if (pred.equals("instance")) {
+            theStack.markFormulaArgAsProcessed(stmt);
         }
 
         if (!Formula.atom(pred)) {
-            System.out.println("Error in LanguageFormatter.nlStmtPara(): statement "
+            System.out.println("Error in LanguageFormatter.paraphraseStatement(): statement "
                     + stmt
                     + " has a formula in the predicate position.");
             return stmt;
         }
 
         if (logicalOperator(pred)) {
-            if(! theStack.isEmpty()) {
-                // Put the args list into the stack for later reference.
-                List<String> args = f.complexArgumentsToArrayList(1);
-                StackElement element = this.theStack.get(theStack.size() - 1);
-                element.formulaArgs = args;
-            }
+            // Put the args list into the stack for later reference.
+            theStack.insertFormulaArgs(f.complexArgumentsToArrayList(1));
 
             ans = paraphraseLogicalOperator(stmt, isNegMode, depth+1);
 
@@ -370,12 +294,12 @@ public class LanguageFormatter {
             if (Formula.isVariable(pred))
                 result.append(pred);
             else {
-                result.append(processAtom(pred, termMap, language));
+                result.append(processAtom(pred, termMap));
             }
             f.read(f.cdr());
             while (!f.empty()) {
                 /*
-                System.out.println("INFO in LanguageFormatter.nlStmtPara(): stmt: " + f);
+                System.out.println("INFO in LanguageFormatter.paraphraseStatement(): stmt: " + f);
                 System.out.println("length: " + f.listLength());
                 System.out.println("result: " + result);
                  */
@@ -383,9 +307,9 @@ public class LanguageFormatter {
                 f.read(f.cdr());
                 result.append(" ");
                 if (Formula.atom(arg))
-                    result.append(processAtom(arg,termMap,language));
+                    result.append(processAtom(arg,termMap));
                 else
-                    result.append(nlStmtPara(arg, isNegMode, depth+1));
+                    result.append(paraphraseStatement(arg, isNegMode, depth + 1));
                 if (!f.empty()) {
                     if (f.listLength() > 1)
                         result.append(", ");
@@ -396,6 +320,60 @@ public class LanguageFormatter {
         }
         ans = result.toString();
         return ans;
+    }
+
+    /*****************************************************************
+     * Insert the give case role into the current element's process map; or, if the SumoProcess already exists
+     * there, update it with the new information.
+     * @param formula
+     * @param caseRole
+     */
+    private void handleCaseRole(Formula formula, String caseRole) {
+        if(kb.kbCache.isInstanceOf(caseRole, "CaseRole") && SumoProcessCollector.isKnownRole(caseRole))    {
+
+            try {
+                if(! theStack.isEmpty())  {
+                    String caseArgument = formula.cadr() + " " + formula.caddr();
+                    String[] caseArgs = caseArgument.trim().split(" ");
+                    String processInstanceName = caseArgs[0];
+                    String processParticipant = caseArgs[1];
+
+                    if(variableTypes.containsKey(processInstanceName))    {
+
+                        HashSet<String> vals = variableTypes.get(processInstanceName);
+                        if(vals.contains("Process")) {
+                            // Mark the argument as PROCESSED.
+                            theStack.markFormulaArgAsProcessed(formula.theFormula);
+
+                            // Get the data in the stack's topmost element.
+                            Map<String, SumoProcessCollector> thisProcessMap = theStack.getCurrProcessMap();
+
+                            if (thisProcessMap.containsKey(processInstanceName)) {
+                                // Already there. Add new information if any exists.
+                                SumoProcessCollector sProcess = thisProcessMap.get(processInstanceName);
+                                String resolvedParticipant = resolveVariable(processParticipant);
+                                sProcess.addRole(caseRole, resolvedParticipant);
+                            } else {
+                                // Insert into stack.
+                                String resolvedProcessName = resolveVariable(processInstanceName);
+                                String resolvedParticipant = resolveVariable(processParticipant);
+                                SumoProcessCollector sProcess = new SumoProcessCollector(kb, caseRole, resolvedProcessName, resolvedParticipant);
+                                thisProcessMap.put(processInstanceName, sProcess);
+                            }
+                        }
+                    }
+
+                }
+            } catch (IllegalArgumentException e) {
+                // Recover from exception by turning off full NLG.
+                this.doInformalNLG = false;
+                //theStack.clear();
+                String temp = statement.replaceAll("\\s+", " ");    // clean up, reducing consecutive whitespace to single space
+                String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
+                        "   Formula:\n       " + temp + "\n";
+                System.out.println(msg);
+            }
+        }
     }
 
     /** ***************************************************************
@@ -438,64 +416,49 @@ public class LanguageFormatter {
             String ans = null;
 
             if (LanguageFormatter.notReadyOperators.contains(pred))   {
-                doNLG = false;
+                doInformalNLG = false;
             }
 
             if (pred.equals("not")) {
-                ans = nlStmtPara(f.car(), true, depth+1);
+                ans = paraphraseStatement(f.car(), true, depth + 1);
                 return ans;
             }
 
             // Push new element onto the stack.
-            Map<String, SumoProcessCollector> nextProcessMap = Maps.newHashMap();
-            List<String> argsList = Lists.newArrayList();
-            StackElement inElement = new StackElement(nextProcessMap, argsList);
-            theStack.add(inElement);
+            theStack.pushNew();
+            LanguageFormatterStack.StackElement inElement = theStack.getCurrStackElement();
 
             try {
 
                 String arg = null;
                 while (!f.empty()) {
                     arg = f.car();
-                    String result = nlStmtPara(arg, false, depth + 1);
+                    String result = paraphraseStatement(arg, false, depth + 1);
                     if (StringUtil.isNonEmptyString(result))
                         args.add(result);
                     else {
                         System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): "
                                 + "bad result for \"" + arg + "\": " + result);
-                        // TODO: We should probably return empty string at this point, like nlStmtPara( ), instead of continuing processing.
+                        // TODO: We should probably return empty string at this point, like paraphraseStatement( ), instead of continuing processing.
                         return "";
                     }
                     f.read(f.cdr());
                 }
 
                 // Perform natural language output.
-                if (doNLG) {
-                    StackElement outElement = theStack.get(theStack.size() - 1);
-                    Map<String, SumoProcessCollector> thisProcessMap = outElement.sumoProcessMap;
+                if (doInformalNLG) {
+                    Map<String, SumoProcessCollector> thisProcessMap = theStack.getCurrProcessMap();
 
                     if(thisProcessMap != null) {
 
                         if(! thisProcessMap.isEmpty()) {
                             // Only perform NLG if the args list has been fully processed.
-                            boolean doIt = false;   // TODO: not sure if this should be true or false
-                            if(theStack.size() >= 2) {
-                                StackElement previousElement = theStack.get(theStack.size() - 2);
-                                doIt = allArgsProcessed(previousElement.formulaArgs);
-                            }
+                            // TODO: the method call below makes this check unnecessary.
+                            boolean doIt = theStack.areFormulaArgsProcessed();
 
                             if (doIt) {
                                 // Try to do natural language generation on top element of stack.
-                                StringBuilder sb = new StringBuilder();
-                                for (SumoProcessCollector process : thisProcessMap.values()) {
-                                    //SumoProcess process = thisProcessMap.get(thisProcessMap.keySet().iterator().next());
-                                    String naturalLanguage = process.toNaturalLanguage();
-                                    if (!naturalLanguage.isEmpty()) {
-                                        sb.append(naturalLanguage).append(" and ");
-                                    }
-                                }
-                                // Remove last "and" if it exists.
-                                String output = sb.toString().replaceAll(" and $", "");
+                                String output = theStack.doCurrNatlLanguageGeneration();
                                 if (!output.isEmpty()) {
 
                                     // FIXME: clear the arguments
@@ -514,15 +477,9 @@ public class LanguageFormatter {
                         }
                         else    {
                             // See if the last recursive call processed all the clause arguments.
-                            if (allArgsProcessed(outElement.formulaArgs)) {
-                                // FIXME: clear the arguments
-//                                if (theStack.size() >= 2) {
-//                                if (theStack.contains(inElement)) {
-//                                    StackElement thisElement = theStack.get(theStack.indexOf(inElement));
-//                                    thisElement.formulaArgs.clear();
-//                                }
-
-                                return args.get(args.size() - 1);
+                            if (theStack.areFormulaArgsProcessed(theStack.getCurrStackElement())) {
+                            // if (allArgsProcessed(outElement.formulaArgs)) {
+                                    return args.get(args.size() - 1);
                             }
                         }
                     }
@@ -531,194 +488,13 @@ public class LanguageFormatter {
             } catch (IllegalArgumentException ex) {
                 ex.printStackTrace();
             } finally {
-                // Clear the stack.
-                // Something's wrong if the top element of the stack isn't inElement.
-                if(theStack.indexOf(inElement) != theStack.size() - 1) {
-                    throw new IllegalStateException("Current element of stack is not the top element.");
-                }
-                if(! theStack.remove(inElement))   {
-                    throw new IllegalStateException("Unable to pop the stack.");
-                }
+                // Pop the stack.
+                theStack.pop(inElement);
             }
 
             // FIXME: put the below into a separate method
-            String COMMA = getKeyword(",",language);
-            //String QUESTION = getKeyword("?",language);
-            String IF = getKeyword("if",language);
-            String THEN = getKeyword("then",language);
-            String AND = getKeyword("and",language);
-            String OR = getKeyword("or",language);
-            String IFANDONLYIF = getKeyword("if and only if",language);
-            String NOT = getKeyword("not",language);
-            String FORALL = getKeyword("for all",language);
-            String EXISTS = getKeyword("there exists",language);
-            String EXIST = getKeyword("there exist",language);
-            String NOTEXIST = getKeyword("there don't exist",language);
-            String NOTEXISTS = getKeyword("there doesn't exist",language);
-            String HOLDS = getKeyword("holds",language);
-            String SOTHAT = getKeyword("so that",language);
-            String SUCHTHAT = getKeyword("such that",language);
-            if (StringUtil.emptyString(SUCHTHAT)) { SUCHTHAT = SOTHAT; }
+            return generateFormalNaturalLanguage(args, ans, pred, isNegMode);
 
-            StringBuilder sb = new StringBuilder();
-
-            if (pred.equals("=>")) {
-                if (isNegMode) {
-                    sb.append(args.get(1));
-                    sb.append(" ");
-                    sb.append(AND);
-                    sb.append(" ");
-                    sb.append("~{");
-                    sb.append(args.get(0));
-                    sb.append("}");
-                }
-                else {
-                    // Special handling for Arabic.
-                    boolean isArabic = (language.matches(".*(?i)arabic.*")
-                            || language.equalsIgnoreCase("ar"));
-                    sb.append("<ul><li>");
-                    sb.append(isArabic ? "<span dir=\"rtl\">" : "");
-                    sb.append(IF);
-                    sb.append(" ");
-                    sb.append(args.get(0));
-                    sb.append(COMMA);
-                    sb.append(isArabic ? "</span>" : "");
-                    sb.append("</li><li>");
-                    sb.append(isArabic ? "<span dir=\"rtl\">" : "");
-                    sb.append(THEN);
-                    sb.append(" ");
-                    sb.append(args.get(1));
-                    sb.append(isArabic ? "</span>" : "");
-                    sb.append("</li></ul>");
-                }
-                ans = sb.toString();
-                return ans;
-            }
-            if (pred.equalsIgnoreCase("and")) {
-                if (isNegMode) {
-                    for (int i = 0; i < args.size(); i++) {
-                        if (i > 0) {
-                            sb.append(" ");
-                            sb.append(OR);
-                            sb.append(" ");
-                        }
-                        sb.append("~{ ");
-                        sb.append(translateWord(termMap,(String) args.get(i),language));
-                        sb.append(" }");
-                    }
-                }
-                else {
-                    for (int i = 0; i < args.size(); i++) {
-                        if (i > 0) {
-                            sb.append(" ");
-                            sb.append(AND);
-                            sb.append(" ");
-                        }
-                        sb.append(translateWord(termMap,(String) args.get(i),language));
-                    }
-                }
-                ans = sb.toString();
-                return ans;
-            }
-            if (pred.equalsIgnoreCase("holds")) {
-                for (int i = 0; i < args.size(); i++) {
-                    if (i > 0) {
-                        if (isNegMode) {
-                            sb.append(" ");
-                            sb.append(NOT);
-                        }
-                        sb.append(" ");
-                        sb.append(HOLDS);
-                        sb.append(" ");
-                    }
-                    sb.append(translateWord(termMap,(String) args.get(i),language));
-                }
-                ans = sb.toString();
-                return ans;
-            }
-            if (pred.equalsIgnoreCase("or")) {
-                for (int i = 0; i < args.size(); i++) {
-                    if (i > 0) {
-                        sb.append(" ");
-                        sb.append(isNegMode ? AND : OR);
-                        sb.append(" ");
-                    }
-                    sb.append(translateWord(termMap,(String) args.get(i),language));
-                }
-                ans = sb.toString();
-                return ans;
-            }
-            if (pred.equals("<=>")) {
-                if (isNegMode) {
-                    sb.append(translateWord(termMap,(String) args.get(1),language));
-                    sb.append(" ");
-                    sb.append(OR);
-                    sb.append(" ");
-                    sb.append("~{ ");
-                    sb.append(translateWord(termMap,(String) args.get(0),language));
-                    sb.append(" }");
-                    sb.append(" ");
-                    sb.append(OR);
-                    sb.append(" ");
-                    sb.append(translateWord(termMap,(String) args.get(0),language));
-                    sb.append(" ");
-                    sb.append(OR);
-                    sb.append(" ");
-                    sb.append("~{ ");
-                    sb.append(translateWord(termMap,(String) args.get(1),language));
-                    sb.append(" }");
-                }
-                else {
-                    sb.append(translateWord(termMap,(String) args.get(0),language));
-                    sb.append(" ");
-                    sb.append(IFANDONLYIF);
-                    sb.append(" ");
-                    sb.append(translateWord(termMap,(String) args.get(1),language));
-                }
-                ans = sb.toString();
-                return ans;
-            }
-            if (pred.equalsIgnoreCase("forall")) {
-                if (isNegMode) {
-                    sb.append(" ");
-                    sb.append(NOT);
-                    sb.append(" ");
-                }
-                sb.append(FORALL);
-                sb.append(" ");
-                if (((String) args.get(0)).contains(" ")) {
-                    // If more than one variable ...
-                    sb.append(translateWord(termMap,formatList((String) args.get(0), language), language));
-                }
-                else {
-                    // If just one variable ...
-                    sb.append(translateWord(termMap,(String) args.get(0),language));
-                }
-                sb.append(" ");
-                sb.append(translateWord(termMap,(String) args.get(1),language));
-                ans = sb.toString();
-                return ans;
-            }
-            if (pred.equalsIgnoreCase("exists")) {
-                if (((String) args.get(0)).contains(" ")) {
-                    // If more than one variable ...
-                    sb.append(isNegMode ? NOTEXIST : EXIST);
-                    sb.append(" ");
-                    sb.append(translateWord(termMap, formatList((String) args.get(0), language), language));
-                }
-                else {
-                    // If just one variable ...
-                    sb.append(isNegMode ? NOTEXISTS : EXISTS);
-                    sb.append(" ");
-                    sb.append(translateWord(termMap,(String) args.get(0),language));
-                }
-                sb.append(" ");
-                sb.append(SUCHTHAT);
-                sb.append(" ");
-                sb.append(translateWord(termMap,(String) args.get(1),language));
-                ans = sb.toString();
-                return ans;
-            }
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -726,30 +502,188 @@ public class LanguageFormatter {
         return "";
     }
 
+    private String generateFormalNaturalLanguage(ArrayList<String> args, String ans, String pred, boolean isNegMode) {
+        String COMMA = getKeyword(",",language);
+        //String QUESTION = getKeyword("?",language);
+        String IF = getKeyword("if",language);
+        String THEN = getKeyword("then",language);
+        String AND = getKeyword("and",language);
+        String OR = getKeyword("or",language);
+        String IFANDONLYIF = getKeyword("if and only if",language);
+        String NOT = getKeyword("not",language);
+        String FORALL = getKeyword("for all",language);
+        String EXISTS = getKeyword("there exists",language);
+        String EXIST = getKeyword("there exist",language);
+        String NOTEXIST = getKeyword("there don't exist",language);
+        String NOTEXISTS = getKeyword("there doesn't exist",language);
+        String HOLDS = getKeyword("holds",language);
+        String SOTHAT = getKeyword("so that",language);
+        String SUCHTHAT = getKeyword("such that",language);
+        if (StringUtil.emptyString(SUCHTHAT)) { SUCHTHAT = SOTHAT; }
 
+        StringBuilder sb = new StringBuilder();
 
-    /** ***************************************************************
-     * Check all the arguments for the clause being processed to see if they have all been processed.
-     * FIXME: this should be moved to a separate object with the stack, etc.
-     * @param formulaArgs
-     * @return
-     */
-    private boolean allArgsProcessed(List<String> formulaArgs) {
-        boolean retVal = false;
-
-        if (! formulaArgs.isEmpty()) {
-            boolean isComplete = true;
-            for (String fArg : formulaArgs) {
-                if (! fArg.startsWith(("PROCESSED: "))) {
-                    isComplete = false;
-                    break;
+        if (pred.equals("=>")) {
+            if (isNegMode) {
+                sb.append(args.get(1));
+                sb.append(" ");
+                sb.append(AND);
+                sb.append(" ");
+                sb.append("~{");
+                sb.append(args.get(0));
+                sb.append("}");
+            }
+            else {
+                // Special handling for Arabic.
+                boolean isArabic = (language.matches(".*(?i)arabic.*")
+                        || language.equalsIgnoreCase("ar"));
+                sb.append("<ul><li>");
+                sb.append(isArabic ? "<span dir=\"rtl\">" : "");
+                sb.append(IF);
+                sb.append(" ");
+                sb.append(args.get(0));
+                sb.append(COMMA);
+                sb.append(isArabic ? "</span>" : "");
+                sb.append("</li><li>");
+                sb.append(isArabic ? "<span dir=\"rtl\">" : "");
+                sb.append(THEN);
+                sb.append(" ");
+                sb.append(args.get(1));
+                sb.append(isArabic ? "</span>" : "");
+                sb.append("</li></ul>");
+            }
+            ans = sb.toString();
+            return ans;
+        }
+        if (pred.equalsIgnoreCase("and")) {
+            if (isNegMode) {
+                for (int i = 0; i < args.size(); i++) {
+                    if (i > 0) {
+                        sb.append(" ");
+                        sb.append(OR);
+                        sb.append(" ");
+                    }
+                    sb.append("~{ ");
+                    sb.append(translateWord(termMap,(String) args.get(i)));
+                    sb.append(" }");
                 }
             }
-            retVal = isComplete;
+            else {
+                for (int i = 0; i < args.size(); i++) {
+                    if (i > 0) {
+                        sb.append(" ");
+                        sb.append(AND);
+                        sb.append(" ");
+                    }
+                    sb.append(translateWord(termMap,(String) args.get(i)));
+                }
+            }
+            ans = sb.toString();
+            return ans;
+        }
+        if (pred.equalsIgnoreCase("holds")) {
+            for (int i = 0; i < args.size(); i++) {
+                if (i > 0) {
+                    if (isNegMode) {
+                        sb.append(" ");
+                        sb.append(NOT);
+                    }
+                    sb.append(" ");
+                    sb.append(HOLDS);
+                    sb.append(" ");
+                }
+                sb.append(translateWord(termMap,(String) args.get(i)));
+            }
+            ans = sb.toString();
+            return ans;
+        }
+        if (pred.equalsIgnoreCase("or")) {
+            for (int i = 0; i < args.size(); i++) {
+                if (i > 0) {
+                    sb.append(" ");
+                    sb.append(isNegMode ? AND : OR);
+                    sb.append(" ");
+                }
+                sb.append(translateWord(termMap,(String) args.get(i)));
+            }
+            ans = sb.toString();
+            return ans;
+        }
+        if (pred.equals("<=>")) {
+            if (isNegMode) {
+                sb.append(translateWord(termMap,(String) args.get(1)));
+                sb.append(" ");
+                sb.append(OR);
+                sb.append(" ");
+                sb.append("~{ ");
+                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(" }");
+                sb.append(" ");
+                sb.append(OR);
+                sb.append(" ");
+                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(" ");
+                sb.append(OR);
+                sb.append(" ");
+                sb.append("~{ ");
+                sb.append(translateWord(termMap,(String) args.get(1)));
+                sb.append(" }");
+            }
+            else {
+                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(" ");
+                sb.append(IFANDONLYIF);
+                sb.append(" ");
+                sb.append(translateWord(termMap,(String) args.get(1)));
+            }
+            ans = sb.toString();
+            return ans;
+        }
+        if (pred.equalsIgnoreCase("forall")) {
+            if (isNegMode) {
+                sb.append(" ");
+                sb.append(NOT);
+                sb.append(" ");
+            }
+            sb.append(FORALL);
+            sb.append(" ");
+            if (((String) args.get(0)).contains(" ")) {
+                // If more than one variable ...
+                sb.append(translateWord(termMap,formatList((String) args.get(0), language)));
+            }
+            else {
+                // If just one variable ...
+                sb.append(translateWord(termMap,(String) args.get(0)));
+            }
+            sb.append(" ");
+            sb.append(translateWord(termMap,(String) args.get(1)));
+            ans = sb.toString();
+            return ans;
+        }
+        if (pred.equalsIgnoreCase("exists")) {
+            if (((String) args.get(0)).contains(" ")) {
+                // If more than one variable ...
+                sb.append(isNegMode ? NOTEXIST : EXIST);
+                sb.append(" ");
+                sb.append(translateWord(termMap, formatList((String) args.get(0), language)));
+            }
+            else {
+                // If just one variable ...
+                sb.append(isNegMode ? NOTEXISTS : EXISTS);
+                sb.append(" ");
+                sb.append(translateWord(termMap,(String) args.get(0)));
+            }
+            sb.append(" ");
+            sb.append(SUCHTHAT);
+            sb.append(" ");
+            sb.append(translateWord(termMap,(String) args.get(1)));
+            ans = sb.toString();
+            return ans;
         }
 
-        return retVal;
+        return "";
     }
+
 
     /** ***************************************************************
      * Create a natural language paraphrase of a logical statement, where the
@@ -835,7 +769,7 @@ public class LanguageFormatter {
             if (Formula.isVariable(arg))
                 para = arg;
             else
-                para = nlStmtPara(arg, isNegMode, 1);
+                para = paraphraseStatement(arg, isNegMode, 1);
 
             //System.out.println("para: " + para);
             if (!Formula.atom(para)) {
@@ -867,7 +801,7 @@ public class LanguageFormatter {
             num++;
             argPointer = ("%" + num);
         }
-        return strFormat.toString();
+        return strFormat;
     }
 
     /** *************************************************************
@@ -876,7 +810,7 @@ public class LanguageFormatter {
 
         if (term.endsWith("Fn"))
             term = term.substring(0,term.length()-2);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < term.length(); i++) {
             if (Character.isLowerCase(term.charAt(i)) || !Character.isLetter(term.charAt(i)))
                 result.append(term.charAt(i));
@@ -925,6 +859,8 @@ public class LanguageFormatter {
     }
 
     /** *************************************************************
+     * FIXME: write unit tests on this and replace string concatentation inside StringBuilder.append( ) below
+     * with successive appends.
      */
     private String allFunctionsOfArity(KB kb, int i) {
 
@@ -935,9 +871,9 @@ public class LanguageFormatter {
             case 3: parent = "TernaryFunction"; break;
             case 4: parent = "QuaternaryFunction"; break;
         }
-        if (parent == "")
+        if (parent.isEmpty())
             return "";
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
             String term = it.next();
             if (kb.kbCache.transInstOf(term,parent))
@@ -973,9 +909,9 @@ public class LanguageFormatter {
             case 4: parent = "QuaternaryPredicate"; break;
             case 5: parent = "QuintaryPredicate"; break;
         }
-        if (parent == "")
+        if (parent.isEmpty())
             return "";
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
             String term = (String) it.next();
             if (kb.kbCache.transInstOf(term,parent))
@@ -1149,8 +1085,11 @@ public class LanguageFormatter {
                 ex2.printStackTrace();
             }
             System.out.println("EXIT LanguageFormatter.readKeywordMap(" + dir + ")");
-            return keywordMap;
+            //return keywordMap;
         }
+
+        return keywordMap;
+
     }
 
     /** ***************************************************************
@@ -1158,7 +1097,7 @@ public class LanguageFormatter {
      * spaces for readability.  Return variable unaltered.  Add
      * term format string to all other atoms.
      */
-    private static String processAtom(String atom, Map<String,String> termMap, String language) {
+    private static String processAtom(String atom, Map<String, String> termMap) {
 
         String result = atom;
         String unquoted = StringUtil.removeEnclosingQuotes(atom);
@@ -1206,13 +1145,12 @@ public class LanguageFormatter {
         for (int i = 0 ; i <= depth ; i++)
             System.out.print("  ");
         System.out.print(depth + ":");
-        return;
     }
 
     /** ***************************************************************
      * Return the NL format of an individual word.
      */
-    private static String translateWord(Map<String,String> termMap, String word, String language) {
+    private static String translateWord(Map<String,String> termMap, String word) {
 
         String ans = word;
         try {
@@ -1408,9 +1346,9 @@ public class LanguageFormatter {
      *
      * @param href the anchor string up to the term= parameter, which this method
      *               will fill in.
-     * @param stmt the KIF statement that will be passed to nlStmtPara for formatting.
-     * @param phraseMap the set of NL formatting statements that will be passed to nlStmtPara.
-     * @param termMap the set of NL statements for terms that will be passed to nlStmtPara.
+     * @param stmt the KIF statement that will be passed to paraphraseStatement for formatting.
+     * @param phraseMap the set of NL formatting statements that will be passed to paraphraseStatement.
+     * @param termMap the set of NL statements for terms that will be passed to paraphraseStatement.
      * @param language the natural language in which the paraphrase should be generated.
      */
     public static String htmlParaphrase(String href, String stmt, Map<String,String> phraseMap,
@@ -1506,7 +1444,7 @@ public class LanguageFormatter {
                                                 String varPretty, String language,
                                                 boolean isClass, HashMap<String,Integer> typeMap) {
 
-        String result = new String(form);
+        String result = form;
         boolean isArabic = (language.matches(".*(?i)arabic.*")
                 || language.equalsIgnoreCase("ar"));
         if (StringUtil.emptyString(varPretty)) 
@@ -1803,5 +1741,6 @@ public class LanguageFormatter {
         System.out.println();
 
     }
+
 }
 

@@ -124,7 +124,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         String input = "(exists (?D ?H) (and (instance ?D Driving) (instance ?H Human) (agent ?D ?H)))";
         LanguageFormatter lf = new LanguageFormatter(input, SigmaTestBase.kb.getFormatMap("EnglishLanguage"), SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
-        String actual = lf.nlStmtPara(input, false, 0);
+        String actual = lf.paraphraseStatement(input, false, 0);
         assertEquals("", actual);
     }
 
