@@ -127,10 +127,6 @@ public class HTMLformatter {
         result.append("<td valign=\"top\" width=\"10%\">");
 
         // System.out.println("Info in HTMLformatter.proofTableFormat(): premises : " + step.premises);
-        if (step.inferenceType == null)
-            System.out.println("Debug by qingqing: step.inferenceType = " + null);
-        else
-            System.out.println("Debug by qingqing: step.inferenceType = " + step.inferenceType);
         if (step.inferenceType!=null && step.inferenceType.equals("assume_negation")) {
             result.append("[Negated Query]");
         } else {
