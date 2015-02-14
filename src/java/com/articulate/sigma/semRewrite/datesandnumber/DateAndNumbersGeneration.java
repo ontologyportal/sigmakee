@@ -105,7 +105,6 @@ public class DateAndNumbersGeneration {
 		String wordToken;
 		Iterator<Map.Entry<Integer, String>> dateEntries = dateMap.entrySet().iterator();
 		while (dateEntries.hasNext()){
-			
 			Map.Entry<Integer, String> dateEntry = dateEntries.next();
 			wordToken = dateEntry.getValue().split("@")[1];
 			
@@ -165,7 +164,8 @@ public class DateAndNumbersGeneration {
 
 	/** ***************************************************************
 	 */
-	private void addAndResetFlags(DateInfo dateSet, List<DateInfo> dateList, FlagUtilities flags, DateComponent dateComponent, String token) {
+	private void addAndResetFlags(DateInfo dateSet, List<DateInfo> dateList, 
+			FlagUtilities flags, DateComponent dateComponent, String token) {
 		
 		DateInfo dateSetTemp;
 		dateSetTemp = new DateInfo(dateSet);
@@ -206,7 +206,7 @@ public class DateAndNumbersGeneration {
 			if (dateFn.length() == 0)
 				return;
 			int charCount = dateFn.toString().replaceAll("[^(]", "").length();
-			for (int i = 0; i <charCount; ++i) {
+			for (int i = 0; i < charCount; ++i) {
 				dateFn.append(")");
 			}
 			sumoTerms.add("(during" + rootWord + dateFn.toString());
@@ -239,7 +239,7 @@ public class DateAndNumbersGeneration {
 				if (token.getId() == firstTokenId ) {
 					sumoTerms.add("(" + "MeasureFn " + token.getWord() + " " + secondTokenStr + ")");
 				} 
-				else if(token.getId() == secondTokenId) {
+				else if (token.getId() == secondTokenId) {
 					sumoTerms.add("(" + "MeasureFn " + token.getWord() + " " + firstTokenStr + ")");
 				}
 			}
@@ -263,14 +263,14 @@ public class DateAndNumbersGeneration {
 	public List<String> generateSumoTerms(List<Tokens> tokensList, List<String> dependencyList) {
 		
 		setRootWord(dependencyList);
-		for(Tokens token : tokensList) {
+		for (Tokens token : tokensList) {
 			switch(token.getNer()) {
-			case "DATE"  : processDate(token, dependencyList);;
-			break;
-			case "NUMBER" : processNumber(token,dependencyList);
-			break;
-			case "DURATION" : ;
-			case "TIME" : ;
+				case "DATE"  : processDate(token, dependencyList);
+					break;
+				case "NUMBER" : processNumber(token,dependencyList);
+					break;
+				case "DURATION" : ;
+				case "TIME" : ;
 			}
 		}
 		generateSumoDateTerms();
