@@ -68,6 +68,7 @@ public class Rule {
                 sb.append(" ?=> ");
             sb.append(rhs.toString()+ ".");
         }
+        sb.append(" ; line " + startLine);
         return sb.toString();
     }
     
