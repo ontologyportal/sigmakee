@@ -185,6 +185,7 @@ public class Interpreter {
    */
   public String interpretSingle(String input) {
       
+	  System.out.println("INFO in Interpreter.interpretSingle(): " + input); 
 	  ArrayList<String> results = null;
       try {
           results = DependencyConverter.getDependencies(input);
@@ -196,32 +197,17 @@ public class Interpreter {
       HashMap<String,String> purewords = extractWords(results);
       ArrayList<String> wsd = findWSD(results,purewords);
       results.addAll(wsd);           
-      //String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
+      String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
       
       ArrayList<CNF> inputs = new ArrayList<CNF>();
-	  for (int i = 0; i < results.size(); i++) {
-	      Lexer lex = new Lexer(results.get(i));
-	      CNF cnf = CNF.parseSimple(lex);
-	      inputs.add(cnf);
-	  }
+      Lexer lex = new Lexer(in);
+      CNF cnf = CNF.parseSimple(lex);
+      inputs.add(cnf);
       ArrayList<String> kifClauses = interpretCNF(inputs);
       kifClauses.addAll(InterpretNumerics.getSumoTerms(input));
       return fromKIFClauses(kifClauses);
   }
-  
-  /** *************************************************************
-   
-  public String interpret(ArrayList<String> clauses) {
-      
-      ArrayList<CNF> inputs = new ArrayList<CNF>();
-	  for (int i = 0; i < clauses.size(); i++) {
-	      Lexer lex = new Lexer(clauses.get(i));
-	      CNF cnf = CNF.parseSimple(lex);
-	      inputs.add(cnf);
-	  }
-      return fromKIFClauses(interpretCNF(inputs));
-  }
- */
+
   /** *************************************************************
    */
   public String printKB(ArrayList<CNF> inputs) {
@@ -244,6 +230,8 @@ public class Interpreter {
 	  while (matcher.find()) {
 		  s = s.replace(matcher.group(1) + matcher.group(2), matcher.group(1) + "?" + matcher.group(2));
 	  }
+	  Formula f = new Formula(s);
+	  
 	  return s;
   }
   
@@ -260,10 +248,10 @@ public class Interpreter {
   public static void addUnprocessed(ArrayList<String> kifoutput, CNF cnf) {
       
       StringBuilder sb = new StringBuilder();
-      for (Disjunct d:cnf.clauses) {
+      for (Disjunct d : cnf.clauses) {
           if (d.disjuncts.size() > 1)
               sb.append("(or \n");
-          for (Clause c: d.disjuncts) {
+          for (Clause c : d.disjuncts) {
               kifoutput.add("(" + c.pred + " " + c.arg1  + " " + c.arg2 + ") ");
           }
           if (d.disjuncts.size() > 1)
@@ -276,8 +264,12 @@ public class Interpreter {
    */
   public ArrayList<String> interpretCNF(ArrayList<CNF> inputs) {
       
+	  if (inputs.size() > 1) {
+	      System.out.println("Error in Interpreter.interpretCNF(): multiple clauses"); 
+		  return null;
+	  }
       ArrayList<String> kifoutput = new ArrayList<String>();
-      System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs); 
+      System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs); 
       boolean bindingFound = true;
       int counter = 0;
       while (bindingFound && counter < 10 && inputs != null && inputs.size() > 0) {
@@ -376,36 +368,6 @@ public class Interpreter {
   }
   
   /** ***************************************************************
-   
-  public String interpSingleCommandLine(String input) {
-      
-	  interpretSingle(input);
-      ArrayList<String> results = null;
-      try {
-          input = StringUtil.removeEnclosingQuotes(input);
-          try {
-              results = DependencyConverter.getDependencies(input);
-          }
-          catch (Exception e) {
-              e.printStackTrace();
-              System.out.println(e.getMessage());
-          }
-          HashMap<String,String> purewords = extractWords(results);
-          ArrayList<String> wsd = findWSD(results,purewords);
-          System.out.println("INFO in Interpreter.interpret(): wsd: " + wsd);
-          System.out.println("INFO in Interpreter.interpret(): results: " + results);
-          results.addAll(wsd);            
-          String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-          return interpret(results);              
-      }
-      catch (Exception e) {
-          e.printStackTrace();
-          System.out.println(e.getMessage());
-      }
-      return "";
-  }
-  */
-  /** ***************************************************************
    */
   public void interpInter() {
       
@@ -462,6 +424,7 @@ public class Interpreter {
             		  question = true;
             	  else
             		  question = false;
+            	  System.out.println("INFO in Interpreter.interpretIter(): " + input); 
             	  interpretSingle(input);
               }
           }
@@ -472,8 +435,8 @@ public class Interpreter {
    */
   public void loadRules(String f) {
 
-      if (f.indexOf(File.separator) < 0)
-          f = "/home/apease/SourceForge/KBs/WordNetMappings/" + f;
+      if (f.indexOf(File.separator.toString(),2) < 0)
+          f = "/home/apease/SourceForge/KBs/WordNetMappings" + f;
       try {
           fname = f;
           RuleSet rsin = RuleSet.readFile(f);
@@ -482,6 +445,7 @@ public class Interpreter {
       catch (Exception e) {
           e.printStackTrace();
           System.out.println(e.getMessage());
+          return;
       }
       System.out.println("INFO in Interpreter.loadRules(): " +
           rs.rules.size() + " rules loaded from " + f);
@@ -491,7 +455,7 @@ public class Interpreter {
    */
   public void loadRules() {
 
-      String filename = "/home/apease/SourceForge/KBs/WordNetMappings/SemRewrite.txt";
+      String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SemRewrite.txt";
       String pref = KBmanager.getMgr().getPref("SemRewrite");
       if (!StringUtil.emptyString(pref))
           filename = pref;
@@ -526,26 +490,31 @@ public class Interpreter {
   /** ***************************************************************
    */
   public static void testInterpret() {
-      
-      //KBmanager.getMgr().initializeOnce();
+
       try {
+    	  KBmanager.getMgr().initializeOnce();
           Interpreter interp = new Interpreter();
           interp.loadRules();
-          System.out.println("INFO in Interpreter.testInterpret(): " + interp.rs);
-          /*
-          ArrayList<String> results = null;
-          try {
-              results = DependencyConverter.getDependencies("John walks to the river.");
-          }
-          catch (Exception e) {
-              e.printStackTrace();
-              System.out.println(e.getMessage());
-          }
-          ArrayList<String> wsd = findWSD(results);
-          results.addAll(wsd);           
-          String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-          interp.interpret(in);      
-          */
+          String sent = "John walks to the store.";
+          System.out.println("INFO in Interpreter.testInterpret(): " + sent);
+          String input = "nsubj(runs-2,John-1), root(ROOT-0,runs-2), det(store-5,the-4), prep_to(runs-2,store-5), sumo(Human,John-1), attribute(John-1,Male), sumo(RetailStore,store-5), sumo(Running,runs-2).";
+          Lexer lex = new Lexer(input);
+          CNF cnfInput = CNF.parseSimple(lex);
+          ArrayList<CNF> inputs = new ArrayList<CNF>();
+          inputs.add(cnfInput);
+          
+          System.out.println(interp.interpretCNF(inputs));
+          //System.out.println("INFO in Interpreter.testInterpret():" + interp.interpretSingle(sent));
+          
+          sent = "John takes a walk.";
+          System.out.println("INFO in Interpreter.testInterpret(): " + sent);
+          input = "nsubj(takes-2,John-1), root(ROOT-0,takes-2), det(walk-4,a-3), dobj(takes-2,walk-4), sumo(Human,John-1), attribute(John-1,Male), sumo(agent,takes-2), sumo(Walking,walk-4).";
+          lex = new Lexer(input);
+          cnfInput = CNF.parseSimple(lex);
+          inputs = new ArrayList<CNF>();
+          inputs.add(cnfInput);
+          System.out.println(interp.interpretCNF(inputs));
+          //System.out.println("INFO in Interpreter.testInterpret():" + interp.interpretSingle(sent));
       }
       catch (Exception e) {
           e.printStackTrace();
@@ -725,11 +694,11 @@ public class Interpreter {
       }
       else {
           //testUnify();
-          //testInterpret();
+          testInterpret();
           //testPreserve();
           //testQuestionPreprocess();
     	  //testPostProcess();
-    	  testTimeDateExtraction();
+    	  //testTimeDateExtraction();
       }
   }
 }
