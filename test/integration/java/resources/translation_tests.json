@@ -112,4 +112,34 @@
   (instance water-6 Water)
   (instance drink-4 Drinking))"
 }
+,
+{
+"text":"John made the car invisible.",
+"kif":
+""
+}
+,
+{
+"text":"John made it to the concert on time.",
+"kif":
+""
+}
+,
+{
+"text":"John made a decision.",
+"kif":
+""
+}
+,
+{
+"text":"John made his case for hiring.",
+"kif":
+""
+}
+,
+{
+"text":"John made it happen.",
+"kif":
+""
+}
 ]
