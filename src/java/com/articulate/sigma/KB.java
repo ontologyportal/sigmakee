@@ -34,6 +34,8 @@ being present in the ontology in order to function as intended.  They are:
 /*************************************************************************************************/
 package com.articulate.sigma;
 
+import com.google.common.collect.Sets;
+
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
@@ -276,6 +278,29 @@ public class KB {
         al.addAll(OMWordnet.lnames);
         return al;
     }
+
+    /** *************************************************************
+     * Remove from the given set any item which is a superclass of another item in the set.
+     * @param set
+     * @return
+     */
+    public Set<String> removeSuperClasses(Set<String> set) {
+        Set<String> returnSet = Sets.newHashSet(set);
+        Set<String> removeSet = Sets.newHashSet();
+
+        // Compare every element to every other.
+        for(String first : returnSet)   {
+            for(String second : returnSet)  {
+                if(isSubclass(first, second))   {
+                    removeSet.add(second);
+                }
+            }
+        }
+
+        returnSet.removeAll(removeSet);
+        return returnSet;
+    }
+
 
     /** *************************************************************
      * Arity errors should already have been trapped in addConstituent()

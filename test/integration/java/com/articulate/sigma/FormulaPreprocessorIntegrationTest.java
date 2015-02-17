@@ -42,13 +42,13 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
     @Test
     public void testFindTypes2() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?NOTPARTPROB", Sets.newHashSet("Quantity", "Entity"));
+        expected.put("?NOTPARTPROB", Sets.newHashSet("Quantity"));
         expected.put("?PART", Sets.newHashSet("SetOrClass", "Object+"));
-        expected.put("?PARTPROB", Sets.newHashSet("Quantity", "Entity"));
-        expected.put("?X", Sets.newHashSet("Object", "Entity"));
+        expected.put("?PARTPROB", Sets.newHashSet("Quantity"));
+        expected.put("?X", Sets.newHashSet("Object"));
         expected.put("?WHOLE", Sets.newHashSet("SetOrClass", "Object+"));
-        expected.put("?Y", Sets.newHashSet("Object", "Entity"));
-        expected.put("?Z", Sets.newHashSet("Object", "Entity"));
+        expected.put("?Y", Sets.newHashSet("Object"));
+        expected.put("?Z", Sets.newHashSet("Object"));
 
         String strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
                 "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and " +
@@ -102,9 +102,9 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("CognitiveAgent", "Entity");
+        HashSet<String> set1 = Sets.newHashSet("CognitiveAgent");
         expected.put("?H", set1);
-        HashSet<String> set2 = Sets.newHashSet("Entity", "LegalAction");
+        HashSet<String> set2 = Sets.newHashSet("LegalAction");
         expected.put("?P", set2);
 
         assertEquals(expected, actual);

@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.google.common.collect.Sets;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -244,20 +246,19 @@ public class FormulaPreprocessor {
      * utility method to merge two HashMaps of String
      * keys and a values of an HashSet of Strings
      */
-    private static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
-                                                              HashMap<String, HashSet<String>> map2) {
+    static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
+                                                              HashMap<String, HashSet<String>> map2, KB kb) {
 
-        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
-        result.putAll(map1);
-        Iterator<String> it = map2.keySet().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
-            HashSet<String> value = new HashSet<String>();
+        HashMap<String, HashSet<String>> result = new HashMap<String,HashSet<String>>(map1);
+
+        for(String key : map2.keySet()) {
+            Set<String> value = new HashSet<String>();
             if (result.containsKey(key)) {
                 value = result.get(key);
             }
             value.addAll(map2.get(key));
-            result.put(key, value);
+            value = kb.removeSuperClasses(value);
+            result.put(key, Sets.newHashSet(value));
         }
         return result;
     }
@@ -299,7 +300,7 @@ public class FormulaPreprocessor {
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {// equals may require special treatment
             result.putAll(input);
             for (int i = 1; i < f.listLength(); i++)
-                result = mergeToMap(result,computeVariableTypesRecurse(kb,new Formula(f.getArgument(i)),input));
+                result = mergeToMap(result,computeVariableTypesRecurse(kb,new Formula(f.getArgument(i)),input), kb);
         }
         else if (f.isSimpleClause()) {
             String pred = carstr;
@@ -321,7 +322,7 @@ public class FormulaPreprocessor {
                     }
                     // If formula is function then recurse.
                     else if(Formula.isFunctionalTerm(arg))  {
-                        result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input));
+                        result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
                     newf = newf.cdrAsFormula();
                     argnum++;  // note that this will try an argument that doesn't exist, and terminate when it does
@@ -329,8 +330,8 @@ public class FormulaPreprocessor {
             }
         }
         else {
-            result = mergeToMap(input,computeVariableTypesRecurse(kb,f.carAsFormula(),input));
-            result = mergeToMap(result,computeVariableTypesRecurse(kb,f.cdrAsFormula(),input));
+            result = mergeToMap(input,computeVariableTypesRecurse(kb,f.carAsFormula(),input), kb);
+            result = mergeToMap(result,computeVariableTypesRecurse(kb,f.cdrAsFormula(),input), kb);
         }
         //System.out.println("result: " + result);
         return result;

@@ -25,7 +25,7 @@ public class SigmaMockTestBase {
             "Driving",
             "Eating",
             "Giving",
-            "Process",
+// Process is not a subclass of Process           "Process",
             "Reading",
             "Seeing",
             "Transportation");
@@ -108,16 +108,15 @@ public class SigmaMockTestBase {
         recognizedMap.put("Substance", RECOGNIZED_SUBSTANCES);
         recognizedMap.put("CorpuscularObject", RECOGNIZED_CORPUSCULAR_OBJECTS);
 
-        List<String> entityList = Lists.newArrayList(RECOGNIZED_SUBSTANCES);
+        List<String> entityList = Lists.newArrayList(RECOGNIZED_PROCESSES);
+        entityList.addAll(RECOGNIZED_SUBSTANCES);
         entityList.addAll(RECOGNIZED_CORPUSCULAR_OBJECTS);
+        entityList.addAll(Lists.newArrayList("Process", "Substance", "CorpuscularObject"));
         recognizedMap.put("Entity", entityList);
 
         signaturesMap.put("instance", INSTANCE_SIGNATURES);
         signaturesMap.put("agent", AGENT_SIGNATURES);
         signaturesMap.put("names", NAMES_SIGNATURES);
-
-//        formulasMap.putAll("format", LANG_FORMAT_MAP_COLS);
-//        formulasMap.putAll("termFormat", LANG_TERM_FORMAT_MAP_COLS);
 
         termFormatMap.put("Process", "process");
         termFormatMap.put("Agent", "agent");
@@ -134,10 +133,10 @@ public class SigmaMockTestBase {
         }
 
         @Override
-        public boolean isSubclass(String str1, String str2)    {
-            List<String> list = recognizedMap.get(str2);
+        public boolean isSubclass(String c1, String c2)    {
+            List<String> list = recognizedMap.get(c2);
 
-            if (list.contains(str1))    {
+            if (list != null && list.contains(c1))    {
                 return true;
             }
 
@@ -166,10 +165,10 @@ public class SigmaMockTestBase {
         }
 
         @Override
-        public boolean isInstanceOf(String str1, String str2)    {
-            List<String> list = recognizedMap.get(str2);
+        public boolean isInstanceOf(String i, String c)    {
+            List<String> list = recognizedMap.get(c);
 
-            if (list.contains(str1))    {
+            if (list.contains(i))    {
                 return true;
             }
             return false;
@@ -180,7 +179,7 @@ public class SigmaMockTestBase {
     public static void setUp() {
         LanguageFormatter.readKeywordMap(KB_PATH);
 
-        Hashtable<String,String> hash = new Hashtable<String, String>();
+        Hashtable<String,String> hash = new Hashtable();
         hash.put("drink", "");
         hash.put("drive", "");
         hash.put("eat", "");

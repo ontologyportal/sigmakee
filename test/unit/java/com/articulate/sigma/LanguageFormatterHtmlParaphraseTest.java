@@ -79,8 +79,7 @@ public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
     public void testHtmlParaphrasePartlyLocated()     {
         String stmt = "(=> (and (instance ?OBJ1 Object) (partlyLocated ?OBJ1 ?OBJ2)) (exists (?SUB) (and (part ?SUB ?OBJ1) (located ?SUB ?OBJ2))))";
 
-        String expectedResult = "if a physical is an instance of object and the physical is partly located in an object, " +
-                "then there exists another physical such that the other physical is a part of the physical and the other physical is located at the object";
+        String expectedResult = "if an object is an instance of object and the object is partly located in another object, then there exists a third object such that the third object is a part of the object and the third object is located at the other object";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
@@ -342,11 +341,7 @@ public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
                 "                  (agent ?event ?agent) \n" +
                 "                  (patient ?event ?document))))";
 
-        String expectedResult = "there don't exist an agent, an object and a physical such that USTopSecret is an attribute of the object " +
-                "holds during the end of the time of existence of the physical and the beginning of the time of existence of USTopSecret " +
-                "is an attribute of the object is less than the beginning of the year 2001 and the agent is an instance of agent and " +
-                "the object is an instance of factual text and the physical is an instance of classifying and the agent is an agent of the physical and " +
-                "the object is a patient of the physical";
+        String expectedResult = "there don't exist an agent, an object and a process such that USTopSecret is an attribute of the object holds during the end of the time of existence of the process and the beginning of the time of existence of USTopSecret is an attribute of the object is less than the beginning of the year 2001 and the agent is an instance of agent and the object is an instance of factual text and the process is an instance of classifying and the agent is an agent of the process and the object is a patient of the process";
 
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
@@ -378,7 +373,7 @@ public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
                 "                (agent ?event ?agent) \n" +
                 "                (patient ?event ?document)))";
 
-        String expectedResult = "there exist an agent, an object and a physical such that USTopSecret is an attribute of the object holds during the end of the time of existence of the physical and the beginning of the time of existence of USTopSecret is an attribute of the object is less than the beginning of the year 2001 and the agent is an instance of agent and the object is an instance of factual text and the physical is an instance of classifying and the agent is an agent of the physical and the object is a patient of the physical";
+        String expectedResult = "there exist an agent, an object and a process such that USTopSecret is an attribute of the object holds during the end of the time of existence of the process and the beginning of the time of existence of USTopSecret is an attribute of the object is less than the beginning of the year 2001 and the agent is an instance of agent and the object is an instance of factual text and the process is an instance of classifying and the agent is an agent of the process and the object is a patient of the process";
 
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
@@ -500,7 +495,7 @@ public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
                 "                (agent ?event2 Robert-1) \n" +
                 "                (instance ?event2 Drinking)))";
 
-        String expectedResult = "there exist an object, a process and a physical such that male is an attribute of Robert-1 and there exists another object such that the physical is located at the other object and the other object is on to the object and Robert-1 is an instance of human and the object is an instance of desk and Robert-1 is an agent of the process and the process is an instance of eating and Robert-1 is an agent of the physical and the physical is an instance of drinking";
+        String expectedResult = "there exist an object, a process and another process such that male is an attribute of Robert-1 and there exists another object such that the other process is located at the other object and the other object is on to the object and Robert-1 is an instance of human and the object is an instance of desk and Robert-1 is an agent of the process and the process is an instance of eating and Robert-1 is an agent of the other process and the other process is an instance of drinking";
 
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
@@ -626,7 +621,7 @@ public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
                 "                    (patient ?event ?bank) \n" +
                 "                    (agent ?event ?dog)))";
 
-        String expectedResult = "there exist an entity, an agent and a process such that for all an object if the object is an instance of canine and the object is not equal to the agent, then a quantity is greater than another quantity and the age of the agent is the quantity and the age of the object is the other quantity and the entity is an instance of bank- financial organization and the agent is an instance of canine and the process is an instance of motion and the entity is a patient of the process and the agent is an agent of the process";
+        String expectedResult = "there exist an entity, an agent and a process such that for all an object if the object is an instance of canine and the object is not equal to the agent, then a time duration is greater than another time duration and the age of the agent is the time duration and the age of the object is the other time duration and the entity is an instance of bank- financial organization and the agent is an instance of canine and the process is an instance of motion and the entity is a patient of the process and the agent is an agent of the process";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
@@ -715,10 +710,10 @@ public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
                 "               (WhenFn ?PROC)\n" +
                 "               (attribute ?HUMAN Awake)))";
 
-        String expectedResult = "if a physical is an instance of intentional process and an agent is an agent of the physical and the agent is an instance of animal, " +
-                "then awake is an attribute of the agent holds during the time of existence of the physical";
-//        String expectedResult = "if a process is an instance of intentional process and an agent is an agent of the process and the agent is an instance of animal, " +
-//                "then awake is an attribute of the agent holds during the time of existence of the process";
+//        String expectedResult = "if a physical is an instance of intentional process and an agent is an agent of the physical and the agent is an instance of animal, " +
+//                "then awake is an attribute of the agent holds during the time of existence of the physical";
+        String expectedResult = "if a process is an instance of intentional process and an agent is an agent of the process and the agent is an instance of animal, " +
+                "then awake is an attribute of the agent holds during the time of existence of the process";
         String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
