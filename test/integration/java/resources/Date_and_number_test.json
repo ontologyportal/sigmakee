@@ -1,0 +1,53 @@
+[
+{
+"text":"John killed Mary on 31 March and also in July 1995 by travelling back in time.",
+"kif":
+"[(during killed-2 (DayFn 31 (MonthFn March)), (during killed-2 (MonthFn July (YearFn 1995))]"
+},
+,
+{
+"text":"Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.",
+"kif":
+"[(birthday aviator-18 (DayFn 24 (MonthFn July (YearFn 1897))), (deathdate aviator-18 (DayFn 2 (MonthFn July (YearFn 1937)))]"
+},
+{
+"text":"Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.",
+"kif":
+"[(during vanished-2 (MonthFn July (YearFn 1937))]"
+},
+{
+"text":"She was declared dead on January 5, 1939.",
+"kif":
+"[(during declared-3 (DayFn 5 (MonthFn January (YearFn 1939)))]"
+},
+{
+"text":"Bob went to work only 5 times in 2003.",
+"kif":
+"[(MeasureFn 5 times), (during went-2 (YearFn 2003)]"
+},
+{
+"text":"John kicks the cart.",
+"kif":
+"[]"
+},
+{
+"text":"John was killed on 8/15/2014 at 3:45 PM.",
+"kif":
+"[(during killed-3 (DayFn 15 (MonthFn august (YearFn 2014))), (during killed-3 (MinuteFn 45 (HourFn 15))]"
+},
+{
+"text":"John murdered Mary in July 1995 at 4 in the morning.",
+"kif":
+"[(during murdered-2 (MonthFn July (YearFn 1995)), (during murdered-2 (MinuteFn 00 (HourFn 04))]"
+},
+{
+"text":"John married Mary on December 22 at 5:45 PM.",
+"kif":
+"[(during married-2 (DayFn 22 (MonthFn December)), (during married-2 (MinuteFn 45 (HourFn 17))]"
+},
+{
+"text":"John was killed on 22 August 1999 at 18:45 hrs.",
+"kif":
+"[(during killed-3 (DayFn 22 (MonthFn august (YearFn 1999))), (during killed-3 (MinuteFn 45 (HourFn 18))]"
+}
+]
