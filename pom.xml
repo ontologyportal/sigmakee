@@ -70,6 +70,14 @@
                     </include>
 				</includes>
 			</testResource>
+			<testResource>
+				<directory>test/integration/java</directory>
+				<includes>
+					<include>
+                        resources/*
+                    </include>
+				</includes>
+			</testResource>
 		</testResources>
 		<pluginManagement>
 			<plugins>
