@@ -33,7 +33,7 @@
 {
 "text":"John was killed on 8/15/2014 at 3:45 PM.",
 "kif":
-"[(during killed-3 (DayFn 15 (MonthFn august (YearFn 2014))), (during killed-3 (MinuteFn 45 (HourFn 15))]"
+"[(during killed-3 (DayFn 15 (MonthFn August (YearFn 2014))), (during killed-3 (MinuteFn 45 (HourFn 15))]"
 },
 {
 "text":"John murdered Mary in July 1995 at 4 in the morning.",
@@ -48,6 +48,6 @@
 {
 "text":"John was killed on 22 August 1999 at 18:45 hrs.",
 "kif":
-"[(during killed-3 (DayFn 22 (MonthFn august (YearFn 1999))), (during killed-3 (MinuteFn 45 (HourFn 18))]"
+"[(during killed-3 (DayFn 22 (MonthFn August (YearFn 1999))), (during killed-3 (MinuteFn 45 (HourFn 18))]"
 }
 ]
