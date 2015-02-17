@@ -1411,7 +1411,43 @@ public class Formula implements Comparable {
     	result.addAll(resultSet);
     	return result;
     }
-    
+   
+    /** ***************************************************************
+     * Collects all quantified variables in this Formula.  Returns an ArrayList
+     * of String variable names (with initial '?').  Note that 
+     * duplicates are not removed.
+     *
+     * @return An ArrayList of String variable names
+     */
+    public ArrayList<String> collectExistentiallyQuantifiedVariables() {
+    	    
+    	ArrayList<String> result = new ArrayList<String>();
+    	HashSet<String> resultSet = new HashSet<String>();
+    	if (listLength() < 1)
+    		return result;
+    	Formula fcar = new Formula();
+    	fcar.read(this.car());
+    	if (fcar.theFormula.equals(EQUANT)) { 
+        	Formula remainder = new Formula();
+        	remainder.read(this.cdr());
+        	if (!remainder.listP()) {
+        		System.out.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
+        		return result;
+        	}
+        	Formula varlist = new Formula();
+        	varlist.read(remainder.car());
+        	resultSet.addAll(varlist.collectAllVariables());
+    		resultSet.addAll(remainder.cdrAsFormula().collectQuantifiedVariables());
+    	}
+    	else {
+    		if (fcar.listP())
+    			resultSet.addAll(fcar.collectQuantifiedVariables());
+    		resultSet.addAll(this.cdrAsFormula().collectQuantifiedVariables());
+    	}
+    	result.addAll(resultSet);
+    	return result;
+    }
+
     /** ***************************************************************
      * Collects all quantified variables in this Formula.  Returns an ArrayList
      * of String variable names (with initial '?').  Note that 
