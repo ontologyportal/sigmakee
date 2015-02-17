@@ -3,8 +3,8 @@ package com.articulate.sigma.semRewrite.datesandnumber;
 /*
 Copyright 2014-2015 IPsoft
 
-Author: Nagaraj Bhat nagaraj.bhat@ipsoft.com
-        Rashmi Rao
+Author: Rashmi Rao rashmi.rao@ipsoft.com
+        Nagaraj Bhat
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,22 +22,28 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
-import java.util.List;
-
-public class InterpretNumerics {
-
-	/**
-	 * Returns a list of SU-KIF statements, each corresponding to a date/time/measure found in the input 
-	 * natural language string.
-	 * @param input: The natural language string.
-	 * @return List of SU-KIF statements, each date/time/measures are obtained from parser.
-	 */
-	public static List<String> getSumoTerms(String input) {
-		
-		StanfordDateTimeExtractor sde = new StanfordDateTimeExtractor();
-		List<Tokens> tokensList = sde.populateParserInfo(input);
-		DateAndNumbersGeneration generator = new DateAndNumbersGeneration();
-		return generator.generateSumoTerms(tokensList, sde.getDependencyList());
-	}
+public class TimeInfo {
 	
+	private String hour = null;
+	private String minute = null;
+	private String second = null;
+	
+	public String getHour() {
+		return hour;
+	}
+	public void setHour(String hour) {
+		this.hour = hour;
+	}
+	public String getMinute() {
+		return minute;
+	}
+	public void setMinute(String minute) {
+		this.minute = minute;
+	}
+	public String getSecond() {
+		return second;
+	}
+	public void setSecond(String second) {
+		this.second = second;
+	}
 }
