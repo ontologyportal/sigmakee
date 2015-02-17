@@ -56,7 +56,8 @@ public class EProver {
 
     /** *************************************************************
      * Add a new tptp file to EBatching.txt
-     * TODO: This function might not be necessary if we find a way to directly add assertion into opened inference engine (e_ltb_runner)
+     * TODO: This function might not be necessary if we find a way to 
+     * directly add assertion into opened inference engine (e_ltb_runner)
      *  */
     public static void addBatchConfig(String inputFilename) {
 
@@ -71,7 +72,6 @@ public class EProver {
             BufferedReader in = new BufferedReader(isr);
             String line = in.readLine();
             while (line != null) {
-
                 String split = "include('";
                 int isEbatchFile = line.indexOf(split);
                 if (isEbatchFile != -1) {
@@ -83,7 +83,8 @@ public class EProver {
             fis.close();
             isr.close();
             in.close();
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error in EProver.addBatchFile()");
             System.out.println(e.getMessage());
@@ -106,7 +107,8 @@ public class EProver {
             pw.println("% SZS start BatchProblems");
             pw.println("% SZS end BatchProblems");
             pw.close();
-        } catch (FileNotFoundException e) {
+        } 
+        catch (FileNotFoundException e) {
             e.printStackTrace();
             System.out.println("Error in EProver.writeBatchFile()");
             System.out.println(e.getMessage());
@@ -164,9 +166,12 @@ public class EProver {
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
 
-    /** Create a running instance of EProver.
-     * Difference from EProver(String executable, String kbFile): move writeBatchConfig out of EProver(String executable)
-     * TODO: This function might not be necessary if we find a way to directly add assertion into opened inference engine (e_ltb_runner)
+    /** *************************************************************
+     * Create a running instance of EProver.
+     * Difference from EProver(String executable, String kbFile): move 
+     * writeBatchConfig out of EProver(String executable)
+     * TODO: This function might not be necessary if we find a way to 
+     * directly add assertion into opened inference engine (e_ltb_runner)
      *
      * @param executable
      * @throws IOException
@@ -273,11 +278,14 @@ public class EProver {
                     }
                 }
             }
-        } catch (ParseException e) {
+        } 
+        catch (ParseException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
             e.printStackTrace();
-        } finally {
+        } 
+        finally {
             try {
                 if (pw != null) pw.close();
             }
@@ -356,8 +364,8 @@ public class EProver {
                     inProof = true;
                 if (inProof)
                     result += line + "\n";
-
                 line = _reader.readLine();
+                //System.out.println("EProver(): " + line);
             }
         }
         catch (Exception ex) {
