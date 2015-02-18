@@ -165,6 +165,55 @@ public class Interpreter {
 
   /** *************************************************************
    */
+  private static ArrayList<String> findQuantification(String form) {
+	  
+	  ArrayList<String> quantified = new ArrayList<String>();
+	  String pattern = "\\?[A-Za-z0-9_]+\\-[0-9]+";
+	  Pattern p = Pattern.compile(pattern);
+	  Formula f = new Formula(form);
+	  ArrayList<String> vars = f.collectAllVariables();
+	  System.out.println("INFO in Interpreter.testAddQuantification(): vars: " + vars);
+	  for (String v : vars) {
+		  Matcher matcher = p.matcher(v);
+		  if (matcher.matches()) 
+			  quantified.add(v);
+	  }
+	  return quantified;
+  }
+  
+  /** *************************************************************
+   */
+  private static String prependQuantifier(ArrayList<String> vars, String form) {
+	  
+	  System.out.println("INFO in Interpreter.prependQuantifier(): " + vars);
+	  StringBuffer sb = new StringBuffer();
+	  if (vars == null || vars.size() < 1)
+		  return form;
+	  sb.append("(exists (");
+	  boolean first = true;
+	  for (String v : vars) {
+		  if (!first) {
+			  sb.append(" ");
+		  }
+		  sb.append(v);
+		  first = false;
+	  }
+	  sb.append(") \n");
+	  sb.append(form);
+	  sb.append(") \n");
+	  return sb.toString();
+  }
+  
+  /** *************************************************************
+   */
+  private static String addQuantification(String form) {
+	  
+	  ArrayList<String> vars = findQuantification(form);
+	  return prependQuantifier(vars, form);
+  }
+  
+  /** *************************************************************
+   */
   public String toFOL(ArrayList<String> clauses) {
       
       StringBuilder sb = new StringBuilder();
@@ -355,16 +404,18 @@ public class Interpreter {
    */
   public String fromKIFClauses(ArrayList<String> kifcs) {
 	  
-      String s = toFOL(kifcs);
-      System.out.println("INFO in Interpreter.interpret(): KIF: " + s);
+      String s1 = toFOL(kifcs);
+      String s2 = postProcess(s1);
+      String s3 = addQuantification(s2);
+      System.out.println("INFO in Interpreter.interpret(): KIF: " + s3);
       if (inference) {
     	  KB kb = KBmanager.getMgr().getKB("SUMO");
     	  if (question)
-    		  System.out.println(kb.askNoProof(postProcess(s),30,1));
+    		  System.out.println(kb.askNoProof(s3,30,1));
     	  else
-    		  System.out.println(kb.tell(s));
+    		  System.out.println(kb.tell(s3));
       }
-      return s;
+      return s3;
   }
   
   /** ***************************************************************
@@ -605,62 +656,79 @@ public class Interpreter {
   /** ***************************************************************
    */
   public static void testWSD() {
-      
+
 	  KBmanager.getMgr().initializeOnce();
-      String input = "Amelia is a pilot.";
-      ArrayList<String> results = null;
-      try {
-          results = DependencyConverter.getDependencies(input);
-      }
-      catch (Exception e) {
-          e.printStackTrace();
-          System.out.println(e.getMessage());
-      }
-      HashMap<String,String> purewords = extractWords(results);
-      ArrayList<String> wsd = findWSD(results,purewords);
-      System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
+	  String input = "Amelia is a pilot.";
+	  ArrayList<String> results = null;
+	  try {
+		  results = DependencyConverter.getDependencies(input);
+	  }
+	  catch (Exception e) {
+		  e.printStackTrace();
+		  System.out.println(e.getMessage());
+	  }
+	  HashMap<String,String> purewords = extractWords(results);
+	  ArrayList<String> wsd = findWSD(results,purewords);
+	  System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
   }
-  
-	/** ***************************************************************
-	 */
-	public static void testTimeDateExtraction() {
-		
-		System.out.println("INFO in Interpreter.testTimeDateExtraction()");
-		Interpreter interp = new Interpreter();
-		KBmanager.getMgr().initializeOnce();
-		interp.loadRules();
-	          
-		System.out.println("----------------------");
-		String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
-		System.out.println(input);
-		String sumoTerms = interp.interpretSingle(input);
-		System.out.println(sumoTerms);
-		
-		System.out.println("----------------------");
-		input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.";
-		System.out.println(input);
-		sumoTerms = interp.interpretSingle(input);
-		System.out.println(sumoTerms);
-		
-		System.out.println("----------------------");
-		input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
-		System.out.println(input);
-		sumoTerms = interp.interpretSingle(input);
-		System.out.println(sumoTerms);
-		
-		System.out.println("----------------------");
-		input = "She was declared dead on January 5, 1939.";
-		System.out.println(input);
-		sumoTerms = interp.interpretSingle(input);
-		System.out.println(sumoTerms);
-		
-		System.out.println("----------------------");
-		input = "Bob went to work only 5 times in 2003.";
-		System.out.println(input);
-		sumoTerms = interp.interpretSingle(input);
-		System.out.println(sumoTerms);
-	}
-	
+
+  /** ***************************************************************
+   */
+  public static void testTimeDateExtraction() {
+
+	  System.out.println("INFO in Interpreter.testTimeDateExtraction()");
+	  Interpreter interp = new Interpreter();
+	  KBmanager.getMgr().initializeOnce();
+	  interp.loadRules();
+
+	  System.out.println("----------------------");
+	  String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
+	  System.out.println(input);
+	  String sumoTerms = interp.interpretSingle(input);
+	  System.out.println(sumoTerms);
+
+	  System.out.println("----------------------");
+	  input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.";
+	  System.out.println(input);
+	  sumoTerms = interp.interpretSingle(input);
+	  System.out.println(sumoTerms);
+
+	  System.out.println("----------------------");
+	  input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
+	  System.out.println(input);
+	  sumoTerms = interp.interpretSingle(input);
+	  System.out.println(sumoTerms);
+
+	  System.out.println("----------------------");
+	  input = "She was declared dead on January 5, 1939.";
+	  System.out.println(input);
+	  sumoTerms = interp.interpretSingle(input);
+	  System.out.println(sumoTerms);
+
+	  System.out.println("----------------------");
+	  input = "Bob went to work only 5 times in 2003.";
+	  System.out.println(input);
+	  sumoTerms = interp.interpretSingle(input);
+	  System.out.println(sumoTerms);
+  }
+
+  /** ***************************************************************
+   */
+  public static void testAddQuantification() {
+
+      String input = "(and (agent kicks-2 John-1) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
+	  			"(instance John-1 Human) (instance cart-4 Wagon))";
+      String s1 = postProcess(input);
+      System.out.println("INFO in Interpreter.testAddQuantification(): Input: " + input);
+      System.out.println("INFO in Interpreter.testAddQuantification(): Output: " + addQuantification(s1));
+      
+      input = "(and (agent kicks-2 ?WH) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
+	  			"(instance ?WH Human) (instance cart-4 Wagon))";
+      s1 = postProcess(input);
+      System.out.println("INFO in Interpreter.testAddQuantification(): Input: " + input);
+      System.out.println("INFO in Interpreter.testAddQuantification(): Output: " + addQuantification(s1));
+  }
+
   /** ***************************************************************
    */
   public static void main(String[] args) {  
@@ -694,11 +762,12 @@ public class Interpreter {
       }
       else {
           //testUnify();
-          testInterpret();
+          //testInterpret();
           //testPreserve();
           //testQuestionPreprocess();
     	  //testPostProcess();
     	  //testTimeDateExtraction();
+    	  testAddQuantification();
       }
   }
 }
