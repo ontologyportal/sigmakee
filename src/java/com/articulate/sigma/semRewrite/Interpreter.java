@@ -171,7 +171,7 @@ public class Interpreter {
 	  String pattern = "\\?[A-Za-z0-9_]+\\-[0-9]+";
 	  Pattern p = Pattern.compile(pattern);
 	  Formula f = new Formula(form);
-	  ArrayList<String> vars = f.collectAllVariables();
+	  Set<String> vars = f.collectAllVariables();
 	  System.out.println("INFO in Interpreter.testAddQuantification(): vars: " + vars);
 	  for (String v : vars) {
 		  Matcher matcher = p.matcher(v);
