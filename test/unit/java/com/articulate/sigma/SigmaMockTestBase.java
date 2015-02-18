@@ -108,9 +108,15 @@ public class SigmaMockTestBase {
         recognizedMap.put("Substance", RECOGNIZED_SUBSTANCES);
         recognizedMap.put("CorpuscularObject", RECOGNIZED_CORPUSCULAR_OBJECTS);
 
+        List<String> recognizedCaseRolesCapitalized = Lists.newArrayList();
+        for(String str : RECOGNIZED_CASE_ROLES) {
+            recognizedCaseRolesCapitalized.add(edu.stanford.nlp.util.StringUtils.capitalize(str));
+        }
+
         List<String> entityList = Lists.newArrayList(RECOGNIZED_PROCESSES);
         entityList.addAll(RECOGNIZED_SUBSTANCES);
         entityList.addAll(RECOGNIZED_CORPUSCULAR_OBJECTS);
+        entityList.addAll(recognizedCaseRolesCapitalized);
         entityList.addAll(Lists.newArrayList("Process", "Substance", "CorpuscularObject"));
         recognizedMap.put("Entity", entityList);
 
@@ -179,7 +185,7 @@ public class SigmaMockTestBase {
     public static void setUp() {
         LanguageFormatter.readKeywordMap(KB_PATH);
 
-        Hashtable<String,String> hash = new Hashtable();
+        Hashtable<String,String> hash = new Hashtable<>();
         hash.put("drink", "");
         hash.put("drive", "");
         hash.put("eat", "");

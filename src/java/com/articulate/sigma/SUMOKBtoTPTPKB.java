@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.io.IOException;
 import java.util.*;
 
 public class SUMOKBtoTPTPKB {
@@ -363,11 +362,11 @@ public class SUMOKBtoTPTPKB {
                     // Filter1: only keep simpleClause and basic axioms
                     // TODO: this should be removed in the future
                     ArrayList<String> relationConstants = new ArrayList<String> (f.gatherRelationConstants());
-                    ArrayList<String> variables = f.collectAllVariables();
-                    ArrayList<String> terms = f.collectTerms();
+                    Set<String> variables = f.collectAllVariables();
+                    Set<String> terms = f.collectTerms();
                     if (relationConstants!=null && variables!=null && terms!=null) {
 
-                        ArrayList<String> minimum = new ArrayList<String>();
+                        Collection<String> minimum = new ArrayList<String>();
                         minimum = removeTermsFromList1WhichAppearInList2(terms, variables);
                         minimum = removeTermsFromList1WhichAppearInList2(minimum, relationConstants);
                         minimum = removeTermsFromList1WhichAppearInList2(minimum, logicalTerms);
@@ -420,7 +419,7 @@ public class SUMOKBtoTPTPKB {
     /**
      * remove terms from list1 which also appear in list2
      */
-    private static ArrayList<String> removeTermsFromList1WhichAppearInList2(ArrayList<String> list1, ArrayList<String> list2) {
+    private static Collection<String> removeTermsFromList1WhichAppearInList2(Collection<String> list1, Collection<String> list2) {
 
         if (list1 == null || list1 == null)
             return list1;
@@ -436,7 +435,7 @@ public class SUMOKBtoTPTPKB {
     /**
      * check if list1 only contains terms in list2
      */
-    private static boolean isList1OnlyContainsTermsFromList2(ArrayList<String> list1, ArrayList<String> list2) {
+    private static boolean isList1OnlyContainsTermsFromList2(Collection<String> list1, Collection<String> list2) {
 
         for (String s1 : list1) {
             if (!list2.contains(s1))

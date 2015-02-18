@@ -1,9 +1,6 @@
 package com.articulate.sigma;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 
 public class PredVarInst {
     
@@ -209,9 +206,9 @@ public class PredVarInst {
      *         return empty if input contains no predicate variables;
      *         return a list of instantiated formulas if the predicate variables are instantiated;
      */
-    public static ArrayList<Formula> instantiatePredVars(Formula input, KB kb) {
+    public static Set<Formula> instantiatePredVars(Formula input, KB kb) {
         
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        Set<Formula> result = new HashSet<Formula>();
         //System.out.println("INFO in PredVarInst.instantiatePredVars(): formula: " + input);
         // If there are no predicate variables, return empty()
         if (gatherPredVars(input).size() == 0)
@@ -972,5 +969,9 @@ public class PredVarInst {
          
          System.out.println(instantiatePredVars(f,kb));
          */
+    }
+
+    private void doNothing()    {
+
     }
 }

@@ -122,7 +122,7 @@ public class FormulaPreprocessor {
         HashMap<String,HashSet<String>> varmap = fp.computeVariableTypes(f, kb);
         // TODO: Add type restrictions only for variables which don't appear in (instance ?X ...) and (subclass ?X ...)
         // This solution is trivial; To completely solve this issue, check "SetOrClass" in SUMO
-        ArrayList<String> variables = form.collectAllVariables();
+        Set<String> variables = form.collectAllVariables();
         for (String v : variables) {
             if (form.toString().contains("(instance " + v + " ")
                     || form.toString().contains("(subclass " + v + " ")) {
@@ -130,7 +130,7 @@ public class FormulaPreprocessor {
             }
         }
         //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): variable types: \n" + varmap);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (varmap.size() > 0) {
             sb.append("(=> (and ");
             Iterator<String> it = varmap.keySet().iterator();
@@ -447,7 +447,7 @@ public class FormulaPreprocessor {
                 Iterator<Formula> it = working.iterator();
                 while (it.hasNext()) {
                     f = (Formula) it.next();
-                    List<Formula> instantiations = PredVarInst.instantiatePredVars(f,kb);
+                    Set<Formula> instantiations = PredVarInst.instantiatePredVars(f,kb);
                     form.errors.addAll(f.getErrors());
 
                     // If the accumulator is null -- the formula can't be instantiated at all and has been marked "reject",

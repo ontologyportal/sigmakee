@@ -1,10 +1,12 @@
 package com.articulate.sigma;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -202,7 +204,7 @@ public class FormulaTest {
 
     @Test
     public void testCollectAllVariables() {
-        List<String> expected = Lists.newArrayList("?C", "?T", "?H", "?W", "?Y", "?Z");
+        Set<String> expected = Sets.newHashSet("?C", "?T", "?H", "?W", "?Y", "?Z");
 
         Formula f1 = new Formula();
         f1.read("(=> " +
@@ -258,7 +260,7 @@ public class FormulaTest {
 
     @Test
     public void testTerms() {
-        List<String> expected = Lists.newArrayList("holdsDuring", "MultiplicationFn", "WealthFn", "?T", "Muslim", "?W",
+        Set<String> expected = Sets.newHashSet("holdsDuring", "MultiplicationFn", "WealthFn", "?T", "Muslim", "?W",
                 "Obligation", "attribute", "?Y", "equal", "?Z", "agent", "and", "Year", "patient", "=>", "modalAttribute",
                 "during", "?C", "monetaryValue", "FullyFormed", "greaterThan", "exists", "?H", "Zakat", "instance",
                 "0.025", "WhenFn");

@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Test;
@@ -69,9 +68,9 @@ public class PredVarInstTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
 
-        ArrayList<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
+        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
 
-        ArrayList<Formula> expected = Lists.newArrayList();
+        Set<Formula> expected = Sets.newHashSet();
         assertEquals(expected, actual);
     }
 }

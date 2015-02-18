@@ -132,8 +132,8 @@ public class LanguageFormatterTest extends UnitTestBase {
     public void testVariableReplace() {
         String form = "there exist ?D and ?H such that ?D is an &%instance$\"instance\" of &%Driving$\"driving\" and ?H is an &%instance$\"instance\" of &%Human$\"human\" and ?H is an &%agent$\"agent\" of ?D";
         HashMap<String, HashSet<String>> instanceMap = Maps.newHashMap();
-        instanceMap.put("?D", Sets.newHashSet("Entity", "Process"));
-        instanceMap.put("?H", Sets.newHashSet("Entity", "Agent"));
+        instanceMap.put("?D", Sets.newHashSet("Process"));
+        instanceMap.put("?H", Sets.newHashSet("Agent"));
         HashMap<String, HashSet<String>> classMap = Maps.newHashMap();
 
         String expected = "there exist &%Process$\"a  process\" and &%Agent$\"an agent\" such that &%Process$\"the process\" is an &%instance$\"instance\" of &%Driving$\"driving\" and &%Agent$\"the agent\" is an &%instance$\"instance\" of &%Human$\"human\" and &%Agent$\"the agent\" is an &%agent$\"agent\" of &%Process$\"the process\"";

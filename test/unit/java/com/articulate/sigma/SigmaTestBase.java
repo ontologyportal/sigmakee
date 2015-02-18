@@ -3,6 +3,7 @@ package com.articulate.sigma;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 
 public class SigmaTestBase {
     static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
@@ -68,4 +69,16 @@ public class SigmaTestBase {
         return xmlReader;
     }
 
+    public static <T> void displayCollectionStringDiffs(Collection<T> coll1, Collection<T> coll2) {
+        for (T obj : coll1) {
+            if (!coll2.contains(obj)) {
+                System.out.println("Found in parameter 1 but not 2: " + obj.toString());
+            }
+        }
+        for (T obj : coll2) {
+            if (!coll1.contains(obj)) {
+                System.out.println("Found in parameter 2 but not 1: " + obj.toString());
+            }
+        }
+    }
 }

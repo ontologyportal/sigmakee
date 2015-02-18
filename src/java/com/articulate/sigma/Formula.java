@@ -1349,12 +1349,12 @@ public class Formula implements Comparable {
      *
      * @return An ArrayList of String variable names
      */
-    public ArrayList<String> collectAllVariables() {
+    public Set<String> collectAllVariables() {
     	    
-    	ArrayList<String> result = new ArrayList<String>();
+    	//ArrayList<String> result = new ArrayList<String>();
     	HashSet<String> resultSet = new HashSet<String>();
     	if (listLength() < 1)
-    		return result;
+    		return resultSet;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
     	if (fcar.isVariable()) 
@@ -1371,8 +1371,8 @@ public class Formula implements Comparable {
     		if (fcdr.listP())
     			resultSet.addAll(fcdr.collectAllVariables());
     	}
-    	result.addAll(resultSet);
-    	return result;
+    	//result.addAll(resultSet);
+    	return resultSet;
     }
    
     /** ***************************************************************
@@ -1457,16 +1457,19 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Collect all the terms in a formula
      */
-    public ArrayList<String> collectTerms() {
+    public Set<String> collectTerms() {
 
         HashSet<String> resultSet = new HashSet<String>();
+
         if (this.theFormula == null || this.theFormula == "") {
 			System.out.println("Error in Formula.collectTerms(): " +
 					"No formula to collect terms from: " + this);
             return null;
         }
+
         if (this.empty())
-            return new ArrayList<String>();
+            return resultSet;
+
         if (this.atom())
             resultSet.add(theFormula);
         else {
@@ -1479,8 +1482,8 @@ public class Formula implements Comparable {
                 f.read(f.cdr());
             }
         }
-        ArrayList<String> result = new ArrayList(resultSet);
-        return result;
+        //ArrayList<String> result = new ArrayList(resultSet);
+        return resultSet;
     }
 
     /** ***************************************************************
