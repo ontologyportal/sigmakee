@@ -17,14 +17,7 @@ package com.articulate.sigma;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 import com.articulate.sigma.KB;
 
@@ -969,6 +962,32 @@ public class Clausifier  {
             newFormula = newFormula.append(f2.substituteVariables(m));
         }
         return newFormula;
+    }
+
+    /** ***************************************************************
+     *  Extract all variables in a list
+     */
+    public static Set<String> extractVariables(Formula f) {
+
+        Set<String> result = new TreeSet<String>();
+        extractVariablesRecursively(f, result);
+        return result;
+    }
+
+    private static void extractVariablesRecursively(Formula f, Set<String> vars) {
+
+        if (f.atom()) {
+            if (f.isVariable() || Formula.isSkolemTerm(f.theFormula)) {
+                vars.add(f.theFormula);
+            }
+        } else if (!f.empty()) {
+            Formula f1 = new Formula();
+            f1.read(f.car());
+            extractVariablesRecursively(f1, vars);
+            Formula f2 = new Formula();
+            f2.read(f.cdr());
+            extractVariablesRecursively(f2, vars);
+        }
     }
 
     /** **************************************************************

@@ -120,4 +120,74 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertTrue(f.logicallyEquals(f));
     }
 
+    @Test
+    public void testUnifyWith() {
+        Formula f1 = new Formula();
+        f1.read("(=>" +
+                "    (instance ?C WalkingCane)" +
+                "    (hasPurpose ?C" +
+                "        (exists (?W)" +
+                "            (and" +
+                "                (instance ?W Walking)" +
+                "                (instrument ?W ?C)))))");
+
+        Formula f2 = new Formula();
+        f2.read("(=>" +
+                "    (instance ?C WalkingCane)" +
+                "    (hasPurpose ?C" +
+                "        (exists (?W)" +
+                "            (and" +
+                "                (instance ?W Walking)" +
+                "                (instrument ?W ?C)))))");
+
+        //testing equal formulas
+        assertTrue(f1.unifyWith(f1));
+
+        //testing formulas that differ in variable reference
+        f2.read("(or (not (instance ?X6 WalkingCane)) (hasPurpose ?X4 (and (instance (SkFn2 ?X6) Walking) (instrument (SkFn2 ?X6) ?X6))))");
+        assertFalse(f1.unifyWith(f2));
+
+        //testing unequal formulas
+        f1 = new Formula();
+        f1.read("(=>" +
+                "    (instance ?C WalkingCane)" +
+                "    (hasPurpose ?C" +
+                "        (exists (?W)" +
+                "            (and" +
+                "                (instance ?W Walking)" +
+                "                (instrument ?W ?C)))))");
+
+        f2 = new Formula();
+        f2.read("(=>" +
+                "    (instance ?C WalkingCane)" +
+                "    (hasPurpose ?C" +
+                "        (exists (?W)" +
+                "            (and" +
+                "                (instance ?W Running)" +
+                "                (instrument ?W ?C)))))");
+
+        assertFalse(f1.unifyWith(f2));
+
+        //testing commutative terms
+        f1 = new Formula();
+        f1.read("(=>" +
+                "    (instance ?C WalkingCane)" +
+                "    (hasPurpose ?C" +
+                "        (exists (?W)" +
+                "            (and" +
+                "                (instance ?W Walking)" +
+                "                (instrument ?W ?C)))))");
+
+        f2 = new Formula();
+        f2.read("(=>" +
+                "    (instance ?C WalkingCane)" +
+                "    (hasPurpose ?C" +
+                "        (exists (?W)" +
+                "            (and" +
+                "                (instrument ?W ?C)" +
+                "                (instance ?W Walking)))))");
+
+        assertTrue(f1.unifyWith(f2));
+
+    }
 }
