@@ -69,9 +69,13 @@ public class DependencyConverter {
         BufferedReader _error;
         String tmpfname = "tmp.txt";
 //        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx1000m -classpath /home/apease/Programs/stanford-parser-full-2014-08-27" + 
-        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx1000m -classpath /home/apease/Programs/stanford-corenlp-full-2015-01-30" + 
+        String stanfordCore = "/home/apease/Programs/stanford-corenlp-full-2015-01-30";
+        String newcore = KBmanager.getMgr().getPref("stanford-core");
+        if (!StringUtil.emptyString(newcore))
+        	stanfordCore = newcore;
+        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx1000m -classpath " + stanfordCore + 
                 "/stanford-corenlp-3.5.1.jar edu.stanford.nlp.parser.lexparser.LexicalizedParser " + 
-                "-outputFormat typedDependencies /home/apease/Programs/stanford-corenlp-full-2015-01-30/englishPCFG-mcg.ser.gz " + tmpfname;
+                "-outputFormat typedDependencies " + stanfordCore + "/englishPCFG-mcg.ser.gz " + tmpfname;
                 //"-outputFormat typedDependencies /home/apease/Programs/stanford-parser-full-2014-08-27/englishPCFG.ser.gz " + tmpfname;
         FileWriter fr = null;
         PrintWriter pr = null;
@@ -130,7 +134,11 @@ public class DependencyConverter {
         BufferedReader _reader; 
         BufferedWriter _writer; 
         BufferedReader _error;
-        String execString = "java -classpath /home/apease/Programs/stanford-parser-full-2014-08-27" + 
+        String stanfordCore = "/home/apease/Programs/stanford-corenlp-full-2015-01-30";
+        String newcore = KBmanager.getMgr().getPref("stanford-core");
+        if (!StringUtil.emptyString(newcore))
+        	stanfordCore = newcore;
+        String execString = "java -classpath " + stanfordCore + 
                 "/stanford-parser.jar edu.stanford.nlp.process.DocumentPreprocessor " + 
                 infile;
         //System.out.println("INFO in DependencyConverter.splitSentences(): executing: " + execString);
