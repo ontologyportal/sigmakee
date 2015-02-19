@@ -1,9 +1,10 @@
 
 package TPTPWorld;
 
+import tptp_parser.SimpleTptpParserOutput;
+
+import java.io.BufferedReader;
 import java.util.*;
-import java.io.*;
-import tptp_parser.*;
 
 public class AnswerExtractor {    
   
@@ -173,7 +174,7 @@ public class AnswerExtractor {
     // try { System.out.println("##### Conjecture: "+conjecture.toString());} catch (Exception e) {}
 
     if (conjecture == null) {      
-      System.out.println("% ERROR: No fof conjecture in proof -> extract answers failed");
+  //    System.out.println("% ERROR: No fof conjecture in proof -> extract answers failed");
       return binds;
     }
 
