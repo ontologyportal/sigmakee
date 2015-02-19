@@ -120,17 +120,26 @@ public class FormulaPreprocessor {
 
         //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): before computer variable types");
         HashMap<String,HashSet<String>> varmap = fp.computeVariableTypes(f, kb);
-        // TODO: Add type restrictions only for variables which don't appear in (instance ?X ...) and (subclass ?X ...)
-        // This solution is trivial; To completely solve this issue, check "SetOrClass" in SUMO
-        Set<String> variables = form.collectAllVariables();
-        for (String v : variables) {
-            if (form.toString().contains("(instance " + v + " ")
-                    || form.toString().contains("(subclass " + v + " ")) {
-                varmap.remove(v);
+        // Do not add sortals if the type equals to "Entity", "Abstract", etc
+        HashMap<String, HashSet<String>> varmapCopied = (HashMap<String, HashSet<String>>) varmap.clone();
+        varmap.clear();
+        Iterator iter = varmapCopied.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String var = (String) entry.getKey();
+            HashSet types = varmapCopied.get(var);
+            types.remove("Entity");
+            types.remove("SetOrClass");
+        }
+        varmap.clear();
+        for (String var : varmapCopied.keySet()) {
+            HashSet types = varmapCopied.get(var);
+            if (!types.isEmpty()) {
+                varmap.put(var, types);
             }
         }
         //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): variable types: \n" + varmap);
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         if (varmap.size() > 0) {
             sb.append("(=> (and ");
             Iterator<String> it = varmap.keySet().iterator();
@@ -247,7 +256,7 @@ public class FormulaPreprocessor {
      * keys and a values of an HashSet of Strings
      */
     static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
-                                                              HashMap<String, HashSet<String>> map2, KB kb) {
+                                                       HashMap<String, HashSet<String>> map2, KB kb) {
 
         HashMap<String, HashSet<String>> result = new HashMap<String,HashSet<String>>(map1);
 
@@ -457,7 +466,7 @@ public class FormulaPreprocessor {
                     if (instantiations != null) {
                         if (instantiations.isEmpty()) {
                             accumulator.add(f);
-    }
+                        }
                         else {
                             accumulator.addAll(instantiations);
                         }
@@ -623,7 +632,7 @@ public class FormulaPreprocessor {
      */
     public ArrayList<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
-        if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + form.theFormula);
+        //    if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + form.theFormula);
         ArrayList<Formula> results = new ArrayList<Formula>();
         if (!StringUtil.emptyString(form.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
@@ -671,10 +680,10 @@ public class FormulaPreprocessor {
         }
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
 
-        // If typePrefix==yes, add a "sortal" antecedent to every axiom
+        // If typePrefix==yes and isQuery==false, add a "sortal" antecedent to every axiom
         KBmanager mgr = KBmanager.getMgr();
         boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
-        if (typePrefix) {
+        if (typePrefix && !isQuery) {
             Iterator<Formula> it = results.iterator();
             while (it.hasNext()) {
                 Formula f = it.next();
@@ -684,7 +693,7 @@ public class FormulaPreprocessor {
         }
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
-        if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
+        //    if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         return results;
     }
 
