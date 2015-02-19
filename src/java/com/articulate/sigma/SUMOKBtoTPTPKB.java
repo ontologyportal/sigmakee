@@ -1,29 +1,15 @@
 package com.articulate.sigma;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
 public class SUMOKBtoTPTPKB {
 
     // TODO: In future, should turn filterSimpleOnly off
     public static final boolean filterSimpleOnly = true;
-    private static ArrayList<String> logicalTerms = new ArrayList<String>(Arrays.asList("=>", "<=>", "forall", "exists", "and", "or", "not"));
-    private static ArrayList<String> basicTerms = new ArrayList<String>(Arrays.asList("Entity",
-            "SetOrClass", "SelfConnectedObject", "Agent",
-            "Process", "Class", "Relation",
-            "Object", "Physical", "UnionFn",
-            "Attribute", "Proposition", "ProcessTask",
-            "Quantity", "Abstract", "ContentBearingPhysical",
-            "PositiveInteger", "RealNumber",
-            "Organization", "ContentBearingObject", "Predicate", "BinaryPredicate"));
 
-	public KB kb;
-	
+    public KB kb;
+
     /** *************************************************************
      * This method translates the entire KB to TPTP format, storing
      * the translation for each Formula in the List identified by the
@@ -42,10 +28,10 @@ public class SUMOKBtoTPTPKB {
             ArrayList<Formula> badList = new ArrayList<Formula>();
             Iterator<Formula> it = kb.formulaMap.values().iterator();
             while (it.hasNext()) {
-            	Formula f = it.next();
-            	SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-            	stptp._f = f;
-            	stptp.tptpParse(f,false, kb);
+                Formula f = it.next();
+                SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                stptp._f = f;
+                stptp.tptpParse(f,false, kb);
                 if (f.getTheTptpFormulas().isEmpty()) {
                     if (badList.size() < 11)
                         badList.add(f);
@@ -102,12 +88,12 @@ public class SUMOKBtoTPTPKB {
         try {
             boolean append = true;
             FileOutputStream file = new FileOutputStream(fileName, append);
-            out = new DataOutputStream(file);            
+            out = new DataOutputStream(file);
             if (axioms != null) {   // add axioms
                 for (String axiom : axioms)
                     out.writeBytes(axiom);
                 out.flush();
-            }            
+            }
             if (StringUtil.isNonEmptyString(conjecture)) {  // add conjecture
                 out.writeBytes(conjecture);
                 out.flush();
@@ -147,10 +133,10 @@ public class SUMOKBtoTPTPKB {
                     String s = f.theFormula.replace(value,key);
                     if (onlyPlainFOL)
                         pr.println("%FOL fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                                   ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
+                                ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
                     else
                         pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                                   ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
+                                ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
                 }
             }
         }
@@ -161,10 +147,10 @@ public class SUMOKBtoTPTPKB {
      */
     public String writeTPTPFile(String fileName,
                                 boolean onlyPlainFOL) {
-    	
+
         final String reasoner = "EProver";
         return writeTPTPFile(fileName,onlyPlainFOL,
-        					reasoner);
+                reasoner);
     }
 
     /** *************************************************************
@@ -173,10 +159,10 @@ public class SUMOKBtoTPTPKB {
     public String writeTPTPFile(String fileName,
                                 boolean onlyPlainFOL,
                                 String reasoner) {
-    	
+
         final Formula conjecture = null;
         return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
-        					reasoner);
+                reasoner);
     }
 
     /** *************************************************************
@@ -186,10 +172,10 @@ public class SUMOKBtoTPTPKB {
                                 Formula conjecture,
                                 boolean onlyPlainFOL,
                                 String reasoner) {
-    	
+
         final boolean isQuestion = false;
         return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
-        					reasoner,isQuestion);
+                reasoner,isQuestion);
     }
 
     /** *************************************************************
@@ -200,32 +186,32 @@ public class SUMOKBtoTPTPKB {
                                 boolean onlyPlainFOL,
                                 String reasoner,
                                 boolean isQuestion) {
-    	
+
         final PrintWriter pw = null;
         return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
-                             reasoner,isQuestion,pw);
+                reasoner,isQuestion,pw);
     }
 
     /** *************************************************************
      */
     public class OrderedFormulae extends TreeSet<Formula> {
-        
+
         public int compare(Object o1, Object o2) {
             Formula f1 = (Formula) o1;
             Formula f2 = (Formula) o2;
             int fileCompare = f1.sourceFile.compareTo(f2.sourceFile);
             if (fileCompare == 0) {
                 fileCompare = (new Integer(f1.startLine))
-                    .compareTo(new Integer(f2.startLine));
+                        .compareTo(new Integer(f2.startLine));
                 if (fileCompare == 0) {
                     fileCompare = (new Long(f1.endFilePosition))
-                        .compareTo(new Long(f2.endFilePosition));
+                            .compareTo(new Long(f2.endFilePosition));
                 }
             }
             return fileCompare;
         }
     }
-    
+
     /** *************************************************************
      *  Write all axioms in the KB to TPTP format.
      *
@@ -235,6 +221,9 @@ public class SUMOKBtoTPTPKB {
                                 String reasoner, boolean isQuestion, PrintWriter pw) {
 
         //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile()");
+        ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
+        HashSet<String> notUsedPredicates = buildNotUsedPredicates();
+        HashSet<Formula> basicInferenceRules = buildBasicInferenceRules();
         String result = null;
         PrintWriter pr = null;
         try {
@@ -305,8 +294,8 @@ public class SUMOKBtoTPTPKB {
                 sf = new File(f.sourceFile);
                 sourceFile = sf.getName();
                 sourceFile = sourceFile.substring(0, sourceFile.lastIndexOf("."));
-                if (!sourceFile.equals(oldSourceFile)) 
-                    kb.errors.add("Source file has changed to " + sourceFile);                
+                if (!sourceFile.equals(oldSourceFile))
+                    kb.errors.add("Source file has changed to " + sourceFile);
                 oldSourceFile = sourceFile;
                 tptpFormulas = f.getTheTptpFormulas();
                 // If onlyPlainFOL, rename all VariableArityRelations so that each
@@ -321,60 +310,62 @@ public class SUMOKBtoTPTPKB {
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 List<Formula> processed = fp.preProcess(tmpF,false, kb);
                 if (!processed.isEmpty()) {
-                	ArrayList<Formula> withRelnRenames = new ArrayList<Formula>();
+                    ArrayList<Formula> withRelnRenames = new ArrayList<Formula>();
                     Iterator<Formula> procit = processed.iterator();
                     while (procit.hasNext()) {
-                    	Formula f2 = procit.next();
+                        Formula f2 = procit.next();
                         withRelnRenames.add(f2.renameVariableArityRelations(kb,relationMap));
                     }
                     SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                	stptp._f = tmpF;
-                	stptp.tptpParse(tmpF,false, kb, withRelnRenames);
+                    stptp._f = tmpF;
+                    stptp.tptpParse(tmpF,false, kb, withRelnRenames);
                     tptpFormulas = tmpF.getTheTptpFormulas();
                     //System.out.println(tptpFormulas);
                 }
                 //}
                 Iterator<String> tptpIt = tptpFormulas.iterator();
                 while (tptpIt.hasNext()) {
-                	theTPTPFormula = tptpIt.next();
-                    if (onlyPlainFOL) {   //----Remove interpretations of arithmetic                        
+                    theTPTPFormula = tptpIt.next();
+                    if (onlyPlainFOL) {   //----Remove interpretations of arithmetic
                         theTPTPFormula = theTPTPFormula
-                            .replaceAll("[$]less","dollar_less")
-                            .replaceAll("[$]greater","dollar_greater")
-                            .replaceAll("[$]time","dollar_times")
-                            .replaceAll("[$]divide","dollar_divide")
-                            .replaceAll("[$]plus","dollar_plus")
-                            .replaceAll("[$]minus","dollar_minus");
+                                .replaceAll("[$]less","dollar_less")
+                                .replaceAll("[$]greater","dollar_greater")
+                                .replaceAll("[$]time","dollar_times")
+                                .replaceAll("[$]divide","dollar_divide")
+                                .replaceAll("[$]plus","dollar_plus")
+                                .replaceAll("[$]minus","dollar_minus");
                         //----Don't output ""ed ''ed and numbers
                         if (theTPTPFormula.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*")
-                            || theTPTPFormula.indexOf('"') >= 0) 
-                            pr.print("%FOL ");                        
+                                || theTPTPFormula.indexOf('"') >= 0)
+                            //pr.print("%FOL ");
+                            continue;
                         if (reasoner.matches(".*(?i)Equinox.*")
-                            && f.theFormula.indexOf("equal") > 2) {
+                                && f.theFormula.indexOf("equal") > 2) {
                             Formula f2 = new Formula();
                             f2.read(f.cdr());
                             f2.read(f.car());
-                            if (f2.theFormula.equals("equal")) 
-                                pr.print("%FOL ");                            
+                            if (f2.theFormula.equals("equal"))
+                                //pr.print("%FOL ");
+                                continue;
                         }
                     }
 
                     // Filter1: only keep simpleClause and basic axioms
                     // TODO: this should be removed in the future
-                    ArrayList<String> relationConstants = new ArrayList<String> (f.gatherRelationConstants());
-                    Set<String> variables = f.collectAllVariables();
-                    Set<String> terms = f.collectTerms();
-                    if (relationConstants!=null && variables!=null && terms!=null) {
-
-                        Collection<String> minimum = new ArrayList<String>();
-                        minimum = removeTermsFromList1WhichAppearInList2(terms, variables);
-                        minimum = removeTermsFromList1WhichAppearInList2(minimum, relationConstants);
-                        minimum = removeTermsFromList1WhichAppearInList2(minimum, logicalTerms);
-                        if (filterSimpleOnly) {
-                            if (f.isSimpleClause() || minimum.isEmpty() || isList1OnlyContainsTermsFromList2(minimum, basicTerms)) {
+                    if (filterSimpleOnly) {
+                        if ((f.isSimpleClause() || isBasicInferenceRules(basicInferenceRules, f))
+                                && !containUnnecessaryPreidcates(notUsedPredicates, f)) {
+                            if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
                                 pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
                                 pr.println(",axiom,(" + theTPTPFormula + ")).");
+                                alreadyWrittenTPTPs.add(theTPTPFormula);
                             }
+                        }
+                    } else {
+                        if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
+                            pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                            pr.println(",axiom,(" + theTPTPFormula + ")).");
+                            alreadyWrittenTPTPs.add(theTPTPFormula);
                         }
                     }
                 }
@@ -385,7 +376,7 @@ public class SUMOKBtoTPTPKB {
                 }
             }
             System.out.println();
-            printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex,onlyPlainFOL);            
+            printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex,onlyPlainFOL);
             if (conjecture != null) {  //----Print conjecture if one has been supplied
                 // conjecture.getTheTptpFormulas() should return a
                 // List containing only one String, so the iteration
@@ -401,7 +392,7 @@ public class SUMOKBtoTPTPKB {
             result = canonicalPath;
         }
         catch (Exception ex) {
-        	System.out.println("Error in SUMOKBtoTPTPKB.writeTPTPfile(): " + ex.getMessage());
+            System.out.println("Error in SUMOKBtoTPTPKB.writeTPTPfile(): " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -416,34 +407,66 @@ public class SUMOKBtoTPTPKB {
         return result;
     }
 
-    /**
-     * remove terms from list1 which also appear in list2
+    /** *************************************************************
+     * define a set of basic inference rules
+     * TODO: In the future, inference should be working on whole SUMO
      */
-    private static Collection<String> removeTermsFromList1WhichAppearInList2(Collection<String> list1, Collection<String> list2) {
+    public static HashSet<Formula> buildBasicInferenceRules() {
 
-        if (list1 == null || list1 == null)
-            return list1;
-        ArrayList<String> result = new ArrayList<String>();
-        for (String s : list1) {
-            if (!list2.contains(s)) {
-                result.add(s);
-            }
-        }
-        return result;
+        HashSet<Formula> basicInferenceRules = new HashSet<Formula>();
+        Formula basicFormula = new Formula();
+        basicFormula.read("(=>\n" +
+                "  (subclass ?X ?Y)\n" +
+                "  (and\n" +
+                "    (instance ?X SetOrClass)\n" +
+                "    (instance ?Y SetOrClass)))");
+        basicInferenceRules.add(basicFormula);
+
+        basicFormula = new Formula();
+        basicFormula.read("(=>\n" +
+                "  (and\n" +
+                "    (subclass ?X ?Y)\n" +
+                "    (instance ?Z ?X))\n" +
+                "  (instance ?Z ?Y))");
+        basicInferenceRules.add(basicFormula);
+
+        return basicInferenceRules;
     }
 
-    /**
-     * check if list1 only contains terms in list2
+    /** *************************************************************
+     * define a set of predicates which will not be used for inference
      */
-    private static boolean isList1OnlyContainsTermsFromList2(Collection<String> list1, Collection<String> list2) {
+    public static HashSet<String> buildNotUsedPredicates() {
 
-        for (String s1 : list1) {
-            if (!list2.contains(s1))
-                return false;
-        }
-        return true;
+        HashSet<String> notUsedPredicates = new HashSet<>();
+        notUsedPredicates.add("documentation");
+        notUsedPredicates.add("format");
+        notUsedPredicates.add("termFormat");
+        notUsedPredicates.add("externalImage");
+        notUsedPredicates.add("relatedExternalConcept");
+        notUsedPredicates.add("relatedInternalConcept");
+        return notUsedPredicates;
     }
- 
+
+    /** *************************************************************
+     * check if formula is a basic inference rule
+     */
+    public static boolean isBasicInferenceRules(HashSet<Formula> basicInferenceRules, Formula formula) {
+
+        return basicInferenceRules.contains(formula);
+    }
+
+    /** *************************************************************
+     * check if the predicate in formula is in the notUsedPredicates or not
+     */
+    public static boolean containUnnecessaryPreidcates(HashSet<String> notUsedPredicates, Formula formula) {
+
+        if (formula.isSimpleClause())
+            return notUsedPredicates.contains(formula.getArgument(0));
+        else
+            return false;
+    }
+
     /** *************************************************************
      */
     public static void main(String[] args) {
@@ -454,10 +477,10 @@ public class SUMOKBtoTPTPKB {
         //System.out.println("INFO in SUMOKBtoTPTPKB.main(): " + skbtptpkb.kb.formulaMap.values().size());
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
         String fileWritten = skbtptpkb.writeTPTPFile(filename, null, true, "none");
-        if (StringUtil.isNonEmptyString(fileWritten)) 
-        	System.out.println("File written: " + fileWritten);            
-        else 
-        	System.out.println("Could not write " + filename);            
+        if (StringUtil.isNonEmptyString(fileWritten))
+            System.out.println("File written: " + fileWritten);
+        else
+            System.out.println("Could not write " + filename);
         return;
     }
 }
