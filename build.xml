@@ -239,6 +239,7 @@
     <pathelement path="src/java/com/articulate/sigma/semRewrite/datesandnumber"/>
 	<pathelement path="test/unit/java/com/articulate/sigma"/>
 	<pathelement path="test/integration/java/com/articulate/sigma"/>
+    <pathelement path="test/corpus/java/com/articulate/sigma"/>
     <pathelement path="src/java/TPTPWorld"/>
     <pathelement path="src/java/tptp_parser"/>
 </path>
