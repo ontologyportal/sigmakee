@@ -1492,12 +1492,19 @@ public class KB {
             if (!processedStmts.isEmpty() && this.eprover != null) {
                 String strQuery = processedStmts.get(0).theFormula;
                 String EResult = this.eprover.submitQuery(strQuery,this);
+                if (EResult==null || EResult.isEmpty())
+                    System.out.println("No response from EProver!");
+                else
+                    System.out.println("Get response from EProver, start for parsing ...");
                 TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(EResult);
                 if (tpp.bindings == null)
                     return null;
                 for (String binding : tpp.bindings) {
-                    String answer = TPTP2SUMO.transformTerm(binding);
-                    answers.add(answer);
+                    String[] eles = binding.split(" ");
+                    for (String ele : eles) {
+                        String answer= TPTP2SUMO.transformTerm(ele);
+                        answers.add(answer);
+                    }
                 }
                 return answers;
             }
