@@ -242,15 +242,28 @@ public class TPTP3ProofProcessor {
 			System.out.println("Error in TPTP3ProofProcessor.processAnswers() bad format: " + line);
 			return;
 		}
-		String[] answers = trimmed.split("\\|");
-		for (int i = 0; i < answers.length; i++) {
-			if (answers[i].equals("_"))
-				break;
-			String answer = trimBrackets(answers[i]);
+		String rest = trimmed;
+		int leftBracket = rest.indexOf("[");
+		int rightBracket = rest.indexOf("]");
+		while (leftBracket != -1 && rightBracket != -1 && leftBracket < rightBracket) {
+			String answers = rest.substring(leftBracket, rightBracket+1);
+			String answer = trimBrackets(answers);
 			if (answer != null) {
 				answer = removeEsk(answer);
-				bindings.add(answer);
+				boolean addToBinding = true;
+				String[] eles = answer.split(", ");
+				for (String ele : eles) {
+					if (!ele.startsWith("s__")) {
+						addToBinding = false;
+						break;
+					}
+				}
+				if (addToBinding)
+					bindings.add(answer);
 			}
+			rest = rest.substring(rightBracket + 1);
+			leftBracket = rest.indexOf("[");
+			rightBracket = rest.indexOf("]");
 		}
 	}
 
@@ -332,7 +345,6 @@ public class TPTP3ProofProcessor {
 				}
 				if (line.indexOf("SZS answers") != -1) {
 					tpp.processAnswers(line.substring(20).trim());
-					tpp.printAnswers();
 				}
 				if (inProof) {
 					if (line.indexOf("SZS output end") != -1) {
