@@ -185,11 +185,11 @@ public class EProver {
                 + __dummyKBdir + File.separator + "EBatchConfig.txt "
                 + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover "
                 + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "epclextract";
-        System.out.println("INFO in EProver(): executing: " + execString);
+    //   System.out.println("INFO in EProver(): executing: " + execString);
         _eprover = Runtime.getRuntime().exec(execString);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()));
-        System.out.println("INFO in EProver(): initializing process");
+    //    System.out.println("INFO in EProver(): initializing process");
 
         String line = _reader.readLine();
         while (line != null) {
@@ -333,7 +333,7 @@ public class EProver {
         //public String submitQuery (String formula, int timeLimit, int bindingsLimit) throws IOException {
                 
         String result = "";
-        System.out.println("INFO in EProver.submitQuery() formula: " + formula);
+        //System.out.println("INFO in EProver.submitQuery() formula: " + formula);
         //Formula f = new Formula();
         //f.read(formula);
         //SUMOformulaToTPTPformula sfttptp = new SUMOformulaToTPTPformula();
@@ -341,14 +341,14 @@ public class EProver {
         try {
             //ArrayList<String> al = sfttptp.tptpParse(f, true, kb);
             String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
-            System.out.println("INFO in EProver.submitQuery() TPTP formula: " + query);
+            //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + query);
             //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + al.get(0));
             //String conjecture = "fof(conj1,conjecture, " + al.get(0) + ").";
             String conjecture = "fof(conj1,conjecture, " + query + ").";
             //String tptpAssert = "( ( ? [V__X] : s__subclass(V__X,s__Object) ) )";
             //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + tptpAssert);
             //String conjecture = "fof(conj1,conjecture, " + tptpAssert + ").";
-            System.out.println("INFO in EProver.submitQuery() conjecture: " + conjecture);
+            System.out.println("\nINFO in EProver.submitQuery() conjecture: " + conjecture + "\n");
             _writer.write(conjecture + "\n");
             _writer.write("go.\n");
             _writer.flush();
