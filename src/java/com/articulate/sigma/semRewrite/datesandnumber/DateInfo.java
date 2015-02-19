@@ -27,6 +27,7 @@ public class DateInfo {
 	private String year = null;
 	private String month = null;
 	private String day = null;
+	private int wordIndex = -1;
 	
 	public DateInfo(){
 		
@@ -35,6 +36,7 @@ public class DateInfo {
 		this.year = info.year;
 		this.day = info.day;
 		this.month = info.month;
+		this.wordIndex = info.wordIndex;
 	}
 	public String getYear() {
 		return year;
@@ -54,10 +56,16 @@ public class DateInfo {
 	public void setDay(String day) {
 		this.day = day;
 	}
-	
+	public int getWordIndex() {
+		return wordIndex;
+	}
+	public void setWordIndex(int wordIndex) {
+		this.wordIndex = wordIndex;
+	}
 	public void clear() {
 		this.day = null;
 		this.month = null;
 		this.year = null;
 	}
+
 }

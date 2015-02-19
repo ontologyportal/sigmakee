@@ -37,7 +37,7 @@ public class InterpretNumerics {
 		StanfordDateTimeExtractor sde = new StanfordDateTimeExtractor();
 		List<Tokens> tokensList = sde.populateParserInfo(input);
 		DateAndNumbersGeneration generator = new DateAndNumbersGeneration();
-		return generator.generateSumoTerms(tokensList, sde.getDependencyList());
+		return generator.generateSumoTerms(tokensList, sde);
 	}
 	
 }

@@ -27,6 +27,7 @@ public class TimeInfo {
 	private String hour = null;
 	private String minute = null;
 	private String second = null;
+	private int wordIndex = -1;
 	
 	public String getHour() {
 		return hour;
@@ -45,5 +46,11 @@ public class TimeInfo {
 	}
 	public void setSecond(String second) {
 		this.second = second;
+	}
+	public int getWordIndex() {
+		return wordIndex;
+	}
+	public void setWordIndex(int wordindex) {
+		this.wordIndex = wordindex;
 	}
 }

@@ -48,6 +48,7 @@ public class StanfordDateTimeExtractor {
 			"NUMBER", "DURATION", "TIME"));
 	
 	private List<String> dependencyList = new ArrayList<String>();
+	private SemanticGraph dependencies;
 	private int tokenCount = 0;
 	
 
@@ -62,7 +63,19 @@ public class StanfordDateTimeExtractor {
 	public int getTokenCount() {
 		return tokenCount;
 	}
-
+	
+	/** ***************************************************************
+	 */
+	public SemanticGraph getDependencies() {
+		return dependencies;
+	}
+	
+	/** ***************************************************************
+	 */
+	public void setDependencies(SemanticGraph dependencies) {
+		this.dependencies = dependencies;
+	}
+	
 	/** ***************************************************************
 	 */
 	public List<Tokens> populateParserInfo(String inputSentence) {
@@ -75,9 +88,10 @@ public class StanfordDateTimeExtractor {
 
 		pipeline.annotate(annotation);
 		List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
-		tokenCount = 1;
+		int sentenceCount = 0;
 		List<Tokens> tokenList = new ArrayList<Tokens>();
 		for (CoreMap sentence: sentences) {
+			tokenCount = 1;
 			for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
 				String namedEntity = token.get(NamedEntityTagAnnotation.class);       
 				if (NUMERICAL_ENTITIES.contains(namedEntity)) {
@@ -92,9 +106,11 @@ public class StanfordDateTimeExtractor {
 				}
 				tokenCount++;
 			}
-			SemanticGraph dependencies = sentence.get(CollapsedDependenciesAnnotation.class);
-			dependencyList = StringUtils.split(dependencies.toList(), "\n");
+			dependencies = (sentence.get(CollapsedDependenciesAnnotation.class));
+			dependencyList = (StringUtils.split(dependencies.toList(), "\n"));
 		}
 		return tokenList;
 	}
+
+	
 }
