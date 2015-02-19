@@ -10,6 +10,8 @@
   <echo message="CATALINA_HOME is set to = ${env.CATALINA_HOME}"/>
   <property name="sigma.home" value="${env.SIGMA_HOME}"/>
   <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
+  <property name="kbs.home" value="${basedir}/../KBs" />
+  <echo message="KBs_HOME is set to = ${kbs.home}" />
   <echo>Java Version via Ant: ${ant.java.version}</echo>
   <echo>Java Version System Prop: ${java.version}</echo> 
   <property name="dist.home" value="${tomcat.home}/webapps"/>
@@ -227,7 +229,37 @@
 		trust="true" >
 	 	<fileset dir="native-installers/debian/temp/repository"></fileset>
 	</scp>
-</target>	
+</target>
+
+	<target name="install" depends="init">
+		<fail message="SIGMA_HOME needs to be set" unless="env.SIGMA_HOME" />
+		<copy todir="${sigma.home}/KBs">
+			<fileset dir="${kbs.home}" />
+		</copy>
+		<copy file="${kbs.home}/Translations/language.txt" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/FirstNames.csv" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/sentiment.csv" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/stopwords.txt" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/wordFrequencies.txt" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-noun.txt" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-verb.txt" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-adj.txt" todir="${sigma.home}/KBs" />
+		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-adv.txt" todir="${sigma.home}/KBs" />
+		<!-- copy wordnet -->
+		<untar dest="${sigma.home}" compression="gzip">
+			<url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" />
+		</untar>
+		<copy file="${sigma.home}/WordNet-3.0/dict/adj.exc" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/adv.exc" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/noun.exc" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/verb.exc" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/index.adj" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/index.adv" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/index.noun" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/index.sense" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/index.verb" todir="${sigma.home}/KBs" />
+		<copy file="${sigma.home}/WordNet-3.0/dict/cntlist" todir="${sigma.home}/KBs" />
+	</target>
 	
 <path id="javadoc.classpath">
     <pathelement path="classes:${basedir}/lib/cos.jar:"/>
@@ -239,7 +271,6 @@
     <pathelement path="src/java/com/articulate/sigma/semRewrite/datesandnumber"/>
 	<pathelement path="test/unit/java/com/articulate/sigma"/>
 	<pathelement path="test/integration/java/com/articulate/sigma"/>
-    <pathelement path="test/corpus/java/com/articulate/sigma"/>
     <pathelement path="src/java/TPTPWorld"/>
     <pathelement path="src/java/tptp_parser"/>
 </path>
