@@ -95,7 +95,7 @@ public class ProofStep {
      */
     public static ArrayList<ProofStep> removeDuplicates(ArrayList<ProofStep> proofSteps) {
 
-    	System.out.println("INFO in ProofSteps.removeDuplicates()");
+    //	System.out.println("INFO in ProofSteps.removeDuplicates()");
         // old number, new number
         HashMap<Integer,Integer> numberingMap = new HashMap<Integer,Integer>();
         
