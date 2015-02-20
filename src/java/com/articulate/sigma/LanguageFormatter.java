@@ -34,12 +34,11 @@ import java.util.*;
  */
 public class LanguageFormatter {
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
-    private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
+    private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath() + File.separator + "WordNetMappings";
 
     private static HashMap<String,HashMap<String,String>> keywordMap;
 
     private static final String PHRASES_FILENAME = "language.txt";
-
 
     private final String statement;
 
