@@ -9,6 +9,7 @@
   <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
   <echo message="CATALINA_HOME is set to = ${env.CATALINA_HOME}"/>
   <property name="sigma.home" value="${env.SIGMA_HOME}"/>
+  <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
   <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
   <property name="kbs.home" value="${basedir}/../KBs" />
   <echo message="KBs_HOME is set to = ${kbs.home}" />
@@ -236,29 +237,54 @@
 		<copy todir="${sigma.home}/KBs">
 			<fileset dir="${kbs.home}" />
 		</copy>
-		<copy file="${kbs.home}/Translations/language.txt" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/FirstNames.csv" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/sentiment.csv" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/stopwords.txt" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/wordFrequencies.txt" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-noun.txt" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-verb.txt" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-adj.txt" todir="${sigma.home}/KBs" />
-		<copy file="${kbs.home}/WordNetMappings/WordNetMappings30-adv.txt" todir="${sigma.home}/KBs" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/Translations/language.txt" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/FirstNames.csv" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/sentiment.csv" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/stopwords.txt" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/wordFrequencies.txt" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/WordNetMappings30-noun.txt" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/WordNetMappings30-verb.txt" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/WordNetMappings30-adj.txt" />
+		<copy todir="${sigma.home}/KBs" file="${kbs.home}/WordNetMappings/WordNetMappings30-adv.txt" />
+
 		<!-- copy wordnet -->
-		<untar dest="${sigma.home}" compression="gzip">
+		<untar dest="${sigma.install.downloads}" compression="gzip">
 			<url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" />
 		</untar>
-		<copy file="${sigma.home}/WordNet-3.0/dict/adj.exc" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/adv.exc" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/noun.exc" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/verb.exc" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/index.adj" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/index.adv" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/index.noun" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/index.sense" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/index.verb" todir="${sigma.home}/KBs" />
-		<copy file="${sigma.home}/WordNet-3.0/dict/cntlist" todir="${sigma.home}/KBs" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/adj.exc" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/adv.exc" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/noun.exc" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/verb.exc" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/index.adj" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/index.adv" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/index.noun" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/index.sense" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/index.verb" />
+		<copy todir="${sigma.home}/KBs" file="${sigma.install.downloads}/WordNet-3.0/dict/cntlist" />
+
+		<get dest="${sigma.install.downloads}" src="http://nlp.stanford.edu/software/stanford-ner-2015-01-29.zip" usetimestamp="true" />
+		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-ner-2015-01-29.zip" >
+			<patternset>
+				<include name="**/classifiers/english.muc.7class.distsim.crf.ser.gz" />
+			</patternset>
+			<mapper type="flatten"/>
+		</unzip>
+
+		<get dest="${sigma.install.downloads}" src="http://nlp.stanford.edu/software/stanford-corenlp-full-2015-01-29.zip" usetimestamp="true" />
+		<unzip dest="${sigma.install.downloads}" src="${sigma.install.downloads}/stanford-corenlp-full-2015-01-29.zip" >
+			<patternset>
+				<include name="**/stanford-corenlp-3.5.1-models.jar" />
+			</patternset>
+			<mapper type="flatten"/>
+		</unzip>
+		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-corenlp-3.5.1-models.jar" >
+			<patternset>
+				<include name="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz" />
+			</patternset>
+			<mapper type="flatten"/>
+		</unzip>
+
+		<get dest="${sigma.install.downloads}" src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.8/E.tgz" usetimestamp="true" />
 	</target>
 	
 <path id="javadoc.classpath">
