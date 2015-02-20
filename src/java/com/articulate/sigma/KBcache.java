@@ -121,7 +121,7 @@ public class KBcache {
         HashMap<String,HashSet<String>> childMap = children.get(rel);
         HashSet<String> childSet = childMap.get(parent);
         if (childSet == null) {
-        	System.out.println("INFO in KBcache.childOfP(): null childset for rel, parent, child: "  
+        	System.out.println("INFO in KBcache.childOfP(): null childset for rel, parent, child: "
                 + rel + " " + parent + " " + child);
         	return false;
         }
@@ -693,8 +693,9 @@ public class KBcache {
                         String childArgType = newDomains.get(i);
                         String parentArgType = tdomains.get(i);
                         //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): comparing child to parent: " + childArgType + " " + parentArgType);
-                        if (!childOfP("subclass",parentArgType,childArgType)) {
-                            //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): replacing");
+                        // If child-relation does not have definition of argument-type, we use parent-relation's argument-type
+                        // TODO: if parent-relation does not have definition of argument-type, we continue to find its parent until we find the definition of argument-type
+                        if (kb.askWithTwoRestrictions(0, "domain", 1, newTerm, 3, childArgType).isEmpty()) {
                             arrayListReplace(newDomains,i,parentArgType);
                         }
                     }
