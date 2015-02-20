@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.*;
 
-import com.articulate.sigma.KB;
-
 /** ************************************************************
  * Handle operations on an individual formula.  This includes
  * formatting for presentation as well as pre-processing for sending
@@ -1100,46 +1098,111 @@ public class Formula implements Comparable {
         //the normalizeParameterOrder method should be moved to Clausifier
         KB kb = KBmanager.getMgr().getKB("SUMO");
 
-        String normalized2 = Formula.normalizeParameterOrder(f2.theFormula, kb, false);
-
-        List<Map<String, String>> mappings = Formula.buildAllVariableMappingsToFormula(f1, f2);
-        for (Map<String, String> varMap:mappings) {
-            Clausifier clausifier = new Clausifier(f1.theFormula);
-            Formula replaced1 = clausifier.substituteVariables(varMap);
-            String normalized1 = Formula.normalizeParameterOrder(replaced1.theFormula, kb, false);
-            if(normalized1.equals(normalized2)) {
-                return true;
-            }
-        }
-
-        return false;
+        List<Set<VariableMapping>> result = mapFormulaVariables(f1, f2, kb);
+        return result != null;
     }
 
-    private static List<Map<String, String>> buildAllVariableMappingsToFormula(Formula f1, Formula f2) {
-        LinkedList<Map<String, String>> result = new LinkedList<Map<String, String>>();
-        Set<String> f1Vars = Clausifier.extractVariables(f1);
-        Set<String> f2Vars = Clausifier.extractVariables(f2);
-        List<String[]> permutations = FormulaUtil.setPermutations(f2Vars);
-        for(String[] p:permutations) {
-            HashMap<String, String> map = new HashMap<String, String>();
-            int i=0;
-            boolean validPermutation = true;
-            for (String v1 : f1Vars) {
-                if ((Formula.isVariable(v1) && Formula.isVariable(p[i])) ||
-                        (Formula.isSkolemTerm(v1) && Formula.isSkolemTerm(p[i]))) {
-                    map.put(v1, p[i]);
-                } else
-                {
-                    validPermutation = false;
-                    break;
-                }
-                i++;
-            }
-            if(validPermutation) {
-                result.add(map);
-            }
+    /**
+     * Compares recursively to formulas and returns possible variable maps between the variables of the two formulas
+     * Returns:
+     * null - if the formulas cannot be equals (due to having different predicates for example)
+     * empty list- formulas are equal, but there are no variables to map
+     * list 0f variable mapping sets the list of possible variable mapping sets which will make formulas equal
+     */
+    public static List<Set<VariableMapping>> mapFormulaVariables(Formula f1, Formula f2, KB kb) {
+        //null tests first
+        if(f1 == null && f2 == null) {
+            ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
+            result.add(new HashSet<VariableMapping>());
+            return result;
+        } else if (f1 == null || f2 == null) {
+            return null;
         }
-        return result;
+
+        //checking formulas are simple tokens
+        if(f1.atom() && f2.atom()) {
+            if((f1.isVariable() && f2.isVariable()) || (Formula.isSkolemTerm(f1.theFormula) && Formula.isSkolemTerm(f2.theFormula))) {
+                ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
+                Set<VariableMapping> set = new HashSet<VariableMapping>();
+                set.add(new VariableMapping(f1.theFormula, f2.theFormula));
+                result.add(set);
+                return result;
+            } else {
+                if(f1.theFormula.equals(f2.theFormula)) {
+                    ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
+                    result.add(new HashSet<VariableMapping>());
+                    return result;
+                } else {
+                    return null;
+                }
+            }
+        } else if (f1.atom() || f2.atom()) {
+            return null;
+        }
+
+        //if we got here, formulas are lists
+        //comparing heads
+        Formula head1 = new Formula();
+        head1.read(f1.car());
+        Formula head2 = new Formula();
+        head2.read(f2.car());
+        List<Set<VariableMapping>> headMaps = mapFormulaVariables(head1, head2, kb);
+        if(headMaps == null) {
+            //heads don't match; no point of going further
+            return null;
+        }
+
+        //comparing arguments
+        ArrayList<String> args1 = f1.complexArgumentsToArrayList(1);
+        ArrayList<String> args2 = f2.complexArgumentsToArrayList(1);
+        if(args1.size() != args2.size()) {
+            return null;
+        }
+
+        if(!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
+            //non commutative relation; comparing parameters in order
+            List<Set<VariableMapping>> runningMaps = headMaps;
+            for(int i = 0; i < args1.size(); i++) {
+                Formula parameter1 = new Formula();
+                parameter1.read(args1.get(i));
+                Formula parameter2 = new Formula();
+                parameter2.read(args2.get(i));
+                List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb);
+                runningMaps = VariableMapping.intersect(runningMaps, parameterMaps);
+                if (runningMaps == null) {
+                    return null;
+                }
+            }
+            return runningMaps;
+        } else {
+            //commutative relation; going through all possible parameter permutations and comparing
+            List<Set<VariableMapping>> unionMaps = new ArrayList<Set<VariableMapping>>();
+            List<int[]> permutations = FormulaUtil.getPermutations(args1.size());
+            for(int[] perm:permutations) {
+                List<Set<VariableMapping>> currentMaps = headMaps;
+                boolean currentPairingValid = true;
+                for(int i = 0; i < args1.size(); i++) {
+                    Formula parameter1 = new Formula();
+                    parameter1.read(args1.get(i));
+                    Formula parameter2 = new Formula();
+                    parameter2.read(args2.get(perm[i]));
+                    List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb);
+                    currentMaps = VariableMapping.intersect(currentMaps, parameterMaps);
+                    if (currentMaps == null) {
+                        currentPairingValid = false;
+                        break;
+                    }
+                }
+                if (currentPairingValid) {
+                    unionMaps = VariableMapping.union(unionMaps, currentMaps);
+                }
+            }
+            if(unionMaps.isEmpty()) {
+                //keeping the convention of null list when matching is impossible
+                unionMaps = null;
+            }
+            return unionMaps;
+        }
     }
 
     /** ***************************************************************
@@ -2548,5 +2611,99 @@ public class Formula implements Comparable {
         testBigArgs();
     }
 
+    private static class VariableMapping {
+        String var1;
+        String var2;
+
+        public VariableMapping(String v1, String v2) {
+            var1 = v1;
+            var2 = v2;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            VariableMapping that = (VariableMapping) o;
+
+            if (var1 != null ? !var1.equals(that.var1) : that.var1 != null) {
+                return false;
+            }
+            if (var2 != null ? !var2.equals(that.var2) : that.var2 != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = var1 != null ? var1.hashCode() : 0;
+            result = 31 * result + (var2 != null ? var2.hashCode() : 0);
+            return result;
+        }
+
+        public static List<Set<VariableMapping>> intersect(List<Set<VariableMapping>> mapList1, List<Set<VariableMapping>> mapList2) {
+            List<Set<VariableMapping>> intersection = new LinkedList<Set<VariableMapping>>();
+            if (mapList1 == null || mapList2 == null) {
+                return null;
+            }
+            for (Set<VariableMapping> set1 : mapList1) {
+                for (Set<VariableMapping> set2 : mapList2) {
+                    Set<VariableMapping> newSet = VariableMapping.unify(set1, set2);
+                    if(newSet != null && !intersection.contains(newSet)) {
+                        intersection.add(newSet);
+                    }
+                }
+            }
+            if (intersection.isEmpty()) {
+                //keeping the convention of null meaning imposibility
+                intersection = null;
+            }
+            return intersection;
+        }
+
+        public static List<Set<VariableMapping>> union(List<Set<VariableMapping>> mapList1, List<Set<VariableMapping>> mapList2) {
+            List<Set<VariableMapping>> union = new LinkedList<Set<VariableMapping>>();
+            if(mapList1 != null) {
+                for (Set<VariableMapping> set1 : mapList1) {
+                    union.add(set1);
+                }
+            }
+            if (mapList2 != null) {
+                for (Set<VariableMapping> set2 : mapList2) {
+                    if ( !union.contains(set2)) {
+                        union.add(set2);
+                    }
+                }
+            }
+            return union;
+        }
+
+        private static Set<VariableMapping> unify(Set<VariableMapping> set1, Set<VariableMapping> set2) {
+            Set<VariableMapping> result = new HashSet<VariableMapping>();
+            for(VariableMapping element:set1) {
+                result.add(element);
+            }
+            for(VariableMapping element:set2) {
+                //testing the element does not collide with an existing element
+                for(VariableMapping e:result){
+                    boolean leftVarsEqual = e.var1.equals(element.var1);
+                    boolean rightVarsEqual = e.var2.equals(element.var2);
+                    if ((leftVarsEqual && !rightVarsEqual) || (!leftVarsEqual && rightVarsEqual)) {
+                        return null;
+                    }
+                }
+                result.add(element);
+            }
+            return result;
+        }
+
+    }
 }
 
