@@ -2559,7 +2559,7 @@ public class KB {
             Iterator<String> it = classNames.iterator();
             while (it.hasNext()) {
                 name = it.next();
-                ans.addAll(kbCache.getInstances(name));
+                ans.addAll(kbCache.getParentClassesOfInstance(name));
             }
         }
         return ans;

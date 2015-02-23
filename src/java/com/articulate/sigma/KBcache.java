@@ -292,7 +292,7 @@ public class KBcache {
 
     /** ***************************************************************    
      */
-    public HashSet<String> getInstances(String cl) {
+    public HashSet<String> getParentClassesOfInstance(String cl) {
         
         HashSet<String> ps = instances.get(cl);
         if (ps != null)
