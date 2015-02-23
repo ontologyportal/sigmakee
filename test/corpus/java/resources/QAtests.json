@@ -1,0 +1,17 @@
+[
+{
+"text":"John owns a dog.",
+"question":"Who owns a dog?",
+"answer":"John-1"
+},
+{
+"text":"John arrives.",
+"question":"Who arrives?",
+"answer":"John-1"
+},
+{
+"text":"John's brother is Bill.",
+"question":"Whose brother is Bill?",
+"answer":"John-1"
+},
+]
