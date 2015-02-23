@@ -293,6 +293,7 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
+    <pathelement path="src/java/com/articulate/sigma/nlp"/>
     <pathelement path="src/java/com/articulate/sigma/semRewrite"/>
     <pathelement path="src/java/com/articulate/sigma/semRewrite/datesandnumber"/>
 	<pathelement path="test/unit/java/com/articulate/sigma"/>
