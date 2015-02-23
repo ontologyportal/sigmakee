@@ -1174,6 +1174,231 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
                 "        (earlier ?INST2 ?INST3))\n" +
                 "      (earlier ?INST1 ?INST3))))";
         expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance conjugate TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (conjugate ?INST1 ?INST2)\n" +
+                "        (conjugate ?INST2 ?INST3))\n" +
+                "      (conjugate ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance copy TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (copy ?INST1 ?INST2)\n" +
+                "        (copy ?INST2 ?INST3))\n" +
+                "      (copy ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance cooccur TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (cooccur ?INST1 ?INST2)\n" +
+                "        (cooccur ?INST2 ?INST3))\n" +
+                "      (cooccur ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance equal TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (equal ?INST1 ?INST2)\n" +
+                "        (equal ?INST2 ?INST3))\n" +
+                "      (equal ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance coordinates TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (coordinates ?INST1 ?INST2)\n" +
+                "        (coordinates ?INST2 ?INST3))\n" +
+                "      (coordinates ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance meronym TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (meronym ?INST1 ?INST2)\n" +
+                "        (meronym ?INST2 ?INST3))\n" +
+                "      (meronym ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subrelation TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subrelation ?INST1 ?INST2)\n" +
+                "        (subrelation ?INST2 ?INST3))\n" +
+                "      (subrelation ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance multiplicativeFactor TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (multiplicativeFactor ?INST1 ?INST2)\n" +
+                "        (multiplicativeFactor ?INST2 ?INST3))\n" +
+                "      (multiplicativeFactor ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance version TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (version ?INST1 ?INST2)\n" +
+                "        (version ?INST2 ?INST3))\n" +
+                "      (version ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance precondition TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (precondition ?INST1 ?INST2)\n" +
+                "        (precondition ?INST2 ?INST3))\n" +
+                "      (precondition ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance covers TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (covers ?INST1 ?INST2)\n" +
+                "        (covers ?INST2 ?INST3))\n" +
+                "      (covers ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subLanguage TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subLanguage ?INST1 ?INST2)\n" +
+                "        (subLanguage ?INST2 ?INST3))\n" +
+                "      (subLanguage ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance lessThanOrEqualTo TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (lessThanOrEqualTo ?INST1 ?INST2)\n" +
+                "        (lessThanOrEqualTo ?INST2 ?INST3))\n" +
+                "      (lessThanOrEqualTo ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subAttribute TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subAttribute ?INST1 ?INST2)\n" +
+                "        (subAttribute ?INST2 ?INST3))\n" +
+                "      (subAttribute ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance larger TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (larger ?INST1 ?INST2)\n" +
+                "        (larger ?INST2 ?INST3))\n" +
+                "      (larger ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance greaterThan TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (greaterThan ?INST1 ?INST2)\n" +
+                "        (greaterThan ?INST2 ?INST3))\n" +
+                "      (greaterThan ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance greaterThanOrEqualTo TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (greaterThanOrEqualTo ?INST1 ?INST2)\n" +
+                "        (greaterThanOrEqualTo ?INST2 ?INST3))\n" +
+                "      (greaterThanOrEqualTo ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance stored TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (stored ?INST1 ?INST2)\n" +
+                "        (stored ?INST2 ?INST3))\n" +
+                "      (stored ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance abstractPart TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (abstractPart ?INST1 ?INST2)\n" +
+                "        (abstractPart ?INST2 ?INST3))\n" +
+                "      (abstractPart ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subGraph TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subGraph ?INST1 ?INST2)\n" +
+                "        (subGraph ?INST2 ?INST3))\n" +
+                "      (subGraph ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance smaller TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (smaller ?INST1 ?INST2)\n" +
+                "        (smaller ?INST2 ?INST3))\n" +
+                "      (smaller ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subProcess TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subProcess ?INST1 ?INST2)\n" +
+                "        (subProcess ?INST2 ?INST3))\n" +
+                "      (subProcess ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance ancestorOrganization TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (ancestorOrganization ?INST1 ?INST2)\n" +
+                "        (ancestorOrganization ?INST2 ?INST3))\n" +
+                "      (ancestorOrganization ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance lessThan TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (lessThan ?INST1 ?INST2)\n" +
+                "        (lessThan ?INST2 ?INST3))\n" +
+                "      (lessThan ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance identicalListItems TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (identicalListItems ?INST1 ?INST2)\n" +
+                "        (identicalListItems ?INST2 ?INST3))\n" +
+                "      (identicalListItems ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
 
         assertEquals(expected, actual);
     }
