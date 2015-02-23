@@ -193,10 +193,13 @@ public class KBcache {
             Formula f = forms.get(i);
             String child = f.getArgument(1);
             String parent = f.getArgument(2);
+            HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
             HashSet<String> iset = new HashSet<String>();
             if (instances.get(child) != null)
                 iset = instances.get(child);
             iset.add(parent);
+            if (superclasses.get(parent) != null)
+                iset.addAll(superclasses.get(parent));
         	instances.put(child, iset);
         }
     }
