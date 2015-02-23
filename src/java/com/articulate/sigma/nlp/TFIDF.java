@@ -15,6 +15,11 @@ http://www.mpi-sws.org/~cristian/Cornell_Movie-Dialogs_Corpus.html
 http://www.mpi-sws.org/~cristian/data/cornell_movie_dialogs_corpus.zip
 (Danescu-Niculescu-Mizil and Lee, 2011) and the Open Mind Common Sense 
 corpus (Singh et al., 2002) http://www.ontologyportal.org/content/omcsraw.txt.bz2
+but has sense been revised to use any textual corpus.
+
+The corpus will be read into ArrayList<String> lines and the user must
+be boolean alternating to true if it's a dialog corpus in which a response
+is in the line following a match.
 
 Author: Adam Pease apease@articulatesoftware.com
 */
@@ -74,7 +79,8 @@ public class TFIDF {
     }
 
     /** ***************************************************************
-     * Remove punctuation and contractions from a sentence.
+     * Remove punctuation and contractions from a sentence. 
+     * @return the sentence in a String minus these elements.
      */
     private String removePunctuation(String sentence) {
 
@@ -145,6 +151,7 @@ public class TFIDF {
 
     /** ***************************************************************
      * Remove stop words from a sentence.
+     * @return a string that is the sentence minus the stop words.
      */
     private String removeStopWords(String sentence) {
 
@@ -179,7 +186,8 @@ public class TFIDF {
     }
 
    /** ***************************************************************
-     * Read a file of stopwords
+     * Read a file of stopwords into the variable 
+     * ArrayList<String> stopwords
      */
     private void readStopWords() {
 
@@ -208,7 +216,7 @@ public class TFIDF {
     }
 
     /** ***************************************************************
-     * Return an ArrayList of the string split by spaces.
+     * @return an ArrayList of the string split by spaces.
      */
     private static ArrayList<String> splitToArrayList(String st) {
 
@@ -229,8 +237,8 @@ public class TFIDF {
       * inverse document frequency = log of number of documents divided by 
       * number of documents in which a term appears.
       * Note that if the query is included as index -1 then it will
-      * get processed too.
-      * HashMap<String,Float> idf = new HashMap<String,Float>();
+      * get processed too. Put the results into
+      * HashMap<String,Float> idf 
      */
     private void calcIDF(int docCount) {
 
@@ -244,9 +252,10 @@ public class TFIDF {
     }
 
     /** ***************************************************************
-      * HashMap<Integer,HashMap<String,Integer>> tf 
-      * HashMap<String,Float> idf 
+      * Calculate TF/IDF and put the results in 
       * HashMap<Integer,HashMap<String,Float>> tfidf 
+      * In the process, calculate the euclidean distance of the word
+      * vectors and put in HashMap<Integer,Float> euclid
       * Note that if the query is included as index -1 then it will
       * get processed too.
      */
@@ -274,11 +283,11 @@ public class TFIDF {
     } 
 
     /** ***************************************************************
-      * HashMap<Integer,HashMap<String,Integer>> tf 
-      * HashMap<String,Float> idf 
+      * Calculate TF/IDF and put results in  
       * HashMap<Integer,HashMap<String,Float>> tfidf 
       * Note that if the query is included as index -1 then it will
       * get processed too.
+      * This calls calcOneTFIDF() that does most of the work.
      */
     private void calcTFIDF() {
 
@@ -330,6 +339,9 @@ public class TFIDF {
     }
 
    /** ***************************************************************
+    * Read a file from @param fname and store it in the 
+    * ArrayList<String> lines member variable.
+    * @return an int number of lines
      */
     private int readFile(String fname) {
 
@@ -374,6 +386,8 @@ public class TFIDF {
 
     /** ***************************************************************
      * Assume that query is file index -1
+     * Calculate the similarity of each document to the query 
+     * Put the result in HashMap<Integer,Float> docSim
      */
     private void calcDocSim() {
 
@@ -414,6 +428,12 @@ public class TFIDF {
     }
 
     /** *************************************************************
+     * @return a string which is the best guess match of the input.
+     * If global variable alternating is set to true, the return the
+     * next line in the input file, which is therefore treated like a
+     * dialog in which the best response to a given input is the line
+     * after the line in the dialog that matches.  If there's more than
+     * one reasonable response, pick a random one.
      */
     private String matchInput(String input) {
     	
@@ -463,6 +483,8 @@ public class TFIDF {
     }
     
     /** *************************************************************
+     * Run a chatbot-style loop, asking for user input and finding
+     * a response in the lines corpus via the TF/IDF algorithm.
      */
     private static void run() {
 
@@ -495,13 +517,14 @@ public class TFIDF {
     }
 
     /** ***************************************************************
+     * @return a series of test specifications containing a filename,
+     * a query and an expected answer.
      */
     public static Collection<Object[]> prepare() {
 
     	ArrayList<Object[]> result = new ArrayList<Object[]>();
     	File jsonTestFile = new File("test.json");
     	//System.out.println("INFO in TFIDF.prepare(): reading: " + jsonTestFile);
-    	// FIXME ? Maybe we should verify the file exists?
     	String filename = jsonTestFile.getAbsolutePath();
     	JSONParser parser = new JSONParser();  
     	try {  
@@ -518,15 +541,23 @@ public class TFIDF {
     		}			 
     	} 
     	catch (FileNotFoundException e) {  
+    		System.out.println("Error in TFIDF.prepare(): File not found: " + filename);
+    		System.out.println(e.getMessage());
     		e.printStackTrace();  
     	} 
-    	catch (IOException e) {  
+    	catch (IOException e) { 
+    		System.out.println("Error in TFIDF.prepare(): IO exception reading: " + filename);
+    		System.out.println(e.getMessage());
     		e.printStackTrace();  
     	} 
-    	catch (ParseException e) {  
+    	catch (ParseException e) { 
+    		System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
+    		System.out.println(e.getMessage());
     		e.printStackTrace();  
     	} 	
     	catch (Exception e) {  
+    		System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
+    		System.out.println(e.getMessage());
     		e.printStackTrace();      		
     	} 	
     	//System.out.println(result);
@@ -534,6 +565,8 @@ public class TFIDF {
     }
 
     /** *************************************************************
+     * Run a series of tests containing a filename,
+     * a query and an expected answer.
      */
     private static void test() {
 
