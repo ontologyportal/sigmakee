@@ -14,8 +14,6 @@ import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
 
-import org.junit.Test;
-
 import edu.stanford.nlp.parser.lexparser.*;
 
 public class Pipeline {
@@ -30,7 +28,7 @@ public class Pipeline {
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 
         // read some text in the text variable
-        String text = "John kicks the cart.";
+        String text = "John kicked the cart from East New Britain. It went far.";
 
         // create an empty Annotation just with the given text
         Annotation document = new Annotation(text);
@@ -51,7 +49,8 @@ public class Pipeline {
                 // this is the POS tag of the token
                 String pos = token.get(PartOfSpeechAnnotation.class);
                 // this is the NER label of the token
-                String ne = token.get(NamedEntityTagAnnotation.class);       
+                String ne = token.get(NamedEntityTagAnnotation.class);  
+                System.out.println(word + "/" + pos + "/" + ne);
             }
 
             // this is the parse tree of the current sentence
@@ -59,13 +58,20 @@ public class Pipeline {
             
             // this is the Stanford dependency graph of the current sentence
             SemanticGraph dependencies = (SemanticGraph) sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+            System.out.println(dependencies);
         }
 
         // This is the coreference link graph
         // Each chain stores a set of mentions that link to each other,
         // along with a method for getting the most representative mention
         // Both sentence and token offsets start at 1!
-        Map<Integer, CorefChain> graph = 
-                document.get(CorefChainAnnotation.class);
+        Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
+        for (Integer i : graph.keySet()) {
+            CorefChain cc = graph.get(i);
+            List<CorefChain.CorefMention> mentions = cc.getMentionsInTextualOrder();
+            if (mentions.size() > 1)
+                for (CorefChain.CorefMention ment : mentions) 
+                    System.out.println(ment.sentNum + " : " + ment.headIndex + " : " + ment.mentionSpan);            
+        }
     }
 }
