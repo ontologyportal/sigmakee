@@ -42,14 +42,14 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         Formula expected = new Formula();
-        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?ELEMENT Entity) (instance ?SET1 Set)) " +
+        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?SET1 Set)) " +
                 "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
                 "(equal ?SET1 ?SET2)))";
         expected.read(expectedString);
 
         Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
-        //assertEquals(expected, actual);
-        assertTrue(expected.logicallyEquals(actual));
+        assertEquals(expected, actual);
+//        assertTrue(expected.logicallyEquals(actual));
     }
 
     // FIXME: test is waiting completion of Formula.logicallyEquals()

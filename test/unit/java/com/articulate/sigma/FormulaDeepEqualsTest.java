@@ -142,7 +142,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "                (instrument ?W ?C)))))");
 
         //testing equal formulas
-        assertTrue(f1.unifyWith(f1));
+        assertTrue(f1.unifyWith(f2));
 
         //testing formulas that differ in variable reference
         f2.read("(or (not (instance ?X6 WalkingCane)) (hasPurpose ?X4 (and (instance (SkFn2 ?X6) Walking) (instrument (SkFn2 ?X6) ?X6))))");
@@ -193,44 +193,25 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     }
 
     @Test
-    public void testUnifyWithOnAnd() {
-        String s1 = "(=>\n" +
-                "  (and\n" +
-                "    (instance ?SET1 Set)\n" +
-                "    (instance ?SET2 Set)\n" +
-                "    (instance ?ELEMENT Entity))\n" +
-                "  (=>\n" +
-                "    (forall (?ELEMENT)\n" +
-                "      (<=>\n" +
-                "        (element ?ELEMENT ?SET1)\n" +
-                "        (element ?ELEMENT ?SET2)))\n" +
-                "    (equal ?SET1 ?SET2)))";
+    public void testUnifyWithMiscPredicates() {
+
+        String s1 = "(=> (and (instance ?X4 Dog) (instance ?X5 Cat)) (equal ?X5 ?X4))";
         Formula f1 = new Formula();
         f1.read(s1);
 
-        String s2 = "(=>\n" +
-                "  (and\n" +
-                "    (instance ?SET1 Set)\n" +
-                "    (instance ?SET2 Set)\n" +
-                "    (instance ?ELEMENT Entity))\n" +
-                "  (=>\n" +
-                "    (forall (?ELEMENT)\n" +
-                "      (<=>\n" +
-                "        (element ?ELEMENT ?SET1)\n" +
-                "        (element ?ELEMENT ?SET2)))\n" +
-                "    (equal ?SET1 ?SET2)))";
+        String s2 = "(=> (and (instance ?X11 Dog) (instance ?X12 Cat)) (equal ?X12 ?X11))";
         Formula f2 = new Formula();
         f2.read(s2);
 
         long start = System.nanoTime();
         assertTrue(f1.unifyWith(f2));
         long stop = System.nanoTime();
-        System.out.println("Execution time (in microseconds): " + ((stop - start)/1000));
-
-    }
+        System.out.println("Execution time (in microseconds): " + ((stop - start) / 1000));
+   }
 
     @Test
     public void testLogicallyEqualsPerformance() {
+
         String stmt = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
         Formula f = new Formula();
@@ -238,12 +219,10 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         Formula expected = new Formula();
-//        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?ELEMENT Entity) (instance ?SET1 Set)) " +
-//                "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
-//                "(equal ?SET1 ?SET2)))";
-        String expectedString = "(=> (and  (instance ?SET1 Set) (instance ?SET2 Set) (instance ?ELEMENT Entity)) " +
+        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?SET1 Set)) " +
                 "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
                 "(equal ?SET1 ?SET2)))";
+
         expected.read(expectedString);
 
         Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);

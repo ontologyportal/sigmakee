@@ -1098,7 +1098,8 @@ public class Formula implements Comparable {
         //the normalizeParameterOrder method should be moved to Clausifier
         KB kb = KBmanager.getMgr().getKB("SUMO");
 
-        List<Set<VariableMapping>> result = mapFormulaVariables(f1, f2, kb);
+        HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap = new HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>>();
+        List<Set<VariableMapping>> result = mapFormulaVariables(f1, f2, kb, memoMap);
         return result != null;
     }
 
@@ -1109,7 +1110,15 @@ public class Formula implements Comparable {
      * empty list- formulas are equal, but there are no variables to map
      * list 0f variable mapping sets the list of possible variable mapping sets which will make formulas equal
      */
-    public static List<Set<VariableMapping>> mapFormulaVariables(Formula f1, Formula f2, KB kb) {
+    public static List<Set<VariableMapping>> mapFormulaVariables(Formula f1, Formula f2, KB kb, HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap) {
+
+        //reading the memo map first
+        FormulaUtil.FormulaMatchMemoMapKey key = FormulaUtil.createFormulaMatchMemoMapKey(f1.theFormula, f2.theFormula);
+        if (memoMap.containsKey(key)) {
+           return memoMap.get(key);
+        }
+
+        //not memo hit, carrying on the actual computations
         //null tests first
         if(f1 == null && f2 == null) {
             ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
@@ -1146,7 +1155,8 @@ public class Formula implements Comparable {
         head1.read(f1.car());
         Formula head2 = new Formula();
         head2.read(f2.car());
-        List<Set<VariableMapping>> headMaps = mapFormulaVariables(head1, head2, kb);
+        List<Set<VariableMapping>> headMaps = mapFormulaVariables(head1, head2, kb,memoMap);
+        memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(head1.theFormula, head2.theFormula), headMaps);
         if(headMaps == null) {
             //heads don't match; no point of going further
             return null;
@@ -1159,7 +1169,8 @@ public class Formula implements Comparable {
             return null;
         }
 
-        if(!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
+        if(!head1.theFormula.equals("equal") && !Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
+//        if(!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
             //non commutative relation; comparing parameters in order
             List<Set<VariableMapping>> runningMaps = headMaps;
             for(int i = 0; i < args1.size(); i++) {
@@ -1167,7 +1178,8 @@ public class Formula implements Comparable {
                 parameter1.read(args1.get(i));
                 Formula parameter2 = new Formula();
                 parameter2.read(args2.get(i));
-                List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb);
+                List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
+                memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(parameter1.theFormula, parameter2.theFormula), parameterMaps);
                 runningMaps = VariableMapping.intersect(runningMaps, parameterMaps);
                 if (runningMaps == null) {
                     return null;
@@ -1186,7 +1198,8 @@ public class Formula implements Comparable {
                     parameter1.read(args1.get(i));
                     Formula parameter2 = new Formula();
                     parameter2.read(args2.get(perm[i]));
-                    List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb);
+                    List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
+                    memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(parameter1.theFormula, parameter2.theFormula), parameterMaps);
                     currentMaps = VariableMapping.intersect(currentMaps, parameterMaps);
                     if (currentMaps == null) {
                         currentPairingValid = false;
@@ -2336,7 +2349,7 @@ public class Formula implements Comparable {
     public static String textFormat(String input) {
 
         Formula f = new Formula(input);
-        return f.format("","  ",new Character((char) 10).toString());
+        return f.format("", "  ", new Character((char) 10).toString());
     }
 
     /** ***************************************************************
@@ -2344,7 +2357,7 @@ public class Formula implements Comparable {
      */
     public String toString() {
 
-        return format("","  ",new Character((char) 10).toString());
+        return format("", "  ", new Character((char) 10).toString());
     }
 
     /** ***************************************************************
@@ -2563,7 +2576,7 @@ public class Formula implements Comparable {
         f1.read("(member ?VAR1 Org1-1)");
     	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
     	f1.read("(capability (KappaFn ?HEAR (and (instance ?HEAR Hearing) (agent ?HEAR ?HUMAN) " +
-        	    "(destination ?HEAR ?HUMAN) (origin ?HEAR ?OBJ))) agent ?HUMAN)");
+                "(destination ?HEAR ?HUMAN) (origin ?HEAR ?OBJ))) agent ?HUMAN)");
     	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
     }
     
@@ -2576,7 +2589,7 @@ public class Formula implements Comparable {
         f1.read("(<=> (instance ?REL TransitiveRelation) (forall (?INST1 ?INST2 ?INST3) " +
     	    " (=> (and (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))");
         System.out.println("Input: " + f1);
-        System.out.println(f1.replaceVar("?REL","part"));
+        System.out.println(f1.replaceVar("?REL", "part"));
     }
     
     /** ***************************************************************
@@ -2704,6 +2717,13 @@ public class Formula implements Comparable {
             return result;
         }
 
+        @Override
+        public String toString() {
+            return "VariableMapping{" +
+                    "var1='" + var1 + '\'' +
+                    ", var2='" + var2 + '\'' +
+                    '}';
+        }
     }
 }
 
