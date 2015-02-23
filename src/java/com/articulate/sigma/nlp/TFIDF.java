@@ -227,8 +227,8 @@ public class TFIDF {
         String[] sentar = st.split(" ");
         ArrayList<String> words = new ArrayList(Arrays.asList(sentar));
         for (int i = 0; i < words.size(); i++) {
-        	if (words.get(i).equals("") || words.get(i) == null || words.get(i).matches("\\s*"))
-        		words.remove(i);
+            if (words.get(i).equals("") || words.get(i) == null || words.get(i).matches("\\s*"))
+                words.remove(i);
         }
         return words;
     }
@@ -436,7 +436,7 @@ public class TFIDF {
      * one reasonable response, pick a random one.
      */
     private String matchInput(String input) {
-    	
+        
         if (emptyString(input)) 
             System.exit(0);            
         Integer negone = new Integer(-1);
@@ -522,46 +522,46 @@ public class TFIDF {
      */
     public static Collection<Object[]> prepare() {
 
-    	ArrayList<Object[]> result = new ArrayList<Object[]>();
-    	File jsonTestFile = new File("test.json");
-    	//System.out.println("INFO in TFIDF.prepare(): reading: " + jsonTestFile);
-    	String filename = jsonTestFile.getAbsolutePath();
-    	JSONParser parser = new JSONParser();  
-    	try {  
-    		Object obj = parser.parse(new FileReader(filename));  
-    		JSONArray jsonObject = (JSONArray) obj; 
-    		ListIterator<JSONObject> li = jsonObject.listIterator();
-    		while (li.hasNext()) {
-    			JSONObject jo = li.next();
-    			String fname = (String) jo.get("file");
-    			String query = (String) jo.get("query");
-    			String answer = (String) jo.get("answer");
-            	System.out.println("INFO in TFIDF.prepare(): " + fname + " " + query + " " + answer);
-    			result.add(new Object[]{fname,query,answer});
-    		}			 
-    	} 
-    	catch (FileNotFoundException e) {  
-    		System.out.println("Error in TFIDF.prepare(): File not found: " + filename);
-    		System.out.println(e.getMessage());
-    		e.printStackTrace();  
-    	} 
-    	catch (IOException e) { 
-    		System.out.println("Error in TFIDF.prepare(): IO exception reading: " + filename);
-    		System.out.println(e.getMessage());
-    		e.printStackTrace();  
-    	} 
-    	catch (ParseException e) { 
-    		System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
-    		System.out.println(e.getMessage());
-    		e.printStackTrace();  
-    	} 	
-    	catch (Exception e) {  
-    		System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
-    		System.out.println(e.getMessage());
-    		e.printStackTrace();      		
-    	} 	
-    	//System.out.println(result);
-    	return result;    
+        ArrayList<Object[]> result = new ArrayList<Object[]>();
+        File jsonTestFile = new File("test.json");
+        //System.out.println("INFO in TFIDF.prepare(): reading: " + jsonTestFile);
+        String filename = jsonTestFile.getAbsolutePath();
+        JSONParser parser = new JSONParser();  
+        try {  
+            Object obj = parser.parse(new FileReader(filename));  
+            JSONArray jsonObject = (JSONArray) obj; 
+            ListIterator<JSONObject> li = jsonObject.listIterator();
+            while (li.hasNext()) {
+                JSONObject jo = li.next();
+                String fname = (String) jo.get("file");
+                String query = (String) jo.get("query");
+                String answer = (String) jo.get("answer");
+                System.out.println("INFO in TFIDF.prepare(): " + fname + " " + query + " " + answer);
+                result.add(new Object[]{fname,query,answer});
+            }             
+        } 
+        catch (FileNotFoundException e) {  
+            System.out.println("Error in TFIDF.prepare(): File not found: " + filename);
+            System.out.println(e.getMessage());
+            e.printStackTrace();  
+        } 
+        catch (IOException e) { 
+            System.out.println("Error in TFIDF.prepare(): IO exception reading: " + filename);
+            System.out.println(e.getMessage());
+            e.printStackTrace();  
+        } 
+        catch (ParseException e) { 
+            System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
+            System.out.println(e.getMessage());
+            e.printStackTrace();  
+        }     
+        catch (Exception e) {  
+            System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
+            System.out.println(e.getMessage());
+            e.printStackTrace();              
+        }     
+        //System.out.println(result);
+        return result;    
     }
 
     /** *************************************************************
@@ -575,22 +575,22 @@ public class TFIDF {
         Random rand = new Random(); 
 
         for (Object[] test : tests) {
-        	String fname = (String) test[0];
-        	String query = (String) test[1];
-        	String answer = (String) test[2];
-        	System.out.print(query + "\t");
+            String fname = (String) test[0];
+            String query = (String) test[1];
+            String answer = (String) test[2];
+            System.out.print(query + "\t");
             TFIDF cb = new TFIDF();
             if (files.containsKey(fname))
-            	cb = files.get(fname);
+                cb = files.get(fname);
             else {
-	            cb.readStopWords();
-	            //System.out.println("Read file: " + fname);
-	            int linecount = cb.readFile(fname);
-	
-	            //System.out.println("Caclulate IDF");
-	            cb.calcIDF(linecount);
-	            //System.out.println("Caclulate TFIDF");
-	            cb.calcTFIDF();
+                cb.readStopWords();
+                //System.out.println("Read file: " + fname);
+                int linecount = cb.readFile(fname);
+    
+                //System.out.println("Caclulate IDF");
+                cb.calcIDF(linecount);
+                //System.out.println("Caclulate TFIDF");
+                cb.calcTFIDF();
             }
             System.out.println(cb.matchInput(query));
         }
@@ -601,7 +601,7 @@ public class TFIDF {
     public static void main(String[] args) {
 
         //run();
-    	test();
+        test();
     }
 }
  

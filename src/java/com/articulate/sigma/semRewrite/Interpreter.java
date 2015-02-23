@@ -49,7 +49,7 @@ public class Interpreter {
   
   public static List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
   public static List<String> months = Lists.newArrayList("January","February","March","April","May","June",
-		  "July","August","September","October","November","December");
+          "July","August","September","October","November","December");
   public static List<String> days = Lists.newArrayList("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
   
   /** *************************************************************
@@ -104,8 +104,8 @@ public class Interpreter {
   /** *************************************************************
    */
   public static boolean excluded(String word) {
-	  
-	  return (months.contains(word) || days.contains(word));
+      
+      return (months.contains(word) || days.contains(word));
   }
   
   /** *************************************************************
@@ -113,7 +113,7 @@ public class Interpreter {
   public static ArrayList<String> findWSD(ArrayList<String> clauses, HashMap<String,String> purewords) {
       
       System.out.println("INFO in Interpreter.addWSD(): " + clauses);
-	  KB kb = KBmanager.getMgr().getKB("SUMO");
+      KB kb = KBmanager.getMgr().getKB("SUMO");
       DependencyConverter.readFirstNames();
       ArrayList<String> results = new ArrayList<String>();
       ArrayList<String> pure = new ArrayList<String>();
@@ -132,7 +132,7 @@ public class Interpreter {
                   if (kb.isInstance(sumo))
                       results.add("equals(" + sumo + "," + purewords.get(pureword) + ")");
                   else
-                	  results.add("sumo(" + sumo + "," + purewords.get(pureword) + ")");
+                      results.add("sumo(" + sumo + "," + purewords.get(pureword) + ")");
               }
           }
           else if (DependencyConverter.maleNames.contains(pureword)) {
@@ -166,50 +166,50 @@ public class Interpreter {
   /** *************************************************************
    */
   private static ArrayList<String> findQuantification(String form) {
-	  
-	  ArrayList<String> quantified = new ArrayList<String>();
-	  String pattern = "\\?[A-Za-z0-9_]+\\-[0-9]+";
-	  Pattern p = Pattern.compile(pattern);
-	  Formula f = new Formula(form);
-	  Set<String> vars = f.collectAllVariables();
-	  System.out.println("INFO in Interpreter.testAddQuantification(): vars: " + vars);
-	  for (String v : vars) {
-		  Matcher matcher = p.matcher(v);
-		  if (matcher.matches()) 
-			  quantified.add(v);
-	  }
-	  return quantified;
+      
+      ArrayList<String> quantified = new ArrayList<String>();
+      String pattern = "\\?[A-Za-z0-9_]+\\-[0-9]+";
+      Pattern p = Pattern.compile(pattern);
+      Formula f = new Formula(form);
+      Set<String> vars = f.collectAllVariables();
+      System.out.println("INFO in Interpreter.testAddQuantification(): vars: " + vars);
+      for (String v : vars) {
+          Matcher matcher = p.matcher(v);
+          if (matcher.matches()) 
+              quantified.add(v);
+      }
+      return quantified;
   }
   
   /** *************************************************************
    */
   private static String prependQuantifier(ArrayList<String> vars, String form) {
-	  
-	  System.out.println("INFO in Interpreter.prependQuantifier(): " + vars);
-	  StringBuffer sb = new StringBuffer();
-	  if (vars == null || vars.size() < 1)
-		  return form;
-	  sb.append("(exists (");
-	  boolean first = true;
-	  for (String v : vars) {
-		  if (!first) {
-			  sb.append(" ");
-		  }
-		  sb.append(v);
-		  first = false;
-	  }
-	  sb.append(") \n");
-	  sb.append(form);
-	  sb.append(") \n");
-	  return sb.toString();
+      
+      System.out.println("INFO in Interpreter.prependQuantifier(): " + vars);
+      StringBuffer sb = new StringBuffer();
+      if (vars == null || vars.size() < 1)
+          return form;
+      sb.append("(exists (");
+      boolean first = true;
+      for (String v : vars) {
+          if (!first) {
+              sb.append(" ");
+          }
+          sb.append(v);
+          first = false;
+      }
+      sb.append(") \n");
+      sb.append(form);
+      sb.append(") \n");
+      return sb.toString();
   }
   
   /** *************************************************************
    */
   private static String addQuantification(String form) {
-	  
-	  ArrayList<String> vars = findQuantification(form);
-	  return prependQuantifier(vars, form);
+      
+      ArrayList<String> vars = findQuantification(form);
+      return prependQuantifier(vars, form);
   }
   
   /** *************************************************************
@@ -234,8 +234,8 @@ public class Interpreter {
    */
   public String interpretSingle(String input) {
       
-	  System.out.println("INFO in Interpreter.interpretSingle(): " + input); 
-	  ArrayList<String> results = null;
+      System.out.println("INFO in Interpreter.interpretSingle(): " + input); 
+      ArrayList<String> results = null;
       try {
           results = DependencyConverter.getDependencies(input);
       }
@@ -272,16 +272,16 @@ public class Interpreter {
   /** *************************************************************
    */
   public static String postProcess(String s) {
-	  
-	  String pattern = "([^\\?A-Za-z])([A-Za-z0-9_]+\\-[0-9]+)";
-	  Pattern p = Pattern.compile(pattern);
-	  Matcher matcher = p.matcher(s);
-	  while (matcher.find()) {
-		  s = s.replace(matcher.group(1) + matcher.group(2), matcher.group(1) + "?" + matcher.group(2));
-	  }
-	  Formula f = new Formula(s);
-	  
-	  return s;
+      
+      String pattern = "([^\\?A-Za-z])([A-Za-z0-9_]+\\-[0-9]+)";
+      Pattern p = Pattern.compile(pattern);
+      Matcher matcher = p.matcher(s);
+      while (matcher.find()) {
+          s = s.replace(matcher.group(1) + matcher.group(2), matcher.group(1) + "?" + matcher.group(2));
+      }
+      Formula f = new Formula(s);
+      
+      return s;
   }
   
   /** *************************************************************
@@ -313,10 +313,10 @@ public class Interpreter {
    */
   public ArrayList<String> interpretCNF(ArrayList<CNF> inputs) {
       
-	  if (inputs.size() > 1) {
-	      System.out.println("Error in Interpreter.interpretCNF(): multiple clauses"); 
-		  return null;
-	  }
+      if (inputs.size() > 1) {
+          System.out.println("Error in Interpreter.interpretCNF(): multiple clauses"); 
+          return null;
+      }
       ArrayList<String> kifoutput = new ArrayList<String>();
       System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs); 
       boolean bindingFound = true;
@@ -342,23 +342,23 @@ public class Interpreter {
                       //System.out.println("INFO in Interpreter.interpret(): new input 1: " + newInput);
                       //System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
                       if (showr)
-                    	  System.out.println("INFO in Interpreter.interpret(): r: " + r);
+                          System.out.println("INFO in Interpreter.interpret(): r: " + r);
                       RHS rhs = r.rhs.applyBindings(bindings);   
                       if (r.operator == Rule.RuleOp.IMP) {
                           CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
                           //System.out.println("INFO in Interpreter.interpret(): input with bindings removed: " + bindingsRemoved);
                           if (!bindingsRemoved.empty()) {  // assert the input after removing bindings
                               if (rhs.cnf != null) {
-                            	  if (showrhs)
-                            		  System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
+                                  if (showrhs)
+                                      System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
                                   bindingsRemoved.merge(rhs.cnf);
                               }
                               newInput = bindingsRemoved;
                           }
                           else
                               if (rhs.cnf != null) {
-                            	  if (showrhs)
-                            		  System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
+                                  if (showrhs)
+                                      System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
                                   newInput = rhs.cnf;
                               }
                           if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) { // assert a KIF RHS
@@ -387,8 +387,8 @@ public class Interpreter {
           if (bindingFound)
               newinputs.add(newInput);
           else
-        	  if (addUnprocessed)
-        		  addUnprocessed(kifoutput,newInput); // a hack to add unprocessed SDP clauses as if they were KIF
+              if (addUnprocessed)
+                  addUnprocessed(kifoutput,newInput); // a hack to add unprocessed SDP clauses as if they were KIF
           inputs = new ArrayList<CNF>();
           inputs.addAll(newinputs);
           System.out.println("INFO in Interpreter.interpret(): KB: " + printKB(inputs));
@@ -403,17 +403,17 @@ public class Interpreter {
   /** ***************************************************************
    */
   public String fromKIFClauses(ArrayList<String> kifcs) {
-	  
+      
       String s1 = toFOL(kifcs);
       String s2 = postProcess(s1);
       String s3 = addQuantification(s2);
       System.out.println("INFO in Interpreter.interpret(): KIF: " + s3);
       if (inference) {
-    	  KB kb = KBmanager.getMgr().getKB("SUMO");
-    	  if (question)
-    		  System.out.println(kb.askNoProof(s3,30,1));
-    	  else
-    		  System.out.println(kb.tell(s3));
+          KB kb = KBmanager.getMgr().getKB("SUMO");
+          if (question)
+              System.out.println(kb.askNoProof(s3,30,1));
+          else
+              System.out.println(kb.tell(s3));
       }
       return s3;
   }
@@ -433,50 +433,50 @@ public class Interpreter {
           input = c.readLine("Enter sentence: ");
           if (!StringUtil.emptyString(input)) {
               if (input.equals("reload")) {
-            	  System.out.println("reloading semantic rewriting rules");
+                  System.out.println("reloading semantic rewriting rules");
                   loadRules();
               }
               else if (input.equals("inference")) {
                   inference = true;
-            	  System.out.println("turned inference on");
+                  System.out.println("turned inference on");
               }
               else if (input.equals("noinference")) {
                   inference = false;
-            	  System.out.println("turned inference off");
+                  System.out.println("turned inference off");
               }
               else if (input.equals("addUnprocessed")) {
                   addUnprocessed = true;
-            	  System.out.println("adding unprocessed clauses");
+                  System.out.println("adding unprocessed clauses");
               }
               else if (input.equals("noUnprocessed")) {
                   addUnprocessed = false;
-            	  System.out.println("not adding unprocessed clauses");
+                  System.out.println("not adding unprocessed clauses");
               }
               else if (input.equals("noshowr")) {
                   showr = false;
-            	  System.out.println("not showing rule that are applied");
+                  System.out.println("not showing rule that are applied");
               }
               else if (input.equals("showr")) {
                   showr = true;
-            	  System.out.println("showing rules that are applied");
+                  System.out.println("showing rules that are applied");
               }
               else if (input.equals("noshowrhs")) {
                   showrhs = false;
-            	  System.out.println("not showing right hand sides that are asserted");
+                  System.out.println("not showing right hand sides that are asserted");
               }
               else if (input.equals("showrhs")) {
                   showrhs = true;
-            	  System.out.println("showing right hand sides that are asserted");
+                  System.out.println("showing right hand sides that are asserted");
               }
               else if (input.startsWith("load "))
                   loadRules(input.substring(input.indexOf(' ')+1));
               else {
-            	  if (input.trim().endsWith("?"))
-            		  question = true;
-            	  else
-            		  question = false;
-            	  System.out.println("INFO in Interpreter.interpretIter(): " + input); 
-            	  interpretSingle(input);
+                  if (input.trim().endsWith("?"))
+                      question = true;
+                  else
+                      question = false;
+                  System.out.println("INFO in Interpreter.interpretIter(): " + input); 
+                  interpretSingle(input);
               }
           }
       } while (!StringUtil.emptyString(input));
@@ -543,7 +543,7 @@ public class Interpreter {
   public static void testInterpret() {
 
       try {
-    	  KBmanager.getMgr().initializeOnce();
+          KBmanager.getMgr().initializeOnce();
           Interpreter interp = new Interpreter();
           interp.loadRules();
           String sent = "John walks to the store.";
@@ -648,7 +648,7 @@ public class Interpreter {
   public static void testPostProcess() {
       
       String input = "(and (agent kicks-2 John-1) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
-    		  			"(instance John-1 Human) (instance cart-4 Wagon))";
+                          "(instance John-1 Human) (instance cart-4 Wagon))";
       System.out.println("INFO in Interpreter.testUnify(): Input: " + postProcess(input));
   }
   
@@ -657,59 +657,59 @@ public class Interpreter {
    */
   public static void testWSD() {
 
-	  KBmanager.getMgr().initializeOnce();
-	  String input = "Amelia is a pilot.";
-	  ArrayList<String> results = null;
-	  try {
-		  results = DependencyConverter.getDependencies(input);
-	  }
-	  catch (Exception e) {
-		  e.printStackTrace();
-		  System.out.println(e.getMessage());
-	  }
-	  HashMap<String,String> purewords = extractWords(results);
-	  ArrayList<String> wsd = findWSD(results,purewords);
-	  System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
+      KBmanager.getMgr().initializeOnce();
+      String input = "Amelia is a pilot.";
+      ArrayList<String> results = null;
+      try {
+          results = DependencyConverter.getDependencies(input);
+      }
+      catch (Exception e) {
+          e.printStackTrace();
+          System.out.println(e.getMessage());
+      }
+      HashMap<String,String> purewords = extractWords(results);
+      ArrayList<String> wsd = findWSD(results,purewords);
+      System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
   }
 
   /** ***************************************************************
    */
   public static void testTimeDateExtraction() {
 
-	  System.out.println("INFO in Interpreter.testTimeDateExtraction()");
-	  Interpreter interp = new Interpreter();
-	  KBmanager.getMgr().initializeOnce();
-	  interp.loadRules();
+      System.out.println("INFO in Interpreter.testTimeDateExtraction()");
+      Interpreter interp = new Interpreter();
+      KBmanager.getMgr().initializeOnce();
+      interp.loadRules();
 
-	  System.out.println("----------------------");
-	  String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
-	  System.out.println(input);
-	  String sumoTerms = interp.interpretSingle(input);
-	  System.out.println(sumoTerms);
+      System.out.println("----------------------");
+      String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
+      System.out.println(input);
+      String sumoTerms = interp.interpretSingle(input);
+      System.out.println(sumoTerms);
 
-	  System.out.println("----------------------");
-	  input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.";
-	  System.out.println(input);
-	  sumoTerms = interp.interpretSingle(input);
-	  System.out.println(sumoTerms);
+      System.out.println("----------------------");
+      input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.";
+      System.out.println(input);
+      sumoTerms = interp.interpretSingle(input);
+      System.out.println(sumoTerms);
 
-	  System.out.println("----------------------");
-	  input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
-	  System.out.println(input);
-	  sumoTerms = interp.interpretSingle(input);
-	  System.out.println(sumoTerms);
+      System.out.println("----------------------");
+      input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
+      System.out.println(input);
+      sumoTerms = interp.interpretSingle(input);
+      System.out.println(sumoTerms);
 
-	  System.out.println("----------------------");
-	  input = "She was declared dead on January 5, 1939.";
-	  System.out.println(input);
-	  sumoTerms = interp.interpretSingle(input);
-	  System.out.println(sumoTerms);
+      System.out.println("----------------------");
+      input = "She was declared dead on January 5, 1939.";
+      System.out.println(input);
+      sumoTerms = interp.interpretSingle(input);
+      System.out.println(sumoTerms);
 
-	  System.out.println("----------------------");
-	  input = "Bob went to work only 5 times in 2003.";
-	  System.out.println(input);
-	  sumoTerms = interp.interpretSingle(input);
-	  System.out.println(sumoTerms);
+      System.out.println("----------------------");
+      input = "Bob went to work only 5 times in 2003.";
+      System.out.println(input);
+      sumoTerms = interp.interpretSingle(input);
+      System.out.println(sumoTerms);
   }
 
   /** ***************************************************************
@@ -717,13 +717,13 @@ public class Interpreter {
   public static void testAddQuantification() {
 
       String input = "(and (agent kicks-2 John-1) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
-	  			"(instance John-1 Human) (instance cart-4 Wagon))";
+                  "(instance John-1 Human) (instance cart-4 Wagon))";
       String s1 = postProcess(input);
       System.out.println("INFO in Interpreter.testAddQuantification(): Input: " + input);
       System.out.println("INFO in Interpreter.testAddQuantification(): Output: " + addQuantification(s1));
       
       input = "(and (agent kicks-2 ?WH) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
-	  			"(instance ?WH Human) (instance cart-4 Wagon))";
+                  "(instance ?WH Human) (instance cart-4 Wagon))";
       s1 = postProcess(input);
       System.out.println("INFO in Interpreter.testAddQuantification(): Input: " + input);
       System.out.println("INFO in Interpreter.testAddQuantification(): Output: " + addQuantification(s1));
@@ -765,9 +765,9 @@ public class Interpreter {
           //testInterpret();
           //testPreserve();
           //testQuestionPreprocess();
-    	  //testPostProcess();
-    	  //testTimeDateExtraction();
-    	  testAddQuantification();
+          //testPostProcess();
+          //testTimeDateExtraction();
+          testAddQuantification();
       }
   }
 }

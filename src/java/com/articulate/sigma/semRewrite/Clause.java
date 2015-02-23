@@ -315,7 +315,7 @@ public class Clause {
             String message = ex.getMessage();
             System.out.println("Error in Clause.parse() " + message);
             ex.printStackTrace();
-        }	
+        }    
         //System.out.println("INFO in Clause.parse(): returning " + cl);
         return cl;
     }
