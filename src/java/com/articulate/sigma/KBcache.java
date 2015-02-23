@@ -255,10 +255,12 @@ public class KBcache {
                 	if (child.equals("exhaustiveAttribute"))
                 		System.out.println("INFO in KBcache.buildTransInstOf(): f: " + f);
                 	String cl = f.getArgument(2);
+                    HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
                     HashSet<String> iset = new HashSet<String>();
                     if (instances.get(child) != null)
                         iset = instances.get(child);
                     iset.add(cl);
+                    iset.addAll(superclasses.get(cl));
                 	instances.put(child, iset);
                 }
             }            
