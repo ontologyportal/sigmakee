@@ -1075,6 +1075,105 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
                 "    (realization ?INST2 ?INST3))\n" +
                 "      (realization ?INST1 ?INST3))))";
         expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subsumesContentClass TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subsumesContentClass ?INST1 ?INST2)\n" +
+                "        (subsumesContentClass ?INST2 ?INST3))\n" +
+                "      (subsumesContentClass ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subList TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subList ?INST1 ?INST2)\n" +
+                "        (subList ?INST2 ?INST3))\n" +
+                "      (subList ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance part TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (part ?INST1 ?INST2)\n" +
+                "        (part ?INST2 ?INST3))\n" +
+                "      (part ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance geometricPart TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (geometricPart ?INST1 ?INST2)\n" +
+                "        (geometricPart ?INST2 ?INST3))\n" +
+                "      (geometricPart ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance familyRelation TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (familyRelation ?INST1 ?INST2)\n" +
+                "        (familyRelation ?INST2 ?INST3))\n" +
+                "      (familyRelation ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subclass TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subclass ?INST1 ?INST2)\n" +
+                "        (subclass ?INST2 ?INST3))\n" +
+                "      (subclass ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance relatedInternalConcept TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (relatedInternalConcept ?INST1 ?INST2)\n" +
+                "        (relatedInternalConcept ?INST2 ?INST3))\n" +
+                "      (relatedInternalConcept ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance subProposition TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (subProposition ?INST1 ?INST2)\n" +
+                "        (subProposition ?INST2 ?INST3))\n" +
+                "      (subProposition ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance beforeOrEqual TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (beforeOrEqual ?INST1 ?INST2)\n" +
+                "        (beforeOrEqual ?INST2 ?INST3))\n" +
+                "      (beforeOrEqual ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance temporalPart TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (temporalPart ?INST1 ?INST2)\n" +
+                "        (temporalPart ?INST2 ?INST3))\n" +
+                "      (temporalPart ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
+        formulaStr = "(<=>\n" +
+                "  (instance earlier TransitiveRelation)\n" +
+                "  (forall (?INST1 ?INST2 ?INST3)\n" +
+                "    (=>\n" +
+                "      (and\n" +
+                "        (earlier ?INST1 ?INST2)\n" +
+                "        (earlier ?INST2 ?INST3))\n" +
+                "      (earlier ?INST1 ?INST3))))";
+        expected.add(new Formula(formulaStr));
 
         assertEquals(expected, actual);
     }
