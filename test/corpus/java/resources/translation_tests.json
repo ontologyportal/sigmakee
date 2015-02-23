@@ -154,5 +154,15 @@
      (attribute ?John-1 Male)
      (instance ?it-3 Process)
      (instance ?John-1 Human)))"
+},
+{
+"text":"John's drinking is fast.",
+"kif":
+"(exists (?John-1 ?drinking-3) 
+   (and 
+     (attribute ?John-1 Male)
+     (instance ?drinking-3 Drinking)
+     (manner ?drinking-3 Quick)
+     (instance ?John-1 Human)))"
 }
 ]
