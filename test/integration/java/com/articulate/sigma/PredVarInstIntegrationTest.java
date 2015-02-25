@@ -1,14 +1,15 @@
 package com.articulate.sigma;
 
 import com.google.common.collect.Sets;
-import org.junit.Test;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 
-import java.util.*;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
 public class PredVarInstIntegrationTest extends IntegrationTestBase {
-    @Test
+
+    @Ignore
     public void testInstantiatePredVars1() {
         String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
                 "(forall (?INST1 ?INST2 ?INST3) " +
