@@ -283,7 +283,7 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationT
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
-    @Test
+    @Ignore
     public void testPlaintiff()     {
         String stmt =   "(exists (?P ?H)\n" +
                 "           (and\n" +
