@@ -83,25 +83,28 @@ public class SigmaMockTestBase {
     private static final ArrayList<Formula> LANG_FORMAT_MAP_COLS = Lists.newArrayList(
             new Formula("(format EnglishLanguage agent \"%2 is %n an &%agent of %1\")"),
             new Formula("(format EnglishLanguage attribute \"%2 is %n an &%attribute of %1\")"),
+            new Formula("(format EnglishLanguage destination \"%1 %n{doesn't} %n &%end%p{s} at %2\")"),
+            new Formula("(format EnglishLanguage instance \"%1 is %n an &%instance of %2\")"),
             new Formula("(format EnglishLanguage instrument \"%2 is %n an &%instrument for %1\")"),
+            new Formula("(format EnglishLanguage located \"%1 is %n &%located at %2\")"),
             new Formula("(format EnglishLanguage member \"%1 is %n a &%member of %2\")"),
+            new Formula("(format EnglishLanguage orientation \"%1 is %n %3 to %2\")"),
+            new Formula("(format EnglishLanguage names \"%2 %n{doesn't have} %p{has} &%name %1\")"),
             new Formula("(format EnglishLanguage patient \"%2 is %n a &%patient of %1\")"),
             new Formula("(format EnglishLanguage subCollection \"%1 is %n a proper &%sub-collection of %2\")"),
-            new Formula("(format EnglishLanguage subList \"%1 is %n a &%sublist of %2\")")
+            new Formula("(format EnglishLanguage subList \"%1 is %n a &%sublist of %2\")"),
+            new Formula("(format EnglishLanguage transported \"%2 is %n &%transported during %1\")")
             );
-
-//    private static final ArrayList<Formula> LANG_TERM_FORMAT_MAP_COLS = Lists.newArrayList(
-//            new Formula("termFormat EnglishLanguage Agent \"agent\")"),
-//            new Formula("termFormat EnglishLanguage Process \"process\"")
-//            );
-
-
-//    private static HashMap<String, ArrayList<String>> formulasMap = new HashMap<String, ArrayList<String>>();
 
     private static HashMap<String, String> termFormatMap = Maps.newHashMap();
 
 
     static  {
+        termFormatMap.put("Telephone", "telephone");
+        termFormatMap.put("Human", "human");
+        termFormatMap.put("Male", "male");
+        termFormatMap.put("Female", "female");
+
         recognizedMap.put("Process", RECOGNIZED_PROCESSES);
         recognizedMap.put("CaseRole", RECOGNIZED_CASE_ROLES);
         recognizedMap.put("VariableArityRelation", RECOGNIZED_VARIABLE_ARITY_RELATIONS);

@@ -18,6 +18,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,7 +56,7 @@ public class LanguageFormatter {
     private final Map<String, HashSet<String>> variableToInstanceMap;
 
     // FIXME: Temporarily disable Informal NLG for certain logical operators.
-    private static final List<String> notReadyOperators = Lists.newArrayList("not", "=>", "<=>");
+    private static final List<String> notReadyOperators = Lists.newArrayList("not");
 
     /**
      * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
@@ -63,6 +64,11 @@ public class LanguageFormatter {
      * the agent is an instance of human and the agent is an agent of the process".
      */
     private boolean doInformalNLG = true;
+
+    void setDoInformalNLG(boolean doIt) {
+        doInformalNLG = doIt;
+    }
+
 
     /**
      * The stack holds information on the formula being processed, so that successive recursive calls can refer to it.
@@ -109,16 +115,30 @@ public class LanguageFormatter {
 
         String nlFormat = "";
         try {
+            theStack.pushNew();
+            LanguageFormatterStack.StackElement element = theStack.getCurrStackElement();
+
             String template = paraphraseStatement(statement, false, 1);
 
+            // Check for successful informal NLG of the entire statement.
+            if (doInformalNLG)  {
+                String informalNLG = theStack.doStatementLevelNatlLanguageGeneration();
+                if (! informalNLG.isEmpty())    {
+                    // Resolve variables.
+                    informalNLG = LanguageFormatter.variableReplace(informalNLG, variableToInstanceMap, Maps.newHashMap(), kb, language);
+                    template = informalNLG;
+                }
+            }
+            theStack.pop(element);
+
+            // Replace any variables in the template.
             if (StringUtil.isNonEmptyString(template)) {
-                String anchorStart = ("<a href=\"" + href + "&term=");
                 Formula f = new Formula();
                 f.read(statement);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
-                HashMap<String, HashSet<String>> instanceMap = new HashMap<String, HashSet<String>>();
-                HashMap<String, HashSet<String>> classMap = new HashMap<String, HashSet<String>>();
+                HashMap<String, HashSet<String>> instanceMap = new HashMap<>();
+                HashMap<String, HashSet<String>> classMap = new HashMap<>();
                 HashMap<String, HashSet<String>> types = fp.computeVariableTypes(f, kb);
                 Iterator<String> it = types.keySet().iterator();
                 while (it.hasNext()) {
@@ -128,14 +148,14 @@ public class LanguageFormatter {
                     while (it2.hasNext()) {
                         String t = it2.next();
                         if (t.endsWith("+")) {
-                            HashSet<String> values = new HashSet<String>();
+                            HashSet<String> values = new HashSet<>();
                             if (classMap.containsKey(var))
                                 values = classMap.get(var);
                             values.add(t.substring(0, t.length()-1));
                             classMap.put(var, values);
                         }
                         else {
-                            HashSet<String> values = new HashSet<String>();
+                            HashSet<String> values = new HashSet<>();
                             if (instanceMap.containsKey(var))
                                 values = instanceMap.get(var);
                             values.add(t);
@@ -149,62 +169,8 @@ public class LanguageFormatter {
                     template = variableReplace(template, instanceMap, classMap, kb, language);
                 }
 
-                StringBuilder sb = new StringBuilder(template);
-                int sblen = sb.length();
-                String titok = "&%";
-                int titoklen = titok.length();
-                String ditok = "$\"";
-                int ditoklen = ditok.length();
-                String dktok = "\"";
-                int dktoklen = dktok.length();
-                int prevti = -1;
-                int ti = 0;
-                int tj = -1;
-                int di = -1;
-                int dj = -1;
-                int dk = -1;
-                int dl = -1;
-                // The indexed positions: &%termNameString$"termDisplayString"  ti tj   di dj  dk dl
-                while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
-                    prevti = ti;
-                    tj = (ti + titoklen);
-                    if (tj >= sblen)
-                        break;
-                    di = sb.indexOf(ditok, tj);
-                    if (di == -1)
-                        break;
-                    String termName = sb.substring(tj, di);
-                    dj = (di + ditoklen);
-                    if (dj >= sblen)
-                        break;
-                    dk = sb.indexOf(dktok, dj);
-                    if (dk == -1)
-                        break;
-                    String displayName = sb.substring(dj, dk);
-                    if (StringUtil.emptyString(displayName))
-                        displayName = termName;
-                    StringBuilder rsb = new StringBuilder();
-                    rsb.append(anchorStart);
-                    rsb.append(termName);
-                    rsb.append("\">");
-                    rsb.append(displayName);
-                    rsb.append("</a>");
-                    dl = (dk + dktoklen);
-                    if (dl > sblen)
-                        break;
-                    int rsblen = rsb.length();
-                    sb = sb.replace(ti, dl, rsb.toString());
-                    sblen = sb.length();
-                    ti = (ti + rsblen);
-                    if (ti >= sblen)
-                        break;
-                    tj = -1;
-                    di = -1;
-                    dj = -1;
-                    dk = -1;
-                    dl = -1;
-                }
-                nlFormat = sb.toString();
+                // Get rid of the percentage signs.
+                nlFormat = resolveFormatSpecifiers(template, href);
             }
         }
         catch (Exception ex) {
@@ -238,8 +204,9 @@ public class LanguageFormatter {
         }
         StringBuilder result = new StringBuilder();
         String ans = null;
-        Formula f = new Formula();
-        f.read(stmt);
+        Formula f = new Formula(stmt);
+
+        theStack.insertFormulaArgs(f);
 
         if (f.atom()) {
             ans = processAtom(stmt,termMap);
@@ -277,10 +244,15 @@ public class LanguageFormatter {
         }
 
         if (logicalOperator(pred)) {
-            // Put the args list into the stack for later reference.
-            theStack.insertFormulaArgs(f.complexArgumentsToArrayList(1));
-
             ans = paraphraseLogicalOperator(stmt, isNegMode, depth+1);
+
+            // "Concatenate" the informal NLG with the operator
+            List<String> translations = theStack.getCurrStackFormulaArgs();
+
+            String translation = generateFormalNaturalLanguage(translations, pred, isNegMode);
+            if (! translation.isEmpty()) {
+                theStack.getCurrStackElement().setTranslation(translation, true);
+            }
 
             return ans;
         }
@@ -328,21 +300,20 @@ public class LanguageFormatter {
      * @param caseRole
      */
     private void handleCaseRole(Formula formula, String caseRole) {
-        if(kb.kbCache.isInstanceOf(caseRole, "CaseRole") && SumoProcessCollector.isKnownRole(caseRole))    {
-
+        if(kb.kbCache.isInstanceOf(caseRole, "CaseRole") && SumoProcessCollector.isKnownRole(caseRole)) {
             try {
-                if(! theStack.isEmpty())  {
+                if (!theStack.isEmpty()) {
                     String caseArgument = formula.cadr() + " " + formula.caddr();
                     String[] caseArgs = caseArgument.trim().split(" ");
                     String processInstanceName = caseArgs[0];
                     String processParticipant = caseArgs[1];
 
-                    if(variableTypes.containsKey(processInstanceName))    {
+                    if (variableTypes.containsKey(processInstanceName)) {
 
                         HashSet<String> vals = variableTypes.get(processInstanceName);
                         // FIXME: instead of adding new processes to the if-statement, you need to iterate through all the vals elements
                         // and see if each one is either Process or a subclass of Process
-                        if(vals.contains("Process") || vals.contains("LegalAction")) {
+                        if (vals.contains("Process") || vals.contains("LegalAction")) {
                             // Mark the argument as PROCESSED.
                             theStack.markFormulaArgAsProcessed(formula.theFormula);
 
@@ -352,13 +323,13 @@ public class LanguageFormatter {
                             if (thisProcessMap.containsKey(processInstanceName)) {
                                 // Already there. Add new information if any exists.
                                 SumoProcessCollector sProcess = thisProcessMap.get(processInstanceName);
-                                String resolvedParticipant = resolveVariable(processParticipant);
-                                sProcess.addRole(caseRole, resolvedParticipant);
+                                //String resolvedParticipant = resolveVariable(processParticipant);
+                                sProcess.addRole(caseRole, processParticipant);
                             } else {
                                 // Insert into stack.
                                 String resolvedProcessName = resolveVariable(processInstanceName);
-                                String resolvedParticipant = resolveVariable(processParticipant);
-                                SumoProcessCollector sProcess = new SumoProcessCollector(kb, caseRole, resolvedProcessName, resolvedParticipant);
+                                //String resolvedParticipant = resolveVariable(processParticipant);
+                                SumoProcessCollector sProcess = new SumoProcessCollector(kb, caseRole, resolvedProcessName, processParticipant);
                                 thisProcessMap.put(processInstanceName, sProcess);
                             }
                         }
@@ -368,7 +339,6 @@ public class LanguageFormatter {
             } catch (IllegalArgumentException e) {
                 // Recover from exception by turning off full NLG.
                 this.doInformalNLG = false;
-                //theStack.clear();
                 String temp = statement.replaceAll("\\s+", " ");    // clean up, reducing consecutive whitespace to single space
                 String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
                         "   Formula:\n       " + temp + "\n";
@@ -408,7 +378,7 @@ public class LanguageFormatter {
                 System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
                 return null;
             }
-            ArrayList<String> args = new ArrayList<String>();
+            ArrayList<String> args = new ArrayList<>();
             Formula f = new Formula();
             f.read(stmt);
             String pred = f.getArgument(0);
@@ -430,19 +400,25 @@ public class LanguageFormatter {
             LanguageFormatterStack.StackElement inElement = theStack.getCurrStackElement();
 
             try {
-
                 String arg = null;
+
                 while (!f.empty()) {
                     arg = f.car();
+
                     String result = paraphraseStatement(arg, false, depth + 1);
-                    if (StringUtil.isNonEmptyString(result))
+
+                    if (StringUtil.isNonEmptyString(result))    {
                         args.add(result);
+
+                        // Let the next element down in the stack know whether we've performed informal NLG.
+                        theStack.pushCurrTranslatedStateDown(arg);
+                    }
                     else {
-                        System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperators(): "
+                        System.out.println("INFO in LanguageFormatter.paraphraseLogicalOperator(): "
                                 + "bad result for \"" + arg + "\": " + result);
-                        // TODO: We should probably return empty string at this point, like paraphraseStatement( ), instead of continuing processing.
                         return "";
                     }
+
                     f.read(f.cdr());
                 }
 
@@ -454,35 +430,17 @@ public class LanguageFormatter {
 
                         if(! thisProcessMap.isEmpty()) {
                             // Only perform NLG if the args list has been fully processed.
-                            // TODO: the method call below makes this check unnecessary.
                             boolean doIt = theStack.areFormulaArgsProcessed();
 
                             if (doIt) {
                                 // Try to do natural language generation on top element of stack.
-                                String output = theStack.doCurrNatlLanguageGeneration();
+                                String output = theStack.doProcessLevelNatlLanguageGeneration();
                                 if (!output.isEmpty()) {
-
-                                    // FIXME: clear the arguments
-//                                    if(theStack.size() >= 2) {
-//                                        StackElement previousElement = theStack.get(theStack.size() - 2);
-//                                        previousElement.formulaArgs.clear();
-//                                    }
-//                                    if (theStack.contains(inElement)) {
-//                                        StackElement thisElement = theStack.get(theStack.indexOf(inElement));
-//                                        thisElement.formulaArgs.clear();
-//                                    }
-
-                                    return output;
+                                    theStack.getPrevStackElement().setTranslation(output, true);
                                 }
                             }
                         }
-                        else    {
-                            // See if the last recursive call processed all the clause arguments.
-                            if (theStack.areFormulaArgsProcessed(theStack.getCurrStackElement())) {
-                            // if (allArgsProcessed(outElement.formulaArgs)) {
-                                    return args.get(args.size() - 1);
-                            }
-                        }
+
                     }
                 }
 
@@ -493,8 +451,14 @@ public class LanguageFormatter {
                 theStack.pop(inElement);
             }
 
-            // FIXME: put the below into a separate method
-            return generateFormalNaturalLanguage(args, ans, pred, isNegMode);
+            theStack.pushCurrTranslatedStateDown(stmt);
+
+            // If this clause has successfully been generated into informal language, then we can drop any remaining quantifiers and mark
+            // the entire clause as translated.
+            theStack.setCurrTranslatedIfQuantified();
+
+            // Do formal NLG in case informal NLG fails.
+            return generateFormalNaturalLanguage(args, pred, isNegMode);
 
         }
         catch (Exception ex) {
@@ -503,7 +467,11 @@ public class LanguageFormatter {
         return "";
     }
 
-    private String generateFormalNaturalLanguage(ArrayList<String> args, String ans, String pred, boolean isNegMode) {
+    String generateFormalNaturalLanguage(List<String> args, String pred, boolean isNegMode) {
+        if (args.isEmpty())     {
+            return "";
+        }
+
         String COMMA = getKeyword(",",language);
         //String QUESTION = getKeyword("?",language);
         String IF = getKeyword("if",language);
@@ -553,8 +521,8 @@ public class LanguageFormatter {
                 sb.append(isArabic ? "</span>" : "");
                 sb.append("</li></ul>");
             }
-            ans = sb.toString();
-            return ans;
+
+            return sb.toString();
         }
         if (pred.equalsIgnoreCase("and")) {
             if (isNegMode) {
@@ -565,7 +533,7 @@ public class LanguageFormatter {
                         sb.append(" ");
                     }
                     sb.append("~{ ");
-                    sb.append(translateWord(termMap,(String) args.get(i)));
+                    sb.append(translateWord(termMap, args.get(i)));
                     sb.append(" }");
                 }
             }
@@ -576,11 +544,11 @@ public class LanguageFormatter {
                         sb.append(AND);
                         sb.append(" ");
                     }
-                    sb.append(translateWord(termMap,(String) args.get(i)));
+                    sb.append(translateWord(termMap, args.get(i)));
                 }
             }
-            ans = sb.toString();
-            return ans;
+
+            return sb.toString();
         }
         if (pred.equalsIgnoreCase("holds")) {
             for (int i = 0; i < args.size(); i++) {
@@ -593,10 +561,10 @@ public class LanguageFormatter {
                     sb.append(HOLDS);
                     sb.append(" ");
                 }
-                sb.append(translateWord(termMap,(String) args.get(i)));
+                sb.append(translateWord(termMap, args.get(i)));
             }
-            ans = sb.toString();
-            return ans;
+
+            return sb.toString();
         }
         if (pred.equalsIgnoreCase("or")) {
             for (int i = 0; i < args.size(); i++) {
@@ -605,40 +573,40 @@ public class LanguageFormatter {
                     sb.append(isNegMode ? AND : OR);
                     sb.append(" ");
                 }
-                sb.append(translateWord(termMap,(String) args.get(i)));
+                sb.append(translateWord(termMap, args.get(i)));
             }
-            ans = sb.toString();
-            return ans;
+
+            return sb.toString();
         }
         if (pred.equals("<=>")) {
             if (isNegMode) {
-                sb.append(translateWord(termMap,(String) args.get(1)));
+                sb.append(translateWord(termMap, args.get(1)));
                 sb.append(" ");
                 sb.append(OR);
                 sb.append(" ");
                 sb.append("~{ ");
-                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(translateWord(termMap, args.get(0)));
                 sb.append(" }");
                 sb.append(" ");
                 sb.append(OR);
                 sb.append(" ");
-                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(translateWord(termMap, args.get(0)));
                 sb.append(" ");
                 sb.append(OR);
                 sb.append(" ");
                 sb.append("~{ ");
-                sb.append(translateWord(termMap,(String) args.get(1)));
+                sb.append(translateWord(termMap, args.get(1)));
                 sb.append(" }");
             }
             else {
-                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(translateWord(termMap, args.get(0)));
                 sb.append(" ");
                 sb.append(IFANDONLYIF);
                 sb.append(" ");
-                sb.append(translateWord(termMap,(String) args.get(1)));
+                sb.append(translateWord(termMap, args.get(1)));
             }
-            ans = sb.toString();
-            return ans;
+
+            return sb.toString();
         }
         if (pred.equalsIgnoreCase("forall")) {
             if (isNegMode) {
@@ -648,38 +616,38 @@ public class LanguageFormatter {
             }
             sb.append(FORALL);
             sb.append(" ");
-            if (((String) args.get(0)).contains(" ")) {
+            if (args.get(0).contains(" ")) {
                 // If more than one variable ...
-                sb.append(translateWord(termMap,formatList((String) args.get(0), language)));
+                sb.append(translateWord(termMap,formatList(args.get(0), language)));
             }
             else {
                 // If just one variable ...
-                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(translateWord(termMap, args.get(0)));
             }
             sb.append(" ");
-            sb.append(translateWord(termMap,(String) args.get(1)));
-            ans = sb.toString();
-            return ans;
+            sb.append(translateWord(termMap, args.get(1)));
+
+            return sb.toString();
         }
         if (pred.equalsIgnoreCase("exists")) {
-            if (((String) args.get(0)).contains(" ")) {
+            if (args.get(0).contains(" ")) {
                 // If more than one variable ...
                 sb.append(isNegMode ? NOTEXIST : EXIST);
                 sb.append(" ");
-                sb.append(translateWord(termMap, formatList((String) args.get(0), language)));
+                sb.append(translateWord(termMap, formatList(args.get(0), language)));
             }
             else {
                 // If just one variable ...
                 sb.append(isNegMode ? NOTEXISTS : EXISTS);
                 sb.append(" ");
-                sb.append(translateWord(termMap,(String) args.get(0)));
+                sb.append(translateWord(termMap, args.get(0)));
             }
             sb.append(" ");
             sb.append(SUCHTHAT);
             sb.append(" ");
-            sb.append(translateWord(termMap,(String) args.get(1)));
-            ans = sb.toString();
-            return ans;
+            sb.append(translateWord(termMap, args.get(1)));
+
+            return sb.toString();
         }
 
         return "";
@@ -701,7 +669,7 @@ public class LanguageFormatter {
         Formula f = new Formula();
         f.read(stmt);
         String pred = f.car();
-        String strFormat = (String) phraseMap.get(pred);
+        String strFormat = phraseMap.get(pred);
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 1 format: " + strFormat);
         // System.out.println("str format: " + strFormat);
         //int index;
@@ -835,8 +803,7 @@ public class LanguageFormatter {
     private String allTerms(KB kb) {
 
         StringBuilder result = new StringBuilder();
-        for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
-            String term = (String) it.next();
+        for (String term : kb.getTerms()) {
             result.append("(termFormat EnglishLanguage ");
             result.append(term);
             result.append(" \"");
@@ -875,11 +842,9 @@ public class LanguageFormatter {
         if (parent.isEmpty())
             return "";
         StringBuilder result = new StringBuilder();
-        for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
-            String term = it.next();
-            if (kb.kbCache.transInstOf(term,parent))
-                result.append("(format EnglishLanguage " + term + " \"" +
-                        functionFormat(term,i) + "\")\n");
+        for (String term : kb.getTerms()) {
+            if (kb.kbCache.transInstOf(term, parent))
+                result.append("(format EnglishLanguage ").append(term).append(" \"").append(functionFormat(term, i)).append("\")\n");
         }
         return result.toString();
     }
@@ -913,10 +878,9 @@ public class LanguageFormatter {
         if (parent.isEmpty())
             return "";
         StringBuilder result = new StringBuilder();
-        for (Iterator<String> it = kb.getTerms().iterator(); it.hasNext();) {
-            String term = (String) it.next();
-            if (kb.kbCache.transInstOf(term,parent))
-                result.append("(format EnglishLanguage " + term + " \"" + relationFormat(term,i) + "\")\n");
+        for (String term : kb.getTerms()) {
+            if (kb.kbCache.transInstOf(term, parent))
+                result.append("(format EnglishLanguage ").append(term).append(" \"").append(relationFormat(term, i)).append("\")\n");
         }
         return result.toString();
     }
@@ -955,6 +919,73 @@ public class LanguageFormatter {
     }
 
     /** ***************************************************************
+     * Resolve the "format specifiers" in the given printf type of statement.
+     * @param template
+     * @param href
+     * @return
+     */
+    public static String resolveFormatSpecifiers(String template, String href) {
+        String anchorStart = ("<a href=\"" + href + "&term=");
+
+        StringBuilder sb = new StringBuilder(template);
+        int sblen = sb.length();
+        String titok = "&%";
+        int titoklen = titok.length();
+        String ditok = "$\"";
+        int ditoklen = ditok.length();
+        String dktok = "\"";
+        int dktoklen = dktok.length();
+        int prevti = -1;
+        int ti = 0;
+        int tj = -1;
+        int di = -1;
+        int dj = -1;
+        int dk = -1;
+        int dl = -1;
+        // The indexed positions: &%termNameString$"termDisplayString"  ti tj   di dj  dk dl
+        while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
+            prevti = ti;
+            tj = (ti + titoklen);
+            if (tj >= sblen)
+                break;
+            di = sb.indexOf(ditok, tj);
+            if (di == -1)
+                break;
+            String termName = sb.substring(tj, di);
+            dj = (di + ditoklen);
+            if (dj >= sblen)
+                break;
+            dk = sb.indexOf(dktok, dj);
+            if (dk == -1)
+                break;
+            String displayName = sb.substring(dj, dk);
+            if (StringUtil.emptyString(displayName))
+                displayName = termName;
+            StringBuilder rsb = new StringBuilder();
+            rsb.append(anchorStart);
+            rsb.append(termName);
+            rsb.append("\">");
+            rsb.append(displayName);
+            rsb.append("</a>");
+            dl = (dk + dktoklen);
+            if (dl > sblen)
+                break;
+            int rsblen = rsb.length();
+            sb = sb.replace(ti, dl, rsb.toString());
+            sblen = sb.length();
+            ti = (ti + rsblen);
+            if (ti >= sblen)
+                break;
+            tj = -1;
+            di = -1;
+            dj = -1;
+            dk = -1;
+            dl = -1;
+        }
+        return sb.toString();
+    }
+
+    /** ***************************************************************
      * Format a list of variables which are not enclosed by parens.
      * Formatting includes inserting the appropriate separator between the elements (usually a comma), as well as
      * inserting the conjunction ("and" or its equivalent in another language) if the conjunction doesn't already exist.
@@ -966,7 +997,7 @@ public class LanguageFormatter {
      *  the formatted string
      */
     public static String formatList(String strseq, String language) {
-    	
+
         if (language == null || language.isEmpty())    {
             throw new IllegalArgumentException("Parameter language is empty or null.");
         }
@@ -1028,7 +1059,7 @@ public class LanguageFormatter {
         }
 
         if (keywordMap == null)
-            keywordMap = new HashMap<String,HashMap<String,String>>();
+            keywordMap = new HashMap<>();
         int lc = 0;
         BufferedReader br = null;
         File phrasesFile = null;
@@ -1057,8 +1088,8 @@ public class LanguageFormatter {
                             languageKeys = Arrays.asList(line.split("\\" + delim));
                         else {
                             phraseList = Arrays.asList(line.split("\\" + delim));
-                            phrasesByLang = new HashMap<String,String>();
-                            key = (String) phraseList.get(0);
+                            phrasesByLang = new HashMap<>();
+                            key = phraseList.get(0);
                             int plLen = phraseList.size();
                             for (int i = 0; i < plLen; i++)
                                 phrasesByLang.put(languageKeys.get(i), phraseList.get(i));
@@ -1130,7 +1161,7 @@ public class LanguageFormatter {
         else if (StringUtil.isDigitString(unquoted))
             ; // do nothing
         else if (termMap.containsKey(atom)) {
-            String formattedString = (String) termMap.get(atom);
+            String formattedString = termMap.get(atom);
             result = ("&%" + atom + "$\"" + formattedString + "\"");
         }
         else
@@ -1156,7 +1187,7 @@ public class LanguageFormatter {
         String ans = word;
         try {
             if (!Formula.isVariable(word) && (termMap != null)) {
-                String pph = (String) termMap.get(word);
+                String pph = termMap.get(word);
                 if (StringUtil.isNonEmptyString(pph)) 
                     ans = pph;                
             }
@@ -1186,7 +1217,7 @@ public class LanguageFormatter {
     private static String expandStar(Formula f, String strFormat, String lang) {
 
         String result = strFormat;
-        ArrayList<String> problems = new ArrayList<String>();
+        ArrayList<String> problems = new ArrayList<>();
         try {
             int flen = f.listLength();
             if (StringUtil.isNonEmptyString(strFormat) && (flen > 1)) {
@@ -1239,15 +1270,14 @@ public class LanguageFormatter {
                             if (lb.equals("{")) {
                                 range = ss.trim();
                                 rangeArr = range.split(",");
-                                for (int i = 0 ; i < rangeArr.length ; i++) {
-                                    if (StringUtil.isNonEmptyString(rangeArr[i])) {
-                                        isRange = (rangeArr[i].indexOf("-") != -1);
-                                        rangeArr2 = rangeArr[i].split("-");
+                                for (String aRangeArr : rangeArr) {
+                                    if (StringUtil.isNonEmptyString(aRangeArr)) {
+                                        isRange = (aRangeArr.indexOf("-") != -1);
+                                        rangeArr2 = aRangeArr.split("-");
                                         lowStr = rangeArr2[0].trim();
                                         try {
                                             low = Integer.parseInt(lowStr);
-                                        }
-                                        catch (Exception e1) {
+                                        } catch (Exception e1) {
                                             problems.add("Error in format \"" + strFormat + "\": bad value in \"" + ss + "\"");
                                             low = 1;
                                         }
@@ -1257,14 +1287,12 @@ public class LanguageFormatter {
                                                 highStr = rangeArr2[1].trim();
                                                 try {
                                                     high = Integer.parseInt(highStr);
-                                                }
-                                                catch (Exception e2) {
+                                                } catch (Exception e2) {
                                                     problems.add("Error in format \"" + strFormat + "\": bad value in \"" + ss + "\"");
                                                     high = (flen - 1);
                                                 }
-                                            }
-                                            else 
-                                                high = (flen - 1);                                            
+                                            } else
+                                                high = (flen - 1);
                                         }
                                         for (int j = low; (j <= high) && (j < argsToPrint.length); j++) {
                                             argsToPrint[j] = true;
@@ -1286,7 +1314,7 @@ public class LanguageFormatter {
                         boolean addAll = (nArgsSet == 0);
                         int nToAdd = (addAll ? (argsToPrint.length - 1) : nArgsSet);
                         for (int i = 1 ; i < argsToPrint.length ; i++) {
-                            if (addAll || (argsToPrint[i] == true)) {
+                            if (addAll || argsToPrint[i]) {
                                 if (nAdded >= 1) {
                                     if (nToAdd == 2) {
                                         sb.append(" ");
@@ -1302,7 +1330,7 @@ public class LanguageFormatter {
                                         sb.append(" ");
                                     }
                                 }
-                                sb.append("%" + i);
+                                sb.append("%").append(i);
                                 nAdded++;
                             }
                         }
@@ -1329,7 +1357,7 @@ public class LanguageFormatter {
             if (errStr == null) { errStr = ""; }
             Iterator<String> it = problems.iterator();
             while (it.hasNext()) {
-                str = (String) it.next();
+                str = it.next();
                 System.out.println("Error in LanguageFormatter.expandStar(): ");
                 System.out.println("  " + str);
                 errStr += ("\n<br/>" + str + "\n<br/>");
@@ -1453,7 +1481,7 @@ public class LanguageFormatter {
         boolean found = true;
         int occurrenceCounter = 1;
         if (typeMap.keySet().contains(varType)) {
-            occurrenceCounter = (Integer) typeMap.get(varType);
+            occurrenceCounter = typeMap.get(varType);
             occurrenceCounter++;
             typeMap.put(varType,new Integer(occurrenceCounter));
         }
@@ -1461,7 +1489,7 @@ public class LanguageFormatter {
             typeMap.put(varType,new Integer(1));
         int count = 1;
         while (found) {
-            if (result.indexOf(varString) > -1 && count < 20) {
+            if (result.contains(varString) && count < 20) {
                 String article = "";
                 String replacement = "";
                 if (isClass) {
@@ -1500,12 +1528,12 @@ public class LanguageFormatter {
      * Collect all the variables occurring in a formula in order.  Return
      * an ArrayList of Strings.
      */
-    private static ArrayList<String> collectOrderedVariables(String form) {
+    static ArrayList<String> collectOrderedVariables(String form) {
 
         boolean inString = false;
         boolean inVar = false;
         String var = "";
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         for (int i = 0; i < form.length(); i++) {
             char ch = form.charAt(i);
             switch (ch) {
@@ -1522,6 +1550,11 @@ public class LanguageFormatter {
             if (inVar)
                 var = var + ch;
         }
+
+        // Add input-final var if it exists.
+        if (! var.trim().isEmpty()) {
+            result.add(var);
+        }
         return result;
     }
 
@@ -1529,32 +1562,32 @@ public class LanguageFormatter {
      * Replace variables in a formula with paraphrases expressing their
      * type.
      */
-    public static String variableReplace(String form, HashMap<String, HashSet<String>> instMap, 
-    		HashMap<String, HashSet<String>> classMap, KB kb, String language) {
+    public static String variableReplace(String form, Map<String, HashSet<String>> instMap,
+            HashMap<String, HashSet<String>> classMap, KB kb, String language) {
 
         String result = form;
-        HashMap<String,Integer> typeMap = new HashMap<String,Integer>();
+        HashMap<String,Integer> typeMap = new HashMap<>();
         ArrayList<String> varList = collectOrderedVariables(form);
         Iterator<String> it = varList.iterator();
         while (it.hasNext()) {
-            String varString = (String) it.next();
+            String varString = it.next();
             if (StringUtil.isNonEmptyString(varString)) {
                 HashSet<String> instanceArray = instMap.get(varString);
                 HashSet<String> subclassArray = classMap.get(varString);
 
                 if (subclassArray != null && subclassArray.size() > 0) {
                     String varType = (String) subclassArray.toArray()[0];
-                    String varPretty = (String) kb.getTermFormatMap(language).get(varType);
+                    String varPretty = kb.getTermFormatMap(language).get(varType);
                     result = incrementalVarReplace(result,varString,varType,varPretty,language,true,typeMap);
                 }
                 else {
                     if (instanceArray != null && instanceArray.size() > 0) {
                         String varType = (String) instanceArray.toArray()[0];
-                        String varPretty = (String) kb.getTermFormatMap(language).get(varType);
+                        String varPretty = kb.getTermFormatMap(language).get(varType);
                         result = incrementalVarReplace(result,varString,varType,varPretty,language,false,typeMap);
                     }
                     else {
-                        String varPretty = (String) kb.getTermFormatMap(language).get("Entity");
+                        String varPretty = kb.getTermFormatMap(language).get("Entity");
                         if (StringUtil.emptyString(varPretty))
                             varPretty = "entity";
                         result = incrementalVarReplace(result,varString,"Entity",varPretty,language,false,typeMap);

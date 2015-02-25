@@ -1,7 +1,6 @@
 package com.articulate.sigma;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -76,15 +75,23 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationT
         String stmt =   "(exists \n" +
                 "              (?event ?telephone) \n" +
                 "              (and \n" +
-                "                (instance Bell Human) \n" +
+                "                (instance Blankenship Human) \n" +
                 "                (agent ?event Blankenship) \n" +
                 "                (instance ?event Process) \n" +
                 "                (instance ?telephone Telephone) \n" +
                 "                (patient ?event ?telephone)))";
 
-//        String expectedResult = "there exist a process and an entity such that Bell is an instance of human and Bell is an agent of the process and the process is an instance of process and the entity is an instance of Telephone and the entity is a patient of the process";
-        String expectedResult = "Blankenship processes a telephone";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist a process and an entity such that Blankenship is an instance of human and Blankenship is an agent of the process and the process is an instance of process and the entity is an instance of telephone and the entity is a patient of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "Blankenship processes a telephone";
+        actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
@@ -207,11 +214,17 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationT
                 "               (instance John-1 Human)\n" +
                 "               (agent ?event John-1)))";
 
-//        String expectedResult = "there exists a process such that the process is an instance of Arriving and Male is an attribute of John-1 and John-1 is an instance of human and John-1 is an agent of the process";
-        String expectedResult = "John-1 arrives";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exists a process such that the process is an instance of arriving and John-1 is an instance of human and John-1 is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "John-1 arrives";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 
@@ -219,7 +232,7 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationT
      *
      */
     @Test
-    public void testFishingFish()     {
+    public void testFishingFishIf()     {
         String stmt =   "(=>\n" +
                 "           (and\n" +
                 "               (instance ?FISHING Fishing)\n" +
@@ -252,7 +265,7 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationT
     }
 
     @Test
-    public void testAnimalShell()     {
+    public void testAnimalShellIf()     {
         String stmt =   "(=>\n" +
                 "           (and\n" +
                 "               (instance ?A Animal)\n" +
@@ -278,12 +291,17 @@ public class LanguageFormatterHtmlParaphraseIntegrationTest extends IntegrationT
                 "               (instance ?H Human)\n" +
                 "               (plaintiff ?P ?H)))";
 
-
-        //String expectedResult = "there exist a legal action and a cognitive agent such that the legal action is an instance of legal action and the cognitive agent is an instance of human and plaintiff the legal action and the cognitive agent";
-        String expectedResult = "a human performs a legalaction";
-        String actualResult = LanguageFormatter.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist a legal action and a cognitive agent such that the legal action is an instance of legal action and the cognitive agent is an instance of human and plaintiff the legal action and the cognitive agent";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a human performs a legal action";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, LanguageFormatter.filterHtml(actualResult));
     }
 

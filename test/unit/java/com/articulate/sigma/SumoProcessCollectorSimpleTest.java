@@ -116,6 +116,20 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         assertEquals(expected, process.toString());
     }
 
+    @Test
+    public void testAddMultipleRolesWithVariables() {
+        SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
+        process.addRole("patient", "?C");
+        process.addRole("goal", "?P");
+
+        String expected = "agent Driving ?H\n" +
+                "goal Driving ?P\n" +
+                "patient Driving ?C\n";
+        assertEquals(expected, process.toString());
+        expected = "?H drives ?C";
+        assertEquals(expected, process.toNaturalLanguage());
+    }
+
     /**
      * Verify that repeated, identical roles are ignored.
      */

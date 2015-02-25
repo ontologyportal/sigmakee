@@ -31,4 +31,13 @@ public class SumoProcessTest extends UnitTestBase {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void testNaturalLanguagePerformsIntentionalProcess() {
+        SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "IntentionalProcess", "Mark");
+
+        String actual = process.toNaturalLanguage();
+        String expected = "Mark performs an intentional process";
+        assertEquals(expected, actual);
+    }
+
 }

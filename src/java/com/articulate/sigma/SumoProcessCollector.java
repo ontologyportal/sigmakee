@@ -141,7 +141,7 @@ public class SumoProcessCollector {
             String key = mapPair.getKey();
             String value = mapPair.getValue();
 
-            sb.append(key.toString().toLowerCase()).append(" ").append(name).append(" ").append(value).append("\n");
+            sb.append(key.toLowerCase()).append(" ").append(name).append(" ").append(value).append("\n");
         }
 
         return sb.toString();
@@ -158,10 +158,7 @@ public class SumoProcessCollector {
             return "";
         }
 
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(formulateNaturalSubject()).append(" ").append(formulateNaturalVerb()).append(" ").append(formulateNaturalDirectObject());
-        String cleanedStr = sb.toString().trim();
+        String cleanedStr = (formulateNaturalSubject() + " " + formulateNaturalVerb() + " " + formulateNaturalDirectObject()).trim();
 
         return cleanedStr;
     }
@@ -202,19 +199,44 @@ public class SumoProcessCollector {
         // We're assuming that only names and reified objects are in uppercase.
         for(String noun : nouns) {
             String temp = noun;
-            if (takesIndefiniteArticle(noun)) {
-                if(!SumoProcessCollector.isVowel(temp.charAt(0)))   {
-                    temp = "a " + temp;
-                }
-                else    {
-                    temp = "an " + temp;
-                }
+            if (! isVariable(temp) && takesIndefiniteArticle(noun)) {
+                temp = aOrAn(temp) + " " + temp;
             }
             sb.append(temp).append(" and ");
         }
         // Remove last "and" if it exists.
         String output = sb.toString().replaceAll(" and $", "");
         return output;
+    }
+
+    /**************************************************************************************************************
+     *
+     * @param str
+     * @return
+     */
+    private boolean isVariable(String str) {
+        if(str.substring(0, 1).equals("?")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**************************************************************************************************************
+     * Look at first letter of input to determine whether it should be preceded by "a" or "an".
+     * @param temp
+     * @return
+     * "a" or "an"
+     */
+    private String aOrAn(String temp) {
+        String article;
+        if(!SumoProcessCollector.isVowel(temp.charAt(0)))   {
+            article = "a";
+        }
+        else    {
+            article = "an";
+        }
+
+        return article;
     }
 
     /**************************************************************************************************************
@@ -268,17 +290,41 @@ public class SumoProcessCollector {
      * @return
      */
     String formulateNaturalVerb() {
-        // FIXME: this seems a very "heavy" way to convert from, e.g. "driving" to "drive"
         String verb = getVerbRootForm();
 
         if (verb == null || verb.isEmpty())  {
-            verb = "performs a " + name.toLowerCase();
+            verb = getNounFormOfVerb(name);
+            //verb = "performs " + noun;
             return verb;
         }
 
         // FIXME: verbPlural is a misnomer; it finds the simple present singular form
         verb = WordNetUtilities.verbPlural(verb);
         return verb;
+    }
+
+
+    /**************************************************************************************************************
+     * For a process which does not have a language representation, get a reasonable way of paraphrasing it.
+     * @return
+     */
+    private String getNounFormOfVerb(String verb) {
+        String phrase = "performs ";
+        // Turn, e.g. "IntentionalProcess" into "intentional process".
+        String formattedTerm = kb.getTermFormatMap("EnglishLanguage").get(verb);
+
+        if (formattedTerm != null && ! formattedTerm.isEmpty()) {
+            if (!kb.isSubclass(verb, "Substance")) {
+                String article = aOrAn(formattedTerm);
+                phrase = phrase + article + " ";
+            }
+            phrase = phrase + formattedTerm;
+        }
+        else    {
+            phrase = phrase + "a " + name.toLowerCase();
+        }
+
+        return phrase;
     }
 
     /**************************************************************************************************************
