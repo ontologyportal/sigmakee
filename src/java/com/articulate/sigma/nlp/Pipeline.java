@@ -24,11 +24,11 @@ public class Pipeline {
 
         // creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution 
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 
         // read some text in the text variable
-        String text = "John kicked the cart from East New Britain. It went far.";
+        String text = "John kicked the cart to East New Britain. He went there too.";
 
         // create an empty Annotation just with the given text
         Annotation document = new Annotation(text);
@@ -43,6 +43,7 @@ public class Pipeline {
         for (CoreMap sentence : sentences) {
             // traversing the words in the current sentence
             // a CoreLabel is a CoreMap with additional token-specific methods
+            int count = 1;
             for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
                 // this is the text of the token
                 String word = token.get(TextAnnotation.class);
@@ -50,7 +51,9 @@ public class Pipeline {
                 String pos = token.get(PartOfSpeechAnnotation.class);
                 // this is the NER label of the token
                 String ne = token.get(NamedEntityTagAnnotation.class);  
-                System.out.println(word + "/" + pos + "/" + ne);
+                List<CoreMap> entity = token.get(MentionsAnnotation.class);
+                System.out.println(word + "-" + count + "/" + pos + "/" + ne + "/" + entity);     
+                count++;
             }
 
             // this is the parse tree of the current sentence
@@ -58,7 +61,8 @@ public class Pipeline {
             
             // this is the Stanford dependency graph of the current sentence
             SemanticGraph dependencies = (SemanticGraph) sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
-            System.out.println(dependencies);
+            System.out.println(dependencies.toList());
+            //System.out.println(dependencies.toPOSList());
         }
 
         // This is the coreference link graph
