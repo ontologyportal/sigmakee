@@ -438,19 +438,17 @@ public class KBcache {
             System.out.println("Error in KBcache.breadthFirstBuildParents(): no relation " + rel);
             return;
         }
-        //else
-        //    System.out.println("INFO in KBcache.breadthFirst(): trying relation " + rel);
+        int threshold = 10;      // maximum time that a term can be traversed in breadthFirstBuildParents()
+        HashMap<String, Integer> appearanceCount = new HashMap<>();  // for each term, we count how many times it has been traversed
         ArrayDeque<String> Q = new ArrayDeque<String>();
-        HashSet<String> V = new HashSet<String>();
         Q.add(root);
-        V.add(root);
         while (!Q.isEmpty()) {
             String t = Q.remove();
             //System.out.println("visiting " + t);
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
             if (forms != null) {
                 HashSet<String> relSubs = collectArgFromFormulas(1,forms);
-                //System.out.println("visiting subs of t: " + relSubs);
+
                 Iterator<String> it = relSubs.iterator();
                 while (it.hasNext()) {
                     String newTerm = it.next();
@@ -466,9 +464,13 @@ public class KBcache {
                     if (newTermParents != null)
                         newParents.addAll(newTermParents);
                     relParents.put(newTerm, newParents);
-                    //System.out.println(newTerm + ": " + newParents);
-                    if (!V.contains(newTerm)) {
-                        V.add(newTerm);
+
+                    if (appearanceCount.get(newTerm) == null) {
+                        appearanceCount.put(newTerm, 1);
+                        Q.addFirst(newTerm);
+                    }
+                    else if (appearanceCount.get(newTerm) <= threshold) {
+                        appearanceCount.put(newTerm, appearanceCount.get(newTerm)+1);
                         Q.addFirst(newTerm);
                     }
                 }
@@ -821,7 +823,7 @@ public class KBcache {
         buildChildren(); // note that buildTransInstOf() depends on this
         collectDomains();  // note that buildInstTransRels() depends on this
         buildInstTransRels();
-        buildTransInstOf();
+        buildDirectInstances();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instances.keySet().size());
     }
     
