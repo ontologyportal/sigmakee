@@ -89,6 +89,7 @@ public class Clause {
     }
     
     /** ***************************************************************
+     * @return true if the clause does not contain any variables
      */
     public boolean isGround() {
         
