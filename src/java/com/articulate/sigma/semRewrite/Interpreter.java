@@ -30,6 +30,13 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.collect.Lists;
 
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
+import edu.stanford.nlp.util.CoreMap;
+
 public class Interpreter {
 
     // Canonicalize rules into CNF then unify.
@@ -237,7 +244,18 @@ public class Interpreter {
       System.out.println("INFO in Interpreter.interpretSingle(): " + input); 
       ArrayList<String> results = null;
       try {
-          results = DependencyConverter.getDependencies(input);
+          Properties props = new Properties();
+          props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+          StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+          Annotation document = new Annotation(input);
+          pipeline.annotate(document);
+          List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+          if (sentences.size() > 1)
+              throw new Exception("Multiple sentences not allowed in Interpreter.interpretSingle()");
+          for (CoreMap sentence : sentences) {
+              SemanticGraph dependencies = (SemanticGraph) sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+              results = Lists.newArrayList(dependencies.toList().split("\n"));
+          }
       }
       catch (Exception e) {
           e.printStackTrace();
