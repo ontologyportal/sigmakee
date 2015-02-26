@@ -13,6 +13,8 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  */
 
+import com.articulate.sigma.nlg.LanguageFormatter;
+
 import java.io.File;
 import java.util.*;
 import java.util.regex.Matcher;

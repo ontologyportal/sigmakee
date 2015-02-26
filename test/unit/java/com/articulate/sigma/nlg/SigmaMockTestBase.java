@@ -1,5 +1,10 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
+import com.articulate.sigma.KBcache;
+import com.articulate.sigma.WordNet;
+import com.articulate.sigma.nlg.LanguageFormatter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -166,7 +171,7 @@ public class SigmaMockTestBase {
     /**
      * Mock of KBcache.
      */
-    protected class KBcacheMock extends KBcache     {
+    protected class KBcacheMock extends KBcache {
 
         public KBcacheMock(KB kb) {
             super(kb);

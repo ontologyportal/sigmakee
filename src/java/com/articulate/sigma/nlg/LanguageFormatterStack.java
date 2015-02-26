@@ -1,5 +1,6 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.Formula;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 

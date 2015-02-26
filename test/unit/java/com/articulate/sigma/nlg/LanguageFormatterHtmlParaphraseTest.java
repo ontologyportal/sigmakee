@@ -1,5 +1,8 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.SigmaTestBase;
+import com.articulate.sigma.UnitTestBase;
+import com.articulate.sigma.nlg.LanguageFormatter;
 import org.junit.*;
 
 import static org.junit.Assert.assertEquals;
@@ -7,7 +10,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * LanguageFormatter tests specifically targeted toward the htmlParaphrase( ) method.
  */
-public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase  {
+public class LanguageFormatterHtmlParaphraseTest extends UnitTestBase {
 
     @Test
     public void testHtmlParaphraseDomainDatePhysical()     {

@@ -1,5 +1,8 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.KB;
+import com.articulate.sigma.WordNet;
+import com.articulate.sigma.WordNetUtilities;
 import com.google.common.collect.*;
 
 import java.util.Map;

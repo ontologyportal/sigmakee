@@ -15,8 +15,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
  */
 
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -193,7 +194,7 @@ public class LanguageFormatter {
             System.out.println("Error in LanguageFormatter.paraphraseStatement(): stmt is empty");
             return "";
         }
-        boolean alreadyTried = kb.loadFormatMapsAttempted.contains(language);
+        boolean alreadyTried = kb.getLoadFormatMapsAttempted().contains(language);
         if ((phraseMap == null) || phraseMap.isEmpty()) {
             if (!alreadyTried) { kb.loadFormatMaps(language); }
             return "";
@@ -1614,9 +1615,9 @@ public class LanguageFormatter {
      *
      * @return String
      */
-    protected static String upcaseFirstVisibleChar(String htmlParaphrase,
-                                                   boolean addFullStop,
-                                                   String language) {
+    public static String upcaseFirstVisibleChar(String htmlParaphrase,
+                                                boolean addFullStop,
+                                                String language) {
 
         String ans = htmlParaphrase;
         try {
@@ -1779,7 +1780,7 @@ public class LanguageFormatter {
     /** **************************************************************
      * Return a defensive copy of the keyword map.
      */
-    static HashMap<String, HashMap<String, String>> getKeywordMap() {
+    public static HashMap<String, HashMap<String, String>> getKeywordMap() {
         return Maps.newHashMap(LanguageFormatter.keywordMap);
     }
 }

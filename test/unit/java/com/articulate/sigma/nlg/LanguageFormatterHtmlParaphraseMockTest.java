@@ -1,5 +1,6 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.KB;
 import org.junit.*;
 
 import static org.junit.Assert.assertEquals;
@@ -7,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * LanguageFormatter tests specifically targeted toward the htmlParaphrase( ) method.
  */
-public class LanguageFormatterHtmlParaphraseMockTest extends SigmaMockTestBase  {
+public class LanguageFormatterHtmlParaphraseMockTest extends SigmaMockTestBase {
     KB kb = kbMock;
 
     @Test

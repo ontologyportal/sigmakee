@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
+import com.articulate.sigma.nlg.LanguageFormatter;
 
 import java.io.*;
 import java.util.*;

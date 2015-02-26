@@ -1,5 +1,6 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.KB;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import org.junit.Rule;

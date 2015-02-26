@@ -34,6 +34,7 @@ being present in the ontology in order to function as intended.  They are:
 /*************************************************************************************************/
 package com.articulate.sigma;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.io.*;
@@ -1955,7 +1956,7 @@ public class KB {
      *
      * @see formatMap is the same but for relation format strings.
      */
-    protected void loadFormatMaps(String lang) {
+    public void loadFormatMaps(String lang) {
 
         if (formatMap == null)
             formatMap = new HashMap<String,HashMap<String,String>>();
@@ -3158,4 +3159,14 @@ public class KB {
         System.out.println(f.getArgument(2).equals("\"test\""));
     */
     }
+
+    /** ***************************************************************
+     *
+     * @return
+     * a defensive copy of loadFormatMapsAttempted.
+     */
+    public ArrayList<String> getLoadFormatMapsAttempted() {
+        return Lists.newArrayList(loadFormatMapsAttempted);
+    }
+
 }

@@ -1,5 +1,8 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.IntegrationTestBase;
+import com.articulate.sigma.SigmaTestBase;
+import com.articulate.sigma.nlg.LanguageFormatter;
 import org.junit.*;
 
 import static org.junit.Assert.assertEquals;

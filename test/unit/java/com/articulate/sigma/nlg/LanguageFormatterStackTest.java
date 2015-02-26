@@ -1,5 +1,7 @@
-package com.articulate.sigma;
+package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.nlg.LanguageFormatterStack;
 import org.junit.Test;
 
 import java.util.List;
