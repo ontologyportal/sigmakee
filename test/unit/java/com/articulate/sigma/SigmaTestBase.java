@@ -1,9 +1,12 @@
 package com.articulate.sigma;
 
+import com.google.common.collect.Lists;
+
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.List;
 
 public class SigmaTestBase {
     static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
@@ -35,7 +38,30 @@ public class SigmaTestBase {
         }
 
         kb = KBmanager.getMgr().getKB("SUMO");
+
+        checkConfiguration();
     }
+
+    private static void checkConfiguration() {
+        List<String> problemList = Lists.newArrayList();
+        if(LanguageFormatter.getKeywordMap().isEmpty()) {
+            problemList.add("LanguageFormatter.keywordMap is empty.");
+        }
+        if(WordNet.wn.synsetsToWords.isEmpty()) {
+            problemList.add("WordNet mappings are empty.");
+        }
+
+        if (! problemList.isEmpty()) {
+            StringBuilder sBuild = new StringBuilder();
+            for (String problem : problemList)  {
+                final String NEWLINE_AND_SPACES = "\n   ";
+                sBuild.append(NEWLINE_AND_SPACES).append(problem);
+            }
+            throw new IllegalStateException("Configuration failed. Problems:" + sBuild.toString());
+        }
+
+    }
+
 
     /**
      * Gets a BufferedReader for the xml file that is this test's configuration.

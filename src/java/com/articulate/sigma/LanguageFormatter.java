@@ -39,7 +39,7 @@ public class LanguageFormatter {
 
     private static HashMap<String,HashMap<String,String>> keywordMap;
 
-    private static final String PHRASES_FILENAME = "language.txt";
+    private static final String PHRASES_FILENAME = "Translations/language.txt";
 
     private final String statement;
 
@@ -1776,5 +1776,11 @@ public class LanguageFormatter {
 
     }
 
+    /** **************************************************************
+     * Return a defensive copy of the keyword map.
+     */
+    static HashMap<String, HashMap<String, String>> getKeywordMap() {
+        return Maps.newHashMap(LanguageFormatter.keywordMap);
+    }
 }
 
