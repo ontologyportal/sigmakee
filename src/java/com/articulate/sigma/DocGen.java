@@ -36,7 +36,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.nlg.NLGUtils;
 
 /** A class to generate simplified HTML-based documentation for SUO-KIF terms. */
 public class DocGen {
@@ -3781,7 +3781,7 @@ public class DocGen {
                                                                    2,
                                                                    false);
                     for (Iterator it = extendeds.iterator(); it.hasNext();) {
-                        subent = (String) it.next();;
+                        subent = (String) it.next();
                         if (!working.contains(subent)) {
                             working.add(subent);
                         }
@@ -4930,7 +4930,7 @@ public class DocGen {
                                        + StringUtil.getLineSeparator());
                     for (int i = 0; i < localLimit; i++) {
                         Formula form = (Formula) forms.get(i);
-                        result.append(LanguageFormatter.htmlParaphrase(kbHref,
+                        result.append(NLGUtils.htmlParaphrase(kbHref,
                                 form.theFormula,
                                 kb.getFormatMap(language),
                                 kb.getTermFormatMap(language),
@@ -4955,12 +4955,12 @@ public class DocGen {
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
-                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                                   form.theFormula, 
-                                                                   kb.getFormatMap(language), 
-                                                                   kb.getTermFormatMap(language), 
-                                                                   kb,
-                                                                   language) 
+                    result.append(NLGUtils.htmlParaphrase(kbHref,
+                            form.theFormula,
+                            kb.getFormatMap(language),
+                            kb.getTermFormatMap(language),
+                            kb,
+                            language)
                                   + StringUtil.getLineSeparator());
                 }
             }
@@ -4978,12 +4978,12 @@ public class DocGen {
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
-                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                                   form.theFormula, 
-                                                                   kb.getFormatMap(language), 
-                                                                   kb.getTermFormatMap(language), 
-                                                                   kb,
-                                                                   language) 
+                    result.append(NLGUtils.htmlParaphrase(kbHref,
+                            form.theFormula,
+                            kb.getFormatMap(language),
+                            kb.getTermFormatMap(language),
+                            kb,
+                            language)
                                   + StringUtil.getLineSeparator());
                 }
             }
@@ -5001,12 +5001,12 @@ public class DocGen {
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
-                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                                   form.theFormula, 
-                                                                   kb.getFormatMap(language), 
-                                                                   kb.getTermFormatMap(language), 
-                                                                   kb,
-                                                                   language) 
+                    result.append(NLGUtils.htmlParaphrase(kbHref,
+                            form.theFormula,
+                            kb.getFormatMap(language),
+                            kb.getTermFormatMap(language),
+                            kb,
+                            language)
                                   + "<br>" 
                                   + StringUtil.getLineSeparator());
                 }
@@ -5025,12 +5025,12 @@ public class DocGen {
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
-                    result.append(LanguageFormatter.htmlParaphrase(kbHref,
-                                                                   form.theFormula, 
-                                                                   kb.getFormatMap(language), 
-                                                                   kb.getTermFormatMap(language), 
-                                                                   kb,
-                                                                   language) 
+                    result.append(NLGUtils.htmlParaphrase(kbHref,
+                            form.theFormula,
+                            kb.getFormatMap(language),
+                            kb.getTermFormatMap(language),
+                            kb,
+                            language)
                                   + "<br>"
                                   + StringUtil.getLineSeparator());
                 }

@@ -4,7 +4,6 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBcache;
 import com.articulate.sigma.WordNet;
-import com.articulate.sigma.nlg.LanguageFormatter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -23,7 +22,7 @@ public class SigmaMockTestBase {
     static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
     private static Hashtable<String, String> oldWordNetSynSetTable;
 
-    protected KB kbMock = new KBMock("dummyString");
+    protected final KB kbMock = new KBMock("dummyString");
 
     private static final ImmutableList<String> RECOGNIZED_PROCESSES = ImmutableList.of(
             "Drinking",
@@ -101,7 +100,7 @@ public class SigmaMockTestBase {
             new Formula("(format EnglishLanguage transported \"%2 is %n &%transported during %1\")")
             );
 
-    private static HashMap<String, String> termFormatMap = Maps.newHashMap();
+    private static final HashMap<String, String> termFormatMap = Maps.newHashMap();
 
 
     static  {
@@ -191,7 +190,7 @@ public class SigmaMockTestBase {
 
     @BeforeClass
     public static void setUp() {
-        LanguageFormatter.readKeywordMap(KB_PATH);
+        NLGUtils.readKeywordMap(KB_PATH);
 
         Hashtable<String,String> hash = new Hashtable<>();
         hash.put("drink", "");

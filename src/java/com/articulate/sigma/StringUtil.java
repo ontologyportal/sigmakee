@@ -51,7 +51,6 @@ public class StringUtil {
      *
      * @param charEncoding A String denoting a character encoding scheme
      *
-     * @return String
      */
     public static void setCharset(String charEncoding) {
         CHARSET = charEncoding;
@@ -127,7 +126,6 @@ public class StringUtil {
      */
     public static void setLineSeparator(String separator) {
         System.setProperty("line.separator", separator);
-        return;
     }
 
     /** *************************************************************
@@ -750,23 +748,23 @@ public class StringUtil {
      */
     public static String allCapsToSUMOID(String str) {
 
-    	if (emptyString(str)) {
-    		System.out.println("Error in StringUtil.allCapsToSUMOID(): str is null");
-    		return "";
-    	}
-    	StringBuffer sb = new StringBuffer();
-    	boolean under = false;
-    	for (int i = 0; i < str.length(); i++) {
-    		if (str.charAt(i) == '_')
-    			under = true;
-    		else {
-        		if (under || i == 0)
-        			sb.append(str.charAt(i));
-        		else
-        			sb.append(Character.toLowerCase(str.charAt(i)));
-        		under = false;
-    		}
-    	}
+        if (emptyString(str)) {
+            System.out.println("Error in StringUtil.allCapsToSUMOID(): str is null");
+            return "";
+        }
+        StringBuffer sb = new StringBuffer();
+        boolean under = false;
+        for (int i = 0; i < str.length(); i++) {
+            if (str.charAt(i) == '_')
+                under = true;
+            else {
+                if (under || i == 0)
+                    sb.append(str.charAt(i));
+                else
+                    sb.append(Character.toLowerCase(str.charAt(i)));
+                under = false;
+            }
+        }
         return sb.toString();
     }
 
@@ -774,10 +772,10 @@ public class StringUtil {
      */
     public static String asSUMORelationID(String str) {
 
-       	if (emptyString(str)) {
-    		System.out.println("Error in StringUtil.asSUMORelationID(): str is null");
-    		return "";
-    	}
+           if (emptyString(str)) {
+            System.out.println("Error in StringUtil.asSUMORelationID(): str is null");
+            return "";
+        }
         return Character.toLowerCase(str.charAt(0)) + str.substring(1);
     }
 
@@ -961,11 +959,7 @@ public class StringUtil {
             if (isNonEmptyString(input)
                 && !isQuotedString(input)
                 && (input.charAt(0) != quoteChar)) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(quoteChar);
-                sb.append(input);
-                sb.append(quoteChar);
-                ans = sb.toString();
+                ans = String.valueOf(quoteChar) + input + quoteChar;
             }
         }
         catch (Exception ex) {
@@ -989,17 +983,17 @@ public class StringUtil {
     
     /** ***************************************************************
      */
-	public static boolean isNumeric(String input) {
-		
-		try {
-			Integer.parseInt(input);
-			return true;
-		} 
-		catch (NumberFormatException e) {
-			// s is not numeric
-			return false;
-		}
-	}
+    public static boolean isNumeric(String input) {
+        
+        try {
+            Integer.parseInt(input);
+            return true;
+        } 
+        catch (NumberFormatException e) {
+            // s is not numeric
+            return false;
+        }
+    }
     
     /** ***************************************************************
      * Returns a String formed from n concatenations of input.
@@ -1044,30 +1038,29 @@ public class StringUtil {
         String result = tree;
         try {
             StringBuilder sb = new StringBuilder();
-            String flist = tree;;
-            if (flist.matches(oldPattern))
+            if (tree.matches(oldPattern))
                 sb.append(newTerm);
-            else if (Formula.listP(flist)) {
-                if (Formula.empty(flist)) {
-                    sb.append(flist);
+            else if (Formula.listP(tree)) {
+                if (Formula.empty(tree)) {
+                    sb.append(tree);
                 }
                 else {
                     Formula f = new Formula();
-                    f.read(flist);
+                    f.read(tree);
                     List tuple = f.literalToArrayList();
                     sb.append("(");
                     int i = 0;
                     for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
                         if (i > 0) sb.append(" ");
                         sb.append(treeReplace(oldPattern,
-                                              newTerm,
-                                              (String) it.next()));
+                                newTerm,
+                                (String) it.next()));
                     }
                     sb.append(")");
                 }
             }
             else {
-                sb.append(flist);
+                sb.append(tree);
             }
             result = sb.toString();
         }
@@ -1282,7 +1275,6 @@ public class StringUtil {
      */
     public static void setLocalReferenceBaseName(String basename) {
         LOCAL_REF_BASE_NAME = basename;
-        return;
     }
 
     /** *******************************************************************
@@ -1378,39 +1370,39 @@ public class StringUtil {
      */
     public static String stringToKIF(String input, boolean upcaseFirst) {
 
-    	if (StringUtil.emptyString(input))
-    		return null;
-    	StringBuffer result = new StringBuffer();
-		if (Character.isJavaIdentifierStart(input.charAt(0)))
-			if (upcaseFirst)
-				result.append(Character.toUpperCase(input.charAt(0)));
-			else
-				result.append(Character.toLowerCase(input.charAt(0)));
-		else
-			if (upcaseFirst)
-				result.append("I_");
-			else
-				result.append("r_");
-    	for (int i = 1; i < input.length(); i++) {
-    		if (input.charAt(i) != ' ') {
-    	   		if (Character.isJavaIdentifierPart(input.charAt(i)) && input.charAt(i) != '$')
-        			result.append(input.charAt(i));
-        		else
-        			result.append("x");
-    		}
+        if (StringUtil.emptyString(input))
+            return null;
+        StringBuffer result = new StringBuffer();
+        if (Character.isJavaIdentifierStart(input.charAt(0)))
+            if (upcaseFirst)
+                result.append(Character.toUpperCase(input.charAt(0)));
+            else
+                result.append(Character.toLowerCase(input.charAt(0)));
+        else
+            if (upcaseFirst)
+                result.append("I_");
+            else
+                result.append("r_");
+        for (int i = 1; i < input.length(); i++) {
+            if (input.charAt(i) != ' ') {
+                   if (Character.isJavaIdentifierPart(input.charAt(i)) && input.charAt(i) != '$')
+                    result.append(input.charAt(i));
+                else
+                    result.append("x");
+            }
 
-    	}
+        }
         return result.toString();
     }
 
     /** *****************************************************************
      */
     public static String indent(int num, String indentChars) {
-    	
-    	StringBuffer sb = new StringBuffer();
-    	for (int i = 0; i < num; i++)
-    		sb.append(indentChars);
-    	return sb.toString();
+        
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < num; i++)
+            sb.append(indentChars);
+        return sb.toString();
     }
     
 
@@ -1419,18 +1411,18 @@ public class StringUtil {
      * @return -1 if not found
      */
     public static int findBalancedParen(int pIndex, String st) {
-    	
-    	int parenLevel = 1;
-    	for (int i = pIndex + 1; i < st.length(); i++) {
-    		if (st.charAt(i) == '(')
-    			parenLevel++;
-    		if (st.charAt(i) == ')') {
-    			parenLevel--;
-    			if (parenLevel == 0)
-    				return i;
-    		}
-    	}
-    	return -1;
+        
+        int parenLevel = 1;
+        for (int i = pIndex + 1; i < st.length(); i++) {
+            if (st.charAt(i) == '(')
+                parenLevel++;
+            if (st.charAt(i) == ')') {
+                parenLevel--;
+                if (parenLevel == 0)
+                    return i;
+            }
+        }
+        return -1;
     }
     
     /** *****************************************************************
@@ -1500,4 +1492,20 @@ public class StringUtil {
     }
 
 
+    /** ***************************************************************
+     * Remove HTML from input string.
+     * @param input
+     * @return
+     */
+    public static String filterHtml(String input)  {
+        // Note use of non-greedy matching.
+        String out = input.replaceAll("<.*?>", "");
+
+        // Clean up.
+        out = out.replaceAll(" +", " ");
+        // Insert a space anywhere a comma isn't followed by a space.
+        out = out.replaceAll(",(\\S)", ", $1");
+
+        return out;
+    }
 } // StringUtil

@@ -14,7 +14,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 */
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
-import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.nlg.NLGUtils;
 
 import java.io.*;
 import java.util.*;
@@ -173,7 +173,7 @@ public class KBmanager {
             
         }
         catch (Exception ex) {
-            System.out.println("Error in KBmanager.setDefaultAttributes(): " + ex.getStackTrace());
+            System.out.println("Error in KBmanager.setDefaultAttributes(): " + Arrays.toString(ex.getStackTrace()));
             ex.printStackTrace();
         }
         return;
@@ -488,7 +488,7 @@ public class KBmanager {
         kbsFromXML(configuration);
         String kbDir = (String) preferences.get("kbDir");
         //System.out.println("Info in KBmanager.initializeOnce(): Using kbDir: " + kbDir);
-        LanguageFormatter.readKeywordMap(kbDir);
+        NLGUtils.readKeywordMap(kbDir);
         WordNet.wn.initOnce();
         OMWordnet.readOMWfiles();
         if (kbs != null && kbs.size() > 0) {

@@ -13,7 +13,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  */
 
-import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.nlg.NLGUtils;
 
 import java.io.File;
 import java.util.*;
@@ -147,7 +147,7 @@ public class HTMLformatter {
         }
         result.append("</td><td width=\"40%\" valign=\"top\">");
         if (StringUtil.isNonEmptyString(language)) {
-            String pph = LanguageFormatter.htmlParaphrase(kbHref,
+            String pph = NLGUtils.htmlParaphrase(kbHref,
                     f.theFormula,
                     KBmanager.getMgr().getKB(kbName).getFormatMap(language),
                     KBmanager.getMgr().getKB(kbName).getTermFormatMap(language),
@@ -156,7 +156,7 @@ public class HTMLformatter {
             if (StringUtil.emptyString(pph))
                 pph = "";
             else {
-                pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
+                pph = NLGUtils.upcaseFirstVisibleChar(pph, true, language);
                 boolean isArabic = (language.matches(".*(?i)arabic.*")
                         || language.equalsIgnoreCase("ar"));
                 if (isArabic)
@@ -321,7 +321,7 @@ public class HTMLformatter {
                 String relationName = DocGen.getInstance(kb.name).showTermName(kb,relation,language);
                 String nonRelation = (String) nonRelations.get(i);
                 String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb,nonRelation,language);
-                if (relation != "" || nonRelation != "") {
+                if (! relation.isEmpty() || ! nonRelation.isEmpty()) {
                 	if (i == 0)
                 		show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(0) + "&relation=" + relations.get(0) + "&KBPOS=" + 1 + "\">previous " + 25 + "</a>" + "</i></td></tr>\n");
 
@@ -523,7 +523,7 @@ public class HTMLformatter {
                 show.append("</td>\n<td width=\"40%\" valign=\"top\">");
                 String pph = null;
                 if (!Formula.DOC_PREDICATES.contains(arg0))
-                    pph = LanguageFormatter.htmlParaphrase(kbHref,f.theFormula,
+                    pph = NLGUtils.htmlParaphrase(kbHref, f.theFormula,
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb, language);
@@ -532,7 +532,7 @@ public class HTMLformatter {
                 else if (isArabic)
                     pph = ("<span dir=\"rtl\">" + pph + "</span>");
                 else
-                    pph = LanguageFormatter.upcaseFirstVisibleChar(pph, true, language);
+                    pph = NLGUtils.upcaseFirstVisibleChar(pph, true, language);
                 show.append(pph + "</td></tr>\n");
             }
         }

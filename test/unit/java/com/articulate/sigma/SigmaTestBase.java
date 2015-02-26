@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.nlg.NLGUtils;
 import com.google.common.collect.Lists;
 
 import java.io.*;
@@ -45,7 +45,7 @@ public class SigmaTestBase {
 
     private static void checkConfiguration() {
         List<String> problemList = Lists.newArrayList();
-        if(LanguageFormatter.getKeywordMap().isEmpty()) {
+        if(NLGUtils.getKeywordMap().isEmpty()) {
             problemList.add("LanguageFormatter.keywordMap is empty.");
         }
         if(WordNet.wn.synsetsToWords.isEmpty()) {
