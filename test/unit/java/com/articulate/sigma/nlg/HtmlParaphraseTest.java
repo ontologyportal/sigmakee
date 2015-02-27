@@ -958,12 +958,12 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "if a process is an instance of driving and an agent is an instance of human and the agent is an agent of the process, then there exists an entity such that the entity is an instance of automobile and the entity %n(does not} comes to be physically controlled by an agent during the process";
+        String expectedResult = "if a process is an instance of driving and an agent is an instance of human and the agent is an agent of the process, then there exists an entity such that the entity is an instance of automobile and the entity comes to be physically controlled by an agent during the process";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        expectedResult = "if a process is an instance of driving and an agent is an instance of human and the agent is an agent of the process, then there exists an entity such that the entity is an instance of automobile and the entity %n(does not} comes to be physically controlled by an agent during the process";
+        expectedResult = "if a process is an instance of driving and an agent is an instance of human and the agent is an agent of the process, then there exists an entity such that the entity is an instance of automobile and the entity comes to be physically controlled by an agent during the process";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
