@@ -186,7 +186,7 @@ public class KBcache {
     /** ***************************************************************
      * Record instances and their explicitly defined parent classes
      */
-    private void buildDirectInstances() {
+    void buildDirectInstances() {
     	
         ArrayList<Formula> forms = kb.ask("arg",0,"instance");
         for (int i = 0; i < forms.size(); i++) {
@@ -211,7 +211,7 @@ public class KBcache {
      * in turn then is an instance of the given class.
      * TODO: make sure that direct instances are recorded too
      */
-    private void buildTransInstOf() {
+    void buildTransInstOf() {
     
         Iterator<String> titer = insts.iterator();     // Iterate through the temporary list of instances built 
                                                        // during creation of the @see children map
