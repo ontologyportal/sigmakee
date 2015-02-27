@@ -28,6 +28,7 @@ public class EProver {
      *  */
     public static void writeBatchConfig(String inputFilename) {
 
+    	//String inputFilename = "/home/apease/Sigma/KBs/SUMO.tptp.withSortal.plainFormulae";
         try {
             System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
             //File initFile = new File(KBmanager.getMgr().getPref("kbDir"), "EBatchConfig.txt");
