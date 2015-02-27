@@ -10,6 +10,13 @@ import static org.junit.Assert.assertEquals;
 
 public class CaseRoleTest extends IntegrationTestBase {
 
+    /**
+     * This test is meant to detect errors in the writing of SUMO rules in kif files. It fails if it finds a case where a term
+     * is declared to be a subrelation of another term that is a CaseRole, but the first term is not explicitly declared to be an
+     * instance of CaseRole. For example, "(subrelation standardInputDevice instrument)" by itself will fail because instrument
+     * is a CaseRole, but we haven't explicitly said standardInputDevice is a CaseRole. The test will pass if the kif file reads
+     * "(subrelation standardInputDevice instrument) /n (instance standardInputDevice CaseRole)".
+     */
     @Test
     public void testCaseRole() {
 
