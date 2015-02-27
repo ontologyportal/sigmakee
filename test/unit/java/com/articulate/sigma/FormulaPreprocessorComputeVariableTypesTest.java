@@ -102,7 +102,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "               (names \"John\" ?H)\n" +
                 "               (instance ?Car Automobile)\n" +
                 "               (agent ?D ?H)\n" +
-                "               (instrument ?D ?Car)))";
+                "               (patient ?D ?Car)))";
         Formula f = new Formula();
         f.read(stmt);
 
@@ -112,7 +112,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?H", Sets.newHashSet("Agent"));
         expected.put("?D", Sets.newHashSet("Process"));
-        expected.put("?Car", Sets.newHashSet("Object"));
+        expected.put("?Car", Sets.newHashSet("Entity"));
 
         assertEquals(expected, actual);
     }

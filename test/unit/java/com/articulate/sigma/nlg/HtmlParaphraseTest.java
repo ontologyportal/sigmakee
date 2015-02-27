@@ -242,7 +242,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
     }
 
     @Test
-    public void testHtmlParaphraseDriving2()     {
+    public void testHtmlParaphraseJohnDriving()     {
         String stmt =   "(exists (?D ?H)\n" +
                 "           (and\n" +
                 "           (instance ?D Driving)\n" +
@@ -260,7 +260,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
     }
 
     @Test
-    public void testHtmlParaphraseDrivingNot2()     {
+    public void testHtmlParaphraseJohnDrivingNot()     {
         String stmt =   "(not\n" +
                 "           (exists (?D ?H)\n" +
                 "               (and\n" +
@@ -277,7 +277,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
     }
 
     @Test
-    public void testHtmlParaphraseDriving3()     {
+    public void testHtmlParaphraseJohnDrivingCar()     {
         String stmt =   "(exists (?D ?H ?Car)\n" +
                 "           (and\n" +
                 "           (instance ?D Driving)\n" +
@@ -285,12 +285,30 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 "           (names \"John\" ?H)\n" +
                 "           (instance ?Car Automobile)\n" +
                 "           (agent ?D ?H)\n" +
-                "           (instrument ?D ?Car)))";
+                "           (patient ?D ?Car)))";
 
-        String expectedResult = "there exist a process, an agent and an object such that the process is an instance of driving and " +
+        String expectedResult = "there exist a process, an agent and an entity such that the process is an instance of driving and " +
                 "the agent is an instance of human and the agent has name \"John\" and " +
-                "the object is an instance of automobile and the agent is an agent of the process and " +
-                "the object is an instrument for the process";
+                "the entity is an instance of automobile and the agent is an agent of the process and " +
+                "the entity is a patient of the process";
+
+        String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testHtmlParaphraseHumanDrivingCar()     {
+        String stmt =   "(exists (?D ?H ?Car)\n" +
+                "           (and\n" +
+                "           (instance ?D Driving)\n" +
+                "           (instance ?H Human)\n" +
+                "           (instance ?Car Automobile)\n" +
+                "           (agent ?D ?H)\n" +
+                "           (patient ?D ?Car)))";
+
+        String expectedResult = "a human drives an automobile";
 
         String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
