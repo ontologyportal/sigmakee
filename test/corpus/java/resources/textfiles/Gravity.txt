@@ -1,0 +1,8 @@
+Gravity is a natural phenomenon by which all physical bodies attract each other.
+It is most commonly recognized and experienced as the agent that gives weight to physical objects, and causes physical objects to fall toward the ground when dropped from a height.
+It is hypothesized that the gravitational force is mediated by a mass less spin-2 particle called the graviton.
+Gravity is one of the four fundamental forces of nature, along with electromagnetism, and the nuclear strong force and weak force.
+Colloquially, gravitation is a force of attraction that acts between and on all physical objects with matter (mass) or energy.
+In modern physics, gravitation is most accurately described by the general theory of relativity proposed by Einstein, which asserts that the phenomenon of gravitation is a consequence of the curvature of space time.
+In pursuit of a theory of everything, the merging of general relativity and quantum mechanics (or quantum field theory) into a more general theory of quantum gravity has become an area of active research.
+Newton's law of universal gravitation postulates that the gravitational force of two bodies of mass is directly proportional to the product of their masses and inversely proportional to the square of the distance between them.
