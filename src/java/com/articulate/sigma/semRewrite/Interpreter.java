@@ -297,8 +297,7 @@ public class Interpreter {
       while (matcher.find()) {
           s = s.replace(matcher.group(1) + matcher.group(2), matcher.group(1) + "?" + matcher.group(2));
       }
-      Formula f = new Formula(s);
-      
+      Formula f = new Formula(s);      
       return s;
   }
   
