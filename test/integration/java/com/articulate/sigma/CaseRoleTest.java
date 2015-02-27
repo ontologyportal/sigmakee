@@ -15,17 +15,6 @@ public class CaseRoleTest extends IntegrationTestBase {
 
         KBcache cache = SigmaTestBase.kb.kbCache;
 
-        // Collect all actual instances for "CaseRole", by running KBcache.buildDirectInstances()
-        cache.instances = new HashMap<>();
-        cache.buildDirectInstances();
-        HashMap<String, HashSet<String>> actualInstancesMap = cache.instances;
-        TreeSet<String> actualInstancesForCaseRole = new TreeSet<>();
-        for (String inst : actualInstancesMap.keySet()) {
-            HashSet<String> parentClasses = actualInstancesMap.get(inst);
-            if (parentClasses.contains("CaseRole"))
-                actualInstancesForCaseRole.add(inst);
-        }
-
         // Collect all expected instances for "CaseRole", by running KBcache.buildTransInstOf()
         cache.instances = new HashMap<>();
         cache.buildTransInstOf();
@@ -35,6 +24,17 @@ public class CaseRoleTest extends IntegrationTestBase {
             HashSet<String> parentClasses = expectedInstancesMap.get(inst);
             if (parentClasses.contains("CaseRole"))
                 expectedInstancesForCaseRole.add(inst);
+        }
+
+        // Collect all actual instances for "CaseRole", by running KBcache.buildDirectInstances()
+        cache.instances = new HashMap<>();
+        cache.buildDirectInstances();
+        HashMap<String, HashSet<String>> actualInstancesMap = cache.instances;
+        TreeSet<String> actualInstancesForCaseRole = new TreeSet<>();
+        for (String inst : actualInstancesMap.keySet()) {
+            HashSet<String> parentClasses = actualInstancesMap.get(inst);
+            if (parentClasses.contains("CaseRole"))
+                actualInstancesForCaseRole.add(inst);
         }
 
         assertEquals(expectedInstancesForCaseRole, actualInstancesForCaseRole);
