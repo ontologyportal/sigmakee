@@ -536,7 +536,7 @@ public class TFIDF {
                 String fname = (String) jo.get("file");
                 String query = (String) jo.get("query");
                 String answer = (String) jo.get("answer");
-                System.out.println("INFO in TFIDF.prepare(): " + fname + " " + query + " " + answer);
+                //System.out.println("INFO in TFIDF.prepare(): " + fname + " " + query + " " + answer);
                 result.add(new Object[]{fname,query,answer});
             }             
         } 
@@ -570,6 +570,8 @@ public class TFIDF {
      */
     private static void test() {
 
+        int tested = 0;
+        int correct = 0;
         HashMap<String,TFIDF> files = new HashMap<String,TFIDF>();
         Collection<Object[]> tests = prepare();
         Random rand = new Random(); 
@@ -578,7 +580,7 @@ public class TFIDF {
             String fname = (String) test[0];
             String query = (String) test[1];
             String answer = (String) test[2];
-            System.out.print(query + "\t");
+            //System.out.print(query + "\t");
             TFIDF cb = new TFIDF();
             if (files.containsKey(fname))
                 cb = files.get(fname);
@@ -592,8 +594,14 @@ public class TFIDF {
                 //System.out.println("Caclulate TFIDF");
                 cb.calcTFIDF();
             }
-            System.out.println(cb.matchInput(query));
+            String actual = cb.matchInput(query);
+            tested++;
+            if (actual.equals(answer) || answer.indexOf(actual) > -1 || actual.indexOf(answer) > -1)
+                correct++;
+            else
+                System.out.println("Test " + tested + " Failed.  Expected: \n" + answer + "\nactual: \n" + actual);
         }
+        System.out.println("Total: " + tested + " correct: " + correct);
     }
 
     /** *************************************************************
