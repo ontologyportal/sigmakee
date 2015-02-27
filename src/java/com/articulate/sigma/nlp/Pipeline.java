@@ -19,6 +19,54 @@ import edu.stanford.nlp.parser.lexparser.*;
 public class Pipeline {
 
     /** ***************************************************************
+     * @return a List of Strings which are concatenated tokens forming
+     * a single named entity, with the suffix of the number of the
+     * head.  For example "I went to New York." would return
+     * "NewYork-4".
+     */
+    public static ArrayList<String> getFullNamedEntities (CoreMap sentence) {
+        
+        ArrayList<String> nes = new ArrayList<String>();
+        StringBuffer ne = new StringBuffer();
+        String neType = "";
+        int count = 1;
+        int wordCount = 0; // number of words packed into a given ne
+        for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+            // this is the text of the token
+            String word = token.get(TextAnnotation.class);
+            System.out.println(word);
+            // this is the NER label of the token
+            String type = token.get(NamedEntityTagAnnotation.class);  
+            if (neType == "") {
+                neType = type;
+                if (!type.equals("O"))
+                    ne.append(word);
+                wordCount = 1;
+            }
+            else if (!neType.equals(type)) {
+                if (!neType.equals("O"))
+                    nes.add(ne.toString() + "-" + (count-wordCount));
+                ne = new StringBuffer();
+                if (!type.equals("O")) {
+                    ne.append(word);
+                    wordCount = 1;
+                }
+                else
+                    wordCount = 0;
+                neType = type;
+            }
+            else {
+                if (!type.equals("O"))
+                    ne.append(word);
+                wordCount++;
+            }
+            System.out.println(word + "-" + count + "/" + type + "/" + neType + "/" + ne + "/" + wordCount);     
+            count++;
+        }   
+        return nes;
+    }
+    
+    /** ***************************************************************
      */
     public static void main(String[] args) {
 
@@ -63,6 +111,7 @@ public class Pipeline {
             SemanticGraph dependencies = (SemanticGraph) sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
             System.out.println(dependencies.toList());
             //System.out.println(dependencies.toPOSList());
+            System.out.println(getFullNamedEntities(sentence));
         }
 
         // This is the coreference link graph
