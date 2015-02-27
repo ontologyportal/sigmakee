@@ -208,34 +208,76 @@ public class FormulaPreprocessor {
      * literals, but for now it's just a hack to grab preconditions.
      */
     public HashMap<String, HashSet<String>> findExplicitTypes(Formula form) {
-        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
 
-        if (debug) System.out.println("INFO in FormulaPreprocessor.findExplicitTypes(): \n" + form);
+        HashMap<String,HashSet<String>> varExplicitTypes = new HashMap<String,HashSet<String>>();
 
-        Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-_]+)");
-        Matcher m = p.matcher(form.theFormula);
-        while (m.find()) {
-            String var = m.group(1);
-            String cl = m.group(2);
-            HashSet<String> hs = new HashSet<String>();
-            if (result.containsKey(var))
-                hs = result.get(var);
-            hs.add(cl);
-            result.put(var, hs);
+        findExplicitTypesRecurse(form, varExplicitTypes, false);
+        return varExplicitTypes;
+    }
+
+    /*****************************************************************
+     * Recursively collect the types of any variables with an instance or subclass expression
+     *
+     * @param form The formula
+     *
+     * @param varExplicitTypes A set of explicit types for each variable
+     *
+     * @param isNegativeLiteral True if form is negative literal, and do not add the explicit type
+     * to the variable. For example, form = (not (foo1 ?X Human)) and isNegativeLiteral == true,
+     * then Human will not be added as the explicit type for ?X.
+     */
+    public static void findExplicitTypesRecurse(Formula form, HashMap<String,HashSet<String>> varExplicitTypes, boolean isNegativeLiteral) {
+
+        if (form == null || StringUtil.emptyString(form.theFormula) || form.empty())
+            return;
+
+        String carstr = form.car();
+
+        if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
+            if (carstr.equals(form.EQUANT) || carstr.equals(form.UQUANT)) {
+                for (int i = 2 ; i < form.listLength(); i++)  // (exists (?X ?Y) (foo1 ?X ?Y)), recurse from the second argument
+                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), varExplicitTypes, false);
+            }
+            else if (carstr.equals(form.NOT)) {
+                for (int i = 1; i < form.listLength(); i++)   // (not (foo1 ?X ?Human)), set isNegativeLiteral = true, and recurse from the first argument
+                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), varExplicitTypes, true);
+            }
+            else {
+                for (int i = 1; i < form.listLength(); i++)   // eg. (and (foo1 ?X ?Y) (foo2 ?X ?Z)), recurse from the first argument
+                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), varExplicitTypes, false);
+            }
         }
+        else if (form.isSimpleClause()) {
+            if (isNegativeLiteral == true)  // If form is negative literal, do not add explicit type for the variable
+                return;
+            Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-_]+)");
+            Matcher m = p.matcher(form.theFormula);
+            while (m.find()) {
+                String var = m.group(1);
+                String cl = m.group(2);
+                HashSet<String> hs = new HashSet<String>();
+                if (varExplicitTypes.containsKey(var))
+                    hs = varExplicitTypes.get(var);
+                hs.add(cl);
+                varExplicitTypes.put(var, hs);
+            }
 
-        p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-]+)");
-        m = p.matcher(form.theFormula);
-        while (m.find()) {
-            String var = m.group(1);
-            String cl = m.group(2);
-            HashSet<String> hs = new HashSet<String>();
-            if (result.containsKey(var))
-                hs = result.get(var);
-            hs.add(cl + "+");
-            result.put(var, hs);
+            p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9]+) ([a-zA-Z0-9\\-]+)");
+            m = p.matcher(form.theFormula);
+            while (m.find()) {
+                String var = m.group(1);
+                String cl = m.group(2);
+                HashSet<String> hs = new HashSet<String>();
+                if (varExplicitTypes.containsKey(var))
+                    hs = varExplicitTypes.get(var);
+                hs.add(cl + "+");
+                varExplicitTypes.put(var, hs);
+            }
         }
-        return result;
+        else {
+            findExplicitTypesRecurse(form.carAsFormula(), varExplicitTypes, false);
+            findExplicitTypesRecurse(form.cdrAsFormula(), varExplicitTypes, false);
+        }
     }
 
     /** ***************************************************************
