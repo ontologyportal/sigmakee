@@ -116,7 +116,7 @@ public class LanguageFormatter {
                 String informalNLG = theStack.doStatementLevelNatlLanguageGeneration();
                 if (! informalNLG.isEmpty())    {
                     // Resolve variables.
-                    informalNLG = LanguageFormatter.variableReplace(informalNLG, variableToInstanceMap, Maps.newHashMap(), kb, language);
+                    informalNLG = LanguageFormatter.variableReplace(informalNLG, variableToInstanceMap, Maps.<String, HashSet<String>>newHashMap(), kb, language);
                     template = informalNLG;
                 }
             }

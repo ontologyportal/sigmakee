@@ -1169,8 +1169,7 @@ public class Formula implements Comparable {
             return null;
         }
 
-        if(!head1.theFormula.equals("equal") && !Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
-//        if(!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
+        if(!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
             //non commutative relation; comparing parameters in order
             List<Set<VariableMapping>> runningMaps = headMaps;
             for(int i = 0; i < args1.size(); i++) {

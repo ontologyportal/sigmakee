@@ -195,7 +195,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     @Test
     public void testUnifyWithMiscPredicates() {
 
-        String s1 = "(=> (and (instance ?X4 Dog) (instance ?X5 Cat)) (equal ?X5 ?X4))";
+        String s1 = "(=> (and (instance ?X4 Dog) (instance ?X5 Cat)) (equal ?X4 ?X5))";
         Formula f1 = new Formula();
         f1.read(s1);
 
