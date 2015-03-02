@@ -36,7 +36,7 @@ public class SigmaMockTestBase {
 
     private static final ImmutableList<String> RECOGNIZED_CASE_ROLES = ImmutableList.of(
             "agent",
-            "benefactive",
+     //       "benefactive",
             "destination",
             "experiencer",
             "goal",

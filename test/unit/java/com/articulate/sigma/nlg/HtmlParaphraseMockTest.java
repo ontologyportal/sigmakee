@@ -139,7 +139,7 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                    (agent ?event ?he)\n" +
                 "                    (destination ?event Sudan)))";
 
-        String expectedResult = "there exist an agent and a process such that the process is an instance of Transportation and the agent is an instance of human and the agent is an agent of the process and the process ends at Sudan";
+        String expectedResult = "a human performs a transportation to Sudan";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");

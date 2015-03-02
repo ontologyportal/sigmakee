@@ -217,9 +217,7 @@ public class LanguageFormatter {
         // PredicateFn.
         String pred = f.car();
 
-        if (kb.kbCache.isInstanceOf(pred, "CaseRole") && SumoProcessCollector.isKnownRole(pred)) {
-            handleCaseRole(f, pred);
-        }
+        handleCaseRole(f, pred);
 
         // Mark the predicate as processed.
         // FIXME: handle other predicates here: located, orientation, etc.
@@ -291,7 +289,7 @@ public class LanguageFormatter {
      * @param caseRole
      */
     private void handleCaseRole(Formula formula, String caseRole) {
-        if(kb.kbCache.isInstanceOf(caseRole, "CaseRole") && SumoProcessCollector.isKnownRole(caseRole)) {
+       if(kb.kbCache.isInstanceOf(caseRole, "CaseRole") && SumoProcessCollector.isKnownRole(caseRole)) {
             try {
                 if (!theStack.isEmpty()) {
                     String caseArgument = formula.cadr() + " " + formula.caddr();
@@ -977,7 +975,7 @@ public class LanguageFormatter {
                 "       (names ?H \"John\")\n" +
                 "       (instance ?Car Automobile)\n" +
                 "       (agent ?D ?H)\n" +
-                "       (instrument ?D ?Car)))";
+                "       (patient ?D ?Car)))";
         f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.theFormula);
@@ -993,7 +991,7 @@ public class LanguageFormatter {
                 "       (instance ?A Airport)\n" +
                 "       (agent ?D ?H)\n" +
                 "       (destination ?D ?A)\n" +
-                "       (instrument ?D ?C)))";
+                "       (patient ?D ?C)))";
         f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.theFormula);

@@ -14,7 +14,7 @@ import java.util.Set;
  */
 public class SumoProcessCollector {
     // FIXME: Don't list each CaseRole--isKnownRole( ) should use subrelation ("(subrelation plaintiff agent)").
-    private static final Set<String> knownRoles = Sets.newHashSet("agent", "plaintiff", "patient");
+    private static final Set<String> knownRoles = Sets.newHashSet("agent", "plaintiff", "patient", "destination", "instrument");
 
     private String name;
     public String getName() {
@@ -25,7 +25,7 @@ public class SumoProcessCollector {
     }
 
     // Use of TreeMultimap ensures iteration is predictable.
-    private Multimap<String, String> roles = TreeMultimap.create();
+    private final Multimap<String, String> roles = TreeMultimap.create();
 
     private KB kb;
 
@@ -161,11 +161,10 @@ public class SumoProcessCollector {
             return "";
         }
 
-        String cleanedStr = (formulateNaturalSubject() + " " + formulateNaturalVerb() + " " + formulateNaturalDirectObject()).trim();
+        String cleanedStr = (formulateNaturalSubject() + " " + formulateNaturalVerb() + " " + formulateNaturalDirectObject() + " " + formulateNaturalIndirectObject()).trim();
 
         return cleanedStr;
     }
-
 
     /**************************************************************************************************************
      * Verify that this process is in a state that can be translated into natural language.
@@ -273,6 +272,25 @@ public class SumoProcessCollector {
         // FIXME: If empty, find some alternate for the dir obj.
         return formulateNaturalCaseRoleNouns("patient");
     }
+
+    /**************************************************************************************************************
+     * Put the "direct object" of this process into natural language.
+     * @return
+     */
+    private String formulateNaturalIndirectObject() {
+        StringBuilder indirObj = new StringBuilder();
+        String destinationObj = formulateNaturalCaseRoleNouns("destination");
+        if (! destinationObj.isEmpty()) {
+            indirObj.append("to ").append(destinationObj).append(" ");
+        }
+        String instrumentObj = formulateNaturalCaseRoleNouns("instrument");
+        if (! instrumentObj.isEmpty()) {
+            return "with " + instrumentObj;
+        }
+        String retVal = indirObj.toString().replaceAll("\\s+", " ");
+        return retVal;
+    }
+
 
     /**************************************************************************************************************
      * Put the subject of this process into natural language.
