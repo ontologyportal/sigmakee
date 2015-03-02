@@ -295,7 +295,7 @@ public class Graph {
      * @param relation the binary relation that is used to forms the arcs
      *                 in the graph.
      */
-    public boolean createDotGraph(KB kb, String term, String relation, String fname) throws IOException {
+    public boolean createDotGraph(KB kb, String term, String relation, int above, int below, String fname) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
@@ -308,9 +308,9 @@ public class Graph {
             HashSet<String> start = new HashSet<String>();
             HashSet<String> checked = new HashSet<String>();
             start.add(term);
-            createDotGraphBody(kb,start,checked,relation,true,result);
+            result = createDotGraphBody(kb,start,checked,relation,above,below,true);
             start.add(term);
-            createDotGraphBody(kb,start,checked,relation,false,result);
+            result.addAll(createDotGraphBody(kb,start,checked,relation,above,below,false));
             pw.println("digraph G {");
             pw.println("  rankdir=LR");
             Iterator<String> it = result.iterator();
@@ -342,9 +342,21 @@ public class Graph {
     /** *************************************************************
      * The main body for createDotGraph().
      */
-    private void createDotGraphBody(KB kb, HashSet<String> startSet, HashSet<String> checkedSet, 
-                                   String relation, boolean upSearch, HashSet<String> result) {
+    private HashSet<String> createDotGraphBody(KB kb, HashSet<String> startSet, HashSet<String> checkedSet, 
+                                   String relation, int above, int below, boolean upSearch) {
 
+        HashSet<String> result = new HashSet<String>();
+        HashSet<String> newStartSet = new HashSet<String>();
+        newStartSet.addAll(startSet);
+        
+        if (upSearch) {
+            above--;
+            if (above < 0) return result;
+        }
+        else {
+            below--;
+            if (below < 0) return result;
+        }
         while (startSet.size() > 0) {
             Iterator<String> it = startSet.iterator();
             String term = (String) it.next();
@@ -360,18 +372,23 @@ public class Graph {
             
             for (int i = 0; i < stmts.size(); i++) {
                 Formula f = stmts.get(i);
+                if (f.isCached())
+                    continue;
                 String parent = f.getArgument(2); 
                 String child = f.getArgument(1);                      
                 String s = "  \"" + parent + "\" -> \"" + child + "\";";
                 result.add(s);
                 checkedSet.add(term);
-                if (upSearch)
-                    startSet.add(parent);
-                else
-                    startSet.add(child);                
-                createDotGraphBody(kb,startSet,checkedSet,relation,upSearch,result);
+                if (upSearch) {
+                    newStartSet.add(parent);
+                }
+                else {
+                    newStartSet.add(child);
+                }                
+                result.addAll(createDotGraphBody(kb,newStartSet,checkedSet,relation,above,below,upSearch));
             } 
         }
+        return result;
     }
 
     /** ***************************************************************
@@ -381,14 +398,22 @@ public class Graph {
 
         try {
             KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            Graph g = new Graph();
+            String start = "Process";
+            String relation = "subclass";
+            HashSet<String> result = new HashSet<String>();
+            HashSet<String> checked = new HashSet<String>();
+            HashSet<String> startSet = new HashSet<String>();
+            startSet.add(start);
+            result = g.createDotGraphBody(kb,startSet,checked,relation,0,2,false);
+            System.out.println(result);
+            //g.createDotGraph(kb, "Process", "subclass", 2,2, "graph.txt");
         } 
         catch (Exception ex ) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
 
-        Graph g = new Graph();
-        g.createBoundedSizeGraph(kb, "Process", "subclass", 50, "  ", "EnglishLanguage");
         /*
         Graph g = new Graph();
         HashSet result = g.createDotGraph(kb,"Entity","subclass");
