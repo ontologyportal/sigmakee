@@ -132,17 +132,20 @@ public class KBmanager {
             preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());  
             preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
             
+            File graphVizDir = new File("/usr/bin");
+            preferences.put("graphVizDir", graphVizDir.getCanonicalPath());
+          
             File graphDir = new File(tomcatRootDir, "webapps" + sep + "sigma" + sep + "graph");
             graphDir.mkdir();
             preferences.put("graphDir", graphDir.getCanonicalPath());
-          
+            
             // There is no foolproof way to determine the actual
             // inferenceEngine path without asking the user.  But we
             // can make an educated guess.
             String _OS = System.getProperty("os.name");
-            String ieExec = "kif-linux";
+            String ieExec = "e_ltb_runner";
             if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*"))
-                ieExec = "kif.exe";
+                ieExec = "e_ltb_runner.exe";
             File ieDirFile = new File(baseDir, "inference");
             File ieExecFile = (ieDirFile.isDirectory()
                                ? new File(ieDirFile, ieExec)
