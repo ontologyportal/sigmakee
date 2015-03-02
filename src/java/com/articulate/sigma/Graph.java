@@ -50,8 +50,8 @@ public class Graph {
     }
 
     /** *************************************************************
-     *  Show a count of the number of "children" which consists of
-     *  instance, subclass, subrelation and subAttribute links
+     *  @return in a String a count of the number of "children" which consists of
+     *  instance, subclass, subrelation and subAttribute links.
      */
     private String generateChildrenColumn(KB kb, String term) {
 
@@ -75,7 +75,7 @@ public class Graph {
     }
 
     /** *************************************************************
-     *  Create a link from the term to the graph page for the term,
+     *  @return a String URL link from the term to the graph page for the term,
      *  given the href input that already includes the kb and lang
      *  parameters.
      */
@@ -86,6 +86,8 @@ public class Graph {
     }
 
     /** *************************************************************
+     * @return an HTML-formatted String consisting of the first 100 
+     * characters of the documentation string for the term parameter
      */
     private String generateDocumentationColumn(KB kb, String term, String href, String language) {
 
@@ -106,7 +108,7 @@ public class Graph {
     }
 
     /** *************************************************************
-     * Count the number of elements in columnList with the value
+     * @return a count of the number of elements in columnList with the value
      * "yes".
      */
     public int columnCount() {
@@ -123,7 +125,7 @@ public class Graph {
     }
 
     /** *************************************************************
-     * Create a <table> header that shows each of the columns to be
+     * @return in a String a <table> header that shows each of the columns to be
      * displayed in the HTML-based graph.
      */
     private String createColumnHeader() {
@@ -142,7 +144,7 @@ public class Graph {
     }
 
     /** *************************************************************
-     * Create a <table> header that shows each of the columns to be
+     * @return in a String a <table> header that shows each of the columns to be
      * displayed in the HTML-based graph.
      */
     private String createGraphEntry(KB kb, String prefix, String kbHref, String term, String language) {
@@ -172,7 +174,7 @@ public class Graph {
      * Create a graph of a bounded size by incrementing the number of
      * levels above and below until the limit is reached or there are
      * no more levels in the knowledge base from the given term and 
-     * relation.
+     * relation. creatGraphBody() does most of the work.
      */
     public ArrayList<String> createBoundedSizeGraph(KB kb, String term, String relation, 
                                         int size, String indentChars, String language) {
@@ -198,7 +200,7 @@ public class Graph {
     /** *************************************************************
      * Create an ArrayList with a set of terms comprising a hierarchy
      * Each term String will be prefixed with an appropriate number of
-     * indentChars. creatGraphBody() does most of the work.
+     * indentChars. @see creatGraphBody() does most of the work.
      *
      * @param kb the knowledge base being graphed
      * @param term the term in the KB being graphed
@@ -224,7 +226,7 @@ public class Graph {
     }
 
     /** *************************************************************
-     * The main body for createGraph(). Creates an indented,
+     * The main body for @see createGraph(). Creates an indented,
      * HTML-formatted display of terms.
      * @param check collects all the terms added to the graph so
      *              far, which is used to prevent cycles
@@ -298,6 +300,7 @@ public class Graph {
         FileWriter fw = null;
         PrintWriter pw = null; 
         String filename = KBmanager.getMgr().getPref("graphDir") + File.separator + fname;
+        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
         try {
             fw = new FileWriter(filename + ".dot");
             pw = new PrintWriter(fw);
@@ -319,7 +322,7 @@ public class Graph {
             pw.close();
             fw.close();
             
-            String command = "dot " + filename + ".dot -Tgif";            
+            String command = graphVizDir + File.separator + "dot " + filename + ".dot -Tgif";            
             Process proc = Runtime.getRuntime().exec(command);
             BufferedInputStream img = new BufferedInputStream(proc.getInputStream());            
             RenderedImage image = ImageIO.read(img);            
@@ -337,7 +340,7 @@ public class Graph {
     }
 
     /** *************************************************************
-     * The main body for createGraph().
+     * The main body for createDotGraph().
      */
     private void createDotGraphBody(KB kb, HashSet<String> startSet, HashSet<String> checkedSet, 
                                    String relation, boolean upSearch, HashSet<String> result) {
