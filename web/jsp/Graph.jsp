@@ -127,7 +127,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
    			  if (term != null && relation != null && kb != null && userRole.equalsIgnoreCase("administrator")) {
    			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
    			      try {
-   			          graphAvailable = g.createDotGraph(kb, term, relation, fname); 
+   			          graphAvailable = g.createDotGraph(kb, term, relation, Integer.parseInt(up),Integer.parseInt(down), fname); 
    			      }
    			      catch (Exception ex) {
    			          graphAvailable = false;
