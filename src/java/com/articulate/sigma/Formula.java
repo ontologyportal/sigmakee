@@ -1855,6 +1855,13 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * Test whether the Formula is automatically created by caching
+     */
+    public boolean isCached() {
+        return sourceFile.contains(KB._cacheFileSuffix);
+    }
+
+    /** ***************************************************************
      * Returns true only if this Formula, explicitly quantified or
      * not, starts with "=>" or "<=>", else returns false.  It would
      * be better to test for the occurrence of at least one positive
