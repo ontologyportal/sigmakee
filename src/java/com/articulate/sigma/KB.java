@@ -2888,248 +2888,12 @@ public class KB {
         return newTreeSet;
     }
 
-    /** *************************************************************
-     *  Turn SUMO into a semantic network by extracting all ground
-     *  binary relations, turning all higher arity relations into a
-     *  set of binary relations, and making all term co-occurring in
-     *  an axiom to be related with a general "link" relation. Also
-     *  use the subclass hierarchy to relate all parents of terms in
-     *  domain statements, through the relation itself but with a
-     *  suffix designating it as a separate relation. Convert SUMO
-     *  terms to WordNet synsets.
+    /** ***************************************************************
+     * @return
+     * a defensive copy of loadFormatMapsAttempted.
      */
-    private void generateSemanticNetwork() {
-
-        TreeSet resultSet = new TreeSet();
-        Iterator it = formulaMap.keySet().iterator();
-        while (it.hasNext()) {          // look at all formulas in the KB
-            String formula = (String) it.next();
-            Formula f = new Formula();
-            f.read(formula);
-            if (f.isRule() || f.car().equals("instance") || f.car().equals("subclass")) 
-                continue;            
-            StreamTokenizer_s st = new StreamTokenizer_s(new StringReader(formula));
-            KIF.setupStreamTokenizer(st);
-            ArrayList al = new ArrayList();
-            boolean firstToken = true;
-            String predicate = "link";
-            try {
-                while (st.nextToken() != StreamTokenizer_s.TT_EOF) {
-                    if (st.ttype == StreamTokenizer_s.TT_WORD) {
-                        String token = st.sval;
-                        if (firstToken && !Formula.isLogicalOperator(token))
-                            predicate = token;
-                        if (Formula.isTerm(token) && !Formula.isLogicalOperator(token) && !firstToken)
-                            al.add(token);
-                        if (firstToken)
-                            firstToken = false;
-                    }
-                }
-            } 
-            catch (IOException ioe) {
-            	System.out.println("INFO in KB.generateSemanticNetwork(): Error parsing: " + formula);
-            }
-            if (al != null && al.size() > 1 && !predicate.equals("link") &&
-                !predicate.equals("instance") && !predicate.equals("subclass") &&
-                !predicate.equals("domain")) {
-                for (int i = 0; i < al.size(); i++) {
-                    String firstTerm = (String) al.get(i);
-                    for (int j = i; j < al.size(); j++) {
-                        String otherTerm = (String) al.get(j);
-                        if (!firstTerm.equals(otherTerm)) {
-                            ArrayList synsets1 = (ArrayList) WordNet.wn.SUMOHash.get(firstTerm);
-                            ArrayList synsets2 = (ArrayList) WordNet.wn.SUMOHash.get(otherTerm);
-                            if (synsets1 != null & synsets2 != null) {
-                                for (int k = 0; k < synsets1.size(); k++) {
-                                    String firstSynset = (String) synsets1.get(k);
-                                    if (firstSynset.endsWith("=")) {
-                                        for (int l = 0; l < synsets2.size(); l++) {
-                                            String secondSynset = (String) synsets2.get(l);
-                                            if (secondSynset.endsWith("=")) {
-                                                char firstLetter = WordNetUtilities.posNumberToLetter(firstSynset.charAt(0));
-                                                char secondLetter = WordNetUtilities.posNumberToLetter(secondSynset.charAt(0));                                                
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /** *************************************************************
-     *  Find all cases of where (instance A B) (instance B C) as
-     *  well as all cases of where (instance A B) (instance B C)
-     *  (instance C D).  Report true if any such cases are found,
-     *  false otherwise.
-     */
-    public boolean instanceOfInstanceP() {
-
-        boolean result = false;
-        Iterator it = terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
-            ArrayList<Formula> al = askWithRestriction(0,"instance",1,term);
-            for (int i = 0; i < al.size(); i++) {
-                Formula f = (Formula) al.get(i);
-                String term2 = f.getArgument(2);
-                if (Formula.atom(term2)) {
-                    ArrayList<Formula> al2 = askWithRestriction(0,"instance",1,term2);
-                    if (al2.size() > 0)
-                        result = true;
-                    for (int j = 0; j < al2.size(); j++) {
-                        Formula f2 = (Formula) al2.get(j);
-                        String term3 = f2.getArgument(2);
-                        if (Formula.atom(term3)) {
-                            ArrayList<Formula> al3 = askWithRestriction(0,"instance",1,term3);
-                            for (int k = 0; k < al3.size(); k++) {
-                                Formula f3 = (Formula) al3.get(k);
-                                String term4 = f3.getArgument(2);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    /** *************************************************************
-     */
-    public void writeDisplayText(String displayFormatPredicate, String displayTermPredicate, 
-            String language, String fname) throws IOException {
-        
-        PrintWriter pr = null;
-        try {
-            pr = new PrintWriter(new FileWriter(fname, false));            
-            //get all formulas that have the display predicate as the predicate           
-            ArrayList<Formula> formats = this.askWithRestriction(0, displayFormatPredicate, 1, language);
-            ArrayList<Formula> terms = this.askWithRestriction(0, displayTermPredicate, 1, language);            
-            HashMap<String,String> termMap = new HashMap<String,String>();            
-            for (int i = 0; i < terms.size(); i++) {
-                Formula term = terms.get(i);                
-                String key = term.getArgument(2);
-                String value = term.getArgument(3);                
-                if (key != "" && value != "") 
-                    termMap.put(key, value);                
-            }            
-            for (int i = 0; i < formats.size(); i++) {
-                Formula format = formats.get(i);                
-                // This is the current predicate whose format we are keeping track of. 
-                String key = format.getArgument(2);
-                String value = format.getArgument(3);                
-                if (key != "" && value != "") {                
-                    // This basically gets all statements that use the current predicate in the 0 position
-                    ArrayList<Formula> predInstances = this.ask("arg", 0, key);                    
-                    for(int j=0; j < predInstances.size(); j++) {
-                        StringBuilder sb = new StringBuilder();
-                        String displayText = String.copyValueOf(value.toCharArray());                        
-                        Formula f = predInstances.get(j);
-                        ArrayList arguments = f.argumentsToArrayList(0);      
-                        sb.append(key);
-                        sb.append(",");           
-                        // check if each of the arguments for the statements is to be replaced in its
-                        // format statement.
-                        for (int k = 1; k < arguments.size(); k++) {
-                            String argName = f.getArgument(k);
-                            String term = (String) termMap.get(argName);
-                            term = StringUtil.removeEnclosingQuotes(term);
-                            String argNum = "%" + String.valueOf(k);
-                        
-                            // also, add the SUMO Concept that is replaced in the format
-                            if (displayText.contains(argNum)) {
-                                sb.append(argName);
-                                sb.append(",");
-                                displayText = displayText.replace(argNum, term);                                
-                            }                                                                
-                        }                                             
-                        sb.append(displayText);                                               
-                        // resulting line will be something like:
-                        // <predicate>, <argument_0>, ..., <argument_n>, <display_text>
-                        // note: argument_0 to argument_n is only placed there if their 
-                        // termFormat is used in the display_text.
-                        pr.println(sb.toString());                        
-                    }                    
-                }
-            }            
-            
-        }
-        catch (java.io.IOException e) {
-        	System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-        catch (Exception e) {
-        	System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-        finally {
-            if (pr != null) 
-                pr.close();            
-        }
-    }
-
-    /** *************************************************************
-     */
-    public static void generateTPTPTestAssertions() {
-        
-        try {
-            int counter = 0;
-            System.out.println("INFO in KB.generateTPTPTestAssertions()");
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
-            Iterator<String> it = kb.terms.iterator();
-            while (it.hasNext()) {
-                String term = it.next();
-                if (Character.isLowerCase(term.charAt(0)) && kb.kbCache.valences.get(term) <= 2) {
-                    /*
-                    ArrayList<Formula> forms = kb.askWithRestriction(0,"domain",1,term);
-                    for (int i = 0; i < forms.size(); i++) {
-                        String argnum = forms.get(i).getArgument(2);
-                        String type = forms.get(i).getArgument(3);
-                        if (argnum.equals("1"))
-                            System.out.print("(instance Foo " + type + "),");
-                        if (argnum.equals("2"))
-                            System.out.print("(instance Bar " + type + ")");
-                    }
-                    */
-                    String argType1 = kb.getArgType(term,1);
-                    String argType2 = kb.getArgType(term,2);
-                    if (argType1 != null && argType2 != null) {
-                        System.out.print("fof(local_" + counter++ + ",axiom,(s__" + term + "(s__Foo,s__Bar))).|");
-                        System.out.print("fof(local_" + counter++ + ",axiom,(s__instance(s__Foo,s__" + argType1 + "))).|");
-                        System.out.println("fof(local_" + counter++ + ",axiom,(s__instance(s__Bar,s__" + argType2 + "))).");
-                    }                    
-                }
-            }
-        } 
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-    
-    /** *************************************************************
-     * Note this simply assumes that initial lower case terms are relations.
-     */
-    public static void generateRelationList() {
-        
-        try {
-            System.out.println("INFO in KB.generateRelationList()");
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println("INFO in KB.generateRelationList(): printing predicates");
-            Iterator<String> it = kb.terms.iterator();
-            while (it.hasNext()) {
-                String term = it.next();
-                if (Character.isLowerCase(term.charAt(0)))
-                    System.out.println(term);
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+    public ArrayList<String> getLoadFormatMapsAttempted() {
+        return Lists.newArrayList(loadFormatMapsAttempted);
     }
     
     /** *************************************************************
@@ -3138,15 +2902,15 @@ public class KB {
 
         //generateTPTPTestAssertions();       
         // testTPTP(args);
-    	try {
-    		KBmanager.getMgr().initializeOnce();
-    		KB kb = KBmanager.getMgr().getKB("SUMO");
-    		//kb.writeTerms();
-    		System.out.println("KB.main(): " + kb.isChildOf("Africa", "Region"));
-    	} 
-    	catch (Exception ioe ) {
-    		System.out.println(ioe.getMessage());
-    	}
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            //kb.writeTerms();
+            System.out.println("KB.main(): " + kb.isChildOf("Africa", "Region"));
+        } 
+        catch (Exception ioe ) {
+            System.out.println(ioe.getMessage());
+        }
 
         //kb.generateSemanticNetwork();
         //kb.generateRandomProof();
@@ -3158,15 +2922,6 @@ public class KB {
         f.read(foo);
         System.out.println(f.getArgument(2).equals("\"test\""));
     */
-    }
-
-    /** ***************************************************************
-     *
-     * @return
-     * a defensive copy of loadFormatMapsAttempted.
-     */
-    public ArrayList<String> getLoadFormatMapsAttempted() {
-        return Lists.newArrayList(loadFormatMapsAttempted);
     }
 
 }
