@@ -195,7 +195,7 @@ public class TFIDF {
         File swFile = null;
         String filename = "";
         try {
-            swFile = new File("stopwords.txt");
+            swFile = new File("textfiles/stopwords.txt");
             if (swFile == null) {
                 System.out.println("Error in readStopWords(): The stopwords file does not exist in " + filename);
                 return;
@@ -523,7 +523,7 @@ public class TFIDF {
     public static Collection<Object[]> prepare() {
 
         ArrayList<Object[]> result = new ArrayList<Object[]>();
-        File jsonTestFile = new File("test.json");
+        File jsonTestFile = new File("IRtests.json");
         //System.out.println("INFO in TFIDF.prepare(): reading: " + jsonTestFile);
         String filename = jsonTestFile.getAbsolutePath();
         JSONParser parser = new JSONParser();  
@@ -587,7 +587,7 @@ public class TFIDF {
             else {
                 cb.readStopWords();
                 //System.out.println("Read file: " + fname);
-                int linecount = cb.readFile(fname);
+                int linecount = cb.readFile("textfiles" + File.separator + fname);
     
                 //System.out.println("Caclulate IDF");
                 cb.calcIDF(linecount);
@@ -596,7 +596,9 @@ public class TFIDF {
             }
             String actual = cb.matchInput(query);
             tested++;
-            if (actual.equals(answer) || answer.indexOf(actual) > -1 || actual.indexOf(answer) > -1)
+            Pattern p = Pattern.compile(answer);
+            Matcher m = p.matcher(actual);
+            if (m.find())
                 correct++;
             else
                 System.out.println("Test " + tested + " Failed.  Expected: \n" + answer + "\nactual: \n" + actual);
