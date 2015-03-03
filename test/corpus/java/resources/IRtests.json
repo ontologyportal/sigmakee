@@ -702,7 +702,7 @@
   {
     "file":"IP.txt",
     "query":"What was IP historically?",
-    "answer":"connectionless datagram service"
+    "answer":"(connectionless datagram service)|(primary protocol in the Internet)"
   },
   {
     "file":"IP.txt",
@@ -772,7 +772,7 @@
   {
     "file":"Research.txt",
     "query":"Why do people routinely research different online websites?",
-    "answer":"To find the best place to buy goods or services people want"
+    "answer":"find the best place to buy goods or services people want"
   },
   {
     "file":"Research.txt",
@@ -787,7 +787,7 @@
   {
     "file":"Research.txt",
     "query":"Why do undergraduate students research the Internet?",
-    "answer":"To find the information students need to complete assigned projects or term papers"
+    "answer":"find the information [^ ]+ need to complete assigned projects or term papers"
   },
   {
     "file":"Research.txt",
@@ -802,12 +802,12 @@
   {
     "file":"Research.txt",
     "query":"How is something categorized as scientific research?",
-    "answer":"none of the above can be considered'' scientific research'' unless none contributes to a body of science, and none follows the scientific method"
+    "answer":"none of the above can be considered .scientific research. unless none contributes to a body of science, and none follows the scientific method"
   },
   {
     "file":"Research.txt",
     "query":"How is something considered as scientific research?",
-    "answer":"none of the above can be considered'' scientific research'' unless none contributes to a body of science, and none follows the scientific method"
+    "answer":"none of the above can be considered .scientific research. unless none contributes to a body of science, and none follows the scientific method"
   },
   {
     "file":"Research.txt",
@@ -842,7 +842,7 @@
   {
     "file":"Research.txt",
     "query":"How is natural science classified?",
-    "answer":"Natural sciences can be further classified into physical sciences, earth sciences, life sciences, and others"
+    "answer":"(Natural science is the science of naturally occurring objects)|(Natural sciences can be further classified into physical sciences, earth sciences, life sciences, and others)"
   },
   {
     "file":"Research.txt",
@@ -997,7 +997,7 @@
   {
     "file":"DataMining.txt",
     "query":"What are some of the Data warehouse technologies?",
-    "answer":"a repository of multiple heterogeneous data sources organized under a unified schema at a single site in order to facilitate management decision making"
+    "answer":"data cleaning, data integration, and on-line analytical processing"
   },
   {
     "file":"DataMining.txt",
@@ -1012,7 +1012,7 @@
   {
     "file":"DataMining.txt",
     "query":"How can data tombs be turned into golden nuggets of knowledge?",
-    "answer":"the widening gap between data and information calls for a systematic development of data mining tools that will turn data tombs into \"golden nuggets\" of knowledge"
+    "answer":"the widening gap between data and information calls for a systematic development of data mining tools that will turn data tombs into .golden nuggets. of knowledge"
   },
   {
     "file":"DataMining.txt",
