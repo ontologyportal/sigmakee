@@ -1,0 +1,32 @@
+Data mining has attracted a great deal of attention in the information industry and in society as a whole in recent years, due to the wide availability of huge amounts of data and the imminent need for turning such data into useful information and knowledge.
+The information and knowledge gained can be used for applications ranging from market analysis, fraud detection, and customer retention, to production control and science exploration.
+Data mining can be viewed as a result of the natural evolution of information technology.
+The database system industry has witnessed an evolutionary path in the development of the following functionalities: data collection and database creation, data management (including data storage and retrieval, and database transaction processing), and advanced data analysis (involving data warehousing and data mining).
+For instance, the early development of data collection and database creation mechanisms served as a prerequisite for later development of effective mechanisms for data storage and retrieval, and query and transaction processing.
+With numerous database systems offering query and transaction processing as common practice, advanced data analysis has naturally become the next target.
+Since the 1960s, database and information technology has been evolving systematically from primitive file processing systems to sophisticated and powerful database systems.
+The research and development in database systems since the 1970s has progressed from early hierarchical and network database systems to the development of relational database systems, data modeling tools, and indexing and accessing methods.
+In addition, users gained convenient and flexible data access through query languages, user interfaces, optimized query processing, and transaction management.
+Efficient methods for on-line transaction processing (OLTP), where a query is viewed as a read-only transaction, have contributed substantially to the evolution and wide acceptance of relational technology as a major tool for efficient storage, retrieval, and management of large amounts of data.
+Database technology since the mid-1980s has been characterized by the popular adoption of relational technology and an upsurge of research and development activities on new and powerful database systems.
+These promote the development of advanced data models such as extended-relational, object-oriented, object-relational, and deductive models.
+Application-oriented database systems, including spatial, temporal, multimedia, active, stream, and sensor, and scientific and engineering databases, knowledge bases, and office information bases, have flourished.
+'Issues related to the distribution, diversification, and sharing of data have been studied extensively.
+Heterogeneous database systems and Internet-based global information systems such as the World Wide Web (WWW) have also emerged and play a vital role in the information industry.
+The steady and amazing progress of computer hardware technology in the past three decades has led to large supplies of powerful and affordable computers, data collection equipment, and storage media.
+This technology provides a great boost to the database and information industry, and makes a huge number of databases and information repositories available for transaction management, information retrieval, and data analysis.
+Data can now be stored in many different kinds of databases and information repositories.
+One data repository architecture that has emerged is the data warehouse, a repository of multiple heterogeneous data sources organized under a unified schema at a single site in order to facilitate management decision making.
+Data warehouse technology includes data cleaning, data integration, and on-line analytical processing (OLAP), that is, analysis techniques with functionalities such as summarization, consolidation, and aggregation as well as the ability to view information from different angles.
+Although OLAP tools support multidimensional analysis and decision making, additional data analysis tools are required for in-depth analysis, such as data classification, clustering, and the characterization of data changes over time.
+In addition, huge volumes of data can be accumulated beyond databases and data warehouses.
+Typical examples include the World Wide Web and data streams, where data flow in and out like streams, as in applications like video surveillance, telecommunication, and sensor networks.
+The effective and efficient analysis of data in such different forms becomes a challenging task.
+The abundance of data, coupled with the need for powerful data analysis tools, has been described as a data rich but information poor situation.
+The fast-growing, tremendous amount of data, collected and stored in large and numerous data repositories, has far exceeded our human ability for comprehension without powerful tools.
+As a result, data collected in large data repositories become “data tombs”—data archives that are seldom visited.
+Consequently, important decisions are often made based not on the information-rich data stored in data repositories, but rather on a decision maker’s intuition, simply because the decision maker does not have the tools to extract the valuable knowledge embedded in the vast amounts of data.
+In addition, consider expert system technologies, which typically rely on users or domain experts to manually input knowledge into knowledge bases.
+Unfortunately, this procedure is prone to biases and errors, and is extremely time-consuming and costly.
+Data mining tools perform data analysis and may uncover important data patterns, contributing greatly to business strategies, knowledge bases, and scientific and medical research.
+The widening gap between data and information calls for a systematic development of data mining tools that will turn data tombs into “golden nuggets” of knowledge.

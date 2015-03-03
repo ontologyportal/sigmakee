@@ -683,5 +683,745 @@
     "file":"Electrons.txt",
     "query":"Who gave electrons their name?",
     "answer":"British natural philosopher Richard Laming first hypothesized the concept of an indivisible quantity of electric charge to explain the chemical properties of atoms in 1838; Irish physicist George Johnstone Stoney named this charge 'electron' in 1891, and J. J. Thomson and his team of British physicists identified it as a particle in 1897"
+  },
+  {
+  "file":"IP.txt",
+  "query":"What is used to relay datagrams across networks?",
+  "answer":"Internet Protocol"
+},
+  {
+    "file":"IP.txt",
+    "query":"What does IP define?",
+    "answer":"(packet structures that encapsulate the data to be delivered)|(addressing methods that are used to label the datagram with source and destination information)"
+  },
+  {
+    "file":"IP.txt",
+    "query":"What are packet structures defined by?",
+    "answer":"(IP)|(Internet Protocol)"
+  },
+  {
+    "file":"IP.txt",
+    "query":"What was IP historically?",
+    "answer":"connectionless datagram service"
+  },
+  {
+    "file":"IP.txt",
+    "query":"What is the Internet protocol suite often referred to as?",
+    "answer":"TCP/IP"
+  },
+  {
+    "file":"IP.txt",
+    "query":"What was the first major version of IP?",
+    "answer":"(Internet Protocol Version 4)|(IPv4)"
+  },
+  {
+    "file":"IP.txt",
+    "query":"What is the successor of IPv4?",
+    "answer":"(Internet Protocol Version 6)|(IPv6)"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"Where was Arnold Schwarzenegger born?",
+    "answer":"Austria"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When did Arnold Schwarzenegger serve as Governor of California?",
+    "answer":"from 2003 until 2011"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When did Arnold win Mr. Universe?",
+    "answer":"age 20"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What was Arnold's breakthrough film?",
+    "answer":"Conan the Barbarian"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What did Arnold Schwarzenegger appear in that was a massive critical and box-office success?",
+    "answer":"The Terminator"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When did Schwarzenegger appear in The Terminator?",
+    "answer":"1984"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What successful films did Arnold Schwarzenegger appear in?",
+    "answer":"Commando|The Running Man|Predator|Twins|Total Recall|Kindergarten Cop|True Lies"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What is Arnold's nicknames?",
+    "answer":"Austrian Oak|Styrian Oak|Arnie|The Governator"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When was Schwarzenegger elected as Govenor?",
+    "answer":"October 7, 2003"
+  },
+  {
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When was Schwarzenegger re-elected?",
+    "answer":"November 7, 2006"
+  },
+  {
+    "file":"Research.txt",
+    "query":"Why do people routinely research different online websites?",
+    "answer":"To find the best place to buy goods or services people want"
+  },
+  {
+    "file":"Research.txt",
+    "query":"Where do people search to find the best place to buy goods or services they want ?",
+    "answer":"different online websites"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How do television channels do research?",
+    "answer":"Television news channels supposedly conduct research in the form of viewer polls on topics of public interest such as forthcoming elections or government-funded projects"
+  },
+  {
+    "file":"Research.txt",
+    "query":"Why do undergraduate students research the Internet?",
+    "answer":"To find the information students need to complete assigned projects or term papers"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How do businesses and consultants perform research?",
+    "answer":"businesses and consultants research different potential solutions to remedy organizational problems such as a supply chain bottleneck or to identify customer purchase patterns"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How do businesses and consultants remedy organizational problems?",
+    "answer":"businesses and consultants research different potential solutions to remedy organizational problems such as a supply chain bottleneck or to identify customer purchase patterns"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How is something categorized as scientific research?",
+    "answer":"none of the above can be considered'' scientific research'' unless none contributes to a body of science, and none follows the scientific method"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How is something considered as scientific research?",
+    "answer":"none of the above can be considered'' scientific research'' unless none contributes to a body of science, and none follows the scientific method"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is science?",
+    "answer":"a systematic and organized body of knowledge in any area of inquiry that is acquired using \"the scientific method\""
+  },
+  {
+    "file":"Research.txt",
+    "query":"What are the categories in science?",
+    "answer":"natural science and social science"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is science grouped into?",
+    "answer":"natural science and social science"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How is science grouped?",
+    "answer":"natural science and social science"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Natural science?",
+    "answer":"the science of naturally occurring objects or phenomena"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is social science?",
+    "answer":"the science of people or collections of people"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How is natural science classified?",
+    "answer":"Natural sciences can be further classified into physical sciences, earth sciences, life sciences, and others"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What are physical sciences?",
+    "answer":"disciplines such as physics, chemistry, and astronomy"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What are earth sciences?",
+    "answer":"consist of disciplines such as geology"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What are life sciences?",
+    "answer":"include disciplines such as biology which is the science of human bodies and botany which is the science of plants"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How is social science classified?",
+    "answer":"can be classified into disciplines such as psychology, sociology, and economics"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Physics?",
+    "answer":"The science of physical objects"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Chemistry?",
+    "answer":"The science of matter"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Astronomy?",
+    "answer":"the science of celestial objects"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Geology?",
+    "answer":"The science of the earth"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Biology?",
+    "answer":"the science of human bodies"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Botany?",
+    "answer":"The science of plants"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Psychology?",
+    "answer":"The science of human behaviors"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Sociology?",
+    "answer":"science of social groups"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is Economics?",
+    "answer":"science of firms, markets, and economies"
+  },
+  {
+    "file":"Research.txt",
+    "query":"How are natural sciences different from the social sciences?",
+    "answer":"(The natural sciences are very precise, accurate, deterministic, and independent of the person making the scientific observations)|(However, the same cannot be said for the social sciences, which tend to be less accurate, deterministic, or unambiguous)"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is the conclusion if two students conducting the same physics experiment obtain two different values of the physical properties?",
+    "answer":"one or both of those students must be in error"
+  },
+  {
+    "file":"Research.txt",
+    "query":"What is the conclusion if two students conducting social experiments obtain different values?",
+    "answer":"one or both of those students must be in error"
+  },
+  {
+    "file":"Research.txt",
+    "query":"Why do two students conducting the same physics experiment obtain two different values of the physical properties?",
+    "answer":"if two students conducting the same physics experiment obtain two different values of these physical properties, then it generally means that one or both of those students must be in error"
+  },
+  {
+    "file":"Research.txt",
+    "query":"Why do two students conducting the same social experiment obtain two different values?",
+    "answer":"one or both of those students must be in error"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What has attracted a great deal of attention in the information industry?",
+    "answer":"data mining"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"Why has data mining attracted a great deal of attention in the information industry?",
+    "answer":"the wide availability of huge amounts of data and the imminent need for turning such data into useful information and knowledge"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What is the information and knowledge gained used for?",
+    "answer":"the information and knowledge gained can be used for applications ranging from market analysis, fraud detection, and customer retention, to production control and science exploration"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What can be viewed as a result of the natural evolution of information technology?",
+    "answer":"Data mining"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What does data management include?",
+    "answer":"data storage and retrieval, and database transaction processing"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What does advanced data analysis involve?",
+    "answer":"(data warehousing and data mining)|(data mining tools perform data analysis and may uncover important data patterns, contributing greatly to business strategies, knowledge bases, and scientific and medical research)"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"How has database and information technology evolved systematically since the 1960’s?",
+    "answer":"from primitive file processing systems to sophisticated and powerful database systems"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"How has database and information technology evolved systematically?",
+    "answer":"from primitive file processing systems to sophisticated and powerful database systems"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"How did the users gain convenient and flexible data access?",
+    "answer":"through query languages, user interfaces, optimized query processing, and transaction management"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What are some of the Application-oriented database systems which have flourished?",
+    "answer":"spatial, temporal, multimedia, active, stream, and sensor, and scientific and engineering databases, knowledge bases, and office information bases"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"How is data stored?",
+    "answer":"in many different kinds of databases and information repositories"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What is a data warehouse?",
+    "answer":"(One data repository architecture that has emerged)|(data warehouse technology includes data cleaning, data integration, and on-line analytical processing \\(OLAP\\), that is, analysis techniques with functionalities such as summarization, consolidation, and aggregation as well as the ability to view information from different angles)"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What are some of the Data warehouse technologies?",
+    "answer":"a repository of multiple heterogeneous data sources organized under a unified schema at a single site in order to facilitate management decision making"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What is described as a data rich but information poor situation?",
+    "answer":"The abundance of data, coupled with the need for powerful data analysis tools"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What are data tombs?",
+    "answer":"datum archives"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"How can data tombs be turned into golden nuggets of knowledge?",
+    "answer":"the widening gap between data and information calls for a systematic development of data mining tools that will turn data tombs into \"golden nuggets\" of knowledge"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What will turn data tombs into golden nuggets of knowledge?",
+    "answer":"Data mining tools"
+  },
+  {
+    "file":"DataMining.txt",
+    "query":"What do data mining tools perform?",
+    "answer":"data analysis"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"Who is the Finance Minister of India?",
+    "answer":"Arun Jaitley"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"Who is the Finance Minister?",
+    "answer":"Aryn Jaitley"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"Who is Arun Jaitley?",
+    "answer":"Finance Minister"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What did Mr Jaitley say about the growth?",
+    "answer":"(growth will accelerate to between 8 and 8.5 percent in the fiscal year starting in April)|(A pace of 7.4 per cent is expected for the current year)"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What percent is expected for the current year?",
+    "answer":"7.4 percent"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"Who forecasted inflation at 5 percent by the end of the fiscal year ending March 2016?",
+    "answer":"Mr. Jaitley"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What percent of tax has the Reserve Bank of India targeted?",
+    "answer":"6 percent"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"How much was the annual inflation in January?",
+    "answer":"5.1 percent"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"How much % of tax will India reduce on business?",
+    "answer":"25 percent over four years from a current 30 percent"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"Which tax is abolished by the government?",
+    "answer":"the wealth tax"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What amount has the government added to boost the efficiency of MNREGA?",
+    "answer":"5,000 crores"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What is MNREGA?",
+    "answer":"MNREGA is the rural, job creation scheme"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What is the rural job creation scheme?",
+    "answer":"(India's costliest welfare programme)|(MNREGA)"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What is India's costliest welfare programme?",
+    "answer":"(the rural job creation scheme)|(MNREGA)"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"How much of increase does the budget show?",
+    "answer":"1"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"To which scheme has the government added 5,000 crores?",
+    "answer":"(MNREGA)|(the rural job creation scheme)|(India's costliest welfare programme)"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What has the minister proposed regarding increasing the service tax?",
+    "answer":"increasing the service tax rate and education cess to 14 percent from the current 12.36 percent"
+  },
+  {
+    "file":"GMFinanceMinister.txt",
+    "query":"What did the local companies hope for?",
+    "answer":"that the budget would reduce their tax liabilities"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is macroeconomics?",
+    "answer":"A branch of economics dealing with the performance, structure, behavior, and decision-making of an economy as a whole rather than individual markets"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What constitutes macroeconomics?",
+    "answer":"(A branch of economics dealing with the performance, structure, behavior, and decision-making of an economy as a whole rather than individual markets)|(This includes national, regional, and global economies)"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What are the 2 most general fields in economics?",
+    "answer":"With microeconomics, macroeconomics is one of the two most general fields in economics"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What do Macroeconomists study?",
+    "answer":"aggregated indicators such as GDP, unemployment rates, and price indexes to understand how the whole economy functions"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What do macroeconomists develop?",
+    "answer":"models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What sort of models do Macroeconomists develop?",
+    "answer":"Models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is microeconomics primarily focused on?",
+    "answer":"the actions of individual agents, such as firms and consumers, and how their behavior determines prices and quantities in specific markets"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What are Macroeconomic models and their forecasts used for?",
+    "answer":"to assist in the development and evaluation of economic policy"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What do Macroeconomic theories usually relate to?",
+    "answer":"the phenomena of output, unemployment, and inflation"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is national output?",
+    "answer":"the lowest amount of everything a country produces in a given time period"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What generates income?",
+    "answer":"Everything that is produced and sold"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"How is the Macroeconomic output usually measured?",
+    "answer":"(total income)|(the total value of final goods)|(Gross Domestic Product)"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is GDP?",
+    "answer":"Macroeconomic output is usually measured by Gross Domestic Product \\(GDP\\) or one of the other national accounts"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is Gross Domestic Product?",
+    "answer":"Macroeconomic output is usually measured by Gross Domestic Product \\(GDP\\) or one of the other national accounts"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What leads to increased economic output over time?",
+    "answer":"advances in technology, accumulation of machinery and other capital, and better education and human capital"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"How is the amount of unemployment in an economy is measured?",
+    "answer":"the unemployment rate"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"How is the labor force calculated?",
+    "answer":"workers actively looking for jobs|People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What constitutes of the labor force?",
+    "answer":"workers actively looking for jobs|People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is the classical unemployment theory?",
+    "answer":"unemployment occurs when wages are too high for employers to be willing to hire more workers"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What are the modern economic theories regarding unemployment?",
+    "answer":"that increased wages actually decrease unemployment by creating more consumer demand"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"How does frictional unemployment occur?",
+    "answer":"when appropriate job vacancies exist for a worker, but the length of time needed to search for and find the job leads to a period of unemployment"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"How does cyclical unemployment occur?",
+    "answer":"when growth stagnates"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is Okun's law?",
+    "answer":"a 3% increase in output would lead to a 1% decrease in unemployment"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What does Okun’s law represent?",
+    "answer":" the empirical relationship between unemployment and economic growth"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is inflation?",
+    "answer":"A general price increase across the entire economy"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"What is deflation?",
+    "answer":"when prices decrease"
+  },
+  {
+    "file":"Macroeconomics.txt",
+    "query":"How does inflation occur?",
+    "answer":"when an economy becomes overheated and grows too quickly"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"What are technology shocks?",
+    "answer":"Events in a macroeconomic model, that change the production function, when there is a sudden change in technology to either benefit or worsen economic activity"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"What changes the production function?",
+    "answer":"Technology shocks"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"How is shock defined?",
+    "answer":"As a sudden change in economic terms"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"How is the term shock defined?",
+    "answer":"As a sudden change in economic terms"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"How is shock modeled?",
+    "answer":"with an aggregate production function that has a scaling factor"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"What happens when there is a sudden change in technology to either benefit or worsen economic activity?",
+    "answer":"technology shock"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"What does technology shock have a big effect on?",
+    "answer":"industry or firm's productivity"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"What is a positive technology shock?",
+    "answer":"increasing the output for a given set of inputs"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"What is a negative technology shock?",
+    "answer":"decreasing the output for a given set of inputs"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"Are positive shocks more common than negative technology shocks?",
+    "answer":"negative shocks are much less common than positive shocks"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"Are negative shocks more common than positive technology shocks?",
+    "answer":"negative shocks are much less common than positive shocks as technology rarely moves backwards"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"What is the example of a positive technology shock?",
+    "answer":"The Industrial Revolution"
+  },
+  {
+    "file":"TechnologyShocks.txt",
+    "query":"How did the Industrial revolution impact people?",
+    "answer":"increased wages steadily over the period of time and it also increased population because people had the wages for standard living"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"What does the incredibly simple microprocessor contain?",
+    "answer":"a fairly large set of instructions"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"What contains a fairly large set of instructions that it can perform?",
+    "answer":"incredibly simple microprocessor"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"How are the collection of instructions implemented?",
+    "answer":"as bit patterns, each one of which has a different meaning when loaded into the instruction register"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"Are humans good at remembering bit patterns?",
+    "answer":"humans are not particularly good at remembering bit patterns"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"What needs to be done as humans are not particularly good at remembering bit patterns?",
+    "answer":"a set of short words are defined to represent the different bit patterns"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"What are the collection of words called?",
+    "answer":"The assembly language of the processor"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"What does an assembler do?",
+    "answer":"An assembler can translate the words into their bit patterns"
+  },
+  {
+    "file":"Microprocessor.txt",
+    "query":"What is done with the assembler output?",
+    "answer":"the output of the assembler is placed in memory for the microprocessor to execute"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"Where is Clearing located?",
+    "answer":"(Illinois)|(suburb of Chicago)"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"Where is Clearing?",
+    "answer":"(Illinois)|(suburb of Chicago)"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"Why were residents unhappy?",
+    "answer":"(armed teenagers on the streets, giving gang signals and shouting at passing cars)|(a series of burglaries and graffiti messages on storefronts)"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"Why were the residents alarmed?",
+    "answer":"(armed teenagers on the streets, giving gang signals and shouting at passing cars)|(a series of burglaries and graffiti messages on storefronts)"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"When were the 2 girls shot?",
+    "answer":"Last December"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"How old were the girls who were shot?",
+    "answer":"13-year-old"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"How many states passed laws which allow youths to be tried in courts?",
+    "answer":"Nearly all 50"
+  },
+  {
+    "file": "ClearingIL.txt",
+    "query": "How many states passed laws to punish parents for their children’s behavior?",
+    "answer": "Nearly all 50"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"Who imposed curfews to reduce violence?",
+    "answer":"In about 25 states"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"How have the murder rates trended in the past decade?",
+    "answer":"there has been a decline in adult murders in the US, while murder rates have surged for youths between 14-17"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"What is done with the young offenders?",
+    "answer":"some are ordered to perform community service, others are placed in job training programs, still others sent to youth prisons"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"What do the Republicans in Congress want to do?",
+    "answer":"reverse a basic principle of juvenile justice: the separation of young criminals from hardened adult criminals in prison"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"Why do the Replubicans want to reverse the principle of juvenile justice?",
+    "answer":"The reasons are partly financial - to reduce the cost of having separate prisons for young people - and partly psychological - to end what Republicans consider as society's overly protective attitude towards young criminals"
+  },
+  {
+    "file":"ClearingIL.txt",
+    "query":"What is a principle of juvenile justice?",
+    "answer":"the separation of young criminals from hardened adult criminals in prison"
   }
 ]

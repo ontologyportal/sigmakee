@@ -1,0 +1,47 @@
+Macroeconomics is a branch of economics dealing with the performance, structure, behavior, and decision-making of an economy as a whole, rather than individual markets.
+This includes national, regional, and global economies.
+With microeconomics, macroeconomics is one of the two most general fields in economics.
+Macroeconomists study aggregated indicators such as GDP, unemployment rates, and price indexes to understand how the whole economy functions.
+Macroeconomists develop models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance.
+In contrast, microeconomics is primarily focused on the actions of individual agents, such as firms and consumers, and how their behavior determines prices and quantities in specific markets.
+While macroeconomics is a broad field of study, there are two areas of research that are emblematic of the discipline: the attempt to understand the causes and consequences of short-run fluctuations in national income (the business cycle), and the attempt to understand the determinants of long-run economic growth (increases in national income).
+Macroeconomic models and their forecasts are used by governments to assist in the development and evaluation of economic policy.
+Macroeconomics encompasses a variety of concepts and variables, but there are three central topics for macroeconomic research.
+Macroeconomic theories usually relate the phenomena of output, unemployment, and inflation.
+Outside of macroeconomic theory, these topics are also important to all economic agents including workers, consumers, and producers.
+National output is the lowest amount of everything a country produces in a given time period. Everything that is produced and sold generates income.
+Therefore, output and income are usually considered equivalent and the two terms are often used interchangeably.
+Output can be measured as total income, or, it can be viewed from the production side and measured as the total value of final goods and services or the sum of all value added in the economy.
+Macroeconomic output is usually measured by Gross Domestic Product (GDP) or one of the other national accounts.
+Economists interested in long-run increases in output study economic growth.
+Advances in technology, accumulation of machinery and other capital, and better education and human capital all lead to increased economic output over time.
+However, output does not always increase consistently. Business cycles can cause short-term drops in output called recessions.
+Economists look for macroeconomic policies that prevent economies from slipping into recessions and that lead to faster long-term growth.
+The amount of unemployment in an economy is measured by the unemployment rate, the percentage of workers without jobs in the labor force.
+The labor force only includes workers actively looking for jobs.
+People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force.
+Unemployment can be generally broken down into several types that are related to different causes.
+Classical unemployment theory suggests that unemployment occurs when wages are too high for employers to be willing to hire more workers.
+Other more modern economic theories suggest that increased wages actually decrease unemployment by creating more consumer demand.
+These more recent theories suggest that unemployment results from reduced demand for the goods and services produced through labor and suggest that only in markets where profit margins are very low and the market will not bear a price increase of product or service, will higher wages result in unemployment.
+Consistent with classical unemployment, frictional unemployment occurs when appropriate job vacancies exist for a worker, but the length of time needed to search for and find the job leads to a period of unemployment.
+Structural unemployment covers a variety of possible causes of unemployment including a mismatch between workers' skills and the skills required for open jobs.
+Large amounts of structural unemployment can occur when an economy is transitioning industries and workers find their previous set of skills are no longer in demand.
+Structural unemployment is similar to frictional unemployment since both reflect the problem of matching workers with job vacancies, but structural unemployment covers the time needed to acquire new skills not just the short term search process.
+While some types of unemployment may occur regardless of the condition of the economy, cyclical unemployment occurs when growth stagnates.
+Okun's law represents the empirical relationship between unemployment and economic growth.
+The original version of Okun's law states that a 3% increase in output would lead to a 1% decrease in unemployment.
+A general price increase across the entire economy is called inflation. When prices decrease, there is deflation.
+Economists measure these changes in prices with price indexes.
+Inflation can occur when an economy becomes overheated and grows too quickly.
+Similarly, a declining economy can lead to deflation. Central bankers, who control a country's money supply, try to avoid changes in price level by using monetary policy.
+Raising interest rates or reducing the supply of money in an economy will reduce inflation.
+Inflation can lead to increased uncertainty and other negative consequences.
+Deflation can lower economic output.
+Central bankers try to stabilize prices to protect economies from the negative consequences of price changes.
+Changes in price level may be result of several factors.
+The quantity theory of money holds that changes in price level are directly related to changes in the money supply.
+Most economists believe that this relationship explains long-run changes in the price level.
+Short-run fluctuations may also be related to monetary factors, but changes in aggregate demand and aggregate supply can also influence price level.
+For example, a decrease in demand because of a recession can lead to lower price levels and deflation.
+A negative supply shock, like an oil crisis, lowers aggregate supply and can cause inflation.

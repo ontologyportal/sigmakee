@@ -1,0 +1,29 @@
+Technology shocks are events in a macroeconomic model, that change the production function.
+The term shock is defined as a sudden change in economic terms.
+Usually this is modeled with an aggregate production function that has a scaling factor.
+A technology shock is when there is a sudden change in technology to either benefit or worsen economic activity.
+This type of shock has big effects on companies that are solely dependent on technology as their main source of labor or production, such as manufacturing plants or oil/energy extraction.
+A technology shock affects an industry or firm's productivity, this may be a positive shock—increasing the output for a given set of inputs, or a negative shock—decreasing the output for a given set of inputs.
+Negative shocks are much less common than positive shocks as technology rarely moves backwards.
+The Industrial Revolution is an example of a positive technology shock.
+The Industrial Revolution occurred between the 18th and the 19th centuries where major changes in agriculture, manufacturing, mining, transport, and technology occurred.
+What this did to the economy at the time was notable.
+It increased wages steadily over the period of time and it also increased population because people had the wages for standard living.
+This is an example of a positive technology shock, where it increases national and disposable income, and also increases the labor force.
+The Industrial Revolution also provided a much more efficient way to produce goods which lead to less labor-intensive work.
+The oil shocks that occurred in the late 1970s are examples of negative technology shocks.
+When the oil shocks occurred, the energy that was used to extract to oil became more expensive, the energy was the technology in this case.
+The price of the capital and the labor both went up due to this shock, and this is an example of a negative technology shock.
+Real business cycle theory (RBCT) is the theory where any type of shock has a ripple effect into many other shocks.
+To relate this to current times the upward price on oil is a RBCT because of the negative technology shock that happened due to the raise in price for the process of extracting of the oil.
+Now due to this increase in price for energy to extract the oil, fewer people could afford oil which drove economic activity down and at the same time lessens a countries national GDP.
+Typically, a RBCT starts with a negative type of shock, which is why the RBCT is becoming less and less relevant in today's economics.
+More and more economists are arguing against the RBCT because very rarely can you have a negative shock on technology with the amount of advancements we are going through now.
+A supply shock is an event that suddenly changes the price of a commodity or service.
+It may be caused by a sudden increase or decrease in the supply of a particular good.
+This sudden change affects the equilibrium price.
+A negative supply shock (sudden supply decrease) will raise prices and shift the aggregate supply curve to the left.
+A negative supply shock can cause stagflation due to a combination of raising prices and falling output.
+A positive supply shock (an increase in supply) will lower the price of said good and shift the aggregate supply curve to the right.
+A positive supply shock could be an advance in technology (a technology shock) which makes production more efficient, thus increasing output.
+In economics, a demand shock is a sudden event that increases or decreases demand for goods or services temporarily.
