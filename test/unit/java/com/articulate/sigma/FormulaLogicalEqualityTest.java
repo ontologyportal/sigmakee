@@ -3,6 +3,7 @@ package com.articulate.sigma;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -22,6 +23,9 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class FormulaLogicalEqualityTest extends UnitTestBase {
     private static final String TEST_FILE_NAME = "formula_logical_equality_tests.json";
+
+    private static long totalExecutionTime;
+    private static int testCount;
 
     @Parameterized.Parameter(value= 0)
     public String f1Text;
@@ -49,12 +53,20 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
                 boolean equal = (boolean) jo.get("equal");
                 result.add(new Object[]{f1, f2, equal});
             }
+
+            testCount = 0;
+            totalExecutionTime = 0;
             System.out.println("Loaded " + jsonObject.size() + " tests.");
         }
         catch (Exception e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    @After
+    public void performanceReport() {
+       System.out.println("\nA total of " + testCount + " tests ran with an average of " + ((totalExecutionTime/testCount) / 1000000) + " milisecond execution time per test.\n");
     }
 
     @Test
@@ -64,10 +76,16 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
         Formula f2 = new Formula();
         f2.read(f2Text);
 
+        long start = System.nanoTime();
+//        boolean comparisonResult = f1.logicallyEquals(f2);
+        boolean comparisonResult = f1.unifyWith(f2);
+        long stop = System.nanoTime();
+        totalExecutionTime += (stop - start);
+        testCount++;
         if(areEqual) {
-            assertTrue("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, f1.logicallyEquals(f2));
+            assertTrue("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
         } else {
-            assertFalse("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, f1.logicallyEquals(f2));
+            assertFalse("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
         }
     }
 }

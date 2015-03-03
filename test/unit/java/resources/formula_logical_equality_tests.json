@@ -402,6 +402,40 @@
     (equal
     (DivisionFn ?INFANTDEATHCOUNT ?THOUSANDSOFBIRTHS) ?REALNUMBER)))",
     "equal": true
+  },
+  {
+    "f1": "
+    (=>
+    (copy ?OBJ1 ?OBJ2)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OBJ1 ?ATTR)
+    (attribute ?OBJ2 ?ATTR))))",
+    "f2": "
+    (=>
+    (copy ?OB2 ?OB1)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OB1 ?ATTR)
+    (attribute ?OB2 ?ATTR))))",
+    "equal":true
+  }
+  {
+    "f1": "
+    (=>
+    (copy ?OBJ1 ?OBJ2)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OBJ1 ?ATTR)
+    (attribute ?OBJ2 ?ATTR))))",
+    "f2": "
+    (=>
+    (copy ?OB2 ?OB2)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OB1 ?ATTR)
+    (attribute ?OB2 ?ATTR))))",
+    "equal":false
   }
 
 
