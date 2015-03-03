@@ -1,0 +1,21 @@
+The electron is a subatomic particle with a negative elementary electric charge.
+Electrons belong to the first generation of the lepton particle family, and are generally thought to be elementary particles because electrons have no known components or substructure.
+The electron has a mass that is approximately 1/1836 that of the proton.
+Quantum mechanical properties of the electron include an intrinsic angular momentum of a half-integer value in units of Planck's constant, which means that it is a fermion.
+Being fermions, no two electrons can occupy the same quantum state, in accordance with the Pauli exclusion principle.
+Electrons also have properties of both particles and waves, and so can collide with other particles and can be diffracted like light.
+Experiments with electrons best demonstrate this duality because electrons have a tiny mass.
+Many physical phenomena involve electrons in an essential role, such as electricity, magnetism, and thermal conductivity, and electrons also participate in gravitational, electromagnetic and weak interactions.
+An electron in space generates an electric field surrounding it. An electron moving relative to an observer generates a magnetic field; external magnetic fields will deflect an electron.
+Electrons radiate or absorb energy in the form of photons when accelerated.
+Laboratory instruments are capable of containing and observing individual electrons as well as electron plasma using electromagnetic fields, whereas dedicated telescopes can detect electron plasma in outer space.
+Electrons have many applications, including electronics, welding, cathode ray tubes, electron microscopes, radiation therapy, lasers, gaseous ionization detectors and particle accelerators.
+Interactions involving electrons and other subatomic particles are of interest in fields such as chemistry and nuclear physics.
+The Coulomb force interaction between positive protons inside atomic nuclei and negative electrons composes atoms.
+Ionization or changes in the proportions of particles changes the binding energy of the system.
+The exchange or sharing of the electrons between two or more atoms is the main cause of chemical bonding.
+British natural philosopher Richard Laming first hypothesized the concept of an indivisible quantity of electric charge to explain the chemical properties of atoms in 1838; Irish physicist George Johnstone Stoney named this charge 'electron' in 1891, and J. J. Thomson and his team of British physicists identified it as a particle in 1897.
+Electrons can also participate in nuclear reactions, such as nucleosynthesis in stars, where electrons are known as beta particles.
+Electrons may be created through beta decay of radioactive isotopes and in high-energy collisions, for instance when cosmic rays enter the atmosphere.
+The antiparticle of the electron is called the positron; it is identical to the electron except that it carries electrical and other charges of the opposite sign.
+If an electron collides with a positron, both particles may be totally annihilated, producing gamma ray photons.

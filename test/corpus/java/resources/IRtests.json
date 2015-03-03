@@ -328,5 +328,360 @@
     "file":"Youth.txt",
     "query":"How were the spanish explorers?",
     "answer":"blood thirsty for gold"
+  },
+  {
+    "file":"Tausche.txt",
+    "query":"Where was Tausche born?",
+    "answer":"Minneapolis, Minnesota"
+  },
+  {
+    "file":"Tausche.txt",
+    "query":"Where did Tausche graduate from?",
+    "answer":"Greater Atlanta Christian School"
+  },
+  {
+    "file":"Tausche.txt",
+    "query":"Where did Tausche attend university?",
+    "answer":"Chapel Hill"
+  },
+  {
+    "file":"Tausche.txt",
+    "query":"What did Tausche earn a bachelor's degree in?",
+    "answer":"business journalism and international politics"
+  },
+  {
+    "file":"Tausche.txt",
+    "query":"What did Tausche receive honors for?",
+    "answer":"in-depth research for analyzing the way international newspapers covered the handover of Hong Kong from British to Chinese rule"
+  },
+  {
+    "file":"Tausche.txt",
+    "query":"Is Tausche an avid marathon runner?",
+    "answer":"according to her Twitter profile, Tausche is now an avid marathon runner"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What was the French Revolution?",
+    "answer":"a period of radical social and political upheaval in France from 1789 to 1799"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What exacerbated an economic crisis?",
+    "answer":"the Seven Years War and the American Revolutionary War"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did The Seven Years War and the American Revolutionary War exacerbate?",
+    "answer":"economic crisis"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"Who did the ineptitude of King Louis XVI and the continued decadence of the aristocracy frustrate?",
+    "answer":"the common people of france"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What increasingly frustrated the common people of France?",
+    "answer":"the ineptitude of king louis xvi and the continued decadence of the aristocracy"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What fueled radical sentiments and launched the Revolution in 1789",
+    "answer":"this resentment, coupled with burgeoning enlightenment ideals"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What was this resentment coupled with?",
+    "answer":"with burgeoning enlightenment ideals"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did this resentment fuel?",
+    "answer":"radical sentiments"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did this resentment launch?",
+    "answer":"the revolution"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did the first year of the Revolution see?",
+    "answer":"members of the third estate proclaiming the tennis court oath in june, the assault on the bastille in july, the passage of the declaration of the rights of man and of the citizen in august, and an epic march on versailles that forced the royal court back to paris in october"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim?",
+    "answer":"the tennis court oath in june, the assault on the bastille in july, the passage of the declaration of the rights of man and of the citizen in august"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did members of the Third Estate proclaim the Tennis Court Oath?",
+    "answer":"in june"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did members of the Third Estate proclaim the assault on the Bastille?",
+    "answer":"in july"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did members of the Third Estate proclaim the passage of the Declaration of the Rights of Man and of the Citizen?",
+    "answer":"in august"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim in June?",
+    "answer":"the tennis court oath"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim in July?",
+    "answer":"the assault on the bastille"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim in August?",
+    "answer":"the passage of the declaration of the rights of man and of the citizen"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What dominated the new few years?",
+    "answer":"struggles between various liberal assemblies and right-wing supporters of the monarchy intent on thwarting major reforms"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When was a republic proclaimed?",
+    "answer":"september 1792(?!.* the next year.*)"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When was King Louis XVI executed?",
+    "answer":"in 1793."
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What shaped the course of the Revolution?",
+    "answer":"external threats"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did the Revolutionary Wars begin?",
+    "answer":".*((in )?1792)(?!, the Rhine-achievements).*"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did the Revolutionary Wars ultimately feature?",
+    "answer":"spectacular french victories that facilitated the conquest of the italian peninsula, the low countries and most territories west of the rhine( )?–( )?achievements that had eluded previous french governments for centuries."
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What radicalized the Revolution?",
+    "answer":"popular agitation"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"Who imposed the dictatorship?",
+    "answer":"the committee of public safety"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did the Committee of Public Safety impose the dictatorship?",
+    "answer":"during the reign of terror"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"From when was the Reign of Terror?",
+    "answer":"from 1793"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"Until when was the Reign of Terror?",
+    "answer":"until 1794"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What caused up to 40,000 deaths inside France?",
+    "answer":"the dictatorship imposed by the committee of public safety"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What abolished slavery in the colonies?",
+    "answer":"the dictatorship imposed by the committee of public safety"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What secured the borders of the new republic from its enemies?",
+    "answer":"the dictatorship imposed by the committee of public safety"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What sparked an internal backlash?",
+    "answer":"the bloody rule of the jacobins"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What ultimately sent Robespierre to the guillotine?",
+    "answer":"the bloody rule of the jacobins"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What sparked an internal backlash and sent Robespierre to the guillotine?",
+    "answer":"the bloody rule of the jacobins"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"After the fall of the Jacobins, what assumed control of the French state?",
+    "answer":"the directory"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did the Directory assume control of the French state?",
+    "answer":"(after the fall of the jacobins)|(in 1795)"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"Until when did the Directory hold power?",
+    "answer":"until 1799"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"Which year marks the traditional conclusion of the Revolution?",
+    "answer":"(that year)|(1799)"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did Napoleon Bonaparte overthrow the Directory?",
+    "answer":"(that year)|(1799)"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did Napoleon Bonaparte establish the Consulate?",
+    "answer":"(that year)|(1799)"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What was the primary successor state of the Revolution?",
+    "answer":"the first empire under napoleon"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did the primary successor state of the Revolution emerge?",
+    "answer":"1804"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did the First Empire under Napoleon emerge?",
+    "answer":"1804"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What spread the new revolutionary principles all over Europe during the Napoleonic Wars?",
+    "answer":"the primary successor state of the revolution, the first empire under napoleon"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did the primary successor state of the Revolution spread?",
+    "answer":"the new revolutionary principles"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did the First Empire under Napoleon spread?",
+    "answer":"the new revolutionary principles"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"When did the First Empire finally collapse?",
+    "answer":"1815"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What has unfolded in the shadow of the French Revolution?",
+    "answer":"the modern era"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did French society itself undergo?",
+    "answer":"an epic transformation"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What underwent an epic transformation?",
+    "answer":"french society"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What evaporated under a sustained assault from various left-wing poligical groups, the masses on the streets, and peasants in the countryside?",
+    "answer":"feudal, aristocratic, and religious privileges"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What were abruptly overthrown under the mantra of \"Liberté, égalité, fraternité\"?",
+    "answer":"old ideas about tradition and hierarchy regarding monarchs, aristocrats, and the catholic church"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What did the Revolution accelerate?",
+    "answer":"the rise of republics and democracies the spread of liberalism and secularism the development of modern ideologies, and the adoption of total war."
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What expanded the arena of human rights?",
+    "answer":"some of its central documents, like the declaration of the rights of man"
+  },
+  {
+    "file":"FrenchRevolution.txt",
+    "query":"What are just a few of the numerous events that ultimately depended upon the eruption of 1789?",
+    "answer":"the latin american independence wars, the louisiana purchase by the united states, and the revolutions of 1848"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"What is an electron?",
+    "answer":"The electron is a subatomic particle with a negative elementary electric charge"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"Where do electrons play an essential role?",
+    "answer":"Many physical phenomena involve electrons in an essential role, such as electricity, magnetism, and thermal conductivity, and electrons also participate in gravitational, electromagnetic and weak interactions"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"What kind of particles are electrons?",
+    "answer":"Electrons belong to the first generation of the lepton particle family, and are generally thought to be elementary particles because electrons have no known components or substructure"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"How big is an electron?",
+    "answer":"The electron has a mass that is approximately 1/1836 that of the proton"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"Are Electrons waves or particles?",
+    "answer":"Electrons also have properties of both particles and waves, and so can collide with other particles and can be diffracted like light"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"How are electrons made?",
+    "answer":"Electrons may be created through beta decay of radioactive isotopes and in high - energy collisions, for instance when cosmic rays enter the atmosphere"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"What is the opposite of an electron?",
+    "answer":"The antiparticle of the electron is called the positron; (a positron)|(it) is identical to the electron except that it carries electrical and other charges of the opposite sign"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"What happens when an electron and a positron collide?",
+    "answer":"If an electron collides with a positron, both particles may be totally annihilated, producing gamma ray photons"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"Can electrons absorb energy?",
+    "answer":"Electrons radiate or absorb energy in the form of photons when accelerated"
+  },
+  {
+    "file":"Electrons.txt",
+    "query":"Who gave electrons their name?",
+    "answer":"British natural philosopher Richard Laming first hypothesized the concept of an indivisible quantity of electric charge to explain the chemical properties of atoms in 1838; Irish physicist George Johnstone Stoney named this charge 'electron' in 1891, and J. J. Thomson and his team of British physicists identified it as a particle in 1897"
   }
 ]
