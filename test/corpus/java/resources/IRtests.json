@@ -142,17 +142,17 @@
   {
     "file":"GeorgeWashington.txt",
     "query":"Who is George Washington?",
-    "answer":"Washington was America's first president."
+    "answer":"(Washington was America's first president)|(George Washington was born on February 22, 1732)"
   },
   {
     "file":"GeorgeWashington.txt",
     "query":"What happened in 1752?",
-    "answer":"George Washington died"
+    "answer":"(George Washington died)|(he died in 1752)"
   },
   {
     "file":"GeorgeWashington.txt",
     "query":"Who continued as an officer in Ohio country?",
-    "answer":"George Washington"
+    "answer":"(George Washington)|(He continued as an officer in Ohio country)"
   },
   {
     "file":"GeorgeWashington.txt",
@@ -172,12 +172,12 @@
   {
     "file":"GeorgeWashington.txt",
     "query":"Who was made commander of the Continental Army?",
-    "answer":"George Washington"
+    "answer":"(George Washington)|(He was made commander of the Continental Army on June 15, 1775)"
   },
   {
     "file":"GeorgeWashington.txt",
     "query":"What happened on June 15, 1775?",
-    "answer":"George Washington was made commander of the Continental Army"
+    "answer":"(George Washington)|(he) was made commander of the Continental Army"
   },
   {
     "file":"Gravity.txt",
@@ -317,7 +317,7 @@
   {
     "file":"Youth.txt",
     "query":"What happened in the early 1490's?",
-    "answer":"de Leon helped fight the Muslims in southern Spain"
+    "answer":"(de Leon)|(he) helped fight the Muslims in southern Spain"
   },
   {
     "file":"Youth.txt",
@@ -357,7 +357,7 @@
   {
     "file":"Tausche.txt",
     "query":"Is Tausche an avid marathon runner?",
-    "answer":"according to her Twitter profile, Tausche is now an avid marathon runner"
+    "answer":"according to her Twitter profile, (Tausche)|(she) is now an avid marathon runner"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -377,22 +377,22 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"Who did the ineptitude of King Louis XVI and the continued decadence of the aristocracy frustrate?",
-    "answer":"the common people of france"
+    "answer":"the common people of (France)|(france)"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What increasingly frustrated the common people of France?",
-    "answer":"the ineptitude of king louis xvi and the continued decadence of the aristocracy"
+    "answer":"the ineptitude of (king louis xvi)|(King Louis XVI) and the continued decadence of the aristocracy"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What fueled radical sentiments and launched the Revolution in 1789",
-    "answer":"this resentment, coupled with burgeoning enlightenment ideals"
+    "answer":"this resentment, coupled with burgeoning (enlightenment)|(Enlightenment) ideals"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What was this resentment coupled with?",
-    "answer":"with burgeoning enlightenment ideals"
+    "answer":"with burgeoning (enlightenment)|(Enlightenment) ideals"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -402,7 +402,7 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What did this resentment launch?",
-    "answer":"the revolution"
+    "answer":"the (revolution)|(Revolution)"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -412,37 +412,37 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What did members of the Third Estate proclaim?",
-    "answer":"the tennis court oath in june, the assault on the bastille in july, the passage of the declaration of the rights of man and of the citizen in august"
+    "answer":"the (tennis court oath in june)|(Tennis Court Oath in June), the assault on the (bastille in july)|(Bastille in July), the passage of the (declaration of the rights of man)|(Declaration of the Rights of Man) and of the (citizen in august)|(Citizen in August)"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"When did members of the Third Estate proclaim the Tennis Court Oath?",
-    "answer":"in june"
+    "answer":"in (june)|(June)"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"When did members of the Third Estate proclaim the assault on the Bastille?",
-    "answer":"in july"
+    "answer":"in (j)|(J)uly"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"When did members of the Third Estate proclaim the passage of the Declaration of the Rights of Man and of the Citizen?",
-    "answer":"in august"
+    "answer":"in (a)|(A)ugust"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What did members of the Third Estate proclaim in June?",
-    "answer":"the tennis court oath"
+    "answer":"the (t)|(T)ennis (c)|(C)ourt (o)|(O)ath"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What did members of the Third Estate proclaim in July?",
-    "answer":"the assault on the bastille"
+    "answer":"the assault on the (b)|(B)astille"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What did members of the Third Estate proclaim in August?",
-    "answer":"the passage of the declaration of the rights of man and of the citizen"
+    "answer":"the passage of the (declaration of the rights of man)|(Declaration of the Rights of Man) and of the (c)|(C)itizen"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -452,17 +452,17 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"When was a republic proclaimed?",
-    "answer":"september 1792(?!.* the next year.*)"
+    "answer":"(s)|(S)eptember 1792(?!.* the next year.*)"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"When was King Louis XVI executed?",
-    "answer":"in 1793."
+    "answer":"(in 1793)|(the next year)"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What shaped the course of the Revolution?",
-    "answer":"external threats"
+    "answer":"(e)|(E)xternal threats"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -472,7 +472,7 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What did the Revolutionary Wars ultimately feature?",
-    "answer":"spectacular french victories that facilitated the conquest of the italian peninsula, the low countries and most territories west of the rhine( )?–( )?achievements that had eluded previous french governments for centuries."
+    "answer":"spectacular (f)|(F)rench victories"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -482,12 +482,12 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"Who imposed the dictatorship?",
-    "answer":"the committee of public safety"
+    "answer":"the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"When did the Committee of Public Safety impose the dictatorship?",
-    "answer":"during the reign of terror"
+    "answer":"during the (r)|(R)eign of (t)|(T)error"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -502,37 +502,37 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What caused up to 40,000 deaths inside France?",
-    "answer":"the dictatorship imposed by the committee of public safety"
+    "answer":"the dictatorship imposed by the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What abolished slavery in the colonies?",
-    "answer":"the dictatorship imposed by the committee of public safety"
+    "answer":"the dictatorship imposed by the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What secured the borders of the new republic from its enemies?",
-    "answer":"the dictatorship imposed by the committee of public safety"
+    "answer":"the dictatorship imposed by the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What sparked an internal backlash?",
-    "answer":"the bloody rule of the jacobins"
+    "answer":"the bloody rule of the (j)|(J)acobins"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What ultimately sent Robespierre to the guillotine?",
-    "answer":"the bloody rule of the jacobins"
+    "answer":"the bloody rule of the (j)|(J)acobins"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What sparked an internal backlash and sent Robespierre to the guillotine?",
-    "answer":"the bloody rule of the jacobins"
+    "answer":"the bloody rule of the (j)|(J)acobins"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"After the fall of the Jacobins, what assumed control of the French state?",
-    "answer":"the directory"
+    "answer":"the (d)|(D)irectory"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -562,7 +562,7 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What was the primary successor state of the Revolution?",
-    "answer":"the first empire under napoleon"
+    "answer":"the (first empire under napoleon)|(First Empire under Napoleon)"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -577,7 +577,7 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What spread the new revolutionary principles all over Europe during the Napoleonic Wars?",
-    "answer":"the primary successor state of the revolution, the first empire under napoleon"
+    "answer":"the primary successor state of the (r)|(R)evolution, the First Empire under Napoleon"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -597,7 +597,7 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What has unfolded in the shadow of the French Revolution?",
-    "answer":"the modern era"
+    "answer":"modern era"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -607,7 +607,7 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What underwent an epic transformation?",
-    "answer":"french society"
+    "answer":"(f)|(F)rench society"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -617,7 +617,7 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What were abruptly overthrown under the mantra of \"Liberté, égalité, fraternité\"?",
-    "answer":"old ideas about tradition and hierarchy regarding monarchs, aristocrats, and the catholic church"
+    "answer":"(o)|(O)ld ideas about tradition and hierarchy regarding monarchs, aristocrats, and the (c)|(C)atholic (c)|(C)hurch"
   },
   {
     "file":"FrenchRevolution.txt",
@@ -627,12 +627,12 @@
   {
     "file":"FrenchRevolution.txt",
     "query":"What expanded the arena of human rights?",
-    "answer":"some of its central documents, like the declaration of the rights of man"
+    "answer":"some of its central documents, like the (declaration of the rights of man)|(Declaration of the Rights of Man)"
   },
   {
     "file":"FrenchRevolution.txt",
     "query":"What are just a few of the numerous events that ultimately depended upon the eruption of 1789?",
-    "answer":"the latin american independence wars, the louisiana purchase by the united states, and the revolutions of 1848"
+    "answer":"the (latin american)|(Latin American) independence wars, the (louisiana purchase)|(Louisiana Purchase) by the (united states)|(United States), and the (r)|(R)evolutions of 1848"
   },
   {
     "file":"Electrons.txt",
