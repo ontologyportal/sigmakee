@@ -66,6 +66,37 @@ public class TFIDF {
     private HashMap<Integer,Float> docSim = new HashMap<Integer,Float>();
 
     private Random rand = new Random(); 
+
+    /** ***************************************************************
+     */
+    public TFIDF() {
+    }
+    
+    /** ***************************************************************
+     */
+    public TFIDF(String filename) {
+        
+        readStopWords();
+        int linecount = readFile("textfiles" + File.separator + filename);
+        calcIDF(linecount);
+        calcTFIDF();
+    }
+
+    /** ***************************************************************
+     */
+    public TFIDF(List<String> l) {
+        
+        int linecount = lines.size() - 1;
+        readStopWords();
+        for (String s : l) {
+            linecount++;
+            lines.add(s);
+            processDoc(s,linecount);
+        }
+        lines.addAll(l);
+        calcIDF(linecount);
+        calcTFIDF();
+    }
     
     /** ***************************************************************
      * @param s An input Object, expected to be a String.
@@ -581,27 +612,20 @@ public class TFIDF {
             String query = (String) test[1];
             String answer = (String) test[2];
             //System.out.print(query + "\t");
-            TFIDF cb = new TFIDF();
+            TFIDF cb = null;
             if (files.containsKey(fname))
                 cb = files.get(fname);
             else {
-                cb.readStopWords();
-                //System.out.println("Read file: " + fname);
-                int linecount = cb.readFile("textfiles" + File.separator + fname);
-    
-                //System.out.println("Caclulate IDF");
-                cb.calcIDF(linecount);
-                //System.out.println("Caclulate TFIDF");
-                cb.calcTFIDF();
+                cb = new TFIDF(fname);
             }
             String actual = cb.matchInput(query);
             tested++;
-            Pattern p = Pattern.compile(answer);
-            Matcher m = p.matcher(actual);
+            Pattern p = Pattern.compile(answer.toLowerCase());
+            Matcher m = p.matcher(actual.toLowerCase());
             if (m.find())
                 correct++;
             else
-                System.out.println("Test " + tested + " Failed.  Expected: \n" + answer + "\nactual: \n" + actual);
+                System.out.println("Test " + tested + " Failed. \n Question:\n" + query + "\nExpected:\n" + answer + "\nactual:\n" + actual);
         }
         System.out.println("Total: " + tested + " correct: " + correct);
     }
