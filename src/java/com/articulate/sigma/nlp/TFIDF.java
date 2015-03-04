@@ -360,7 +360,7 @@ public class TFIDF {
                 if (!tokensNoDup.contains(token)) {
                     Integer intval = docfreq.get(token);
                     int intvalint = intval.intValue();
-                    docfreq.put(token,new Integer(intvalint++));
+                    docfreq.put(token,new Integer(intvalint + 1));
                     tokensNoDup.add(token);
                 }
             }    
@@ -595,6 +595,20 @@ public class TFIDF {
         return result;    
     }
 
+    /** *************************************************************
+     * Run a series of tests containing a filename,
+     * a query and an expected answer.
+     */
+    private static void staticTest() {
+        
+        ArrayList<String> input = new ArrayList<String>();
+        input.add("I eat an apple.");
+        input.add("People have an apple.");
+        input.add("People will eat.");
+        TFIDF cb = null;
+        cb = new TFIDF(input);
+    }
+    
     /** *************************************************************
      * Run a series of tests containing a filename,
      * a query and an expected answer.
