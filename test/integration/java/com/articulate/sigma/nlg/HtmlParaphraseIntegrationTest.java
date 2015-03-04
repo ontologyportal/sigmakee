@@ -286,7 +286,7 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
-    @Ignore
+    @Test
     public void testPlaintiff()     {
         String stmt =   "(exists (?P ?H)\n" +
                 "           (and\n" +

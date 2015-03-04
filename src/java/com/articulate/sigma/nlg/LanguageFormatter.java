@@ -170,7 +170,7 @@ public class LanguageFormatter {
         return nlFormat;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Create a natural language paraphrase of a logical statement.
      *  @param stmt The statement to be paraphrased.
      *  @param isNegMode Whether the statement is negated.
@@ -222,7 +222,10 @@ public class LanguageFormatter {
         // Mark the predicate as processed.
         // FIXME: handle other predicates here: located, orientation, etc.
         if (pred.equals("instance")) {
-            theStack.markFormulaArgAsProcessed(stmt);
+            // Do not mark as processed "complicated" clauses containing functions. They will have to be handled later in the process.
+            if (! Formula.isFunction(new Formula(f.complexArgumentsToArrayList(2).get(0)).car())) {
+                theStack.markFormulaArgAsProcessed(stmt);
+            }
         }
 
         if (!Formula.atom(pred)) {
@@ -289,7 +292,11 @@ public class LanguageFormatter {
      * @param caseRole
      */
     private void handleCaseRole(Formula formula, String caseRole) {
-       if(kb.kbCache.isInstanceOf(caseRole, "CaseRole") && SumoProcessCollector.isKnownRole(caseRole)) {
+        if (! doInformalNLG)    {
+            return;
+        }
+
+        if (kb.kbCache.isInstanceOf(caseRole, "CaseRole")) {
             try {
                 if (!theStack.isEmpty()) {
                     String caseArgument = formula.cadr() + " " + formula.caddr();
@@ -300,9 +307,7 @@ public class LanguageFormatter {
                     if (variableTypes.containsKey(processInstanceName)) {
 
                         HashSet<String> vals = variableTypes.get(processInstanceName);
-                        // FIXME: instead of adding new processes to the if-statement, you need to iterate through all the vals elements
-                        // and see if each one is either Process or a subclass of Process
-                        if (vals.contains("Process") || vals.contains("LegalAction")) {
+                        if (SumoProcess.containsProcess(vals, kb))  {
                             // Mark the argument as PROCESSED.
                             theStack.markFormulaArgAsProcessed(formula.theFormula);
 

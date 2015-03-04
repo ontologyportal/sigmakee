@@ -543,7 +543,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        expectedResult = "Robert-1 directs a bank card with a pigeon";
+        expectedResult = "Robert-1 directs a bank card to Mary-1 with a pigeon";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
@@ -818,7 +818,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
     }
 
     /**
-     * Ideal: "He travels to (the) Sudan."
+     *
      */
     @Test
     public void testHumanTravels()     {
@@ -1128,6 +1128,388 @@ public class HtmlParaphraseTest extends UnitTestBase {
         expectedResult = "if an agent is an instance of animal, " +
                 "then there exists a process such that the process is an instance of body motion and the agent is an agent of the process " +
                 "or there exists an entity such that the entity is an instance of body position and the entity is an attribute of the agent";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testJohnSeesSelfConnectedObject()     {
+        String stmt =   "(exists (?event ?object)\n" +
+                "           (and \n" +
+                "               (instance John-1 Human) \n" +
+                "               (instance ?event Seeing) \n" +
+                "               (instance ?object SelfConnectedObject) \n" +
+                "               (experiencer ?event John-1) \n" +
+                "               (patient ?event ?object)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there exist a process and an entity such that John-1 is an instance of human and the process is an instance of seeing and the entity is an instance of self connected object and John-1 experiences the process and the entity is a patient of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "John-1 sees a self connected object";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    /**
+     * This formula has no agent/experiencer. Eventually we will want to translate it into passive voice--currently we fall back to formal NLG.
+     */
+    @Test
+    public void testSelfConnectedObjectIsSeen()     {
+        String stmt =   "(exists (?event ?object)\n" +
+                "           (and \n" +
+                "               (instance ?event Seeing) \n" +
+                "               (instance ?object SelfConnectedObject) \n" +
+                "               (patient ?event ?object)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there exist a process and an entity such that the process is an instance of seeing and the entity is an instance of self connected object and the entity is a patient of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there exist a process and an entity such that the process is an instance of seeing and the entity is an instance of self connected object and the entity is a patient of the process";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testJohnSeesHambuger()     {
+        String stmt =   "(exists (?event ?hamburger)\n" +
+                "           (and \n" +
+                "               (instance John-1 Human) \n" +
+                "               (instance ?event Seeing) \n" +
+                "               (instance ?hamburger (FoodForFn Human)) \n" +
+                "               (experiencer ?event John-1) \n" +
+                "               (patient ?event ?hamburger)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there exist a process and an entity such that John-1 is an instance of human and the process is an instance of seeing and the entity is an instance of FoodForFn human and John-1 experiences the process and the entity is a patient of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there exist a process and an entity such that John-1 is an instance of human and the process is an instance of seeing and the entity is an instance of FoodForFn human and John-1 experiences the process and the entity is a patient of the process";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Ignore
+    @Test
+    public void testArtifactMoves()     {
+        String stmt =   "(exists (?event ?thing)\n" +
+                "           (and \n" +
+                "               (instance ?event BodyMotion) \n" +
+                "               (instance ?thing Artifact) \n" +
+                "               (moves ?event ?thing)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there exist a motion and an object such that the motion is an instance of body motion and the object is an instance of artifact and the object is a moves of the motion";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        // FIXME: the CaseRole has influence on the verb: expectedResult = "an artifact moves";
+        expectedResult = "an artifact experiences a body motion";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testGirlDrivesFromLondonOnHighway()     {
+        String stmt =   "(exists (?she ?event ?route)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Driving) \n" +
+                "                    (instance ?she Girl) \n" +
+                "                    (instance ?route Expressway) \n" +
+                "                    (agent ?event ?she) \n" +
+                "                    (path ?event ?route) \n" +
+                "                    (origin ?event LondonUnitedKingdom)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, a motion and an object such that the motion is an instance of driving and the agent is an instance of girl and the object is an instance of expressway and the agent is an agent of the motion and the object is path along which the motion occurs and the motion originates at London";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a girl drives along an expressway from LondonUnitedKingdom";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testGirlDrivesTowardsLeedsFromLondonOnHighway()     {
+        String stmt =   "(exists (?she ?event ?route)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Driving) \n" +
+                "                    (instance ?she Girl) \n" +
+                "                    (instance ?route Expressway) \n" +
+                "                    (agent ?event ?she) \n" +
+                "                    (path ?event ?route) \n" +
+                "                    (direction ?event Leeds) \n" +
+                "                    (origin ?event LondonUnitedKingdom)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, a motion and an object such that the motion is an instance of driving and the agent is an instance of girl and the object is an instance of expressway and the agent is an agent of the motion and the object is path along which the motion occurs and entities in the process the motion are moving Leeds and the motion originates at London";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a girl drives toward Leeds along an expressway from LondonUnitedKingdom";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testGirlDrivesNorthFromLondonOnHighway()     {
+        String stmt =   "(exists (?she ?event ?route)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Driving) \n" +
+                "                    (instance ?she Girl) \n" +
+                "                    (instance ?route Expressway) \n" +
+                "                    (agent ?event ?she) \n" +
+                "                    (path ?event ?route) \n" +
+                "                    (direction ?event North) \n" +
+                "                    (origin ?event LondonUnitedKingdom)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, a motion and an object such that the motion is an instance of driving and the agent is an instance of girl and the object is an instance of expressway and the agent is an agent of the motion and the object is path along which the motion occurs and entities in the process the motion are moving north and the motion originates at London";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a girl drives toward North along an expressway from LondonUnitedKingdom";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testGirlDrivesNorthThroughLeedsFromLondonOnHighway()     {
+        String stmt =   "(exists (?she ?event ?route ?midpoint)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Driving) \n" +
+                "                    (instance ?she Girl) \n" +
+                "                    (instance ?route Expressway) \n" +
+                "                    (instance Leeds City) \n" +
+                "                    (agent ?event ?she) \n" +
+                "                    (path ?event ?route) \n" +
+                "                    (direction ?event North) \n" +
+                "                    (eventPartlyLocated ?event Leeds) \n" +
+                "                    (origin ?event LondonUnitedKingdom)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, a motion, , , an object and an entity such that the motion is an instance of driving and the agent is an instance of girl and the object is an instance of expressway and Leeds is an instance of city and the agent is an agent of the motion and the object is path along which the motion occurs and entities in the process the motion are moving north and event partly located the motion and Leeds and the motion originates at London";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a girl drives toward North along an expressway from LondonUnitedKingdom in Leeds";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testGirlDrivesThroughEngland()     {
+        String stmt =   "(exists (?she ?event)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Driving) \n" +
+                "                    (instance ?she Girl) \n" +
+                "                    (agent ?event ?she) \n" +
+                "                    (eventLocated ?event England)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent and a process such that the process is an instance of driving and the agent is an instance of girl and the agent is an agent of the process and event located the process and England";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a girl drives in England";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testGirlCarveWeaponOutOfSoap()     {
+        String stmt =   "(exists (?she ?event ?gun ?soap)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Making) \n" +
+                "                    (instance ?she Woman) \n" +
+                "                    (instance ?gun Weapon) \n" +
+                "                    (instance ?soap Artifact) \n" +
+                "                    (agent ?event ?she) \n" +
+                "                    (patient ?event ?gun) \n" +
+                "                    (resource ?event ?soap)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, a process, , , an entity and an object such that the process is an instance of making and the agent is an instance of woman and the entity is an instance of weapon and the object is an instance of artifact and the agent is an agent of the process and the entity is a patient of the process and the object is a resource for the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a woman makes a weapon out of an artifact";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    /**
+     * Like the previous test, but gun is a result--a more specific patient.
+     */
+    @Test
+    public void testGirlCarveWeaponOutOfSoap2()     {
+        String stmt =   "(exists (?she ?event ?gun ?soap)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Making) \n" +
+                "                    (instance ?she Woman) \n" +
+                "                    (instance ?gun Weapon) \n" +
+                "                    (instance ?soap Artifact) \n" +
+                "                    (agent ?event ?she) \n" +
+                "                    (result ?event ?gun) \n" +
+                "                    (resource ?event ?soap)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, a process, , , an entity and an object such that the process is an instance of making and the agent is an instance of woman and the entity is an instance of weapon and the object is an instance of artifact and the agent is an agent of the process and the entity is a result of the process and the object is a resource for the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a woman makes a weapon out of an artifact";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Ignore
+    @Test
+    public void testBoyAttendsDemonstration()     {
+        String stmt =   "(exists (?he ?event)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Demonstrating) \n" +
+                "                    (instance ?he Boy) \n" +
+                "                    (attends ?event ?he)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist a human and a demonstrating such that the demonstrating is an instance of demonstrating and the human is an instance of boy and attends the demonstrating and the human";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        // FIXME: the CaseRole has influence on the verb:
+        expectedResult = "a boy attends a demonstration";
+        // expectedResult = "a boy experiences a demonstration";
+        //expectedResult = "a boy demonstrates";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testConnectedObjectBurnsPatient()     {
+        String stmt =   "(exists (?object ?event)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Combustion) \n" +
+                "                    (instance ?object ConnectedObject) \n" +
+                "                    (patient ?event ?object)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an entity and a process such that the process is an instance of combustion and the entity is an instance of ConnectedObject and the entity is a patient of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there exist an entity and a process such that the process is an instance of combustion and the entity is an instance of ConnectedObject and the entity is a patient of the process";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testConnectedObjectBurnsResource()     {
+        String stmt =   "(exists (?object ?event)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Combustion) \n" +
+                "                    (instance ?object ConnectedObject) \n" +
+                "                    (resource ?event ?object)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an object and a process such that the process is an instance of combustion and the object is an instance of ConnectedObject and the object is a resource for the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there exist an object and a process such that the process is an instance of combustion and the object is an instance of ConnectedObject and the object is a resource for the process";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    /**
+     * Ignored until we figure out how to insert "on" after the verb portion when there is no literal verb.
+     */
+    @Ignore
+    @Test
+    public void testBoyBurnsCombustibleObject()     {
+        String stmt =   "(exists (?he ?event ?object)\n" +
+                "                  (and\n" +
+                "                    (instance ?event Combustion) \n" +
+                "                    (instance ?he Boy) \n" +
+                "                    (instance ?object ConnectedObject) \n" +
+                "                    (patient ?event ?object) \n" +
+                "                    (agent ?event ?he)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, a process and an entity such that the process is an instance of combustion and the agent is an instance of boy and the entity is an instance of ConnectedObject and the entity is a patient of the process and the agent is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a boy performs a combustion on a ConnectedObject";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }

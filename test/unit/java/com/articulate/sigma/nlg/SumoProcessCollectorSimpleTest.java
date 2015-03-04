@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 
 public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
 
-    protected final KB knowledgeBase = this.kbMock;
+    private final KB knowledgeBase = this.kbMock;
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -66,26 +66,28 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
     public void testBasicSumoProcessFunctionality() {
         // Test constructor.
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Human");
+        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
         assertEquals(1, process.getRolesAndEntities().size());
-        assertEquals(1, process.getRoleEntities("agent").size());
-        assertEquals(0, process.getRoleEntities("patient").size());
-        assertEquals(true, process.isValid());
+        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
+        assertEquals(0, SumoProcessCollector.getRoleEntities(CaseRole.PATIENT, roleScratchPad).size());
 
         //Test agent getters and setters.
         process.addRole("agent", "Tom");
+        roleScratchPad = process.createNewRoleScratchPad();
 
         Set<String> expectedAgents = Sets.newTreeSet(Sets.newHashSet("Tom", "human"));
 
-        Set<String> actualAgents = process.getRoleEntities("agent");
+        Set<String> actualAgents = SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad);
         //Collections.sort(actualAgents);
 
         assertEquals(expectedAgents, actualAgents);
 
         // Test patient getters and setters.
         process.addRole("patient", "Automobile");
+        roleScratchPad = process.createNewRoleScratchPad();
 
         Set<String> expectedPatients = Sets.newTreeSet(Sets.newHashSet("automobile"));
-        Set<String> actualPatients = process.getRoleEntities("patient");
+        Set<String> actualPatients = SumoProcessCollector.getRoleEntities(CaseRole.PATIENT, roleScratchPad);
 
         assertEquals(expectedPatients, actualPatients);
 
@@ -104,19 +106,17 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
     public void testIsValidFalse() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "benefactive", "Driving", "Sally");
         process.addRole("goal", "HospitalBuilding");
-
-        assertEquals(false, process.isValid());
     }
 
     @Test
     public void testAddMultipleRoles() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Human");
-        process.addRole("benefactive", "Sally");
-        process.addRole("goal", "HospitalBuilding");
+        process.addRole("patient", "Sally");
+        process.addRole("destination", "HospitalBuilding");
 
         String expected = "agent Driving human\n" +
-                "benefactive Driving Sally\n" +
-                "goal Driving HospitalBuilding\n";
+                "destination Driving HospitalBuilding\n" +
+                "patient Driving Sally\n";
         assertEquals(expected, process.toString());
     }
 
@@ -124,13 +124,13 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
     public void testAddMultipleRolesWithVariables() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
         process.addRole("patient", "?C");
-        process.addRole("goal", "?P");
+        process.addRole("destination", "?P");
 
         String expected = "agent Driving ?H\n" +
-                "goal Driving ?P\n" +
+                "destination Driving ?P\n" +
                 "patient Driving ?C\n";
         assertEquals(expected, process.toString());
-        expected = "?H drives ?C";
+        expected = "?H drives ?C to ?P";
         assertEquals(expected, process.toNaturalLanguage());
     }
 
@@ -140,10 +140,12 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
     @Test
     public void testNoIdenticalRoleParticipants() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Mark");
-        assertEquals(1, process.getRoleEntities("agent").size());
+        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
+        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
 
         process.addRole("agent", "Mark");
-        assertEquals(1, process.getRoleEntities("agent").size());
+        roleScratchPad = process.createNewRoleScratchPad();
+        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
     }
 
     /**
@@ -152,19 +154,20 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
     @Test
     public void testDeepCopies() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Mark");
-        process.addRole("goal", "HospitalBuilding");
+        process.addRole("destination", "HospitalBuilding");
+        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
 
-        assertEquals(1, process.getRoleEntities("agent").size());
+        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
         assertEquals(2, process.getRolesAndEntities().size());
 
         // Get local copy of agents, and change that.
-        Set<String> agents = process.getRoleEntities("agent");
+        Set<String> agents = SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad);
         agents.add("Sally");
-        assertEquals(1, process.getRoleEntities("agent").size());
+        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
 
         // Get local copy of all roles, and change that.
-        Multimap<String, String> allRoles = process.getRolesAndEntities();
-        allRoles.put("goal", "House");
+        Multimap<CaseRole, String> allRoles = process.getRolesAndEntities();
+        allRoles.put(CaseRole.DESTINATION, "House");
         assertEquals(2, process.getRolesAndEntities().size());
     }
 
@@ -173,15 +176,18 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "patient", "Driving", "Automobile");
 
         String expected = "an automobile";
-        assertEquals(expected, process.formulateNaturalDirectObject());
+        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
+        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
 
         process.addRole("patient", "Truck");
+        roleScratchPad = process.createNewRoleScratchPad();
         expected = "an automobile and a truck";
-        assertEquals(expected, process.formulateNaturalDirectObject());
+        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
 
         process.addRole("patient", "Taxi");
+        roleScratchPad = process.createNewRoleScratchPad();
         expected = "an automobile and a taxi and a truck";
-        assertEquals(expected, process.formulateNaturalDirectObject());
+        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
     }
 
     /**
@@ -193,7 +199,8 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "patient", "Driving", "Entity");
 
         String expected = "Entity";
-        assertEquals(expected, process.formulateNaturalDirectObject());
+        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
+        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
     }
 
     @Test
@@ -201,15 +208,18 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Human");
 
         String expected = "a human";
-        assertEquals(expected, process.formulateNaturalSubject());
+        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
+        assertEquals(expected, process.formulateNaturalSubject(roleScratchPad));
 
         process.addRole("agent", "Coffee");
         expected = "coffee and a human";
-        assertEquals(expected, process.formulateNaturalSubject());
+        roleScratchPad = process.createNewRoleScratchPad();
+        assertEquals(expected, process.formulateNaturalSubject(roleScratchPad));
 
         process.addRole("agent", "MedicalDoctor");
         expected = "coffee and a human and a medicaldoctor";
-        assertEquals(expected, process.formulateNaturalSubject());
+        roleScratchPad = process.createNewRoleScratchPad();
+        assertEquals(expected, process.formulateNaturalSubject(roleScratchPad));
     }
 
     @Test
@@ -218,6 +228,23 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
 
         String expected = "performs a transportation";
         assertEquals(expected, process.formulateNaturalVerb());
+    }
+
+    /**
+     * Verify that createNewRoleScratchPad( ) returns a defensive copy.
+     */
+    @Test
+    public void testCreateNewRoleScratchPad() {
+        SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Transportation", "Maria");
+
+        Multimap<CaseRole,String> originalMap = process.createNewRoleScratchPad();
+        assertEquals(1, originalMap.size());
+        originalMap.clear();
+        assertEquals(0, originalMap.size());
+
+        Multimap<CaseRole,String> actualMap = process.createNewRoleScratchPad();
+
+        assertEquals(1, actualMap.size());
     }
 
 

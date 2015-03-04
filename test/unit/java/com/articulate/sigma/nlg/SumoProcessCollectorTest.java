@@ -9,9 +9,9 @@ import static org.junit.Assert.assertEquals;
 
 // Tests on SumoProcess require KBs be loaded.
 
-public class SumoProcessTest extends UnitTestBase {
+public class SumoProcessCollectorTest extends UnitTestBase {
 
-    protected KB knowledgeBase = SigmaTestBase.kb;
+    private final KB knowledgeBase = SigmaTestBase.kb;
 
     @Test
     public void testNaturalLanguageDrivingPatient() {
