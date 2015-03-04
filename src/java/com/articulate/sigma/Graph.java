@@ -268,6 +268,8 @@ public class Graph {
                 graphsize++;
                 if (graphsize < 100)                 
                     result.add(createGraphEntry(kb,prefix.toString(),kbHref,term,language));
+                else
+                    return result;
             }
             if (below > 0) {
                 ArrayList<Formula> stmtBelow = kb.askWithRestriction(0,relation,2,term);
@@ -377,7 +379,11 @@ public class Graph {
                 String parent = f.getArgument(2); 
                 String child = f.getArgument(1);                      
                 String s = "  \"" + parent + "\" -> \"" + child + "\";";
-                result.add(s);
+                graphsize++;
+                if (graphsize < 100) 
+                    result.add(s);
+                else
+                    return result;
                 checkedSet.add(term);
                 if (upSearch) {
                     newStartSet.add(parent);
