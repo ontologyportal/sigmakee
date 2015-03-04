@@ -13,7 +13,7 @@ public class NLGStringUtilsTest {
     @Test
     public void testConcatenateNoInput()   {
         String expected = "";
-        String actual = NLGStringUtils.concatenateWithCommas(Lists.newArrayList());
+        String actual = NLGStringUtils.concatenateWithCommas(Lists.<String>newArrayList());
         assertEquals(expected, actual);
 
         expected = "";

@@ -45,10 +45,17 @@
 			<artifactId>json-simple</artifactId>
 			<version>1.1</version>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>edu.stanford.nlp</groupId>
 			<artifactId>stanford-corenlp</artifactId>
 			<version>3.5.1</version>
+		</dependency-->
+		<dependency>
+			<groupId>edu.stanford.nlp</groupId>
+			<artifactId>stanford-corenlp</artifactId>
+			<version>SNAPSHOT</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/stanford-corenlp-SNAPSHOT.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.stanford.nlp</groupId>
@@ -60,22 +67,19 @@
 	</dependencies>
 	<build>
 		<sourceDirectory>${src.dir}</sourceDirectory>
-		<testSourceDirectory>${test.src.dir}</testSourceDirectory>
 		<testResources>
 			<testResource>
 				<directory>${test.src.dir}</directory>
 				<includes>
-					<include>
-                        resources/*
-                    </include>
+					<include>**/*.java</include>
+					<include>resources/*</include>
 				</includes>
 			</testResource>
 			<testResource>
 				<directory>test/integration/java</directory>
 				<includes>
-					<include>
-                        resources/*
-                    </include>
+					<include>**/*.java</include>
+					<include>resources/*</include>
 				</includes>
 			</testResource>
 		</testResources>
