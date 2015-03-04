@@ -2,11 +2,13 @@ package com.articulate.sigma.nlp.pipeline;
 
 import edu.stanford.nlp.pipeline.Annotation;
 import junit.framework.TestCase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Created by aholub on 2/27/15.
  */
+@Ignore
 public class PipelineTest extends TestCase {
 
     @Test
