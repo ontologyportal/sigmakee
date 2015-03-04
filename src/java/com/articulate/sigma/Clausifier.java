@@ -2224,7 +2224,7 @@ public class Clausifier  {
         Formula result = c.clausify();        
         System.out.println(result);   
         
-        c = new Clausifier("(and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) (instance ?NUMBER1 RealNumber) " +
+        c = new Clausifier("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) (instance ?NUMBER1 RealNumber) " +
                 "(instance ?NUMBER2 RealNumber)) (or (and (instance ?NUMBER1 NonnegativeRealNumber) " +
                 "(equal ?NUMBER1 ?NUMBER2)) (and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 " +
                 "(SubtractionFn 0 ?NUMBER1)))))");
