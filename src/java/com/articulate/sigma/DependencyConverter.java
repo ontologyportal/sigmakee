@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import tptp_parser.SimpleTptpParserOutput;
+
 import java.io.*;
 import java.util.*;
 import java.text.ParseException;
@@ -167,7 +169,7 @@ public class DependencyConverter {
         String canonicalPath = "";
         try {
             String baseDir = KBmanager.getMgr().getPref("kbDir");
-            swFile = new File(baseDir + File.separator + "FirstNames.csv");
+            swFile = new File(baseDir + File.separator + "WordNetMappings" + File.separator + "FirstNames.csv");
             if (swFile == null) {
                 System.out.println("Error in DependencyConverter.readFirstNames(): " + 
                                     "The first names file does not exist in " + baseDir);

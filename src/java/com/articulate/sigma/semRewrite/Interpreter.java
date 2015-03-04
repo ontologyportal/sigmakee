@@ -523,7 +523,7 @@ public class Interpreter {
    */
   public void loadRules() {
 
-      String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SemRewrite.txt";
+      String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "SemRewrite.txt";
       String pref = KBmanager.getMgr().getPref("SemRewrite");
       if (!StringUtil.emptyString(pref))
           filename = pref;

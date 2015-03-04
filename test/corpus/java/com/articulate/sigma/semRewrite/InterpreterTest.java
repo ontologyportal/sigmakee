@@ -12,7 +12,6 @@ import org.json.simple.*;
 import org.json.simple.parser.*;
 
 import com.articulate.sigma.KBmanager;
-import com.google.common.collect.ImmutableList;
 
 import java.io.*;
 import java.util.*;
@@ -71,12 +70,20 @@ public class InterpreterTest extends IntegrationTestBase {
         System.out.println(result);
         return result;    
     }
+
+    private String unify(String data) {
+        return data.replaceAll("\\n", "").replaceAll("\\s*\\)", ")").replaceAll("\\s*\\(", "(").trim();
+    }
     
     /** ***************************************************************
      */
     @Test
     public void test() {
-        assertEquals(fExpected, interp.interpretSingle(fInput));
+        String actual = interp.interpretSingle(fInput);
+        // Just to have beautiful output
+        if(!Objects.equals(unify(fExpected), unify(actual))) {
+            assertEquals(fExpected, actual);
+        }
     }
 }
 
