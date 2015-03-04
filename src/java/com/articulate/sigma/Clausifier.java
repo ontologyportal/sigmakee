@@ -2218,10 +2218,20 @@ public class Clausifier  {
         System.out.println("================== testClausificationSimple ======================");
         Formula form = new Formula();
         Clausifier c = new Clausifier("(<=> (or (or (forall (?X) (a ?X))  (b ?X)) (exists (?X) (exists (?Y) (p ?X (f ?Y))))) (q (g a) ?X))");
+
         System.out.println("input: " + c.thisFormula);
         System.out.println();
         Formula result = c.clausify();        
-        System.out.println(result);        
+        System.out.println(result);   
+        
+        c = new Clausifier("(and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) (instance ?NUMBER1 RealNumber) " +
+                "(instance ?NUMBER2 RealNumber)) (or (and (instance ?NUMBER1 NonnegativeRealNumber) " +
+                "(equal ?NUMBER1 ?NUMBER2)) (and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 " +
+                "(SubtractionFn 0 ?NUMBER1)))))");
+        System.out.println("input: " + c.thisFormula);
+        System.out.println();
+        result = c.clausify();        
+        System.out.println(result);  
     }
     
     /** ***************************************************************
@@ -2231,11 +2241,11 @@ public class Clausifier  {
         //testRemoveImpEq();
         //testMoveNegationIn();
         //testMoveQuantifiersLeft();
-        testStandardizeVariables();
+        //testStandardizeVariables();
         //testSkolemization();
         //testDistribute();
         //testClausification();
-        //testClausificationSimple();
+        testClausificationSimple();
     	//testClausifier(args);
     }
 }
