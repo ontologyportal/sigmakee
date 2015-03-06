@@ -62,7 +62,8 @@
     </copy>
 
     <copy todir="${deploy.home}/lib">
-        <fileset file="${basedir}/lib/IDV.jar" />
+        <fileset file="${basedir}/lib/*.jar" />
+        <!-- fileset file="${basedir}/lib/IDV.jar" />
         <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
         <fileset file="${basedir}/lib/mail.jar" />
         <fileset file="${basedir}/lib/guava-15.0.jar" />
@@ -71,7 +72,7 @@
         <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
         <fileset file="${basedir}/lib/TptpParser.jar" />
         <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
-        <!-- fileset file="${basedir}/lib/ClientHttpRequest.jar" /-->
+        <fileset file="${basedir}/lib/ClientHttpRequest.jar" / -->
     </copy>
 
     <!-- Create WEB-INF/classes/ and copy all the loose classes to it. -->
@@ -145,7 +146,8 @@
 	        <fileset dir="web/pixmaps"/>
 	    </copy>
 	    <copy todir="${debian.folder}/temp/sigmawebapp/lib">
-	        <fileset file="${basedir}/lib/IDV.jar" />
+	    	<fileset file="${basedir}/lib/*.jar" />
+	        <!-- fileset file="${basedir}/lib/IDV.jar" />
 	        <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
 	        <fileset file="${basedir}/lib/mail.jar" />
 	        <fileset file="${basedir}/lib/guava-15.0.jar" />
@@ -154,7 +156,7 @@
 	        <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
 	        <fileset file="${basedir}/lib/TptpParser.jar" />
 	    	<fileset file="${basedir}/lib/cos-multipart.jar" />
-	        <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
+	        <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" / -->
 	    </copy>
 	    <!-- Create WEB-INF/classes/ and copy all the loose classes to it. -->
 		<mkdir dir="${debian.folder}/temp/sigmawebapp/WEB-INF/classes"/>
