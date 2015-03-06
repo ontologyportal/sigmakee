@@ -147,8 +147,8 @@ public class EProver {
         // Qingqing: modify executable string using e_ltb_runner
         String execString = executable + " --interactive "
                 + __dummyKBdir + File.separator + "EBatchConfig.txt "
-                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover "
-                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "epclextract";
+                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover ";
+                //  executable.substring(0, executable.lastIndexOf("/")) + File.separator + "epclextract";
         System.out.println("INFO in EProver(): executing: " + execString);
         _eprover = Runtime.getRuntime().exec(execString);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
