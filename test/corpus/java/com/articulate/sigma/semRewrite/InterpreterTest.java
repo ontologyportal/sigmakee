@@ -3,6 +3,7 @@ package com.articulate.sigma.semRewrite;
 import static org.junit.Assert.assertEquals;
 
 import com.articulate.sigma.IntegrationTestBase;
+import com.google.common.io.Resources;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +15,7 @@ import org.json.simple.parser.*;
 import com.articulate.sigma.KBmanager;
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 
 @RunWith(Parameterized.class)
@@ -39,12 +41,10 @@ public class InterpreterTest extends IntegrationTestBase {
      */
     @Parameters(name="{0}")
     public static Collection<Object[]> prepare() {
-   
-           ArrayList<Object[]> result = new ArrayList<Object[]>();
-        File jsonTestFile = new File(IntegrationTestBase.RESOURCES_FILE, "translation_tests.json");
-        // FIXME ? Maybe we should verify the file exists?
-        String filename = jsonTestFile.getAbsolutePath();
-        JSONParser parser = new JSONParser();  
+        ArrayList<Object[]> result = new ArrayList<Object[]>();
+        URL translationTestsFile = Resources.getResource("resources/translation_tests.json");
+        String filename = translationTestsFile.getPath();
+        JSONParser parser = new JSONParser();
         try {  
             Object obj = parser.parse(new FileReader(filename));  
             JSONArray jsonObject = (JSONArray) obj; 

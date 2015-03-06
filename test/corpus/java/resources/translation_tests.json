@@ -1,5 +1,4 @@
 [
-{
 {"text":"John owns a dog.",
 "kif":
 "(exists (?John-1 ?dog-4) 
@@ -9,7 +8,6 @@
     (possesses ?John-1 ?dog-4)
     (instance ?dog-4 Canine)))"
 },
-{
 {"text":"John arrives.",
 "kif":
 "(exists (?John-1 ?arrives-2) 
@@ -19,7 +17,6 @@
     (instance ?arrives-2 Arriving)
     (instance ?John-1 Human)))"
 },
-{
 {"text":"John is a customer of the bank.",
 "kif":
 "(exists (?bank)
@@ -29,7 +26,6 @@
     (customer John-1 ?bank)
     (instance ?bank Bank-FinancialOrganization)))"
 },
-{
 {"text":"The customer is at the bank.",
 "kif":
 "(exists (?bank ?customer ?salesperson)
@@ -40,7 +36,6 @@
     (located ?customer ?bank)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"The card is valid.",
 "kif":
 "(exists (?card)
@@ -48,7 +43,6 @@
     (instance ?card BankCard)
     (attribute ?card Valid)))"
 },
-{
 {"text":"John is a baker.",
 "kif":
 "(and
@@ -56,7 +50,6 @@
   (instance John-1 Human)
   (attribute John-1 Position) )"
 },
-{
 {"text":"John is the baker.",
 "kif":
 "(and
@@ -64,7 +57,6 @@
   (instance John-1 Human)
   (attribute John-1 Position) )"
 },
-{
 {"text":"John is German.",
 "kif":
 "(and
@@ -72,7 +64,6 @@
   (instance John-1 Human)
   (member John-1 TeutonicEthnicity))"
 },
-{
 {"text":"John is Mr Miller.",
 "kif":
 "(and
@@ -83,7 +74,6 @@
   (instance John-1 Human)
   (attribute John-1 Male))"
 },
-{
 {"text":"John's sibling is Mr Miller.",
 "kif":
 "(exists (?sibling)
@@ -96,7 +86,6 @@
     (equal ?sibling MrMiller)
     (sibling ?sibling John-1)))"
 },
-{
 {"text":"John is Mr Miller's father.",
 "kif":
 "(exists (?father)
@@ -109,7 +98,6 @@
     (equal John-1 ?father)
     (father ?father MrMiller)))"
 },
-{
 {"text":"The sibling of Jill is at the bank.",
 "kif":
 "(exists (?bank ?sibling)
@@ -120,7 +108,6 @@
     (sibling ?sibling Jill-1)
     (located ?sibling ?bank)))"
 },
-{
 {"text":"John's card is compatible with the red bank card.",
 "kif":
 "(exists (?bank_card ?card)
@@ -133,7 +120,6 @@
     (possesses John-1 ?card)
     (attribute ?card SubjectiveAssessmentAttribute)))"
 },
-{
 {"text":"John's code is identical to Mary's code.",
 "kif":
 "(exists (?code1 ?code2)
@@ -148,7 +134,6 @@
     (possesses Mary-1 ?code2)
     (equal ?code1 ?code2)))"
 },
-{
 {"text":"John's card is more expensive than Mary's card.",
 "kif":
 "(exists (?card1 ?card2)
@@ -165,7 +150,6 @@
     (monetaryValue ?card2 ?val2)
     (greaterThan ?val1 ?val2)))"
 },
-{
 {"text":"John gives the card to Mary.",
 "kif":
 "(exists (?card ?event)
@@ -180,7 +164,6 @@
     (instance Mary-1 Human)
     (destination ?event Mary-1)))"
 },
-{
 {"text":"She gives the card to Mary.",
 "kif":
 "(exists (?card ?she ?event)
@@ -195,7 +178,6 @@
     (instance Mary-1 Human)
     (destination ?event Mary-1)))"
 },
-{
 {"text":"A new customer gives the card to the teller.",
 "kif":
 "(exists (?teller ?card ?salesperson ?customer ?event)
@@ -211,7 +193,6 @@
     (attribute ?teller Position)
     (destination ?event ?teller)))"
 },
-{
 {"text":"John gives Mary the card.",
 "kif":
 "(exists (?card ?event)
@@ -226,7 +207,6 @@
     (instance Mary-1 Human)
     (destination ?event Mary-1)))"
 },
-{
 {"text":"A new customer gives the teller the card.",
 "kif":
 "(exists (?teller ?card ?salesperson ?customer ?event)
@@ -242,7 +222,6 @@
     (attribute ?teller Position)
     (destination ?event ?teller)))"
 },
-{
 {"text":"The oldest dog enters the bank.",
 "kif":
 "(exists (?bank ?dog ?event)
@@ -263,7 +242,6 @@
     (patient ?event ?bank)
     (agent ?event ?dog)))"
 },
-{
 {"text":"The oldest customer enters an invalid card.",
 "kif":
 "(exists (?card ?customer ?event ?salesperson)
@@ -287,7 +265,6 @@
     (agent ?event ?customer)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"Mr Miller is the oldest teller.",
 "kif":
 "(and
@@ -306,7 +283,6 @@
         (age ?X ?val2))))
   (instance MrMiller Human))"
 },
-{
 {"text":"John dry cleans the credit card.",
 "kif":
 "(exists (?credit_card ?event)
@@ -318,7 +294,6 @@
     (instance ?credit_card CreditCard)
     (patient ?event ?credit_card)))"
 },
-{
 {"text":"The New York Times is at the bank.",
 "kif":
 "(exists (?bank)
@@ -327,7 +302,6 @@
     (instance ?bank Bank-FinancialOrganization)
     (located TheNewYorkTimes ?bank) ))"
 },
-{
 {"text":"Mr Miller enters the bank.",
 "kif":
 "(exists (?bank ?event)
@@ -341,7 +315,6 @@
     (instance ?event Motion)
     (patient ?event ?bank)))"
 },
-{
 {"text":"The customer Mr Miller enters the bank.",
 "kif":
 "(exists (?bank ?event ?salesperson)
@@ -355,7 +328,6 @@
     (instance ?salesperson CognitiveAgent)
     (patient ?event ?bank)))"
 },
-{
 {"text":"The customer Mr Miller enters a bank X.",
 "kif":
 "(exists (?salesperson ?event ?X)
@@ -369,7 +341,6 @@
     (instance ?X Bank-FinancialOrganization)
     (patient ?event ?X)))"
 },
-{
 {"text":"The card's code is valid.",
 "kif":
 "(exists (?card ?code)
@@ -379,7 +350,6 @@
     (instance ?code Text)
     (part ?code ?card)))"
 },
-{
 {"text":"John's card is at the bank.",
 "kif":
 "(exists (?bank ?card)
@@ -391,7 +361,6 @@
     (possesses John-1 ?card)
     (located ?card ?bank)))"
 },
-{
 {"text":"The captain of the ship throws the cannon into the sea.",
 "kif":
 "(exists (?cannon ?captain ?event ?sea ?ship)
@@ -406,7 +375,6 @@
     (operator ?captain ?ship)
     (destination ?event ?sea)))"
 },
-{
 {"text":"The thief kills John's father.",
 "kif":
 "(exists (?event ?father ?thief)
@@ -419,7 +387,6 @@
     (patient ?event ?father)
     (agent ?event ?thief)))"
 },
-{
 {"text":"The banker pokes John's nose.",
 "kif":
 "(exists (?banker ?event ?nose)
@@ -433,7 +400,6 @@
     (agent ?event ?banker)
     (patient ?event ?nose)))"
 },
-{
 {"text":"The farmer sees John's dog.",
 "kif":
 "(exists (?dog ?event ?farmer)
@@ -447,7 +413,6 @@
     (patient ?event ?dog)
     (experiencer ?event ?farmer)))"
 },
-{
 {"text":"John's swimming triggers Mary's distress.",
 "kif":
 "(exists (?distress ?swimming)
@@ -462,12 +427,10 @@
     (attribute Mary-1 ?distress)
     (result ?swimming ?distress)))"
 },
-{
 {"text":"Washington is the capital of the United States.",
 "kif":
 "(capitalCity WashingtonDC UnitedStates)"
 },
-{
 {"text":"He travels to the Sudan.",
 "kif":
 "(exists (?he ?event)
@@ -478,7 +441,6 @@
     (agent ?event ?he)
     (destination ?event Sudan)))"
 },
-{
 {"text":"He travels to Sudan.",
 "kif":
 "(exists (?he ?event)
@@ -489,7 +451,6 @@
     (agent ?event ?he)
     (destination ?event Sudan)))"
 },
-{
 {"text":"The waiter pours soup into the bowl.",
 "kif":
 "(exists (?bowl ?event ?soup ?waiter)
@@ -502,7 +463,6 @@
     (patient ?event ?soup)
     (agent ?event ?waiter)))"
 },
-{
 {"text":"Water flows.",
 "kif":
 "(exists (?event ?water)
@@ -511,7 +471,6 @@
     (instance ?water Water)
     (patient ?event ?water)))"
 },
-{
 {"text":"The boy talks.",
 "kif":
 "(exists (?boy ?event)
@@ -522,7 +481,6 @@
     (instance ?event Speaking)
     (agent ?event ?boy)))"
 },
-{
 {"text":"The spy gives money to the thief.",
 "kif":
 "(exists (?event ?money ?spy ?thief)
@@ -535,7 +493,6 @@
     (agent ?event ?spy)
     (destination ?event ?thief)))"
 },
-{
 {"text":"He drives toward the bridge.",
 "kif":
 "(exists (?bridge ?he ?event)
@@ -547,7 +504,6 @@
     (instance ?bridge Bridge)
     (direction ?event ?bridge)))"
 },
-{
 {"text":"Karla falls below the tree branch.",
 "kif":
 "(exists (?event ?tree_branch ?location)
@@ -560,7 +516,6 @@
     (destination ?event ?location)
     (orientation ?location ?tree_branch Below)))"
 },
-{
 {"text":"John enters the bank with Sarah.",
 "kif":
 "(exists (?bank ?event)
@@ -575,7 +530,6 @@
     (instance Sarah-1 Human)
     (agent ?event Sarah-1)))"
 },
-{
 {"text":"The airplane flies to the airport.",
 "kif":
 "(exists (?airplane ?airport ?event)
@@ -586,7 +540,6 @@
     (patient ?event ?airplane)
     (destination ?event ?airport)))"
 },
-{
 {"text":"The boat floats on the water.",
 "kif":
 "(exists (?water ?boat ?event ?location)
@@ -598,7 +551,6 @@
     (orientation ?location ?water On)
     (located ?event ?location)))"
 },
-{
 {"text":"The train arrives on every Monday.",
 "kif":
 "(exists (?train ?event ?Monday)
@@ -610,7 +562,6 @@
     (overlapsTemporally
       (WhenFn ?event) ?Monday)))"
 },
-{
 {"text":"The visitor arrives at the station.",
 "kif":
 "(exists (?event ?station ?visitor)
@@ -621,7 +572,6 @@
     (destination ?event ?station)
     (agent ?event ?visitor)))"
 },
-{
 {"text":"The visitor arrives at the midnight.",
 "kif":
 "(exists (?event ?midnight ?visitor)
@@ -633,7 +583,6 @@
       (WhenFn ?event) ?midnight)
     (agent ?event ?visitor)))"
 },
-{
 {"text":"John's dog is the most expensive dog.",
 "kif":
 "(exists (?dog)
@@ -653,7 +602,6 @@
     (instance ?dog Canine)
     (possesses John-1 ?dog)))"
 },
-{
 {"text":"John's dog is more expensive than Mary's dog.",
 "kif":
 "(exists (?dog1 ?dog2)
@@ -670,7 +618,6 @@
     (instance ?dog2 Canine)
     (possesses Mary-1 ?dog2)))"
 },
-{
 {"text":"John's dog is different from Mary's dog.",
 "kif":
 "(exists (?dog1 ?dog2)
@@ -686,7 +633,6 @@
     (instance ?dog2 Canine)
     (possesses Mary-1 ?dog2)))"
 },
-{
 {"text":"John is red.",
 "kif":
 "(and
@@ -694,7 +640,6 @@
   (instance John-1 Human)
   (attribute John-1 Male) )"
 },
-{
 {"text":"The dog is red.",
 "kif":
 "(exists (?dog)
@@ -702,7 +647,6 @@
     (attribute ?dog Red)
     (instance ?dog Canine)))"
 },
-{
 {"text":"A customer who is German inserts the card.",
 "kif":
 "(exists (?card ?customer ?event ?salesperson)
@@ -716,7 +660,6 @@
     (agent ?event ?customer)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"The customer who enters the bank inserts the card.",
 "kif":
 "(exists (?bank ?card ?customer ?event1 ?event2 ?salesperson)
@@ -733,7 +676,6 @@
     (agent ?event2 ?customer)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"The card which is old is valid.",
 "kif":
 "(exists (?card)
@@ -742,7 +684,6 @@
     (attribute ?card Valid)
     (instance ?card BankCard)))"
 },
-{
 {"text":"The card that is old is valid.",
 "kif":
 "(exists (?card)
@@ -751,7 +692,6 @@
     (attribute ?card Valid)
     (attribute ?card Old)))"
 },
-{
 {"text":"A customer inserts a credit card which is old.",
 "kif":
 "(exists (?credit_card ?customer ?event ?salesperson)
@@ -765,7 +705,6 @@
     (agent ?event ?customer)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"Mr Miller enters the card that the customer inserts.",
 "kif":
 "(exists (?card ?customer ?event1 ?event2 ?salesperson)
@@ -785,7 +724,6 @@
     (customer ?customer ?salesperson)
     (patient ?event2 ?card)))"
 },
-{
 {"text":"Mr Miller enters the card that the customer inserts into the slot.",
 "kif":
 "(exists (?card ?customer ?event1 ?event2 ?salesperson ?slot)
@@ -807,7 +745,6 @@
     (customer ?customer ?salesperson)
     (destination ?event2 ?slot)))"
 },
-{
 {"text":"John gives the card to the teller who gives the code to the customer.",
 "kif":
 "(exists (?card ?code ?customer ?event1 ?event2 ?salesperson ?teller)
@@ -829,7 +766,6 @@
     (destination ?event1 ?teller)
     (agent ?event2 ?teller)))"
 },
-{
 {"text":"John gives the card to the teller who gives the customer the code.",
 "kif":
 "(exists (?card ?code ?customer ?event1 ?event2 ?salesperson ?teller)
@@ -851,7 +787,6 @@
     (destination ?event1 ?teller)
     (agent ?event2 ?teller)))"
 },
-{
 {"text":"The teller enters the card that the customer gives to him.",
 "kif":
 "(exists (?card ?customer ?event1 ?event2 ?him ?salesperson ?teller)
@@ -871,7 +806,6 @@
     (agent ?event1 ?teller)
     (destination ?event2 ?him)))"
 },
-{
 {"text":"The teller enters the card that the customer gives him.",
 "kif":
 "(exists (?card ?customer ?event1 ?event2 ?him ?salesperson ?teller)
@@ -891,7 +825,6 @@
     (agent ?event1 ?teller)
     (destination ?event2 ?him)))"
 },
-{
 {"text":"John gives the card to the teller who the customer gives the code to.",
 "kif":
 "(exists (?card ?code ?customer ?event1 ?event2 ?salesperson ?teller)
@@ -913,7 +846,6 @@
     (destination ?event1 ?teller)
     (destination ?event2 ?teller)))"
 },
-{
 {"text":"John gives the card to the teller who gives the customer the code.",
 "kif":
 "(exists (?card ?code ?customer ?event1 ?event2 ?salesperson ?teller)
@@ -935,7 +867,6 @@
     (destination ?event1 ?teller)
     (agent ?event2 ?teller)))"
 },
-{
 {"text":"A customer who is old inserts a credit card that is valid.",
 "kif":
 "(exists (?credit_card ?salesperson ?customer ?event)
@@ -950,7 +881,6 @@
     (instance ?credit_card CreditCard)
     (patient ?event ?credit_card)))"
 },
-{
 {"text":"John's customer inserts a valid card.",
 "kif":
 "(exists (?card ?customer ?event)
@@ -964,7 +894,6 @@
     (patient ?event ?card)
     (agent ?event ?customer)))"
 },
-{
 {"text":"John's customer inserts a valid card manually.",
 "kif":
 "(exists (?card ?customer ?event)
@@ -979,7 +908,6 @@
     (patient ?event ?card)
     (agent ?event ?customer)))"
 },
-{
 {"text":"John's customer inserts a valid card of Mary manually into a slot X.",
 "kif":
 "(exists (?X ?card ?customer ?event)
@@ -999,7 +927,6 @@
     (patient ?event ?card)
     (agent ?event ?customer)))"
 },
-{
 {"text":"John's customer who is new inserts a valid card of Mary manually into a slot X.",
 "kif":
 "(exists (?X ?card ?customer ?event)
@@ -1020,7 +947,6 @@
     (patient ?event ?card)
     (agent ?event ?customer)))"
 },
-{
 {"text":"John's customer inserts a valid card manually into a slot X.",
 "kif":
 "(exists (?X ?card ?customer ?event)
@@ -1037,7 +963,6 @@
     (patient ?event ?card)
     (agent ?event ?customer)))"
 },
-{
 {"text":"The fast train arrives punctually.",
 "kif":
 "(exists (?event ?train)
@@ -1048,7 +973,6 @@
     (instance ?train Train)
     (patient ?event ?train)))"
 },
-{
 {"text":"The fast train arrives punctually on this Monday.",
 "kif":
 "(exists (?Monday ?event ?train)
@@ -1062,7 +986,6 @@
       (WhenFn ?event) ?Monday)
     (patient ?event ?train)))"
 },
-{
 {"text":"The fast train arrives punctually on this Monday in the station.",
 "kif":
 "(exists (?Monday ?event ?station ?train)
@@ -1078,7 +1001,6 @@
     (destination ?event ?station)
     (patient ?event ?train)))"
 },
-{
 {"text":"A customer arrives on this Monday punctually.",
 "kif":
 "(exists (?salesperson ?customer ?event ?monday)
@@ -1093,7 +1015,6 @@
       (WhenFn ?event) ?monday)
     (manner ?event Punctually)))"
 },
-{
 {"text":"A customer arrives on the train.",
 "kif":
 "(exists (?customer ?event ?salesperson ?train)
@@ -1106,7 +1027,6 @@
     (customer ?customer ?salesperson)
     (destination ?event ?train)))"
 },
-{
 {"text":"A customer arrives on every Monday.",
 "kif":
 "(exists (?Monday ?customer ?event ?salesperson)
@@ -1120,7 +1040,6 @@
     (agent ?event ?customer)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"A customer enters a code manually.",
 "kif":
 "(exists (?code ?salesperson ?customer ?event)
@@ -1134,7 +1053,6 @@
     (patient ?event ?code)
     (manner ?event Manually)))"
 },
-{
 {"text":"The train arrives in the station.",
 "kif":
 "(exists (?event ?station ?train)
@@ -1145,7 +1063,6 @@
     (destination ?event ?station)
     (patient ?event ?train)))"
 },
-{
 {"text":"The customer who inserts a card slowly enters a code.",
 "kif":
 "(exists (?card ?code ?customer ?event1 ?event2 ?salesperson)
@@ -1163,7 +1080,6 @@
     (agent ?event2 ?customer)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"The customer inserts a card slowly.",
 "kif":
 "(exists (?card ?salesperson ?customer ?event)
@@ -1177,7 +1093,6 @@
     (patient ?event ?card)
     (manner ?event Slowly)))"
 },
-{
 {"text":"John uses the credit card correctly.",
 "kif":
 "(exists (?credit_card ?event)
@@ -1191,7 +1106,6 @@
     (patient ?event ?credit_card)
     (manner ?event Correctly)))"
 },
-{
 {"text":"A dog is a mammal.",
 "kif":
 "(forall (?dog)
@@ -1199,7 +1113,6 @@
     (instance ?dog Canine)
     (instance ?dog Mammal)))"
 },
-{
 {"text":"John enters the bank.",
 "kif":
 "(exists (?bank ?event)
@@ -1211,7 +1124,6 @@
     (instance ?event Motion)
     (patient ?event ?bank)))"
 },
-{
 {"text":"The Zulus attack the boxes.",
 "kif":
 "(exists (?Zulu ?box ?event)
@@ -1222,21 +1134,18 @@
     (agent ?event ?Zulu)
     (patient ?event ?box)))"
 },
-{
 {"text":"Apples are fruit.",
 "kif":
 "(=>
   (instance ?apple Apple)
   (instance ?apple FruitOrVegetable))"
 },
-{
 {"text":"Trees are green.",
 "kif":
 "(=>
   (instance ?tree Tree)
   (attribute ?tree Green))"
 },
-{
 {"text":"The boy gave the girl a book.",
 "kif":
 "(exists (?book ?boy ?event ?girl)
@@ -1252,7 +1161,6 @@
     (patient ?event ?book)
     (agent ?event ?boy)))"
 },
-{
 {"text":"The car is in the garage.",
 "kif":
 "(exists (?garage ?car)
@@ -1261,7 +1169,6 @@
     (instance ?garage Garage)
     (instance ?car Automobile)))"
 },
-{
 {"text":"The dog runs.",
 "kif":
 "(exists (?dog ?event)
@@ -1270,7 +1177,6 @@
     (instance ?event Walking)
     (agent ?event ?dog)))"
 },
-{
 {"text":"The boy ate the fish.",
 "kif":
 "(exists (?boy ?event ?fish)
@@ -1283,7 +1189,6 @@
     (agent ?event ?boy)
     (patient ?event ?fish)))"
 },
-{
 {"text":"Tom gives the card to Sarah.",
 "kif":
 "(exists (?card ?event)
@@ -1298,7 +1203,6 @@
     (instance Sarah-1 Human)
     (destination ?event Sarah-1)))"
 },
-{
 {"text":"A carnivore is a large animal.",
 "kif":
 "(forall (?carnivore)
@@ -1308,7 +1212,6 @@
       (attribute ?carnivore Large)
       (instance ?carnivore Animal))))"
 },
-{
 {"text":"John is the president of the United States.",
 "kif":
 "(exists (?president)
@@ -1317,7 +1220,6 @@
     (instance John-1 Human)
     (occupiesPosition John-1 President UnitedStates)))"
 },
-{
 {"text":"Srini travels to the Sudan.",
 "kif":
 "(exists (?event)
@@ -1327,7 +1229,6 @@
     (destination ?event Sudan)
     (instance ?event Transportation)))"
 },
-{
 {"text":"Is the banker a man?",
 "kif":
 "(exists (?banker)
@@ -1335,7 +1236,6 @@
     (attribute ?banker Banker)
     (instance ?banker Man)))"
 },
-{
 {"text":"Is the dog red?",
 "kif":
 "(exists (?dog)
@@ -1343,7 +1243,6 @@
     (attribute ?dog Red)
     (instance ?dog Canine)))"
 },
-{
 {"text":"Is John's dog the most expensive dog?",
 "kif":
 "(exists (?dog)
@@ -1363,7 +1262,6 @@
     (instance ?dog Canine)
     (possesses John-1 ?dog)))"
 },
-{
 {"text":"Is John's dog more expensive than Mary's dog?",
 "kif":
 "(exists (?dog1 ?dog2)
@@ -1380,7 +1278,6 @@
     (instance ?dog2 Canine)
     (possesses Mary-1 ?dog2)))"
 },
-{
 {"text":"Is John's dog different from Mary's dog?",
 "kif":
 "(exists (?dog1 ?dog2)
@@ -1396,7 +1293,6 @@
     (instance ?dog2 Canine)
     (possesses Mary-1 ?dog2)))"
 },
-{
 {"text":"Does John breathe?",
 "kif":
 "(exists (?event)
@@ -1406,7 +1302,6 @@
     (instance John-1 Human)
     (agent ?event John-1)))"
 },
-{
 {"text":"Does Mary give John a book?",
 "kif":
 "(exists (?book ?event)
@@ -1421,7 +1316,6 @@
     (instance John-1 Human)
     (destination ?event John-1)))"
 },
-{
 {"text":"Does Mary give a book to John?",
 "kif":
 "(exists (?book ?event)
@@ -1436,7 +1330,6 @@
     (instance John-1 Human)
     (destination ?event John-1)))"
 },
-{
 {"text":"Does John beat Mr Miller?",
 "kif":
 "(exists (?event)
@@ -1451,28 +1344,24 @@
     (names MrMiller \"MrMiller\")
     (patient ?event MrMiller)))"
 },
-{
 {"text":"What is valid?",
 "kif":
 "(and
   (attribute ?what Valid)
   (instance ?what Physical))"
 },
-{
 {"text":"Who is the teller?",
 "kif":
 "(and
   (attribute ?who Position)
   (instance ?who Human))"
 },
-{
 {"text":"Who is the baker?",
 "kif":
 "(and
   (attribute ?who Position)
   (instance ?who Human))"
 },
-{
 {"text":"Who is the representative of the company?",
 "kif":
 "(exists (?company)
@@ -1482,7 +1371,6 @@
     (instance ?who Human)
     (operator ?who ?company)))"
 },
-{
 {"text":"What is in the slot?",
 "kif":
 "(exists (?slot)
@@ -1490,7 +1378,6 @@
     (instance ?slot ATMSlot)
     (located ?what ?slot)))"
 },
-{
 {"text":"Who enters what?",
 "kif":
 "(exists (?event)
@@ -1500,7 +1387,6 @@
     (agent ?event ?who)
     (patient ?event ?what)))"
 },
-{
 {"text":"Which customer enters a card?",
 "kif":
 "(exists (?card ?salesperson ?event)
@@ -1513,7 +1399,6 @@
     (instance ?card BankCard)
     (patient ?event ?card)))"
 },
-{
 {"text":"Who enters a card?",
 "kif":
 "(exists (?card ?event)
@@ -1524,7 +1409,6 @@
     (instance ?card BankCard)
     (patient ?event ?card)))"
 },
-{
 {"text":"Who does Mary beat?",
 "kif":
 "(exists (?event)
@@ -1535,7 +1419,6 @@
     (agent ?event Mary-1)
     (patient ?event ?who)))"
 },
-{
 {"text":"What does the dog eat?",
 "kif":
 "(exists (?dog ?event)
@@ -1545,7 +1428,6 @@
     (agent ?event ?dog)
     (patient ?event ?what)))"
 },
-{
 {"text":"Who does John give a card to?",
 "kif":
 "(exists (?card ?event)
@@ -1558,7 +1440,6 @@
     (patient ?event ?card)
     (destination ?event ?who)))"
 },
-{
 {"text":"What does Mary give to John?",
 "kif":
 "(exists (?event)
@@ -1572,7 +1453,6 @@
     (instance John-1 Human)
     (destination ?event John-1)))"
 },
-{
 {"text":"With whom does John enter the room?",
 "kif":
 "(exists (?room ?event)
@@ -1585,7 +1465,6 @@
     (destination ?event ?room)
     (agent ?event ?with_whom)))"
 },
-{
 {"text":"Who does John enter the room with?",
 "kif":
 "(exists (?room ?event)
@@ -1598,7 +1477,6 @@
     (destination ?event ?room)
     (agent ?event ?with_whom)) )"
 },
-{
 {"text":"What does John open the door with?",
 "kif":
 "(exists (?door ?event)
@@ -1611,7 +1489,6 @@
     (instance ?door Door)
     (patient ?event ?door) ))"
 },
-{
 {"text":"With what does John open the door?",
 "kif":
 "(exists (?door ?event)
@@ -1624,7 +1501,6 @@
     (instance ?door Door)
     (patient ?event ?door) ))"
 },
-{
 {"text":"From where does the train arrive?",
 "kif":
 "(exists (?event ?train)
@@ -1634,7 +1510,6 @@
     (origin ?event ?from_where)
     (patient ?event ?train)))"
 },
-{
 {"text":"Where does the train arrive from?",
 "kif":
 "(exists (?train ?event)
@@ -1644,7 +1519,6 @@
     (origin ?event ?where_from)
     (patient ?event ?train) ))"
 },
-{
 {"text":"Where does the machine move to?",
 "kif":
 "(exists (?machine ?event)
@@ -1654,7 +1528,6 @@
     (destination ?event ?where_to)
     (patient ?event ?machine) ))"
 },
-{
 {"text":"Where does John insert the card into?",
 "kif":
 "(exists (?card ?event)
@@ -1667,7 +1540,6 @@
     (instance ?card BankCard)
     (patient ?event ?card) ))"
 },
-{
 {"text":"With whom does the employee enter the room?",
 "kif":
 "(exists (?room ?OccupationalRole ?employee ?event)
@@ -1680,7 +1552,6 @@
     (destination ?event ?room)
     (agent ?event ?with_whom) ))"
 },
-{
 {"text":"How often does the milkman come?",
 "kif":
 "(exists (?event ?milkman)
@@ -1690,7 +1561,6 @@
     (frequency ?event ?how_often)
     (agent ?event ?milkman)))"
 },
-{
 {"text":"How long does the jet fly?",
 "kif":
 "(exists (?jet ?event)
@@ -1701,7 +1571,6 @@
       (WhenFn ?event) ?how_long)
     (patient ?event ?jet)))"
 },
-{
 {"text":"Since when does the employee work?",
 "kif":
 "(exists (?employee ?event ?employer)
@@ -1713,7 +1582,6 @@
         (WhenFn ?event)) ?since_when)
     (agent ?event ?employee)))"
 },
-{
 {"text":"How does the dog run?",
 "kif":
 "(exists (?dog ?event)
@@ -1723,7 +1591,6 @@
     (manner ?event ?how)
     (agent ?event ?dog) ))"
 },
-{
 {"text":"When does the man arrive?",
 "kif":
 "(exists (?event ?man)
@@ -1735,7 +1602,6 @@
         (WhenFn ?event)) ?when)
     (agent ?event ?man)))"
 },
-{
 {"text":"Where does John work?",
 "kif":
 "(exists (?event)
@@ -1746,7 +1612,6 @@
     (instance ?event Works)
     (located ?event ?where)))"
 },
-{
 {"text":"When is the dinner?",
 "kif":
 "(exists (?dinner)
@@ -1756,7 +1621,6 @@
         (WhenFn ?dinner)) ?when)
     (instance ?dinner Eating) ))"
 },
-{
 {"text":"How long is the dinner?",
 "kif":
 "(exists (?dinner)
@@ -1765,7 +1629,6 @@
     (duration
       (WhenFn ?dinner) ?how_long)))"
 },
-{
 {"text":"John owns a book. He likes it.",
 "kif":
 "(exists (?book)
@@ -1776,7 +1639,6 @@
     (instance ?book Book)
     (possesses John-1 ?book)))"
 },
-{
 {"text":"Some man sees some dog.",
 "kif":
 "(exists (?dog ?event ?man)
@@ -1787,7 +1649,6 @@
     (patient ?event ?dog)
     (experiencer ?event ?man)))"
 },
-{
 {"text":"Every man sees a dog.",
 "kif":
 "(forall (?man)
@@ -1800,7 +1661,6 @@
         (patient ?event ?dog)
         (experiencer ?event ?man)))))"
 },
-{
 {"text":"Some man sees every dog.",
 "kif":
 "(forall (?dog)
@@ -1813,7 +1673,6 @@
         (patient ?event ?dog)
         (experiencer ?event ?man)))))"
 },
-{
 {"text":"Every man sees every dog.",
 "kif":
 "(forall (?man)
@@ -1828,7 +1687,6 @@
             (patient ?event ?dog)
             (experiencer ?event ?man)))))))"
 },
-{
 {"text":"If John sees a hamburger then he wants it.",
 "kif":
 "(forall (?event ?hamburger)
@@ -1846,7 +1704,6 @@
       (instance ?hamburger Object)
       (wants John-1 ?hamburger))))"
 },
-{
 {"text":"If John travels then he walks.",
 "kif":
 "(forall (?event1)
@@ -1863,7 +1720,6 @@
         (agent ?event2 John-1)
         (instance ?event2 Walking)))))"
 },
-{
 {"text":"If Mary gives John a book then he reads it.",
 "kif":
 "(forall (?book ?event1)
@@ -1887,7 +1743,6 @@
         (instance ?event2 Reading)
         (patient ?event2 ?book)))))"
 },
-{
 {"text":"John eats every hamburger that he sees.",
 "kif":
 "(forall (?event1 ?hamburger)
@@ -1907,7 +1762,6 @@
         (instance ?event2 Eating)
         (patient ?event2 ?hamburger)))))"
 },
-{
 {"text":"John observes a hamburger at a store.",
 "kif":
 "(exists (?event ?hamburger ?store)
@@ -1921,7 +1775,6 @@
     (patient ?event ?hamburger)
     (destination ?event ?store)))"
 },
-{
 {"text":"The terrorist attacks the embassy.",
 "kif":
 "(exists (?embassy ?event ?terrorist)
@@ -1932,7 +1785,6 @@
     (patient ?event ?embassy)
     (agent ?event ?terrorist)))"
 },
-{
 {"text":"The door shatters.",
 "kif":
 "(exists (?door ?event)
@@ -1941,7 +1793,6 @@
     (instance ?event Destruction)
     (patient ?event ?door)))"
 },
-{
 {"text":"The ambassador gives Jacques Chirac a letter. He reads it.",
 "kif":
 "(exists (?ambassador ?event1 ?event2 ?letter)
@@ -1959,7 +1810,6 @@
     (patient ?event1 ?letter)
     (patient ?event2 ?letter)))"
 },
-{
 {"text":"The embassy guard breaks John's nose.",
 "kif":
 "(exists (?embassy_guard ?event ?nose)
@@ -1973,7 +1823,6 @@
     (agent ?event ?embassy_guard)
     (patient ?event ?nose)))"
 },
-{
 {"text":"John's father punches the guard.",
 "kif":
 "(exists (?event ?father ?guard)
@@ -1986,7 +1835,6 @@
     (agent ?event ?father)
     (patient ?event ?guard)))"
 },
-{
 {"text":"John's dog bites the ambassador.",
 "kif":
 "(exists (?ambassador ?dog ?event)
@@ -2000,7 +1848,6 @@
     (patient ?event ?ambassador)
     (agent ?event ?dog)))"
 },
-{
 {"text":"John's passport hits the floor.",
 "kif":
 "(exists (?event ?floor ?passport)
@@ -2014,7 +1861,6 @@
     (patient ?event ?floor)
     (agent ?event ?passport)))"
 },
-{
 {"text":"Is an ambassador a diplomatic agent?",
 "kif":
 "(forall (?ambassador)
@@ -2022,7 +1868,6 @@
     (attribute ?ambassador Ambassador)
     (attribute ?ambassador DiplomaticAgent)))"
 },
-{
 {"text":"Is a general a diplomatic agent?",
 "kif":
 "(forall (?general)
@@ -2030,22 +1875,18 @@
     (attribute ?general MilitaryGeneral)
     (attribute ?general DiplomaticAgent)))"
 },
-{
 {"text":"Is Afghanistan a continent?",
 "kif":
 "(instance Afghanistan Continent)"
 },
-{
 {"text":"Does Asia include Afghanistan?",
 "kif":
 "(part Afghanistan Asia)"
 },
-{
 {"text":"Does Afghanistan include Asia?",
 "kif":
 "(part Asia Afghanistan)"
 },
-{
 {"text":"If a country has an ambassador to the United States then it has diplomatic relations with the United States.",
 "kif":
 "(=>
@@ -2055,7 +1896,6 @@
     (representativeAgentToAgent ?country ?ambassador UnitedStates))
   (diplomaticRelations ?country UnitedStates))"
 },
-{
 {"text":"France has an ambassador to the United States.",
 "kif":
 "(exists (?ambassador)
@@ -2063,12 +1903,10 @@
     (attribute ?ambassador Ambassador)
     (representativeAgentToAgent France ?ambassador UnitedStates)))"
 },
-{
 {"text":"Does France have diplomatic relations with the United States?",
 "kif":
 "(diplomaticRelations France UnitedStates)"
 },
-{
 {"text":"If the European Monetary Union includes a country then it trades in the euro.",
 "kif":
 "(forall (?country)
@@ -2083,7 +1921,6 @@
         (agent ?event ?country)
         (patient ?event ?euro)))))"
 },
-{
 {"text":"Britain does not trade in the euro.",
 "kif":
 "(not
@@ -2094,12 +1931,10 @@
       (instance ?event ChangeOfPossession)
       (patient ?event ?euro))))"
 },
-{
 {"text":"Does the European Monetary Union include Britain?",
 "kif":
 "(part UnitedKingdomOfGreatBritainAndNorthernIreland EuropeanMonetaryUnion)"
 },
-{
 {"text":"If NATO includes a country then it has an armed force.",
 "kif":
 "(forall (?country)
@@ -2112,12 +1947,10 @@
         (instance ?armed_force Organization)
         (possesses ?country ?armed_force)))))"
 },
-{
 {"text":"NATO includes France.",
 "kif":
 "(member France NorthAtlanticTreatyOrganization)"
 },
-{
 {"text":"The European Monetary Union includes some country that NATO includes.",
 "kif":
 "(exists (?country)
@@ -2126,7 +1959,6 @@
     (part ?country EuropeanMonetaryUnion)
     (part ?country NorthAtlanticTreatyOrganization)))"
 },
-{
 {"text":"If the European Monetary Union includes some country then Europe includes it.",
 "kif":
 "(forall (?country)
@@ -2138,7 +1970,6 @@
       (instance ?country Object)
       (part ?country Europe))))"
 },
-{
 {"text":"Does Europe include some country that NATO includes?",
 "kif":
 "(exists (?country)
@@ -2147,12 +1978,10 @@
     (part ?country Europe)
     (part ?country NorthAtlanticTreatyOrganization)))"
 },
-{
 {"text":"Does Iraq have diplomatic relations with the United States?",
 "kif":
 "(diplomaticRelations Iraq UnitedStates)"
 },
-{
 {"text":"Does Afghanistan provide controlled substances?",
 "kif":
 "(exists (?controlled_substances ?event)
@@ -2162,17 +1991,14 @@
     (instance ?controlled_substances ControlledSubstance)
     (patient ?event ?controlled_substances)))"
 },
-{
 {"text":"Who leads Afghanistan?",
 "kif":
 "(occupiesPosition ?who Leader Afghanistan)"
 },
-{
 {"text":"Who is the ruler of the Sudan?",
 "kif":
 "(occupiesPosition ?who Leader Sudan)"
 },
-{
 {"text":"Does Afghanistan export jewelry?",
 "kif":
 "(exists (?event ?jewelry)
@@ -2182,12 +2008,10 @@
     (instance ?jewelry Jewelry)
     (patient ?event ?jewelry)))"
 },
-{
 {"text":"Is Afghanistan an island?",
 "kif":
 "(instance Afghanistan Island)"
 },
-{
 {"text":"Which country is Afghanistan's neighboring country that borders the Persian Gulf?",
 "kif":
 "(and
@@ -2195,7 +2019,6 @@
   (instance ?neighboring_country Nation)
   (meetsSpatially Afghanistan ?neighboring_country))"
 },
-{
 {"text":"C/1-82 FA fires FASCAM at the T-80U.",
 "kif":
 "(exists (?FASCAM_rounds ?T-80U_main_battle_tank ?event)
@@ -2207,33 +2030,28 @@
     (patient ?event ?FASCAM_rounds)
     (destination ?event ?T-80U_main_battle_tank)))"
 },
-{
 {"text":"Where is Afghanistan?",
 "kif":
 "(and
   (instance Afghanistan Nation)
   (located Afghanistan ?where))"
 },
-{
 {"text":"Where is YoungsCompany?",
 "kif":
 "(and
   (instance YoungsCompany MilitaryOrganization)
   (located YoungsCompany ?where))"
 },
-{
 {"text":"What is OperationSecurityForFoodDistribution?",
 "kif":
 "(instance OperationSecurityForFoodDistribution ?what)"
 },
-{
 {"text":"Who is Young?",
 "kif":
 "(and
   (instance Young Human)
   (attribute Young ?who))"
 },
-{
 {"text":"Who is the leader of YoungsCompany?",
 "kif":
 "(and
@@ -2241,7 +2059,6 @@
   (instance ?who Human)
   (leader ?who YoungsCompany))"
 },
-{
 {"text":"Young is the leader of YoungsCompany.",
 "kif":
 "(and
@@ -2249,7 +2066,6 @@
   (instance YoungsCompany MilitaryOrganization)
   (leader Young YoungsCompany))"
 },
-{
 {"text":"Young leads YoungsCompany.",
 "kif":
 "(exists (?event)
@@ -2260,7 +2076,6 @@
     (instance ?event Guiding)
     (patient ?event YoungsCompany)))"
 },
-{
 {"text":"Perez is a member of YoungsCompany.",
 "kif":
 "(and
@@ -2268,17 +2083,14 @@
   (instance YoungsCompany MilitaryOrganization)
   (member Perez YoungsCompany))"
 },
-{
 {"text":"what is the goal of OperationSecurityForFoodDistribution?",
 "kif":
 "(destination OperationSecurityForFoodDistribution ?what)"
 },
-{
 {"text":"What is OperationSecurityForFoodDistribution's goal?",
 "kif":
 "(destination OperationSecurityForFoodDistribution ?what)"
 },
-{
 {"text":"What is the purpose of an ATM?",
 "kif":
 "(exists (?ATM)
@@ -2286,7 +2098,6 @@
     (instance ?ATM Device)
     (hasPurpose ?ATM ?what)))"
 },
-{
 {"text":"What is an ATM's purpose?",
 "kif":
 "(exists (?ATM)
@@ -2294,14 +2105,12 @@
     (instance ?ATM Device)
     (hasPurpose ?ATM ?what)))"
 },
-{
 {"text":"What is Young?",
 "kif":
 "(and
   (attribute Young ?what)
   (instance Young Human))"
 },
-{
 {"text":"Bob is the publisher of the book.",
 "kif":
 "(exists (?book)
@@ -2312,47 +2121,38 @@
     (instance ?book Book)
     (publishes Robert-1 ?book)))"
 },
-{
 {"text":"What is the conclusion of the book?",
 "kif":
 "(conclusion Book ?what)"
 },
-{
 {"text":"What is Perez's consideration?",
 "kif":
 "(considers Perez ?what)"
 },
-{
 {"text":"What is the cause of French Revolution?",
 "kif":
 "(causes ?what French_Revolution)"
 },
-{
 {"text":"What is the result of French Revolution?",
 "kif":
 "(result French_Revolution ?what)"
 },
-{
 {"text":"What is Perez's skill?",
 "kif":
 "(hasSkill ?what Perez)"
 },
-{
 {"text":"What is the resource of YoungsCompany?",
 "kif":
 "(resource YoungsCompany ?what)"
 },
-{
 {"text":"What is Omar's belief?",
 "kif":
 "(believes Omar ?what)"
 },
-{
 {"text":"What is French Revolution?",
 "kif":
 "(instance French_Revolution ?what)"
 },
-{
 {"text":"Bob is a citizen of the United States.",
 "kif":
 "(and
@@ -2360,28 +2160,24 @@
   (citizen Robert-1 UnitedStates)
   (instance Robert-1 Human))"
 },
-{
 {"text":"Omar is a warlord.",
 "kif":
 "(and
   (attribute Omar Position)
   (instance Omar Human))"
 },
-{
 {"text":"Omar is a citizen of Afghanistan.",
 "kif":
 "(and
   (citizen Omar Afghanistan)
   (instance Omar Human))"
 },
-{
 {"text":"Young is a captain.",
 "kif":
 "(and
   (attribute Young Captain)
   (instance Young Human))"
 },
-{
 {"text":"Who is the author of the book?",
 "kif":
 "(exists (?book)
@@ -2390,14 +2186,12 @@
     (instance ?who Human)
     (authors ?who ?book)))"
 },
-{
 {"text":"Who is Bob?",
 "kif":
 "(and
   (instance Robert-1 Human)
   (attribute Robert-1 ?who))"
 },
-{
 {"text":"Homer is the author of Iliad.",
 "kif":
 "(and
@@ -2405,7 +2199,6 @@
   (instance Homer Human)
   (instance Iliad Text))"
 },
-{
 {"text":"Bob is the author of a book. He plays a record.",
 "kif":
 "(exists (?book ?event ?record)
@@ -2419,12 +2212,10 @@
     (instance ?record Device)
     (patient ?event ?record)))"
 },
-{
 {"text":"What is the conclusion of Odyssey?",
 "kif":
 "(conclusion ?what Odyssey)"
 },
-{
 {"text":"Who is the author of Odyssey?",
 "kif":
 "(and
@@ -2432,7 +2223,6 @@
   (authors ?who Odyssey)
   (instance ?who Human))"
 },
-{
 {"text":"Is Homer the author of Iliad?",
 "kif":
 "(and
@@ -2440,7 +2230,6 @@
   (instance Homer Human)
   (instance Iliad Text))"
 },
-{
 {"text":"Who writes Iliad?",
 "kif":
 "(and
@@ -2448,7 +2237,6 @@
   (authors ?who Iliad)
   (instance ?who Human))"
 },
-{
 {"text":"Who authors Iliad?",
 "kif":
 "(and
@@ -2456,7 +2244,6 @@
   (authors ?who Iliad)
   (instance ?who Human))"
 },
-{
 {"text":"An arrow penetrates the wood.",
 "kif":
 "(exists (?arrow ?wood)
@@ -2465,7 +2252,6 @@
     (instance ?wood Wood)
     (penetrates ?arrow ?wood)))"
 },
-{
 {"text":"A window faces the door.",
 "kif":
 "(exists (?door ?window)
@@ -2474,7 +2260,6 @@
     (instance ?window Window)
     (faces ?window ?door)))"
 },
-{
 {"text":"A bedroom faces the beach.",
 "kif":
 "(exists (?beach ?bedroom)
@@ -2483,7 +2268,6 @@
     (instance ?bedroom Bedroom)
     (faces ?bedroom ?beach)))"
 },
-{
 {"text":"The author faces a challenge.",
 "kif":
 "(exists (?author ?challenge)
@@ -2491,7 +2275,6 @@
     (attribute ?challenge SubjectiveAssessmentAttribute)
     (faces ?author ?challenge)))"
 },
-{
 {"text":"The candidate faces the conflict.",
 "kif":
 "(exists (?candidate ?conflict)
@@ -2500,7 +2283,6 @@
     (instance ?conflict Contest)
     (faces ?candidate ?conflict)))"
 },
-{
 {"text":"A window faces the street.",
 "kif":
 "(exists (?street ?window)
@@ -2509,7 +2291,6 @@
     (instance ?window Window)
     (faces ?window ?street)))"
 },
-{
 {"text":"Bob does not read Iliad.",
 "kif":
 "(not
@@ -2522,7 +2303,6 @@
       (instance ?event Reading)
       (patient ?event Iliad))))"
 },
-{
 {"text":"Bob does not write Iliad.",
 "kif":
 "(and
@@ -2532,7 +2312,6 @@
   (not
     (authors Robert-1 Iliad)))"
 },
-{
 {"text":"Bob does not give the book to Mary.",
 "kif":
 "(not
@@ -2548,7 +2327,6 @@
       (instance ?event Giving)
       (patient ?event ?book))))"
 },
-{
 {"text":"Bob is not the author of Iliad.",
 "kif":
 "(and
@@ -2558,7 +2336,6 @@
   (not
     (authors Robert-1 Iliad)))"
 },
-{
 {"text":"Bob is not British.",
 "kif":
 "(and
@@ -2567,7 +2344,6 @@
   (not
     (member Robert-1 British)))"
 },
-{
 {"text":"Bob is not rich.",
 "kif":
 "(and
@@ -2576,7 +2352,6 @@
   (not
     (attribute Robert-1 SubjectiveAssessmentAttribute)))"
 },
-{
 {"text":"Bob is not older than Jim.",
 "kif":
 "(and
@@ -2587,7 +2362,6 @@
   (not
     (older Robert-1 James-1)))"
 },
-{
 {"text":"Bob is not a customer of the bank.",
 "kif":
 "(exists (?bank)
@@ -2598,7 +2372,6 @@
       (customer Robert-1 ?bank))
     (instance ?bank Bank-FinancialOrganization)))"
 },
-{
 {"text":"A bird is not a mammal.",
 "kif":
 "(forall (?bird)
@@ -2607,7 +2380,6 @@
     (not
       (instance ?bird Mammal))))"
 },
-{
 {"text":"Bob is not at the bank.",
 "kif":
 "(exists (?bank)
@@ -2618,21 +2390,18 @@
       (located Robert-1 ?bank))
     (instance ?bank Bank-FinancialOrganization)))"
 },
-{
 {"text":"A rifle's range is not 250 meters.",
 "kif":
 "(not
   (range Rifle
     (MeasureFn 250 Meter)))"
 },
-{
 {"text":"The range of a rifle is not 250 meters.",
 "kif":
 "(not
   (range Rifle
     (MeasureFn 250 Meter)))"
 },
-{
 {"text":"The briefcase is not different from the handbag.",
 "kif":
 "(exists (?briefcase ?handbag)
@@ -2641,7 +2410,6 @@
     (instance ?handbag Bag)
     (equal ?briefcase ?handbag)))"
 },
-{
 {"text":"Who does not read Iliad?",
 "kif":
 "(not
@@ -2653,7 +2421,6 @@
       (instance ?who Human)
       (agent ?event ?who))))"
 },
-{
 {"text":"Who does not eat avocado?",
 "kif":
 "(not
@@ -2665,7 +2432,6 @@
       (patient ?event ?avocado)
       (agent ?event ?who))))"
 },
-{
 {"text":"Who does not own the book?",
 "kif":
 "(exists (?book)
@@ -2675,7 +2441,6 @@
     (instance ?book Book)
     (instance ?who Human)))"
 },
-{
 {"text":"What does not have an engine?",
 "kif":
 "(exists (?engine)
@@ -2685,7 +2450,6 @@
     (instance ?engine Machine)
     (instance ?what Physical)))"
 },
-{
 {"text":"Who is not British?",
 "kif":
 "(and
@@ -2693,7 +2457,6 @@
     (member ?who British))
   (instance ?who Human))"
 },
-{
 {"text":"What is not liquid?",
 "kif":
 "(and
@@ -2701,7 +2464,6 @@
     (attribute ?what Liquid))
   (instance ?what Physical))"
 },
-{
 {"text":"Does not a bird fly?",
 "kif":
 "(not
@@ -2709,7 +2471,6 @@
     (instance ?X Bird)
     (capability Flying agent ?X)))"
 },
-{
 {"text":"Is not a bird a mammal?",
 "kif":
 "(forall (?bird)
@@ -2718,7 +2479,6 @@
     (not
       (instance ?bird Mammal))))"
 },
-{
 {"text":"Who does not John give a card to?",
 "kif":
 "(not
@@ -2732,7 +2492,6 @@
       (patient ?event ?card)
       (destination ?event ?who))))"
 },
-{
 {"text":"What does not Mary give to John?",
 "kif":
 "(not
@@ -2747,7 +2506,6 @@
       (instance ?event Giving)
       (patient ?event ?what))))"
 },
-{
 {"text":"Where does Bob not carry the card?",
 "kif":
 "(not
@@ -2761,7 +2519,6 @@
       (patient ?event ?card)
       (located ?event ?where))))"
 },
-{
 {"text":"Where does a dog not bark?",
 "kif":
 "(not
@@ -2772,7 +2529,6 @@
       (agent ?event ?dog)
       (located ?event ?where))))"
 },
-{
 {"text":"When does the train not arrive?",
 "kif":
 "(not
@@ -2785,7 +2541,6 @@
           (WhenFn ?event)) ?when)
       (patient ?event ?train))))"
 },
-{
 {"text":"When does the engine not work?",
 "kif":
 "(not
@@ -2798,7 +2553,6 @@
           (WhenFn ?event)) ?when)
       (patient ?event ?engine))))"
 },
-{
 {"text":"When does a dog not bark?",
 "kif":
 "(not
@@ -2811,7 +2565,6 @@
           (WhenFn ?event)) ?when)
       (agent ?event ?dog))))"
 },
-{
 {"text":"How does Bob not remember the book?",
 "kif":
 "(not
@@ -2825,7 +2578,6 @@
       (patient ?event ?book)
       (manner ?event ?how))))"
 },
-{
 {"text":"How does a dog not bark?",
 "kif":
 "(not
@@ -2836,7 +2588,6 @@
       (agent ?event ?dog)
       (manner ?event ?how))))"
 },
-{
 {"text":"Since when does Bob not read a book?",
 "kif":
 "(not
@@ -2852,7 +2603,6 @@
           (WhenFn ?event)) ?since_when)
       (patient ?event ?book))))"
 },
-{
 {"text":"How long does the train not arrive?",
 "kif":
 "(not
@@ -2864,7 +2614,6 @@
       (instance ?train Train)
       (patient ?event ?train))))"
 },
-{
 {"text":"How long does the engine not work?",
 "kif":
 "(not
@@ -2876,7 +2625,6 @@
         (WhenFn ?event) ?how_long)
       (patient ?event ?engine))))"
 },
-{
 {"text":"Until when does Bob not read the book?",
 "kif":
 "(not
@@ -2892,7 +2640,6 @@
           (WhenFn ?event)) ?until_when)
       (patient ?event ?book))))"
 },
-{
 {"text":"How often does the engine not work?",
 "kif":
 "(not
@@ -2903,7 +2650,6 @@
       (patient ?event ?engine)
       (frequency ?event ?how_often))))"
 },
-{
 {"text":"From where does the man not arrive?",
 "kif":
 "(not
@@ -2914,7 +2660,6 @@
       (origin ?event ?from_where)
       (agent ?event ?man))))"
 },
-{
 {"text":"Bob does not kick the cart.",
 "kif":
 "(not
@@ -2928,7 +2673,6 @@
       (agent ?kick ?bob)
       (patient ?kick ?cart))))"
 },
-{
 {"text":"Bob does not write the book.",
 "kif":
 "(not
@@ -2940,7 +2684,6 @@
       (names ?bob \"Bob\")
       (authors ?bob ?book))))"
 },
-{
 {"text":"Bob does not write the book on Tuesday in the bathtub.",
 "kif":
 "(not
@@ -2960,7 +2703,6 @@
       (names ?bob \"Bob\")
       (authors ?bob ?book))))"
 },
-{
 {"text":"Not every animal is a bird.",
 "kif":
 "(exists (?animal)
@@ -2969,7 +2711,6 @@
     (not
       (instance ?animal Bird))))"
 },
-{
 {"text":"If Bob owns a horse, then he doesn't beat it.",
 "kif":
 "(=>
@@ -2985,7 +2726,6 @@
         (agent ?beating ?bob)
         (patient ?beating ?horse)))))"
 },
-{
 {"text":"No farmer beats a horse.",
 "kif":
 "(not
@@ -2997,7 +2737,6 @@
       (agent ?beating ?farmer)
       (patient ?beating ?horse))))"
 },
-{
 {"text":"Brutus inserts the knife into Caesar.",
 "kif":
 "(exists (?event ?knife)
@@ -3008,7 +2747,6 @@
     (destination ?event Caesar)
     (patient ?event ?knife)))"
 },
-{
 {"text":"Brutus inserts the knife into the cow.",
 "kif":
 "(exists (?cow ?event ?knife)
@@ -3021,7 +2759,6 @@
     (destination ?event ?cow)
     (patient ?event ?knife)))"
 },
-{
 {"text":"Bob cooks food with her.",
 "kif":
 "(exists (?event ?food ?her)
@@ -3036,7 +2773,6 @@
     (patient ?event ?food)
     (agent ?event ?her)))"
 },
-{
 {"text":"John reads a book and Mary goes to the shop.",
 "kif":
 "(exists (?book ?event1 ?event2 ?shop)
@@ -3054,7 +2790,6 @@
     (patient ?event1 ?book)
     (destination ?event2 ?shop)))"
 },
-{
 {"text":"John buys a book and he reads it.",
 "kif":
 "(exists (?book ?event1 ?event2)
@@ -3070,7 +2805,6 @@
     (patient ?event1 ?book)
     (patient ?event2 ?book)))"
 },
-{
 {"text":"Bob does not own the book but he reads it.",
 "kif":
 "(exists (?book ?event)
@@ -3085,7 +2819,6 @@
     (instance ?event Reading)
     (patient ?event ?book)))"
 },
-{
 {"text":"Bob, John and Mary write the book.",
 "kif":
 "(exists (?book)
@@ -3101,7 +2834,6 @@
     (authors Robert-1 ?book)
     (instance ?book Book)))"
 },
-{
 {"text":"The boy and the girl own a bicycle.",
 "kif":
 "(exists (?bicycle ?boy ?girl)
@@ -3116,7 +2848,6 @@
     (possesses ?boy ?bicycle)
     (possesses ?girl ?bicycle)))"
 },
-{
 {"text":"Homer writes Iliad and Odyssey.",
 "kif":
 "(and
@@ -3126,7 +2857,6 @@
   (instance Iliad Text)
   (instance Odyssey Text))"
 },
-{
 {"text":"Bob and Mary own a car and a boat.",
 "kif":
 "(exists (?boat ?car)
@@ -3142,7 +2872,6 @@
     (possesses Mary-1 ?car)
     (possesses Robert-1 ?car)))"
 },
-{
 {"text":"Bob and Mary buy a car and a boat.",
 "kif":
 "(exists (?boat ?car ?event)
@@ -3159,7 +2888,6 @@
     (patient ?event ?boat)
     (patient ?event ?car)))"
 },
-{
 {"text":"Bob sends Bill a book and a ticket.",
 "kif":
 "(exists (?book ?event ?ticket)
@@ -3176,7 +2904,6 @@
     (patient ?event ?book)
     (patient ?event ?ticket)))"
 },
-{
 {"text":"Bob is a musician and a carpenter.",
 "kif":
 "(and
@@ -3185,7 +2912,6 @@
   (attribute Robert-1 Musician)
   (instance Robert-1 Human))"
 },
-{
 {"text":"Bob is a soldier, an educator, a musician and a carpenter.",
 "kif":
 "(and
@@ -3196,7 +2922,6 @@
   (attribute Robert-1 Teacher)
   (instance Robert-1 Human))"
 },
-{
 {"text":"Bob returns a book, a pen, a knife and a cup to Bill.",
 "kif":
 "(exists (?book ?cup ?event ?knife ?pen)
@@ -3217,7 +2942,6 @@
     (patient ?event ?knife)
     (patient ?event ?pen)))"
 },
-{
 {"text":"Bob returns a book to Bill and Mary.",
 "kif":
 "(exists (?book ?event)
@@ -3235,7 +2959,6 @@
     (instance ?event GivingBack)
     (patient ?event ?book)))"
 },
-{
 {"text":"Bob mails a letter to Bill, Mary, John and Jane.",
 "kif":
 "(exists (?event ?letter)
@@ -3259,7 +2982,6 @@
     (instance ?letter Letter)
     (patient ?event ?letter)))"
 },
-{
 {"text":"Bob and Mary mail a book, a letter and a toy to John, Jane and Bill.",
 "kif":
 "(exists (?book ?event ?letter ?toy)
@@ -3287,7 +3009,6 @@
     (patient ?event ?letter)
     (patient ?event ?toy)))"
 },
-{
 {"text":"Bill and Mary mail Bob and Jane a book, a letter, a shirt and a toy.",
 "kif":
 "(exists (?book ?event ?letter ?shirt ?toy)
@@ -3314,7 +3035,6 @@
     (patient ?event ?shirt)
     (patient ?event ?toy)))"
 },
-{
 {"text":"Bill and Mary mail Bob and Jane a book, a letter, a shirt and a toy.",
 "kif":
 "(exists (?book ?event ?letter ?shirt ?toy)
@@ -3341,7 +3061,6 @@
     (patient ?event ?shirt)
     (patient ?event ?toy)))"
 },
-{
 {"text":"Bob buys Mary, Bill and Joe a computer.",
 "kif":
 "(exists (?computer ?event)
@@ -3362,7 +3081,6 @@
     (instance ?event Buying)
     (patient ?event ?computer)))"
 },
-{
 {"text":"Bob buys and sells gold.",
 "kif":
 "(exists (?event1 ?event2 ?gold)
@@ -3377,7 +3095,6 @@
     (patient ?event1 ?gold)
     (patient ?event2 ?gold)))"
 },
-{
 {"text":"Bob peels and cuts a carrot.",
 "kif":
 "(exists (?carrot ?event1 ?event2)
@@ -3392,7 +3109,6 @@
     (patient ?event1 ?carrot)
     (patient ?event2 ?carrot)))"
 },
-{
 {"text":"Omar buys and sells opium.",
 "kif":
 "(exists (?event1 ?event2 ?opium)
@@ -3406,7 +3122,6 @@
     (patient ?event1 ?opium)
     (patient ?event2 ?opium)))"
 },
-{
 {"text":"Bob writes and publishes a book.",
 "kif":
 "(exists (?book)
@@ -3417,7 +3132,6 @@
     (instance ?book Book)
     (publishes Robert-1 ?book)))"
 },
-{
 {"text":"France designs, manufactures and sells the airplane.",
 "kif":
 "(exists (?airplane ?event1 ?event2 ?event3)
@@ -3433,7 +3147,6 @@
     (patient ?event2 ?airplane)
     (patient ?event3 ?airplane)))"
 },
-{
 {"text":"Jane writes, conducts and sings the opera.",
 "kif":
 "(exists (?event1 ?event2 ?opera)
@@ -3449,7 +3162,6 @@
     (patient ?event1 ?opera)
     (patient ?event2 ?opera)))"
 },
-{
 {"text":"Bob buys and sells gold and silver.",
 "kif":
 "(exists (?event1 ?event2 ?gold ?silver)
@@ -3467,7 +3179,6 @@
     (patient ?event2 ?gold)
     (patient ?event2 ?silver)))"
 },
-{
 {"text":"Bob and Mary buy and sell gold and silver.",
 "kif":
 "(exists (?event1 ?event2 ?gold ?silver)
@@ -3489,7 +3200,6 @@
     (patient ?event2 ?gold)
     (patient ?event2 ?silver)))"
 },
-{
 {"text":"Bob and Mary buy and sell gold, silver and copper.",
 "kif":
 "(exists (?copper ?event1 ?event2 ?gold ?silver)
@@ -3514,7 +3224,6 @@
     (patient ?event2 ?gold)
     (patient ?event2 ?silver)))"
 },
-{
 {"text":"Bob and Mary buy and sell gold, silver, iron and copper.",
 "kif":
 "(exists (?copper ?event1 ?event2 ?gold ?iron ?silver)
@@ -3542,7 +3251,6 @@
     (patient ?event2 ?iron)
     (patient ?event2 ?silver)))"
 },
-{
 {"text":"France and Germany design, manufacture and sell the airplane.",
 "kif":
 "(exists (?airplane ?event1 ?event2 ?event3)
@@ -3561,7 +3269,6 @@
     (patient ?event2 ?airplane)
     (patient ?event3 ?airplane)))"
 },
-{
 {"text":"France and Germany design, manufacture and sell the airplane and the missile.",
 "kif":
 "(exists (?airplane ?event1 ?event2 ?event3 ?missile)
@@ -3584,7 +3291,6 @@
     (patient ?event2 ?missile)
     (patient ?event3 ?missile)))"
 },
-{
 {"text":"France and Germany design, manufacture and sell the airplane, the ship and the missile.",
 "kif":
 "(exists (?airplane ?event1 ?event2 ?event3 ?missile ?ship)
@@ -3611,7 +3317,6 @@
     (patient ?event3 ?missile)
     (patient ?event3 ?ship)))"
 },
-{
 {"text":"France and Germany design, manufacture and sell the airplane, the vehicle, the ship and the missile.",
 "kif":
 "(exists (?airplane ?event1 ?event2 ?event3 ?missile ?ship ?vehicle)
@@ -3642,7 +3347,6 @@
     (patient ?event3 ?ship)
     (patient ?event3 ?vehicle)))"
 },
-{
 {"text":"Bob, Mary and John design and sell the toy.",
 "kif":
 "(exists (?event1 ?event2 ?toy)
@@ -3665,7 +3369,6 @@
     (patient ?event1 ?toy)
     (patient ?event2 ?toy)))"
 },
-{
 {"text":"France, Germany and Sweden design, manufacture and sell the watch.",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?watch)
@@ -3687,7 +3390,6 @@
     (patient ?event2 ?watch)
     (patient ?event3 ?watch)))"
 },
-{
 {"text":"Bob, Mary, John and Jane write and publish the book.",
 "kif":
 "(exists (?book)
@@ -3710,7 +3412,6 @@
     (publishes Mary-1 ?book)
     (publishes Robert-1 ?book)))"
 },
-{
 {"text":"Bob, Mary, John and Jane write, edit and publish the book.",
 "kif":
 "(exists (?book)
@@ -3737,7 +3438,6 @@
     (publishes Mary-1 ?book)
     (publishes Robert-1 ?book)))"
 },
-{
 {"text":"Bob, Mary, John and Jane write, edit and publish the book and the letter.",
 "kif":
 "(exists (?book ?letter)
@@ -3777,7 +3477,6 @@
     (publishes Mary-1 ?letter)
     (publishes Robert-1 ?letter)))"
 },
-{
 {"text":"Bob and Jane write, edit and publish the book, the poem and the letter.",
 "kif":
 "(exists (?book ?letter ?poem)
@@ -3808,7 +3507,6 @@
     (publishes Jane-1 ?poem)
     (publishes Robert-1 ?poem)))"
 },
-{
 {"text":"Bob and Jane write, edit and publish the book, the poem, the song and the letter.",
 "kif":
 "(exists (?book ?letter ?poem ?song)
@@ -3846,7 +3544,6 @@
     (publishes Jane-1 ?song)
     (publishes Robert-1 ?song)))"
 },
-{
 {"text":"Bob does not grow and eat avocado.",
 "kif":
 "(not
@@ -3862,7 +3559,6 @@
       (patient ?event1 ?avocado)
       (patient ?event2 ?avocado))))"
 },
-{
 {"text":"Bob does not write and publish the book.",
 "kif":
 "(exists (?book)
@@ -3875,7 +3571,6 @@
       (publishes Robert-1 ?book))
     (instance ?book Book)))"
 },
-{
 {"text":"France and Germany do not design, manufacture and sell the bomb.",
 "kif":
 "(not
@@ -3895,7 +3590,6 @@
       (patient ?event2 ?bomb)
       (patient ?event3 ?bomb))))"
 },
-{
 {"text":"Bob walks and talks.",
 "kif":
 "(exists (?event1 ?event2)
@@ -3907,7 +3601,6 @@
     (agent ?event2 Robert-1)
     (instance ?event2 Speaking)))"
 },
-{
 {"text":"Bob and Mary walk and talk.",
 "kif":
 "(exists (?event1 ?event2)
@@ -3923,7 +3616,6 @@
     (agent ?event2 Robert-1)
     (instance ?event2 Speaking)))"
 },
-{
 {"text":"Bob wines, dines and talks.",
 "kif":
 "(exists (?event1 ?event2 ?event3)
@@ -3937,7 +3629,6 @@
     (agent ?event3 Robert-1)
     (instance ?event3 Speaking)))"
 },
-{
 {"text":"Bob and Mary wine, dine and talk.",
 "kif":
 "(exists (?event1 ?event2 ?event3)
@@ -3956,7 +3647,6 @@
     (agent ?event3 Robert-1)
     (instance ?event3 Speaking)))"
 },
-{
 {"text":"Bob emails, faxes and airmails the letter to Mary.",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?letter)
@@ -3979,7 +3669,6 @@
     (patient ?event2 ?letter)
     (patient ?event3 ?letter)))"
 },
-{
 {"text":"Bob emails, faxes and airmails a letter, a pamphlet, a flyer and an article to Mary, Susan, Jim and Bill.",
 "kif":
 "(exists (?article ?event1 ?event2 ?flyer ?letter ?pamphlet)
@@ -4019,7 +3708,6 @@
     (patient ?event2 ?letter)
     (patient ?event2 ?pamphlet)))"
 },
-{
 {"text":"Bob emails and faxes Mary a letter.",
 "kif":
 "(exists (?event1 ?event2 ?letter)
@@ -4038,7 +3726,6 @@
     (patient ?event1 ?letter)
     (patient ?event2 ?letter)))"
 },
-{
 {"text":"Bob emails, faxes and airmails Mary a letter.",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?letter)
@@ -4061,7 +3748,6 @@
     (patient ?event2 ?letter)
     (patient ?event3 ?letter)))"
 },
-{
 {"text":"Do Jim and Jane buy the book?",
 "kif":
 "(exists (?book ?event)
@@ -4076,7 +3762,6 @@
     (instance ?event Buying)
     (patient ?event ?book)))"
 },
-{
 {"text":"Do Bob, Jane and Mary go to the park?",
 "kif":
 "(exists (?event ?park)
@@ -4094,7 +3779,6 @@
     (instance ?park PublicPark)
     (destination ?event ?park)))"
 },
-{
 {"text":"Do France, Britain, Germany and Sweden design the airplane?",
 "kif":
 "(exists (?airplane ?event)
@@ -4107,7 +3791,6 @@
     (instance ?event Planning)
     (patient ?event ?airplane)))"
 },
-{
 {"text":"Does France design and manufacture the airplane?",
 "kif":
 "(exists (?airplane ?event1 ?event2)
@@ -4120,7 +3803,6 @@
     (patient ?event1 ?airplane)
     (patient ?event2 ?airplane)))"
 },
-{
 {"text":"Does France design, manufacture and sell the airplane?",
 "kif":
 "(exists (?airplane ?event1 ?event2 ?event3)
@@ -4136,7 +3818,6 @@
     (patient ?event2 ?airplane)
     (patient ?event3 ?airplane)))"
 },
-{
 {"text":"Do France and Germany design and manufacture the airplane?",
 "kif":
 "(exists (?airplane ?event1 ?event2)
@@ -4151,7 +3832,6 @@
     (patient ?event1 ?airplane)
     (patient ?event2 ?airplane)))"
 },
-{
 {"text":"Do Bob and Mary design, manufacture and sell the handbag?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?handbag)
@@ -4174,7 +3854,6 @@
     (patient ?event2 ?handbag)
     (patient ?event3 ?handbag)))"
 },
-{
 {"text":"Do Bob, Joe and Mary design and manufacture the suitcase?",
 "kif":
 "(exists (?event1 ?event2 ?suitcase)
@@ -4197,7 +3876,6 @@
     (patient ?event1 ?suitcase)
     (patient ?event2 ?suitcase)))"
 },
-{
 {"text":"Do Bob, Joe and Mary design, manufacture and sell the suitcase?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?suitcase)
@@ -4225,7 +3903,6 @@
     (patient ?event2 ?suitcase)
     (patient ?event3 ?suitcase)))"
 },
-{
 {"text":"Do Britain, France, Germany and Italy design and manufacture the machine?",
 "kif":
 "(exists (?event1 ?event2 ?machine)
@@ -4244,7 +3921,6 @@
     (patient ?event1 ?machine)
     (patient ?event2 ?machine)))"
 },
-{
 {"text":"Do Bob, Mary, Joe and Jim write, edit and publish the article?",
 "kif":
 "(exists (?article)
@@ -4271,7 +3947,6 @@
     (publishes Mary-1 ?article)
     (publishes Robert-1 ?article)))"
 },
-{
 {"text":"Who writes and publishes the book?",
 "kif":
 "(exists (?book)
@@ -4281,7 +3956,6 @@
     (authors ?who ?book)
     (publishes ?who ?book)))"
 },
-{
 {"text":"Who designs, manufactures and sells the watch?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?watch)
@@ -4298,7 +3972,6 @@
     (patient ?event3 ?watch)
     (agent ?event3 ?who)))"
 },
-{
 {"text":"Who designs, manufactures and sells the watch and the clock?",
 "kif":
 "(exists (?clock ?event1 ?event2 ?event3 ?watch)
@@ -4319,7 +3992,6 @@
     (patient ?event3 ?watch)
     (agent ?event3 ?who)))"
 },
-{
 {"text":"Which country designs, manufactures and sells the airplane and the missile?",
 "kif":
 "(exists (?airplane ?event1 ?event2 ?event3 ?missile)
@@ -4340,7 +4012,6 @@
     (patient ?event2 ?missile)
     (patient ?event3 ?missile)))"
 },
-{
 {"text":"Which company designs and manufactures the drug?",
 "kif":
 "(exists (?drug ?event1 ?event2)
@@ -4354,7 +4025,6 @@
     (patient ?event1 ?drug)
     (patient ?event2 ?drug)))"
 },
-{
 {"text":"Which customer buys the steak?",
 "kif":
 "(exists (?event ?salesperson ?steak)
@@ -4367,7 +4037,6 @@
     (customer ?customer ?salesperson)
     (patient ?event ?steak)))"
 },
-{
 {"text":"What car enters the garden and the backyard?",
 "kif":
 "(exists (?backyard ?event ?garden)
@@ -4380,7 +4049,6 @@
     (agent ?event ?car)
     (patient ?event ?garden)))"
 },
-{
 {"text":"What country invades Poland, Czechoslovakia and Romania?",
 "kif":
 "(exists (?event)
@@ -4392,7 +4060,6 @@
     (patient ?event Romania)
     (agent ?event ?country)))"
 },
-{
 {"text":"Where do Bob and Mary work?",
 "kif":
 "(exists (?event)
@@ -4406,7 +4073,6 @@
     (instance ?event Works)
     (located ?event ?where)))"
 },
-{
 {"text":"When do Jim, Joe and Jane arrive?",
 "kif":
 "(exists (?event)
@@ -4425,7 +4091,6 @@
       (BeginFn
         (WhenFn ?event)) ?when)))"
 },
-{
 {"text":"How do Bob, Mary, Joe and Jane arrive?",
 "kif":
 "(exists (?event)
@@ -4445,7 +4110,6 @@
     (instance ?event Arriving)
     (manner ?event ?how)))"
 },
-{
 {"text":"Where does France design and manufacture the bomb?",
 "kif":
 "(exists (?bomb ?event1 ?event2)
@@ -4460,7 +4124,6 @@
     (located ?event1 ?where)
     (located ?event2 ?where)))"
 },
-{
 {"text":"How does Sweden design, manufacture and sell the watch?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?watch)
@@ -4479,7 +4142,6 @@
     (manner ?event3 ?how)
     (patient ?event3 ?watch)))"
 },
-{
 {"text":"How do Sweden and France design and manufacture the clock?",
 "kif":
 "(exists (?clock ?event1 ?event2)
@@ -4496,7 +4158,6 @@
     (manner ?event1 ?how)
     (manner ?event2 ?how)))"
 },
-{
 {"text":"How do Sweden and France design, manufacture and sell the clock?",
 "kif":
 "(exists (?clock ?event1 ?event2 ?event3)
@@ -4518,7 +4179,6 @@
     (manner ?event2 ?how)
     (manner ?event3 ?how)))"
 },
-{
 {"text":"Where do Sweden, Spain and France design and manufacture the machine?",
 "kif":
 "(exists (?event1 ?event2 ?machine)
@@ -4537,7 +4197,6 @@
     (patient ?event2 ?machine)
     (located ?event2 ?where)))"
 },
-{
 {"text":"When do Sweden, Spain and France design, manufacture and sell the yacht?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?yacht)
@@ -4568,7 +4227,6 @@
     (patient ?event2 ?yacht)
     (patient ?event3 ?yacht)))"
 },
-{
 {"text":"When do Sweden, Spain, Italy and France design and manufacture the yacht?",
 "kif":
 "(exists (?event1 ?event2 ?yacht)
@@ -4593,7 +4251,6 @@
     (patient ?event1 ?yacht)
     (patient ?event2 ?yacht)))"
 },
-{
 {"text":"When do Sweden, Spain, Italy and France design, manufacture and sell the yacht?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?yacht)
@@ -4627,7 +4284,6 @@
     (patient ?event2 ?yacht)
     (patient ?event3 ?yacht)))"
 },
-{
 {"text":"When do Sweden, Spain, Italy and France not design, manufacture and sell the yacht?",
 "kif":
 "(not
@@ -4662,7 +4318,6 @@
       (patient ?event2 ?yacht)
       (patient ?event3 ?yacht))))"
 },
-{
 {"text":"When do the train and the bus arrive?",
 "kif":
 "(exists (?bus ?event ?train)
@@ -4676,7 +4331,6 @@
     (patient ?event ?bus)
     (patient ?event ?train)))"
 },
-{
 {"text":"When do the train and the bus not arrive?",
 "kif":
 "(not
@@ -4691,7 +4345,6 @@
       (patient ?event ?bus)
       (patient ?event ?train))))"
 },
-{
 {"text":"Is Bob a musician and a carpenter?",
 "kif":
 "(and
@@ -4700,7 +4353,6 @@
   (attribute Robert-1 Musician)
   (instance Robert-1 Human))"
 },
-{
 {"text":"Where are the bank and the school?",
 "kif":
 "(exists (?bank ?school)
@@ -4710,7 +4362,6 @@
     (located ?bank ?where)
     (located ?school ?where)))"
 },
-{
 {"text":"Every farmer owns a horse. ",
 "kif":
 "(forall (?farmer)
@@ -4720,7 +4371,6 @@
       (instance ?horse Horse)
       (possesses ?farmer ?horse))))"
 },
-{
 {"text":"Bob and Mary are rich.",
 "kif":
 "(and
@@ -4731,7 +4381,6 @@
   (instance Mary-1 Human)
   (instance Robert-1 Human))"
 },
-{
 {"text":"The fish and the fruit are different from the beef.",
 "kif":
 "(exists (?beef ?fish ?fruit)
@@ -4744,7 +4393,6 @@
     (instance ?fish Fish)
     (instance ?fruit FruitOrVegetable)))"
 },
-{
 {"text":"Bob and Mary are the customer of the bank.",
 "kif":
 "(exists (?bank)
@@ -4757,7 +4405,6 @@
     (customer Robert-1 ?bank)
     (instance ?bank Bank-FinancialOrganization)))"
 },
-{
 {"text":"Are Bob and Mary rich?",
 "kif":
 "(and
@@ -4768,7 +4415,6 @@
   (instance Mary-1 Human)
   (instance Robert-1 Human))"
 },
-{
 {"text":"Are Bob and Mary generous?",
 "kif":
 "(and
@@ -4779,7 +4425,6 @@
   (instance Mary-1 Human)
   (instance Robert-1 Human))"
 },
-{
 {"text":"Are Jim, Jane and John at the park?",
 "kif":
 "(exists (?park)
@@ -4795,7 +4440,6 @@
     (located Jane-1 ?park)
     (located John-1 ?park)))"
 },
-{
 {"text":"A pen is a tool and a weapon.",
 "kif":
 "(forall (?pen)
@@ -4805,7 +4449,6 @@
       (instance ?pen Device)
       (instance ?pen Weapon))))"
 },
-{
 {"text":"Every general is a commander and a soldier.",
 "kif":
 "(forall (?general)
@@ -4815,7 +4458,6 @@
       (attribute ?general MilitaryCommander)
       (attribute ?general Soldier))))"
 },
-{
 {"text":"A house is a place, a shelter and a home.",
 "kif":
 "(forall (?house)
@@ -4826,7 +4468,6 @@
       (instance ?house Building)
       (instance ?house Region))))"
 },
-{
 {"text":"Every beach is water, sand, sunshine and joy.",
 "kif":
 "(forall (?beach)
@@ -4838,7 +4479,6 @@
       (instance ?beach Sunlight)
       (instance ?beach Water))))"
 },
-{
 {"text":"A flag is an identity and a token.",
 "kif":
 "(forall (?flag)
@@ -4848,7 +4488,6 @@
       (attribute ?flag TraitAttribute)
       (instance ?flag ContentBearingObject))))"
 },
-{
 {"text":"Who do John and Mary give a card to?",
 "kif":
 "(exists (?card ?event)
@@ -4864,7 +4503,6 @@
     (patient ?event ?card)
     (destination ?event ?who)))"
 },
-{
 {"text":"Who do Bill, Mary and Joe give a book to?",
 "kif":
 "(exists (?book ?event)
@@ -4883,7 +4521,6 @@
     (patient ?event ?book)
     (destination ?event ?who)))"
 },
-{
 {"text":"Who does John show and give a card to?",
 "kif":
 "(exists (?card ?event1 ?event2)
@@ -4901,7 +4538,6 @@
     (destination ?event1 ?who)
     (destination ?event2 ?who)))"
 },
-{
 {"text":"Who does Mary email, fax and airmail a letter to?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?letter)
@@ -4923,7 +4559,6 @@
     (patient ?event3 ?letter)
     (destination ?event3 ?who)))"
 },
-{
 {"text":"Who do John and Mary email and fax a letter to?",
 "kif":
 "(exists (?event1 ?event2 ?letter)
@@ -4945,7 +4580,6 @@
     (patient ?event2 ?letter)
     (destination ?event2 ?who)))"
 },
-{
 {"text":"Who do John and Mary email, fax and airmail a letter to?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?letter)
@@ -4972,7 +4606,6 @@
     (patient ?event3 ?letter)
     (destination ?event3 ?who)))"
 },
-{
 {"text":"Who do John, Mary and Jim email and fax a letter to?",
 "kif":
 "(exists (?event1 ?event2 ?letter)
@@ -4998,7 +4631,6 @@
     (patient ?event2 ?letter)
     (destination ?event2 ?who)))"
 },
-{
 {"text":"Who do John, Mary and Jim email, fax and airmail a letter to?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?letter)
@@ -5030,7 +4662,6 @@
     (patient ?event3 ?letter)
     (destination ?event3 ?who)))"
 },
-{
 {"text":"Who does John give an apple and an orange to?",
 "kif":
 "(exists (?apple ?event ?orange)
@@ -5045,7 +4676,6 @@
     (patient ?event ?orange)
     (destination ?event ?who)))"
 },
-{
 {"text":"Who does John give an apple, an orange and a banana to?",
 "kif":
 "(exists (?apple ?banana ?event ?orange)
@@ -5062,7 +4692,6 @@
     (patient ?event ?orange)
     (destination ?event ?who)))"
 },
-{
 {"text":"Who does John give an apple, an orange, a banana and a lemon to?",
 "kif":
 "(exists (?apple ?banana ?event ?lemon ?orange)
@@ -5081,7 +4710,6 @@
     (patient ?event ?orange)
     (destination ?event ?who)))"
 },
-{
 {"text":"Who does John email and fax a letter and an article to?",
 "kif":
 "(exists (?article ?event1 ?event2 ?letter)
@@ -5102,7 +4730,6 @@
     (patient ?event2 ?letter)
     (destination ?event2 ?who)))"
 },
-{
 {"text":"Who does John email and fax a letter, a poem and an article to?",
 "kif":
 "(exists (?article ?event1 ?event2 ?letter ?poem)
@@ -5126,7 +4753,6 @@
     (patient ?event2 ?poem)
     (destination ?event2 ?who)))"
 },
-{
 {"text":"Who does John email and fax a letter, a poem, a song and an article to?",
 "kif":
 "(exists (?article ?event1 ?event2 ?letter ?poem ?song)
@@ -5153,7 +4779,6 @@
     (patient ?event2 ?song)
     (destination ?event2 ?who)))"
 },
-{
 {"text":"Who does John email, fax and airmail a letter and an article to?",
 "kif":
 "(exists (?article ?event1 ?event2 ?event3 ?letter)
@@ -5179,7 +4804,6 @@
     (patient ?event3 ?letter)
     (destination ?event3 ?who)))"
 },
-{
 {"text":"Who do John and Mary email, fax and airmail a letter, a poem and an article to?",
 "kif":
 "(exists (?article ?event1 ?event2 ?event3 ?letter ?poem)
@@ -5214,7 +4838,6 @@
     (patient ?event3 ?poem)
     (destination ?event3 ?who)))"
 },
-{
 {"text":"Who do John and Mary email, fax and airmail a letter, a poem, a song and an article to?",
 "kif":
 "(exists (?article ?event1 ?event2 ?event3 ?letter ?poem ?song)
@@ -5253,7 +4876,6 @@
     (patient ?event3 ?song)
     (destination ?event3 ?who)))"
 },
-{
 {"text":"What does Mary email and fax to John?",
 "kif":
 "(exists (?event1 ?event2)
@@ -5272,7 +4894,6 @@
     (patient ?event1 ?what)
     (patient ?event2 ?what)))"
 },
-{
 {"text":"What does Mary email, fax and airmail to John?",
 "kif":
 "(exists (?event1 ?event2 ?event3)
@@ -5295,7 +4916,6 @@
     (patient ?event2 ?what)
     (patient ?event3 ?what)))"
 },
-{
 {"text":"What does Mary give to John and Bill?",
 "kif":
 "(exists (?event)
@@ -5312,7 +4932,6 @@
     (instance ?event Giving)
     (patient ?event ?what)))"
 },
-{
 {"text":"What does Mary give to John, Joe and Bill?",
 "kif":
 "(exists (?event)
@@ -5332,7 +4951,6 @@
     (instance ?event Giving)
     (patient ?event ?what)))"
 },
-{
 {"text":"What does Mary give to John, Joe, Jim and Bill?",
 "kif":
 "(exists (?event)
@@ -5355,7 +4973,6 @@
     (instance ?event Giving)
     (patient ?event ?what)))"
 },
-{
 {"text":"What do Mary and Susan email and fax to John and Joe?",
 "kif":
 "(exists (?event1 ?event2)
@@ -5382,7 +4999,6 @@
     (patient ?event1 ?what)
     (patient ?event2 ?what)))"
 },
-{
 {"text":"What does Mary email and fax to John, Jim and Joe?",
 "kif":
 "(exists (?event1 ?event2)
@@ -5409,7 +5025,6 @@
     (patient ?event1 ?what)
     (patient ?event2 ?what)))"
 },
-{
 {"text":"What does Mary email and fax to John, Jane, Jim and Joe?",
 "kif":
 "(exists (?event1 ?event2)
@@ -5440,7 +5055,6 @@
     (patient ?event1 ?what)
     (patient ?event2 ?what)))"
 },
-{
 {"text":"What does Mary email, fax and airmail to John and Joe?",
 "kif":
 "(exists (?event1 ?event2 ?event3)
@@ -5468,7 +5082,6 @@
     (patient ?event2 ?what)
     (patient ?event3 ?what)))"
 },
-{
 {"text":"What does Mary email, fax and airmail to John, Jane and Joe?",
 "kif":
 "(exists (?event1 ?event2 ?event3)
@@ -5501,7 +5114,6 @@
     (patient ?event2 ?what)
     (patient ?event3 ?what)))"
 },
-{
 {"text":"What does Mary email, fax and airmail to John, Jane, Jim and Joe?",
 "kif":
 "(exists (?event1 ?event2 ?event3)
@@ -5539,7 +5151,6 @@
     (patient ?event2 ?what)
     (patient ?event3 ?what)))"
 },
-{
 {"text":"The customer who emails and faxes the letter enters the bank.",
 "kif":
 "(exists (?bank ?customer ?event2 ?event3 ?event1 ?letter ?salesperson)
@@ -5560,7 +5171,6 @@
     (patient ?event2 ?letter)
     (patient ?event3 ?letter)))"
 },
-{
 {"text":"The customer who emails, faxes and airmails the letter enters the code.",
 "kif":
 "(exists (?code ?customer ?event2 ?event3 ?event4 ?event1 ?letter ?salesperson)
@@ -5584,7 +5194,6 @@
     (patient ?event3 ?letter)
     (patient ?event4 ?letter)))"
 },
-{
 {"text":"The country that designs, manufactures and sells the bomb defies the world.",
 "kif":
 "(exists (?bomb ?country ?event1 ?event2 ?event3 ?event4 ?world)
@@ -5606,7 +5215,6 @@
     (agent ?event4 ?country)
     (patient ?event4 ?world)))"
 },
-{
 {"text":"The country that sells the bomb and the missile to the terrorist defies the world.",
 "kif":
 "(exists (?bomb ?country ?event1 ?event2 ?missile ?terrorist ?world)
@@ -5625,7 +5233,6 @@
     (destination ?event1 ?terrorist)
     (patient ?event2 ?world)))"
 },
-{
 {"text":"The country that grows and sells the opium denies the fact.",
 "kif":
 "(exists (?country ?event1 ?event2 ?event3 ?fact ?opium)
@@ -5644,7 +5251,6 @@
     (patient ?event2 ?opium)
     (patient ?event3 ?fact)))"
 },
-{
 {"text":"Joe enters the bank that Bob and Mary email and fax a letter to.",
 "kif":
 "(exists (?bank ?event1 ?event2 ?event3 ?letter)
@@ -5672,7 +5278,6 @@
     (patient ?event2 ?letter)
     (patient ?event3 ?letter)))"
 },
-{
 {"text":"Joe inserts the card that Bob and Mary give to Jim.",
 "kif":
 "(exists (?card ?event1 ?event2)
@@ -5695,7 +5300,6 @@
     (patient ?event1 ?card)
     (patient ?event2 ?card)))"
 },
-{
 {"text":"Since when does the train arrive and stop?",
 "kif":
 "(exists (?event1 ?event2 ?train)
@@ -5712,7 +5316,6 @@
     (patient ?event1 ?train)
     (patient ?event2 ?train)))"
 },
-{
 {"text":"Since when does Mexico design, manufacture and sell the fabric?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?fabric)
@@ -5737,7 +5340,6 @@
     (patient ?event2 ?fabric)
     (patient ?event3 ?fabric)))"
 },
-{
 {"text":"Since when do Bob and Mary buy the house?",
 "kif":
 "(exists (?event ?house)
@@ -5755,7 +5357,6 @@
         (WhenFn ?event)) ?since_when)
     (patient ?event ?house)))"
 },
-{
 {"text":"Since when do Bob, Mary and Jim play the basketball?",
 "kif":
 "(exists (?basketball ?event)
@@ -5776,7 +5377,6 @@
         (WhenFn ?event)) ?since_when)
     (patient ?event ?basketball)))"
 },
-{
 {"text":"How long do Bob, Mary, Jane and Jim play the tennis?",
 "kif":
 "(exists (?event ?tennis)
@@ -5799,7 +5399,6 @@
     (instance ?tennis Sport)
     (patient ?event ?tennis)))"
 },
-{
 {"text":"Since when do Bob and Mary walk and talk?",
 "kif":
 "(exists (?event1 ?event2)
@@ -5821,7 +5420,6 @@
       (BeginFn
         (WhenFn ?event2)) ?since_when)))"
 },
-{
 {"text":"Until when do Bob, Joe and Mary walk and talk?",
 "kif":
 "(exists (?event1 ?event2)
@@ -5847,7 +5445,6 @@
       (EndFn
         (WhenFn ?event2)) ?until_when)))"
 },
-{
 {"text":"Since when do Mary, Jane, Joe and John sit and eat?",
 "kif":
 "(exists (?event1 ?event2)
@@ -5877,7 +5474,6 @@
       (BeginFn
         (WhenFn ?event2)) ?since_when)))"
 },
-{
 {"text":"How long do Germany and France design, manufacture and sell the machine?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?machine)
@@ -5902,7 +5498,6 @@
     (patient ?event2 ?machine)
     (patient ?event3 ?machine)))"
 },
-{
 {"text":"How long do Britain, Germany and France design, manufacture and sell the machine?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?machine)
@@ -5930,7 +5525,6 @@
     (patient ?event2 ?machine)
     (patient ?event3 ?machine)))"
 },
-{
 {"text":"Until when do Britain, Germany, Italy and France design, manufacture and sell the machine?",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?machine)
@@ -5964,7 +5558,6 @@
     (patient ?event2 ?machine)
     (patient ?event3 ?machine)))"
 },
-{
 {"text":"How long do Britain and France not manufacture and sell the machine?",
 "kif":
 "(not
@@ -5984,7 +5577,6 @@
       (patient ?event1 ?machine)
       (patient ?event2 ?machine))))"
 },
-{
 {"text":"How long do Britain and France not manufacture and sell the car and the engine?",
 "kif":
 "(not
@@ -6007,7 +5599,6 @@
       (patient ?event1 ?engine)
       (patient ?event2 ?engine))))"
 },
-{
 {"text":"How long do Bob, Mary, Jane and Jim not play the tennis?",
 "kif":
 "(not
@@ -6031,7 +5622,6 @@
       (instance ?tennis Sport)
       (patient ?event ?tennis))))"
 },
-{
 {"text":"Where do Bob and Mary insert the card into?",
 "kif":
 "(exists (?card ?event)
@@ -6047,7 +5637,6 @@
     (patient ?event ?card)
     (destination ?event ?where_into)))"
 },
-{
 {"text":"Where do Bob and Jim email and fax the letter to?",
 "kif":
 "(exists (?event1 ?event2 ?letter)
@@ -6068,7 +5657,6 @@
     (patient ?event2 ?letter)
     (destination ?event2 ?where_to)))"
 },
-{
 {"text":"Where do Bob and Mary not send the book to?",
 "kif":
 "(not
@@ -6085,7 +5673,6 @@
       (patient ?event ?book)
       (destination ?event ?where_to))))"
 },
-{
 {"text":"Where do the rain and the snow start from?",
 "kif":
 "(exists (?event ?rain ?snow)
@@ -6097,7 +5684,6 @@
     (patient ?event ?snow)
     (origin ?event ?where_from)))"
 },
-{
 {"text":"Where do the fire and the smoke arrive and spread from?",
 "kif":
 "(exists (?event1 ?event2 ?fire ?smoke)
@@ -6113,7 +5699,6 @@
     (patient ?event2 ?smoke)
     (origin ?event2 ?where_from)))"
 },
-{
 {"text":"From where do the rain and the snow start?",
 "kif":
 "(exists (?event ?rain ?snow)
@@ -6125,7 +5710,6 @@
     (patient ?event ?rain)
     (patient ?event ?snow)))"
 },
-{
 {"text":"From where do Bob, Mary, Jim and Jane buy and rent the engine and the tool?",
 "kif":
 "(exists (?engine ?event1 ?event2 ?tool)
@@ -6157,7 +5741,6 @@
     (origin ?event2 ?from_where)
     (patient ?event2 ?tool)))"
 },
-{
 {"text":"Where are Bob and Mary?",
 "kif":
 "(and
@@ -6168,7 +5751,6 @@
   (located Mary-1 ?where)
   (located Robert-1 ?where))"
 },
-{
 {"text":"When are the lunch and the seminar?",
 "kif":
 "(exists (?lunch ?seminar)
@@ -6182,7 +5764,6 @@
       (BeginFn
         (WhenFn ?seminar)) ?when)))"
 },
-{
 {"text":"Where are the gym, the library and the studio?",
 "kif":
 "(exists (?gym ?library ?studio)
@@ -6194,7 +5775,6 @@
     (located ?library ?where)
     (located ?studio ?where)))"
 },
-{
 {"text":"How are the ceremony, the speech, the firework and the parade?",
 "kif":
 "(exists (?ceremony ?firework ?parade ?speech)
@@ -6208,7 +5788,6 @@
     (manner ?parade ?how)
     (manner ?speech ?how)))"
 },
-{
 {"text":"How often are the train and the bus?",
 "kif":
 "(exists (?bus ?train)
@@ -6218,7 +5797,6 @@
     (frequency ?bus ?how_often)
     (frequency ?train ?how_often)))"
 },
-{
 {"text":"How long are the movie, the drama and the opera?",
 "kif":
 "(exists (?drama ?movie ?opera)
@@ -6233,7 +5811,6 @@
     (instance ?movie MotionPicture)
     (instance ?opera Opera)))"
 },
-{
 {"text":"A car and a bicycle of the policeman are at the park.",
 "kif":
 "(exists (?bicycle ?car ?park ?policeman)
@@ -6247,7 +5824,6 @@
     (located ?car ?park)
     (possesses ?policeman ?car)))"
 },
-{
 {"text":"Bob's card and money are in the bank.",
 "kif":
 "(exists (?bank ?card ?money)
@@ -6262,7 +5838,6 @@
     (located ?card ?bank)
     (located ?money ?bank)))"
 },
-{
 {"text":"Mary's food, wine and juice are good.",
 "kif":
 "(exists (?food ?juice ?wine)
@@ -6279,7 +5854,6 @@
     (instance ?wine Wine)
     (possesses Mary-1 ?wine)))"
 },
-{
 {"text":"A lion, a dog, an elephant and a monkey of the circus run on the street.",
 "kif":
 "(exists (?circus ?dog ?elephant ?event ?lion ?monkey ?street)
@@ -6301,7 +5875,6 @@
     (agent ?event ?monkey)
     (destination ?event ?street)))"
 },
-{
 {"text":"Are a lion and a monkey of the circus at the park?",
 "kif":
 "(exists (?circus ?lion ?monkey ?park)
@@ -6315,7 +5888,6 @@
     (located ?lion ?park)
     (located ?monkey ?park)))"
 },
-{
 {"text":"Bob gives the money and the card of Mary to John.",
 "kif":
 "(exists (?card ?event ?money)
@@ -6336,7 +5908,6 @@
     (patient ?event ?card)
     (patient ?event ?money)))"
 },
-{
 {"text":"Bob gives Mary's card and money to John.",
 "kif":
 "(exists (?card ?event ?money)
@@ -6357,7 +5928,6 @@
     (patient ?event ?card)
     (patient ?event ?money)))"
 },
-{
 {"text":"The United Nations sells Iraq's natural gas and petroleum to Turkey and Israel.",
 "kif":
 "(exists (?event ?natural_gas ?petroleum)
@@ -6373,7 +5943,6 @@
     (patient ?event ?natural_gas)
     (patient ?event ?petroleum)))"
 },
-{
 {"text":"The rebel sells the diamond, mineral and coal of South Africa to Europe.",
 "kif":
 "(exists (?coal ?diamond ?event ?mineral ?rebel)
@@ -6393,7 +5962,6 @@
     (patient ?event ?mineral)
     (agent ?event ?rebel)))"
 },
-{
 {"text":"The slave driver ships Africa's slave, diamond, mineral and coal to America.",
 "kif":
 "(exists (?coal ?diamond ?event ?mineral ?slave ?slave_driver)
@@ -6415,7 +5983,6 @@
     (patient ?event ?slave)
     (agent ?event ?slave_driver)))"
 },
-{
 {"text":"The host gives a meal to the chief and the crew of the convoy.",
 "kif":
 "(exists (?chief ?convoy ?crew ?event ?host ?meal)
@@ -6433,7 +6000,6 @@
     (agent ?event ?host)
     (patient ?event ?meal)))"
 },
-{
 {"text":"The agency gives a meal and a shelter to the chief, the elderly and the youngster of the tribe.",
 "kif":
 "(exists (?agency ?chief ?elderly ?event ?meal ?shelter ?tribe ?youngster)
@@ -6457,7 +6023,6 @@
     (destination ?event ?youngster)
     (possesses ?tribe ?youngster)))"
 },
-{
 {"text":"The agency gives the woman, the elderly, the youngster and the sick of the tribe a shelter.",
 "kif":
 "(exists (?agency ?elderly ?event ?shelter ?sick ?tribe ?woman ?youngster)
@@ -6482,7 +6047,6 @@
     (possesses ?tribe ?woman)
     (possesses ?tribe ?youngster)))"
 },
-{
 {"text":"The company trades Africa's diamond, gold, copper and coal.",
 "kif":
 "(exists (?coal ?company ?copper ?diamond ?event ?gold)
@@ -6503,7 +6067,6 @@
     (patient ?event ?diamond)
     (patient ?event ?gold)))"
 },
-{
 {"text":"The agency buys and sells Middle East's coal and petroleum.",
 "kif":
 "(exists (?agency ?coal ?event1 ?event2 ?petroleum)
@@ -6523,7 +6086,6 @@
     (patient ?event1 ?petroleum)
     (patient ?event2 ?petroleum)))"
 },
-{
 {"text":"The troop of France and Britain entered Paris.",
 "kif":
 "(exists (?event ?troop)
@@ -6535,7 +6097,6 @@
     (operator ?troop UnitedKingdomOfGreatBritainAndNorthernIreland)
     (agent ?event ?troop)))"
 },
-{
 {"text":"France and Britain's troop entered Paris.",
 "kif":
 "(exists (?event ?troop)
@@ -6547,7 +6108,6 @@
     (operator ?troop UnitedKingdomOfGreatBritainAndNorthernIreland)
     (agent ?event ?troop)))"
 },
-{
 {"text":"The dog of Bob and Mary is at the park.",
 "kif":
 "(exists (?dog ?park)
@@ -6562,7 +6122,6 @@
     (instance ?park PublicPark)
     (located ?dog ?park)))"
 },
-{
 {"text":"John and Mary's dog likes Bob and Jane's cat.",
 "kif":
 "(exists (?cat ?dog)
@@ -6583,7 +6142,6 @@
     (possesses Mary-1 ?dog)
     (enjoys ?dog ?cat)))"
 },
-{
 {"text":"The troop of Britain, France and Germany entered the city.",
 "kif":
 "(exists (?city ?event ?troop)
@@ -6597,7 +6155,6 @@
     (patient ?event ?city)
     (agent ?event ?troop)))"
 },
-{
 {"text":"Bob, Jim and John's dog likes candy.",
 "kif":
 "(exists (?candy ?dog)
@@ -6615,7 +6172,6 @@
     (possesses Robert-1 ?dog)
     (enjoys ?dog ?candy)))"
 },
-{
 {"text":"Does the agency buy and sell Middle East's coal and petroleum?",
 "kif":
 "(exists (?agency ?coal ?event1 ?event2 ?petroleum)
@@ -6635,7 +6191,6 @@
     (patient ?event1 ?petroleum)
     (patient ?event2 ?petroleum)))"
 },
-{
 {"text":"Which company trades Africa's diamond, gold, copper and coal?",
 "kif":
 "(exists (?coal ?copper ?diamond ?event ?gold)
@@ -6656,7 +6211,6 @@
     (patient ?event ?diamond)
     (patient ?event ?gold)))"
 },
-{
 {"text":"Since when does the slave driver ship Africa's slave, diamond, mineral and coal to America?",
 "kif":
 "(exists (?coal ?diamond ?event ?mineral ?slave ?slave_driver)
@@ -6681,7 +6235,6 @@
     (patient ?event ?slave)
     (agent ?event ?slave_driver)))"
 },
-{
 {"text":"Who gives the money and the card of Mary to John?",
 "kif":
 "(exists (?card ?event ?money)
@@ -6701,7 +6254,6 @@
     (patient ?event ?money)
     (agent ?event ?who)))"
 },
-{
 {"text":"Who gives Mary's card and money to John?",
 "kif":
 "(exists (?card ?event ?money)
@@ -6721,7 +6273,6 @@
     (patient ?event ?money)
     (agent ?event ?who)))"
 },
-{
 {"text":"Who does Bob give Mary's card and money to?",
 "kif":
 "(exists (?card ?event ?money)
@@ -6740,7 +6291,6 @@
     (patient ?event ?money)
     (destination ?event ?who)))"
 },
-{
 {"text":"How long does the United Nations sell Iraq's natural gas and petroleum to Turkey and Israel?",
 "kif":
 "(exists (?event ?natural_gas ?petroleum)
@@ -6758,7 +6308,6 @@
     (patient ?event ?natural_gas)
     (patient ?event ?petroleum)))"
 },
-{
 {"text":"Until when does the agency buy and sell Middle East's coal and petroleum?",
 "kif":
 "(exists (?agency ?coal ?event1 ?event2 ?petroleum)
@@ -6784,7 +6333,6 @@
     (patient ?event1 ?petroleum)
     (patient ?event2 ?petroleum)))"
 },
-{
 {"text":"When does the troop of Britain, France and Germany enter the city?",
 "kif":
 "(exists (?city ?event ?troop)
@@ -6801,7 +6349,6 @@
     (patient ?event ?city)
     (agent ?event ?troop)))"
 },
-{
 {"text":"Until when does the agency buy and sell the coal and petroleum of Iraq and Kuwait?",
 "kif":
 "(exists (?agency ?coal ?event1 ?event2 ?petroleum)
@@ -6829,7 +6376,6 @@
     (patient ?event1 ?petroleum)
     (patient ?event2 ?petroleum)))"
 },
-{
 {"text":"The troop of Britain, France, Germany and Italy occupied the city.",
 "kif":
 "(exists (?city ?troop)
@@ -6842,7 +6388,6 @@
     (operator ?troop UnitedKingdomOfGreatBritainAndNorthernIreland)
     (inhabits ?troop ?city)))"
 },
-{
 {"text":"Jim likes Bob, Mary, Bill and Susan's house.",
 "kif":
 "(exists (?house)
@@ -6864,7 +6409,6 @@
     (possesses Susan-1 ?house)
     (possesses William-1 ?house)))"
 },
-{
 {"text":"Bob and Mary's card and money are at the bank.",
 "kif":
 "(exists (?bank ?card ?money)
@@ -6883,7 +6427,6 @@
     (located ?card ?bank)
     (located ?money ?bank)))"
 },
-{
 {"text":"Joe, Mary and Jane's food and water are at the park.",
 "kif":
 "(exists (?food ?park ?water)
@@ -6906,7 +6449,6 @@
     (located ?food ?park)
     (located ?water ?park)))"
 },
-{
 {"text":"The machine, the tool, the camera and the personnel of Britain, France, Belgium and Italy entered the city.",
 "kif":
 "(exists (?camera ?city ?event ?machine ?personnel ?tool)
@@ -6939,7 +6481,6 @@
     (agent ?event ?personnel)
     (agent ?event ?tool)))"
 },
-{
 {"text":"Mary likes her mother.",
 "kif":
 "(exists (?mother)
@@ -6949,7 +6490,6 @@
     (enjoys Mary-1 ?mother)
     (mother ?mother Mary-1)))"
 },
-{
 {"text":"Bob is Mary's brother.  She likes him.",
 "kif":
 "(and
@@ -6960,7 +6500,6 @@
   (instance Mary-1 Human)
   (instance Robert-1 Human))"
 },
-{
 {"text":"John threw a ball.  The ball is blue.",
 "kif":
 "(exists (?ball ?event)
@@ -6973,7 +6512,6 @@
     (instance ?event Impelling)
     (patient ?event ?ball)))"
 },
-{
 {"text":"Jim likes every book that he owns.",
 "kif":
 "(forall (?book)
@@ -6988,7 +6526,6 @@
       (instance James-1 Human)
       (enjoys James-1 ?book))))"
 },
-{
 {"text":"Bob and Mary have a cat.  They like it.",
 "kif":
 "(exists (?cat)
@@ -7003,7 +6540,6 @@
     (possesses Mary-1 ?cat)
     (possesses Robert-1 ?cat)))"
 },
-{
 {"text":"If Jim buys a book, then he reads it.",
 "kif":
 "(forall (?book ?event1)
@@ -7024,7 +6560,6 @@
         (instance ?event2 Reading)
         (patient ?event2 ?book)))))"
 },
-{
 {"text":"Jim ate every donut that he bought.",
 "kif":
 "(forall (?donut ?event1)
@@ -7044,7 +6579,6 @@
         (instance ?event2 Eating)
         (patient ?event2 ?donut)))))"
 },
-{
 {"text":"If Bob is the father of Mary, then he likes her.",
 "kif":
 "(=>
@@ -7061,7 +6595,6 @@
     (instance Mary-1 Human)
     (instance Robert-1 Human)))"
 },
-{
 {"text":"If Bob is Mary's father, then he gives her a picture.",
 "kif":
 "(=>
@@ -7083,7 +6616,6 @@
       (instance ?picture PaintedPicture)
       (patient ?event ?picture))))"
 },
-{
 {"text":"Bob bought a book.  Jim likes his book.",
 "kif":
 "(exists (?book ?event)
@@ -7099,7 +6631,6 @@
     (instance ?event Buying)
     (patient ?event ?book)))"
 },
-{
 {"text":"Bob has a cat and a dog.  Mary does not like his cat.",
 "kif":
 "(exists (?cat ?dog)
@@ -7115,7 +6646,6 @@
     (instance ?dog Canine)
     (possesses Robert-1 ?dog)))"
 },
-{
 {"text":"Bob has a cat.  Mary does not like his dog.",
 "kif":
 "(exists (?cat ?dog)
@@ -7131,7 +6661,6 @@
     (instance ?dog Canine)
     (possesses Robert-1 ?dog)))"
 },
-{
 {"text":"Susan went to the bank.  She inserted her card.",
 "kif":
 "(exists (?bank ?card ?event1 ?event2)
@@ -7148,7 +6677,6 @@
     (destination ?event1 ?bank)
     (patient ?event2 ?card)))"
 },
-{
 {"text":"Bob threw a ball.  His ball is blue.",
 "kif":
 "(exists (?ball ?event)
@@ -7162,7 +6690,6 @@
     (instance ?event Impelling)
     (patient ?event ?ball)))"
 },
-{
 {"text":"Bob reads a book.  His dog goes to the park.",
 "kif":
 "(exists (?book ?dog ?event1 ?event2 ?park)
@@ -7180,7 +6707,6 @@
     (agent ?event2 ?dog)
     (destination ?event2 ?park)))"
 },
-{
 {"text":"Bob and Mary read a book.  His dog and her cat go to the park.",
 "kif":
 "(exists (?book ?cat ?dog ?event1 ?event2 ?park)
@@ -7204,7 +6730,6 @@
     (agent ?event2 ?dog)
     (destination ?event2 ?park)))"
 },
-{
 {"text":"Bob works at the countryside.  Mary likes his house, his dog, his bull and his garden.",
 "kif":
 "(exists (?bull ?countryside ?dog ?event ?garden ?house)
@@ -7230,7 +6755,6 @@
     (possesses Robert-1 ?house)
     (destination ?event ?countryside)))"
 },
-{
 {"text":"Bob and Mary like their dog.",
 "kif":
 "(exists (?dog)
@@ -7245,7 +6769,6 @@
     (possesses Mary-1 ?dog)
     (possesses Robert-1 ?dog)))"
 },
-{
 {"text":"Bob went to Paris.  He likes its river.",
 "kif":
 "(exists (?event ?river)
@@ -7259,7 +6782,6 @@
     (instance ?river River)
     (part ?river ParisFrance)))"
 },
-{
 {"text":"Mary went to the park. Her dog likes its fountain.",
 "kif":
 "(exists (?dog ?event ?fountain ?park)
@@ -7276,7 +6798,6 @@
     (destination ?event ?park)
     (part ?fountain ?park)))"
 },
-{
 {"text":"Bob and his dog go to the park.",
 "kif":
 "(exists (?dog ?event ?park)
@@ -7291,7 +6812,6 @@
     (agent ?event ?dog)
     (destination ?event ?park)))"
 },
-{
 {"text":"Bob, Mary, his cat and her dog go to the park.",
 "kif":
 "(exists (?cat ?dog ?event ?park)
@@ -7312,7 +6832,6 @@
     (agent ?event ?dog)
     (destination ?event ?park)))"
 },
-{
 {"text":"Bob, his dog and his cat go to the park.",
 "kif":
 "(exists (?cat ?dog ?event ?park)
@@ -7330,7 +6849,6 @@
     (agent ?event ?dog)
     (destination ?event ?park)))"
 },
-{
 {"text":"5 dogs fight 2 tigers.",
 "kif":
 "(exists (?dogs ?event ?tigers)
@@ -7351,7 +6869,6 @@
     (agent ?event ?dogs)
     (patient ?event ?tigers)))"
 },
-{
 {"text":"3 boys go to the park.",
 "kif":
 "(exists (?boys ?event ?park)
@@ -7370,7 +6887,6 @@
     (agent ?event ?boys)
     (destination ?event ?park)))"
 },
-{
 {"text":"5 Germans are in the bank.",
 "kif":
 "(exists (?Germans ?bank)
@@ -7384,7 +6900,6 @@
     (instance ?bank Bank-FinancialOrganization)
     (located ?Germans ?bank)))"
 },
-{
 {"text":"The bonus is 7 books.",
 "kif":
 "(exists (?bonus ?books)
@@ -7398,7 +6913,6 @@
     (member-count ?books 7)
     (equal ?bonus ?books)))"
 },
-{
 {"text":"The decoration is 3 flowers.",
 "kif":
 "(exists (?decoration ?flowers)
@@ -7412,7 +6926,6 @@
     (member-count ?flowers 3)
     (equal ?decoration ?flowers)))"
 },
-{
 {"text":"Bob has 2 cats.",
 "kif":
 "(exists (?cats)
@@ -7427,7 +6940,6 @@
     (member-count ?cats 2)
     (possesses Robert-1 ?cats)))"
 },
-{
 {"text":"Bob published 2 books.",
 "kif":
 "(exists (?books)
@@ -7442,7 +6954,6 @@
     (member-count ?books 2)
     (publishes Robert-1 ?books)))"
 },
-{
 {"text":"Bob kills 2 rats.",
 "kif":
 "(exists (?event ?rats)
@@ -7459,7 +6970,6 @@
     (member-count ?rats 2)
     (patient ?event ?rats)))"
 },
-{
 {"text":"Bob bought Mary 3 flowers.",
 "kif":
 "(exists (?event ?flowers)
@@ -7479,7 +6989,6 @@
     (member-count ?flowers 3)
     (patient ?event ?flowers)))"
 },
-{
 {"text":"3 Germans sold 50 trucks to 2 Americans.",
 "kif":
 "(exists (?Americans ?Germans ?event ?trucks)
@@ -7507,7 +7016,6 @@
     (agent ?event ?Germans)
     (patient ?event ?trucks)))"
 },
-{
 {"text":"2 boars attack 3 antelopes.",
 "kif":
 "(exists (?antelopes ?boars ?event)
@@ -7528,7 +7036,6 @@
     (patient ?event ?antelopes)
     (agent ?event ?boars)))"
 },
-{
 {"text":"3 boars fight 2 boars.",
 "kif":
 "(exists (?boars1 ?boars2 ?event)
@@ -7549,7 +7056,6 @@
     (agent ?event ?boars1)
     (patient ?event ?boars2)))"
 },
-{
 {"text":"Bob visited 3 parks.",
 "kif":
 "(exists (?event ?parks)
@@ -7566,7 +7072,6 @@
     (member-count ?parks 3)
     (destination ?event ?parks)))"
 },
-{
 {"text":"3 blue brigades fight 2 red brigades.",
 "kif":
 "(exists (?brigades1 ?brigades2 ?event)
@@ -7591,7 +7096,6 @@
     (agent ?event ?brigades1)
     (patient ?event ?brigades2)))"
 },
-{
 {"text":"The bookstore sells the book in 3 cities.",
 "kif":
 "(exists (?book ?bookstore ?cities ?event)
@@ -7609,7 +7113,6 @@
     (agent ?event ?bookstore)
     (destination ?event ?cities)))"
 },
-{
 {"text":"Do 3 blue brigades fight 5 red brigades?",
 "kif":
 "(exists (?brigades1 ?brigades2 ?event)
@@ -7634,7 +7137,6 @@
     (agent ?event ?brigades1)
     (patient ?event ?brigades2)))"
 },
-{
 {"text":"Do 3 blue brigades and 2 green brigades fight 5 red brigades?",
 "kif":
 "(exists (?brigades1 ?brigades2 ?brigades3 ?event)
@@ -7668,7 +7170,6 @@
     (agent ?event ?brigades2)
     (patient ?event ?brigades3)))"
 },
-{
 {"text":"Bob earned 5 dollars.",
 "kif":
 "(exists (?dollars ?event)
@@ -7685,7 +7186,6 @@
     (instance ?event Getting)
     (patient ?event ?dollars)))"
 },
-{
 {"text":"5 dollars are identical to 500 cents.",
 "kif":
 "(exists (?cents ?dollars)
@@ -7704,7 +7204,6 @@
     (member-count ?dollars 5)
     (equal ?dollars ?cents)))"
 },
-{
 {"text":"5 dollars equal 500 cents.",
 "kif":
 "(exists (?cents ?dollars)
@@ -7723,7 +7222,6 @@
     (member-count ?dollars 5)
     (equal ?dollars ?cents)))"
 },
-{
 {"text":"Bob does not like the book.  Jim likes it.",
 "kif":
 "(exists (?book)
@@ -7737,7 +7235,6 @@
     (enjoys James-1 ?book)
     (instance ?book Book)))"
 },
-{
 {"text":"Bob killed the rat.  Jim did not kill it.",
 "kif":
 "(exists (?event1 ?event2 ?rat)
@@ -7757,7 +7254,6 @@
     (instance ?rat Rat)
     (patient ?event2 ?rat)))"
 },
-{
 {"text":"3 blue brigades did not fight 2 red brigades.",
 "kif":
 "(not
@@ -7783,7 +7279,6 @@
       (agent ?event ?brigades1)
       (patient ?event ?brigades2))))"
 },
-{
 {"text":"1 dollar is 100 cents.",
 "kif":
 "(forall (?dollar)
@@ -7797,7 +7292,6 @@
       (instance ?dollar Collection)
       (member-count ?dollar 100))))"
 },
-{
 {"text":"The 7 books are the bonus.",
 "kif":
 "(exists (?bonus ?books)
@@ -7811,7 +7305,6 @@
     (member-count ?books 7)
     (equal ?books ?bonus)))"
 },
-{
 {"text":"Dogs are mammals.",
 "kif":
 "(forall (?dog)
@@ -7819,7 +7312,6 @@
     (instance ?dog Canine)
     (instance ?dog Mammal)))"
 },
-{
 {"text":"Dogs bark.",
 "kif":
 "(forall (?dog)
@@ -7829,7 +7321,6 @@
       (instance ?event Communication)
       (agent ?event ?dog))))"
 },
-{
 {"text":"All dogs bark.",
 "kif":
 "(forall (?dog)
@@ -7839,7 +7330,6 @@
       (instance ?event Communication)
       (agent ?event ?dog))))"
 },
-{
 {"text":"Some dogs bark.",
 "kif":
 "(exists (?dog ?event)
@@ -7848,7 +7338,6 @@
     (instance ?event Communication)
     (agent ?event ?dog)))"
 },
-{
 {"text":"The dogs run.",
 "kif":
 "(exists (?dogs ?event)
@@ -7861,7 +7350,6 @@
     (instance ?event Walking)
     (agent ?event ?dogs)))"
 },
-{
 {"text":"Bob has 1 cat.",
 "kif":
 "(exists (?cat)
@@ -7871,7 +7359,6 @@
     (instance ?cat Feline)
     (possesses Robert-1 ?cat)))"
 },
-{
 {"text":"Bob reads a book and writes a letter.",
 "kif":
 "(exists (?book ?event ?letter)
@@ -7885,7 +7372,6 @@
     (instance ?letter Letter)
     (patient ?event ?book)))"
 },
-{
 {"text":"Bob bought a book and rented a car and a boat.",
 "kif":
 "(exists (?boat ?book ?car ?event1 ?event2)
@@ -7903,7 +7389,6 @@
     (patient ?event1 ?book)
     (patient ?event2 ?car)))"
 },
-{
 {"text":"Bob cut the meat, boiled the carrot and watered the flower.",
 "kif":
 "(exists (?carrot ?event2 ?event1 ?event3 ?flower ?meat)
@@ -7923,7 +7408,6 @@
     (patient ?event2 ?meat)
     (patient ?event3 ?flower)))"
 },
-{
 {"text":"Bob rented a bicycle and a car and went to the park.",
 "kif":
 "(exists (?bicycle ?car ?event1 ?event2 ?park)
@@ -7941,7 +7425,6 @@
     (patient ?event1 ?car)
     (destination ?event2 ?park)))"
 },
-{
 {"text":"Bob sits and eats a fish.",
 "kif":
 "(exists (?event1 ?event2 ?fish)
@@ -7955,7 +7438,6 @@
     (instance ?fish Fish)
     (patient ?event2 ?fish)))"
 },
-{
 {"text":"Bob eats a fish and sits.",
 "kif":
 "(exists (?event2 ?event1 ?fish)
@@ -7969,7 +7451,6 @@
     (instance ?fish Fish)
     (patient ?event2 ?fish)))"
 },
-{
 {"text":"Bob eats a fish and reads a book.",
 "kif":
 "(exists (?book ?event2 ?event1 ?fish)
@@ -7985,7 +7466,6 @@
     (patient ?event1 ?book)
     (patient ?event2 ?fish)))"
 },
-{
 {"text":"Bob sells a book to Jim and buys Mary a scarf.",
 "kif":
 "(exists (?book ?event1 ?event2 ?scarf)
@@ -8007,7 +7487,6 @@
     (patient ?event1 ?book)
     (patient ?event2 ?scarf)))"
 },
-{
 {"text":"Bob walks, talks and eats a pie.",
 "kif":
 "(exists (?event1 ?event2 ?event3 ?pie)
@@ -8023,7 +7502,6 @@
     (instance ?pie Food)
     (patient ?event3 ?pie)))"
 },
-{
 {"text":"An arm of Tom is injured.",
 "kif":
 "(exists (?agent ?event ?arm)
@@ -8037,7 +7515,6 @@
     (agent ?event ?agent)
     (patient ?event ?arm)))"
 },
-{
 {"text":"The party is on Monday.",
 "kif":
 "(exists (?Monday ?party)
@@ -8047,7 +7524,6 @@
     (overlapsTemporally
       (WhenFn ?party) ?Monday)))"
 },
-{
 {"text":"Birds eat insects.",
 "kif":
 "(forall (?bird)
@@ -8059,7 +7535,6 @@
       (agent ?event ?bird)
       (patient ?event ?insect))))"
 },
-{
 {"text":"Bob is the youngest teller.",
 "kif":
 "(and
@@ -8077,7 +7552,6 @@
         (age ?X ?val2))))
   (instance Robert-1 Human))"
 },
-{
 {"text":"Bill is younger than Tom.",
 "kif":
 "(and
@@ -8089,7 +7563,6 @@
   (age Tom-1 ?val2)
   (greaterThan ?val2 ?val1))"
 },
-{
 {"text":"Mississippi is the longest river.",
 "kif":
 "(and
@@ -8105,7 +7578,6 @@
         (length ?X ?val2))))
   (instance Mississippi River))"
 },
-{
 {"text":"Is the book more expensive than the toy?",
 "kif":
 "(exists (?book ?toy)
@@ -8116,7 +7588,6 @@
     (monetaryValue ?toy ?val2)
     (greaterThan ?val1 ?val2)))"
 },
-{
 {"text":"Who is the youngest soldier?",
 "kif":
 "(and
@@ -8133,7 +7604,6 @@
   (attribute ?who Soldier)
   (instance ?who Human))"
 },
-{
 {"text":"Who is the tallest man?",
 "kif":
 "(and
@@ -8149,7 +7619,6 @@
         (height ?X ?val2))))
   (instance ?who Man))"
 },
-{
 {"text":"Everest is the tallest mountain.",
 "kif":
 "(and
@@ -8165,7 +7634,6 @@
         (elevation ?X ?val2))))
   (instance Everest Mountain))"
 },
-{
 {"text":"Bob's birthday is on the Labor Day.",
 "kif":
 "(exists (?Labor_Day ?birthday)
@@ -8177,7 +7645,6 @@
     (possesses Robert-1 ?birthday)
     (overlapsTemporally ?birthday ?Labor_Day)))"
 },
-{
 {"text":"Bob's birthday is on September 4, 1960.",
 "kif":
 "(exists (?birthday)
@@ -8191,7 +7658,6 @@
           (YearFn 1960))))
     (possesses Robert-1 ?birthday)))"
 },
-{
 {"text":"Bob went to the park before noon.",
 "kif":
 "(exists (?event ?noon ?park)
@@ -8208,7 +7674,6 @@
     (instance ?park PublicPark)
     (destination ?event ?park)))"
 },
-{
 {"text":"Bob was in the park before noon.",
 "kif":
 "(exists (?noon ?park)
@@ -8223,7 +7688,6 @@
     (instance ?noon TimePosition)
     (instance ?park PublicPark)))"
 },
-{
 {"text":"Bob went to New York City on the Independence Day.",
 "kif":
 "(exists (?Independence_Day ?event)
@@ -8238,7 +7702,6 @@
     (destination ?event NewYorkCityNewYork)
     (instance ?event Transportation)))"
 },
-{
 {"text":"Bob was in New York City on the Independence Day.",
 "kif":
 "(exists (?Independence_Day)
@@ -8251,7 +7714,6 @@
       (WhenFn
         (located Robert-1 NewYorkCityNewYork)) ?Independence_Day)))"
 },
-{
 {"text":"Bob will go to New York City after Friday.",
 "kif":
 "(exists (?Friday ?event)
@@ -8268,7 +7730,6 @@
     (destination ?event NewYorkCityNewYork)
     (instance ?event Transportation)))"
 },
-{
 {"text":"Bob will go to New York City during the spring.",
 "kif":
 "(exists (?event ?spring)
@@ -8283,7 +7744,6 @@
     (overlapsTemporally
       (WhenFn ?event) ?spring)))"
 },
-{
 {"text":"Bob will not go to Yellowstone National Park in the winter.",
 "kif":
 "(not
@@ -8299,7 +7759,6 @@
       (overlapsTemporally
         (WhenFn ?event) ?winter))))"
 },
-{
 {"text":"Bob was a teacher before 1997.",
 "kif":
 "(exists (?teacher)
@@ -8315,7 +7774,6 @@
       (BeginFn
         (YearFn 1997)))))"
 },
-{
 {"text":"Bob visited Boston on January 1, 2001.",
 "kif":
 "(exists (?event)
@@ -8331,7 +7789,6 @@
     (instance ?event Translocation)
     (destination ?event BostonMassachusetts)))"
 },
-{
 {"text":"Bob went to New York City after 2001.",
 "kif":
 "(exists (?event)
@@ -8348,7 +7805,6 @@
     (destination ?event NewYorkCityNewYork)
     (instance ?event Transportation)))"
 },
-{
 {"text":"Bob went to New York City before the great 1931.",
 "kif":
 "(exists (?event)
@@ -8367,7 +7823,6 @@
     (destination ?event NewYorkCityNewYork)
     (instance ?event Transportation)))"
 },
-{
 {"text":"Bob went to Honolulu before December 1941.",
 "kif":
 "(exists (?event)
@@ -8385,7 +7840,6 @@
     (destination ?event Honolulu)
     (instance ?event Transportation)))"
 },
-{
 {"text":"The meeting is on Monday.",
 "kif":
 "(exists (?Monday ?meeting)
@@ -8395,7 +7849,6 @@
       (WhenFn ?meeting) ?Monday)
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The meeting will be on January 18, 2008.",
 "kif":
 "(exists (?meeting)
@@ -8407,7 +7860,6 @@
           (YearFn 2008))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"Bob went to the bank at 8 AM.",
 "kif":
 "(exists (?bank ?event)
@@ -8422,7 +7874,6 @@
     (instance ?event Transportation)
     (destination ?event ?bank)))"
 },
-{
 {"text":"Bob went to the bank at 8:30:45 AM.",
 "kif":
 "(exists (?bank ?event)
@@ -8439,7 +7890,6 @@
     (instance ?event Transportation)
     (destination ?event ?bank)))"
 },
-{
 {"text":"The meeting is on 8:30 PM January 18, 2008.",
 "kif":
 "(exists (?meeting)
@@ -8453,7 +7903,6 @@
               (YearFn 2008))))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The pilotless aircraft fired a missile at the target at 2:30:15 PM March 22, 1993.",
 "kif":
 "(exists (?event ?missile ?pilotless_aircraft ?target)
@@ -8474,7 +7923,6 @@
     (agent ?event ?pilotless_aircraft)
     (destination ?event ?target)))"
 },
-{
 {"text":"Bob liked January 1, 2000.",
 "kif":
 "(and
@@ -8485,7 +7933,6 @@
         (YearFn 2000))))
   (instance Robert-1 Human))"
 },
-{
 {"text":"Did Bob go to Honolulu after 1955?",
 "kif":
 "(exists (?event)
@@ -8502,19 +7949,16 @@
     (destination ?event Honolulu)
     (instance ?event Transportation)))"
 },
-{
 {"text":"1996 is a leap year.",
 "kif":
 "(instance
   (YearFn 1996) LeapYear)"
 },
-{
 {"text":"The year 2008 is a leap year.",
 "kif":
 "(instance
   (YearFn 2008) LeapYear)"
 },
-{
 {"text":"The 1st of January 2008 is a Tuesday.",
 "kif":
 "(instance
@@ -8522,7 +7966,6 @@
     (MonthFn January
       (YearFn 2008))) Tuesday)"
 },
-{
 {"text":"The 1st day of January 2008 is a Tuesday.",
 "kif":
 "(instance
@@ -8530,7 +7973,6 @@
     (MonthFn January
       (YearFn 2008))) Tuesday)"
 },
-{
 {"text":"The Monday, 21st of January 2008 is a holiday.",
 "kif":
 "(and
@@ -8543,7 +7985,6 @@
       (MonthFn January
         (YearFn 2008))) Monday))"
 },
-{
 {"text":"Bob bought a book on Tuesday, 22nd of January 2008.",
 "kif":
 "(exists (?book ?event)
@@ -8564,7 +8005,6 @@
     (instance ?event Buying)
     (patient ?event ?book)))"
 },
-{
 {"text":"Bob received the mail after the Thanksgiving Day, 22nd of November 2007.",
 "kif":
 "(exists (?event ?mail)
@@ -8583,7 +8023,6 @@
     (instance ?mail ContentBearingObject)
     (patient ?event ?mail)))"
 },
-{
 {"text":"The meeting is on 8:30 PM January 18, 2008.",
 "kif":
 "(exists (?meeting)
@@ -8597,7 +8036,6 @@
               (YearFn 2008))))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The meeting is on 8:30 PM the 18th of January, 2008.",
 "kif":
 "(exists (?meeting)
@@ -8611,7 +8049,6 @@
               (YearFn 2008))))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The meeting is on 8:30 PM 1/18/2008.",
 "kif":
 "(exists (?meeting)
@@ -8625,7 +8062,6 @@
               (YearFn 2008))))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The first strike started at 1 PM on Thursday the 25th of January, 1945.",
 "kif":
 "(exists (?event ?first_strike)
@@ -8644,7 +8080,6 @@
     (instance ?first_strike Attack)
     (patient ?event ?first_strike)))"
 },
-{
 {"text":"The first strike started at 1:30:10 PM on Thursday the 25th of January, 1945.",
 "kif":
 "(exists (?event ?first_strike)
@@ -8665,7 +8100,6 @@
     (instance ?first_strike Attack)
     (patient ?event ?first_strike)))"
 },
-{
 {"text":"The meeting was at 1 PM on Thursday the 25th of January, 1945.",
 "kif":
 "(exists (?meeting)
@@ -8682,7 +8116,6 @@
             (YearFn 1945)))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The meeting will be at 1 PM on Thursday the 25th of January.",
 "kif":
 "(exists (?meeting)
@@ -8697,7 +8130,6 @@
           (MonthFn January))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The meeting will be on January 25.",
 "kif":
 "(exists (?meeting)
@@ -8708,7 +8140,6 @@
         (YearFn 25)))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The meeting is on 2008, a leap year.",
 "kif":
 "(exists (?meeting)
@@ -8720,7 +8151,6 @@
       (YearFn 2008))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The meeting will be on January 25, Thursday.",
 "kif":
 "(exists (?meeting)
@@ -8734,7 +8164,6 @@
         (YearFn 25)))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"The Christmas Day of 2008 is a Thursday.",
 "kif":
 "(exists (?Christmas_Day)
@@ -8743,7 +8172,6 @@
     (temporalPart ?Christmas_Day
       (YearFn 2008))))"
 },
-{
 {"text":"The winter of 2008 is short.",
 "kif":
 "(exists (?winter)
@@ -8753,7 +8181,6 @@
     (temporalPart ?winter
       (YearFn 2008))))"
 },
-{
 {"text":"The winter of year 2008 is short.",
 "kif":
 "(exists (?winter)
@@ -8763,7 +8190,6 @@
     (temporalPart ?winter
       (YearFn 2008))))"
 },
-{
 {"text":"Bob enjoys January, 2008 in the New York City.",
 "kif":
 "(exists (?event)
@@ -8778,7 +8204,6 @@
       (MonthFn January
         (YearFn 2008)))))"
 },
-{
 {"text":"Bob enjoys the January of 2008 in the New York City.",
 "kif":
 "(exists (?event)
@@ -8793,7 +8218,6 @@
       (MonthFn January
         (YearFn 2008)))))"
 },
-{
 {"text":"Bob went to the shop on the midnight of January 31, 2008.",
 "kif":
 "(exists (?event ?midnight ?shop)
@@ -8812,7 +8236,6 @@
     (instance ?shop RetailStore)
     (destination ?event ?shop)))"
 },
-{
 {"text":"Bob went to the shop on the midnight of the 31st of January, 2008.",
 "kif":
 "(exists (?event ?midnight ?shop)
@@ -8831,7 +8254,6 @@
     (instance ?shop RetailStore)
     (destination ?event ?shop)))"
 },
-{
 {"text":"Bob went to the shop on the midnight of 1/31/2008.",
 "kif":
 "(exists (?event ?midnight ?shop)
@@ -8850,7 +8272,6 @@
     (instance ?shop RetailStore)
     (destination ?event ?shop)))"
 },
-{
 {"text":"Bob went to the shop on a weekend of January 2008.",
 "kif":
 "(exists (?event ?shop ?weekend)
@@ -8868,7 +8289,6 @@
         (YearFn 2008)))
     (destination ?event ?shop)))"
 },
-{
 {"text":"Mary went to the park on a Sunday of January 2008.",
 "kif":
 "(exists (?Sunday ?event ?park)
@@ -8886,7 +8306,6 @@
     (instance ?park PublicPark)
     (destination ?event ?park)))"
 },
-{
 {"text":"Mary was in the New York City during the week of January 25, 2008.",
 "kif":
 "(exists (?week)
@@ -8903,7 +8322,6 @@
         (MonthFn January
           (YearFn 2008))) ?week)))"
 },
-{
 {"text":"The bird flies south in the winter.",
 "kif":
 "(exists (?bird ?event ?winter)
@@ -8916,7 +8334,6 @@
       (WhenFn ?event) ?winter)
     (agent ?event ?bird)))"
 },
-{
 {"text":"Bob moves north in 2005.",
 "kif":
 "(exists (?event)
@@ -8930,7 +8347,6 @@
     (direction ?event North)
     (instance ?event Transportation)))"
 },
-{
 {"text":"The convoy moves northeast by north.",
 "kif":
 "(exists (?convoy ?event)
@@ -8940,7 +8356,6 @@
     (instance ?event Transportation)
     (agent ?event ?convoy)))"
 },
-{
 {"text":"Bob drives up the street.",
 "kif":
 "(exists (?event ?street)
@@ -8952,7 +8367,6 @@
     (instance ?street Roadway)
     (path ?event ?street)))"
 },
-{
 {"text":"Bob drives up the hill.",
 "kif":
 "(exists (?event ?hill)
@@ -8964,7 +8378,6 @@
     (instance ?hill Hill)
     (patient ?event ?hill)))"
 },
-{
 {"text":"The troop moves southwest.",
 "kif":
 "(exists (?event ?troop)
@@ -8974,7 +8387,6 @@
     (attribute ?troop Soldier)
     (agent ?event ?troop)))"
 },
-{
 {"text":"A book is on the floor.",
 "kif":
 "(exists (?book ?floor)
@@ -8983,7 +8395,6 @@
     (instance ?floor Floor)
     (orientation ?book ?floor On)))"
 },
-{
 {"text":"A book is under the desk.",
 "kif":
 "(exists (?book ?desk)
@@ -8992,7 +8403,6 @@
     (instance ?desk Desk)
     (orientation ?book ?desk Below)))"
 },
-{
 {"text":"The boat floats on the water.",
 "kif":
 "(exists (?boat ?event ?water)
@@ -9006,7 +8416,6 @@
     (instance ?water Water)
     (patient ?event ?boat)))"
 },
-{
 {"text":"A bird flies on the cloud.",
 "kif":
 "(exists (?bird ?cloud ?event)
@@ -9020,7 +8429,6 @@
     (instance ?event Flying)
     (agent ?event ?bird)))"
 },
-{
 {"text":"A bird flies over the cloud.",
 "kif":
 "(exists (?bird ?cloud ?event)
@@ -9034,7 +8442,6 @@
     (instance ?event Flying)
     (agent ?event ?bird)))"
 },
-{
 {"text":"Bob sung a song under the oak tree.",
 "kif":
 "(exists (?event ?oak_tree ?song)
@@ -9051,7 +8458,6 @@
     (instance ?song MusicalComposition)
     (patient ?event ?song)))"
 },
-{
 {"text":"A fish swims under the coral reef.",
 "kif":
 "(exists (?coral_reef ?event ?fish)
@@ -9065,7 +8471,6 @@
     (instance ?fish Fish)
     (agent ?event ?fish)))"
 },
-{
 {"text":"A fish is under the coral reef.",
 "kif":
 "(exists (?coral_reef ?fish)
@@ -9074,7 +8479,6 @@
     (instance ?fish Fish)
     (orientation ?fish ?coral_reef Below)))"
 },
-{
 {"text":"A fish swims under the coral reef and eats a worm around a rock.",
 "kif":
 "(exists (?coral_reef ?event1 ?event2 ?fish ?rock ?worm)
@@ -9097,7 +8501,6 @@
     (agent ?event2 ?fish)
     (patient ?event2 ?worm)))"
 },
-{
 {"text":"Bob wrote a poem atop the hill.",
 "kif":
 "(exists (?event ?hill ?poem)
@@ -9115,7 +8518,6 @@
     (instance ?poem FictionalText)
     (patient ?event ?poem)))"
 },
-{
 {"text":"3 tanks move atop the hill.",
 "kif":
 "(exists (?event ?hill ?tanks)
@@ -9134,7 +8536,6 @@
     (member-count ?tanks 3)
     (patient ?event ?tanks)))"
 },
-{
 {"text":"3 tanks fight atop the hill.",
 "kif":
 "(exists (?event ?hill ?tanks)
@@ -9153,7 +8554,6 @@
     (member-count ?tanks 3)
     (patient ?event ?tanks)))"
 },
-{
 {"text":"An apple falls under the bench.",
 "kif":
 "(exists (?apple ?bench ?event)
@@ -9167,7 +8567,6 @@
     (instance ?event MotionDownward)
     (patient ?event ?apple)))"
 },
-{
 {"text":"An apple is under the tree branch.",
 "kif":
 "(exists (?apple ?tree_branch)
@@ -9176,7 +8575,6 @@
     (instance ?tree_branch BodyPart)
     (orientation ?apple ?tree_branch Below)))"
 },
-{
 {"text":"An apple ripens under the tree branch.",
 "kif":
 "(exists (?apple ?event ?tree_branch)
@@ -9190,13 +8588,11 @@
     (instance ?tree_branch BodyPart)
     (patient ?event ?apple)))"
 },
-{
 {"text":"There is a book.",
 "kif":
 "(exists (?book)
   (instance ?book Book))"
 },
-{
 {"text":"There are 3 books.",
 "kif":
 "(exists (?books)
@@ -9208,7 +8604,6 @@
     (instance ?books Collection)
     (member-count ?books 3)))"
 },
-{
 {"text":"There is a pen on the desk.",
 "kif":
 "(exists (?desk ?pen)
@@ -9217,7 +8612,6 @@
     (instance ?pen WritingDevice)
     (orientation ?pen ?desk On)))"
 },
-{
 {"text":"There are 5 books on the desk.",
 "kif":
 "(exists (?books ?desk)
@@ -9231,7 +8625,6 @@
     (instance ?desk Desk)
     (orientation ?books ?desk On)))"
 },
-{
 {"text":"There is a meeting at 3 PM.",
 "kif":
 "(exists (?meeting)
@@ -9241,7 +8634,6 @@
       (HourFn 15))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"There is a meeting on 9 AM in the lab.",
 "kif":
 "(exists (?lab ?meeting)
@@ -9253,7 +8645,6 @@
     (instance ?meeting FormalMeeting)
     (located ?meeting ?lab)))"
 },
-{
 {"text":"The books are on the desk.",
 "kif":
 "(exists (?books ?desk)
@@ -9266,7 +8657,6 @@
     (instance ?desk Desk)
     (orientation ?books ?desk On)))"
 },
-{
 {"text":"A pile of books are on the desk.",
 "kif":
 "(exists (?books ?desk)
@@ -9279,7 +8669,6 @@
     (instance ?desk Desk)
     (orientation ?books ?desk On)))"
 },
-{
 {"text":"There is a pile of books.",
 "kif":
 "(exists (?books)
@@ -9290,7 +8679,6 @@
         (instance ?book Book)))
     (instance ?books Collection)))"
 },
-{
 {"text":"There is a pile of books on the desk.",
 "kif":
 "(exists (?books ?desk)
@@ -9303,7 +8691,6 @@
     (instance ?desk Desk)
     (orientation ?books ?desk On)))"
 },
-{
 {"text":"Bob bought many books and several pens.",
 "kif":
 "(exists (?books ?event ?pens)
@@ -9325,7 +8712,6 @@
     (patient ?event ?books)
     (patient ?event ?pens)))"
 },
-{
 {"text":"On the desk is a book.",
 "kif":
 "(exists (?book ?desk)
@@ -9334,7 +8720,6 @@
     (instance ?desk Desk)
     (orientation ?book ?desk On)))"
 },
-{
 {"text":"On the desk is a pile of books.",
 "kif":
 "(exists (?books ?desk)
@@ -9347,7 +8732,6 @@
     (instance ?desk Desk)
     (orientation ?books ?desk On)))"
 },
-{
 {"text":"Under the bed is a carpet.",
 "kif":
 "(exists (?bed ?carpet)
@@ -9356,7 +8740,6 @@
     (instance ?carpet Clothing)
     (orientation ?carpet ?bed Below)))"
 },
-{
 {"text":"Bob is around an oak tree.  A boy is under it.",
 "kif":
 "(exists (?boy ?oak_tree)
@@ -9370,7 +8753,6 @@
     (orientation Robert-1 ?oak_tree Near)
     (orientation ?boy ?oak_tree Below)))"
 },
-{
 {"text":"Bob is around an oak tree.  Under it is a boy.",
 "kif":
 "(exists (?boy ?oak_tree)
@@ -9384,7 +8766,6 @@
     (orientation Robert-1 ?oak_tree Near)
     (orientation ?boy ?oak_tree Below)))"
 },
-{
 {"text":"Bob is around an oak tree.  Under it is a bench.",
 "kif":
 "(exists (?bench ?oak_tree)
@@ -9396,7 +8777,6 @@
     (orientation Robert-1 ?oak_tree Near)
     (orientation ?bench ?oak_tree Below)))"
 },
-{
 {"text":"Under the cloud is an oak tree.  Under it is a bench.",
 "kif":
 "(exists (?bench ?cloud ?oak_tree)
@@ -9407,7 +8787,6 @@
     (orientation ?bench ?oak_tree Below)
     (orientation ?oak_tree ?cloud Below)))"
 },
-{
 {"text":"Bob has a dog. Does he likes it?",
 "kif":
 "(exists (?dog)
@@ -9418,7 +8797,6 @@
     (instance ?dog Canine)
     (possesses Robert-1 ?dog)))"
 },
-{
 {"text":"Did Bob buy a bike? He did not like his car.",
 "kif":
 "(exists (?bike ?car ?event)
@@ -9436,7 +8814,6 @@
     (instance ?event Buying)
     (patient ?event ?bike)))"
 },
-{
 {"text":"There are 2 books and 3 pens on the desk.",
 "kif":
 "(exists (?books ?desk ?pens)
@@ -9457,7 +8834,6 @@
     (orientation ?books ?desk On)
     (orientation ?pens ?desk On)))"
 },
-{
 {"text":"3 books and 2 pens are on the desk.",
 "kif":
 "(exists (?books ?desk ?pens)
@@ -9478,7 +8854,6 @@
     (orientation ?books ?desk On)
     (orientation ?pens ?desk On)))"
 },
-{
 {"text":"A dog and a cat are under the desk.",
 "kif":
 "(exists (?cat ?desk ?dog)
@@ -9489,7 +8864,6 @@
     (orientation ?cat ?desk Below)
     (orientation ?dog ?desk Below)))"
 },
-{
 {"text":"Bob and Mary live atop a hill.",
 "kif":
 "(exists (?hill)
@@ -9508,7 +8882,6 @@
     (instance Robert-1 Human)
     (instance ?hill Hill)))"
 },
-{
 {"text":"Bob eats and drinks on the desk.",
 "kif":
 "(exists (?desk ?event1 ?event2)
@@ -9525,7 +8898,6 @@
     (agent ?event2 Robert-1)
     (instance ?event2 Drinking)))"
 },
-{
 {"text":"Under the desk are a dog and a cat.",
 "kif":
 "(exists (?cat ?desk ?dog)
@@ -9536,7 +8908,6 @@
     (orientation ?cat ?desk Below)
     (orientation ?dog ?desk Below)))"
 },
-{
 {"text":"Under the desk are a dog, a cat and a rabbit.",
 "kif":
 "(exists (?cat ?desk ?dog ?rabbit)
@@ -9549,7 +8920,6 @@
     (orientation ?dog ?desk Below)
     (orientation ?rabbit ?desk Below)))"
 },
-{
 {"text":"Under the desk are a dog, a cat, a rabbit and a pig.",
 "kif":
 "(exists (?cat ?desk ?dog ?pig ?rabbit)
@@ -9564,7 +8934,6 @@
     (orientation ?pig ?desk Below)
     (orientation ?rabbit ?desk Below)))"
 },
-{
 {"text":"Is there a meeting at 3 PM in the lab?",
 "kif":
 "(exists (?lab ?meeting)
@@ -9576,7 +8945,6 @@
     (instance ?meeting FormalMeeting)
     (located ?meeting ?lab)))"
 },
-{
 {"text":"Are there a book and a pen on the desk?",
 "kif":
 "(exists (?book ?desk ?pen)
@@ -9587,7 +8955,6 @@
     (orientation ?book ?desk On)
     (orientation ?pen ?desk On)))"
 },
-{
 {"text":"Were there an apple tree, an orange tree and a peach tree in the garden?",
 "kif":
 "(exists (?apple_tree ?garden ?orange_tree ?peach_tree)
@@ -9600,7 +8967,6 @@
     (located ?orange_tree ?garden)
     (located ?peach_tree ?garden)))"
 },
-{
 {"text":"Are there an elephant, a monkey, a lion and a tiger in the circus?",
 "kif":
 "(exists (?circus ?elephant ?lion ?monkey ?tiger)
@@ -9615,7 +8981,6 @@
     (located ?monkey ?circus)
     (located ?tiger ?circus)))"
 },
-{
 {"text":"Will there be a meeting at 3 PM in the lab?",
 "kif":
 "(exists (?lab ?meeting)
@@ -9627,7 +8992,6 @@
     (instance ?meeting FormalMeeting)
     (located ?meeting ?lab)))"
 },
-{
 {"text":"Will not there be a meeting at 3 PM in the lab?",
 "kif":
 "(exists (?lab ?meeting)
@@ -9641,7 +9005,6 @@
           (HourFn 15))))
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"Will there be a car and a bike in the garage?",
 "kif":
 "(exists (?bike ?car ?garage)
@@ -9654,7 +9017,6 @@
     (located ?bike ?garage)
     (located ?car ?garage)))"
 },
-{
 {"text":"Shall there be a book, a picture and a pen on the shelf?",
 "kif":
 "(exists (?book ?pen ?picture ?shelf)
@@ -9667,7 +9029,6 @@
     (orientation ?pen ?shelf On)
     (orientation ?picture ?shelf On)))"
 },
-{
 {"text":"Shall there be a computer, a desk, a chair and a blackboard in the library?",
 "kif":
 "(exists (?blackboard ?chair ?computer ?desk ?library)
@@ -9682,7 +9043,6 @@
     (located ?computer ?library)
     (located ?desk ?library)))"
 },
-{
 {"text":"On the bottom is a book, then a pen.",
 "kif":
 "(exists (?book ?pen)
@@ -9691,7 +9051,6 @@
     (instance ?pen WritingDevice)
     (orientation ?pen ?book On)))"
 },
-{
 {"text":"At the top is a photo, then a flag.",
 "kif":
 "(exists (?flag ?photo)
@@ -9700,7 +9059,6 @@
     (instance ?photo Photograph)
     (orientation ?flag ?photo Below)))"
 },
-{
 {"text":"At the right is Bob, then Mary.",
 "kif":
 "(and
@@ -9710,7 +9068,6 @@
   (instance Robert-1 Human)
   (orientation Mary-1 Robert-1 Left))"
 },
-{
 {"text":"On the North is a beach, then the city.",
 "kif":
 "(exists (?beach ?city)
@@ -9719,7 +9076,6 @@
     (instance ?city City)
     (orientation ?city ?beach South)))"
 },
-{
 {"text":"There are 10 books under the desk and on the floor.",
 "kif":
 "(exists (?books ?desk ?floor)
@@ -9735,7 +9091,6 @@
     (orientation ?books ?desk Below)
     (orientation ?books ?floor On)))"
 },
-{
 {"text":"There is a blue sky over the mountain and over the sea.",
 "kif":
 "(exists (?blue_sky ?mountain ?sea)
@@ -9746,7 +9101,6 @@
     (orientation ?blue_sky ?mountain Above)
     (orientation ?blue_sky ?sea Above)))"
 },
-{
 {"text":"On the bottom is a book, then a photo, then a flag.",
 "kif":
 "(exists (?book ?flag ?photo)
@@ -9757,7 +9111,6 @@
     (orientation ?photo ?book On)
     (orientation ?flag ?photo On)))"
 },
-{
 {"text":"On the bottom is a book, then a photo, then a flag, then a pen.",
 "kif":
 "(exists (?book ?flag ?pen ?photo)
@@ -9770,7 +9123,6 @@
     (orientation ?pen ?flag On)
     (orientation ?flag ?photo On)))"
 },
-{
 {"text":"At the top is a flower, then a photo, then a book, then a typewriter.",
 "kif":
 "(exists (?book ?flower ?photo ?typewriter)
@@ -9783,7 +9135,6 @@
     (orientation ?typewriter ?book Below)
     (orientation ?photo ?flower Below)))"
 },
-{
 {"text":"From the right is Bob, then Mary, then Jim, then Tom, then Susan.",
 "kif":
 "(and
@@ -9802,7 +9153,6 @@
   (orientation Susan-1 Tom-1 Left)
   (orientation Tom-1 James-1 Left))"
 },
-{
 {"text":"From the North is a lake, then a river, then a mountain, then a prairie, then the city.",
 "kif":
 "(exists (?city ?lake ?mountain ?prairie ?river)
@@ -9817,7 +9167,6 @@
     (orientation ?prairie ?mountain South)
     (orientation ?mountain ?river South)))"
 },
-{
 {"text":"There is a pile of bricks.  On the bottom is a red brick, then a yellow brick, then a blue brick, then a white brick.",
 "kif":
 "(exists (?brick2 ?brick3 ?brick4 ?brick5 ?bricks)
@@ -9839,7 +9188,6 @@
     (member ?brick4 ?bricks)
     (member ?brick5 ?bricks)))"
 },
-{
 {"text":"There is a pile of books. At the top is a red book, then a yellow book.",
 "kif":
 "(exists (?book2 ?book3 ?books)
@@ -9855,7 +9203,6 @@
     (member ?book2 ?books)
     (member ?book3 ?books)))"
 },
-{
 {"text":"There are 3 blocks. On the bottom is a red block, then a yellow block, then a blue block.",
 "kif":
 "(exists (?block2 ?block3 ?block4 ?blocks)
@@ -9875,7 +9222,6 @@
     (member ?block3 ?blocks)
     (member ?block4 ?blocks)))"
 },
-{
 {"text":"Bob reads his book where Mary reads her novel.",
 "kif":
 "(exists (?book ?event1 ?event2 ?novel ?place)
@@ -9898,7 +9244,6 @@
     (patient ?event2 ?novel)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"The troop attacked the enemy where it landed.",
 "kif":
 "(exists (?enemy ?event1 ?event2 ?place ?troop)
@@ -9914,7 +9259,6 @@
     (destination ?event1 ?place)
     (agent ?event1 ?troop)))"
 },
-{
 {"text":"Bob runs where Mary walks in the morning.",
 "kif":
 "(exists (?event1 ?event2 ?morning ?place)
@@ -9934,7 +9278,6 @@
     (destination ?event1 ?place)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"The plane attacked the enemy where there was a missile defense system.",
 "kif":
 "(exists (?enemy ?event ?missile_defense_system ?place ?plane)
@@ -9949,7 +9292,6 @@
     (agent ?event ?plane)
     (located ?missile_defense_system ?place)))"
 },
-{
 {"text":"The boy feeds his cows where there is grass.",
 "kif":
 "(exists (?boy ?cows ?event ?grass ?place)
@@ -9967,7 +9309,6 @@
     (destination ?event ?place)
     (located ?grass ?place)))"
 },
-{
 {"text":"Bob went to where Mary went to.",
 "kif":
 "(exists (?event1 ?event2 ?place)
@@ -9984,7 +9325,6 @@
     (destination ?event1 ?place)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"Bob came from where Mary went to.",
 "kif":
 "(exists (?event1 ?event2 ?place)
@@ -10001,7 +9341,6 @@
     (origin ?event1 ?place)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"Bob came from where Mary bought the book.",
 "kif":
 "(exists (?book ?event1 ?event2 ?place)
@@ -10020,7 +9359,6 @@
     (origin ?event1 ?place)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"Bob bought the book where Mary went to.",
 "kif":
 "(exists (?book ?event1 ?event2 ?place)
@@ -10039,7 +9377,6 @@
     (destination ?event1 ?place)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"Bob walked around where Mary lost her key.",
 "kif":
 "(exists (?event1 ?event2 ?key ?place)
@@ -10062,7 +9399,6 @@
     (patient ?event2 ?key)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"Bob looked around where Mary lost her key.",
 "kif":
 "(exists (?event1 ?event2 ?key ?place)
@@ -10085,7 +9421,6 @@
     (patient ?event2 ?key)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"There is a cloud above where the tree grows.",
 "kif":
 "(exists (?cloud ?event ?place ?tree)
@@ -10098,7 +9433,6 @@
     (destination ?event ?place)
     (agent ?event ?tree)))"
 },
-{
 {"text":"The bird flies over where the oak tree grows.",
 "kif":
 "(exists (?bird ?event1 ?event2 ?oak_tree ?place)
@@ -10116,7 +9450,6 @@
     (agent ?event2 ?oak_tree)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"The fish swims under where the coral reef grows.",
 "kif":
 "(exists (?coral_reef ?event1 ?event2 ?fish ?place)
@@ -10134,7 +9467,6 @@
     (patient ?event1 ?coral_reef)
     (agent ?event2 ?fish)))"
 },
-{
 {"text":"Bob swims below where Jim swims.",
 "kif":
 "(exists (?event1 ?event2 ?place)
@@ -10154,7 +9486,6 @@
     (instance ?place Region)
     (destination ?event2 ?place)))"
 },
-{
 {"text":"The war was in 1900.",
 "kif":
 "(exists (?war)
@@ -10164,7 +9495,6 @@
       (YearFn 1900))
     (instance ?war War)))"
 },
-{
 {"text":"A card was inserted by Bob.",
 "kif":
 "(exists (?card ?event)
@@ -10176,7 +9506,6 @@
     (instance ?event Putting)
     (patient ?event ?card)))"
 },
-{
 {"text":"Rome was built by the slaves.",
 "kif":
 "(exists (?event ?slaves)
@@ -10191,7 +9520,6 @@
     (instance ?slaves Collection)
     (agent ?event ?slaves)))"
 },
-{
 {"text":"The infant was not carried by the mother.",
 "kif":
 "(not
@@ -10203,7 +9531,6 @@
       (patient ?event ?infant)
       (agent ?event ?mother))))"
 },
-{
 {"text":"The road will not be paved by the gardener.",
 "kif":
 "(not
@@ -10215,7 +9542,6 @@
       (agent ?event ?gardener)
       (path ?event ?road))))"
 },
-{
 {"text":"The road was paved.",
 "kif":
 "(exists (?agent ?event ?road)
@@ -10226,7 +9552,6 @@
     (agent ?event ?agent)
     (path ?event ?road)))"
 },
-{
 {"text":"The city was built.",
 "kif":
 "(exists (?agent ?city ?event)
@@ -10237,7 +9562,6 @@
     (agent ?event ?agent)
     (patient ?event ?city)))"
 },
-{
 {"text":"The history was made.",
 "kif":
 "(exists (?agent ?event ?history)
@@ -10248,7 +9572,6 @@
     (agent ?event ?agent)
     (patient ?event ?history)))"
 },
-{
 {"text":"The telephone was created by Bell.",
 "kif":
 "(exists (?event ?telephone)
@@ -10259,7 +9582,6 @@
     (instance ?telephone Telephone)
     (patient ?event ?telephone)))"
 },
-{
 {"text":"The card that is inserted by Bob is red.",
 "kif":
 "(exists (?card ?event)
@@ -10272,7 +9594,6 @@
     (instance ?event Putting)
     (patient ?event ?card)))"
 },
-{
 {"text":"The car that was damaged is red.",
 "kif":
 "(exists (?agent ?car ?event)
@@ -10284,7 +9605,6 @@
     (agent ?event ?agent)
     (patient ?event ?car)))"
 },
-{
 {"text":"The tiger that was shot by Bob killed a boy.",
 "kif":
 "(exists (?boy ?event1 ?event2 ?tiger)
@@ -10302,7 +9622,6 @@
     (patient ?event1 ?tiger)
     (agent ?event2 ?tiger)))"
 },
-{
 {"text":"Bob gave Mary a book that was written by Bob's father.",
 "kif":
 "(exists (?book ?event ?father)
@@ -10319,7 +9638,6 @@
     (patient ?event ?book)
     (authors ?father ?book)))"
 },
-{
 {"text":"The boy that was hit by a car plays in the park.",
 "kif":
 "(exists (?boy ?car ?event1 ?event2 ?park)
@@ -10336,7 +9654,6 @@
     (agent ?event1 ?car)
     (destination ?event2 ?park)))"
 },
-{
 {"text":"Iliad is an epic poem that was written by Homer.",
 "kif":
 "(and
@@ -10344,7 +9661,6 @@
   (instance Homer Human)
   (instance Iliad NarrativeText))"
 },
-{
 {"text":"The boy who was hit is protected.",
 "kif":
 "(exists (?agent1 ?agent2 ?boy ?event ?state)
@@ -10361,7 +9677,6 @@
     (patient ?event ?boy)
     (patient ?state ?boy)))"
 },
-{
 {"text":"The car that was damaged is abandoned.",
 "kif":
 "(exists (?agent1 ?agent2 ?car ?event1 ?event2)
@@ -10376,7 +9691,6 @@
     (patient ?event1 ?car)
     (patient ?event2 ?car)))"
 },
-{
 {"text":"A card was sent to Mary by Bob.",
 "kif":
 "(exists (?card ?event)
@@ -10391,7 +9705,6 @@
     (instance ?event Directing)
     (patient ?event ?card)))"
 },
-{
 {"text":"A card was sent Mary by Bob.",
 "kif":
 "(exists (?card ?event)
@@ -10406,7 +9719,6 @@
     (instance ?event Directing)
     (patient ?event ?card)))"
 },
-{
 {"text":"A card was sent to Mary.",
 "kif":
 "(exists (?agent ?card ?event)
@@ -10420,7 +9732,6 @@
     (agent ?event ?agent)
     (patient ?event ?card)))"
 },
-{
 {"text":"A card was sent Mary.",
 "kif":
 "(exists (?agent ?card ?event)
@@ -10434,7 +9745,6 @@
     (agent ?event ?agent)
     (patient ?event ?card)))"
 },
-{
 {"text":"Mary was sent a card to by Bob.",
 "kif":
 "(exists (?card ?event)
@@ -10449,7 +9759,6 @@
     (instance ?event Directing)
     (patient ?event ?card)))"
 },
-{
 {"text":"Mary was sent a card to.",
 "kif":
 "(exists (?agent ?card ?event)
@@ -10463,7 +9772,6 @@
     (agent ?event ?agent)
     (patient ?event ?card)))"
 },
-{
 {"text":"The message which was sent to Mary by Bob is important.",
 "kif":
 "(exists (?event ?message)
@@ -10479,7 +9787,6 @@
     (instance ?message Text)
     (patient ?event ?message)))"
 },
-{
 {"text":"The message which was sent Mary by Bob is important.",
 "kif":
 "(exists (?event ?message)
@@ -10495,7 +9802,6 @@
     (instance ?message Text)
     (patient ?event ?message)))"
 },
-{
 {"text":"The message which was sent to Mary is important.",
 "kif":
 "(exists (?agent ?event ?message)
@@ -10510,7 +9816,6 @@
     (agent ?event ?agent)
     (patient ?event ?message)))"
 },
-{
 {"text":"The message which was sent Mary is important.",
 "kif":
 "(exists (?agent ?event ?message)
@@ -10525,7 +9830,6 @@
     (agent ?event ?agent)
     (patient ?event ?message)))"
 },
-{
 {"text":"Mary who was sent a message to by Bob reads a book.",
 "kif":
 "(exists (?book ?event1 ?event2 ?message)
@@ -10544,7 +9848,6 @@
     (patient ?event1 ?book)
     (patient ?event2 ?message)))"
 },
-{
 {"text":"Mary who was sent a message to reads a book.",
 "kif":
 "(exists (?agent ?book ?event1 ?event2 ?message)
@@ -10562,7 +9865,6 @@
     (patient ?event1 ?book)
     (patient ?event2 ?message)))"
 },
-{
 {"text":"A saw is a tool that cuts things.",
 "kif":
 "(forall (?saw)
@@ -10576,7 +9878,6 @@
         (agent ?event ?saw)
         (patient ?event ?thing)))))"
 },
-{
 {"text":"A vat is a large tub that holds liquids.",
 "kif":
 "(forall (?vat)
@@ -10591,7 +9892,6 @@
         (patient ?event ?liquid)
         (agent ?event ?vat)))))"
 },
-{
 {"text":"Bottles containing water are red.",
 "kif":
 "(forall (?bottle ?water)
@@ -10604,7 +9904,6 @@
       (attribute ?bottle Red)
       (instance ?bottle Bottle))))"
 },
-{
 {"text":"Bottles that contain water are red.",
 "kif":
 "(forall (?bottle ?water)
@@ -10617,7 +9916,6 @@
       (attribute ?bottle Red)
       (instance ?bottle Bottle))))"
 },
-{
 {"text":"Documents containing information about weapons of mass destruction are top secret.",
 "kif":
 "(forall (?document ?weapon_of_mass_destruction)
@@ -10633,7 +9931,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"Documents containing information about the intelligence activities are top secret.",
 "kif":
 "(forall (?document ?intelligence_activities)
@@ -10653,7 +9950,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"The SIO classified the document X as secret.",
 "kif":
 "(exists (?SIO ?X ?event)
@@ -10668,7 +9964,6 @@
     (agent ?event ?SIO)
     (patient ?event ?X)))"
 },
-{
 {"text":"The document Y was classified by the classification authority as top secret.",
 "kif":
 "(exists (?Y ?classification_authority ?event)
@@ -10683,7 +9978,6 @@
     (patient ?event ?Y)
     (agent ?event ?classification_authority)))"
 },
-{
 {"text":"The book was classified as top secret by the committee.",
 "kif":
 "(exists (?book ?committee ?event)
@@ -10698,7 +9992,6 @@
     (patient ?event ?book)
     (agent ?event ?committee)))"
 },
-{
 {"text":"The book was classified by the committee as top secret.",
 "kif":
 "(exists (?book ?committee ?event)
@@ -10713,7 +10006,6 @@
     (patient ?event ?book)
     (agent ?event ?committee)))"
 },
-{
 {"text":"Documents containing information about weapons of mass destruction are classified as top secret.",
 "kif":
 "(forall (?document ?weapon_of_mass_destruction)
@@ -10737,7 +10029,6 @@
         (agent ?event ?agent)
         (patient ?event ?document)))))"
 },
-{
 {"text":"Documents containing information about weapons of mass destruction are classified top secret.",
 "kif":
 "(forall (?document ?weapon_of_mass_destruction)
@@ -10761,7 +10052,6 @@
         (agent ?event ?agent)
         (patient ?event ?document)))))"
 },
-{
 {"text":"Documents containing information about the production of weapons of mass destruction are classified as top secret.",
 "kif":
 "(forall (?document ?production ?weapon_of_mass_destruction)
@@ -10790,7 +10080,6 @@
         (agent ?event ?agent)
         (patient ?event ?document)))))"
 },
-{
 {"text":"Documents containing information about the development of weapons of mass destruction are top secret.",
 "kif":
 "(forall (?development ?document ?weapon_of_mass_destruction)
@@ -10811,7 +10100,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"Documents containing information about the proliferation of weapons of mass destruction are top secret.",
 "kif":
 "(forall (?document ?proliferation ?weapon_of_mass_destruction)
@@ -10832,7 +10120,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"Documents containing information about the deployment of weapons of mass destruction are top secret.",
 "kif":
 "(forall (?deployment ?document ?weapon_of_mass_destruction)
@@ -10853,7 +10140,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"Documents containing information about the storage of weapons of mass destruction are top secret.",
 "kif":
 "(forall (?document ?storage ?weapon_of_mass_destruction)
@@ -10874,7 +10160,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"The document, X, containing information about the storage of weapons of mass destruction is top secret.",
 "kif":
 "(exists (?X ?storage ?weapon_of_mass_destruction)
@@ -10892,7 +10177,6 @@
     (instance ?storage Keeping)
     (instance ?weapon_of_mass_destruction WeaponOfMassDestruction)))"
 },
-{
 {"text":"The document containing information about the storage of weapons of mass destruction is classified as top secret.",
 "kif":
 "(exists (?agent ?document ?event ?storage ?weapon_of_mass_destruction)
@@ -10917,7 +10201,6 @@
     (agent ?event ?agent)
     (patient ?event ?document)))"
 },
-{
 {"text":"The old red dog is hungry.",
 "kif":
 "(exists (?dog)
@@ -10927,7 +10210,6 @@
     (attribute ?dog Red)
     (instance ?dog Canine)))"
 },
-{
 {"text":"The oldest red dog is hungry.",
 "kif":
 "(exists (?dog)
@@ -10946,7 +10228,6 @@
     (attribute ?dog Red)
     (instance ?dog Canine)))"
 },
-{
 {"text":"The oldest red dog goes to the park.",
 "kif":
 "(exists (?dog ?event ?park)
@@ -10968,7 +10249,6 @@
     (agent ?event ?dog)
     (destination ?event ?park)))"
 },
-{
 {"text":"An old, tall, hungry and thirsty man went to the shop.",
 "kif":
 "(exists (?event ?man ?shop)
@@ -10983,7 +10263,6 @@
     (agent ?event ?man)
     (destination ?event ?shop)))"
 },
-{
 {"text":"The old and unimportant documents are unclassified.",
 "kif":
 "(exists (?documents)
@@ -10998,7 +10277,6 @@
     (attribute ?documents USUnclassified)
     (instance ?documents Collection)))"
 },
-{
 {"text":"The new and long document, X, will be classified as top secret.",
 "kif":
 "(exists (?X ?agent ?event)
@@ -11015,7 +10293,6 @@
     (patient ?event ?X)
     (agent ?event ?agent)))"
 },
-{
 {"text":"The new document is classified as For Official Use Only by the SIO.",
 "kif":
 "(exists (?SIO ?document ?event)
@@ -11031,7 +10308,6 @@
     (agent ?event ?SIO)
     (patient ?event ?document)))"
 },
-{
 {"text":"Documents containing the secret about the development of nuclear weapons are top secret.",
 "kif":
 "(forall (?development ?document ?nuclear_weapon)
@@ -11052,7 +10328,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"Documents containing the secret of the intelligence activities are top secret.",
 "kif":
 "(forall (?document ?intelligence_activities)
@@ -11072,7 +10347,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"Documents containing the secret of the production of Vollum1B are classified as top secret.",
 "kif":
 "(forall (?document ?production)
@@ -11101,7 +10375,6 @@
         (agent ?event ?agent)
         (patient ?event ?document)))))"
 },
-{
 {"text":"Documents containing information about the proliferation of nuclear weapons are top secret.",
 "kif":
 "(forall (?document ?nuclear_weapon ?proliferation)
@@ -11122,7 +10395,6 @@
       (attribute ?document USTopSecret)
       (instance ?document FactualText))))"
 },
-{
 {"text":"Bob did not classify the document X.",
 "kif":
 "(not
@@ -11135,7 +10407,6 @@
       (instance ?event Classifying)
       (patient ?event ?X))))"
 },
-{
 {"text":"The document is unclassified before 2001.",
 "kif":
 "(exists (?document)
@@ -11148,7 +10419,6 @@
         (YearFn 2001)))
     (instance ?document FactualText)))"
 },
-{
 {"text":"The document was classified as top secret before 2001.",
 "kif":
 "(exists (?agent ?document ?event)
@@ -11169,7 +10439,6 @@
     (agent ?event ?agent)
     (patient ?event ?document)))"
 },
-{
 {"text":"The document was not classified as top secret before 2001.",
 "kif":
 "(not
@@ -11191,7 +10460,6 @@
       (agent ?event ?agent)
       (patient ?event ?document))))"
 },
-{
 {"text":"The new document, X, contains information about the deployment of military materials. It is classified as secret by the classification authority.",
 "kif":
 "(exists (?X ?classification_authority ?deployment ?event ?military_material)
@@ -11217,7 +10485,6 @@
     (patient ?event ?X)
     (agent ?event ?classification_authority)))"
 },
-{
 {"text":"The document X contains information about the production of Vollum1B. What is X's security classification level?",
 "kif":
 "(exists (?X ?production)
@@ -11237,7 +10504,6 @@
     (attribute X ?what)
     (instance ?what SecurityClassificationLevel)))"
 },
-{
 {"text":"The document X contains information about the military material. What is the security classification level of the document X?",
 "kif":
 "(exists (?X ?military_material)
@@ -11251,7 +10517,6 @@
     (instance ?what SecurityClassificationLevel)
     (attribute ?X ?what)))"
 },
-{
 {"text":"Bob bought a book.  Who is the author of the book?",
 "kif":
 "(exists (?book ?event)
@@ -11265,7 +10530,6 @@
     (patient ?event ?book)
     (authors ?who ?book)))"
 },
-{
 {"text":"The document X is unclassified.  Who classified it?",
 "kif":
 "(exists (?X ?event)
@@ -11277,7 +10541,6 @@
     (patient ?event ?X)
     (agent ?event ?who)))"
 },
-{
 {"text":"The document X contains information about the military material. What is its security classification level?",
 "kif":
 "(exists (?X ?military_material)
@@ -11291,7 +10554,6 @@
     (instance ?what SecurityClassificationLevel)
     (attribute ?X ?what)))"
 },
-{
 {"text":"The document X contains information about the production of Vollum1B. What is the document's security classification level?",
 "kif":
 "(exists (?X ?production)
@@ -11310,7 +10572,6 @@
     (instance ?what SecurityClassificationLevel)
     (attribute ?X ?what)))"
 },
-{
 {"text":"Bob wrote a document. What is its security classification level?",
 "kif":
 "(exists (?document)
@@ -11322,7 +10583,6 @@
     (instance ?what SecurityClassificationLevel)
     (attribute ?document ?what)))"
 },
-{
 {"text":"Is the document top secret?",
 "kif":
 "(exists (?document)
@@ -11330,7 +10590,6 @@
     (attribute ?document USTopSecret)
     (instance ?document FactualText)))"
 },
-{
 {"text":"Is the document X unclassified?",
 "kif":
 "(exists (?X)
@@ -11338,7 +10597,6 @@
     (attribute ?X USUnclassified)
     (instance ?X FactualText)))"
 },
-{
 {"text":"Did Bob classify the document as top secret?",
 "kif":
 "(exists (?document ?event)
@@ -11354,7 +10612,6 @@
     (instance ?event Classifying)
     (patient ?event ?document)))"
 },
-{
 {"text":"Was the document X classified as top secret by the SIO?",
 "kif":
 "(exists (?SIO ?X ?event)
@@ -11369,7 +10626,6 @@
     (agent ?event ?SIO)
     (patient ?event ?X)))"
 },
-{
 {"text":"Was the document X classified by the SIO as top secret?",
 "kif":
 "(exists (?SIO ?X ?event)
@@ -11384,7 +10640,6 @@
     (agent ?event ?SIO)
     (patient ?event ?X)))"
 },
-{
 {"text":"Is the book written by Bob?",
 "kif":
 "(exists (?book)
@@ -11394,7 +10649,6 @@
     (authors Robert-1 ?book)
     (instance ?book Book)))"
 },
-{
 {"text":"Shall the novel be written?",
 "kif":
 "(exists (?agent ?novel)
@@ -11403,7 +10657,6 @@
     (instance ?novel Novel)
     (authors ?agent ?novel)))"
 },
-{
 {"text":"Shall the document X be classified as top secret?",
 "kif":
 "(exists (?X ?agent ?event)
@@ -11418,13 +10671,11 @@
     (patient ?event ?X)
     (agent ?event ?agent)))"
 },
-{
 {"text":"Is there a meeting?",
 "kif":
 "(exists (?meeting)
   (instance ?meeting FormalMeeting))"
 },
-{
 {"text":"Is there a book in the library?",
 "kif":
 "(exists (?book ?library)
@@ -11433,7 +10684,6 @@
     (instance ?library Room)
     (located ?book ?library)))"
 },
-{
 {"text":"Is the document unclassified before 2001?",
 "kif":
 "(exists (?document)
@@ -11446,7 +10696,6 @@
         (YearFn 2001)))
     (instance ?document FactualText)))"
 },
-{
 {"text":"Who classified the document X as top secret?",
 "kif":
 "(exists (?X ?event)
@@ -11461,7 +10710,6 @@
     (patient ?event ?X)
     (agent ?event ?who)))"
 },
-{
 {"text":"Who classified the document?",
 "kif":
 "(exists (?document ?event)
@@ -11472,7 +10720,6 @@
     (patient ?event ?document)
     (agent ?event ?who)))"
 },
-{
 {"text":"Who did not classify the document X?",
 "kif":
 "(not
@@ -11484,7 +10731,6 @@
       (patient ?event ?X)
       (agent ?event ?who))))"
 },
-{
 {"text":"Who wrote Iliad?",
 "kif":
 "(and
@@ -11492,7 +10738,6 @@
   (authors ?who Iliad)
   (instance ?who Human))"
 },
-{
 {"text":"Who wrote the book that Bob read?",
 "kif":
 "(exists (?book ?event)
@@ -11506,7 +10751,6 @@
     (patient ?event ?book)
     (authors ?who ?book)))"
 },
-{
 {"text":"What is the security classification level of the document?",
 "kif":
 "(exists (?document)
@@ -11515,7 +10759,6 @@
     (instance ?what SecurityClassificationLevel)
     (attribute ?document ?what)))"
 },
-{
 {"text":"What is the security classification level of the document X?",
 "kif":
 "(exists (?X)
@@ -11524,7 +10767,6 @@
     (instance ?what SecurityClassificationLevel)
     (attribute ?X ?what)))"
 },
-{
 {"text":"What are the security classification level of the document X and the document Y?",
 "kif":
 "(exists (?X ?Y)
@@ -11536,7 +10778,6 @@
     (attribute ?X ?what1)
     (attribute ?Y ?what2)))"
 },
-{
 {"text":"What are the security classification levels of the document X, the book Y and the letter Z?",
 "kif":
 "(exists (?X ?Y ?Z)
@@ -11551,7 +10792,6 @@
     (attribute ?Y ?what2)
     (attribute ?Z ?what3)))"
 },
-{
 {"text":"What are the security classification levels of the document A, the book B, the report C and the letter D?",
 "kif":
 "(exists (?A ?B ?C ?D)
@@ -11569,7 +10809,6 @@
     (attribute ?C ?what3)
     (attribute ?D ?what4)))"
 },
-{
 {"text":"What did Bob classify as top secret?",
 "kif":
 "(exists (?event)
@@ -11584,7 +10823,6 @@
     (instance ?event Classifying)
     (patient ?event ?what)))"
 },
-{
 {"text":"What did Bob classify the document X as?",
 "kif":
 "(exists (?X ?event)
@@ -11601,7 +10839,6 @@
     (instance ?what SecurityClassificationLevel)
     (patient ?event ?X)))"
 },
-{
 {"text":"What is the document X classified as?",
 "kif":
 "(exists (?X ?agent ?event)
@@ -11617,7 +10854,6 @@
     (patient ?event ?X)
     (agent ?event ?agent)))"
 },
-{
 {"text":"What is not the document X's security classification level?",
 "kif":
 "(exists (?X)
@@ -11627,7 +10863,6 @@
     (not
       (attribute ?X ?what))))"
 },
-{
 {"text":"What was the security classification level of the document X before 2001?",
 "kif":
 "(exists (?X)
@@ -11641,7 +10876,6 @@
     (instance ?X FactualText)
     (instance ?what SecurityClassificationLevel)))"
 },
-{
 {"text":"What was the document X's security classification level after 2001?",
 "kif":
 "(exists (?X)
@@ -11655,7 +10889,6 @@
     (instance ?X FactualText)
     (instance ?what SecurityClassificationLevel)))"
 },
-{
 {"text":"What was the document X's security classification level during 2001?",
 "kif":
 "(exists (?X)
@@ -11667,7 +10900,6 @@
     (instance ?X FactualText)
     (instance ?what SecurityClassificationLevel)))"
 },
-{
 {"text":"What was the document X classified as by the classification authority before 1990?",
 "kif":
 "(exists (?X ?classification_authority ?event)
@@ -11689,7 +10921,6 @@
     (patient ?event ?X)
     (agent ?event ?classification_authority)))"
 },
-{
 {"text":"Since when did the classification authority classify the document as secret?",
 "kif":
 "(exists (?classification_authority ?document ?event)
@@ -11708,7 +10939,6 @@
     (agent ?event ?classification_authority)
     (patient ?event ?document)))"
 },
-{
 {"text":"Since when was the document X classified as secret?",
 "kif":
 "(exists (?X ?agent ?event)
@@ -11727,7 +10957,6 @@
     (patient ?event ?X)
     (agent ?event ?agent)))"
 },
-{
 {"text":"Since when was the document classified as secret?",
 "kif":
 "(exists (?agent ?document ?event)
@@ -11746,14 +10975,12 @@
     (agent ?event ?agent)
     (patient ?event ?document)))"
 },
-{
 {"text":"Which document is top secret?",
 "kif":
 "(and
   (attribute ?document USTopSecret)
   (instance ?document FactualText))"
 },
-{
 {"text":"Which customer enters the card?",
 "kif":
 "(exists (?card ?event ?salesperson)
@@ -11766,7 +10993,6 @@
     (agent ?event ?customer)
     (customer ?customer ?salesperson)))"
 },
-{
 {"text":"Which card does Bob enter?",
 "kif":
 "(exists (?event)
@@ -11777,7 +11003,6 @@
     (instance ?event Motion)
     (patient ?event ?card)))"
 },
-{
 {"text":"Which document did Bob classify as top secret?",
 "kif":
 "(exists (?event)
@@ -11792,7 +11017,6 @@
     (instance ?event Classifying)
     (patient ?event ?document)))"
 },
-{
 {"text":"Which document was classified as top secret by the SIO?",
 "kif":
 "(exists (?SIO ?event)
@@ -11807,14 +11031,12 @@
     (agent ?event ?SIO)
     (patient ?event ?document)))"
 },
-{
 {"text":"Which card is valid?",
 "kif":
 "(and
   (attribute ?card Valid)
   (instance ?card BankCard))"
 },
-{
 {"text":"Which card is inserted?",
 "kif":
 "(exists (?agent ?event)
@@ -11825,7 +11047,6 @@
     (agent ?event ?agent)
     (patient ?event ?card)))"
 },
-{
 {"text":"Which document was classified as secret?",
 "kif":
 "(exists (?agent ?event)
@@ -11840,7 +11061,6 @@
     (agent ?event ?agent)
     (patient ?event ?document)))"
 },
-{
 {"text":"Which document was sent to Mary?",
 "kif":
 "(exists (?agent ?event)
@@ -11854,7 +11074,6 @@
     (agent ?event ?agent)
     (patient ?event ?document)))"
 },
-{
 {"text":"Which security classification level did Bob classify the document X as?",
 "kif":
 "(exists (?X ?event)
@@ -11871,7 +11090,6 @@
     (instance ?security_classification_level SecurityClassificationLevel)
     (patient ?event ?X)))"
 },
-{
 {"text":"When was the document classified as secret?",
 "kif":
 "(exists (?agent ?document ?event)
@@ -11890,7 +11108,6 @@
     (agent ?event ?agent)
     (patient ?event ?document)))"
 },
-{
 {"text":"When was the document not classified as secret?",
 "kif":
 "(not
@@ -11910,7 +11127,6 @@
       (agent ?event ?agent)
       (patient ?event ?document))))"
 },
-{
 {"text":"When did Bob write the book?",
 "kif":
 "(exists (?book)
@@ -11924,7 +11140,6 @@
         (WhenFn
           (authors Robert-1 ?book))) ?when)))"
 },
-{
 {"text":"Until when was the document not classified as top secret?",
 "kif":
 "(not
@@ -11944,7 +11159,6 @@
       (agent ?event ?agent)
       (patient ?event ?document))))"
 },
-{
 {"text":"How long did Bob write the book?",
 "kif":
 "(exists (?book)
@@ -11957,7 +11171,6 @@
       (WhenFn
         (authors Robert-1 ?book)) ?how_long)))"
 },
-{
 {"text":"How long is the meeting?",
 "kif":
 "(exists (?meeting)
@@ -11966,7 +11179,6 @@
       (WhenFn ?meeting) ?how_long)
     (instance ?meeting FormalMeeting)))"
 },
-{
 {"text":"How long is the document unclassified?",
 "kif":
 "(exists (?document)
@@ -11977,7 +11189,6 @@
       (WhenFn
         (attribute ?document USUnclassified)) ?how_long)))"
 },
-{
 {"text":"How long is the wound red?",
 "kif":
 "(exists (?wound)
@@ -11988,7 +11199,6 @@
     (attribute ?wound Red)
     (instance ?wound Injuring)))"
 },
-{
 {"text":"How long was the document X classified as top secret?",
 "kif":
 "(exists (?X ?agent ?event)
@@ -12006,7 +11216,6 @@
     (patient ?event ?X)
     (agent ?event ?agent)))"
 },
-{
 {"text":"By whom was the document X classified as top secret?",
 "kif":
 "(exists (?X ?event)
@@ -12021,7 +11230,6 @@
     (patient ?event ?X)
     (agent ?event ?whom)))"
 },
-{
 {"text":"By whom was a card sent to Mary?",
 "kif":
 "(exists (?card ?event)
@@ -12035,7 +11243,6 @@
     (patient ?event ?card)
     (agent ?event ?whom)))"
 },
-{
 {"text":"By whom was Mary sent a card to?",
 "kif":
 "(exists (?card ?event)
@@ -12049,7 +11256,6 @@
     (patient ?event ?card)
     (agent ?event ?whom)))"
 },
-{
 {"text":"By what government agency was the document X classified as secret?",
 "kif":
 "(exists (?X ?event)
@@ -12064,7 +11270,6 @@
     (patient ?event ?X)
     (agent ?event ?government_agency)))"
 },
-{
 {"text":"By which classification authority was the document X classified as top secret?",
 "kif":
 "(exists (?X ?event)
@@ -12079,7 +11284,6 @@
     (patient ?event ?X)
     (agent ?event ?classification_authority)))"
 },
-{
 {"text":"Where was the document classified as secret?",
 "kif":
 "(exists (?agent ?document ?event)
@@ -12095,7 +11299,6 @@
     (patient ?event ?document)
     (located ?event ?where)))"
 },
-{
 {"text":"John's brother is Bill.",
 "kif":
 "(exists (?John-1 ?Bill-5) 
@@ -12106,35 +11309,30 @@
     (attribute ?Bill-5 Male)
     (instance ?Bill-5 Human)))"
 },
-{
 {"text":"Who is John's brother?",
 "kif":
 "(and 
   (brother John-3 ?WH)
   (instance John-3 Human))"
 },
-{
 {"text":"John's brother is who?",
 "kif":
 "(and 
   (brother John-3 ?WH)
   (instance John-3 Human))"
 },
-{
 {"text":"John is the brother of who?",
 "kif":
 "(and 
   (brother John-3 ?WH)
   (instance John-3 Human))"
 },
-{
 {"text":"Who is John the brother of?",
 "kif":
 "(and 
   (brother John-3 ?WH)
   (instance John-3 Human))"
 },
-{
 {"text":"John kicks the cart.",
 "kif":
 "(exists (?John-1 ?cart-4 ?kicks-2) 
@@ -12146,7 +11344,6 @@
     (instance ?John-1 Human)
     (instance ?cart-4 Wagon)))"
 },
-{
 {"text":"John takes a walk.",
 "kif":
 "(and 
@@ -12154,7 +11351,6 @@
   (instance John-1 Human)
   (instance walk-4 Walking))"
 },
-{
 {"text":"John took a walk",
 "kif":
 "(and 
@@ -12164,7 +11360,6 @@
     (WhenFn walk-4) Now)
   (instance walk-4 Walking))"
 },
-{
 {"text":"John will take a walk.",
 "kif":
 "(and 
@@ -12174,7 +11369,6 @@
     (WhenFn walk-5))
   (instance walk-5 Walking))"
 },
-{
 {"text":"John has taken a walk.",
 "kif":
 "(and 
@@ -12184,7 +11378,6 @@
     (WhenFn walk-4) Now)
   (instance walk-4 Walking))"
 },
-{
 {"text":"John takes a drink of water.",
 "kif":
 "(and 
@@ -12194,17 +11387,14 @@
   (instance water-6 Water)
   (instance drink-4 Drinking))"
 },
-{
 {"text":"John made the car invisible.",
 "kif":
 ""
 },
-{
 {"text":"John made it to the concert on time.",
 "kif":
 ""
 },
-{
 {"text":"John made a decision.",
 "kif":
 "(exists (?decision-4 ?John-1) 
@@ -12216,12 +11406,10 @@
        (WhenFn ?decision-4) Now)
      (instance ?decision-4 Deciding)))"
 },
-{
 {"text":"John made his case for hiring.",
 "kif":
 ""
 },
-{
 {"text":"John made it happen.",
 "kif":
 "(exists (?John-1 ?made-2 ?it-3 ?happen-4) 
@@ -12231,7 +11419,6 @@
      (instance ?it-3 Process)
      (instance ?John-1 Human)))"
 },
-{
 {"text":"John's drinking is fast.",
 "kif":
 "(exists (?John-1 ?drinking-3) 
