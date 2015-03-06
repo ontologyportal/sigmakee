@@ -12259,7 +12259,13 @@
     (capability Flying agent ?X)))"
 },
 {"text":"dogs live in dog houses",
-"kif":""
+"kif":
+"(=>
+  (instance ?D Canine)
+  (exists (?H)
+    (and
+      (instance ?H House)
+      (inhabits ?D ?H))))"
 },
 {"text":"A box can hold things",
 "kif":
@@ -12303,35 +12309,78 @@
 },
 
 {"text":"A unicycle is a vehicle with one wheel that is moved by pedals",
-"kif":""
+"kif":"(subclass Unicycle Vehicle)
+(=>
+  (instance ?U Unicycle)
+  (exists (?W)
+    (and
+      (instance ?W Wheel)
+      (part ?W ?U)
+      (not
+        (exists (?OW)
+          (and
+            (instance ?OW Wheel)
+            (not 
+              (equals ?W ?OW))
+            (part ?OW ?U)))))))
+"
 },
 
 {"text":"A wheel is a circular object that rotates around its center",
-"kif":""
+"kif":
+"(=>
+  (instance ?W Wheel)
+  (attribute ?W Circle))
+(=>
+  (instance ?W Wheel)
+  (capability Rotating patient ?W))
+"
 },
 
 {"text":"Ants are social insects",
-"kif":""
+"kif":
+"(=>
+  (instance ?A AntInsect)
+  (capability SocialInteraction agent ?A))"
 },
 
 {"text":"At night the sun is not visible",
-"kif":""
+"kif":
+"(=>
+  (instance ?N NightTime)
+  (not
+    (exists (?S)
+      (and
+        (instance ?S Seeing)
+        (patient ?S Sol)))))"
 },
 
 {"text":"Coral reefs are warm, clear, shallow ocean habitats that are rich in life",
-"kif":""
+"kif":
+"(=>
+  (instance ?C CoralReef)"
 },
 
 {"text":"George washington was the first president of the united states",
-"kif":""
+"kif":
+"(not
+  (exists (?L)
+    (and
+      (holdsDuring ?T (leader UnitedStates GeorgeWashington))
+      (holdsDuring ?T2 (leader UnitedStates ?L))
+      (earlier ?T2 ?T))))"
 },
 
 {"text":"Jelly is a spread made from fruit juice",
-"kif":""
+"kif":"(subclass Jelly Spread)
+(ingredient (JuiceOfFn FruitOrVegetable) Jelly)"
 },
 
 {"text":"Lava is hot",
-"kif":""
+"kif":
+"(=>
+  (instance ?X Lava)
+  (attribute ?X HotTemperature))"
 },
 
 {"text":"No block of plastic has ever held public office",
