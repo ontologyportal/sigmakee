@@ -3,9 +3,7 @@ package com.articulate.sigma.nlg;
 import com.articulate.sigma.KB;
 import com.google.common.collect.*;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This object represents a process or an event, holding information on its case roles as
@@ -14,13 +12,13 @@ import java.util.Set;
 public class SumoProcessCollector {
     private SumoProcess sumoProcess;
 
-    // Use of TreeMultimap ensures iteration is predictable.
+    // Use of TreeMultimap ensures iteration is predetermined.
     private final Multimap<CaseRole, String> roles = TreeMultimap.create();
 
     private KB kb;
 
     /**************************************************************************************
-     * Construct a SumoProcess.
+     * Construct a SumoProcessCollector.
      * @param kb
      * @param role
      * @param process
@@ -56,13 +54,21 @@ public class SumoProcessCollector {
 
         entity = checkEntityCase(entity);
 
-        sumoProcess = new SumoProcess(process);
+        sumoProcess = new SumoProcess(process, kb);
         //name = process;
 
         CaseRole caseRole = CaseRole.toCaseRole(role);
         roles.put(caseRole, entity);
     }
 
+
+    /**************************************************************************************
+     *
+     * @return
+     */
+    public SumoProcess getSumoProcess() {
+        return sumoProcess;
+    }
 
     /**************************************************************************************
      * Add a new role/entity pair to this event.
@@ -74,17 +80,6 @@ public class SumoProcessCollector {
 
         CaseRole caseRole = CaseRole.toCaseRole(role);
         roles.put(caseRole, entity);
-    }
-
-
-    /**************************************************************************************
-     * Get all the entities playing a given role in this process.
-     * @param role
-     * @param roleScratchPad
-     * @return
-     */
-    static Set<String> getRoleEntities(CaseRole role, Multimap<CaseRole, String> roleScratchPad)   {
-        return Sets.newTreeSet(roleScratchPad.get(role));
     }
 
 
@@ -150,129 +145,8 @@ public class SumoProcessCollector {
      *  a natural language translation, or empty string if one is not possible
      */
     public String toNaturalLanguage()   {
-        // We need a scratch pad, on which we can "scratch out" the items that have been used up.
-        Multimap<CaseRole, String> roleScratchPad = createNewRoleScratchPad();
-
-        String subject = formulateNaturalSubject(roleScratchPad);
-
-        // If no subject, perform no NLG.
-        if(subject.isEmpty())   {
-            return "";
-        }
-
-        String cleanedStr = (subject + " " + formulateNaturalVerb() + " " +
-                formulateNaturalDirectObject(roleScratchPad) + " " + formulateNaturalIndirectObject(roleScratchPad)).trim();
-
-        return cleanedStr;
-    }
-
-    /**************************************************************************************************************
-     * Return all the entities of the given role in the correct case.
-     * Assumes the role will be some kind of noun.
-     * @return
-     */
-    String formulateNounPhraseForCaseRole(CaseRole role, Multimap<CaseRole, String> roleScratchPad)    {
-        if (! roles.containsKey(role))    {
-            return "";
-        }
-        Set<String> nouns = getRoleEntities(role, roleScratchPad);
-
-        StringBuilder sb = new StringBuilder();
-        // We're assuming that only names and reified objects are in uppercase.
-        for(String noun : nouns) {
-            String temp = noun;
-            if (! NLGStringUtils.isVariable(temp) && Noun.takesIndefiniteArticle(noun, kb)) {
-                temp = Noun.aOrAn(temp) + " " + temp;
-            }
-            sb.append(temp).append(" and ");
-        }
-        // Remove last "and" if it exists.
-        String output = sb.toString().replaceAll(" and $", "");
-        return output;
-    }
-
-    /**************************************************************************************************************
-     * Put the "direct object" of this process into natural language.
-     * @return
-     * @param roleScratchPad
-     */
-    String formulateNaturalDirectObject(Multimap<CaseRole, String> roleScratchPad) {
-        StringBuilder sBuild = new StringBuilder();
-
-        VerbProperties verbProperties = new VerbPropertiesSimpleImpl();
-        String verb = sumoProcess.getVerb();
-
-        List<CaseRole> caseRolesToUse = verbProperties.getCaseRolesForGrammarRole(verb, SVOGrammar.SVOGrammarPosition.DIRECT_OBJECT);
-        for(CaseRole role : caseRolesToUse) {
-            String obj = formulateNounPhraseForCaseRole(role, roleScratchPad);
-            if (! obj.isEmpty()) {
-                sBuild.append(" ").append(obj).append(" ");
-                roleScratchPad.removeAll(role);
-                break;
-            }
-        }
-
-        return sBuild.toString().replaceAll("\\s+", " ").trim();
-    }
-
-    /**************************************************************************************************************
-     * Put the "direct object" of this process into natural language.
-     * @return
-     * @param roleScratchPad
-     */
-    private String formulateNaturalIndirectObject(Multimap<CaseRole, String> roleScratchPad) {
-        StringBuilder sBuild = new StringBuilder();
-
-        VerbProperties verbProperties = new VerbPropertiesSimpleImpl();
-        String verb = sumoProcess.getVerb();
-
-        List<CaseRole> caseRolesToUse = verbProperties.getCaseRolesForGrammarRole(verb, SVOGrammar.SVOGrammarPosition.INDIRECT_OBJECT);
-        for(CaseRole role : caseRolesToUse) {
-            String obj = formulateNounPhraseForCaseRole(role, roleScratchPad);
-            if (! obj.isEmpty()) {
-                List<String> preps = verbProperties.getPrepositionForCaseRole(verb, role);
-                // TODO: for time being, take just the first one in the list
-                String prep = preps.get(0);
-                sBuild.append(prep + " ").append(obj).append(" ");
-                roleScratchPad.removeAll(role);
-            }
-        }
-
-        return sBuild.toString().replaceAll("\\s+", " ").trim();
-    }
-
-
-    /**************************************************************************************************************
-     * Put the subject of this process into natural language.
-     * @return
-     * @param roleScratchPad
-     */
-    String formulateNaturalSubject(Multimap<CaseRole, String> roleScratchPad) {
-        StringBuilder sBuild = new StringBuilder();
-
-        VerbProperties verbProperties = new VerbPropertiesSimpleImpl();
-        String verb = sumoProcess.getVerb();
-
-        List<CaseRole> caseRolesToUse = verbProperties.getCaseRolesForGrammarRole(verb, SVOGrammar.SVOGrammarPosition.SUBJECT);
-        for(CaseRole role : caseRolesToUse) {
-            String obj = formulateNounPhraseForCaseRole(role, roleScratchPad);
-            if (! obj.isEmpty()) {
-                sBuild.append(" ").append(obj).append(" ");
-                roleScratchPad.removeAll(role);
-                break;
-            }
-        }
-
-        return sBuild.toString().replaceAll("\\s+", " ").trim();
-
-    }
-
-    /**************************************************************************************************************
-     * Put the verb of this process into natural language.
-     * @return
-     */
-    String formulateNaturalVerb() {
-        return sumoProcess.formulateNaturalVerb(kb);
+        Sentence sentence = new Sentence(createNewRoleScratchPad(), sumoProcess, kb);
+        return sentence.toNaturalLanguage();
     }
 
 }

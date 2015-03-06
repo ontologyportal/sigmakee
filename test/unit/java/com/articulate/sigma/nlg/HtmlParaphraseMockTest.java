@@ -202,7 +202,7 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                (instance ?telephone Telephone) \n" +
                 "                (patient ?event ?telephone)))";
 
-        String expectedResult = "Blankenship performs a process a telephone";
+        String expectedResult = "Blankenship performs a process on a telephone";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");

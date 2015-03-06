@@ -20,7 +20,7 @@ public class VerbPropertiesSimpleImpl implements VerbProperties {
      * @return
      */
     @Override
-    public List<CaseRole> getCaseRolesForGrammarRole(String verb, SVOGrammar.SVOGrammarPosition grammarRole)   {
+    public List<CaseRole> getCaseRolesForGrammarRole(String verb, SVOElement.SVOGrammarPosition grammarRole)   {
         return SVOGrammar.getCaseRolesForGrammarPosition(verb, grammarRole);
     }
 

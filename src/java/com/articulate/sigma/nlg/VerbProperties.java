@@ -22,7 +22,7 @@ public interface VerbProperties {
      * @param grammarRole
      * @return
      */
-    public List<CaseRole> getCaseRolesForGrammarRole(String verb, SVOGrammar.SVOGrammarPosition grammarRole);
+    public List<CaseRole> getCaseRolesForGrammarRole(String verb, SVOElement.SVOGrammarPosition grammarRole);
 
     /******************************************************************************************
      * Return a list of prepositions for the given verb and the given case role. The list consists

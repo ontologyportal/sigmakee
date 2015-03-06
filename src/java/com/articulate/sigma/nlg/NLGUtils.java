@@ -18,7 +18,7 @@ import java.util.*;
 public class NLGUtils {
 
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
-    private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath() + File.separator + "WordNetMappings";
+    //private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath() + File.separator + "WordNetMappings";
     private static final String PHRASES_FILENAME = "Translations/language.txt";
     static HashMap<String,HashMap<String,String>> keywordMap;
 
@@ -473,7 +473,7 @@ public class NLGUtils {
                                 rangeArr = range.split(",");
                                 for (String aRangeArr : rangeArr) {
                                     if (StringUtil.isNonEmptyString(aRangeArr)) {
-                                        isRange = (aRangeArr.indexOf("-") != -1);
+                                        isRange = (aRangeArr.contains("-"));
                                         rangeArr2 = aRangeArr.split("-");
                                         lowStr = rangeArr2[0].trim();
                                         try {
@@ -661,5 +661,20 @@ public class NLGUtils {
             ex.printStackTrace();
         }
         return ans;
+    }
+
+    /**************************************************************************************************************
+     * Return true if the given list includes "Process", or if one of its elements is a subclass of Process.
+     * @param vals
+     * @param kb
+     * @return
+     */
+    public static boolean containsProcess(Collection<String> vals, KB kb) {
+        for (String val : vals)  {
+            if (val.equals("Process") || kb.isSubclass(val, "Process"))  {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -15,9 +15,7 @@ import java.util.Map;
 public class SVOGrammar {
 
 
-    public enum SVOGrammarPosition {SUBJECT, DIRECT_OBJECT, INDIRECT_OBJECT}
-
-    private static final Multimap<SVOGrammarPosition, CaseRole> defaultGrammarPositions = ArrayListMultimap.create();
+    private static final Multimap<SVOElement.SVOGrammarPosition, CaseRole> defaultGrammarPositions = ArrayListMultimap.create();
 
     // "The subject of the sentence will usually be the agent or the experiencer, in that order of likelihood."
     private static final List<CaseRole> SUBJECT_CASEROLES = Lists.newArrayList(CaseRole.AGENT, CaseRole.EXPERIENCER, CaseRole.MOVES);
@@ -31,28 +29,28 @@ public class SVOGrammar {
 
     // Insert default mappings into the multimap.
     static {
-        defaultGrammarPositions.putAll(SVOGrammarPosition.SUBJECT, SUBJECT_CASEROLES);
-        defaultGrammarPositions.putAll(SVOGrammarPosition.DIRECT_OBJECT, DIRECTOBJECT_CASEROLES);
-        defaultGrammarPositions.putAll(SVOGrammarPosition.INDIRECT_OBJECT, INDIRECTOBJECT_CASEROLES);
+        defaultGrammarPositions.putAll(SVOElement.SVOGrammarPosition.SUBJECT, SUBJECT_CASEROLES);
+        defaultGrammarPositions.putAll(SVOElement.SVOGrammarPosition.DIRECT_OBJECT, DIRECTOBJECT_CASEROLES);
+        defaultGrammarPositions.putAll(SVOElement.SVOGrammarPosition.INDIRECT_OBJECT, INDIRECTOBJECT_CASEROLES);
     }
 
     // Mappings for verb/grammar role combinations that fall out of the default grammar role behavior.
-    private static final Map<String, Multimap<SVOGrammarPosition, CaseRole>> specialVerbGrammarPositionBehaviorMap = Maps.newHashMap();
+    private static final Map<String, Multimap<SVOElement.SVOGrammarPosition, CaseRole>> specialVerbGrammarPositionBehaviorMap = Maps.newHashMap();
     static  {
         // agent: The man burned the wood.  patient: The wood burned.
-        Multimap<SVOGrammarPosition, CaseRole> svoList = ArrayListMultimap.create();
-        svoList.putAll(SVOGrammarPosition.SUBJECT, Lists.newArrayList(CaseRole.AGENT, CaseRole.PATIENT));
+        Multimap<SVOElement.SVOGrammarPosition, CaseRole> svoList = ArrayListMultimap.create();
+        svoList.putAll(SVOElement.SVOGrammarPosition.SUBJECT, Lists.newArrayList(CaseRole.AGENT, CaseRole.PATIENT));
         // FIXME: make resource a known Case Role? svoList.putAll(SVOGrammarRole.DIRECT_OBJECT, Lists.newArrayList(CaseRole.PATIENT, CaseRole.RESOURCE));
         specialVerbGrammarPositionBehaviorMap.put("burn", svoList);
 
         // patient: The boy fell.
         svoList = ArrayListMultimap.create();
-        svoList.putAll(SVOGrammarPosition.SUBJECT, Lists.newArrayList(CaseRole.EXPERIENCER, CaseRole.PATIENT));
+        svoList.putAll(SVOElement.SVOGrammarPosition.SUBJECT, Lists.newArrayList(CaseRole.EXPERIENCER, CaseRole.PATIENT));
         specialVerbGrammarPositionBehaviorMap.put("fall", svoList);
 
         // experiencer: Jack sees.
         svoList = ArrayListMultimap.create();
-        svoList.putAll(SVOGrammarPosition.SUBJECT, Lists.newArrayList(CaseRole.EXPERIENCER));
+        svoList.putAll(SVOElement.SVOGrammarPosition.SUBJECT, Lists.newArrayList(CaseRole.EXPERIENCER));
         specialVerbGrammarPositionBehaviorMap.put("see", svoList);
 
         // TODO: Uncomment when benefits is made a CaseRole
@@ -69,12 +67,12 @@ public class SVOGrammar {
      * @param grammarRole
      * @return
      */
-    public static List<CaseRole> getCaseRolesForGrammarPosition(String verb, SVOGrammarPosition grammarRole)   {
-        List<CaseRole> retList = Lists.newArrayList();
+    public static List<CaseRole> getCaseRolesForGrammarPosition(String verb, SVOElement.SVOGrammarPosition grammarRole)   {
+        List<CaseRole> retList;
 
         // First try exception list.
         if (specialVerbGrammarPositionBehaviorMap.containsKey(verb) && specialVerbGrammarPositionBehaviorMap.get(verb).containsKey(grammarRole))    {
-            Multimap<SVOGrammarPosition, CaseRole> mm = specialVerbGrammarPositionBehaviorMap.get(verb);
+            Multimap<SVOElement.SVOGrammarPosition, CaseRole> mm = specialVerbGrammarPositionBehaviorMap.get(verb);
             retList = Lists.newArrayList(mm.get(grammarRole));
         }
         // Use the default.

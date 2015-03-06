@@ -69,16 +69,16 @@ public class VerbPropertiesTest {
         String inputVerb = "blahblah";
 
         List<CaseRole> expected = Lists.newArrayList(CaseRole.AGENT, CaseRole.EXPERIENCER, CaseRole.MOVES);
-        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOGrammar.SVOGrammarPosition.SUBJECT);
+        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOElement.SVOGrammarPosition.SUBJECT);
         assertEquals(expected, actual);
 
         expected = Lists.newArrayList(CaseRole.PATIENT, CaseRole.MOVES);
-        actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOGrammar.SVOGrammarPosition.DIRECT_OBJECT);
+        actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOElement.SVOGrammarPosition.DIRECT_OBJECT);
         assertEquals(expected, actual);
 
         expected = Lists.newArrayList(CaseRole.DIRECTION, CaseRole.PATH, CaseRole.ORIGIN, CaseRole.DESTINATION,
                 CaseRole.EVENTPARTLYLOCATED, CaseRole.INSTRUMENT, CaseRole.RESOURCE);
-        actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOGrammar.SVOGrammarPosition.INDIRECT_OBJECT);
+        actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOElement.SVOGrammarPosition.INDIRECT_OBJECT);
         assertEquals(expected, actual);
     }
 
@@ -87,12 +87,12 @@ public class VerbPropertiesTest {
         String inputVerb = "burn";
 
         List<CaseRole> expected = Lists.newArrayList(CaseRole.AGENT, CaseRole.PATIENT);
-        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOGrammar.SVOGrammarPosition.SUBJECT);
+        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOElement.SVOGrammarPosition.SUBJECT);
         assertEquals(expected, actual);
 
         // Falls back to default values for direct object.
         expected = Lists.newArrayList(CaseRole.PATIENT, CaseRole.MOVES);
-        actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOGrammar.SVOGrammarPosition.DIRECT_OBJECT);
+        actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOElement.SVOGrammarPosition.DIRECT_OBJECT);
         assertEquals(expected, actual);
     }
 
@@ -101,7 +101,7 @@ public class VerbPropertiesTest {
         String inputVerb = "fall";
 
         List<CaseRole> expected = Lists.newArrayList(CaseRole.EXPERIENCER, CaseRole.PATIENT);
-        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOGrammar.SVOGrammarPosition.SUBJECT);
+        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOElement.SVOGrammarPosition.SUBJECT);
         assertEquals(expected, actual);
     }
 
@@ -110,7 +110,7 @@ public class VerbPropertiesTest {
         String inputVerb = "see";
 
         List<CaseRole> expected = Lists.newArrayList(CaseRole.EXPERIENCER);
-        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOGrammar.SVOGrammarPosition.SUBJECT);
+        List<CaseRole> actual = verbPropertiesSimple.getCaseRolesForGrammarRole(inputVerb, SVOElement.SVOGrammarPosition.SUBJECT);
         assertEquals(expected, actual);
     }
 }

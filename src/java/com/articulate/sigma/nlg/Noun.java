@@ -7,6 +7,8 @@ import com.articulate.sigma.KB;
  */
 
 public class Noun {
+
+
     /**************************************************************************************************************
      * Look at first letter of input to determine whether it should be preceded by "a" or "an".
      * @param temp
@@ -44,6 +46,7 @@ public class Noun {
 
         // Capitalize so that the lookup below works.
         String temp = noun.substring(0, 1).toUpperCase() + noun.substring(1);
+
         return ! kb.isSubclass(temp, "Substance");
     }
 }

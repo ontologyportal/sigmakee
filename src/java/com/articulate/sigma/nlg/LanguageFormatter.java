@@ -307,7 +307,7 @@ public class LanguageFormatter {
                     if (variableTypes.containsKey(processInstanceName)) {
 
                         HashSet<String> vals = variableTypes.get(processInstanceName);
-                        if (SumoProcess.containsProcess(vals, kb))  {
+                        if (NLGUtils.containsProcess(vals, kb))  {
                             // Mark the argument as PROCESSED.
                             theStack.markFormulaArgAsProcessed(formula.theFormula);
 

@@ -14,6 +14,9 @@ public class CaseRoleTest extends UnitTestBase {
         CaseRole caseRole = CaseRole.toCaseRole("agent");
         assertEquals(CaseRole.AGENT, caseRole);
 
+        caseRole = CaseRole.toCaseRole("attends");
+        assertEquals(CaseRole.ATTENDS, caseRole);
+
         caseRole = CaseRole.toCaseRole("destination");
         assertEquals(CaseRole.DESTINATION, caseRole);
 
@@ -47,7 +50,7 @@ public class CaseRoleTest extends UnitTestBase {
         caseRole = CaseRole.toCaseRole("other");
         assertEquals(CaseRole.OTHER, caseRole);
 
-        caseRole = CaseRole.toCaseRole("blahblahblah");
+        caseRole = CaseRole.toCaseRole("blahblah");
         assertEquals(CaseRole.OTHER, caseRole);
     }
 
@@ -64,9 +67,6 @@ public class CaseRoleTest extends UnitTestBase {
 
         caseRole = CaseRole.toCaseRole("changesLocation");
         assertEquals(CaseRole.MOVES, caseRole);
-
-        caseRole = CaseRole.toCaseRole("attends");
-        assertEquals(CaseRole.EXPERIENCER, caseRole);
 
         // partly located is not a case role
         caseRole = CaseRole.toCaseRole("partlyLocated");

@@ -3,55 +3,102 @@ package com.articulate.sigma.nlg;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.WordNet;
 import com.articulate.sigma.WordNetUtilities;
-
-import java.util.Collection;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
+import com.google.common.collect.Sets;
 
 /**
  * Handles verb functionality for a SUMO process.
  */
 public class SumoProcess {
     private final String verb;
+    private final KB kb;
 
-    public SumoProcess(String verb) {
+    public SumoProcess(String verb, KB kb) {
         this.verb = verb;
+        this.kb = kb;
     }
 
+    private String surfaceForm;
+
+    /**************************************************************************************************************
+     * Indirectly invoked by SumoProcessCollector.toString( ).
+     * @return
+     */
     @Override
     public String toString()    {
         return verb;
     }
 
-    String formulateNaturalVerb(KB kb) {
-        String verb = getVerbRootForm();
+    /**************************************************************************************************************
+     *
+     * @return
+     */
+    public String getSurfaceForm() {
+        return surfaceForm;
+    }
 
-        if (verb == null || verb.isEmpty())  {
-            verb = getNounFormOfVerb(this.verb, kb);
-            return verb;
+    /**************************************************************************************************************
+     *
+     * @param surfaceForm
+     */
+    public void setSurfaceForm(String surfaceForm) {
+        this.surfaceForm = surfaceForm;
+    }
+
+    /**************************************************************************************************************
+     * Try to phrase the verb into natural language, setting this object's internal state appropriately.
+     * @param sentence
+     */
+    public void formulateNaturalVerb(Sentence sentence) {
+        String verbSurfaceForm = getVerbRootForm();
+
+        if (verbSurfaceForm == null || verbSurfaceForm.isEmpty())  {
+            setVerbAndDirectObject(this.verb, kb, sentence);
         }
-
-        // FIXME: verbPlural is a misnomer; it finds the simple present singular form
-        verb = WordNetUtilities.verbPlural(verb);
-        return verb;
+        else {
+            if(sentence.getSubject().getSingularPlural().equals(SVOElement.NUMBER.SINGULAR)) {
+                // FIXME: verbPlural is a misnomer; it finds the simple present singular form
+                verbSurfaceForm = WordNetUtilities.verbPlural(verbSurfaceForm);
+            }
+            setSurfaceForm(verbSurfaceForm);
+        }
     }
 
     /**************************************************************************************************************
      * Get the root of the given verb.
      * @return
      */
-    String getVerbRootForm() {
+    private String getVerbRootForm() {
 
         return WordNet.wn.verbRootForm(verb, verb.toLowerCase());
     }
 
     /**************************************************************************************************************
      * For a process which does not have a language representation, get a reasonable way of paraphrasing it.
-     * @return
+     * Sets both verb and direct object of the sentence.
      */
-    private String getNounFormOfVerb(String verb, KB kb) {
-        String phrase = "performs ";
+    void setVerbAndDirectObject(String verb, KB kb, Sentence sentence) {
+        // First set the verb, depending on the subject's case role and number.
+        String surfaceForm = "experience";
+
+        Multiset<CaseRole> experienceSubjectCaseRoles = HashMultiset.create(Sets.newHashSet(CaseRole.AGENT));
+        if(! Multisets.intersection(sentence.getSubject().getConsumedCaseRoles(), experienceSubjectCaseRoles).isEmpty())    {
+            surfaceForm = "perform";
+        }
+
+        if (sentence.getSubject().getSingularPlural().equals(SVOElement.NUMBER.SINGULAR))    {
+            surfaceForm = surfaceForm + "s";
+        }
+        setSurfaceForm(surfaceForm);
+
+        // Now determine and set the direct object (which may end up displacing what would otherwise have been a
+        // direct object for this sentence).
         // Turn, e.g. "IntentionalProcess" into "intentional process".
         String formattedTerm = kb.getTermFormatMap("EnglishLanguage").get(verb);
 
+        String phrase = "";
         if (formattedTerm != null && ! formattedTerm.isEmpty()) {
             if (!kb.isSubclass(verb, "Substance")) {
                 String article = Noun.aOrAn(formattedTerm);
@@ -63,25 +110,16 @@ public class SumoProcess {
             phrase = phrase + "a " + this.verb.toLowerCase();
         }
 
-        return phrase;
+        sentence.getDirectObject().setSurfaceForm(phrase);
+        sentence.getDirectObject().addConsumedCaseRole(CaseRole.PATIENT);
     }
 
+    /**************************************************************************************************************
+     *
+     * @return
+     */
     public String getVerb() {
         return verb;
     }
 
-    /**
-     * Return true if the given list includes "Process", or if one of its elements is a subclass of Process.
-     * @param vals
-     * @param kb
-     * @return
-     */
-    public static boolean containsProcess(Collection<String> vals, KB kb) {
-        for (String val : vals)  {
-            if (val.equals("Process") || kb.isSubclass(val, "Process"))  {
-                return true;
-            }
-        }
-        return false;
-    }
 }

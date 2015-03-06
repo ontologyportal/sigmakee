@@ -68,8 +68,8 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Human");
         Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
         assertEquals(1, process.getRolesAndEntities().size());
-        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
-        assertEquals(0, SumoProcessCollector.getRoleEntities(CaseRole.PATIENT, roleScratchPad).size());
+        assertEquals(1, Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
+        assertEquals(0, Sentence.getRoleEntities(CaseRole.PATIENT, roleScratchPad).size());
 
         //Test agent getters and setters.
         process.addRole("agent", "Tom");
@@ -77,7 +77,7 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
 
         Set<String> expectedAgents = Sets.newTreeSet(Sets.newHashSet("Tom", "human"));
 
-        Set<String> actualAgents = SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad);
+        Set<String> actualAgents = Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad);
         //Collections.sort(actualAgents);
 
         assertEquals(expectedAgents, actualAgents);
@@ -87,7 +87,7 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         roleScratchPad = process.createNewRoleScratchPad();
 
         Set<String> expectedPatients = Sets.newTreeSet(Sets.newHashSet("automobile"));
-        Set<String> actualPatients = SumoProcessCollector.getRoleEntities(CaseRole.PATIENT, roleScratchPad);
+        Set<String> actualPatients = Sentence.getRoleEntities(CaseRole.PATIENT, roleScratchPad);
 
         assertEquals(expectedPatients, actualPatients);
 
@@ -141,11 +141,11 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
     public void testNoIdenticalRoleParticipants() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Mark");
         Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
-        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
+        assertEquals(1, Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
 
         process.addRole("agent", "Mark");
         roleScratchPad = process.createNewRoleScratchPad();
-        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
+        assertEquals(1, Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
     }
 
     /**
@@ -157,77 +157,18 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         process.addRole("destination", "HospitalBuilding");
         Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
 
-        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
+        assertEquals(1, Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
         assertEquals(2, process.getRolesAndEntities().size());
 
         // Get local copy of agents, and change that.
-        Set<String> agents = SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad);
+        Set<String> agents = Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad);
         agents.add("Sally");
-        assertEquals(1, SumoProcessCollector.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
+        assertEquals(1, Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad).size());
 
         // Get local copy of all roles, and change that.
         Multimap<CaseRole, String> allRoles = process.getRolesAndEntities();
         allRoles.put(CaseRole.DESTINATION, "House");
         assertEquals(2, process.getRolesAndEntities().size());
-    }
-
-    @Test
-    public void testFormulateNaturalDirectObject() {
-        SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "patient", "Driving", "Automobile");
-
-        String expected = "an automobile";
-        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
-        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
-
-        process.addRole("patient", "Truck");
-        roleScratchPad = process.createNewRoleScratchPad();
-        expected = "an automobile and a truck";
-        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
-
-        process.addRole("patient", "Taxi");
-        roleScratchPad = process.createNewRoleScratchPad();
-        expected = "an automobile and a taxi and a truck";
-        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
-    }
-
-    /**
-     * Verifies that, at least for the time being, the case of "Entity" participants is not changed, and we do not precede
-     * it with a definite article.
-     */
-    @Test
-    public void testFormulateNaturalDirectObjectEntity() {
-        SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "patient", "Driving", "Entity");
-
-        String expected = "Entity";
-        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
-        assertEquals(expected, process.formulateNaturalDirectObject(roleScratchPad));
-    }
-
-    @Test
-    public void testFormulateNaturalSubject() {
-        SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Human");
-
-        String expected = "a human";
-        Multimap<CaseRole, String> roleScratchPad = process.createNewRoleScratchPad();
-        assertEquals(expected, process.formulateNaturalSubject(roleScratchPad));
-
-        process.addRole("agent", "Coffee");
-        expected = "coffee and a human";
-        roleScratchPad = process.createNewRoleScratchPad();
-        assertEquals(expected, process.formulateNaturalSubject(roleScratchPad));
-
-        process.addRole("agent", "MedicalDoctor");
-        expected = "coffee and a human and a medicaldoctor";
-        roleScratchPad = process.createNewRoleScratchPad();
-        assertEquals(expected, process.formulateNaturalSubject(roleScratchPad));
-    }
-
-    @Test
-    public void testFormulateNaturalVerbNotInWordNet() {
-        SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Transportation", "Maria");
-
-        String expected = "performs a transportation";
-        assertEquals(expected, process.formulateNaturalVerb());
     }
 
     /**

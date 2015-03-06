@@ -13,7 +13,7 @@ import java.util.Collection;
  * case role.
  */
 public enum CaseRole {
-    AGENT, DESTINATION, DIRECTION, EVENTPARTLYLOCATED, EXPERIENCER, INSTRUMENT, MOVES, ORIGIN, PATH, PATIENT, RESOURCE, OTHER;
+    AGENT, ATTENDS, DESTINATION, DIRECTION, EVENTPARTLYLOCATED, EXPERIENCER, INSTRUMENT, MOVES, ORIGIN, PATH, PATIENT, RESOURCE, OTHER;
 
     static KB kb = KBmanager.getMgr().getKB("SUMO");
     // Perhaps useful for unit testing:
