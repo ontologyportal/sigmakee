@@ -223,7 +223,10 @@ public class LanguageFormatter {
         // FIXME: handle other predicates here: located, orientation, etc.
         if (pred.equals("instance")) {
             // Do not mark as processed "complicated" clauses containing functions. They will have to be handled later in the process.
+            // FIXME: The check below handles "(instance ?hamburger (FoodForFn Human))", but not "(instance (GovernmentFn ?Place) StateGovernment))".
             if (! Formula.isFunction(new Formula(f.complexArgumentsToArrayList(2).get(0)).car())) {
+                theStack.translateCurrProcessInstantiation(kb, f);
+
                 theStack.markFormulaArgAsProcessed(stmt);
             }
         }

@@ -43,7 +43,7 @@ public class SumoProcess {
      *
      * @param surfaceForm
      */
-    public void setSurfaceForm(String surfaceForm) {
+    void setSurfaceForm(String surfaceForm) {
         this.surfaceForm = surfaceForm;
     }
 
@@ -52,27 +52,18 @@ public class SumoProcess {
      * @param sentence
      */
     public void formulateNaturalVerb(Sentence sentence) {
-        String verbSurfaceForm = getVerbRootForm();
+        String verbSurfaceForm = getVerbRootForm(this.verb);
 
         if (verbSurfaceForm == null || verbSurfaceForm.isEmpty())  {
             setVerbAndDirectObject(this.verb, kb, sentence);
         }
         else {
             if(sentence.getSubject().getSingularPlural().equals(SVOElement.NUMBER.SINGULAR)) {
-                // FIXME: verbPlural is a misnomer; it finds the simple present singular form
-                verbSurfaceForm = WordNetUtilities.verbPlural(verbSurfaceForm);
+                verbSurfaceForm = verbRootToThirdPersonSingular(verbSurfaceForm);
+
             }
             setSurfaceForm(verbSurfaceForm);
         }
-    }
-
-    /**************************************************************************************************************
-     * Get the root of the given verb.
-     * @return
-     */
-    private String getVerbRootForm() {
-
-        return WordNet.wn.verbRootForm(verb, verb.toLowerCase());
     }
 
     /**************************************************************************************************************
@@ -120,6 +111,27 @@ public class SumoProcess {
      */
     public String getVerb() {
         return verb;
+    }
+
+    /**************************************************************************************************************
+     *
+     * @param verbRoot
+     * @return
+     */
+    public static String verbRootToThirdPersonSingular(String verbRoot) {
+        // FIXME: verbPlural is a misnomer; it finds the simple present singular form
+        return WordNetUtilities.verbPlural(verbRoot);
+    }
+
+    /**************************************************************************************************************
+     * Get the root of the given verb.
+     * @param gerund
+     *   the verb in gerund (-ing) form.
+     * @return
+     *   the root of the given verb, or null if not found
+     */
+    public static String getVerbRootForm(String gerund) {
+        return WordNet.wn.verbRootForm(gerund, gerund.toLowerCase());
     }
 
 }

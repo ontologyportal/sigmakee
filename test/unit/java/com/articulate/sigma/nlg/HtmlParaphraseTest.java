@@ -1525,8 +1525,34 @@ public class HtmlParaphraseTest extends UnitTestBase {
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        // FIXME: expectedResult = "if someone is driving then a vehicle experiences the driving";
-        expectedResult = "if a process is an instance of driving, then there exists an entity such that the entity is an instance of vehicle and the entity is a patient of the process";
+        expectedResult = "if someone drives, then a vehicle experiences a driving";
+        // expectedResult = "if a process is an instance of driving, then there exists an entity such that the entity is an instance of vehicle and the entity is a patient of the process";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testSwimmingWater()     {
+        String stmt =   "(=>\n" +
+                "           (and\n" +
+                "               (instance ?SWIM Swimming)\n" +
+                "               (agent ?SWIM ?AGENT))\n" +
+                "           (exists (?AREA)\n" +
+                "               (and\n" +
+                "                   (instance ?AREA WaterArea)\n" +
+                "                   (located ?AGENT ?AREA))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an entity such that the entity is an instance of water area and the agent is located at the entity";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        //expectedResult = "if an agent swims, then the agent is in a body of water";
+        expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an entity such that the entity is an instance of water area and the agent is located at the entity";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }

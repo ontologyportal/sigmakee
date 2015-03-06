@@ -1,6 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -17,7 +18,7 @@ public class LanguageFormatterStack {
     public enum StackState {PROCESSED, TRANSLATED, UNPROCESSED, QUANTIFIED_VARS}
 
     public class FormulaArg {
-        String argument;
+        final String argument;
         StackState state = StackState.UNPROCESSED;
         String translation = "";
 
@@ -36,7 +37,7 @@ public class LanguageFormatterStack {
         /**
          * Holds the arguments of the current clause. We use it to keep track of which arguments have been translated into informal NLG successfully.
          */
-        List<FormulaArg> formulaArgs = Lists.newArrayList();
+        final List<FormulaArg> formulaArgs = Lists.newArrayList();
 
         /**
          * Indicates whether we have translated this level into informal language.
@@ -415,7 +416,7 @@ public class LanguageFormatterStack {
      * are QUANTIFIED_VARS and TRANSLATED.
      * @return
      */
-    public boolean isQuantifiedClauseProcessed() {
+    boolean isQuantifiedClauseProcessed() {
         boolean retVal = false;
 
         StackElement element = getCurrStackElement();
@@ -435,6 +436,30 @@ public class LanguageFormatterStack {
             }
         }
         return retVal;
+    }
+
+    /********************************************************************************
+     * If possible, translate the process instantiation and insert the translatation into the topmost
+     * stack element.
+     * @param kb
+     * @param formula
+     *   a formula for the instantiation of a process, e.g. (instance ?event Classifying)
+     */
+    public void translateCurrProcessInstantiation(KB kb, Formula formula) {
+        // Expecting the instantiation of a process, e.g. (instance ?FLY FlyingAircraft)
+        String process = formula.complexArgumentsToArrayList(2).get(0);
+        if (kb.isSubclass(process, "IntentionalProcess"))  {
+            String kbForm = kb.getTermFormatMap("EnglishLanguage").get(process);
+            if(kbForm == null)  {
+                // For some reason the formatted version of the term is not in the KBs. Maybe we'll have luck with the process name in the original formula.
+                kbForm = process;
+            }
+            String simpleForm = SumoProcess.getVerbRootForm(kbForm);
+            if (simpleForm != null && ! simpleForm.isEmpty())  {
+                simpleForm = SumoProcess.verbRootToThirdPersonSingular(simpleForm);
+                getCurrStackElement().setTranslation("someone " + simpleForm, true);
+            }
+        }
     }
 
 

@@ -302,13 +302,63 @@ public class FormulaTest {
     }
 
     @Test
-    public void testComplexVars() {
+    public void testComplexVarsDuringWhenFn1() {
         List<String> expected = Lists.newArrayList("?Y", "(WhenFn ?H)");
 
         Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
 
         assertEquals(expected, f1.complexArgumentsToArrayList(1));
+    }
+
+    @Test
+    public void testComplexVarsDuringWhenFn2() {
+        List<String> expected = Lists.newArrayList("(WhenFn ?H)");
+
+        Formula f1 = new Formula();
+        f1.read("(during ?Y (WhenFn ?H))");
+
+        assertEquals(expected, f1.complexArgumentsToArrayList(2));
+    }
+
+    @Test
+    public void testComplexVarsInstance1() {
+        List<String> expected = Lists.newArrayList("?DRIVE", "Driving");
+
+        Formula f1 = new Formula();
+        f1.read("(instance ?DRIVE Driving)");
+
+        assertEquals(expected, f1.complexArgumentsToArrayList(1));
+    }
+
+    @Test
+    public void testComplexVarsInstance2() {
+        List<String> expected = Lists.newArrayList("Driving");
+
+        Formula f1 = new Formula();
+        f1.read("(instance ?DRIVE Driving)");
+
+        assertEquals(expected, f1.complexArgumentsToArrayList(2));
+    }
+
+    @Test
+    public void testComplexVarsInstanceGovernmentFn1() {
+        List<String> expected = Lists.newArrayList("(GovernmentFn ?Place)", "StateGovernment)");
+
+        Formula f1 = new Formula();
+        f1.read("(instance (GovernmentFn ?Place) StateGovernment))");
+
+        assertEquals(expected, f1.complexArgumentsToArrayList(1));
+    }
+
+    @Test
+    public void testComplexVarsInstanceGovernmentFn2() {
+        List<String> expected = Lists.newArrayList("StateGovernment)");
+
+        Formula f1 = new Formula();
+        f1.read("(instance (GovernmentFn ?Place) StateGovernment))");
+
+        assertEquals(expected, f1.complexArgumentsToArrayList(2));
     }
 
     @Test
