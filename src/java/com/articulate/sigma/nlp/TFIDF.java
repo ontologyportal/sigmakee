@@ -27,12 +27,11 @@ Author: Adam Pease apease@articulatesoftware.com
 /*******************************************************************/
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 import java.util.regex.*;
 
-import org.json.simple.*;
-import org.json.simple.parser.*;
-import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 
 public class TFIDF {
 
@@ -77,7 +76,7 @@ public class TFIDF {
     public TFIDF(String filename) {
         
         readStopWords();
-        int linecount = readFile("textfiles" + File.separator + filename);
+        int linecount = readFile("resources" + File.separator + "textfiles" + File.separator + filename);
         calcIDF(linecount);
         calcTFIDF();
     }
@@ -223,24 +222,18 @@ public class TFIDF {
     private void readStopWords() {
 
        // System.out.println("INFO in readStopWords(): Reading stop words");
-        File swFile = null;
         String filename = "";
         try {
-            swFile = new File("textfiles/stopwords.txt");
-            if (swFile == null) {
-                System.out.println("Error in readStopWords(): The stopwords file does not exist in " + filename);
-                return;
-            }
-            filename = swFile.getCanonicalPath();
-            FileReader r = new FileReader(swFile);
+            URL stopWordsFile = Resources.getResource("resources/textfiles/stopwords.txt");
+            filename = stopWordsFile.getPath();
+            FileReader r = new FileReader(filename);
             LineNumberReader lr = new LineNumberReader(r);
             String line;
             while ((line = lr.readLine()) != null)
                 stopwords.add(line.intern());
         }
         catch (Exception i) {
-            System.out.println("Error in readStopWords() reading file "
-                    + filename + ": " + i.getMessage());
+            System.out.println("Error in readStopWords() reading file " + filename + ": " + i.getMessage());
             i.printStackTrace();
         }
         return;
@@ -380,9 +373,9 @@ public class TFIDF {
         int counter = 0;
         String line = "";
         BufferedReader omcs = null;
-        try { 
-            File file = new File(fname);
-            String filename = file.getCanonicalPath();
+        try {
+            URL fileURL = Resources.getResource(fname);
+            String filename = fileURL.getPath();
             omcs = new BufferedReader(new FileReader(filename));
             /* readLine is a bit quirky :
              * it returns the content of a line MINUS the newline.
@@ -466,10 +459,10 @@ public class TFIDF {
      * after the line in the dialog that matches.  If there's more than
      * one reasonable response, pick a random one.
      */
-    private String matchInput(String input) {
-        
-        if (emptyString(input)) 
-            System.exit(0);            
+    protected String matchInput(String input) {
+
+        if (emptyString(input))
+            System.exit(0);
         Integer negone = new Integer(-1);
         processDoc(input,negone);
         calcIDF(lines.size()+1);
@@ -478,7 +471,7 @@ public class TFIDF {
         calcDocSim();
         //System.out.println("Caclulate sorted sim");
         TreeMap<Float,ArrayList<Integer>> sortedSim = new TreeMap<Float,ArrayList<Integer>>();
-          // private HashMap<Integer,Float> docSim = HashMap<Integer,Float>(); 
+          // private HashMap<Integer,Float> docSim = HashMap<Integer,Float>();
         Iterator<Integer> it = docSim.keySet().iterator();
         while (it.hasNext()) {
            Integer i = it.next();
@@ -487,7 +480,7 @@ public class TFIDF {
                ArrayList<Integer> vals = sortedSim.get(f);
                vals.add(i);
            }
-           else { 
+           else {
                ArrayList<Integer> vals = new ArrayList<Integer>();
                vals.add(i);
                sortedSim.put(f,vals);
@@ -503,7 +496,7 @@ public class TFIDF {
             random = rand.nextInt(vals.size());
             index = vals.get(new Integer(random));
             counter++;
-        //} while (counter < 50 && ((question && (index.intValue() < cb.omcsLineStart)) || 
+        //} while (counter < 50 && ((question && (index.intValue() < cb.omcsLineStart)) ||
         //       (!question && (index.intValue() > cb.omcsLineStart))));
         //System.out.println("query: " + input);
         //System.out.println("line: " + lines.get(index));
@@ -512,7 +505,7 @@ public class TFIDF {
         else
             return lines.get(new Integer(index.intValue()+1));
     }
-    
+
     /** *************************************************************
      * Run a chatbot-style loop, asking for user input and finding
      * a response in the lines corpus via the TF/IDF algorithm.
@@ -547,54 +540,6 @@ public class TFIDF {
         }
     }
 
-    /** ***************************************************************
-     * @return a series of test specifications containing a filename,
-     * a query and an expected answer.
-     */
-    public static Collection<Object[]> prepare() {
-
-        ArrayList<Object[]> result = new ArrayList<Object[]>();
-        File jsonTestFile = new File("IRtests.json");
-        //System.out.println("INFO in TFIDF.prepare(): reading: " + jsonTestFile);
-        String filename = jsonTestFile.getAbsolutePath();
-        JSONParser parser = new JSONParser();  
-        try {  
-            Object obj = parser.parse(new FileReader(filename));  
-            JSONArray jsonObject = (JSONArray) obj; 
-            ListIterator<JSONObject> li = jsonObject.listIterator();
-            while (li.hasNext()) {
-                JSONObject jo = li.next();
-                String fname = (String) jo.get("file");
-                String query = (String) jo.get("query");
-                String answer = (String) jo.get("answer");
-                //System.out.println("INFO in TFIDF.prepare(): " + fname + " " + query + " " + answer);
-                result.add(new Object[]{fname,query,answer});
-            }             
-        } 
-        catch (FileNotFoundException e) {  
-            System.out.println("Error in TFIDF.prepare(): File not found: " + filename);
-            System.out.println(e.getMessage());
-            e.printStackTrace();  
-        } 
-        catch (IOException e) { 
-            System.out.println("Error in TFIDF.prepare(): IO exception reading: " + filename);
-            System.out.println(e.getMessage());
-            e.printStackTrace();  
-        } 
-        catch (ParseException e) { 
-            System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
-            System.out.println(e.getMessage());
-            e.printStackTrace();  
-        }     
-        catch (Exception e) {  
-            System.out.println("Error in TFIDF.prepare(): Parse exception reading: " + filename);
-            System.out.println(e.getMessage());
-            e.printStackTrace();              
-        }     
-        //System.out.println(result);
-        return result;    
-    }
-
     /** *************************************************************
      * Run a series of tests containing a filename,
      * a query and an expected answer.
@@ -608,48 +553,15 @@ public class TFIDF {
         TFIDF cb = null;
         cb = new TFIDF(input);
     }
-    
+
     /** *************************************************************
      * Run a series of tests containing a filename,
      * a query and an expected answer.
      */
-    private static void test() {
-
-        int tested = 0;
-        int correct = 0;
-        HashMap<String,TFIDF> files = new HashMap<String,TFIDF>();
-        Collection<Object[]> tests = prepare();
-        Random rand = new Random(); 
-
-        for (Object[] test : tests) {
-            String fname = (String) test[0];
-            String query = (String) test[1];
-            String answer = (String) test[2];
-            //System.out.print(query + "\t");
-            TFIDF cb = null;
-            if (files.containsKey(fname))
-                cb = files.get(fname);
-            else {
-                cb = new TFIDF(fname);
-            }
-            String actual = cb.matchInput(query);
-            tested++;
-            Pattern p = Pattern.compile(answer.toLowerCase());
-            Matcher m = p.matcher(actual.toLowerCase());
-            if (m.find())
-                correct++;
-            else
-                System.out.println("Test " + tested + " Failed. \n Question:\n" + query + "\nExpected:\n" + answer + "\nactual:\n" + actual);
-        }
-        System.out.println("Total: " + tested + " correct: " + correct);
-    }
-
     /** *************************************************************
      */
     public static void main(String[] args) {
-
         //run();
-        test();
     }
 }
  
