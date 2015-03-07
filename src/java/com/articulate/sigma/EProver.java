@@ -14,10 +14,12 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 import java.io.*;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 public class EProver {
 
+    private ProcessBuilder _builder;
     private Process _eprover;
     private BufferedReader _reader; 
     private BufferedWriter _writer; 
@@ -142,28 +144,16 @@ public class EProver {
         writeBatchConfig(kbFile);
         System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
-        // String execString = executable + " --interactive " + 
-                // KBmanager.getMgr().getPref("kbDir") + File.separator + "EBatchConfig.txt";
-        // Qingqing: modify executable string using e_ltb_runner
-        String execString = executable + " --interactive "
-                + __dummyKBdir + File.separator + "EBatchConfig.txt "
-                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover ";
-                //  executable.substring(0, executable.lastIndexOf("/")) + File.separator + "epclextract";
-        System.out.println("INFO in EProver(): executing: " + execString);
-        _eprover = Runtime.getRuntime().exec(execString);
-        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
-        _error = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()));
-        System.out.println("INFO in EProver(): initializing process");
 
-        // Qingqing: another way to write while-loop to avoid NullPointerException
-        String line = _reader.readLine();
-        while (line != null) {
-            if (line.indexOf("Error:") != -1)
-                throw new IOException(line);
-            if (line.indexOf("# Enter job") != -1)
-                break;
-            line = _reader.readLine();
-        }
+        // executable = /PATH_TO_E_LTB_RUNNER;
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
+
+        _builder = new ProcessBuilder(commands);
+        _builder.redirectErrorStream(true);
+        _eprover = _builder.start();
+        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
 
@@ -179,27 +169,17 @@ public class EProver {
      */
     public EProver (String executable) throws IOException {
 
-        if (_eprover != null)
+        if (_builder != null && _eprover != null)
             terminate();
 
-        String execString = executable + " --interactive "
-                + __dummyKBdir + File.separator + "EBatchConfig.txt "
-                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover "
-                + executable.substring(0, executable.lastIndexOf("/")) + File.separator + "epclextract";
-    //   System.out.println("INFO in EProver(): executing: " + execString);
-        _eprover = Runtime.getRuntime().exec(execString);
-        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
-        _error = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()));
-    //    System.out.println("INFO in EProver(): initializing process");
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
 
-        String line = _reader.readLine();
-        while (line != null) {
-            if (line.indexOf("Error:") != -1)
-                throw new IOException(line);
-            if (line.indexOf("# Enter job") != -1)
-                break;
-            line = _reader.readLine();
-        }
+        _builder = new ProcessBuilder(commands);
+        _builder.redirectErrorStream(true);
+        _eprover = _builder.start();
+        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
     
@@ -311,6 +291,7 @@ public class EProver {
         try {
             _writer.write("quit.\n");
             _writer.write("go.\n");
+            _writer.flush();
             _writer.close();
             _reader.close();
             System.out.println("DESTROYING the Process " + _eprover);
@@ -331,42 +312,28 @@ public class EProver {
      * @throws IOException should not normally be thrown
      */
     public String submitQuery(String formula, KB kb) {
-        //public String submitQuery (String formula, int timeLimit, int bindingsLimit) throws IOException {
-                
+
         String result = "";
-        //System.out.println("INFO in EProver.submitQuery() formula: " + formula);
-        //Formula f = new Formula();
-        //f.read(formula);
-        //SUMOformulaToTPTPformula sfttptp = new SUMOformulaToTPTPformula();
 
         try {
-            //ArrayList<String> al = sfttptp.tptpParse(f, true, kb);
             String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
-            //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + query);
-            //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + al.get(0));
-            //String conjecture = "fof(conj1,conjecture, " + al.get(0) + ").";
             String conjecture = "fof(conj1,conjecture, " + query + ").";
-            //String tptpAssert = "( ( ? [V__X] : s__subclass(V__X,s__Object) ) )";
-            //System.out.println("INFO in EProver.submitQuery() TPTP formula: " + tptpAssert);
-            //String conjecture = "fof(conj1,conjecture, " + tptpAssert + ").";
             System.out.println("\nINFO in EProver.submitQuery() conjecture: " + conjecture + "\n");
             _writer.write(conjecture + "\n");
             _writer.write("go.\n");
             _writer.flush();
 
-            // Qingqing: another way to write while-loop to avoid NullPointerException
-            //System.out.println("INFO in EProver.submitQuery() writing executing results.");
             String line = _reader.readLine();
             boolean inProof = false;
             while (line != null) {
-                if (line.indexOf("# Enter job") != -1)
-                    break;
                 if (line.indexOf("# SZS status") != -1)
                     inProof = true;
-                if (inProof)
+                if (inProof) {
+                    if (line.indexOf("# Enter job") != -1)
+                        break;
                     result += line + "\n";
+                }
                 line = _reader.readLine();
-                //System.out.println("EProver(): " + line);
             }
         }
         catch (Exception ex) {
