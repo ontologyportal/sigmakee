@@ -320,7 +320,7 @@ public class SUMOKBtoTPTPKB {
                     stptp._f = tmpF;
                     stptp.tptpParse(tmpF,false, kb, withRelnRenames);
                     tptpFormulas = tmpF.getTheTptpFormulas();
-                    //System.out.println(tptpFormulas);
+                    f.theTptpFormulas.addAll(tptpFormulas);
                 }
                 //}
                 Iterator<String> tptpIt = tptpFormulas.iterator();
