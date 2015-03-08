@@ -11545,7 +11545,12 @@
 {"text":"Coral reefs are warm, clear, shallow ocean habitats that are rich in life",
 "kif":
 "(=>
-  (instance ?C CoralReef)"
+  (and
+    (instance ?C CoralReef)
+    (instance ?W WaterArea)
+    (orientation ?W ?C Near))
+  (located ?W LittoralZone))
+    "
 },
 
 {"text":"George washington was the first president of the united states",
@@ -11693,8 +11698,58 @@
 {"text":"Some people carry their lunch in a lunch box",
 "kif":""
 },
-
 {"text":"Stegosaurus was a plant-eating dinosaur that had armored plates along its back",
 "kif":""
+},
+{"text":"Is there a train from Paris to Lyon?",
+"kif":
+"(and
+  (origin ?X ParisFrance)
+  (destination ?X LyonFrance)
+  (instance ?X Transportation)
+  (instrument ?X ?T)
+  (instance ?T Train))"
+},
+{"text":"I want to leave early in the morning.",
+"kif":
+"(desires I-me
+  (exists (?L)
+    (and
+      (instance ?M Morning)
+      (during
+        (BeginFn (WhenFn ?L))
+        ?M)
+      (origin ?X ParisFrance)
+      (destination ?X LyonFrance)
+      (instance ?X Transportation)
+      (instrument ?X ?T)
+      (objectTransferred ?X I-me)
+      (instance ?T Train))))"
+},
+{"text":"Is it a fast train?",
+"kif":
+"(and
+   (origin ?X ParisFrance)
+   (destination ?X LyonFrance)
+   (instance ?X Transportation)
+   (instrument ?X ?T)
+   (attribute ?T Fast)
+   (instance ?T Train))"
+},
+{"text":"Can I pay with US Dollar or EURO only ?",
+"kif":
+"(and
+   (or
+     (validPaymentType (MeasureFn USDollar ?X) ?S ?P)
+     (validPaymentType (MeasureFn EuroDollar ?X) ?S ?P))
+   (objectTransferred ?P ?TIC)
+   (instance ?TIC Ticket)
+   (refers ?TIC ?X)
+   (origin ?X ParisFrance)
+   (destination ?X LyonFrance)
+   (instance ?X Transportation)
+   (instrument ?X ?T)
+   (attribute ?T Fast)
+   (instance ?T Train))"
 }
 ]
