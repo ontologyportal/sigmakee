@@ -1,5 +1,26 @@
 package com.articulate.sigma.nlp.pipeline;
 
+/*
+Copyright 2014-2015 IPsoft
+
+Author: Andrei Holub andrei.holub@ipsoft.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA 
+*/
+
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
@@ -18,9 +39,13 @@ import java.util.Map;
 
 public class SentenceUtil {
 
+    /** ***************************************************************
+     * Print all the sentences in this document
+     * CoreMap is essentially a Map that uses class objects as keys and 
+     * has values with custom types
+     */
     public static void printSentences(Annotation document) {
-        // these are all the sentences in this document
-        // a CoreMap is essentially a Map that uses class objects as keys and has values with custom types
+
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
         for(CoreMap sentence : sentences) {
             // traversing the words in the current sentence
@@ -104,18 +129,32 @@ public class SentenceUtil {
         return nes;
     }
 
+    /** ***************************************************************
+     *  Print the coreference link graph
+     *  Each chain stores a set of mentions that link to each other,
+     *  along with a method for getting the most representative mention
+     *  Both sentence and token offsets start at 1!
+     */
     public static void printCorefChain(Annotation document) {
-        // This is the coreference link graph
-        // Each chain stores a set of mentions that link to each other,
-        // along with a method for getting the most representative mention
-        // Both sentence and token offsets start at 1!
+
         Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
         for (CorefChain cc : graph.values()) {
             List<CorefChain.CorefMention> mentions = cc.getMentionsInTextualOrder();
-            if (mentions.size() > 1)
+            if (mentions.size() > 1) {
                 for (CorefChain.CorefMention ment : mentions) {
                     System.out.println(ment.sentNum + " : " + ment.headIndex + " : " + ment.mentionSpan);
                 }
+            }
         }
+    }
+    
+    /** ***************************************************************
+     */
+    public static void main(String[] args) {
+        
+        Pipeline p = new Pipeline();
+        Annotation a = p.annotate("I went to New York and had cookies and cream in the Empire State Building in January with Mary.");
+        printCorefChain(a);
+        printSentences(a);
     }
 }
