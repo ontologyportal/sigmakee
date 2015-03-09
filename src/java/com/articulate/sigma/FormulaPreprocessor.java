@@ -110,77 +110,170 @@ public class FormulaPreprocessor {
      *     (foo ?A B)
      *     (bar B ?A)))
      */
-    Formula addTypeRestrictionsNew(Formula form, KB kb) {
+    Formula addTypeRestrictions(Formula form, KB kb) {
 
-        //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew()");
-        String result = form.theFormula;
-        Formula f = new Formula();
-        f.read(result);
-        FormulaPreprocessor fp = new FormulaPreprocessor();
+        HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);    // get variable types from domain definition
+        HashMap<String, HashSet<String>> varExplicitTypes = findExplicitTypes(form);        // get variable types explicitly defined in formula
 
-        //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): before computer variable types");
-        HashMap<String,HashSet<String>> varmap = fp.computeVariableTypes(f, kb);
-        // Do not add sortals if the type equals to "Entity", "Abstract", etc
-        HashMap<String, HashSet<String>> varmapCopied = (HashMap<String, HashSet<String>>) varmap.clone();
-        varmap.clear();
-        Iterator iter = varmapCopied.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String var = (String) entry.getKey();
-            HashSet types = varmapCopied.get(var);
-            types.remove("Entity");
-            types.remove("SetOrClass");
-        }
-        varmap.clear();
-        for (String var : varmapCopied.keySet()) {
-            HashSet types = varmapCopied.get(var);
-            if (!types.isEmpty()) {
-                varmap.put(var, types);
+        // only keep variables which are not explicitly defined in formula
+        HashMap<String,HashSet<String>> varmap = (HashMap<String, HashSet<String>>) varDomainTypes.clone();
+        if (varExplicitTypes != null) {
+            for (String v : varExplicitTypes.keySet()) {
+                varmap.remove(v);
             }
         }
-        //System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): variable types: \n" + varmap);
+
+        // add sortals for unquantifiedVariables
         StringBuffer sb = new StringBuffer();
-        if (varmap.size() > 0) {
-            sb.append("(=> (and ");
-            Iterator<String> it = varmap.keySet().iterator();
-            while (it.hasNext()) {
-                String var = it.next();
-                HashSet<String> types = varmap.get(var);
-                HashSet<String> insts = new HashSet<String>();
-                HashSet<String> classes = new HashSet<String>();
-                Iterator<String> it2 = types.iterator();
-                while (it2.hasNext()) {
-                    String type = it2.next();
-                    if (type.endsWith("+"))
-                        classes.add(type.substring(0,type.length()-1));
-                    else
-                        insts.add(type);
-                }
-                if (insts != null) {
-                    winnowTypeList(insts,kb);
-                    Iterator<String> it3 = insts.iterator();
-                    while (it3.hasNext()) {
-                        String s = it3.next();
-                        sb.append("(instance " + var + " " + s + ")");
+        ArrayList<String> unquantifiedVariables = form.collectUnquantifiedVariables();
+        boolean begin = true;
+        for (int i = 0; i < unquantifiedVariables.size(); i++) {
+            String unquantifiedV = unquantifiedVariables.get(i);
+            HashSet<String> types = varmap.get(unquantifiedV);
+            if (types != null && !types.isEmpty()) {
+                String mostRelevantType = getMostRelevantType(kb, types);   // get most specific type for unquantifiedV
+                if (mostRelevantType != null && !mostRelevantType.isEmpty()) {
+                    if (begin) {
+                        sb.append("(=> \n  (and \n");
+                        begin = false;
                     }
-                }
-                if (classes != null) {
-                    winnowTypeList(classes,kb);
-                    Iterator<String> it3 = classes.iterator();
-                    while (it3.hasNext()) {
-                        String s = it3.next();
-                        sb.append("(subclass " + var + " " + s + ")");
-                    }
+                    sb.append(" (instance " + unquantifiedV + " " + mostRelevantType + ") ");
                 }
             }
-            sb.append(") " + f + ")");
-
-            // f is initialized to be original form;
-            // f be updated only when varmap.size() > 0;
-            f.read(sb.toString());
         }
-        //if (debug) System.out.println("INFO in FormulaPreprocessor.addTypeRestrictionsNew(): \n" + f);
+
+        if (!begin)
+            sb.append(")\n");
+
+        // recursively add sortals for existentially quantified variables
+        addTypeRestrictionsRecurse(kb, form, sb, varmap);
+
+        if (!begin)
+            sb.append(")\n");
+
+        Formula f = new Formula();
+        f.read(sb.toString());
+
         return f;
+    }
+
+    /** ***************************************************************
+     * Recursively add sortals for existentially quantified variable in formula
+     */
+    private void addTypeRestrictionsRecurse(KB kb, Formula f, StringBuffer sb, HashMap<String, HashSet<String>> varmap) {
+
+        if (f == null || StringUtil.emptyString(f.theFormula) || f.empty())
+            return;
+
+        String carstr = f.car();
+        if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
+
+            sb.append("(" + carstr + " ");
+            if (carstr.equals(f.EQUANT) || carstr.equals(f.UQUANT)) {
+                // If we see existentially quantified variables, like (exists (?X ?Y) ...),
+                //   and if ?X, ?Y are not explicitly restricted in the following statements,
+                // we need to add type restrictions for ?X, ?Y
+
+                sb.append(f.getArgument(1) + " ");
+
+                ArrayList<String> quantifiedVariables = collectVariables(f.getArgument(1));
+                boolean addSortals = false; // set addSortals = true, if at least one variable is existentially quantified variable,
+                //                           and it is not explicitly restricted
+                for (String ev : quantifiedVariables) {
+                    HashSet<String> types = varmap.get(ev);
+                    if (types != null && !types.isEmpty()) {
+                        addSortals = true;
+                        break;
+                    }
+                }
+                if (addSortals) {
+                    if (carstr.equals(f.EQUANT)) sb.append("(and ");
+                    else if (carstr.equals(f.UQUANT)) sb.append("(=> (and ");
+                }
+
+                for (int i = 0; i < quantifiedVariables.size(); i++) {
+                    String existentiallyQV = quantifiedVariables.get(i);
+                    HashSet<String> types = varmap.get(existentiallyQV);
+                    if (types != null && !types.isEmpty()) {
+                        String mostRelevantType = getMostRelevantType(kb, types);  // get most relevant type for existentiallyQV
+                        if (mostRelevantType != null && !mostRelevantType.isEmpty()) {
+                            sb.append("(instance " + existentiallyQV + " " + mostRelevantType + ") ");
+                        }
+                    }
+                }
+                if (addSortals && carstr.equals(f.UQUANT))
+                    sb.append(")");
+
+                for (int i = 2 ; i < f.listLength(); i++) {
+                    addTypeRestrictionsRecurse(kb, new Formula(f.getArgument(i)), sb, varmap);
+                }
+                if (addSortals)
+                    sb.append(")");
+            }
+            else {
+                // recurse from the first argument if the formula is not in (exists ...) / (forall ...) scope
+                for (int i = 1; i < f.listLength(); i++) {
+                    addTypeRestrictionsRecurse(kb, new Formula(f.getArgument(i)), sb, varmap);
+                }
+            }
+            sb.append(")");
+        }
+        else if (f.isSimpleClause()) {
+            sb.append(f + " ");
+        }
+        else {
+            addTypeRestrictionsRecurse(kb, f.carAsFormula(), sb, varmap);
+            addTypeRestrictionsRecurse(kb, f.cdrAsFormula(), sb, varmap);
+        }
+    }
+
+    /**
+     * Collect variables from strings. For example,
+     * Input = (?X ?Y ?Z)
+     * Output = list [?X, ?Y, ?Z]
+     */
+    private ArrayList<String> collectVariables(String argstr) {
+
+        ArrayList<String> arglist = new ArrayList<>();
+        if (argstr.startsWith(Formula.V_PREF)) {
+            arglist.add(argstr);
+            return arglist;
+        }
+        else if (argstr.startsWith(Formula.LP)) {
+            arglist = new ArrayList<>(Arrays.asList(argstr.substring(1, argstr.length()-1).split(" ")));
+            return arglist;
+        }
+        else {
+            System.err.println("Errors in FormulaPreprocessor.collectVariables ...");
+            return null;
+        }
+    }
+
+    /** ************************************************************************
+     * Get the most specific type for variables
+     * for example, types of "?Writing" = [Entity, Physical, Process, IntentionalProcess, ContentDevelopment, Writing]
+     * return the most specific type = Writing
+     */
+    private String getMostRelevantType(KB kb, HashSet<String> types) {
+
+        HashSet<String> insts = new HashSet<String>();
+        Iterator<String> iter = types.iterator();
+        while (iter.hasNext()) {
+            String type = iter.next();
+            if (!type.endsWith("+"))
+                insts.add(type);
+            else
+                insts.add(type.substring(0, type.length()-1));
+        }
+        if (insts != null) {
+            winnowTypeList(insts, kb);
+            Iterator<String> it1 = insts.iterator();
+            while (it1.hasNext()) {
+                return it1.next();
+            }
+        }
+
+        return null;
     }
 
     /*****************************************************************
@@ -730,7 +823,7 @@ public class FormulaPreprocessor {
             while (it.hasNext()) {
                 Formula f = it.next();
                 FormulaPreprocessor fp = new FormulaPreprocessor();
-                f.read(fp.addTypeRestrictionsNew(f,kb).theFormula);
+                f.read(fp.addTypeRestrictions(f,kb).theFormula);
             }
         }
 
@@ -820,14 +913,14 @@ public class FormulaPreprocessor {
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         FormulaPreprocessor.debug = true;
-        System.out.println(fp.addTypeRestrictionsNew(f,kb));
+        System.out.println(fp.addTypeRestrictions(f,kb));
 
         System.out.println();
         strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
                 " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
         f.read(strf);
         fp = new FormulaPreprocessor();
-        System.out.println(fp.addTypeRestrictionsNew(f,kb));
+        System.out.println(fp.addTypeRestrictions(f,kb));
 
         System.out.println();
         strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
@@ -837,7 +930,7 @@ public class FormulaPreprocessor {
                 "(part ?X ?Z))))))) (greaterThan ?PARTPROB ?NOTPARTPROB))";
         f.read(strf);
         fp = new FormulaPreprocessor();
-        System.out.println(fp.addTypeRestrictionsNew(f,kb));
+        System.out.println(fp.addTypeRestrictions(f,kb));
     }
 
     /** ***************************************************************
