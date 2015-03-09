@@ -83,7 +83,7 @@ public class CorefTest extends TestCase {
     @Test
     public void test() throws IOException {
         Collection<CorefChain> corefs = getCorefChain(fileName);
-        boolean notFound = FluentIterable.from(corefs)
+        boolean hasBoth = FluentIterable.from(corefs)
                 .filter(new Predicate<CorefChain>() {
                     @Override
                     public boolean apply(CorefChain corefChain) {
@@ -96,7 +96,7 @@ public class CorefTest extends TestCase {
                                 });
                     }
                 })
-                .filter(new Predicate<CorefChain>() {
+                .anyMatch(new Predicate<CorefChain>() {
                     @Override
                     public boolean apply(CorefChain corefChain) {
                         return FluentIterable.from(corefChain.getMentionsInTextualOrder())
@@ -107,8 +107,8 @@ public class CorefTest extends TestCase {
                                     }
                                 });
                     }
-                }).isEmpty();
-        if(notFound) {
+                });
+        if(!hasBoth) {
             fail("Not found: " + corefA + " + " + corefB);
         }
     }
