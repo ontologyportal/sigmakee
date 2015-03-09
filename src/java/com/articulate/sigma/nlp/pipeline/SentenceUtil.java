@@ -7,9 +7,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
-import edu.stanford.nlp.semgraph.SemanticGraphFactory;
 import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.KBestTreesAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.ScoredObject;
@@ -112,8 +110,7 @@ public class SentenceUtil {
         // along with a method for getting the most representative mention
         // Both sentence and token offsets start at 1!
         Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
-        for (Integer i : graph.keySet()) {
-            CorefChain cc = graph.get(i);
+        for (CorefChain cc : graph.values()) {
             List<CorefChain.CorefMention> mentions = cc.getMentionsInTextualOrder();
             if (mentions.size() > 1)
                 for (CorefChain.CorefMention ment : mentions) {

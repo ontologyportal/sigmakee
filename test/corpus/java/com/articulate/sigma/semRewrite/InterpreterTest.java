@@ -3,20 +3,18 @@ package com.articulate.sigma.semRewrite;
 import static org.junit.Assert.assertEquals;
 
 import com.articulate.sigma.IntegrationTestBase;
-import com.google.common.io.Resources;
+import com.articulate.sigma.test.JsonReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.json.simple.*;
-import org.json.simple.parser.*;
 
 import com.articulate.sigma.KBmanager;
 
-import java.io.*;
-import java.net.URL;
 import java.util.*;
+import java.util.function.Function;
 
 @RunWith(Parameterized.class)
 public class InterpreterTest extends IntegrationTestBase {
@@ -41,34 +39,16 @@ public class InterpreterTest extends IntegrationTestBase {
      */
     @Parameters(name="{0}")
     public static Collection<Object[]> prepare() {
-        ArrayList<Object[]> result = new ArrayList<Object[]>();
-        URL translationTestsFile = Resources.getResource("resources/translation_tests.json");
-        String filename = translationTestsFile.getPath();
-        JSONParser parser = new JSONParser();
-        try {  
-            Object obj = parser.parse(new FileReader(filename));  
-            JSONArray jsonObject = (JSONArray) obj; 
-            ListIterator<JSONObject> li = jsonObject.listIterator();
-            while (li.hasNext()) {
-                JSONObject jo = li.next();
+        return JsonReader.transform("resources/translation_tests.json", new Function<JSONObject, Object[]>() {
+            @Override
+            public Object[] apply(JSONObject jo) {
                 String text = (String) jo.get("text");
                 //String tokens = (String) jo.get("tokens");
                 //String type = (String) jo.get("type");
                 String kif = (String) jo.get("kif");
-                result.add(new Object[]{text,kif});
-            }             
-        } 
-        catch (FileNotFoundException e) {  
-            e.printStackTrace();  
-        } 
-        catch (IOException e) {  
-            e.printStackTrace();  
-        } 
-        catch (ParseException e) {  
-            e.printStackTrace();  
-        }     
-        System.out.println(result);
-        return result;    
+                return new Object[]{text,kif};
+            }
+        });
     }
 
     private String unify(String data) {
