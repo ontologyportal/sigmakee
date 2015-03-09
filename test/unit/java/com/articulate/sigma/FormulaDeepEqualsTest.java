@@ -3,7 +3,6 @@ package com.articulate.sigma;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -220,12 +219,12 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
 
         Formula expected = new Formula();
         String expectedString = "(=> (and (instance ?SET2 Set) (instance ?SET1 Set)) " +
-                "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
+                "(=> (forall (?ELEMENT) (=> (instance ?ELEMENT Entity) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2)))) " +
                 "(equal ?SET1 ?SET2)))";
 
         expected.read(expectedString);
 
-        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
+        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
         long start = System.nanoTime();
 //        assertTrue(expected.logicallyEquals(actual));
         assertTrue(expected.unifyWith(actual));
