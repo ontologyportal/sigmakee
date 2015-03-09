@@ -47,7 +47,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "(equal ?SET1 ?SET2)))";
         expected.read(expectedString);
 
-        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
+        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
         assertEquals(expected, actual);
 //        assertTrue(expected.logicallyEquals(actual));
     }
@@ -67,7 +67,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA) (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE)))";
         expected.read(expectedString);
 
-        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
+        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
         //assertEquals(expected, actual);
         assertTrue(expected.logicallyEquals(actual));
     }

@@ -83,7 +83,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
                 "(equal (?NOTPARTPROB (ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) (part ?X ?Z))))))) " +
                 "(greaterThan ?PARTPROB ?NOTPARTPROB))) ";
         expected.read(expectedString);
-        Formula actual = fp.addTypeRestrictionsNew(f, SigmaTestBase.kb);
+        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
         //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
         assertEquals(expected, actual);
     }
