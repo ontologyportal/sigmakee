@@ -1,562 +1,286 @@
-[
-{
+[{
 "text":"John killed Mary on 31 March and also in July 1995 by travelling back in time.",
-"kif":
-"[(during killed (MonthFn July (YearFn 1995)), (during killed (DayFn 31 (MonthFn March))]"
-},
-,
-{
+"kif":"[(during killed (MonthFn July (YearFn 1995)), (during killed (DayFn 31 (MonthFn March))]"
+},{
 "text":"Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.",
-"kif":
-"[(birthday Amelia (DayFn 24 (MonthFn July (YearFn 1897))), (deathdate Amelia (DayFn 2 (MonthFn July (YearFn 1937)))]"
-},
-{
+"kif":"[(birthday Amelia (DayFn 24 (MonthFn July (YearFn 1897))), (deathdate Amelia (DayFn 2 (MonthFn July (YearFn 1937)))]"
+},{
 "text":"Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.",
-"kif":
-"[(during vanished (MonthFn July (YearFn 1937))]"
-},
-{
+"kif":"[(during vanished (MonthFn July (YearFn 1937))]"
+},{
 "text":"She was declared dead on January 5, 1939.",
-"kif":
-"[(during declared (DayFn 5 (MonthFn January (YearFn 1939)))]"
-},
-{
+"kif":"[(during declared (DayFn 5 (MonthFn January (YearFn 1939)))]"
+},{
 "text":"Bob went to work only 5 times in 2003.",
-"kif":
-"[(during work (YearFn 2003), (MeasureFn 5 times)]"
-},
-{
+"kif":"[(during work (YearFn 2003), (MeasureFn 5 times)]"
+},{
 "text":"John kicks the cart.",
-"kif":
-"[]"
-},
-{
+"kif":"[]"
+},{
 "text":"John was killed on 8/15/2014 at 3:45 PM.",
-"kif":
-"[(during killed (DayFn 15 (MonthFn august (YearFn 2014))), (during killed (MinuteFn 45 (HourFn 15))]"
-},
-{
+"kif":"[(during killed (DayFn 15 (MonthFn august (YearFn 2014))), (during killed (MinuteFn 45 (HourFn 15))]"
+},{
 "text":"John murdered Mary in July 1995 at 4 in the morning.",
-"kif":
-"[(during murdered (MinuteFn 00 (HourFn 04)), (during murdered (MonthFn July (YearFn 1995))]"
-},
-{
+"kif":"[(during murdered (MinuteFn 00 (HourFn 04)), (during murdered (MonthFn July (YearFn 1995))]"
+},{
 "text":"John married Mary on December 22 at 5:45 PM.",
-"kif":
-"[(during married (MinuteFn 45 (HourFn 17)), (during married (DayFn 22 (MonthFn December))]"
-},
-{
+"kif":"[(during married (MinuteFn 45 (HourFn 17)), (during married (DayFn 22 (MonthFn December))]"
+},{
 "text":"John was killed on 22 August 1999 at 18:45 hrs.",
-"kif":
-"[(during killed (MinuteFn 45 (HourFn 18)), (during killed (DayFn 22 (MonthFn august (YearFn 1999)))]"
-},
-{
+"kif":"[(during killed (MinuteFn 45 (HourFn 18)), (during killed (DayFn 22 (MonthFn august (YearFn 1999)))]"
+},{
 "text":"This man is 170 centimeters tall.",
-"kif":
-"[(height man-2 (MeasureFn 170 Centimeter))]"
-}
-,
-{
+"kif":"[(height man-2 (MeasureFn 170 Centimeter))]"
+},{
 "text":"This man is forty-feet high in the air.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The baby is twenty-five inches long.",
-"kif":
-"[(length baby-2 (MeasureFn 25 Inch))]"
-}
-,
-{
+"kif":"[(length baby-2 (MeasureFn 25 Inch))]"
+},{
 "text":"My office window is five-feet wide.",
-"kif":
-"[(width window-3 (MeasureFn 55 FootLength))]"
-}
-,
-{
+"kif":"[(width window-3 (MeasureFn 55 FootLength))]"
+},{
 "text":"The Chicago river is 156 miles long.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The Amazon is between 6 and 30 miles wide.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The Grand Canyon ranges from four to eighteen miles wide.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The dining table is 100 centimeters long.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The side table is sixty-five centimeters wide.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The river is twelve feet deep.",
-"kif":
-"[(depth river-2 (MeasureFn 12 FootLength))]"
-}
-,
-{
+"kif":"[(depth river-2 (MeasureFn 12 FootLength))]"
+},{
 "text":"The wall is four meters high.",
-"kif":
-"[(height wall-2 (MeasureFn 4 Meter))]"
-}
-,
-{
+"kif":"[(height wall-2 (MeasureFn 4 Meter))]"
+},{
 "text":"Jack is 178 centimeters tall.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The pool is fifty meters long. ",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The pool is twenty feet wide. ",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Grandfather is sixty years old.",
-"kif":
-"[(age grandfather-1 (MeasureFn 65 YearDuration))]"
-}
-,
-{
+"kif":"[(age grandfather-1 (MeasureFn 65 YearDuration))]"
+},{
 "text":"The tree is ten meters around.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The tree is ten meters in circumference.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The beach is ten miles away. ",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The statue is eight feet high and stands on a two foot tall pedestal.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It is an eight foot high statue.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The height of that shelf is two meters.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The depth of the Amazon river is over 20 meters.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The island is 11 miles long and 5 miles wide.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"We were traveling at a height of 10,000 meters above sea level.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The statue is 3 meters high.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The zoo insists on the mammals having a pool at least 10 meters deep, 30 meters wide and 150 meters long.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The island is 11 miles by 5 miles.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The engine is designed to take minimum space and weighs 55 kg.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"We buy rice by the kilo, which works out cheaper.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The bath holds 500 liters before it overflows.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Each time you fill the bath, the water flows in at the rate of 15 liters per minute through the cold tap and 12 liters per minute through the hot tap (when they are fully turned on).",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The traffic moves at a fast pace; a speed of over one hundred kilometers an hour is not difficult.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The traffic moves at a fast pace; a speed of over one hundred kilometers per hour is not difficult.  ",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"This cheese is $12.50 a kilo. ",
-"kif":
-"[]"
-}
-,
-{
-"text":""text":"This cheese is $12.50 per kilo.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
+"text":"This cheese is $12.50 per kilo.",
+"kif":"[]"
+},{
 "text":"The speed limit in towns in the UK is 30 miles per hour.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The speed limit in towns in the UK is 30 miles an hour.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It costs 20 pounds an hour to rent a boat on the lake.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It costs 20 pounds per hour to rent a boat on the lake.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"This enormous canyon is over a mile deep.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The shelves are 10 inches deep.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"I stood three feet deep in the water.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The table is two meters long.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Tell me how long the table is. ",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How long is the table?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It's two meters long.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The table is three feet wide.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Tell me how wide the table is.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How wide is the table?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It's three feet wide.",
-"kif":
-"[]"
-}
-,
-{
-"text":""text":"The pond is eight centimeters deep.",
-"kif":
-"[(depth pond-2 (MeasureFn 8 Centimeters))]"
-}
-,
-{
+"kif":"[]"
+},{
+"text":"The pond is eight centimeters deep.",
+"kif":"[(depth pond-2 (MeasureFn 8 Centimeters))]"
+},{
 "text":"Tell me how deep the pond is.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How deep is the pond?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It's eight centimeters deep.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The ice is two inches thick.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Tell me how thick the ice is.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How thick is the ice?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It's two inches thick.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The mountain is two miles high.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Tell me how high the mountain is.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How high is the mountain?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It's two miles high.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The woman is two meters tall.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Tell me how tall the woman is.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How tall is the woman?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"She's two meters tall.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"That guy is eighty-five years old.",
-"kif":
-"[(age guy-2 (MeasureFn 85 YearDuration))]"
-}
-,
-{
+"kif":"[(age guy-2 (MeasureFn 85 YearDuration))]"
+},{
 "text":"Tell me how old that guy is.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How old is that guy?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"He's eighty-five years old.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How often do you see her?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Twice a week.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How many are still here?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"There are five bags.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How much did that cost?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"They cost thirty euros each.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How big is your apartment?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"My apartment has five rooms.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How old is she?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"She is two years old.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"She's five years old.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"Tell me how long that table is.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"How long is that table?",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"The table is five feet long.",
-"kif":
-"[]"
-}
-,
-{
+"kif":"[]"
+},{
 "text":"It's five feet long.",
-"kif":
-"[]"
-}
-]
+"kif":"[]"
+}]

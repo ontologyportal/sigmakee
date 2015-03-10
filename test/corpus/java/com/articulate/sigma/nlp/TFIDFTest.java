@@ -47,14 +47,18 @@ public class TFIDFTest extends TestCase {
         });
     }
 
-
-    @Test
-    public void test() {
+    private TFIDF getCachedTFIDF(String fileName) {
         TFIDF cb = parsedFiles.get(fileName);
         if(cb == null) {
             cb = new TFIDF(fileName);
             parsedFiles.put(fileName, cb);
         }
+        return cb;
+    }
+
+    @Test
+    public void test() {
+        TFIDF cb = getCachedTFIDF(fileName);
         String actual = cb.matchInput(query);
         Pattern p = Pattern.compile(answer.toLowerCase());
         Matcher m = p.matcher(actual.toLowerCase());

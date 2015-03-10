@@ -27,6 +27,7 @@ import java.util.regex.*;
 import java.io.*;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.nlp.CorefSubstitutor;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.collect.Lists;
 
@@ -240,20 +241,23 @@ public class Interpreter {
    * Take in a sentence and output a SUO-KIF string
    */
   public String interpretSingle(String input) {
-      
-      System.out.println("INFO in Interpreter.interpretSingle(): " + input); 
+      System.out.println("INFO in Interpreter.interpretSingle(): " + input);
+
+      String substitutedInput = CorefSubstitutor.substitute(input);
+      if(!input.equals(substitutedInput)) {
+          System.out.println("INFO input substituted to: " + substitutedInput);
+      }
+
       ArrayList<String> results = null;
       try {
           Properties props = new Properties();
           props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
           StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-          Annotation document = new Annotation(input);
+          Annotation document = new Annotation(substitutedInput);
           pipeline.annotate(document);
           List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-          if (sentences.size() > 1)
-              throw new Exception("Multiple sentences not allowed in Interpreter.interpretSingle()");
           for (CoreMap sentence : sentences) {
-              SemanticGraph dependencies = (SemanticGraph) sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+              SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
               results = Lists.newArrayList(dependencies.toList().split("\n"));
           }
       }
@@ -271,7 +275,7 @@ public class Interpreter {
       CNF cnf = CNF.parseSimple(lex);
       inputs.add(cnf);
       ArrayList<String> kifClauses = interpretCNF(inputs);
-      kifClauses.addAll(InterpretNumerics.getSumoTerms(input));
+      kifClauses.addAll(InterpretNumerics.getSumoTerms(substitutedInput));
       return fromKIFClauses(kifClauses);
   }
 

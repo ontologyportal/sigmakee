@@ -22,7 +22,6 @@ public class JsonReader {
 
         URL irTests = Resources.getResource(resourcePath);
 
-        //System.out.println("INFO in TFIDF.prepare(): reading: " + filename);
         JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(Resources.toString(irTests, Charsets.UTF_8));

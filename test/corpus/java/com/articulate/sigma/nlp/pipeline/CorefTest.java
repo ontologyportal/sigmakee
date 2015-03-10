@@ -42,22 +42,16 @@ public class CorefTest extends TestCase {
         parsedDocuments.clear();
     }
 
-    @Parameterized.Parameters(name="<{0}> {1} + {2}")
+    @Parameterized.Parameters(name="<{0}> {1} ↔ {2}")
     public static Collection<Object[]> prepare() {
         return JsonReader.transform("resources/corefTests.json", new Function<JSONObject, Object[]>() {
             @Override
             public Object[] apply(JSONObject jo) {
                 String fileName = (String) jo.get("file");
                 Long sentence = (Long) jo.get("sentence");
-                Long sentenceA;
-                Long sentenceB;
-                if(sentence != null) {
-                    sentenceA = sentence;
-                    sentenceB = sentence;
-                } else {
-                    sentenceA = (Long) jo.get("sentenceA");
-                    sentenceB = (Long) jo.get("sentenceB");
-                }
+                Long sentenceA = sentence != null ? sentence : (Long) jo.get("sentenceA");
+                Long sentenceB = sentence != null ? sentence : (Long) jo.get("sentenceB");
+
                 String valueA = (String) jo.get("valueA");
                 String valueB = (String) jo.get("valueB");
                 return new Object[]{fileName,
@@ -109,7 +103,7 @@ public class CorefTest extends TestCase {
                     }
                 });
         if(!hasBoth) {
-            fail("Not found: " + corefA + " + " + corefB);
+            fail("Not found: " + corefA + " ↔ " + corefB);
         }
     }
 }
