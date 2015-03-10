@@ -1497,16 +1497,7 @@ public class KB {
                     System.out.println("No response from EProver!");
                 else
                     System.out.println("Get response from EProver, start for parsing ...");
-                TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(EResult);
-                if (tpp.bindings == null)
-                    return null;
-                for (String binding : tpp.bindings) {
-                    String[] eles = binding.split(" ");
-                    for (String ele : eles) {
-                        String answer= TPTP2SUMO.transformTerm(ele);
-                        answers.add(answer);
-                    }
-                }
+                answers = TPTP3ProofProcessor.parseAnswerTuples(EResult, this, fp);
                 return answers;
             }
         }
