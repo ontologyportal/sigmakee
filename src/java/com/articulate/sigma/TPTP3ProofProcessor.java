@@ -22,6 +22,7 @@ import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -242,28 +243,18 @@ public class TPTP3ProofProcessor {
 			System.out.println("Error in TPTP3ProofProcessor.processAnswers() bad format: " + line);
 			return;
 		}
-		String rest = trimmed;
-		int leftBracket = rest.indexOf("[");
-		int rightBracket = rest.indexOf("]");
-		while (leftBracket != -1 && rightBracket != -1 && leftBracket < rightBracket) {
-			String answers = rest.substring(leftBracket, rightBracket+1);
-			String answer = trimBrackets(answers);
+		String[] answers = trimmed.split("\\|");
+		for (int i = 0; i < answers.length; i++) {
+			if (answers[i].equals("_"))
+				break;
+			String answer = trimBrackets(answers[i]);
 			if (answer != null) {
-				answer = removeEsk(answer);
-				boolean addToBinding = true;
-				String[] eles = answer.split(", ");
-				for (String ele : eles) {
-					if (!ele.startsWith("s__")) {
-						addToBinding = false;
-						break;
-					}
-				}
-				if (addToBinding)
+				String[] esks = answer.split(", ");
+				for (String esk : esks) {
+					answer = removeEsk(esk);
 					bindings.add(answer);
+				}
 			}
-			rest = rest.substring(rightBracket + 1);
-			leftBracket = rest.indexOf("[");
-			rightBracket = rest.indexOf("]");
 		}
 	}
 
@@ -271,30 +262,16 @@ public class TPTP3ProofProcessor {
 	 * remove skolem symbol with arity n
 	 * Example Input1: esk2_1(s__Arc13_1)
 	 * Expected Output1: s__Arc13_1
-	 *
-	 * Example Input2: s__John_1, esk2_0
-	 * Expected Input2: s__John_1
 	 */
 	private String removeEsk(String line) {
 
-		String answerString = "";
-		String pattern = "esk\\d_\\d";
-
-		String[] answers = line.split(", ");
-		for (String answer : answers) {
-			answer = answer.trim();
-			Pattern r = Pattern.compile(pattern);
-			Matcher m = r.matcher(answer);
-			if (m.find()) {
-				answer = m.replaceAll("");
-				int leftParen = answer.indexOf("(");
-				int rightParen = answer.indexOf(")");
-				if (leftParen != -1 && rightParen != -1)
-					answer = answer.substring(leftParen+1, rightParen);
-			}
-			answerString += answer + " ";
+		if (line.startsWith("esk")) {
+			int leftParen = line.indexOf("(");
+			int rightParen = line.indexOf(")");
+			if (leftParen != -1 && rightParen != -1)
+				return line.substring(leftParen+1, rightParen);
 		}
-		return answerString.trim();
+		return line;
 	}
 
 	/** ***************************************************************
@@ -366,6 +343,53 @@ public class TPTP3ProofProcessor {
 		tpp.proof = ProofStep.removeUnnecessary(tpp.proof);
 		tpp.proof = ProofStep.removeDuplicates(tpp.proof);
 		return tpp;
+	}
+
+	/** ***************************************************************
+	 * Take E's infernece results, extract answers from the_list_of_definite_answer_tuples
+	 * For example,
+	 * tuple_list = [[esk3_1(s__Org1_1)]|_]
+	 * Output = [Org1_1]
+	 *
+	 * tuple_list = [[esk3_0]|_]
+	 * Output = [An instance of Human] (Human is the most specific type for esk3_0 in the given proof)
+	 */
+	public static ArrayList<String> parseAnswerTuples(String st, KB kb, FormulaPreprocessor fp) {
+
+		ArrayList<String> answers = new ArrayList<>();
+		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(st);
+		if (tpp.bindings == null)
+			return null;
+		for (String binding : tpp.bindings) {
+			if (binding.startsWith("esk")) {
+				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, tpp.proof);
+				HashSet<String> types = new HashSet<>();
+				for (String skolemStmt : skolemStmts) {
+					Pattern p = Pattern.compile("\\(instance ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-_]+)");
+					Matcher m = p.matcher(skolemStmt);
+					while (m.find()) {
+						String cl = m.group(2);
+						types.add(cl);
+					}
+
+					p = Pattern.compile("\\(subclass ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
+					m = p.matcher(skolemStmt);
+					while (m.find()) {
+						String cl = m.group(2);
+						types.add(cl);
+					}
+				}
+				fp.winnowTypeList(types, kb);
+				for (String t : types) {
+					answers.add("an instance of " + t);
+				}
+			}
+			else {
+				String answer= TPTP2SUMO.transformTerm(binding);
+				answers.add(answer);
+			}
+		}
+		return answers;
 	}
 
 	/** ***************************************************************
