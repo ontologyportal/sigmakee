@@ -343,27 +343,39 @@ public class FormulaPreprocessor {
         else if (form.isSimpleClause()) {
             if (isNegativeLiteral == true)  // If form is negative literal, do not add explicit type for the variable
                 return;
-            Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-_]+)");
+            Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-_]+)");
             Matcher m = p.matcher(form.theFormula);
             while (m.find()) {
                 String var = m.group(1);
                 String cl = m.group(2);
-                HashSet<String> hs = new HashSet<String>();
-                if (varExplicitTypes.containsKey(var))
-                    hs = varExplicitTypes.get(var);
-                hs.add(cl);
+                HashSet<String> hs = new HashSet<>();
+                if (!cl.startsWith("?")) {
+                    if (varExplicitTypes.containsKey(var))
+                        hs = varExplicitTypes.get(var);
+                    hs.add(cl);
+                }
+                else {
+                    if (varExplicitTypes.containsKey(var))
+                        hs = varExplicitTypes.get(var);
+                }
                 varExplicitTypes.put(var, hs);
             }
 
-            p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
+            p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-]+)");
             m = p.matcher(form.theFormula);
             while (m.find()) {
                 String var = m.group(1);
                 String cl = m.group(2);
-                HashSet<String> hs = new HashSet<String>();
-                if (varExplicitTypes.containsKey(var))
-                    hs = varExplicitTypes.get(var);
-                hs.add(cl + "+");
+                HashSet<String> hs = new HashSet<>();
+                if (!cl.startsWith("?")) {
+                    if (varExplicitTypes.containsKey(var))
+                        hs = varExplicitTypes.get(var);
+                    hs.add(cl + "+");
+                }
+                else {
+                    if (varExplicitTypes.containsKey(var))
+                        hs = varExplicitTypes.get(var);
+                }
                 varExplicitTypes.put(var, hs);
             }
         }
