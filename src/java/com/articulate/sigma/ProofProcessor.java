@@ -125,7 +125,7 @@ public class ProofProcessor {
      * one without, for example: sk2
      * We need to find either of these in the proofs to see what relationship it goes into
      */
-    private ArrayList<String> returnSkolemStmt(String skolem, ArrayList<ProofStep> proofSteps) {
+    public static ArrayList<String> returnSkolemStmt(String skolem, ArrayList<ProofStep> proofSteps) {
 
     	if (skolem.startsWith("(") && skolem.endsWith(")")) 
     		skolem = skolem.substring(1, skolem.length()-1);
