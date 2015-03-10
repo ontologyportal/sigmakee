@@ -64,7 +64,7 @@ public class FormulaPreprocessor {
      *
      * @return void
      */
-    private void winnowTypeList(HashSet<String> types, KB kb) {
+    public void winnowTypeList(HashSet<String> types, KB kb) {
 
         long t1 = 0L;
         if (types.size() > 1) {
