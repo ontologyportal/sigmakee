@@ -20,15 +20,15 @@ You should have received a copy of the GNU General Public License
 along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
-*/
+ */
 
 public class TimeInfo {
-	
+
 	private String hour = null;
 	private String minute = null;
 	private String second = null;
 	private int wordIndex = -1;
-	
+
 	public String getHour() {
 		return hour;
 	}
@@ -52,5 +52,20 @@ public class TimeInfo {
 	}
 	public void setWordIndex(int wordindex) {
 		this.wordIndex = wordindex;
+	}
+
+	public boolean equals(TimeInfo timeInfo) {
+		boolean hourFlag,minuteFlag,secondFlag;
+		hourFlag = minuteFlag = secondFlag = true;
+		if ((timeInfo.hour != null) && (this.hour != null) && !(timeInfo.hour.equals(hour))) {
+			hourFlag = false;
+		}
+		if ((timeInfo.minute != null) && (this.minute != null) && !(timeInfo.minute.equals(minute))) {
+			minuteFlag = false;
+		}
+		if ((timeInfo.second != null) && (this.second != null) && !(timeInfo.second.equals(second))) {
+			secondFlag = false;
+		}
+		return (hourFlag && minuteFlag && secondFlag);
 	}
 }

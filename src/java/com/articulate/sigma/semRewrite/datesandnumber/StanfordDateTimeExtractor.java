@@ -32,6 +32,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.BeginIndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.EndIndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NormalizedNamedEntityTagAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -44,8 +45,10 @@ import edu.stanford.nlp.util.StringUtils;
 
 public class StanfordDateTimeExtractor {
 
-	public static List<String> NUMERICAL_ENTITIES = new ArrayList<String>(Arrays.asList("DATE",
-			"NUMBER", "DURATION", "TIME"));
+	public static List<String> DATE_ENTITIES = new ArrayList<String>(Arrays.asList("DATE",
+			"DURATION", "TIME"));
+	public static List<String> MEASURE_ENTITIES = new ArrayList<String>(Arrays.asList(
+			"NUMBER", "PERCENT"));
 	
 	private List<String> dependencyList = new ArrayList<String>();
 	private SemanticGraph dependencies;
@@ -94,7 +97,7 @@ public class StanfordDateTimeExtractor {
 			tokenCount = 1;
 			for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
 				String namedEntity = token.get(NamedEntityTagAnnotation.class);       
-				if (NUMERICAL_ENTITIES.contains(namedEntity)) {
+				if ((DATE_ENTITIES.contains(namedEntity)) || ((MEASURE_ENTITIES.contains(namedEntity))&& (token.get(PartOfSpeechAnnotation.class).equals("CD")))) {
 					Tokens tokens = new Tokens();
 					tokens.setId(tokenCount);
 					tokens.setWord(token.get(TextAnnotation.class));
