@@ -23,6 +23,7 @@ public class EProver {
     private BufferedWriter _writer; 
     private BufferedReader _error;
     private static String __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+    private static int axiomIndex = 0;
 
     /** *************************************************************
      *  */
@@ -225,13 +226,11 @@ public class EProver {
 
         boolean allAdded = (eprover != null);
         PrintWriter pw = null;
-        int axiomIndex = 0;
         try {
             pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
             ArrayList<Formula> processedFormulas = new ArrayList<Formula>();
             Iterator<Formula> it2 = parsedFormulas.iterator();
             while (it2.hasNext()) {
-                axiomIndex++;
                 processedFormulas.clear();
                 Formula parsedF = it2.next();          // 1. Preproccess the formula.
                 FormulaPreprocessor fp = new FormulaPreprocessor();
