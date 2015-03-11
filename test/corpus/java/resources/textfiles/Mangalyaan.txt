@@ -6,9 +6,6 @@ The Mars Orbiter Mission probe lifted-off from the First Launch Pad at Satish Dh
 The launch window was approximately 20 days long and started on 28 October 2013. 
 The MOM probe spent about a month in Earth orbit, where it made a series of seven apogee-raising orbital manoeuvres before trans-Mars injection on 30 November 2013 (UTC). 
 After a 298-day transit to Mars, it was successfully inserted into Mars orbit on 24 September 2014. 
-The mission is a "technology demonstrator" project to develop the technologies for design, planning, management, and operations of an interplanetary mission. It carries five instruments that will help advance knowledge about Mars to achieve its secondary, scientific objective.
+The mission is a "technology demonstrator" project to develop the technologies for design, planning, management, and operations of an interplanetary mission.
+It carries five instruments that will help advance knowledge about Mars to achieve its secondary, scientific objective.
 [24] The spacecraft is currently being monitored from the Spacecraft Control Centre at ISRO Telemetry, Tracking and Command Network (ISTRAC) in Bangalore with support from Indian Deep Space Network (IDSN) antennae at Byalalu.
-
-
-
-

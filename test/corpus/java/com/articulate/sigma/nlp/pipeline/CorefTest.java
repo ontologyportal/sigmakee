@@ -85,7 +85,11 @@ public class CorefTest extends TestCase {
                                 .anyMatch(new Predicate<CorefChain.CorefMention>() {
                                     @Override
                                     public boolean apply(CorefChain.CorefMention corefMention) {
-                                        return corefA.equals(corefMention);
+                                        boolean same = corefA.equals(corefMention);
+                                        if(same) {
+                                            System.out.println("1st pass: " + corefMention.toString());
+                                        }
+                                        return same;
                                     }
                                 });
                     }
@@ -97,12 +101,19 @@ public class CorefTest extends TestCase {
                                 .anyMatch(new Predicate<CorefChain.CorefMention>() {
                                     @Override
                                     public boolean apply(CorefChain.CorefMention corefMention) {
-                                        return corefB.equals(corefMention);
+                                        boolean same = corefB.equals(corefMention);
+                                        if(same) {
+                                            System.out.println("2nd pass: " + corefMention.toString());
+                                        }
+                                        return same;
                                     }
                                 });
                     }
                 });
         if(!hasBoth) {
+            for(CorefChain chain : corefs) {
+                System.out.println(chain);
+            }
             fail("Not found: " + corefA + " ↔ " + corefB);
         }
     }
