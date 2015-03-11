@@ -484,7 +484,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
         Map<String, HashSet<String>> actual = fp.findExplicitTypes(f);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?Y", new HashSet<>());
+        expected.put("?Y", new HashSet<String>());
         // TODO: add explicit type "Month" for ?MONTH
         assertEquals(expected, actual);
     }
@@ -597,7 +597,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
         Map<String, HashSet<String>> actual = fp.findExplicitTypes(f);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?X", new HashSet<>());
+        expected.put("?X", new HashSet<String>());
         expected.put("?Y", Sets.newHashSet("PureSubstance+"));
         assertEquals(expected, actual);
     }
@@ -620,7 +620,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
         Map<String, HashSet<String>> actual = fp.findExplicitTypes(f);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?SUBSTANCE", new HashSet<>());
+        expected.put("?SUBSTANCE", new HashSet<String>());
         expected.put("?BOILING", Sets.newHashSet("Boiling"));
         expected.put("?MEASURE", Sets.newHashSet("UnitOfTemperature"));
         assertEquals(expected, actual);
