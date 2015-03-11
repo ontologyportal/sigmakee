@@ -20,11 +20,11 @@ public class JsonReader {
     public static <T> Collection<T> transform(String resourcePath, Function<JSONObject, T> transformer) {
         Collection<T> result = Lists.newArrayList();
 
-        URL irTests = Resources.getResource(resourcePath);
-
+        URL jsonTests = Resources.getResource(resourcePath);
+        System.out.println("Reading JSON file: " + jsonTests.getPath());
         JSONParser parser = new JSONParser();
         try {
-            Object obj = parser.parse(Resources.toString(irTests, Charsets.UTF_8));
+            Object obj = parser.parse(Resources.toString(jsonTests, Charsets.UTF_8));
             JSONArray jsonObject = (JSONArray) obj;
             ListIterator<JSONObject> li = jsonObject.listIterator();
             while (li.hasNext()) {
