@@ -558,8 +558,6 @@ public class TFIDF {
      * Run a series of tests containing a filename,
      * a query and an expected answer.
      */
-    /** *************************************************************
-     */
     public static void main(String[] args) {
         //run();
     }
