@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 
+import com.google.common.collect.Lists;
+
 public class WSD {
 
     /** ***************************************************************
@@ -208,6 +210,8 @@ public class WSD {
 
         //System.out.println("WSD.getBestDefaultSUMO(): " + word);
         String sense = getBestDefaultSense(word);
+        if (StringUtil.emptyString(sense))
+            return "";
         if (sense.charAt(0) == '1') {
             return WordNet.wn.nounSUMOHash.get(sense.substring(1));
         }
@@ -269,7 +273,7 @@ public class WSD {
         if (bestSense == "") {
             //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
             ArrayList<String> al = WordNet.wn.wordsToSenses.get(word.toLowerCase());
-            //System.out.println("INFO in WSD.getBestDefaultSense(): " + al);
+            //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
             if (al != null) {
                 Iterator<String> it = al.iterator();
                 while (it.hasNext()) {
@@ -368,6 +372,7 @@ public class WSD {
         }
         WordNet.initOnce();
         System.out.println("INFO in WSD.testWordWSD(): " + WSD.getBestDefaultSense("India"));
+        System.out.println("INFO in WSD.testWordWSD(): " + WSD.getBestDefaultSense("kick"));
     }
     
     /** ***************************************************************
@@ -382,21 +387,25 @@ public class WSD {
             System.out.println(ex.getMessage());
         }
         WordNet.initOnce();
-        System.out.println("INFO in WSD.testWSD(): done initializing");
+        System.out.println("INFO in WSD.testSentenceWSD(): done initializing");
 
         String sentence = "John walks.";
-        System.out.println("INFO in WSD.testWSD(): " + sentence);
-        System.out.println("INFO in WSD.testWSD(): " + WSD.collectWordSenses(sentence));
+        System.out.println("INFO in WSD.testSentenceWSD(): " + sentence);
+        System.out.println("INFO in WSD.testSentenceWSD(): " + WSD.collectWordSenses(sentence));
         sentence = "Bob runs around the track.";
-        System.out.println("INFO in WSD.testWSD(): " + sentence);
-        System.out.println("INFO in WSD.testWSD(): " + WSD.collectWordSenses(sentence));
+        System.out.println("INFO in WSD.testSentenceWSD(): " + sentence);
+        System.out.println("INFO in WSD.testSentenceWSD(): " + WSD.collectWordSenses(sentence));
         sentence = "A computer is a general purpose device that can be programmed to carry out a finite set of arithmetic or logical operations.";
-        System.out.println("INFO in WSD.testWSD(): " + sentence);
-        System.out.println("INFO in WSD.testWSD(): " + WSD.collectWordSenses(sentence));
+        System.out.println("INFO in WSD.testSentenceWSD(): " + sentence);
+        System.out.println("INFO in WSD.testSentenceWSD(): " + WSD.collectWordSenses(sentence));
         sentence = "A four stroke engine is a beautiful thing.";
-        System.out.println("INFO in WSD.testWSD(): " + sentence);
-        System.out.println("INFO in WSD.testWSD(): " + WSD.collectWordSenses(sentence));     
-        System.out.println("INFO in WSD.testWSD(): " + WordNet.wn.sumoSentenceDisplay(sentence,sentence,""));
+        System.out.println("INFO in WSD.testSentenceWSD(): " + sentence);
+        System.out.println("INFO in WSD.testSentenceWSD(): " + WSD.collectWordSenses(sentence));     
+        System.out.println("INFO in WSD.testSentenceWSD(): " + WordNet.wn.sumoSentenceDisplay(sentence,sentence,""));
+        ArrayList<String> sentar = Lists.newArrayList("John","kicks","the","cart");
+        System.out.println("INFO in WSD.testSentenceWSD(): " + sentar);
+        for (String s : sentar)
+            System.out.println("INFO in WSD.testSentenceWSD(): word: " + s + " SUMO: " + WSD.getBestDefaultSUMO(s));
     }
     
     /** ***************************************************************
