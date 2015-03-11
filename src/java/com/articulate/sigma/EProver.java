@@ -13,10 +13,8 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
 import java.io.*;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+
 public class EProver {
 
     private ProcessBuilder _builder;
@@ -65,7 +63,7 @@ public class EProver {
     public static void addBatchConfig(String inputFilename) {
 
         File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
-        ArrayList<String> ebatchfiles = new ArrayList<String>();
+        HashSet<String> ebatchfiles = new HashSet<>();
         ebatchfiles.add(inputFilename);
 
         // Collect existed tptp files
