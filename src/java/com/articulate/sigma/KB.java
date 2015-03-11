@@ -1377,7 +1377,12 @@ public class KB {
             File tptpfile = new File(dir, (userAssertionTPTP));     // create kb.name_UserAssertions.tptp
             String filename = kiffile.getCanonicalPath();
             ArrayList<Formula> formulasAlreadyPresent = merge(kif, filename);
-            if (!formulasAlreadyPresent.isEmpty()) {
+            // only check formulasAlreadyPresent when filterSimpleOnly = false;
+            // otherwise, some user assertions/axioms will not be asserted for inference,
+            // since these axioms do exist in formulasAlreadyPresent but not in SUMO.tptp
+            // In the future, when SUMO can completely run using whole KB, we can remove
+            // SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
+            if (SUMOKBtoTPTPKB.filterSimpleOnly==false && !formulasAlreadyPresent.isEmpty()) {
                 String sf = ((Formula)formulasAlreadyPresent.get(0)).sourceFile;
                 result = "The formula was already added from " + sf;
             }
