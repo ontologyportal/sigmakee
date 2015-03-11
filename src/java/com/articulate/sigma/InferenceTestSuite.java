@@ -394,6 +394,71 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
+     * The method will be called in InferenceTest in unit test;
+     * It takes a TQG file path, reading the kif statements and queries and expected answers;
+     * It parses E's inference output for actual answers;
+     * Note that this procedure DOES NOT delete any prior user assertions.
+     */
+    public static void inferenceUnitTest(String testpath, KB kb,
+           ArrayList expectedAnswers, ArrayList<String> actualAnswers) {
+
+        // read the test file
+        File file = new File(testpath);
+        KIF kif = new KIF();
+        try {
+            kif.readFile(file.getCanonicalPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Iterator it = kif.formulaMap.keySet().iterator();
+        String note = file.getName();
+        String query = null;
+        int timeout = 0;
+
+        while (it.hasNext()) {
+            String formula = (String) it.next();
+            if (formula.indexOf(";") != -1)
+                formula = formula.substring(0,formula.indexOf(";"));
+            System.out.println("INFO in InferenceTestSuite.test(): Formula: " + formula);
+            if (formula.startsWith("(note"))
+                note = formula.substring(6,formula.length()-1);
+            else if (formula.startsWith("(query"))
+                query = formula.substring(7,formula.length()-1);
+            else if (formula.startsWith("(answer"))
+                expectedAnswers.add(formula.substring(8,formula.length()-1));
+            else if (formula.startsWith("(time"))
+                timeout = Integer.parseInt(formula.substring(6,formula.length()-1));
+            else
+                kb.tell(formula);
+        }
+        int maxAnswers = expectedAnswers.size();
+        Formula theQuery = new Formula();
+        ArrayList theQueries = null;
+        theQuery.theFormula = query;
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        theQueries = fp.preProcess(theQuery,true,kb);
+        Iterator q = theQueries.iterator();
+        while (q.hasNext()) {
+            String processedStmt = ((Formula)q.next()).theFormula;
+            ArrayList<String> tmpAnswers = kb.askNoProof(processedStmt,timeout,maxAnswers);
+            actualAnswers.addAll(tmpAnswers);
+        }
+
+        System.out.println("expectedAnswers = " + expectedAnswers);
+        System.out.println("actualAnswers   = " + actualAnswers);
+
+        if (expectedAnswers.size()==1 && expectedAnswers.get(0).equals("yes")) {
+            if (actualAnswers.size() > 0) {
+                actualAnswers.clear();
+                actualAnswers.add("yes");
+            }
+        }
+    }
+
+    /** ***************************************************************
      * Test method
      */
     public static void main(String[] args) {
