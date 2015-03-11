@@ -311,6 +311,7 @@ public class TPTP3ProofProcessor {
 		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 		try {
 			boolean inProof = false;
+			boolean finishAnswersTuple = false;
 			String line;
 			while ((line = lnr.readLine()) != null) {
 				if (line.indexOf("SZS output start") != -1) {
@@ -321,7 +322,10 @@ public class TPTP3ProofProcessor {
 					tpp.status = line.substring(15);
 				}
 				if (line.indexOf("SZS answers") != -1) {
-					tpp.processAnswers(line.substring(20).trim());
+					if (!finishAnswersTuple) {
+						tpp.processAnswers(line.substring(20).trim());
+						finishAnswersTuple = true;
+					}
 				}
 				if (inProof) {
 					if (line.indexOf("SZS output end") != -1) {
@@ -358,8 +362,12 @@ public class TPTP3ProofProcessor {
 
 		ArrayList<String> answers = new ArrayList<>();
 		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(st);
-		if (tpp.bindings == null)
-			return null;
+		if (tpp.bindings == null || tpp.bindings.isEmpty()) {
+			if (tpp.proof != null && !tpp.proof.isEmpty()) {
+				answers.add("Proof Found");
+			}
+			return answers;
+		}
 		for (String binding : tpp.bindings) {
 			if (binding.startsWith("esk")) {
 				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, tpp.proof);
