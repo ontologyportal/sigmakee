@@ -249,10 +249,10 @@ public class Interpreter {
    * Take in a sentence and output a SUO-KIF string
    */
   public String interpretSingle(String input) {
+      
       System.out.println("INFO in Interpreter.interpretSingle(): " + input);
-
       String substitutedInput = CorefSubstitutor.substitute(input);
-      if(!input.equals(substitutedInput)) {
+      if (!input.equals(substitutedInput)) {
           System.out.println("INFO input substituted to: " + substitutedInput);
       }
 
@@ -282,9 +282,15 @@ public class Interpreter {
       ArrayList<CNF> inputs = new ArrayList<CNF>();
       Lexer lex = new Lexer(in);
       CNF cnf = CNF.parseSimple(lex);
+
+      List<String> measures = InterpretNumerics.getSumoTerms(substitutedInput);
+      for (String m : measures) {
+          lex = new Lexer(m);
+          CNF cnfnew = CNF.parseSimple(lex);
+          cnf.merge(cnfnew);
+      }
       inputs.add(cnf);
       ArrayList<String> kifClauses = interpretCNF(inputs);
-      kifClauses.addAll(InterpretNumerics.getSumoTerms(substitutedInput));
       return fromKIFClauses(kifClauses);
   }
 
