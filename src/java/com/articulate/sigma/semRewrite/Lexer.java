@@ -167,10 +167,10 @@ public class Lexer {
         tokenDefs.put(Var,          Pattern.compile("\\?[a-zA-Z][_a-z0-9_A-Z]*\\*?"));
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
+        tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+\\:?E?-?[0-9]*-?[0-9]*"));
         tokenDefs.put(Ident,        Pattern.compile("[0-9a-zA-Z][_\\-a-z0-9_A-Z]*\\*?"));
         tokenDefs.put(Zero,         Pattern.compile("\\!"));
         tokenDefs.put(Stop,         Pattern.compile("stop"));
-        tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+E?-?[0-9]*"));
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
         tokenDefs.put(Directive,    Pattern.compile("#[^\\n]*"));
         tokenDefs.put(QuotedString, Pattern.compile("'[^']*'"));
@@ -467,6 +467,7 @@ public class Lexer {
     
     private static String example2 = "bank2";
     private static String example3 = "at*";
+    private static String example4 = "num(PM-6, 8:30-5)";
     
     /** ***************************************************************
      * Test that comments and whitespace are normally ignored. 
@@ -603,13 +604,42 @@ public class Lexer {
     }
     
     /** ***************************************************************
+     * Check the positive case of AcceptLit(). 
+     */
+    private static void testAcceptClause() {
+
+        System.out.println("-------------------------------------------------");
+        System.out.println("INFO in Lexer.testAcceptClause()");
+        Lexer lex = new Lexer(example4);
+        try {
+            
+            Pattern value = tokenDefs.get(Number);
+            Matcher m = value.matcher("8:30");
+            if (m.lookingAt()) {
+                System.out.println("parse ok");
+            }
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /** ***************************************************************
      */
     public static void main(String[] args) {
         
-        testString();
+        //testString();
         //testLex();
         //testTerm();
         //testAcceptLit();
         //testErrors();
+        testAcceptClause();
     }
 }
