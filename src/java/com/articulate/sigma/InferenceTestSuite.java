@@ -427,8 +427,20 @@ public class InferenceTestSuite {
                 note = formula.substring(6,formula.length()-1);
             else if (formula.startsWith("(query"))
                 query = formula.substring(7,formula.length()-1);
-            else if (formula.startsWith("(answer"))
-                expectedAnswers.add(formula.substring(8,formula.length()-1));
+            else if (formula.startsWith("(answer")) {
+                String answerstring = formula.substring(8, formula.length() - 1).trim();
+                if (answerstring.equals("yes") || answerstring.equals("no")){
+                    expectedAnswers.add(answerstring);
+                }
+                else {
+                    if (answerstring.startsWith("(and"))
+                        answerstring = answerstring.substring(4, answerstring.length() - 1).trim();
+                    String[] answers = answerstring.split("\\)");
+                    for (String a : answers) {
+                        expectedAnswers.add(a.substring(a.indexOf("(") + 1, a.length()));
+                    }
+                }
+            }
             else if (formula.startsWith("(time"))
                 timeout = Integer.parseInt(formula.substring(6,formula.length()-1));
             else
@@ -446,9 +458,6 @@ public class InferenceTestSuite {
             ArrayList<String> tmpAnswers = kb.askNoProof(processedStmt,timeout,maxAnswers);
             actualAnswers.addAll(tmpAnswers);
         }
-
-        System.out.println("expectedAnswers = " + expectedAnswers);
-        System.out.println("actualAnswers   = " + actualAnswers);
 
         if (expectedAnswers.size()==1 && expectedAnswers.get(0).equals("yes")) {
             if (actualAnswers.size() > 0) {
