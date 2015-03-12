@@ -1502,6 +1502,7 @@ public class KB {
                     System.out.println("No response from EProver!");
                 else
                     System.out.println("Get response from EProver, start for parsing ...");
+                System.out.println("Results returned from E = \n" + EResult);
                 answers = TPTP3ProofProcessor.parseAnswerTuples(EResult, this, fp);
                 return answers;
             }
