@@ -126,12 +126,14 @@ public class TPTP3ProofProcessor {
 			for (int i = 0; i < supportSet.length; i++) {
 				//System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet[i]);
 				if (supportSet[i].indexOf("(") == -1) {
-					Integer stepnum = idTable.get(supportSet[i].trim());
-					if (stepnum == null)
-						System.out.println("Error in TPTP3ProofProcessor.parseSupports() no id: " + stepnum +
-								" for premises at step " + supportSet[i]);
-					else
-						prems.add(stepnum);
+					if (!supportSet[i].trim().equals("[symmetry]")) {
+						Integer stepnum = idTable.get(supportSet[i].trim());
+						if (stepnum == null)
+							System.out.println("Error in TPTP3ProofProcessor.parseSupports() no id: " + stepnum +
+									" for premises at step " + supportSet[i]);
+						else
+							prems.add(stepnum);
+					}
 				}
 			}
 		}
