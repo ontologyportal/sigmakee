@@ -117,22 +117,28 @@ public class Interpreter {
   }
   
   /** *************************************************************
+   * @return a list of strings in the format sumo(Class,word-num) 
+   * that specify the SUMO class of each word that isn't a stopword.
    */
   public static ArrayList<String> findWSD(ArrayList<String> clauses, HashMap<String,String> purewords) {
       
-      System.out.println("INFO in Interpreter.addWSD(): " + clauses);
+      //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
       KB kb = KBmanager.getMgr().getKB("SUMO");
       DependencyConverter.readFirstNames();
       ArrayList<String> results = new ArrayList<String>();
       ArrayList<String> pure = new ArrayList<String>();
       pure.addAll(purewords.keySet());
+      //System.out.println("INFO in Interpreter.addWSD(): words: " + pure);
       for (int i = 0; i < pure.size(); i++) {
           String pureword = pure.get(i);
+          //System.out.println("INFO in Interpreter.addWSD(): pureword:  " + pureword);
           if (WordNet.wn.stopwords.contains(pureword) || qwords.contains(pureword.toLowerCase()) || excluded(pureword))
               continue;
           String id = WSD.findWordSenseInContext(pureword, pure);
+          //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
           if (!StringUtil.emptyString(id)) {
               String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
+              //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
               if (!StringUtil.emptyString(sumo)) {
                   if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
                       sumo = sumo.substring(0,sumo.indexOf(" ")-1);
@@ -153,8 +159,10 @@ public class Interpreter {
           }      
           else {
               String synset = WSD.getBestDefaultSense(pureword);
+              //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
               if (!StringUtil.emptyString(synset)) {
                   String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
+                  //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
                   if (!StringUtil.emptyString(sumo)) {
                       if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
                           sumo = sumo.substring(0,sumo.indexOf(" ")-1);
@@ -180,7 +188,7 @@ public class Interpreter {
       Pattern p = Pattern.compile(pattern);
       Formula f = new Formula(form);
       Set<String> vars = f.collectAllVariables();
-      System.out.println("INFO in Interpreter.testAddQuantification(): vars: " + vars);
+      //System.out.println("INFO in Interpreter.findQuantification(): vars: " + vars);
       for (String v : vars) {
           Matcher matcher = p.matcher(v);
           if (matcher.matches()) 
@@ -193,7 +201,7 @@ public class Interpreter {
    */
   private static String prependQuantifier(ArrayList<String> vars, String form) {
       
-      System.out.println("INFO in Interpreter.prependQuantifier(): " + vars);
+      //System.out.println("INFO in Interpreter.prependQuantifier(): " + vars);
       StringBuffer sb = new StringBuffer();
       if (vars == null || vars.size() < 1)
           return form;
@@ -267,9 +275,10 @@ public class Interpreter {
       }
       HashMap<String,String> purewords = extractWords(results);
       ArrayList<String> wsd = findWSD(results,purewords);
-      results.addAll(wsd);           
-      String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
+      results.addAll(wsd);
       
+      String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
+      System.out.println("INFO in Interpreter.interpretSingle(): " + in);
       ArrayList<CNF> inputs = new ArrayList<CNF>();
       Lexer lex = new Lexer(in);
       CNF cnf = CNF.parseSimple(lex);
