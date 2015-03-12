@@ -69,6 +69,11 @@
   "valueB":"himself"
 },{
   "file":"GeorgeWashington.txt",
+  "sentence":14,
+  "valueA":"an advocate of a federal government",
+  "valueB":"Washington"
+},{
+  "file":"GeorgeWashington.txt",
   "sentenceA":1,
   "valueA":"George Washington",
   "sentenceB":15,

@@ -1,14 +1,19 @@
 package com.articulate.sigma.nlp.pipeline;
 
+import com.articulate.sigma.test.CVSExporter;
 import com.articulate.sigma.test.JsonReader;
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import edu.stanford.nlp.dcoref.CorefChain;
-import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.util.CoreMap;
 import junit.framework.TestCase;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
@@ -19,7 +24,7 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -28,18 +33,31 @@ import java.util.function.Function;
 @RunWith(Parameterized.class)
 public class CorefTest extends TestCase {
 
-    private static Map<String, Collection<CorefChain>> parsedDocuments = Maps.newHashMap();
+    private static LoadingCache<String, Annotation> DOCUMENTS_CACHED = CacheBuilder.newBuilder()
+            .build(new CacheLoader<String, Annotation>() {
+                @Override
+                public Annotation load(String fileName) throws Exception {
+                    URL url = Resources.getResource("resources/textfiles/" + fileName);
+                    Pipeline pipeline = new Pipeline();
+                    Annotation document = pipeline.annotate(Resources.toString(url, Charsets.UTF_8));
+                    return document;
+                }
+            });
 
     @Parameterized.Parameter(value= 0)
     public String fileName;
     @Parameterized.Parameter(value= 1)
-    public CorefPram corefA;
+    public CorefParam corefA;
     @Parameterized.Parameter(value= 2)
-    public CorefPram corefB;
+    public CorefParam corefB;
+
+    // swallows output by default
+    private static final CVSExporter exportResults = new CVSExporter(false, "Filename,Result,Coref A,Coref B,Sentence A, Sentence B");
 
     @AfterClass
-    public static void cleanUp() {
-        parsedDocuments.clear();
+    public static void cleanUp() throws IOException {
+        DOCUMENTS_CACHED.invalidateAll();
+        exportResults.flushIfEnabled();
     }
 
     @Parameterized.Parameters(name="<{0}> {1} ↔ {2}")
@@ -55,28 +73,17 @@ public class CorefTest extends TestCase {
                 String valueA = (String) jo.get("valueA");
                 String valueB = (String) jo.get("valueB");
                 return new Object[]{fileName,
-                        valueA == null ? CorefPram.of(sentenceA, (Long) jo.get("indexA")) : CorefPram.of(sentenceA, valueA),
-                        valueB == null ? CorefPram.of(sentenceB, (Long) jo.get("indexB")) : CorefPram.of(sentenceB, valueB)
+                        valueA == null ? CorefParam.of(sentenceA, (Long) jo.get("indexA")) : CorefParam.of(sentenceA, valueA),
+                        valueB == null ? CorefParam.of(sentenceB, (Long) jo.get("indexB")) : CorefParam.of(sentenceB, valueB)
                 };
             }
         });
     }
 
-    private Collection<CorefChain> getCorefChain(String fileName) throws IOException {
-        Collection<CorefChain> corefs = parsedDocuments.get(fileName);
-        if(!parsedDocuments.containsKey(fileName)) {
-            URL url = Resources.getResource("resources/textfiles/" + fileName);
-            Pipeline pipeline = new Pipeline();
-            Annotation document = pipeline.annotate(Resources.toString(url, Charsets.UTF_8));
-            corefs = document.get(CorefCoreAnnotations.CorefChainAnnotation.class).values();
-            parsedDocuments.put(fileName, corefs);
-        }
-        return corefs;
-    }
-
     @Test
-    public void test() throws IOException {
-        Collection<CorefChain> corefs = getCorefChain(fileName);
+    public void test() throws Exception {
+        Annotation document = DOCUMENTS_CACHED.get(fileName);
+        Collection<CorefChain> corefs = document.get(CorefChainAnnotation.class).values();
         boolean hasBoth = FluentIterable.from(corefs)
                 .filter(new Predicate<CorefChain>() {
                     @Override
@@ -110,6 +117,14 @@ public class CorefTest extends TestCase {
                                 });
                     }
                 });
+
+        // Export results if export enabled
+        List<CoreMap> coreMaps = document.get(CoreAnnotations.SentencesAnnotation.class);
+        exportResults.addRow(new String[]{fileName, hasBoth ? "OK" : "FAILED"
+                , corefA.getRef(), corefB.getRef()
+                , coreMaps.get(corefA.getSentenceIndex()).toString()
+                , corefA.getSentenceIndex() == corefB.getSentenceIndex() ? "" : coreMaps.get(corefB.getSentenceIndex()).toString()});
+
         if(!hasBoth) {
             for(CorefChain chain : corefs) {
                 System.out.println(chain);
