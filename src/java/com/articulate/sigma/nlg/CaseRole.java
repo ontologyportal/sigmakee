@@ -15,12 +15,6 @@ import java.util.Collection;
 public enum CaseRole {
     AGENT, ATTENDS, DESTINATION, DIRECTION, EVENTPARTLYLOCATED, EXPERIENCER, INSTRUMENT, MOVES, ORIGIN, PATH, PATIENT, RESOURCE, OTHER;
 
-    static KB kb = KBmanager.getMgr().getKB("SUMO");
-    // Perhaps useful for unit testing:
-    public static void setKBmanager(KB kb) {
-        CaseRole.kb = kb;
-    }
-
     /******************************************************************
      * Is the input string a valid case role?
      * Note that this method is case-sensitive.
@@ -59,7 +53,7 @@ public enum CaseRole {
      * @param input
      * @return
      */
-    public static CaseRole toCaseRole(String input)     {
+    public static CaseRole toCaseRole(String input, KB kb)     {
         CaseRole role = null;
         try {
             role = CaseRole.valueOf(input.toUpperCase());

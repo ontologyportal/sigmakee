@@ -61,7 +61,7 @@ public class SumoProcessCollector {
         sumoProcess = new SumoProcess(process, kb);
         //name = process;
 
-        CaseRole caseRole = CaseRole.toCaseRole(role);
+        CaseRole caseRole = CaseRole.toCaseRole(role, kb);
         roles.put(caseRole, entity);
     }
 
@@ -99,7 +99,7 @@ public class SumoProcessCollector {
         if (! kb.kbCache.isInstanceOf(role, "CaseRole")) {
             throw new IllegalArgumentException("Invalid role: " + msg);
         }
-        CaseRole caseRole = CaseRole.toCaseRole(role);
+        CaseRole caseRole = CaseRole.toCaseRole(role, kb);
         roles.put(caseRole, entity);
     }
 

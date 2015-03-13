@@ -15,7 +15,7 @@ import com.google.common.collect.Sets;
  * A structure allowing one Subject-Verb-Object element in a sentence to "know" about the others.
  */
 public class Sentence {
-    private static KB kb;
+    private KB kb;
 
     // TODO: consider having SVOElement and SumoProcess implement an interface; right now they all share one
     // method--getSurfaceForm( )
@@ -42,15 +42,6 @@ public class Sentence {
      * Constructor.
      * @param roles
      * @param process
-     */
-    public Sentence(Multimap<CaseRole, String> roles, SumoProcess process)   {
-        this(roles, process, KBmanager.getMgr().getKB("SUMO"));
-    }
-
-    /**************************************************************************************
-     * Constructor.
-     * @param roles
-     * @param process
      * @param kb
      */
     public Sentence(Multimap<CaseRole, String> roles, SumoProcess process, KB kb)   {
@@ -59,7 +50,7 @@ public class Sentence {
 
         verb = new SumoProcess(process, kb);
 
-        Sentence.kb = kb;
+        this.kb = kb;
     }
 
     /**************************************************************************************
