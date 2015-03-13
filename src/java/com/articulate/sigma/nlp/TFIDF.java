@@ -60,7 +60,9 @@ public class TFIDF {
     
       // when true, indicates that responses should be the line after the matched line
     private boolean alternating = false;
-
+    
+    private static boolean asResource = true; // use JUnit resource path for input file
+    
       // similarity of each document to the query (index -1)
     private HashMap<Integer,Float> docSim = new HashMap<Integer,Float>();
 
@@ -224,8 +226,12 @@ public class TFIDF {
        // System.out.println("INFO in readStopWords(): Reading stop words");
         String filename = "";
         try {
-            URL stopWordsFile = Resources.getResource("resources/textfiles/stopwords.txt");
-            filename = stopWordsFile.getPath();
+            if (asResource) {
+                URL stopWordsFile = Resources.getResource("resources/textfiles/stopwords.txt");
+                filename = stopWordsFile.getPath();
+            }
+            else
+                filename = "stopwords.txt";
             FileReader r = new FileReader(filename);
             LineNumberReader lr = new LineNumberReader(r);
             String line;
@@ -372,10 +378,18 @@ public class TFIDF {
         int linecount = lines.size() - 1;
         int counter = 0;
         String line = "";
+        String filename = "";
         BufferedReader omcs = null;
         try {
-            URL fileURL = Resources.getResource(fname);
-            String filename = fileURL.getPath();
+            if (asResource) {
+                URL fileURL = Resources.getResource(fname);
+                filename = fileURL.getPath();
+            }
+            else
+                filename = fname;
+            File f = new File(filename);
+            if (!f.exists())
+                filename = fname;
             omcs = new BufferedReader(new FileReader(filename));
             /* readLine is a bit quirky :
              * it returns the content of a line MINUS the newline.
@@ -512,21 +526,29 @@ public class TFIDF {
      */
     private static void run() {
 
+        run("ShellDoc.txt");
+    }
+        
+    /** *************************************************************
+     * Run with a given file
+     */
+    private static void run(String fname) {
+
         TFIDF cb = new TFIDF();
         cb.readStopWords();
         //System.out.println("Read movie lines");
         //int linecount = cb.readMovieLinesFile();
         //System.out.println("Read open mind");
         //linecount = linecount + cb.readOpenMind();
-        System.out.println("Read Shell");
-        int linecount = cb.readFile("ShellDoc.txt");
+        System.out.println(fname);
+        int linecount = cb.readFile(fname);
 
         System.out.println("Caclulate IDF");
         cb.calcIDF(linecount);
         System.out.println("Caclulate TFIDF");
         cb.calcTFIDF();
 
-        System.out.println("Hi, I'm a chatbot, tell/ask me something");
+        //System.out.println("Hi, I'm a chatbot, tell/ask me something");
         boolean done = false;
         while (!done) {
             Console c = System.console();
@@ -559,7 +581,18 @@ public class TFIDF {
      * a query and an expected answer.
      */
     public static void main(String[] args) {
-        //run();
+        
+        if (args != null && args.length > 0 && args[0].equals("-h")) {
+            System.out.println("Usage: ");
+            System.out.println("TFIDF -h         % show this help info");
+            System.out.println("      -f fname   % use a particular input file");
+        }
+        else if (args != null && args.length > 1 && args[0].equals("-f")) {
+            asResource = false;
+            run(args[1]);
+        }
+        else
+            run();
     }
 }
  
