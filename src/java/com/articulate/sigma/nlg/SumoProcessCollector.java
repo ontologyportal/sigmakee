@@ -5,12 +5,16 @@ import com.google.common.collect.*;
 
 import java.util.Map;
 
+import static com.articulate.sigma.nlg.VerbProperties.*;
+
 /**
  * This object represents a process or an event, holding information on its case roles as
  * well as the entities which play that role.
  */
 public class SumoProcessCollector {
     private SumoProcess sumoProcess;
+
+    private VerbProperties.Polarity polarity = Polarity.AFFIRMATIVE;
 
     // Use of TreeMultimap ensures iteration is predetermined.
     private final Multimap<CaseRole, String> roles = TreeMultimap.create();
@@ -71,6 +75,19 @@ public class SumoProcessCollector {
     }
 
     /**************************************************************************************
+     * Getter and setter for polarity field.
+     *
+     */
+    public Polarity getPolarity() {
+        return polarity;
+    }
+
+    public void setPolarity(Polarity polarity) {
+        this.polarity = polarity;
+        this.sumoProcess.setPolarity(polarity);
+    }
+
+    /**************************************************************************************
      * Add a new role/entity pair to this event.
      * @param role
      * @param arg
@@ -78,6 +95,10 @@ public class SumoProcessCollector {
     public void addRole(String role, String arg) {
         String entity = checkEntityCase(arg);
 
+        String msg = "role = " + role + "; entity = " + entity + ".";
+        if (! kb.kbCache.isInstanceOf(role, "CaseRole")) {
+            throw new IllegalArgumentException("Invalid role: " + msg);
+        }
         CaseRole caseRole = CaseRole.toCaseRole(role);
         roles.put(caseRole, entity);
     }
@@ -126,6 +147,7 @@ public class SumoProcessCollector {
      */
     @Override
     public String toString()  {
+        // FIXME: current implementation doesn't indicate polarity
         StringBuilder sb = new StringBuilder();
 
         for(Map.Entry<CaseRole, String> mapPair : roles.entries())  {
@@ -149,4 +171,26 @@ public class SumoProcessCollector {
         return sentence.toNaturalLanguage();
     }
 
+    /**************************************************************************************************************
+     * Merge the roles of the given SumoProcessCollector into this object.
+     * If new SumoProcessCollector's polarity is Negative, set this object's to the same.
+     * @param newProcessCollector
+     */
+    public void merge(SumoProcessCollector newProcessCollector) {
+        String thisVerb = this.sumoProcess.getVerb();
+        String newVerb = newProcessCollector.getSumoProcess().getVerb();
+
+        if (! thisVerb.equals(newVerb))   {
+            String msg = "Cannot merge because the objects do not have identical processes: process1 = " +
+                    thisVerb + "; process2 = " + newVerb;
+            throw new IllegalArgumentException(msg);
+        }
+
+        roles.putAll(newProcessCollector.roles);
+
+        // If either Collector has a Negative polarity, the merged one should as well.
+        if (newProcessCollector.getPolarity().equals(Polarity.NEGATIVE))    {
+            this.setPolarity(Polarity.NEGATIVE);
+        }
+    }
 }

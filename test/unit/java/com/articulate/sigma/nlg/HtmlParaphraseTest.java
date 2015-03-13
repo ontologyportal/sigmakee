@@ -143,15 +143,22 @@ public class HtmlParaphraseTest extends UnitTestBase {
     public void testHtmlParaphraseNamesNot()     {
         String stmt = "(not (names \"John\" ?H))";
 
-        String expectedResult = "an entity doesn't have name \"John\"";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "an entity doesn't have name \"John\"";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "an entity doesn't have name \"John\"";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
     @Test
-    public void testHtmlParaphraseDrivingNot()     {
+    public void testHtmlParaphraseDrivingNot1()     {
         String stmt =       "(not \n" +
                 "               (exists (?D ?H)\n" +
                 "                   (and\n" +
@@ -159,10 +166,39 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 "                       (instance ?H Human)\n" +
                 "                       (agent ?D ?H))))";
 
-        String expectedResult = "there don't exist a process and an agent such that the process is an instance of driving and the agent is an instance of human and the agent is an agent of the process";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there don't exist a process and an agent such that the process is an instance of driving and the agent is an instance of human and the agent is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a human doesn't drive";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testHtmlParaphraseDrivingNot2()     {
+        String stmt =       "(not\n" +
+                "               (exists (?D)\n" +
+                "                   (and\n" +
+                "                       (instance ?D Driving)\n" +
+                "                       (agent ?D John))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there doesn't exist a process such that the process is an instance of driving and John is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "John doesn't drive";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
@@ -260,7 +296,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
     }
 
     @Test
-    public void testHtmlParaphraseJohnDrivingNot()     {
+    public void testHtmlParaphraseJohnDrivingNot1()     {
         String stmt =   "(not\n" +
                 "           (exists (?D ?H)\n" +
                 "               (and\n" +
@@ -269,10 +305,18 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 "               (names \"John\" ?H)\n" +
                 "               (agent ?D ?H))))";
 
-        String expectedResult = "there don't exist a process and an agent such that the process is an instance of driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there don't exist a process and an agent such that the process is an instance of driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there don't exist a process and an agent such that the process is an instance of driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        // FIXME: I think this says "No one named John drives."
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
@@ -785,10 +829,17 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 "                    (patient ?event ?bank) \n" +
                 "                    (agent ?event ?dog)))";
 
-        String expectedResult = "there exist an entity, an agent and a process such that for all an object if the object is an instance of canine and the object is not equal to the agent, then a time duration is greater than another time duration and the age of the agent is the time duration and the age of the object is the other time duration and the entity is an instance of bank- financial organization and the agent is an instance of canine and the process is an instance of motion and the entity is a patient of the process and the agent is an agent of the process";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an entity, an agent and a process such that for all an object if the object is an instance of canine and the object is not equal to the agent, then a time duration is greater than another time duration and the age of the agent is the time duration and the age of the object is the other time duration and the entity is an instance of bank- financial organization and the agent is an instance of canine and the process is an instance of motion and the entity is a patient of the process and the agent is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there exist an entity, an agent and a process such that for all an object if the object is an instance of canine and the object is not equal to the agent, then a time duration is greater than another time duration and the age of the agent is the time duration and the age of the object is the other time duration and the entity is an instance of bank- financial organization and the agent is an instance of canine and the process is an instance of motion and the entity is a patient of the process and the agent is an agent of the process";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
@@ -857,7 +908,6 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 "                    (destination ?event Sudan)))";
 
         String expectedResult = "there exist an agent and a process such that the process is an instance of transportation and male is an attribute of the agent and the agent is an instance of human and the agent is an agent of the process and the process ends at sudan";
-        //String expectedResult = "there exist an agent and a process such that a human performs a transportation";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
@@ -919,11 +969,20 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 "               (not\n" +
                 "                   (instance ?AGENT Human))))";
 
-        String expectedResult = "if an object is an instance of animal language and an agent is an agent of a process and the object is an instrument for the process, " +
-                "then the agent is an instance of animal and the agent is not an instance of human";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "if an object is an instance of animal language and an agent is an agent of a process and the object is an instrument for the process, " +
+                "then the agent is an instance of animal and the agent is not an instance of human";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        // FIXME:
+        //expectedResult = "if an animal is speaking an animal language, then the animal is not human";
+        expectedResult = "if an object is an instance of animal language and an agent is an agent of a process and the object is an instrument for the process, then the agent is an instance of animal and the agent is not an instance of human";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
@@ -1112,12 +1171,6 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
 
-        // Online version below.
-//        String expectedResult = "if an agent is an instance of animal, " +
-//                "then there exists a process such that the process is an instance of body motion and the agent is an agent of the process " +
-//                "or there exists an attribute such that the attribute is an instance of body position and the attribute is an attribute of the agent";
-
-        // Sigma version below.
         String expectedResult = "if an agent is an instance of animal, " +
                 "then there exists a process such that the process is an instance of body motion and the agent is an agent of the process " +
                 "or there exists an entity such that the entity is an instance of body position and the entity is an attribute of the agent";
@@ -1153,6 +1206,62 @@ public class HtmlParaphraseTest extends UnitTestBase {
 
         languageFormatter.setDoInformalNLG(true);
         expectedResult = "John-1 sees a self connected object";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testJohnSeesSelfConnectedObjectNot1()     {
+        String stmt =   "(exists (?event ?object)\n" +
+                "           (and \n" +
+                "               (instance John-1 Human) \n" +
+                "               (instance ?event Seeing) \n" +
+                "               (instance ?object SelfConnectedObject) \n" +
+                "               (experiencer ?event John-1) \n" +
+                "               (not \n" +
+                "                   (patient ?event ?object))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there exist a process and an entity such that John-1 is an instance of human and the process is an instance of seeing and the entity is an instance of self connected object and John-1 experiences the process and the entity is not a patient of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "John-1 doesn't see a self connected object";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testJohnSeesSelfConnectedObjectNot2()     {
+        String stmt =   "(exists (?event ?object)\n" +
+                "           (and \n" +
+                "               (instance John-1 Human) \n" +
+                "               (instance ?event Seeing) \n" +
+                "               (instance ?object SelfConnectedObject) \n" +
+                "               (not \n" +
+                "                   (and \n" +
+                "                       (experiencer ?event John-1) \n" +
+                "                       (patient ?event ?object)))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there exist a process and an entity such that John-1 is an instance of human and the process is an instance of seeing and the entity is an instance of self connected object and ~{ John-1 experiences the process } or ~{ the entity is a patient of the process }";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        // FIXME:
+        // expectedResult = "Either John-1 sees something that isn't a self connected object or somebody other than John sees a self-connected object";
+        // expectedResult = "John-1 doesn't see a self connected object";
+        expectedResult = "there exist a process and an entity such that John-1 is an instance of human and the process is an instance of seeing and the entity is an instance of self connected object and ~{ John-1 experiences the process } or ~{ the entity is a patient of the process }";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
@@ -1228,6 +1337,56 @@ public class HtmlParaphraseTest extends UnitTestBase {
         languageFormatter.setDoInformalNLG(true);
         // FIXME: the CaseRole has influence on the verb: expectedResult = "an artifact moves";
         expectedResult = "an artifact experiences a body motion";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testArtifactMovesNot1()     {
+        String stmt =   "(not\n" +
+                "           (exists (?event)\n" +
+                "               (and \n" +
+                "                   (instance ?event BodyMotion) \n" +
+                "                   (instance Thing1 Artifact) \n" +
+                "                   (moves ?event Thing1))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there doesn't exist a motion such that the motion is an instance of body motion and Thing1 is an instance of artifact and Thing1 is a moves of the motion";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        // FIXME: the CaseRole has influence on the verb: expectedResult = "an artifact moves";
+        expectedResult = "Thing1 doesn't experience a body motion";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testArtifactMovesNot2()     {
+        String stmt =   "(exists (?event ?thing)\n" +
+                "           (and \n" +
+                "               (instance ?event BodyMotion) \n" +
+                "               (instance ?thing Artifact) \n" +
+                "               (not \n" +
+                "                   (moves ?event ?thing))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+
+        String expectedResult = "there exist a motion and an object such that the motion is an instance of body motion and the object is an instance of artifact and the object is not a moves of the motion";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        // FIXME: the CaseRole has influence on the verb: expectedResult = "an artifact moves";
+        expectedResult = "an artifact doesn't experience a body motion";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
@@ -1553,6 +1712,52 @@ public class HtmlParaphraseTest extends UnitTestBase {
         languageFormatter.setDoInformalNLG(true);
         //expectedResult = "if an agent swims, then the agent is in a body of water";
         expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an entity such that the entity is an instance of water area and the agent is located at the entity";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testObjectFillsHole()     {
+        String stmt =   "(exists (?OBJ ?HOLE)\n" +
+                "           (and\n" +
+                "               (instance ?OBJ Object)\n" +
+                "               (instance ?HOLE Hole)\n" +
+                "               (fills ?OBJ ?HOLE)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an object and a hole such that the object is an instance of object and the hole is an instance of hole and the object fills the hole";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there exist an object and a hole such that the object is an instance of object and the hole is an instance of hole and the object fills the hole";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testObjectFillsHoleNot()     {
+        String stmt =   "(exists (?OBJ ?HOLE)\n" +
+                "           (and\n" +
+                "               (instance ?OBJ Object)\n" +
+                "               (instance ?HOLE Hole)\n" +
+                "               (not\n" +
+                "                   (fills ?OBJ ?HOLE))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an object and a hole such that the object is an instance of object and the hole is an instance of hole and the object doesn't fill the hole";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        //expectedResult = "some object doesn't fill a hole";
+        expectedResult = "there exist an object and a hole such that the object is an instance of object and the hole is an instance of hole and the object doesn't fill the hole";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }

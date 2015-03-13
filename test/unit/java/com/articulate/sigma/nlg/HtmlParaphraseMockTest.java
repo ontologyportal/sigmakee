@@ -38,10 +38,19 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                       (agent ?D ?H))))";
 
 
-        String expectedResult = "there don't exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent is an agent of the process";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
+
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there don't exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a human doesn't drive";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
@@ -69,10 +78,18 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                       (instance Harry Human)\n" +
                 "                       (agent ?D Harry))))";
 
-        String expectedResult = "there doesn't exist a process such that the process is an instance of Driving and Harry is an instance of human and Harry is an agent of the process";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
+
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there doesn't exist a process such that the process is an instance of Driving and Harry is an instance of human and Harry is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "Harry doesn't drive";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
@@ -97,15 +114,23 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
         String stmt =   "(not\n" +
                 "           (exists (?D ?H)\n" +
                 "               (and\n" +
-                "               (instance ?D Driving)\n" +
-                "               (instance ?H Human)\n" +
-                "               (names \"John\" ?H)\n" +
-                "               (agent ?D ?H))))";
+                "                   (instance ?D Driving)\n" +
+                "                   (instance ?H Human)\n" +
+                "                   (names \"John\" ?H)\n" +
+                "                   (agent ?D ?H))))";
 
-        String expectedResult = "there don't exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
+
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there don't exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "there don't exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 
@@ -302,10 +327,19 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                       (instance ?event2 Reading) \n" +
                 "                       (patient ?event2 ?book))))))";
 
-        String expectedResult = "for all an entity and a process if male is an attribute of John-1 and female is an attribute of Mary-1 and John-1 is an instance of human and Mary-1 is an instance of human and the entity is an instance of Book and Mary-1 is an agent of the process and the process ends at John-1 and the process is an instance of Giving and the entity is a patient of the process, then there doesn't exist another process such that male is an attribute of John-1 and John-1 is an instance of human and the entity is an instance of Object and John-1 is an agent of the other process and the other process is an instance of Reading and the entity is a patient of the other process";
-        String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
+
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "for all an entity and a process if male is an attribute of John-1 and female is an attribute of Mary-1 and John-1 is an instance of human and Mary-1 is an instance of human and the entity is an instance of Book and Mary-1 is an agent of the process and the process ends at John-1 and the process is an instance of Giving and the entity is a patient of the process, then there doesn't exist another process such that male is an attribute of John-1 and John-1 is an instance of human and the entity is an instance of Object and John-1 is an agent of the other process and the other process is an instance of Reading and the entity is a patient of the other process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        //expectedResult = "if mary gives john a book then he doesn't read it";
+        actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
 

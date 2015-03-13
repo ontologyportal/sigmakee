@@ -1,6 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
 import com.articulate.sigma.nlg.LanguageFormatterStack;
 import org.junit.Test;
 
@@ -8,7 +9,9 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class LanguageFormatterStackTest {
+public class LanguageFormatterStackTest extends SigmaMockTestBase {
+    private final KB kb = kbMock;
+
 
     @Test
     public void testInsertQuantifier() {
@@ -197,6 +200,67 @@ public class LanguageFormatterStackTest {
         // Now both are in a "processed" state.
         assertFalse(LanguageFormatterStack.areFormulaArgsProcessed(stack.getCurrStackElement()));
         assertTrue(LanguageFormatterStack.areFormulaArgsProcessed(stack.getPrevStackElement()));
+    }
+
+
+    @Test
+    public void testPushCurrSumoProcessDown() {
+        String string1 = "(and \n" +
+                "               (instance John-1 Human) \n" +
+                "               (instance ?event Seeing) \n" +
+                "               (instance ?object SelfConnectedObject) \n" +
+                "               (experiencer ?event John-1) \n" +
+                "               (not \n" +
+                "                   (patient ?event ?object)))";
+
+
+        LanguageFormatterStack stack = new LanguageFormatterStack();
+
+        // Push items onto the stack.
+        stack.pushNew();
+        Formula formula1 = new Formula(string1);
+        stack.insertFormulaArgs(formula1);
+        stack.pushNew();
+        String string2 = formula1.complexArgumentsToArrayList(1).get(1);
+        Formula formula2 = new Formula(string2);
+        stack.insertFormulaArgs(formula2);
+        stack.pushNew();
+        String string3 = formula2.complexArgumentsToArrayList(1).get(1);
+        Formula formula3 = new Formula(string3);
+        stack.insertFormulaArgs(formula3);
+
+        // Nothing marked as processed except for var quantifier in first element at bottom of stack.
+        assertEquals(0, stack.getCurrStackElement().getSumoProcessMap().size());
+        assertEquals(0, stack.getPrevStackElement().getSumoProcessMap().size());
+
+        // Set the Sumo process maps for the top two elements.
+        SumoProcessCollector processCollector = new SumoProcessCollector(kb, "experiencer", "Seeing", "John-1");
+        stack.getPrevStackElement().getSumoProcessMap().put("?event", processCollector);
+
+        processCollector = new SumoProcessCollector(kb, "patient", "Seeing", "?object");
+        stack.getCurrStackElement().getSumoProcessMap().put("?event", processCollector);
+
+        // Set top element's state to negative.
+        stack.getCurrStackElement().setProcessPolarity("?event", VerbProperties.Polarity.NEGATIVE);
+
+        // Now the stack elements should be populated.
+        assertEquals(1, stack.getCurrStackElement().getSumoProcessMap().size());
+        assertEquals(1, stack.getCurrStackElement().getSumoProcessMap().get("?event").getRolesAndEntities().size());
+        assertEquals(VerbProperties.Polarity.NEGATIVE, stack.getCurrStackElement().getSumoProcessMap().get("?event").getPolarity());
+        assertEquals(1, stack.getPrevStackElement().getSumoProcessMap().size());
+        assertEquals(1, stack.getPrevStackElement().getSumoProcessMap().get("?event").getRolesAndEntities().size());
+        assertEquals(VerbProperties.Polarity.AFFIRMATIVE, stack.getPrevStackElement().getSumoProcessMap().get("?event").getPolarity());
+
+        // Call pushCurrSumoProcessDown().
+        stack.pushCurrSumoProcessDown();
+
+        // Now the second-from-the-top should contain the information in the topmost element. The topmost won't have changed.
+        assertEquals(1, stack.getCurrStackElement().getSumoProcessMap().size());
+        assertEquals(1, stack.getCurrStackElement().getSumoProcessMap().get("?event").getRolesAndEntities().size());
+        assertEquals(VerbProperties.Polarity.NEGATIVE, stack.getCurrStackElement().getSumoProcessMap().get("?event").getPolarity());
+        assertEquals(1, stack.getPrevStackElement().getSumoProcessMap().size());
+        assertEquals(2, stack.getPrevStackElement().getSumoProcessMap().get("?event").getRolesAndEntities().size());
+        assertEquals(VerbProperties.Polarity.NEGATIVE, stack.getPrevStackElement().getSumoProcessMap().get("?event").getPolarity());
     }
 
 }

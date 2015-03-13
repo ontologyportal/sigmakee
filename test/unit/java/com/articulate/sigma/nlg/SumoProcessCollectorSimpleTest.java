@@ -17,7 +17,7 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
     private final KB knowledgeBase = this.kbMock;
 
     @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
+    public ExpectedException expectedException = ExpectedException.none();
 
     // Testing for null/empty parameters.
     @Test(expected=IllegalArgumentException.class)
@@ -45,8 +45,8 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
      */
     @Test
     public void testInvalidRole() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Invalid role: role = invalidRole; process = hi; entity = there.");
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage("Invalid role: role = invalidRole; process = hi; entity = there.");
 
         new SumoProcessCollector(knowledgeBase, "invalidRole", "hi", "there");
     }
@@ -56,8 +56,8 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
      */
     @Test
     public void testInvalidProcess() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Process parameter is not a Process: role = agent; process = EatingBadTastingOatmeal; entity = John.");
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage("Process parameter is not a Process: role = agent; process = EatingBadTastingOatmeal; entity = John.");
 
         new SumoProcessCollector(knowledgeBase, "agent", "EatingBadTastingOatmeal", "John");
     }
@@ -188,5 +188,85 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         assertEquals(1, actualMap.size());
     }
 
+    /**
+     * Throws IllegalArgumentException because the events of the two processes don't match.
+     */
+    @Test
+    public void testMergeMultipleRolesFail() {
+        SumoProcessCollector process1 = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
+
+        SumoProcessCollector process2 = new SumoProcessCollector(knowledgeBase, "agent", "Eating", "?H");
+        process2.addRole("patient", "?C");
+
+        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expectMessage("Cannot merge because the objects do not have identical processes: process1 = Driving; process2 = Eating");
+        process1.merge(process2);
+    }
+
+    @Test
+    public void testMergeMultipleRolesNoIntersection() {
+        SumoProcessCollector process1 = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
+        process1.addRole("patient", "?C");
+
+        SumoProcessCollector process2 = new SumoProcessCollector(knowledgeBase, "patient", "Driving", "?D");
+        process2.addRole("destination", "?P");
+
+        process1.merge(process2);
+
+        String expected = "agent Driving ?H\n" +
+                "destination Driving ?P\n" +
+                "patient Driving ?C\n" +
+                "patient Driving ?D\n";
+        assertEquals(expected, process1.toString());
+        expected = "?H drives ?C and ?D to ?P";
+        assertEquals(expected, process1.toNaturalLanguage());
+    }
+
+    @Test
+    public void testMergeMultipleRolesAgentIntersection() {
+        SumoProcessCollector process1 = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
+        process1.addRole("patient", "?C");
+
+        SumoProcessCollector process2 = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
+        process2.addRole("patient", "?D");
+        process2.addRole("destination", "?P");
+
+        process1.merge(process2);
+
+        String expected = "agent Driving ?H\n" +
+                "destination Driving ?P\n" +
+                "patient Driving ?C\n" +
+                "patient Driving ?D\n";
+        assertEquals(expected, process1.toString());
+        expected = "?H drives ?C and ?D to ?P";
+        assertEquals(expected, process1.toNaturalLanguage());
+    }
+
+    @Test
+    public void testMergeMultipleRolesAgentIntersectionNegative() {
+        SumoProcessCollector process1 = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
+        process1.addRole("patient", "?C");
+
+        SumoProcessCollector process2 = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "?H");
+        process2.addRole("patient", "?D");
+        process2.addRole("destination", "?P");
+        process2.setPolarity(VerbProperties.Polarity.NEGATIVE);
+
+        // Verify polarity before the merge.
+        assertEquals(VerbProperties.Polarity.AFFIRMATIVE, process1.getPolarity());
+        assertEquals(VerbProperties.Polarity.NEGATIVE, process2.getPolarity());
+
+        process1.merge(process2);
+
+        assertEquals(VerbProperties.Polarity.NEGATIVE, process1.getPolarity());
+
+        String expected = "agent Driving ?H\n" +
+                "destination Driving ?P\n" +
+                "patient Driving ?C\n" +
+                "patient Driving ?D\n";
+        assertEquals(expected, process1.toString());
+        expected = "?H doesn't drive ?C and ?D to ?P";
+        assertEquals(expected, process1.toNaturalLanguage());
+    }
 
 }

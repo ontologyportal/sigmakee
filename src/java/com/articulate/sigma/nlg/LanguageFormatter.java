@@ -46,8 +46,8 @@ public class LanguageFormatter {
 
     private final Map<String, HashSet<String>> variableToInstanceMap;
 
-    // FIXME: Temporarily disable Informal NLG for certain logical operators.
-    private static final List<String> notReadyOperators = Lists.newArrayList("not");
+    // FIXME: Verify that we handle all operators, then delete this field.
+    private static final List<String> notReadyOperators = Lists.newArrayList();
 
     /**
      * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
@@ -217,7 +217,7 @@ public class LanguageFormatter {
         // PredicateFn.
         String pred = f.car();
 
-        handleCaseRole(f, pred);
+        handleCaseRole(f, pred, isNegMode);
 
         // Mark the predicate as processed.
         // FIXME: handle other predicates here: located, orientation, etc.
@@ -241,10 +241,16 @@ public class LanguageFormatter {
         if (NLGUtils.logicalOperator(pred)) {
             ans = paraphraseLogicalOperator(stmt, isNegMode, depth+1);
 
-            // "Concatenate" the informal NLG with the operator
             List<String> translations = theStack.getCurrStackFormulaArgs();
+            String translation = "";
+            if (translations.size() > 1) {
+                // "Concatenate" the informal NLG with the operator, e.g. if repeated entity use "the" instead of "a".
+                translation = generateFormalNaturalLanguage(translations, pred, isNegMode);
+            }
+            else if (translations.size() == 1) {
+                translation = translations.get(0);
+            }
 
-            String translation = generateFormalNaturalLanguage(translations, pred, isNegMode);
             if (! translation.isEmpty()) {
                 theStack.getCurrStackElement().setTranslation(translation, true);
             }
@@ -293,8 +299,9 @@ public class LanguageFormatter {
      * there, update it with the new information.
      * @param formula
      * @param caseRole
+     * @param isNegMode
      */
-    private void handleCaseRole(Formula formula, String caseRole) {
+    private void handleCaseRole(Formula formula, String caseRole, boolean isNegMode) {
         if (! doInformalNLG)    {
             return;
         }
@@ -322,12 +329,20 @@ public class LanguageFormatter {
                                 SumoProcessCollector sProcess = thisProcessMap.get(processInstanceName);
                                 //String resolvedParticipant = resolveVariable(processParticipant);
                                 sProcess.addRole(caseRole, processParticipant);
+
+                                if (isNegMode)  {
+                                    sProcess.setPolarity(VerbProperties.Polarity.NEGATIVE);
+                                }
                             } else {
                                 // Insert into stack.
                                 String resolvedProcessName = resolveVariable(processInstanceName);
                                 //String resolvedParticipant = resolveVariable(processParticipant);
                                 SumoProcessCollector sProcess = new SumoProcessCollector(kb, caseRole, resolvedProcessName, processParticipant);
                                 thisProcessMap.put(processInstanceName, sProcess);
+
+                                if (isNegMode)  {
+                                    sProcess.setPolarity(VerbProperties.Polarity.NEGATIVE);
+                                }
                             }
                         }
                     }
@@ -387,14 +402,36 @@ public class LanguageFormatter {
                 doInformalNLG = false;
             }
 
-            if (pred.equals("not")) {
-                ans = paraphraseStatement(f.car(), true, depth + 1);
-                return ans;
-            }
-
             // Push new element onto the stack.
             theStack.pushNew();
             LanguageFormatterStack.StackElement inElement = theStack.getCurrStackElement();
+
+            if (pred.equals("not")) {
+                theStack.setPolarity(VerbProperties.Polarity.NEGATIVE);
+                ans = paraphraseStatement(f.car(), true, depth + 1);
+                inElement.setProcessPolarity(VerbProperties.Polarity.NEGATIVE);
+                theStack.pushCurrSumoProcessDown();
+
+                // FIXME: for next iteration of this ticket; encapsulate this code in LanguageFormatterStack
+//                if (theStack.getCurrStackElement().getTranslated())     {
+//                    String translation = theStack.getCurrStackElement().getTranslation();
+//                    theStack.getPrevStackElement().setTranslation(translation, true);
+//                    theStack.pop(inElement);
+//                    theStack.pushCurrTranslatedStateDown(stmt);
+//                    theStack.pop(theStack.getCurrStackElement());
+//                }
+//                else    {
+//                    theStack.pushCurrTranslatedStateDown(f.car());
+//                    theStack.pop(inElement);
+//                }
+
+                theStack.pushCurrTranslatedStateDown(f.car());
+                theStack.pop(inElement);
+
+                // FIXME: what is the condition for the next line to be necessary?
+                theStack.markFormulaArgAsProcessed(stmt);
+                return ans;
+            }
 
             try {
                 String arg = null;

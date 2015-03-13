@@ -15,6 +15,8 @@ import java.util.Map;
 public class LanguageFormatterStack {
     private final List<StackElement> theStack = Lists.newArrayList();
 
+    private VerbProperties.Polarity polarity = VerbProperties.Polarity.AFFIRMATIVE;
+
     public enum StackState {PROCESSED, TRANSLATED, UNPROCESSED, QUANTIFIED_VARS}
 
     public class FormulaArg {
@@ -29,10 +31,15 @@ public class LanguageFormatterStack {
     }
 
     public class StackElement  {
+
         /**
          * Holds all the events being processed.
          */
-        Map<String, SumoProcessCollector> sumoProcessMap = Maps.newHashMap();
+        private Map<String, SumoProcessCollector> sumoProcessMap = Maps.newHashMap();
+
+        public Map<String, SumoProcessCollector> getSumoProcessMap() {
+            return sumoProcessMap;
+        }
 
         /**
          * Holds the arguments of the current clause. We use it to keep track of which arguments have been translated into informal NLG successfully.
@@ -109,10 +116,61 @@ public class LanguageFormatterStack {
             this.translation = translation;
             this.translated = translated;
         }
+
+        /********************************************************************************
+         * Set the polarity of current stack element's process.
+         * @param predicate
+         * @param polarity
+         */
+        public void setProcessPolarity(String predicate, VerbProperties.Polarity polarity) {
+            SumoProcessCollector process = sumoProcessMap.get(predicate);
+            if (process != null) {
+                process.setPolarity(polarity);
+            }
+        }
+
+        /********************************************************************************
+         * Set polarity.
+         * @param polarity
+         */
+        public void setProcessPolarity(VerbProperties.Polarity polarity) {
+            if (sumoProcessMap.isEmpty())     {
+                return;
+            }
+            String singleKey = sumoProcessMap.keySet().iterator().next();
+            setProcessPolarity(singleKey, polarity);
+        }
+
+        /********************************************************************************
+         * Getter and setter for translated field.
+         * @return
+         */
+        public boolean getTranslated() {
+            return translated;
+        }
+
+        public String getTranslation() {
+            return translation;
+        }
     }
 
 
-    // LanguageFormatterStack methods begin here.
+    /********************************************************************************/
+
+     // LanguageFormatterStack methods begin here.
+
+
+    /********************************************************************************
+     * Getter and setter for polarity field.
+     * @return
+     */
+    public VerbProperties.Polarity getPolarity() {
+        return polarity;
+    }
+
+    public void setPolarity(VerbProperties.Polarity polarity) {
+        this.polarity = polarity;
+    }
 
 
     /********************************************************************************
@@ -129,10 +187,10 @@ public class LanguageFormatterStack {
      */
     public void pop(StackElement inElement) {
         // Something is wrong if the top element of the stack isn't inElement.
-        if(theStack.indexOf(inElement) != (theStack.size() - 1)) {
+        if (theStack.indexOf(inElement) != (theStack.size() - 1)) {
             throw new IllegalStateException("Current element of stack is not the top element.");
         }
-        if(! theStack.remove(inElement))   {
+        if (! theStack.remove(inElement))   {
             throw new IllegalStateException("Unable to pop the stack.");
         }
     }
@@ -160,7 +218,7 @@ public class LanguageFormatterStack {
      *  the topmost stack element; or null if the stack is empty
      */
     public StackElement getCurrStackElement() {
-        if(! isEmpty()) {
+        if (! isEmpty()) {
             return getTop();
         }
         return null;
@@ -172,7 +230,7 @@ public class LanguageFormatterStack {
      *  the 2nd from the top stack element; or null if the stack has fewer than 2 elements
      */
     public StackElement getPrevStackElement() {
-        if(theStack.size() >= 2) {
+        if (theStack.size() >= 2) {
             return theStack.get(theStack.size() - 2);
         }
         return null;
@@ -199,7 +257,7 @@ public class LanguageFormatterStack {
      */
     public void insertFormulaArgs(Formula formula) {
         List<String> args = formula.complexArgumentsToArrayList(1);
-        if(! isEmpty() && args != null) {
+        if (! isEmpty() && args != null) {
             // Put the args list into the stack for later reference.
             StackElement element = getTop();
             element.argsInit(formula, args);
@@ -212,16 +270,14 @@ public class LanguageFormatterStack {
      * @param theArg
      * @return
      */
-    public boolean markFormulaArgAsProcessed(String theArg) {
+    public void markFormulaArgAsProcessed(String theArg) {
         boolean retVal = false;
 
-        if(theStack.size() >= 2) {
+        if (theStack.size() >= 2) {
             // The relevant args are not held at top of stack, but at top - 1
             List<FormulaArg> stackArgs = theStack.get(theStack.size() - 2).formulaArgs;
             retVal = setFormulaArgState(stackArgs, theArg, StackState.PROCESSED);
         }
-
-        return retVal;
     }
 
     /********************************************************************************
@@ -267,7 +323,7 @@ public class LanguageFormatterStack {
     public boolean areFormulaArgsProcessed() {
         boolean retVal = false;
 
-        if(theStack.size() >= 2) {
+        if (theStack.size() >= 2) {
             // The relevant args are not held at top of stack, but at top - 1
             StackElement stackElement = theStack.get(theStack.size() - 2);
             retVal = LanguageFormatterStack.areFormulaArgsProcessed(stackElement);
@@ -315,6 +371,11 @@ public class LanguageFormatterStack {
             StringBuilder sb = new StringBuilder();
 
             for (SumoProcessCollector process : getCurrProcessMap().values()) {
+                // "Inherit" polarity from top-level if it is negative.
+                if (this.polarity.equals(VerbProperties.Polarity.NEGATIVE)) {
+                    process.setPolarity(VerbProperties.Polarity.NEGATIVE);
+                }
+
                 String naturalLanguage = process.toNaturalLanguage();
                 if (!naturalLanguage.isEmpty()) {
                     sb.append(naturalLanguage).append(" and ");
@@ -390,10 +451,21 @@ public class LanguageFormatterStack {
         List<String> translations = Lists.newArrayList();
         for (FormulaArg formula : element.formulaArgs)   {
             // If any element has not been translated, do nothing.
+            // FIXME: Also allow processed?
+//            if (! formula.state.equals(StackState.TRANSLATED) )   {
+//                if (! formula.state.equals(StackState.PROCESSED)) {
+//                    return Lists.newArrayList();
+//                }
+//            }
+//            else {
+//                translations.add(formula.translation);
+//            }
+
             if (! formula.state.equals(StackState.TRANSLATED))   {
                 return Lists.newArrayList();
             }
             translations.add(formula.translation);
+
         }
 
         return translations;
@@ -404,7 +476,7 @@ public class LanguageFormatterStack {
      * second having a state of TRANSLATED--mark the curr stack element as Translated.
      */
     public void setCurrTranslatedIfQuantified() {
-        if(isQuantifiedClauseProcessed())    {
+        if (isQuantifiedClauseProcessed())    {
             String translation = getCurrStackElement().formulaArgs.get(1).translation;
             getCurrStackElement().setTranslation(translation, true);
         }
@@ -439,7 +511,7 @@ public class LanguageFormatterStack {
     }
 
     /********************************************************************************
-     * If possible, translate the process instantiation and insert the translatation into the topmost
+     * If possible, translate the process instantiation and insert the translation into the topmost
      * stack element.
      * @param kb
      * @param formula
@@ -458,6 +530,29 @@ public class LanguageFormatterStack {
             if (simpleForm != null && ! simpleForm.isEmpty())  {
                 simpleForm = SumoProcess.verbRootToThirdPersonSingular(simpleForm);
                 getCurrStackElement().setTranslation("someone " + simpleForm, true);
+            }
+        }
+    }
+
+    /**
+     * Push the current element's sumoProcessMap down into the previous element.
+     * If the sumoProcessCollector already exists in the lower element of the stack,
+     * merge the current element's sumo process elements into the lower element's.
+     */
+    public void pushCurrSumoProcessDown() {
+        StackElement currElement = getCurrStackElement();
+        StackElement prevElement = getPrevStackElement();
+        Map<String, SumoProcessCollector> prevSumoMap = prevElement.sumoProcessMap;
+        for (Map.Entry<String, SumoProcessCollector> currProcessEntry : currElement.sumoProcessMap.entrySet())   {
+            String key = currProcessEntry.getKey();
+            if (prevSumoMap.containsKey(key))    {
+                // Merge.
+                SumoProcessCollector prevCollector = prevSumoMap.get(key);
+                prevCollector.merge(currProcessEntry.getValue());
+            }
+            else    {
+                // Insert.
+                prevSumoMap.put(key, currProcessEntry.getValue());
             }
         }
     }

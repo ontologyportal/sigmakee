@@ -18,8 +18,8 @@ import java.util.*;
  * Add processes and case roles to the static final lists as necessary.
  */
 public class SigmaMockTestBase {
-    static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
-    static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
+    private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
+    private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
     private static Hashtable<String, String> oldWordNetSynSetTable;
 
     protected final KB kbMock = new KBMock("dummyString");
@@ -40,6 +40,7 @@ public class SigmaMockTestBase {
             "destination",
             "experiencer",
             "goal",
+            "instrument",
             "patient");
 
     // FIXME: not sure if instance should be here, or not

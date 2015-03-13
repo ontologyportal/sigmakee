@@ -57,7 +57,7 @@ public class Sentence {
         caseRoles = HashMultimap.create(roles);
         setCaseRolesScratchpad(roles);
 
-        verb = new SumoProcess(process.getVerb(), kb);
+        verb = new SumoProcess(process, kb);
 
         Sentence.kb = kb;
     }
@@ -141,7 +141,7 @@ public class Sentence {
      * Return the case roles scratchpad.
      * @return
      */
-    public Multimap<CaseRole, String> getCaseRolesScratchpad() {
+    Multimap<CaseRole, String> getCaseRolesScratchpad() {
         return caseRolesScratchpad;
     }
 
@@ -187,7 +187,7 @@ public class Sentence {
      */
     private void reset() {
         subject = new SVOElement(SVOGrammarPosition.SUBJECT);
-        verb = new SumoProcess(verb.getVerb(), kb);
+        verb = new SumoProcess(verb, kb);
         directObject = new SVOElement(SVOGrammarPosition.DIRECT_OBJECT);
         indirectObjects = Lists.newArrayList();
         setCaseRolesScratchpad(caseRoles);
@@ -340,7 +340,7 @@ public class Sentence {
         subject.setSurfaceForm(sBuild.toString().replaceAll("\\s+", " ").trim());
 
         // Set verb to "experiences" and the direct object to a noun form of the process.
-        verb.setVerbAndDirectObject(verb.getVerb(), kb, this);
+        verb.setVerbAndDirectObject(this);
     }
 
 }

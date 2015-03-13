@@ -9,7 +9,7 @@ import java.util.List;
  * FIXME: perhaps rename to "VerbBehavior"?
  */
 public interface VerbProperties {
-
+    public static enum Polarity {AFFIRMATIVE, NEGATIVE}
 
     /******************************************************************************************
      * Return a list of case roles for the given verb and the given grammar role. The list consists
