@@ -96,8 +96,8 @@ public class HtmlParaphraseTest extends UnitTestBase {
     public void testHtmlParaphraseDefinePhysical()     {
         String stmt = "(<=> (instance ?PHYS Physical) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
 
-        String expectedResult = "a physical is an instance of physical if and only if there exist an entity and " +
-                "a time position such that the physical is located at the entity and the physical exists during the time position";
+        String expectedResult = "a physical is an instance of physical if and only if there exist an object and " +
+                "a time position such that the physical is located at the object and the physical exists during the time position";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
@@ -1705,13 +1705,13 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an entity such that the entity is an instance of water area and the agent is located at the entity";
+        String expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an object such that the object is an instance of water area and the agent is located at the object";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
         //expectedResult = "if an agent swims, then the agent is in a body of water";
-        expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an entity such that the entity is an instance of water area and the agent is located at the entity";
+        expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an object such that the object is an instance of water area and the agent is located at the object";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
