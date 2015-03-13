@@ -107,7 +107,7 @@ public class LanguageFormatter {
         String nlFormat = "";
         try {
             theStack.pushNew();
-            LanguageFormatterStack.StackElement element = theStack.getCurrStackElement();
+            StackElement element = theStack.getCurrStackElement();
 
             String template = paraphraseStatement(statement, false, 1);
 
@@ -404,7 +404,7 @@ public class LanguageFormatter {
 
             // Push new element onto the stack.
             theStack.pushNew();
-            LanguageFormatterStack.StackElement inElement = theStack.getCurrStackElement();
+            StackElement inElement = theStack.getCurrStackElement();
 
             if (pred.equals("not")) {
                 theStack.setPolarity(VerbProperties.Polarity.NEGATIVE);

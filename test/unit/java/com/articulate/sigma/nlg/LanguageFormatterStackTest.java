@@ -6,6 +6,7 @@ import com.articulate.sigma.nlg.LanguageFormatterStack;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Stack;
 
 import static org.junit.Assert.*;
 
@@ -26,16 +27,16 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         stack.pushNew();
         stack.insertFormulaArgs(formula);
 
-        List<LanguageFormatterStack.FormulaArg> formulaArgs = stack.getCurrStackElement().formulaArgs;
+        List<StackElement.FormulaArg> formulaArgs = stack.getCurrStackElement().formulaArgs;
         assertEquals(2, formulaArgs.size());
 
-        assertEquals(LanguageFormatterStack.StackState.QUANTIFIED_VARS, LanguageFormatterStack.getFormulaArg(formulaArgs, "(?D ?H)").state);
+        assertEquals(StackElement.StackState.QUANTIFIED_VARS, LanguageFormatterStack.getFormulaArg(formulaArgs, "(?D ?H)").state);
 
         String expectedKey = "(and\n" +
                 "                   (instance ?D Driving)\n" +
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H))";
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
     }
 
 
@@ -51,17 +52,17 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         stack.pushNew();
         stack.insertFormulaArgs(formula);
 
-        List<LanguageFormatterStack.FormulaArg> formulaArgs = stack.getCurrStackElement().formulaArgs;
+        List<StackElement.FormulaArg> formulaArgs = stack.getCurrStackElement().formulaArgs;
         assertEquals(3, formulaArgs.size());
 
         String expectedKey = "(instance ?D Driving)";
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
 
         expectedKey = "(instance ?H Human)";
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
 
         expectedKey = "(agent ?D ?H)";
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
     }
 
 
@@ -86,7 +87,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         stack.insertFormulaArgs(formula2);
 
         // Verify state of bottom element's arg.
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
 
         // Set top element's translated state, creating the illegal state.
         stack.getCurrStackElement().setTranslation("", true);
@@ -116,8 +117,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         stack.insertFormulaArgs(formula2);
 
         // Verify state of bottom element's arg.
-        //assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, stack.getPrevStackElement().formulaArgs.get(string2));
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
 
         // Set top element's translated state.
         stack.getCurrStackElement().setTranslation("a human drives", true);
@@ -126,9 +126,9 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         stack.pushCurrTranslatedStateDown(string2);
 
         // Verify the state has changed.
-        LanguageFormatterStack.FormulaArg formulaArg = LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2);
+        StackElement.FormulaArg formulaArg = LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2);
         assertEquals("a human drives", formulaArg.translation);
-        assertEquals(LanguageFormatterStack.StackState.TRANSLATED, formulaArg.state);
+        assertEquals(StackElement.StackState.TRANSLATED, formulaArg.state);
     }
 
     @Test
@@ -152,7 +152,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         stack.insertFormulaArgs(formula2);
 
         // Verify state of bottom element's arg.
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
 
         // Do not modify top element's translated state.
         //stack.getCurrStackElement().setTranslation(true);
@@ -161,7 +161,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         stack.pushCurrTranslatedStateDown(string2);
 
         // Verify the state has changed.
-        assertEquals(LanguageFormatterStack.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
+        assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(stack.getPrevStackElement().formulaArgs, string2).state);
     }
 
 

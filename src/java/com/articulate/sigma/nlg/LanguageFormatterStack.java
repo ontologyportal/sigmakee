@@ -9,6 +9,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import com.articulate.sigma.nlg.StackElement.*;
+
 /**
  * The stack which LanguageFormatter uses in its recursive operations.
  */
@@ -17,142 +19,6 @@ public class LanguageFormatterStack {
 
     private VerbProperties.Polarity polarity = VerbProperties.Polarity.AFFIRMATIVE;
 
-    public enum StackState {PROCESSED, TRANSLATED, UNPROCESSED, QUANTIFIED_VARS}
-
-    public class FormulaArg {
-        final String argument;
-        StackState state = StackState.UNPROCESSED;
-        String translation = "";
-
-        public FormulaArg(String arg, StackState stackState) {
-            this.state = stackState;
-            argument = arg;
-        }
-    }
-
-    public class StackElement  {
-
-        /**
-         * Holds all the events being processed.
-         */
-        private Map<String, SumoProcessCollector> sumoProcessMap = Maps.newHashMap();
-
-        public Map<String, SumoProcessCollector> getSumoProcessMap() {
-            return sumoProcessMap;
-        }
-
-        /**
-         * Holds the arguments of the current clause. We use it to keep track of which arguments have been translated into informal NLG successfully.
-         */
-        final List<FormulaArg> formulaArgs = Lists.newArrayList();
-
-        /**
-         * Indicates whether we have translated this level into informal language.
-         */
-        private boolean translated = false;
-
-        private String translation = "";
-
-        /********************************************************************************
-         * Instantiate a StackElement with a sumoProcess map and a list of formula args.
-         *
-         * @param spcMap
-         * @param args
-         */
-        public StackElement(Map<String, SumoProcessCollector> spcMap, List<String> args)  {
-            sumoProcessMap = Maps.newHashMap(spcMap);
-            init(args);
-        }
-
-        /********************************************************************************
-         * Init the formulaArgs and translated for this StackElement.
-         * @param args
-         */
-        public void init(List<String> args) {
-            translated = false;
-            translation = "";
-            formulaArgs.clear();
-            for(String arg : args)  {
-                formulaArgs.add(new FormulaArg(arg, StackState.UNPROCESSED));
-            }
-        }
-
-        /********************************************************************************
-         * Init the formulaArgs for this StackElement. The formula parameter is used to set valid
-         * formulaArgs to states other than UNPROCESSED.
-         * @param formula
-         * @param args
-         */
-        public void argsInit(Formula formula, List<String> args) {
-            init(args);
-
-            // Set the formula args' state.
-            String pred = formula.car();
-            if (Formula.isQuantifier(pred))     {
-                // See if it is a list of variables.
-
-                String temp = args.get(0).replaceAll("[()]", "");
-                String[] strings = temp.split(" ");
-                boolean isVarList = true;
-                for(String str : strings)  {
-                    if (! Formula.isVariable(str)) {
-                        isVarList = false;
-                    }
-                }
-                if (isVarList) {
-                    //formulaArgs.put(args.get(0), StackState.QUANTIFIED_VARS);
-                    formulaArgs.get(0).state = StackState.QUANTIFIED_VARS;
-                }
-
-            }
-        }
-
-        /********************************************************************************
-         * Mark this stack element as having been translated.
-         * @param translation
-         * @param translated
-         */
-        public void setTranslation(String translation, boolean translated) {
-            this.translation = translation;
-            this.translated = translated;
-        }
-
-        /********************************************************************************
-         * Set the polarity of current stack element's process.
-         * @param predicate
-         * @param polarity
-         */
-        public void setProcessPolarity(String predicate, VerbProperties.Polarity polarity) {
-            SumoProcessCollector process = sumoProcessMap.get(predicate);
-            if (process != null) {
-                process.setPolarity(polarity);
-            }
-        }
-
-        /********************************************************************************
-         * Set polarity.
-         * @param polarity
-         */
-        public void setProcessPolarity(VerbProperties.Polarity polarity) {
-            if (sumoProcessMap.isEmpty())     {
-                return;
-            }
-            String singleKey = sumoProcessMap.keySet().iterator().next();
-            setProcessPolarity(singleKey, polarity);
-        }
-
-        /********************************************************************************
-         * Getter and setter for translated field.
-         * @return
-         */
-        public boolean getTranslated() {
-            return translated;
-        }
-
-        public String getTranslation() {
-            return translation;
-        }
-    }
 
 
     /********************************************************************************/
@@ -208,7 +74,7 @@ public class LanguageFormatterStack {
     public void pushNew() {
         Map<String, SumoProcessCollector> nextProcessMap = Maps.newHashMap();
         List<String> argsList = Lists.newArrayList();
-        StackElement inElement = new StackElement(nextProcessMap, argsList);
+        StackElement inElement = new StackElement(this, nextProcessMap, argsList);
         theStack.add(inElement);
     }
 
@@ -245,7 +111,7 @@ public class LanguageFormatterStack {
 
         if (! isEmpty())    {
             StackElement element = getTop();
-            retVal = element.sumoProcessMap;
+            retVal = element.getSumoProcessMap();
         }
 
         return retVal;
@@ -395,7 +261,7 @@ public class LanguageFormatterStack {
         // Stack should have only one element
 
         if (theStack.size() == 1) {
-            output = getCurrStackElement().translation;
+            output = getCurrStackElement().getTranslation();
         }
         return output;
     }
@@ -418,20 +284,20 @@ public class LanguageFormatterStack {
             return;
         }
 
-        if (curr.translated)  {
-            if (curr.translation == null || curr.translation.isEmpty())  {
+        if (curr.getTranslated())  {
+            if (curr.getTranslation() == null || curr.getTranslation().isEmpty())  {
                 throw new IllegalStateException("Current stack element state is Translated, but translation is null or empty.");
             }
 
             prevFormulaArg.state = StackState.TRANSLATED;
-            prevFormulaArg.translation = curr.translation;
+            prevFormulaArg.translation = curr.getTranslation();
         }
         else if (prevFormulaArg.state.equals(StackState.QUANTIFIED_VARS))   {
             // This is set in initialization of the formula, and we don't want to change it.
             return;
         }
         else    {
-            if (! curr.translation.isEmpty())  {
+            if (! curr.getTranslation().isEmpty())  {
                 throw new IllegalStateException("Current stack element state is not Translated, but translation is not empty.");
             }
 
@@ -542,8 +408,8 @@ public class LanguageFormatterStack {
     public void pushCurrSumoProcessDown() {
         StackElement currElement = getCurrStackElement();
         StackElement prevElement = getPrevStackElement();
-        Map<String, SumoProcessCollector> prevSumoMap = prevElement.sumoProcessMap;
-        for (Map.Entry<String, SumoProcessCollector> currProcessEntry : currElement.sumoProcessMap.entrySet())   {
+        Map<String, SumoProcessCollector> prevSumoMap = prevElement.getSumoProcessMap();
+        for (Map.Entry<String, SumoProcessCollector> currProcessEntry : currElement.getSumoProcessMap().entrySet())   {
             String key = currProcessEntry.getKey();
             if (prevSumoMap.containsKey(key))    {
                 // Merge.
