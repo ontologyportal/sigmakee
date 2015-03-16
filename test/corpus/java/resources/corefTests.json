@@ -1,4 +1,83 @@
 [{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":1,
+  "valueA":"Amelia Mary Earhart -LRB- July 24 , 1897 -- July 2 , 1937 -RRB-",
+  "sentenceB":2,
+  "valueB":"She"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":1,
+  "valueA":"an American aviator",
+  "sentenceB":2,
+  "valueB":"She"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":1,
+  "valueA":"the first women to fly a plane long distances",
+  "sentenceB":2,
+  "valueB":"She"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":2,
+  "valueA":"She",
+  "sentenceB":3,
+  "valueB":"She"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":3,
+  "valueA":"She",
+  "sentenceB":4,
+  "valueB":"She"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentence":4,
+  "valueA":"books",
+  "valueB":"them"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":4,
+  "valueA":"She",
+  "sentenceB":5,
+  "valueB":"Earhart"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":5,
+  "valueA":"Earhart",
+  "sentenceB":6,
+  "valueB":"She"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":6,
+  "valueA":"She",
+  "sentenceB":7,
+  "valueB":"Earhart"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":7,
+  "valueA":"Earhart",
+  "sentenceB":8,
+  "valueB":"Earhart 's"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentenceA":8,
+  "valueA":"Earhart 's",
+  "sentenceB":9,
+  "valueB":"Earhart"
+},{
+  "file":"AmeliaEarhart.txt",
+  "sentence":9,
+  "valueA":"Gardner Island",
+  "valueB":"there"
+},
+  {
+    "file": "AmeliaEarhart.txt",
+    "sentenceA": 9,
+    "valueA": "the hypothesis",
+    "sentenceB": 10,
+    "valueB": "It"
+},
+
+{
   "file":"GeorgeWashington.txt",
   "sentenceA":1,
   "valueA":"George Washington",
