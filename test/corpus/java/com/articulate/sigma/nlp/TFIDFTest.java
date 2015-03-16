@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -50,7 +51,7 @@ public class TFIDFTest extends TestCase {
     private TFIDF getCachedTFIDF(String fileName) {
         TFIDF cb = parsedFiles.get(fileName);
         if(cb == null) {
-            cb = new TFIDF(fileName);
+            cb = new TFIDF("resources" + File.separator + "textfiles" + File.separator + fileName, "testfiles/stopwords.txt");
             parsedFiles.put(fileName, cb);
         }
         return cb;

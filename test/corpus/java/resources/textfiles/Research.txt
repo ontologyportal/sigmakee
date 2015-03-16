@@ -5,9 +5,11 @@ Graduate students working on research projects for a professor may see research 
 Businesses and consultants research different potential solutions to remedy organizational problems such as a supply chain bottleneck or to identify customer purchase patterns.
 However, none of the above can be considered “scientific research” unless it contributes to a body of science, and it follows the scientific method.
 Science refers to a systematic and organized body of knowledge in any area of inquiry that is acquired using “the scientific method”.
-Science can be grouped into two broad categories: natural science and social science. Natural science is the science of naturally occurring objects or phenomena, such as light, objects, matter, earth, celestial bodies, or the human body.
+Science can be grouped into two broad categories: natural science and social science.
+Natural science is the science of naturally occurring objects or phenomena, such as light, objects, matter, earth, celestial bodies, or the human body.
 Natural sciences can be further classified into physical sciences, earth sciences, life sciences, and others.
-Physical sciences consist of disciplines such as physics, chemistry, and astronomy. Earth sciences consist of disciplines such as geology.
+Physical sciences consist of disciplines such as physics, chemistry, and astronomy.
+Earth sciences consist of disciplines such as geology.
 Life sciences include disciplines such as biology and botany.
 In contrast, social science is the science of people or collections of people, such as groups, firms, societies, or economies, and their individual or collective behaviors.
 Social sciences can be classified into disciplines such as psychology, sociology, and economics.

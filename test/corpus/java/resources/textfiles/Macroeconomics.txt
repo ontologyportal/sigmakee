@@ -15,7 +15,8 @@ Output can be measured as total income, or, it can be viewed from the production
 Macroeconomic output is usually measured by Gross Domestic Product (GDP) or one of the other national accounts.
 Economists interested in long-run increases in output study economic growth.
 Advances in technology, accumulation of machinery and other capital, and better education and human capital all lead to increased economic output over time.
-However, output does not always increase consistently. Business cycles can cause short-term drops in output called recessions.
+However, output does not always increase consistently.
+Business cycles can cause short-term drops in output called recessions.
 Economists look for macroeconomic policies that prevent economies from slipping into recessions and that lead to faster long-term growth.
 The amount of unemployment in an economy is measured by the unemployment rate, the percentage of workers without jobs in the labor force.
 The labor force only includes workers actively looking for jobs.
@@ -31,10 +32,12 @@ Structural unemployment is similar to frictional unemployment since both reflect
 While some types of unemployment may occur regardless of the condition of the economy, cyclical unemployment occurs when growth stagnates.
 Okun's law represents the empirical relationship between unemployment and economic growth.
 The original version of Okun's law states that a 3% increase in output would lead to a 1% decrease in unemployment.
-A general price increase across the entire economy is called inflation. When prices decrease, there is deflation.
+A general price increase across the entire economy is called inflation.
+When prices decrease, there is deflation.
 Economists measure these changes in prices with price indexes.
 Inflation can occur when an economy becomes overheated and grows too quickly.
-Similarly, a declining economy can lead to deflation. Central bankers, who control a country's money supply, try to avoid changes in price level by using monetary policy.
+Similarly, a declining economy can lead to deflation.
+Central bankers, who control a country's money supply, try to avoid changes in price level by using monetary policy.
 Raising interest rates or reducing the supply of money in an economy will reduce inflation.
 Inflation can lead to increased uncertainty and other negative consequences.
 Deflation can lower economic output.

@@ -6,7 +6,8 @@ Being fermions, no two electrons can occupy the same quantum state, in accordanc
 Electrons also have properties of both particles and waves, and so can collide with other particles and can be diffracted like light.
 Experiments with electrons best demonstrate this duality because electrons have a tiny mass.
 Many physical phenomena involve electrons in an essential role, such as electricity, magnetism, and thermal conductivity, and electrons also participate in gravitational, electromagnetic and weak interactions.
-An electron in space generates an electric field surrounding it. An electron moving relative to an observer generates a magnetic field; external magnetic fields will deflect an electron.
+An electron in space generates an electric field surrounding it.
+An electron moving relative to an observer generates a magnetic field; external magnetic fields will deflect an electron.
 Electrons radiate or absorb energy in the form of photons when accelerated.
 Laboratory instruments are capable of containing and observing individual electrons as well as electron plasma using electromagnetic fields, whereas dedicated telescopes can detect electron plasma in outer space.
 Electrons have many applications, including electronics, welding, cathode ray tubes, electron microscopes, radiation therapy, lasers, gaseous ionization detectors and particle accelerators.

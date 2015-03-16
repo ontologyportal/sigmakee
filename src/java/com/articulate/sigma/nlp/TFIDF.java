@@ -74,28 +74,40 @@ public class TFIDF {
 
     /** ***************************************************************
      */
-    public TFIDF() {
-        readStopWords();
+    public TFIDF(List<String> documents, String stopwordsFilename) {
+        prepare(documents, stopwordsFilename);
     }
-    
-    /** ***************************************************************
-     */
-    public TFIDF(String filename) {
+
+    public TFIDF(String filename, String stopwordsFilename) {
+        try {
+            List<String> documents = TFIDFUtil.readFile(filename, false);
+            prepare(documents, stopwordsFilename);
+        } catch (IOException e) {
+            System.out.println("Unable to read: " + filename);
+        }
+    }
+
+    public void prepare(List<String> documents, String stopwordsFilename) {
         rand.setSeed(18021918); // Makes test results consistent
-        readStopWords();
-        readFile("resources" + File.separator + "textfiles" + File.separator + filename);
+        readStopWords(stopwordsFilename);
+        readDocuments(documents);
+        calcIDF(documents.size());
+        calcTFIDF();
     }
 
     /** ***************************************************************
+     * Process a document
+     * @param documents - list of strings to be processed
      */
-    public TFIDF(List<String> l) {
-        readStopWords();
-        for (String s : l) {
-            prepareLine(s);
+    private void readDocuments(List<String> documents) {
+        int count = 0;
+        for (String doc : documents) {
+            lines.add(doc);
+            processDoc(doc, count);
+            count++;
         }
-        calcDFs();
     }
-    
+
     /** ***************************************************************
      * Remove punctuation and contractions from a sentence. 
      * @return the sentence in a String minus these elements.
@@ -207,9 +219,10 @@ public class TFIDF {
      * Read a file of stopwords into the variable 
      * ArrayList<String> stopwords
      */
-    private void readStopWords() {
+    private void readStopWords(String stopwordsFilename) {
 
        // System.out.println("INFO in readStopWords(): Reading stop words");
+
         String filename = "";
         try {
             if (asResource) {
@@ -262,6 +275,7 @@ public class TFIDF {
         while (it.hasNext()) {
             String token = it.next();
             float f = (float) Math.log10(docCount / docfreq.get(token));
+            //System.out.println("token: " + token + ", docCount: " + docCount + ", docFreq: " + docfreq.get(token) + ", idf: " + f);
             idf.put(token,new Float(f));
         }
         //System.out.println("IDF:\n" + idf);
@@ -539,16 +553,16 @@ public class TFIDF {
      */
     private static void run(String fname) {
 
-        TFIDF cb = new TFIDF();
-        cb.readStopWords();
-        //System.out.println("Read movie lines");
-        //int linecount = cb.readMovieLinesFile();
-        //System.out.println("Read open mind");
-        //linecount = linecount + cb.readOpenMind();
-        System.out.println("Read Shell");
-        cb.readFile("ShellDoc.txt");
+        List<String> documents = null;
+        try {
+            documents = TFIDFUtil.readFile("ShellDoc.txt", false);
+        } catch (IOException e) {
+            System.out.println("Couldn't read document: ShellDoc.txt. Exiting");
+            return;
+        }
+        TFIDF cb = new TFIDF(documents, "testfiles/stopwords.txt");
 
-        //System.out.println("Hi, I'm a chatbot, tell/ask me something");
+        System.out.println("Hi, I'm a chatbot, tell/ask me something");
         boolean done = false;
         while (!done) {
             Console c = System.console();
@@ -568,11 +582,11 @@ public class TFIDF {
      */
     private static void staticTest() {
         
-        ArrayList<String> input = new ArrayList<String>();
+        List<String> input = new ArrayList<String>();
         input.add("I eat an apple.");
         input.add("People have an apple.");
         input.add("People will eat.");
-        TFIDF cb = new TFIDF(input);
+        TFIDF cb = new TFIDF(input, "testfiles/stopwords.txt");
     }
 
     /** *************************************************************
