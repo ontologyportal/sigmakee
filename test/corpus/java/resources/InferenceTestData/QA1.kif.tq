@@ -1,0 +1,24 @@
+(note QA1)  ;; boolean version
+
+(time 1000)
+
+(exists (?JOHN ?KICKS ?CART)
+  (and
+    (instance ?JOHN Human)
+    (instance ?KICKS Kicking)
+    (instance ?CART Wagon)
+    (patient ?KICKS ?CART)
+    (agent ?KICKS ?JOHN)))
+
+(subclass Kicking Impelling)
+
+(query (exists (?JOHN)
+         (forall (?DUMMY)
+           (exists (?KICKS ?CART)
+             (and
+               (instance ?JOHN Human)
+               (instance ?KICKS Impelling)
+               (instance ?CART Wagon)
+               (patient ?KICKS ?CART))))))
+
+(answer (an instance of Human))
