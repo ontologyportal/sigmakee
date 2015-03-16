@@ -31,7 +31,10 @@ import java.net.URL;
 import java.util.*;
 import java.util.regex.*;
 
+import com.articulate.sigma.utils.ProgressPrinter;
 import com.google.common.io.Resources;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class TFIDF {
 
@@ -60,9 +63,9 @@ public class TFIDF {
     
       // when true, indicates that responses should be the line after the matched line
     private boolean alternating = false;
-    
+
     private static boolean asResource = true; // use JUnit resource path for input file
-    
+
       // similarity of each document to the query (index -1)
     private HashMap<Integer,Float> docSim = new HashMap<Integer,Float>();
 
@@ -78,40 +81,20 @@ public class TFIDF {
     /** ***************************************************************
      */
     public TFIDF(String filename) {
-        
         readStopWords();
-        int linecount = readFile("resources" + File.separator + "textfiles" + File.separator + filename);
-        calcIDF(linecount);
-        calcTFIDF();
+        readFile("resources" + File.separator + "textfiles" + File.separator + filename);
     }
 
     /** ***************************************************************
      */
     public TFIDF(List<String> l) {
-        
-        int linecount = lines.size() - 1;
         readStopWords();
         for (String s : l) {
-            linecount++;
-            lines.add(s);
-            processDoc(s,linecount);
+            prepareLine(s);
         }
-        lines.addAll(l);
-        calcIDF(linecount);
-        calcTFIDF();
+        calcDFs();
     }
     
-    /** ***************************************************************
-     * @param s An input Object, expected to be a String.
-     * @return true if s == null or s is an empty String, else false.
-     */
-    private static boolean emptyString(Object s) {
-
-        return ((s == null)
-                || ((s instanceof String)
-                    && s.equals("")));
-    }
-
     /** ***************************************************************
      * Remove punctuation and contractions from a sentence. 
      * @return the sentence in a String minus these elements.
@@ -119,7 +102,7 @@ public class TFIDF {
     private String removePunctuation(String sentence) {
 
         Matcher m = null;
-        if (emptyString(sentence))
+        if (isNullOrEmpty(sentence))
             return sentence;
         m = Pattern.compile("(\\w)\\'re").matcher(sentence);
         while (m.find()) {
@@ -189,7 +172,7 @@ public class TFIDF {
      */
     private String removeStopWords(String sentence) {
 
-        if (emptyString(sentence))
+        if (isNullOrEmpty(sentence))
             return "";
         String result = "";
         ArrayList al = splitToArrayList(sentence);
@@ -212,7 +195,7 @@ public class TFIDF {
      */
     private boolean isStopWord(String word) {
 
-        if (emptyString(word))
+        if (isNullOrEmpty(word))
             return false;
         if (stopwords.contains(word.trim().toLowerCase())) 
             return true;
@@ -252,7 +235,7 @@ public class TFIDF {
      */
     private static ArrayList<String> splitToArrayList(String st) {
 
-        if (emptyString(st)) {
+        if (isNullOrEmpty(st)) {
             System.out.println("Error in WordNet.splitToArrayList(): empty string input");
             return null;
         }
@@ -339,10 +322,10 @@ public class TFIDF {
      */
     private void processDoc(String doc, Integer intlineCount) {
 
-        if (emptyString(doc)) return;
+        if (isNullOrEmpty(doc)) return;
         String line = removePunctuation(doc);
         line = removeStopWords(line);    
-        if (emptyString(line.trim())) return;        
+        if (isNullOrEmpty(line.trim())) return;
         ArrayList<String> tokens = splitToArrayList(line.trim());
         //System.out.println("ProcessDoc: " + tokens);
         HashSet<String> tokensNoDup = new HashSet<String>();
@@ -370,47 +353,48 @@ public class TFIDF {
         tf.put(intlineCount,tdocfreq);
     }
 
-   /** ***************************************************************
+    public void newLine(String line) {
+        prepareLine(line);
+        calcDFs();
+    }
+
+    protected void prepareLine(String line) {
+        if (!isNullOrEmpty(line)) {
+            int newLineIndex = lines.size();
+            lines.add(line);
+            //System.out.println(line);
+            processDoc(line, newLineIndex);
+        }
+    }
+
+    protected void calcDFs() {
+        System.out.println("Caclulate IDF");
+        calcIDF(lines.size() - 1);
+        System.out.println("Caclulate TFIDF");
+        calcTFIDF();
+    }
+
+    /** ***************************************************************
     * Read a file from @param fname and store it in the 
     * ArrayList<String> lines member variable.
     * @return an int number of lines
      */
-    private int readFile(String fname) {
-
-        int linecount = lines.size() - 1;
-        int counter = 0;
+    private void readFile(String fname) {
         String line = "";
-        String filename = "";
         BufferedReader omcs = null;
         try {
-            if (asResource) {
-                URL fileURL = Resources.getResource(fname);
-                filename = fileURL.getPath();
-            }
-            else
-                filename = fname;
-            File f = new File(filename);
-            if (!f.exists())
-                filename = fname;
+            URL fileURL = Resources.getResource(fname);
+            String filename = fileURL.getPath();
             omcs = new BufferedReader(new FileReader(filename));
             /* readLine is a bit quirky :
              * it returns the content of a line MINUS the newline.
              * it returns null only for the END of the stream.
              * it returns an empty String if two newlines appear in a row. */
+            ProgressPrinter pp = new ProgressPrinter(1000);
             while ((line = omcs.readLine()) != null) {
-                counter++;
-                if (counter == 1000) {
-                    counter = 0;
-                    System.out.print(".");
-                }
-                if (!emptyString(line)) {
-                    linecount++;
-                    Integer intlineCount = new Integer(linecount);
-                    lines.add(line); 
-                    //System.out.println(line);
-                    processDoc(line,intlineCount);
-                }
-            }  
+                pp.tick();
+                prepareLine(line);
+            }
             System.out.println();
             omcs.close();         
         }
@@ -421,7 +405,8 @@ public class TFIDF {
         }
         //System.out.println("Movie lines:\n" + lines);
         //System.out.println("TF:\n" + tf);
-        return linecount;      
+
+        calcDFs();
     }
 
     /** ***************************************************************
@@ -495,7 +480,7 @@ public class TFIDF {
     protected List<String> matchInput(String input, int n) {
 
         ArrayList<String> result = new ArrayList<String>();
-        if (emptyString(input))
+        if (isNullOrEmpty(input))
             System.exit(0);
         Integer negone = new Integer(-1);
         processDoc(input,negone);
@@ -547,7 +532,7 @@ public class TFIDF {
 
         run("ShellDoc.txt");
     }
-        
+
     /** *************************************************************
      * Run with a given file
      */
@@ -559,13 +544,8 @@ public class TFIDF {
         //int linecount = cb.readMovieLinesFile();
         //System.out.println("Read open mind");
         //linecount = linecount + cb.readOpenMind();
-        System.out.println(fname);
-        int linecount = cb.readFile(fname);
-
-        System.out.println("Caclulate IDF");
-        cb.calcIDF(linecount);
-        System.out.println("Caclulate TFIDF");
-        cb.calcTFIDF();
+        System.out.println("Read Shell");
+        cb.readFile("ShellDoc.txt");
 
         //System.out.println("Hi, I'm a chatbot, tell/ask me something");
         boolean done = false;
@@ -591,8 +571,7 @@ public class TFIDF {
         input.add("I eat an apple.");
         input.add("People have an apple.");
         input.add("People will eat.");
-        TFIDF cb = null;
-        cb = new TFIDF(input);
+        TFIDF cb = new TFIDF(input);
     }
 
     /** *************************************************************
@@ -600,7 +579,7 @@ public class TFIDF {
      * a query and an expected answer.
      */
     public static void main(String[] args) {
-        
+
         if (args != null && args.length > 0 && args[0].equals("-h")) {
             System.out.println("Usage: ");
             System.out.println("TFIDF -h         % show this help info");

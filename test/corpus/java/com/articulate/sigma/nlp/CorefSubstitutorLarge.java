@@ -12,8 +12,6 @@ import org.junit.runners.Parameterized;
 import java.util.Collection;
 import java.util.function.Function;
 
-import static com.articulate.sigma.nlp.CorefSubstitutor.substitute;
-
 /**
  * Created by aholub on 3/10/15.
  */
@@ -44,6 +42,7 @@ public class CorefSubstitutorLarge extends TestCase {
     @Test
     public void test() {
         Annotation document = pipeline.annotate(input);
-        assertEquals(expected, substitute(document));
+        CorefSubstitutor substitutor = new CorefSubstitutor(document);
+        assertEquals(expected, substitutor.substitute());
     }
 }
