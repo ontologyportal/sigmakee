@@ -66,7 +66,7 @@ public class CorefSubstitutor {
     }
 
     private String extractTextWithSameNER(CorefMention mention) {
-        List<String> out = Lists.newArrayListWithCapacity(mention.endIndex - mention.startIndex + 1);
+        List<String> out = Lists.newArrayListWithCapacity(mention.endIndex - mention.startIndex);
         List<CoreLabel> tokens = getSentenceTokens(mention.sentNum - 1);
         final String ner = tokens.get(0).ner();
         for(int i = mention.startIndex; i < mention.endIndex; i++) {

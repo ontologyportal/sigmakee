@@ -29,6 +29,7 @@ Author: Adam Pease apease@articulatesoftware.com
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.*;
 
 import com.articulate.sigma.utils.ProgressPrinter;
@@ -69,18 +70,18 @@ public class TFIDF {
       // similarity of each document to the query (index -1)
     private HashMap<Integer,Float> docSim = new HashMap<Integer,Float>();
 
-    private Random rand = new Random(); 
+    private Random rand = new Random();
 
     /** ***************************************************************
      */
     public TFIDF() {
-        
         readStopWords();
     }
     
     /** ***************************************************************
      */
     public TFIDF(String filename) {
+        rand.setSeed(18021918); // Makes test results consistent
         readStopWords();
         readFile("resources" + File.separator + "textfiles" + File.separator + filename);
     }
