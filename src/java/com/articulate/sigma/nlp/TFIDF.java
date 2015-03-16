@@ -71,6 +71,8 @@ public class TFIDF {
     /** ***************************************************************
      */
     public TFIDF() {
+        
+        readStopWords();
     }
     
     /** ***************************************************************
@@ -466,6 +468,23 @@ public class TFIDF {
     }
 
     /** *************************************************************
+     * add a new document to the set
+     */
+    public void addInput(String input) {
+        
+        lines.add(input);
+        int linecount = lines.size();
+        calcIDF(linecount);
+        calcTFIDF();
+    }
+    
+    /** *************************************************************
+     */
+    protected String matchInput(String input) {
+        return matchInput(input,1).get(0);        
+    }
+    
+    /** *************************************************************
      * @return a string which is the best guess match of the input.
      * If global variable alternating is set to true, the return the
      * next line in the input file, which is therefore treated like a
@@ -473,8 +492,9 @@ public class TFIDF {
      * after the line in the dialog that matches.  If there's more than
      * one reasonable response, pick a random one.
      */
-    protected String matchInput(String input) {
+    protected List<String> matchInput(String input, int n) {
 
+        ArrayList<String> result = new ArrayList<String>();
         if (emptyString(input))
             System.exit(0);
         Integer negone = new Integer(-1);
@@ -500,24 +520,23 @@ public class TFIDF {
                sortedSim.put(f,vals);
            }
         }
-        //System.out.println("result: " + sortedSim);
-        ArrayList<Integer> vals = sortedSim.get(sortedSim.lastKey());
-
-        int counter = 0;
-        int random = 0;
-        Integer index = null;
-        //do {
+        
+        Iterator<Float> it2 = sortedSim.descendingKeySet().iterator();
+        int counter = n;
+        while (it2.hasNext() && counter > 0) {
+            Float f = it2.next();
+            ArrayList<Integer> vals = sortedSim.get(f);
+            int random = 0;
+            Integer index = null;
             random = rand.nextInt(vals.size());
             index = vals.get(new Integer(random));
-            counter++;
-        //} while (counter < 50 && ((question && (index.intValue() < cb.omcsLineStart)) ||
-        //       (!question && (index.intValue() > cb.omcsLineStart))));
-        //System.out.println("query: " + input);
-        //System.out.println("line: " + lines.get(index));
-        if (!alternating)
-            return lines.get(new Integer(index.intValue()));
-        else
-            return lines.get(new Integer(index.intValue()+1));
+            counter--;
+            if (!alternating)
+                result.add(f + ":" + lines.get(new Integer(index.intValue())));
+            else
+                result.add(f + ":" + lines.get(new Integer(index.intValue()+1)));
+        }        
+        return result;
     }
 
     /** *************************************************************
@@ -558,7 +577,7 @@ public class TFIDF {
             }
             String input = c.readLine("> ");
             //boolean question = input.trim().endsWith("?");
-            System.out.println(cb.matchInput(input));
+            System.out.println(cb.matchInput(input,10));
         }
     }
 
