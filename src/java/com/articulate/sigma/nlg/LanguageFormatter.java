@@ -360,7 +360,7 @@ public class LanguageFormatter {
     }
 
     /** ***************************************************************
-     * Uses variableToInstanceMap to resolve a given variable.
+     * Uses variableToInstanceMap and variableTypes to resolve a given variable.
      * If more than one entry is in the map, currently takes the first one returned by the iterator.
      * @param input
      * @return
@@ -368,8 +368,13 @@ public class LanguageFormatter {
     private String resolveVariable(String input) {
         String retVal = input;
 
-        if(variableToInstanceMap.containsKey(input))    {
+        if (variableToInstanceMap.containsKey(input))    {
             Set<String> values = variableToInstanceMap.get(input);
+            // If more than one entry, take the first one returned by the iterator.
+            retVal = values.iterator().next();
+        }
+        else if (variableTypes.containsKey(input)) {
+            Set<String> values = variableTypes.get(input);
             // If more than one entry, take the first one returned by the iterator.
             retVal = values.iterator().next();
         }
@@ -412,24 +417,15 @@ public class LanguageFormatter {
                 inElement.setProcessPolarity(VerbProperties.Polarity.NEGATIVE);
                 theStack.pushCurrSumoProcessDown();
 
-                // FIXME: for next iteration of this ticket; encapsulate this code in LanguageFormatterStack
-//                if (theStack.getCurrStackElement().getTranslated())     {
-//                    String translation = theStack.getCurrStackElement().getTranslation();
-//                    theStack.getPrevStackElement().setTranslation(translation, true);
-//                    theStack.pop(inElement);
-//                    theStack.pushCurrTranslatedStateDown(stmt);
-//                    theStack.pop(theStack.getCurrStackElement());
-//                }
-//                else    {
-//                    theStack.pushCurrTranslatedStateDown(f.car());
-//                    theStack.pop(inElement);
-//                }
+                if (theStack.getCurrStackElement().getTranslated()) {
+                    theStack.pushTranslationDownToNotLevel(stmt);
+                    theStack.pop(inElement);
+                }
+                else    {
+                    theStack.pop(inElement);
+                    theStack.markFormulaArgAsProcessed(stmt);
+                }
 
-                theStack.pushCurrTranslatedStateDown(f.car());
-                theStack.pop(inElement);
-
-                // FIXME: what is the condition for the next line to be necessary?
-                theStack.markFormulaArgAsProcessed(stmt);
                 return ans;
             }
 

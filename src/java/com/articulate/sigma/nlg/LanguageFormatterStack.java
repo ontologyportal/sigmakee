@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import com.articulate.sigma.nlg.StackElement.*;
@@ -137,12 +138,10 @@ public class LanguageFormatterStack {
      * @return
      */
     public void markFormulaArgAsProcessed(String theArg) {
-        boolean retVal = false;
-
         if (theStack.size() >= 2) {
             // The relevant args are not held at top of stack, but at top - 1
             List<FormulaArg> stackArgs = theStack.get(theStack.size() - 2).formulaArgs;
-            retVal = setFormulaArgState(stackArgs, theArg, StackState.PROCESSED);
+            setFormulaArgState(stackArgs, theArg, StackState.PROCESSED);
         }
     }
 
@@ -400,7 +399,7 @@ public class LanguageFormatterStack {
         }
     }
 
-    /**
+    /********************************************************************************
      * Push the current element's sumoProcessMap down into the previous element.
      * If the sumoProcessCollector already exists in the lower element of the stack,
      * merge the current element's sumo process elements into the lower element's.
@@ -424,4 +423,57 @@ public class LanguageFormatterStack {
     }
 
 
+    /********************************************************************************
+     * Handle pushing the translation down into the stack for "not" clauses.
+     * @param statement
+     */
+    public void pushTranslationDownToNotLevel(String statement) {
+        String translation = getCurrStackElement().getTranslation();
+
+        if (translation.isEmpty())  {
+            return;
+        }
+
+        // Iterate through the stack from top down, looking for a "(not ..." formula arg.
+        ListIterator<StackElement> iterator = theStack.listIterator(theStack.size());
+        while(iterator.hasPrevious())   {
+            StackElement element = iterator.previous();
+
+            for (FormulaArg formulaArg : element.formulaArgs)   {
+                if (formulaArg.argument.equals(statement))   {
+                    // Set the formula arg.
+                    formulaArg.translation = translation;
+                    formulaArg.state = StackState.TRANSLATED;
+
+                    // Set the element.
+                    element.setTranslation(translation, true);
+
+                    return;
+                }
+            }
+        }
+
+        // If the original formula begins with "(not" + existential quantifier, it won't be in the formula args.
+        // In this case, iterate through the stack from top down, looking for the quantifier. For example, if the
+        // original begins "(not  (exists (?D ?H) ...", we will find "(exists (?D ?H) ..." in the formula args.
+        Formula formula = new Formula(statement);
+        statement = formula.cdrAsFormula().car();
+        iterator = theStack.listIterator(theStack.size());
+        while(iterator.hasPrevious())   {
+            StackElement element = iterator.previous();
+
+            for (FormulaArg formulaArg : element.formulaArgs)   {
+                if (formulaArg.argument.equals(statement))   {
+                    // Set the formula arg.
+                    formulaArg.translation = translation;
+                    formulaArg.state = StackState.TRANSLATED;
+
+                    // Set the element.
+                    element.setTranslation(translation, true);
+
+                    return;
+                }
+            }
+        }
+    }
 }

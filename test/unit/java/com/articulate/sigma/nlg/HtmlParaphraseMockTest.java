@@ -214,7 +214,7 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
     }
 
     /**
-     * Ideal: "Bell created the telephone."; also "The telephone was created by Bell."
+     * Ideal: "Blankenship created the telephone."; also "The telephone was created by Blankenship."
      */
     @Test
     public void testHtmlParaphraseBlankenshipCreateTelephone()     {
