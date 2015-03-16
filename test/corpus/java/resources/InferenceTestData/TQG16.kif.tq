@@ -3,33 +3,10 @@
 (time 900)
 
 
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
+;; The axiom does not exist in *.kif file
 (=>
   (connectedEngineeringComponents ?X ?Y)
   (connected ?X ?Y))
-
-(<=>
-    (connectedEngineeringComponents ?COMP1 ?COMP2)
-    (exists (?CONNECTION)
-        (connectsEngineeringComponents ?CONNECTION ?COMP1 ?COMP2)))
-
-(=>
-    (connected ?OBJ1 ?OBJ2)
-    (or
-        (meetsSpatially ?OBJ1 ?OBJ2)
-        (overlapsSpatially ?OBJ1 ?OBJ2)))
-
 
 (instance Object16-1 EngineeringConnection)
 (instance Object16-2 EngineeringComponent)

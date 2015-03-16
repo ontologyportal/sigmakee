@@ -2,31 +2,6 @@
 
 (time 600)
 
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-
-(=>
-    (and
-        (instance ?PROC TherapeuticProcess)
-        (patient ?PROC ?BIO))
-    (or
-        (instance ?BIO Organism)
-        (exists (?ORG)
-            (and
-                (instance ?ORG Organism)
-                (part ?BIO ?ORG)))))
-
-
 (instance Proc18-1 TherapeuticProcess)
 (instance Bio18-1 OrganicObject)
 (patient Proc18-1 Bio18-1)

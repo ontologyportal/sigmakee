@@ -4,25 +4,6 @@
 
 (instance Org1-1 Organization)
 
-(=>
-    (instance ?COLL Collection)
-    (exists (?OBJ)
-        (member ?OBJ ?COLL)))
-
-(subclass Organization Collection)
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
 (query (exists (?MEMBER) (member ?MEMBER Org1-1)))
 
 (answer yes)

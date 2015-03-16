@@ -17,8 +17,6 @@
     (instance ?Z ?X))
   (instance ?Z ?Y))
 
-(subclass Reptile Animal)
-
 
 (instance Creature50-1 Animal)
 

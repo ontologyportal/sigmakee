@@ -2,12 +2,6 @@
 
 (time 600)
 
-(not
-    (not
-        (holdsDuring
-            (WhenFn DoingSomething4-1) 
-            (attribute Entity4-1 Dead))))
-
 (instance Entity4-1 Human)
 
 (instance DoingSomething4-1 IntentionalProcess)
@@ -24,25 +18,6 @@
       (holdsDuring
         (WhenFn ?PROC)
         (attribute ?AGENT Dead)))))
-
-(<=>
-    (instance ?AGENT Agent)
-    (exists (?PROC)
-        (agent ?PROC ?AGENT)))
-
-(subclass IntentionalProcess Process)
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
 
 (query (not (holdsDuring (WhenFn DoingSomething4-1) (attribute Entity4-1 Dead))))
 

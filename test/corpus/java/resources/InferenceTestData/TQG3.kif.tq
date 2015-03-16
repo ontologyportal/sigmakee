@@ -4,46 +4,6 @@
 
 (instance Number3-1 NonnegativeRealNumber)
 
-(<=>
-    (and
-        (equal
-            (AbsoluteValueFn ?NUMBER1) ?NUMBER2)
-        (instance ?NUMBER1 RealNumber)
-        (instance ?NUMBER2 RealNumber))
-    (or
-        (and
-            (instance ?NUMBER1 NonnegativeRealNumber)
-            (equal ?NUMBER1 ?NUMBER2))
-        (and
-            (instance ?NUMBER1 NegativeRealNumber)
-            (equal ?NUMBER2
-                (SubtractionFn 0 ?NUMBER1)))))
-
-(=>
-    (instance ?NUMBER NonnegativeRealNumber)
-    (or
-        (equal
-            (SignumFn ?NUMBER) 1)
-        (equal
-            (SignumFn ?NUMBER) 0)))
-
-(=>
-    (instance ?NUMBER NegativeRealNumber)
-    (equal
-        (SignumFn ?NUMBER) -1))
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
 (query (not (instance Number3-1 NegativeRealNumber)))
 
 (answer yes)

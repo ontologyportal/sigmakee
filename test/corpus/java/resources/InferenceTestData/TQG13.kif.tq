@@ -2,27 +2,6 @@
 
 (time 240)
 
-
-(<=>
-    (instance ?LOOP GraphLoop)
-    (exists (?NODE)
-        (links ?NODE ?NODE ?LOOP)))
-
-(subclass GraphLoop GraphArc)
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-
 (instance Arc13-1 GraphLoop)
 
 (query (exists (?NODE) (links ?NODE ?NODE Arc13-1)))

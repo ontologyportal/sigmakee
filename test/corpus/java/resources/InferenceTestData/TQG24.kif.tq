@@ -4,20 +4,6 @@
 
 (time 300)
 
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-
 (instance Rover24-1 Canine)
 
 (query (instance Rover24-1 CorpuscularObject))

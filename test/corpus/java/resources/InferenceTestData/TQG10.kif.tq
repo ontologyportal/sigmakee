@@ -3,23 +3,6 @@
 (time 900)
 
 (=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-
-(<=>
-    (instance ?CLASS Class)
-    (subclass ?CLASS Entity))
-
-(=>
   (and
     (instance ?A Animal)
     (not (exists (?PART)

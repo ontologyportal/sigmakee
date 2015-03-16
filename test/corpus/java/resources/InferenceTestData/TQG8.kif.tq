@@ -9,26 +9,6 @@
            (capability Reasoning ?ROLE1 Jane8-1) 
            (capability Perception ?ROLE2 Jane8-1))))
 
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-(=>
-    (instance ?AGENT CognitiveAgent)
-    (capability Reasoning agent ?AGENT))
-
-(=>
-    (instance ?AGENT SentientAgent)
-    (capability Perception experiencer ?AGENT))
-
 (answer yes)
 
 

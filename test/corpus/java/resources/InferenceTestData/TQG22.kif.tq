@@ -5,6 +5,7 @@
 (time 180)
 
 
+;; The axiom does not exist in *.kif file
 (=>
   (son ?SON ?ANCESTOR)
   (ancestor ?SON ?ANCESTOR))

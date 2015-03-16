@@ -5,18 +5,7 @@
 (time 900)
 
 
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
+;; The axiom does not exist in *.kif file
 (=>
   (and
     (subclass ?X ?Y)

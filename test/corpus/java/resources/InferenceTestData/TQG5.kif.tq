@@ -2,22 +2,6 @@
 
 (time 300)
 
-
-(subclass ColdBloodedVertebrate Animal)
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-
 (instance Lizard5-1 Class)
 (instance Organism5-1 Lizard5-1)
 

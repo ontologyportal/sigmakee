@@ -2,20 +2,6 @@
 
 ;; Circular subclass reasoning.
 
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-
 (instance Class31-1 Class)
 (instance Class31-2 Class)
 (instance Class31-3 Class)

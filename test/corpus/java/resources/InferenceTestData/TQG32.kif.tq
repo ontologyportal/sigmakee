@@ -2,20 +2,6 @@
 
 ;; Intensional query requiring circular subclass reasoning.
 
-
-(=>
-    (subclass ?X ?Y)
-    (and
-        (instance ?X SetOrClass)
-        (instance ?Y SetOrClass)))
-
-(=>
-  (and
-    (subclass ?X ?Y)
-    (instance ?Z ?X))
-  (instance ?Z ?Y))
-
-
 (instance Class32-1 Class)
 (instance Class32-2 Class)
 (instance Class32-3 Class)
