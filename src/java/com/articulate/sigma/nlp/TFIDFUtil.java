@@ -16,7 +16,6 @@ import java.util.List;
  */
 public class TFIDFUtil {
 
-
     /** ***************************************************************
      * This method reads in a text file, breaking it into single line documents
      * Currently, sentences are not separated if they occur on the same line.
@@ -25,14 +24,15 @@ public class TFIDFUtil {
      * @return list of strings from each line of the document
      */
     public static List<String> readFile(String filename, boolean separateSentences) throws IOException {
+        
         List<String> documents = Lists.newArrayList();
         URL fileURL = Resources.getResource(filename);
         File f = new File(filename);
         BufferedReader bf = new BufferedReader(new FileReader(fileURL.getPath()));
         String line;
         while ((line = bf.readLine()) != null) {
-            if (line == null || line.equals("")) continue;
-
+            if (line == null || line.equals("")) 
+                continue;
             documents.add(line);
         }
         return documents;
