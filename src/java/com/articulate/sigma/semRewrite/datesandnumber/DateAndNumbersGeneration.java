@@ -334,7 +334,7 @@ public class DateAndNumbersGeneration {
 		}
 		if ((measuredEntity == null) && (unitOfMeasurementNode != null)) {
 			for (SemanticGraphEdge e : StanfordDependencies.getOutEdgesSorted(unitOfMeasurementNode)) {
-				if ((e.getRelation().equals("nsubj")) || (e.getRelation().equals("dobj"))) {
+				if ((e.getRelation().toString().equals("nsubj")) || (e.getRelation().toString().equals("dobj"))) {
 					measuredEntity = e.getDependent();
 					flag = true;
 					break;
