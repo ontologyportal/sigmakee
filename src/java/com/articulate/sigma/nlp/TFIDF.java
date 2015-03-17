@@ -74,20 +74,33 @@ public class TFIDF {
 
     /** ***************************************************************
      */
+    public TFIDF(String stopwordsFilename) {
+        readStopWords(stopwordsFilename);
+    }
+
+    /** ***************************************************************
+     */
     public TFIDF(List<String> documents, String stopwordsFilename) {
         prepare(documents, stopwordsFilename);
     }
 
+    /** ***************************************************************
+     */
     public TFIDF(String filename, String stopwordsFilename) {
+        
         try {
             List<String> documents = TFIDFUtil.readFile(filename, false);
             prepare(documents, stopwordsFilename);
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
             System.out.println("Unable to read: " + filename);
         }
     }
 
+    /** ***************************************************************
+     */
     public void prepare(List<String> documents, String stopwordsFilename) {
+        
         rand.setSeed(18021918); // Makes test results consistent
         readStopWords(stopwordsFilename);
         readDocuments(documents);
@@ -100,6 +113,7 @@ public class TFIDF {
      * @param documents - list of strings to be processed
      */
     private void readDocuments(List<String> documents) {
+        
         int count = 0;
         for (String doc : documents) {
             lines.add(doc);
@@ -222,7 +236,6 @@ public class TFIDF {
     private void readStopWords(String stopwordsFilename) {
 
        // System.out.println("INFO in readStopWords(): Reading stop words");
-
         String filename = "";
         try {
             if (asResource) {
@@ -337,10 +350,12 @@ public class TFIDF {
      */
     private void processDoc(String doc, Integer intlineCount) {
 
-        if (isNullOrEmpty(doc)) return;
+        if (isNullOrEmpty(doc)) 
+            return;
         String line = removePunctuation(doc);
         line = removeStopWords(line);    
-        if (isNullOrEmpty(line.trim())) return;
+        if (isNullOrEmpty(line.trim())) 
+            return;
         ArrayList<String> tokens = splitToArrayList(line.trim());
         //System.out.println("ProcessDoc: " + tokens);
         HashSet<String> tokensNoDup = new HashSet<String>();
@@ -368,12 +383,18 @@ public class TFIDF {
         tf.put(intlineCount,tdocfreq);
     }
 
+    /** ***************************************************************
+     */
     public void newLine(String line) {
+        
         prepareLine(line);
         calcDFs();
     }
 
+    /** ***************************************************************
+     */
     protected void prepareLine(String line) {
+        
         if (!isNullOrEmpty(line)) {
             int newLineIndex = lines.size();
             lines.add(line);
@@ -382,7 +403,10 @@ public class TFIDF {
         }
     }
 
+    /** ***************************************************************
+     */
     protected void calcDFs() {
+        
         System.out.println("Caclulate IDF");
         calcIDF(lines.size() - 1);
         System.out.println("Caclulate TFIDF");
@@ -395,11 +419,15 @@ public class TFIDF {
     * @return an int number of lines
      */
     private void readFile(String fname) {
+        
         String line = "";
         BufferedReader omcs = null;
         try {
-            URL fileURL = Resources.getResource(fname);
-            String filename = fileURL.getPath();
+            String filename = fname;
+            if (asResource) {
+                URL fileURL = Resources.getResource(fname);
+                filename = fileURL.getPath();
+            }
             omcs = new BufferedReader(new FileReader(filename));
             /* readLine is a bit quirky :
              * it returns the content of a line MINUS the newline.
@@ -481,18 +509,14 @@ public class TFIDF {
     /** *************************************************************
      */
     protected String matchInput(String input) {
+        
         return matchInput(input,1).get(0);        
     }
     
     /** *************************************************************
-     * @return a string which is the best guess match of the input.
-     * If global variable alternating is set to true, the return the
-     * next line in the input file, which is therefore treated like a
-     * dialog in which the best response to a given input is the line
-     * after the line in the dialog that matches.  If there's more than
-     * one reasonable response, pick a random one.
+     * @return a list of matches ranked by relevance to the input.
      */
-    protected List<String> matchInput(String input, int n) {
+    protected TreeMap<Float,ArrayList<Integer>> matchInputFull(String input, int n) {
 
         ArrayList<String> result = new ArrayList<String>();
         if (isNullOrEmpty(input))
@@ -501,9 +525,7 @@ public class TFIDF {
         processDoc(input,negone);
         calcIDF(lines.size()+1);
         calcOneTFIDF(negone);
-        //System.out.println("Caclulate docsim");
         calcDocSim();
-        //System.out.println("Caclulate sorted sim");
         TreeMap<Float,ArrayList<Integer>> sortedSim = new TreeMap<Float,ArrayList<Integer>>();
           // private HashMap<Integer,Float> docSim = HashMap<Integer,Float>();
         Iterator<Integer> it = docSim.keySet().iterator();
@@ -520,6 +542,22 @@ public class TFIDF {
                sortedSim.put(f,vals);
            }
         }
+        
+        return sortedSim;
+    }
+
+    /** *************************************************************
+     * @return a list of strings which are the top n best guess matches to the input.
+     * If global variable alternating is set to true, the return the
+     * next line in the input file, which is therefore treated like a
+     * dialog in which the best response to a given input is the line
+     * after the line in the dialog that matches.  If there's more than
+     * one reasonable response, pick a random one.
+     */
+    protected List<String> matchInput(String input, int n) {
+
+        ArrayList<String> result = new ArrayList<String>();
+        TreeMap<Float,ArrayList<Integer>> sortedSim = matchInputFull(input,n);
         
         Iterator<Float> it2 = sortedSim.descendingKeySet().iterator();
         int counter = n;
@@ -555,12 +593,20 @@ public class TFIDF {
 
         List<String> documents = null;
         try {
-            documents = TFIDFUtil.readFile("ShellDoc.txt", false);
-        } catch (IOException e) {
-            System.out.println("Couldn't read document: ShellDoc.txt. Exiting");
+            if (asResource)
+                documents = TFIDFUtil.readFile(fname, false);
+        } 
+        catch (IOException e) {
+            System.out.println("Couldn't read document: " + fname + ". Exiting");
             return;
         }
-        TFIDF cb = new TFIDF(documents, "testfiles/stopwords.txt");
+        TFIDF cb;
+        if (asResource)
+            cb = new TFIDF(documents, "testfiles/stopwords.txt");
+        else {
+            cb = new TFIDF("testfiles/stopwords.txt");
+            cb.readFile(fname);
+        }
 
         System.out.println("Hi, I'm a chatbot, tell/ask me something");
         boolean done = false;
