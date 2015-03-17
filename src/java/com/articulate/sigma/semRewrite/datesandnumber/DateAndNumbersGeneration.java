@@ -38,6 +38,8 @@ import com.articulate.sigma.WordNet;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
+import edu.stanford.nlp.trees.GrammaticalRelation;
 
 public class DateAndNumbersGeneration {
 
@@ -282,6 +284,19 @@ public class DateAndNumbersGeneration {
 		visitedNodes.add(unitOfMeasurementNode.toString()+"-"+unitOfMeasurementNode.index());
 		String measuredEntityStr = null;
 		boolean flag = false;
+		int x = 0;
+		if ((measuredEntity == null) && (unitOfMeasurementNode != null)) {
+			for (SemanticGraphEdge e : StanfordDependencies.getOutEdgesSorted(unitOfMeasurementNode)) {
+				if ((e.getRelation().equals("nsubj")) || (e.getRelation().equals("dobj"))) {
+					measuredEntity = e.getDependent();
+					flag = true;
+					break;
+				}
+			}
+		}
+		else if ((measuredEntity == null) && (unitOfMeasurementNode == null)){
+			return;
+		}
 		while ((measuredEntity != null) && (!flag)) {
 			measuredEntityStr = measuredEntity.value()+"-"+measuredEntity.index();
 			if (!visitedNodes.contains(measuredEntityStr)) {
@@ -330,7 +345,9 @@ public class DateAndNumbersGeneration {
             posTagRemover = posTagRemoverMatcher.group(1);
             measuredEntityStr = measuredEntityStr.replace(posTagRemover, "");
         }*/
-		sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
+		if (measuredEntity != null) {
+			sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
+		}
 		String sumoUnitOfMeasure = WSD.getBestDefaultSUMOsense(unitOfMeasurementNode.value(), 1);
 		System.out.println(sumoUnitOfMeasure);
 		if (!sumoUnitOfMeasure.isEmpty()) {
