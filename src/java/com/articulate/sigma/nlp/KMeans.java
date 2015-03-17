@@ -13,8 +13,8 @@ import com.articulate.sigma.semRewrite.Interpreter;
 public class KMeans {
 
     private static int count1,count2,count3;
-    private static int k[][];
-    private static int tempk[][];
+    private static float k[][];
+    private static float tempk[][];
     private static double m[];
     private static double diff[];
 
@@ -22,7 +22,7 @@ public class KMeans {
      * This method will determine the cluster in which an element go at 
      * a particular step.
      */
-    private static int calcDiff(int a, int p) {
+    private static int calcDiff(float a, int p) {
         
         int temp1 = 0;
         for (int i = 0; i < p; ++i) {
@@ -66,33 +66,33 @@ public class KMeans {
      * This checks if previous k ie. tempk and current k are same.
      * Used as terminating case.
      */
-    private static int check1(int n, int p) {
+    private static boolean check1(int n, int p) {
         
         for (int i = 0; i < p; ++i) {
             for (int j = 0; j < n; ++j) {
                 if (tempk[i][j] != k[i][j]) {
-                    return 0;
+                    return false;
                 }
             }
         }
-        return 1;
+        return true;
     }
 
     /** ***************************************************************
      */
-    public static ArrayList<ArrayList<Integer>> run(int n, int[] d, int p) {
+    public static ArrayList<ArrayList<Float>> run(int n, float[] d, int p) {
         
-        ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();
-        k = new int[p][n];
-        tempk = new int[p][n];
+        ArrayList<ArrayList<Float>> result = new ArrayList<ArrayList<Float>>();
+        k = new float[p][n];
+        tempk = new float[p][n];
         m = new double[p];
         diff = new double[p];
         /* Initializing m */
         for (int i = 0; i < p; ++i)
             m[i] = d[i];
 
-        int temp=0;
-        int flag=0;
+        int temp = 0;
+        boolean flag = false;
         do {
             for (int i = 0; i < p; ++i)
                 for (int j = 0; j < n; ++j) {
@@ -111,7 +111,7 @@ public class KMeans {
             }
             calcMeans(n,p); // call to method which will calculate mean at this step.
             flag = check1(n,p); // check if terminating condition is satisfied.
-            if (flag != 1)
+            if (flag != true)
                 // Take backup of k in tempk so that you can check for equivalence in next step
                 for (int i = 0; i < p; ++i)
                     for (int j = 0; j < n; ++j)
@@ -130,15 +130,15 @@ public class KMeans {
                 //System.out.print("m" + (i + 1) + "=" + m[i] + "  ");
 
             count1 = 0; count2 = 0; count3 = 0;
-        } while (flag == 0);
+        } while (flag == false);
 
         //System.out.println("\n\n\nThe Final Clusters By Kmeans are as follows: ");
         for (int i = 0; i < p; ++i) {
             //System.out.print("K" + (i + 1) + "{ ");
-            ArrayList<Integer> oneCluster = new ArrayList<Integer>();
+            ArrayList<Float> oneCluster = new ArrayList<Float>();
             for (int j = 0; k[i][j] != -1 && j < n - 1; ++j) {
                 //System.out.print(k[i][j] + " ");
-                oneCluster.add(new Integer(k[i][j]));
+                oneCluster.add(new Float(k[i][j]));
             }
             //System.out.println("}");
             result.add(oneCluster);
@@ -155,16 +155,16 @@ public class KMeans {
         /* Accepting number of elements */
         System.out.println("Enter the number of elements ");
         int n = scr.nextInt();
-        int[] d = new int[n];
+        float[] d = new float[n];
         /* Accepting elements */
         System.out.println("Enter " + n + " elements: ");
         for (int i = 0; i < n; ++i)
-            d[i] = scr.nextInt();
+            d[i] = scr.nextFloat();
         /* Accepting num of clusters */
         System.out.println("Enter the number of clusters: ");
         int p = scr.nextInt();
         /* Initialising arrays */
-        ArrayList<ArrayList<Integer>> result = run(n,d,p);
+        ArrayList<ArrayList<Float>> result = run(n,d,p);
         System.out.println(result);
     }
 
@@ -174,18 +174,11 @@ public class KMeans {
         
         //System.out.println("INFO in KMeans.testKmeans()");
         int n = 8;
-        int[] d = new int[] {2, 3, 6, 8, 12, 15, 18, 22};
+        float[] d = new float[] {2, 3, 6, 8, 12, 15, 18, 22};
         int p = 3;
-        ArrayList<ArrayList<Integer>> result = run(n,d,p);
+        ArrayList<ArrayList<Float>> result = run(n,d,p);
         System.out.println(result);
-        /* Expected results
-        Value of m
-        m1=2.5  m2=7.0  m3=16.75
-
-        The Final Clusters By Kmeans are as follows:
-        K1{ 2 3 }
-        K2{ 6 8 }
-        K3{ 12 15 18 22 } */
+        System.out.println("Should be: [[2.0, 3.0], [6.0, 8.0], [12.0, 15.0, 18.0, 22.0]]");
     }
     
     /** ***************************************************************
