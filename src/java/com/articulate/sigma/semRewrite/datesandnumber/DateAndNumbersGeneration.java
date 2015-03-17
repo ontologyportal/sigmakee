@@ -289,15 +289,19 @@ public class DateAndNumbersGeneration {
 
 		IndexedWord tokenNode = StanfordDependencies.getNodeByIndex(token.getId());
 		IndexedWord unitOfMeasurementNode = StanfordDependencies.getParent(tokenNode);
-		String unitOfMeasurementStr = unitOfMeasurementNode.toString();
-		IndexedWord measuredEntity = StanfordDependencies.getParent(unitOfMeasurementNode);    
+		IndexedWord measuredEntity = null;
 		String posTagRemover = null;
+		String unitOfMeasurementStr = "";
 		List<String> visitedNodes = new ArrayList<String>();
 		Matcher posTagRemoverMatcher = null;
-		visitedNodes.add(unitOfMeasurementNode.toString()+"-"+unitOfMeasurementNode.index());
 		String measuredEntityStr = null;
 		boolean flag = false;
 		int x = 0;
+		if (unitOfMeasurementNode != null) {
+			unitOfMeasurementStr = unitOfMeasurementNode.toString();
+			measuredEntity = StanfordDependencies.getParent(unitOfMeasurementNode);
+			visitedNodes.add(unitOfMeasurementNode.toString()+"-"+unitOfMeasurementNode.index());
+		}
 		if ((measuredEntity == null) && (unitOfMeasurementNode != null)) {
 			for (SemanticGraphEdge e : StanfordDependencies.getOutEdgesSorted(unitOfMeasurementNode)) {
 				if ((e.getRelation().equals("nsubj")) || (e.getRelation().equals("dobj"))) {
