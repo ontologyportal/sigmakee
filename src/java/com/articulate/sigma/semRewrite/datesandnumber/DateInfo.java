@@ -1,5 +1,9 @@
 package com.articulate.sigma.semRewrite.datesandnumber;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /*
 Copyright 2014-2015 IPsoft
 
@@ -27,7 +31,11 @@ public class DateInfo {
 	private String year = null;
 	private String month = null;
 	private String day = null;
-	private int wordIndex = -1;
+	private int startIndex = -1;
+	private int endIndex = -1;
+	private String weekDay = null;
+	private int timeCount = -1;
+	
 	
 	public DateInfo(){
 		
@@ -36,7 +44,9 @@ public class DateInfo {
 		this.year = info.year;
 		this.day = info.day;
 		this.month = info.month;
-		this.wordIndex = info.wordIndex;
+		this.wordIndexes = new ArrayList<Integer>();
+		this.wordIndexes = info.wordIndexes;
+		processWordIndexes();
 	}
 	public String getYear() {
 		return year;
@@ -57,15 +67,58 @@ public class DateInfo {
 		this.day = day;
 	}
 	public int getWordIndex() {
-		return wordIndex;
+		processWordIndexes();
+		return startIndex;
 	}
-	public void setWordIndex(int wordIndex) {
-		this.wordIndex = wordIndex;
-	}
+	
 	public void clear() {
 		this.day = null;
 		this.month = null;
 		this.year = null;
 	}
+	
+	public int getTimeCount() {
+		return timeCount;
+	}
+
+	public void setTimeCount(int timeCount) {
+		this.timeCount = timeCount;
+	}
+
+	public String getWeekDay() {
+		return weekDay;
+	}
+
+	public void setWeekDay(String weekDay) {
+		this.weekDay = weekDay;
+	}
+
+	private List<Integer> wordIndexes = new ArrayList<Integer>();
+	
+	public void addWordIndex(int index) {
+		this.wordIndexes.add(index);
+	}
+	
+	public void processWordIndexes() {
+		this.endIndex = Collections.max(this.wordIndexes);
+		this.startIndex = Collections.min(this.wordIndexes);
+	}
+	
+	public List<Integer> getWordIndexes() {
+		return wordIndexes;
+	}
+	
+	public int getEndIndex() {
+		processWordIndexes();
+		return endIndex;
+	}
+	
+	public void print() {
+		System.out.println("Day, " + this.day + " Month, " + this.month + " Year, " + this.year + " Start Index, " + this.startIndex + " EndIndex, " + this.endIndex);
+	}
+
 
 }
+
+
+

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -70,6 +71,7 @@ public class DateAndNumbersGeneration {
 	private HashMap<Integer,String> dateMap = new HashMap<Integer,String>();
 	private SemanticGraph StanfordDependencies;
 	private int timeCount = 1;
+	private List<DateInfo> allDatesList = new LinkedList<DateInfo>();
 	/** ***************************************************************
 	 */
 	public DateAndNumbersGeneration() {
@@ -89,8 +91,13 @@ public class DateAndNumbersGeneration {
 		else if (DAYS.contains(token.getWord().toLowerCase())) {
 			String tokenRoot = getRootWord(token.getId());
 			if (tokenRoot != null) {
-			sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
+				sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
 			}
+			DateInfo tempDate = new DateInfo();
+			tempDate.setWeekDay(token.getWord());
+			tempDate.addWordIndex(token.getId());
+			tempDate.setTimeCount(timeCount);
+			allDatesList.add(tempDate);
 			sumoTerms.add("day(time-"+timeCount+","+token.getWord()+")");	
 			timeCount++;
 		} 
@@ -102,6 +109,13 @@ public class DateAndNumbersGeneration {
 			if (tokenRoot != null) {
 				sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
 			}
+			DateInfo tempDate = new DateInfo();
+			tempDate.setDay(westernYearMatcher.group(3));
+			tempDate.setMonth(MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1));
+			tempDate.setYear(westernYearMatcher.group(5));
+			tempDate.addWordIndex(token.getId());
+			tempDate.setTimeCount(timeCount);
+			allDatesList.add(tempDate);
 			sumoTerms.add("month(time-"+timeCount+","+MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)+")");
 			sumoTerms.add("day(time-"+timeCount+","+westernYearMatcher.group(3)+")");
 			sumoTerms.add("year(time-"+timeCount+","+westernYearMatcher.group(5)+")");
@@ -118,17 +132,17 @@ public class DateAndNumbersGeneration {
 
 		switch(dateComponent) {
 		case MONTH : flags.setMonthFlag(true);
-		dateSet.setMonth(wordToken);
-		dateSet.setWordIndex(wordId);
-		break;
+					 dateSet.setMonth(wordToken);
+					 dateSet.addWordIndex(wordId);
+					 break;
 		case YEAR : flags.setYearFlag(true);
-		dateSet.setYear(wordToken);
-		dateSet.setWordIndex(wordId);
-		break;
+					dateSet.setYear(wordToken);
+					dateSet.addWordIndex(wordId);
+					break;
 		case DAY : flags.setDayFlag(true);
-		dateSet.setDay(wordToken);
-		dateSet.setWordIndex(wordId);
-		break;
+				   dateSet.setDay(wordToken);
+				   dateSet.addWordIndex(wordId);
+				   break;
 		}
 	}
 
@@ -152,15 +166,18 @@ public class DateAndNumbersGeneration {
 					populateDate(flags, DateComponent.MONTH, wordToken, dateInfo,dateEntry.getKey());
 				}
 				else if (!flags.isDayFlag() && !flags.isYearFlag()) {
+					dateList.add(dateInfo);
+					allDatesList.add(dateInfo);
 					dateInfoTemp = new DateInfo();
 					dateInfoTemp.setMonth(wordToken);
-					dateInfoTemp.setWordIndex(dateEntry.getKey());
+					dateInfoTemp.addWordIndex(dateEntry.getKey());
 					dateList.add(dateInfoTemp);
+					allDatesList.add(dateInfoTemp);
 					flags.setMonthFlag(true);
 
 				}
 				else {
-					addAndResetFlags(dateInfo, dateList, flags, DateComponent.MONTH, wordToken,dateEntry.getKey());
+					dateInfo = addAndResetFlags(dateInfo, dateList, flags, DateComponent.MONTH, wordToken,dateEntry.getKey());
 				}
 			}
 			else if (dateEntry.getValue().contains("DAYS")) {
@@ -168,14 +185,17 @@ public class DateAndNumbersGeneration {
 					populateDate(flags, DateComponent.DAY, wordToken, dateInfo,dateEntry.getKey());
 				}
 				else if (!flags.isMonthFlag() && !flags.isYearFlag()) {
+					dateList.add(dateInfo);
+					allDatesList.add(dateInfo);
 					dateInfoTemp = new DateInfo();
 					dateInfoTemp.setDay(wordToken);
-					dateInfoTemp.setWordIndex(dateEntry.getKey());
+					dateInfoTemp.addWordIndex(dateEntry.getKey());
 					dateList.add(dateInfoTemp);
+					allDatesList.add(dateInfoTemp);
 					flags.setDayFlag(true);
 				}
 				else {
-					addAndResetFlags(dateInfo, dateList, flags, DateComponent.DAY, wordToken,dateEntry.getKey());
+					dateInfo = addAndResetFlags(dateInfo, dateList, flags, DateComponent.DAY, wordToken,dateEntry.getKey());
 				}
 			}
 			else if (dateEntry.getValue().contains("YEAR")){
@@ -183,58 +203,66 @@ public class DateAndNumbersGeneration {
 					populateDate(flags, DateComponent.YEAR, wordToken, dateInfo,dateEntry.getKey());
 				}
 				else if (!flags.isDayFlag() && !flags.isMonthFlag()){
+					dateList.add(dateInfo);
+					allDatesList.add(dateInfo);
 					dateInfoTemp = new DateInfo();
 					dateInfoTemp.setYear(wordToken);
-					dateInfoTemp.setWordIndex(dateEntry.getKey());
+					dateInfoTemp.addWordIndex(dateEntry.getKey());
 					dateList.add(dateInfoTemp);
+					allDatesList.add(dateInfoTemp);
 					flags.setYearFlag(true);
 				}
 				else {
-					addAndResetFlags(dateInfo, dateList, flags, DateComponent.YEAR, wordToken,dateEntry.getKey());
+					dateInfo = addAndResetFlags(dateInfo, dateList, flags, DateComponent.YEAR, wordToken,dateEntry.getKey());
 				}	
 			}
 			else if (flags.isYearFlag() && flags.isMonthFlag() && flags.isDayFlag()) {
 				dateInfoTemp = new DateInfo(dateInfo);
 				dateList.add(dateInfoTemp);
-				dateInfoTemp.setWordIndex(dateEntry.getKey());
+				allDatesList.add(dateInfoTemp);
+				dateInfoTemp.addWordIndex(dateEntry.getKey());
 				dateInfo.clear();
 				flags.resetFlags();
 			}
 		}
 		dateList.add(dateInfo);
+		allDatesList.add(dateInfo);
 		return dateList;
 	}
 
 	/** ***************************************************************
 	 */
-	private void addAndResetFlags(DateInfo dateSet, List<DateInfo> dateList, FlagUtilities flags, DateComponent dateComponent, String token,int wordId) {
+	private DateInfo addAndResetFlags(DateInfo dateSet, List<DateInfo> dateList, FlagUtilities flags, DateComponent dateComponent, String token,int wordId) {
 
 		DateInfo dateSetTemp;
 		dateSetTemp = new DateInfo(dateSet);
 		dateList.add(dateSetTemp);
+		allDatesList.add(dateSetTemp);
 		dateSet.clear();
 		flags.resetFlags();
+		DateInfo newDateInfo = new DateInfo();
 		switch (dateComponent) {
-		case DAY :
-			dateSet.setDay(token);
-			dateSet.setWordIndex(wordId);
-			flags.setDayFlag(true);
-			break;
-		case MONTH:
-			dateSet.setMonth(token);
-			dateSet.setWordIndex(wordId);
-			flags.setMonthFlag(true);
-			break;
-		case YEAR:
-			dateSet.setYear(token);
-			dateSet.setWordIndex(wordId);
-			flags.setYearFlag(true);
+			case DAY :
+				newDateInfo.setDay(token);
+				newDateInfo.addWordIndex(wordId);
+				flags.setDayFlag(true);
+				break;
+			case MONTH:
+				newDateInfo.setMonth(token);
+				newDateInfo.addWordIndex(wordId);
+				flags.setMonthFlag(true);
+				break;
+			case YEAR:
+				newDateInfo.setYear(token);
+				newDateInfo.addWordIndex(wordId);
+				flags.setYearFlag(true);
 		}
+		return newDateInfo;
 	}
 
 	/** ***************************************************************
 	 */
-	private void generateSumoDateTerms(){
+	private List<DateInfo> generateSumoDateTerms(){
 
 		List<DateInfo> dateList = gatherDateSet();
 		for (DateInfo date : dateList) {
@@ -249,12 +277,14 @@ public class DateAndNumbersGeneration {
 					sumoTerms.add("year(time-"+timeCount+","+date.getYear()+")");
 				}
 				String tokenRoot = getRootWord(date.getWordIndex());
-				if (tokenRoot != null) {
+				date.setTimeCount(timeCount);
+				if (tokenRoot != null) {				
 					sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
 				}
 				timeCount++;
 			}
 		}
+		return dateList;
 	}
 
 	/** ***************************************************************
@@ -504,10 +534,49 @@ public class DateAndNumbersGeneration {
 	/** ***************************************************************
 	 */
 	private void filterSumoTerms() {
+	
 		Set<String> hashsetList = new HashSet<String>(sumoTerms);
 		sumoTerms.clear();
 		sumoTerms.addAll(hashsetList);
 	}
+	
+	/** ***************************************************************
+	 */
+	private void handleDurations() {
+		
+		for(int i = 0; i < allDatesList.size() - 1; i++) {
+			if((allDatesList.get(i).getEndIndex() + 2) == (allDatesList.get(i + 1).getWordIndex())) {
+				//System.out.println("Duration consists of ::");
+				//allDatesList.get(i).print();
+				//allDatesList.get(i+1).print();
+				IndexedWord tempParent = StanfordDependencies.getNodeByIndex(allDatesList.get(i).getWordIndex());	
+				while (!tempParent.equals(StanfordDependencies.getFirstRoot())) {
+					tempParent = StanfordDependencies.getParent(tempParent);
+					if (VerbTags.contains(tempParent.tag()) ||
+							nounTags.contains(tempParent.tag())) {
+						break;
+					}
+				}
+				if(tempParent != null) {
+					//System.out.println("Duration is associated with ::" + tempParent);
+					if(VerbTags.contains(tempParent.tag())) {
+						sumoTerms.add("StartTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
+						sumoTerms.add("EndTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
+					}
+					if(nounTags.contains(tempParent.tag())) {
+						if(tempParent.ner().equals("PERSON")) {
+							sumoTerms.add("BirthDate(" + tempParent.value() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
+							sumoTerms.add("DeathDate(" + tempParent.value() + "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
+						} else {
+							sumoTerms.add("StartTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
+							sumoTerms.add("EndTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	/** ***************************************************************
 	 */
 	public List<String> generateSumoTerms(List<Tokens> tokensList, StanfordDateTimeExtractor stanfordParser) {
@@ -517,16 +586,18 @@ public class DateAndNumbersGeneration {
 		int numberCount = 1;
 		for(Tokens token : tokensList) {
 			switch(token.getNer()) {
-			case "DATE"  : processDate(token, stanfordParser.getDependencyList());
-			break;
-			case "NUMBER":case "PERCENT" : measureFn(token,numberCount); ++numberCount;  //processNumber(token,stanfordParser.getDependencyList());
-			break;
-			case "DURATION" : ;
-			case "TIME" : tokenIdNormalizedTimeMap.add(token.getId() + "@" + token.getNormalizedNer());
+				case "DATE"  : processDate(token, stanfordParser.getDependencyList());
+							   break;
+				case "NUMBER":
+				case "PERCENT" : measureFn(token,numberCount); ++numberCount;  //processNumber(token,stanfordParser.getDependencyList());
+								 break;
+				case "DURATION" : break;
+				case "TIME" : tokenIdNormalizedTimeMap.add(token.getId() + "@" + token.getNormalizedNer());
 			}
 		}
 		List<TimeInfo> timesList = processTime(tokenIdNormalizedTimeMap);
 		generateSumoDateTerms();
+		handleDurations();
 		generateSumoTimeTerms(timesList);
 		filterSumoTerms();
 		return sumoTerms;
