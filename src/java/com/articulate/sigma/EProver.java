@@ -251,6 +251,8 @@ public class EProver {
                             String theTPTPFormula = tptpIt.next();
                             pw.print("fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                             pw.println(",axiom,(" + theTPTPFormula + ")).");
+                            String tptpstring = "fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
+                            System.out.println("INFO in EProver.assertFormula: TPTP for user assertion = " + tptpstring);
                         }
                         pw.flush();
                     }
