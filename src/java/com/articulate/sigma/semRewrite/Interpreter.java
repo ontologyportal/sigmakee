@@ -784,6 +784,7 @@ public class Interpreter {
       else if (args != null && args.length > 0 && args[0].equals("-h")) {
           System.out.println("Semantic Rewriting with SUMO, Sigma and E");
           System.out.println("  options:");
+          System.out.println("  -h - show this help screen");
           System.out.println("  -s - runs one conversion of one sentence");
           System.out.println("  -i - runs a loop of conversions of one sentence at a time,");
           System.out.println("       prompting the user for more.  Empty line to exit.");
