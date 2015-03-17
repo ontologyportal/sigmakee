@@ -6,7 +6,7 @@ import java.util.*;
 public class SUMOKBtoTPTPKB {
 
     // TODO: In future, should turn filterSimpleOnly off
-    public static final boolean filterSimpleOnly = true;
+    public static final boolean filterSimpleOnly = false;
 
     public KB kb;
 
