@@ -75,6 +75,7 @@ public class DateAndNumbersGeneration {
 	public DateAndNumbersGeneration() {
 	}
 
+	
 	/** ***************************************************************
 	 */
 	private void processDate(Tokens token, List<String> dependencyList) {
@@ -86,7 +87,10 @@ public class DateAndNumbersGeneration {
 			dateMap.put(token.getId(), "MONTH@"+token.getWord());
 		} 
 		else if (DAYS.contains(token.getWord().toLowerCase())) {
-			sumoTerms.add("time("+getRootWord(token.getId())+","+"time-"+timeCount+")");
+			String tokenRoot = getRootWord(token.getId());
+			if (tokenRoot != null) {
+			sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
+			}
 			sumoTerms.add("day(time-"+timeCount+","+token.getWord()+")");	
 			timeCount++;
 		} 
@@ -94,7 +98,10 @@ public class DateAndNumbersGeneration {
 			dateMap.put(token.getId(), "YEAR@" + token.getWord());
 		} 
 		else if (westernYearMatcher.find()) {
-			sumoTerms.add("time("+getRootWord(token.getId())+","+"time-"+timeCount+")");
+			String tokenRoot = getRootWord(token.getId());
+			if (tokenRoot != null) {
+				sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
+			}
 			sumoTerms.add("month(time-"+timeCount+","+MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)+")");
 			sumoTerms.add("day(time-"+timeCount+","+westernYearMatcher.group(3)+")");
 			sumoTerms.add("year(time-"+timeCount+","+westernYearMatcher.group(5)+")");
@@ -241,7 +248,10 @@ public class DateAndNumbersGeneration {
 				if (date.getYear() != null) {
 					sumoTerms.add("year(time-"+timeCount+","+date.getYear()+")");
 				}
-				sumoTerms.add("time("+getRootWord(date.getWordIndex())+","+"time-"+timeCount+")");
+				String tokenRoot = getRootWord(date.getWordIndex());
+				if (tokenRoot != null) {
+					sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
+				}
 				timeCount++;
 			}
 		}
@@ -263,7 +273,10 @@ public class DateAndNumbersGeneration {
 				if (times.getHour() != null) {
 					sumoTerms.add("hour("+"time-"+timeCount+","+times.getHour()+")");
 				}
-				sumoTerms.add("time("+getRootWord(times.getWordIndex())+","+"time-"+timeCount+")");
+				String tokenRoot = getRootWord(times.getWordIndex());
+				if (tokenRoot != null) {
+					sumoTerms.add("time("+tokenRoot+","+"time-"+timeCount+")");
+				}
 				timeCount++;
 			}
 		}
