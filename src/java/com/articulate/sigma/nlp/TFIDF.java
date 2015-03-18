@@ -507,6 +507,45 @@ public class TFIDF {
     }
     
     /** *************************************************************
+     * @return a list of matches ranked by relevance to the input.
+     * If there is a cluster of top matches, return all elements of
+     * the cluster.  If no answer has a good match, return
+     * "I don't know".  Iterate the number of clusters until the top
+     * cluster is no more than 3.
+     */
+    public ArrayList<String> matchBestInput(String input) {
+        
+        ArrayList<String> result = new ArrayList<String>();
+        TreeMap<Float,ArrayList<Integer>> sortedSim = matchInputFull(input);
+        if (sortedSim.lastKey() < .1) {
+            result.add("I don't know");
+            return result;
+        }
+        Object[] floats = sortedSim.keySet().toArray();
+        int numClusters = 3;
+        if (floats.length < numClusters)
+            numClusters = floats.length;
+        float[] floatarray = new float[floats.length];
+        for (int i = 0; i < floats.length; i++)
+            floatarray[i] = (float) floats[i];
+        ArrayList<ArrayList<Float>> res = KMeans.run(floatarray.length, floatarray, numClusters);
+        ArrayList<Float> topCluster = res.get(res.size() - 2);
+        while (res.get(res.size() - 2).size() > 3 && numClusters < floats.length) {
+            numClusters++;
+            res = KMeans.run(floatarray.length, floatarray, numClusters);
+            topCluster = res.get(res.size() - 2);
+            //System.out.println("Info in TFIDF.matchBestInput(): " + res);
+            //System.out.println("Info in TFIDF.matchBestInput(): " + topCluster);
+        }
+        for (int i = 0; i < topCluster.size(); i++) {
+            ArrayList<Integer> temp = sortedSim.get(topCluster.get(i));
+            for (int j = 0; j < temp.size(); j++)
+                result.add(lines.get(temp.get(j).intValue()));
+        }
+        return result;
+    }
+    
+    /** *************************************************************
      */
     protected String matchInput(String input) {
         
@@ -516,7 +555,7 @@ public class TFIDF {
     /** *************************************************************
      * @return a list of matches ranked by relevance to the input.
      */
-    protected TreeMap<Float,ArrayList<Integer>> matchInputFull(String input, int n) {
+    protected TreeMap<Float,ArrayList<Integer>> matchInputFull(String input) {
 
         ArrayList<String> result = new ArrayList<String>();
         if (isNullOrEmpty(input))
@@ -557,7 +596,7 @@ public class TFIDF {
     protected List<String> matchInput(String input, int n) {
 
         ArrayList<String> result = new ArrayList<String>();
-        TreeMap<Float,ArrayList<Integer>> sortedSim = matchInputFull(input,n);
+        TreeMap<Float,ArrayList<Integer>> sortedSim = matchInputFull(input);
         
         Iterator<Float> it2 = sortedSim.descendingKeySet().iterator();
         int counter = n;
@@ -618,7 +657,8 @@ public class TFIDF {
             }
             String input = c.readLine("> ");
             //boolean question = input.trim().endsWith("?");
-            System.out.println(cb.matchInput(input,10));
+            //System.out.println(cb.matchInput(input,10));
+            System.out.println(cb.matchBestInput(input));
         }
     }
 
