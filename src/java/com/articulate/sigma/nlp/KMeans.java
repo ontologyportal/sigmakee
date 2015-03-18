@@ -6,21 +6,22 @@ import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.semRewrite.Interpreter;
 
 // code thanks to http://adityamandhare.blogspot.com/2013/02/kmeans-clustering-algorithm-java-code.html
+// modified to solve fixed number of clusters - APease
 
 // Hartigan, J. A.; Wong, M. A. (1979). "Algorithm AS 136: A K-Means Clustering Algorithm". 
 // Journal of the Royal Statistical Society, Series C 28 (1): 100–108. JSTOR 2346830.
 
 public class KMeans {
 
-    private static int count1,count2,count3;
+    private static int[] counts;
     private static float k[][];
     private static float tempk[][];
     private static double m[];
     private static double diff[];
 
     /** ***************************************************************
-     * This method will determine the cluster in which an element go at 
-     * a particular step.
+     * This method will determine the cluster in which an element should 
+     * go at a particular step.
      */
     private static int calcDiff(float a, int p) {
         
@@ -43,22 +44,31 @@ public class KMeans {
     }
 
     /** ***************************************************************
+     * This method will determine mean values
+     */
+    public static float mean(float[] list, int n) {
+    
+        int cnt = 0;
+        float mean = 0;
+        for (int j = 0; j < n - 1; ++j) {
+            if (list[j] != -1) {
+                mean += list[j];
+                ++cnt;
+            }
+        }
+        return mean / cnt;
+    }
+    
+    /** ***************************************************************
      * This method will determine intermediate mean values
      */
     private static void calcMeans(int n, int p) {
         
-        for (int i = 0; i < p; ++i)
-            m[i] = 0; // initializing means to 0
+       // for (int i = 0; i < p; ++i)
+       //     m[i] = 0; // initializing means to 0
         int cnt = 0;
         for (int i = 0; i < p; ++i) {
-            cnt = 0;
-            for (int j = 0; j < n - 1; ++j) {
-                if (k[i][j] != -1) {
-                    m[i] += k[i][j];
-                    ++cnt;
-                }
-            }
-            m[i] = m[i] / cnt;
+            m[i] = mean(k[i],n);
         }
     }
 
@@ -77,11 +87,13 @@ public class KMeans {
         }
         return true;
     }
-
+    
     /** ***************************************************************
      */
     public static ArrayList<ArrayList<Float>> run(int n, float[] d, int p) {
         
+        counts = new int[p];
+        Arrays.fill(counts, 0);
         ArrayList<ArrayList<Float>> result = new ArrayList<ArrayList<Float>>();
         k = new float[p][n];
         tempk = new float[p][n];
@@ -100,14 +112,7 @@ public class KMeans {
                 }
             for (int i = 0; i < n; ++i) { // for loop will cal calcDiff(int) for every element.            
                 temp = calcDiff(d[i],p);
-                if (temp == 0)
-                    k[temp][count1++] = d[i];
-                else
-                    if (temp == 1)
-                        k[temp][count2++] = d[i];
-                    else
-                        if (temp == 2)
-                            k[temp][count3++] = d[i]; 
+                k[temp][counts[temp]++] = d[i];
             }
             calcMeans(n,p); // call to method which will calculate mean at this step.
             flag = check1(n,p); // check if terminating condition is satisfied.
@@ -119,17 +124,17 @@ public class KMeans {
 
             //System.out.println("\n\nAt this step");
             //System.out.println("\nValue of clusters");
-           // for (int i = 0; i < p; ++i) {
-                //System.out.print("K" + (i + 1) + "{ ");
-                //for (int j = 0; k[i][j] != -1 && j < n - 1; ++j)
-                    //System.out.print(k[i][j] + " ");
+            //for (int i = 0; i < p; ++i) {
+            //    System.out.print("K" + (i + 1) + "{ ");
+            //    for (int j = 0; k[i][j] != -1 && j < n - 1; ++j)
+            //        System.out.print(k[i][j] + " ");
                 //System.out.println("}");
             //}
             //System.out.println("\nValue of m ");
             //for (int i = 0; i < p; ++i)
-                //System.out.print("m" + (i + 1) + "=" + m[i] + "  ");
+            //    System.out.print("m" + (i + 1) + "=" + m[i] + "  ");
 
-            count1 = 0; count2 = 0; count3 = 0;
+            Arrays.fill(counts, 0);
         } while (flag == false);
 
         //System.out.println("\n\n\nThe Final Clusters By Kmeans are as follows: ");
