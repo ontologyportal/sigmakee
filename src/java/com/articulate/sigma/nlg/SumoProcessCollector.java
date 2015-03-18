@@ -12,6 +12,7 @@ import static com.articulate.sigma.nlg.VerbProperties.*;
  * well as the entities which play that role.
  */
 public class SumoProcessCollector {
+
     private SumoProcess sumoProcess;
 
     private VerbProperties.Polarity polarity = Polarity.AFFIRMATIVE;
@@ -20,6 +21,8 @@ public class SumoProcessCollector {
     private final Multimap<CaseRole, String> roles = TreeMultimap.create();
 
     private KB kb;
+
+    private Multimap<String, SumoProcessEntityProperty> entityProperties = TreeMultimap.create();
 
     /**************************************************************************************
      * Construct a SumoProcessCollector.
@@ -56,7 +59,8 @@ public class SumoProcessCollector {
             throw new IllegalArgumentException("Process parameter is not a Process: " + msg);
         }
 
-        entity = checkEntityCase(entity);
+        // FIXME: there's no reason to be doing this at this point; but changing is not a simple matter
+        entity = SumoProcessCollector.lowercaseIfEntity(entity, kb);
 
         sumoProcess = new SumoProcess(process, kb);
         //name = process;
@@ -93,7 +97,7 @@ public class SumoProcessCollector {
      * @param arg
      */
     public void addRole(String role, String arg) {
-        String entity = checkEntityCase(arg);
+        String entity = SumoProcessCollector.lowercaseIfEntity(arg, kb);
 
         String msg = "role = " + role + "; entity = " + entity + ".";
         if (! kb.kbCache.isInstanceOf(role, "CaseRole")) {
@@ -130,12 +134,17 @@ public class SumoProcessCollector {
      * @param entity
      * @return
      */
-    private String checkEntityCase(String entity) {
+    public static String lowercaseIfEntity(String entity, KB kb) {
 
         // FIXME: instances of human and geographical area/region are capitalized; also holidays/weekdays/months/centuries
         String temp = entity;
-        if(kb.isSubclass(entity, "Entity"))    {
-            temp = temp.toLowerCase();
+        if (kb.isSubclass(entity, "Entity"))    {
+            if (kb.getTermFormatMap("EnglishLanguage").containsKey(entity))     {
+                temp = kb.getTermFormatMap("EnglishLanguage").get(entity);
+            }
+            else    {
+                temp = temp.toLowerCase();
+            }
         }
         return temp;
     }
@@ -166,9 +175,20 @@ public class SumoProcessCollector {
      * @return
      *  a natural language translation, or empty string if one is not possible
      */
-    public String toNaturalLanguage()   {
-        Sentence sentence = new Sentence(createNewRoleScratchPad(), sumoProcess, kb);
+    public String toNaturalLanguage( )   {
+        Sentence sentence = new Sentence(createNewRoleScratchPad(), sumoProcess, kb, entityProperties);
         return sentence.toNaturalLanguage();
+    }
+
+    /**************************************************************************************************************
+     * Translate this process and its case roles into natural language.
+     * @return
+     *  a natural language translation, or empty string if one is not possible
+     * @param properties
+     */
+
+    public void setEntityProperties(Multimap<String, SumoProcessEntityProperty> properties)   {
+        entityProperties = properties;
     }
 
     /**************************************************************************************************************

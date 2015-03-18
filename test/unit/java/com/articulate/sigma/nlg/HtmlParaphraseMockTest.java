@@ -184,7 +184,7 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                    (agent ?event ?he)\n" +
                 "                    (destination ?event Sudan)))";
 
-        String expectedResult = "there exist an agent and a process such that the process is an instance of Transportation and male is an attribute of the agent and the agent is an instance of human and the agent is an agent of the process and the process ends at Sudan";
+        String expectedResult = "a male human performs a transportation to Sudan";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
@@ -284,14 +284,14 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                (exists \n" +
                 "                  (?event2) \n" +
                 "                  (and \n" +
-                "                  (attribute John-1 Male) \n" +
-                "                  (instance John-1 Human) \n" +
-                "                  (instance ?book Object) \n" +
-                "                  (agent ?event2 John-1) \n" +
-                "                  (instance ?event2 Reading) \n" +
-                "                  (patient ?event2 ?book)))))";
+                "                       (attribute John-1 Male) \n" +
+                "                       (instance John-1 Human) \n" +
+                "                       (instance ?book Object) \n" +
+                "                       (agent ?event2 John-1) \n" +
+                "                       (instance ?event2 Reading) \n" +
+                "                       (patient ?event2 ?book)))))";
 
-        String expectedResult = "for all an entity and a process if male is an attribute of John-1 and female is an attribute of Mary-1 and John-1 is an instance of human and Mary-1 is an instance of human and the entity is an instance of Book and Mary-1 is an agent of the process and the process ends at John-1 and the process is an instance of Giving and the entity is a patient of the process, then there exists another process such that male is an attribute of John-1 and John-1 is an instance of human and the entity is an instance of Object and John-1 is an agent of the other process and the other process is an instance of Reading and the entity is a patient of the other process";
+        String expectedResult = "if female Mary-1 gives a book to male John-1, then male John-1 reads the book";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
@@ -320,12 +320,12 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "                   (exists \n" +
                 "                       (?event2) \n" +
                 "                       (and \n" +
-                "                       (attribute John-1 Male) \n" +
-                "                       (instance John-1 Human) \n" +
-                "                       (instance ?book Object) \n" +
-                "                       (agent ?event2 John-1) \n" +
-                "                       (instance ?event2 Reading) \n" +
-                "                       (patient ?event2 ?book))))))";
+                "                           (attribute John-1 Male) \n" +
+                "                           (instance John-1 Human) \n" +
+                "                           (instance ?book Object) \n" +
+                "                           (agent ?event2 John-1) \n" +
+                "                           (instance ?event2 Reading) \n" +
+                "                           (patient ?event2 ?book))))))";
 
 
         LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
@@ -338,7 +338,7 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        //expectedResult = "if mary gives john a book then he doesn't read it";
+        expectedResult = "if female Mary-1 doesn't give a book to male John-1, then male John-1 doesn't read the book";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
@@ -378,6 +378,7 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
         LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
+
         languageFormatter.setDoInformalNLG(false);
         String expectedResult = "if a process is an instance of Driving and an agent is an instance of human and the agent is an agent of the process, then the agent is transported during the process";
         String actualResult = languageFormatter.htmlParaphrase("");
@@ -386,6 +387,65 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
         languageFormatter.setDoInformalNLG(true);
         expectedResult = "if a process is an instance of Driving and an agent is an instance of human and the agent is an agent of the process, then the agent is transported during the process";
 
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testDrivingToCleanCity()     {
+        String stmt =   "(exists \n" +
+                "              (?agent ?city ?event) \n" +
+                "              (and \n" +
+                "                (instance ?agent Agent) \n" +
+                "                (instance ?city City) \n" +
+                "                (instance ?event Driving) \n" +
+                "                (agent ?event ?agent) \n" +
+                "                (destination ?event ?city) \n" +
+                "                (attribute ?city Clean)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "EnglishLanguage");
+
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an agent, an entity and a process such that the agent is an instance of agent and the entity is an instance of city and the process is an instance of Driving and the agent is an agent of the process and the process ends at the entity and clean is an attribute of the entity";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "an agent drives to a clean city";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    /**
+     * Ideal: "The waiter pours soup into the bowl."
+     */
+    @Test
+    @Ignore
+    public void testWaiterGivesTeaDoctor()     {
+        String stmt =   "(exists \n" +
+                "              (?doctor ?event ?tea ?waiter) \n" +
+                "              (and \n" +
+                "                (instance ?doctor MedicalDoctor) \n" +
+                "                (instance ?event Giving) \n" +
+                "                (instance ?tea Tea) \n" +
+                "                (attribute ?waiter ServicePosition) \n" +
+                "                (destination ?event ?doctor) \n" +
+                "                (patient ?event ?tea) \n" +
+                "                (agent ?event ?waiter)))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "EnglishLanguage");
+
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "there exist an entity, a process, , , another entity and an agent such that the entity is an instance of MedicalDoctor and the process is an instance of Giving and the other entity is an instance of tea and ServicePosition is an attribute of the agent and the process ends at the entity and the other entity is a patient of the process and the agent is an agent of the process";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        expectedResult = "a kind of ServicePosition agent gives tea to a medical doctor";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }

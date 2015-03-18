@@ -109,6 +109,9 @@ public class SigmaMockTestBase {
         termFormatMap.put("Human", "human");
         termFormatMap.put("Male", "male");
         termFormatMap.put("Female", "female");
+        termFormatMap.put("Clean", "clean");
+        termFormatMap.put("City", "city");
+        termFormatMap.put("Tea", "tea");
 
         recognizedMap.put("Process", RECOGNIZED_PROCESSES);
         recognizedMap.put("CaseRole", RECOGNIZED_CASE_ROLES);
@@ -125,7 +128,7 @@ public class SigmaMockTestBase {
         entityList.addAll(RECOGNIZED_SUBSTANCES);
         entityList.addAll(RECOGNIZED_CORPUSCULAR_OBJECTS);
         entityList.addAll(recognizedCaseRolesCapitalized);
-        entityList.addAll(Lists.newArrayList("Process", "Substance", "CorpuscularObject"));
+        entityList.addAll(Lists.newArrayList("Process", "Substance", "CorpuscularObject", "City"));
         recognizedMap.put("Entity", entityList);
 
         signaturesMap.put("instance", INSTANCE_SIGNATURES);

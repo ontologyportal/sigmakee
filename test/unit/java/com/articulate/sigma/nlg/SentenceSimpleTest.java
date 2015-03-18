@@ -1,6 +1,8 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.KB;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -11,12 +13,14 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
 
     private final KB knowledgeBase = this.kbMock;
 
+    private final Multimap<String, SumoProcessEntityProperty> entityProperties = HashMultimap.create();
+
     @Test
     public void testFormulateNaturalDirectObject() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "patient", "Driving", "Automobile");
 
         String expected = "an automobile";
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
         sentence.formulateNaturalDirectObject();
         assertEquals(expected, sentence.getDirectObject().getSurfaceForm());
 
@@ -44,7 +48,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "patient", "Driving", "Entity");
 
         String expected = "Entity";
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
         sentence.formulateNaturalDirectObject();
         assertEquals(expected, sentence.getDirectObject().getSurfaceForm());
     }
@@ -54,7 +58,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Human");
 
         String expected = "a human";
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
         sentence.formulateNaturalSubject();
         assertEquals(expected, sentence.getSubject().getSurfaceForm());
 
@@ -75,7 +79,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
     public void testFormulateNaturalVerbNotInWordNet() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Transportation", "Maria");
 
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
         sentence.formulateNaturalSubject();
         sentence.formulateNaturalVerb();
         assertEquals("Maria", sentence.getSubject().getSurfaceForm());
@@ -88,7 +92,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Maria");
         process.addRole("patient", "Automobile");
         process.addRole("instrument", "Telephone");
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
 
         String expected = "Maria drives an automobile with a telephone";
         String actual = sentence.toNaturalLanguage();
@@ -101,7 +105,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         process.addRole("patient", "Automobile");
         process.addRole("instrument", "Telephone");
         process.addRole("destination", "Albany");
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
 
         String expected = "Maria drives an automobile to Albany with a telephone";
         String actual = sentence.toNaturalLanguage();
@@ -117,7 +121,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         process.addRole("instrument", "Telephone");
         process.addRole("instrument", "Bell");
         process.addRole("destination", "Albany");
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
 
         String expected = "Maria and a medicaldoctor drive an automobile and a truck to Albany with a bell and a telephone";
         String actual = sentence.toNaturalLanguage();
@@ -136,7 +140,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         process.addRole("instrument", "Bell");
         process.addRole("instrument", "Book");
         process.addRole("destination", "Albany");
-        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase);
+        Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
 
         String expected = "Maria, Suzy and a medicaldoctor drive an automobile, a taxi and a truck to Albany with a bell, a book and a telephone";
         String actual = sentence.toNaturalLanguage();

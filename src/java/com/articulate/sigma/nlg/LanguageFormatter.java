@@ -19,7 +19,7 @@ package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.util.*;
 
@@ -42,9 +42,13 @@ public class LanguageFormatter {
     private final KB kb;
     private final String language;
 
-    private final HashMap<String, HashSet<String>> variableTypes;
+    private final Map<String, HashSet<String>> variableTypes;
 
     private final Map<String, HashSet<String>> variableToInstanceMap;
+
+    // Modifiable versions of variableTypes and variableToInstanceMap for informal NLG.
+    private HashMap<String, Set<String>> variableTypesNLG;
+    private  Map<String, Set<String>> variableToInstanceMapNLG;
 
     // FIXME: Verify that we handle all operators, then delete this field.
     private static final List<String> notReadyOperators = Lists.newArrayList();
@@ -89,6 +93,47 @@ public class LanguageFormatter {
         variableTypes = fp.computeVariableTypes(f, kb);
 
         variableToInstanceMap = fp.findExplicitTypes(f);
+
+        init();
+    }
+
+    /***********************************************************************************
+     *
+     */
+    private void init() {
+//        variableTypesNLG = new HashMap<>(variableTypes);
+        variableTypesNLG = new HashMap<>();
+        variableToInstanceMapNLG = new HashMap<>(variableToInstanceMap);
+        // FIXME: put this in NLG utilities
+        for (Map.Entry<String, Set<String>> entry : variableToInstanceMapNLG.entrySet())    {
+            String variable = entry.getKey();
+            Set<String> origInstances = entry.getValue();
+            Set<String> newInstances = Sets.newHashSet();
+            for (String instance : origInstances)   {
+                String newStr = SumoProcessCollector.lowercaseIfEntity(instance, kb);
+//                if  (Noun.takesIndefiniteArticle(instance, kb)) {
+//                    newStr = Noun.aOrAn(newStr) + " " + newStr;
+//                }
+                newInstances.add(newStr);
+            }
+            variableToInstanceMapNLG.put(variable, newInstances);
+        }
+        for (Map.Entry<String, HashSet<String>> entry : variableTypes.entrySet())    {
+            // Insert into variableTypesNLG only if the key is not found in variableToInstanceMapNLG.
+            String variable = entry.getKey();
+            if (! variableToInstanceMapNLG.containsKey(variable)) {
+                Set<String> origInstances = entry.getValue();
+                Set<String> newInstances = Sets.newHashSet();
+                for (String instance : origInstances)   {
+                    String newStr = SumoProcessCollector.lowercaseIfEntity(instance, kb);
+//                    if  (Noun.takesIndefiniteArticle(instance, kb)) {
+//                        newStr = Noun.aOrAn(newStr) + " " + newStr;
+//                    }
+                    newInstances.add(newStr);
+                }
+                variableTypesNLG.put(variable, newInstances);
+            }
+        }
     }
 
 
@@ -103,6 +148,7 @@ public class LanguageFormatter {
      * @return
      */
     public String htmlParaphrase(String href)     {
+        init();
 
         String nlFormat = "";
         try {
@@ -116,7 +162,7 @@ public class LanguageFormatter {
                 String informalNLG = theStack.doStatementLevelNatlLanguageGeneration();
                 if (! informalNLG.isEmpty())    {
                     // Resolve variables.
-                    informalNLG = LanguageFormatter.variableReplace(informalNLG, variableToInstanceMap, Maps.<String, HashSet<String>>newHashMap(), kb, language);
+                    informalNLG = LanguageFormatter.variableReplace(informalNLG, variableToInstanceMapNLG, variableTypesNLG, kb, language);
                     template = informalNLG;
                 }
             }
@@ -128,8 +174,8 @@ public class LanguageFormatter {
                 f.read(statement);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
-                HashMap<String, HashSet<String>> instanceMap = new HashMap<>();
-                HashMap<String, HashSet<String>> classMap = new HashMap<>();
+                HashMap<String, Set<String>> instanceMap = new HashMap<>();
+                HashMap<String, Set<String>> classMap = new HashMap<>();
                 HashMap<String, HashSet<String>> types = fp.computeVariableTypes(f, kb);
                 Iterator<String> it = types.keySet().iterator();
                 while (it.hasNext()) {
@@ -139,14 +185,14 @@ public class LanguageFormatter {
                     while (it2.hasNext()) {
                         String t = it2.next();
                         if (t.endsWith("+")) {
-                            HashSet<String> values = new HashSet<>();
+                            Set<String> values = new HashSet<>();
                             if (classMap.containsKey(var))
                                 values = classMap.get(var);
                             values.add(t.substring(0, t.length()-1));
                             classMap.put(var, values);
                         }
                         else {
-                            HashSet<String> values = new HashSet<>();
+                            Set<String> values = new HashSet<>();
                             if (instanceMap.containsKey(var))
                                 values = instanceMap.get(var);
                             values.add(t);
@@ -244,7 +290,7 @@ public class LanguageFormatter {
             List<String> translations = theStack.getCurrStackFormulaArgs();
             String translation = "";
             if (translations.size() > 1) {
-                // "Concatenate" the informal NLG with the operator, e.g. if repeated entity use "the" instead of "a".
+                // FIXME: check this: "Concatenate" the informal NLG with the operator, e.g. if repeated entity use "the" instead of "a".
                 translation = generateFormalNaturalLanguage(translations, pred, isNegMode);
             }
             else if (translations.size() == 1) {
@@ -259,6 +305,43 @@ public class LanguageFormatter {
         }
 
         if (phraseMap.containsKey(pred)) {
+            // FIXME: Handle attributes here. Encapsulate.
+            if(pred.equals("attribute"))    {
+                StackElement element = theStack.getCurrStackElement();
+                SumoProcessEntityProperty property = new SumoProcessEntityProperty(f);
+                // Insert the property into the map with the identifier as the key.
+                String key = f.cdrAsFormula().car();
+                theStack.getCurrStackElement().getEntityProperties().put(key, property);
+                theStack.markFormulaArgAsProcessed(stmt);
+                // Modify the variable list to hold the attribute
+                if (variableToInstanceMapNLG.containsKey(key))     {
+                    Set<String> oldSet = variableToInstanceMapNLG.get(key);
+                    Set<String> newSet = Sets.newHashSet();
+                    for(String oldStr : oldSet)   {
+                        // modify each noun accordingly
+                        String newStr = property.getSurfaceFormForNoun(oldStr, kb);
+//                        if  (Noun.takesIndefiniteArticle(oldStr, kb)) {
+//                            newStr = Noun.aOrAn(newStr) + " " + newStr;
+//                        }
+                        newSet.add(newStr);
+                    }
+                    variableToInstanceMapNLG.put(key, newSet);
+                }
+                if (variableTypesNLG.containsKey(key))     {
+                    Set<String> oldSet = variableTypesNLG.get(key);
+                    Set<String> newSet = Sets.newHashSet();
+                    for(String oldStr : oldSet)   {
+                        // modify each noun accordingly
+                        String newStr = property.getSurfaceFormForNoun(oldStr, kb);
+//                        if  (Noun.takesIndefiniteArticle(oldStr, kb)) {
+//                            newStr = Noun.aOrAn(newStr) + " " + newStr;
+//                        }
+                        newSet.add(newStr);
+                    }
+                    variableTypesNLG.put(key, newSet);
+                }
+            }
+
             ans = paraphraseWithFormat(stmt, isNegMode);
             return ans;
         }
@@ -939,8 +1022,8 @@ public class LanguageFormatter {
      * Replace variables in a formula with paraphrases expressing their
      * type.
      */
-    public static String variableReplace(String form, Map<String, HashSet<String>> instMap,
-            HashMap<String, HashSet<String>> classMap, KB kb, String language) {
+    public static String variableReplace(String form, Map<String, Set<String>> instMap,
+            HashMap<String, Set<String>> classMap, KB kb, String language) {
 
         String result = form;
         HashMap<String,Integer> typeMap = new HashMap<>();
@@ -949,8 +1032,8 @@ public class LanguageFormatter {
         while (it.hasNext()) {
             String varString = it.next();
             if (StringUtil.isNonEmptyString(varString)) {
-                HashSet<String> instanceArray = instMap.get(varString);
-                HashSet<String> subclassArray = classMap.get(varString);
+                Set<String> instanceArray = instMap.get(varString);
+                Set<String> subclassArray = classMap.get(varString);
 
                 if (subclassArray != null && ! subclassArray.isEmpty()) {
                     String varType = (String) subclassArray.toArray()[0];

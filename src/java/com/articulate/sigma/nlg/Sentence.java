@@ -1,7 +1,6 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -15,7 +14,7 @@ import com.google.common.collect.Sets;
  * A structure allowing one Subject-Verb-Object element in a sentence to "know" about the others.
  */
 public class Sentence {
-    private KB kb;
+    private final KB kb;
 
     // TODO: consider having SVOElement and SumoProcess implement an interface; right now they all share one
     // method--getSurfaceForm( )
@@ -26,6 +25,8 @@ public class Sentence {
     private SVOElement directObject = new SVOElement(SVOGrammarPosition.DIRECT_OBJECT);
 
     private List<SVOElement> indirectObjects = Lists.newArrayList();
+
+    private final Multimap<String, SumoProcessEntityProperty> entityProperties;
 
     /**
      * A list of the sentence's case roles.
@@ -42,15 +43,18 @@ public class Sentence {
      * Constructor.
      * @param roles
      * @param process
-     * @param kb
+     * @param inKB
+     * @param properties
      */
-    public Sentence(Multimap<CaseRole, String> roles, SumoProcess process, KB kb)   {
+    public Sentence(Multimap<CaseRole, String> roles, SumoProcess process, KB inKB, Multimap<String, SumoProcessEntityProperty> properties)   {
         caseRoles = HashMultimap.create(roles);
         setCaseRolesScratchpad(roles);
 
-        verb = new SumoProcess(process, kb);
+        verb = new SumoProcess(process, inKB);
 
-        this.kb = kb;
+        this.kb = inKB;
+
+        entityProperties = properties;
     }
 
     /**************************************************************************************
@@ -293,20 +297,40 @@ public class Sentence {
         if (! getCaseRolesScratchpad().containsKey(role))    {
             return "";
         }
-        Set<String> rawNouns = getRoleEntities(role, getCaseRolesScratchpad());
+        Set<String> rawNouns = Sentence.getRoleEntities(role, getCaseRolesScratchpad());
 
         List<String> fixedNouns = Lists.newArrayList();
         // We're assuming that only names and reified objects are in uppercase.
         for (String noun : rawNouns) {
             String temp = noun;
-            if (! NLGStringUtils.isVariable(temp) && Noun.takesIndefiniteArticle(noun, kb)) {
-                temp = Noun.aOrAn(temp) + " " + temp;
+            if (! NLGStringUtils.isVariable(noun)) {
+                temp = addProperties(noun);
+                if  (Noun.takesIndefiniteArticle(noun, kb)) {
+                    temp = Noun.aOrAn(temp) + " " + temp;
+                }
             }
             fixedNouns.add(temp);
             element.addConsumedCaseRole(role);
         }
 
         return NLGStringUtils.concatenateWithCommas(fixedNouns);
+    }
+
+    /**************************************************************************************************************
+     * Add properties like adjectives to the given noun.
+     * @param noun
+     * @return
+     */
+    private String addProperties(String noun) {
+        if (entityProperties.isEmpty() || entityProperties.get(noun).isEmpty()) {
+            return noun;
+        }
+
+        String retVal = noun;
+        for (SumoProcessEntityProperty prop : entityProperties.get(noun))   {
+            retVal = prop.getSurfaceFormForNoun(retVal, kb);
+        }
+        return retVal;
     }
 
     /**************************************************************************************************************

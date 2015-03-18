@@ -1,8 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.Formula;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
 
 import java.util.List;
 import java.util.Map;
@@ -25,12 +24,15 @@ public class StackElement {
         }
     }
 
-    private LanguageFormatterStack languageFormatterStack;
-
     /**
      * Holds all the events being processed.
      */
     private Map<String, SumoProcessCollector> sumoProcessMap = Maps.newHashMap();
+
+    /**
+     * Holds properties belonging to entities involved in the processes. Key is a string identifier (e.g. variable).
+     */
+    private Multimap<String, SumoProcessEntityProperty> entityProperties = TreeMultimap.create();
 
     /**
      * Holds the arguments of the current clause. We use it to keep track of which arguments have been translated into informal NLG successfully.
@@ -50,8 +52,7 @@ public class StackElement {
      * @param spcMap
      * @param args
      */
-    public StackElement(LanguageFormatterStack languageFormatterStack, Map<String, SumoProcessCollector> spcMap, List<String> args)  {
-        this.languageFormatterStack = languageFormatterStack;
+    public StackElement(Map<String, SumoProcessCollector> spcMap, List<String> args)  {
         sumoProcessMap = Maps.newHashMap(spcMap);
         init(args);
     }
@@ -60,7 +61,7 @@ public class StackElement {
      * Init the formulaArgs and translated for this StackElement.
      * @param args
      */
-    public void init(List<String> args) {
+    void init(List<String> args) {
         translated = false;
         translation = "";
         formulaArgs.clear();
@@ -146,11 +147,24 @@ public class StackElement {
     }
 
     /********************************************************************************
+     * Getter and setter for translated field.
+     * @return
+     */
+    public Multimap<String, SumoProcessEntityProperty> getEntityProperties() {
+        return entityProperties;
+    }
+
+    public void setEntityProperties(Multimap<String, SumoProcessEntityProperty> entityProperties) {
+        this.entityProperties = entityProperties;
+    }
+
+    /********************************************************************************
      *
      * @return
      */
     public Map<String, SumoProcessCollector> getSumoProcessMap() {
         return sumoProcessMap;
     }
+
 
 }

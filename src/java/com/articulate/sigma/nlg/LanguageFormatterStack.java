@@ -75,7 +75,7 @@ public class LanguageFormatterStack {
     public void pushNew() {
         Map<String, SumoProcessCollector> nextProcessMap = Maps.newHashMap();
         List<String> argsList = Lists.newArrayList();
-        StackElement inElement = new StackElement(this, nextProcessMap, argsList);
+        StackElement inElement = new StackElement(nextProcessMap, argsList);
         theStack.add(inElement);
     }
 
@@ -235,12 +235,14 @@ public class LanguageFormatterStack {
         if (areFormulaArgsProcessed()) {
             StringBuilder sb = new StringBuilder();
 
+            // Pass any entity properties, aka "attributes" on.
             for (SumoProcessCollector process : getCurrProcessMap().values()) {
                 // "Inherit" polarity from top-level if it is negative.
                 if (this.polarity.equals(VerbProperties.Polarity.NEGATIVE)) {
                     process.setPolarity(VerbProperties.Polarity.NEGATIVE);
                 }
 
+                process.setEntityProperties(getCurrStackElement().getEntityProperties());
                 String naturalLanguage = process.toNaturalLanguage();
                 if (!naturalLanguage.isEmpty()) {
                     sb.append(naturalLanguage).append(" and ");
