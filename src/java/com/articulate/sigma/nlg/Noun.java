@@ -11,12 +11,13 @@ public class Noun {
 
     /**************************************************************************************************************
      * Look at first letter of input to determine whether it should be preceded by "a" or "an".
-     * @param temp
+     * @param input
      * @return
      * "a" or "an"
      */
-    public static String aOrAn(String temp) {
+    public static String aOrAn(String input) {
         String article;
+        String temp = input.toLowerCase();
         if(!NLGStringUtils.isVowel(temp.charAt(0)))   {
             article = "a";
         }
@@ -34,19 +35,14 @@ public class Noun {
      * @return
      */
     public static boolean takesIndefiniteArticle(String noun, KB kb)  {
-        // Return false if capitalized.
-        if (noun.substring(0,1).matches("[A-Z]")) {
-            return false;
-        }
-
         // Return false if Entity.
         if (noun.equals("Entity"))   {
             return false;
         }
 
-        // Capitalize so that the lookup below works.
-        String temp = noun.substring(0, 1).toUpperCase() + noun.substring(1);
-
-        return ! kb.isSubclass(temp, "Substance");
+        if (kb.isSubclass(noun, "Entity")) {
+            return !kb.isSubclass(noun, "Substance");
+        }
+        return false;
     }
 }

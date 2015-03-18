@@ -101,34 +101,31 @@ public class LanguageFormatter {
      *
      */
     private void init() {
-//        variableTypesNLG = new HashMap<>(variableTypes);
-        variableTypesNLG = new HashMap<>();
+        // Get special versions of variable maps.
         variableToInstanceMapNLG = new HashMap<>(variableToInstanceMap);
-        // FIXME: put this in NLG utilities
+        variableTypesNLG = new HashMap<>();
+
+        // variableToInstanceMapNLG should map variables to the correct surface form of the SUMO term
         for (Map.Entry<String, Set<String>> entry : variableToInstanceMapNLG.entrySet())    {
             String variable = entry.getKey();
             Set<String> origInstances = entry.getValue();
             Set<String> newInstances = Sets.newHashSet();
             for (String instance : origInstances)   {
-                String newStr = SumoProcessCollector.lowercaseIfEntity(instance, kb);
-//                if  (Noun.takesIndefiniteArticle(instance, kb)) {
-//                    newStr = Noun.aOrAn(newStr) + " " + newStr;
-//                }
+                String newStr = SumoProcessCollector.getProperFormOfEntity(instance, kb);
                 newInstances.add(newStr);
             }
             variableToInstanceMapNLG.put(variable, newInstances);
         }
+
+        // variableTypes should map variables to the correct surface form of the SUMO term, but we want it to contain
+        // only those terms not in variableToInstanceMapNLG
         for (Map.Entry<String, HashSet<String>> entry : variableTypes.entrySet())    {
-            // Insert into variableTypesNLG only if the key is not found in variableToInstanceMapNLG.
             String variable = entry.getKey();
             if (! variableToInstanceMapNLG.containsKey(variable)) {
                 Set<String> origInstances = entry.getValue();
                 Set<String> newInstances = Sets.newHashSet();
                 for (String instance : origInstances)   {
-                    String newStr = SumoProcessCollector.lowercaseIfEntity(instance, kb);
-//                    if  (Noun.takesIndefiniteArticle(instance, kb)) {
-//                        newStr = Noun.aOrAn(newStr) + " " + newStr;
-//                    }
+                    String newStr = SumoProcessCollector.getProperFormOfEntity(instance, kb);
                     newInstances.add(newStr);
                 }
                 variableTypesNLG.put(variable, newInstances);
@@ -290,7 +287,7 @@ public class LanguageFormatter {
             List<String> translations = theStack.getCurrStackFormulaArgs();
             String translation = "";
             if (translations.size() > 1) {
-                // FIXME: check this: "Concatenate" the informal NLG with the operator, e.g. if repeated entity use "the" instead of "a".
+                // "Plug" the operator into the informal language, e.g. "=> A B" becomes "if A, then B".
                 translation = generateFormalNaturalLanguage(translations, pred, isNegMode);
             }
             else if (translations.size() == 1) {
@@ -305,41 +302,19 @@ public class LanguageFormatter {
         }
 
         if (phraseMap.containsKey(pred)) {
-            // FIXME: Handle attributes here. Encapsulate.
-            if(pred.equals("attribute"))    {
-                StackElement element = theStack.getCurrStackElement();
-                SumoProcessEntityProperty property = new SumoProcessEntityProperty(f);
-                // Insert the property into the map with the identifier as the key.
-                String key = f.cdrAsFormula().car();
-                theStack.getCurrStackElement().getEntityProperties().put(key, property);
+
+            if (pred.equals("attribute"))    {
                 theStack.markFormulaArgAsProcessed(stmt);
-                // Modify the variable list to hold the attribute
-                if (variableToInstanceMapNLG.containsKey(key))     {
-                    Set<String> oldSet = variableToInstanceMapNLG.get(key);
-                    Set<String> newSet = Sets.newHashSet();
-                    for(String oldStr : oldSet)   {
-                        // modify each noun accordingly
-                        String newStr = property.getSurfaceFormForNoun(oldStr, kb);
-//                        if  (Noun.takesIndefiniteArticle(oldStr, kb)) {
-//                            newStr = Noun.aOrAn(newStr) + " " + newStr;
-//                        }
-                        newSet.add(newStr);
-                    }
-                    variableToInstanceMapNLG.put(key, newSet);
-                }
-                if (variableTypesNLG.containsKey(key))     {
-                    Set<String> oldSet = variableTypesNLG.get(key);
-                    Set<String> newSet = Sets.newHashSet();
-                    for(String oldStr : oldSet)   {
-                        // modify each noun accordingly
-                        String newStr = property.getSurfaceFormForNoun(oldStr, kb);
-//                        if  (Noun.takesIndefiniteArticle(oldStr, kb)) {
-//                            newStr = Noun.aOrAn(newStr) + " " + newStr;
-//                        }
-                        newSet.add(newStr);
-                    }
-                    variableTypesNLG.put(key, newSet);
-                }
+
+                // Add the property to the current stack element.
+                SumoProcessEntityProperty property = new SumoProcessEntityProperty(f);
+                String key = f.cdrAsFormula().car();
+                theStack.addToCurrProperties(key, property);
+
+                // Modify the variable maps so that the variables are mapped to a surface form for the entity which includes
+                // the attribute.
+                updateVariables(variableToInstanceMapNLG, key, property);
+                updateVariables(variableTypesNLG, key, property);
             }
 
             ans = paraphraseWithFormat(stmt, isNegMode);
@@ -375,6 +350,27 @@ public class LanguageFormatter {
         }
         ans = result.toString();
         return ans;
+    }
+
+    /*****************************************************************
+     * Modify the given variable map so that given key is mapped to a surface form for the entity which includes
+     * the given property.
+     * @param variableMap
+     * @param key
+     * @param property
+     */
+    private void updateVariables(Map<String, Set<String>> variableMap, String key, SumoProcessEntityProperty property) {
+        if (variableMap.containsKey(key))     {
+            Set<String> oldSet = variableMap.get(key);
+            Set<String> newSet = Sets.newHashSet();
+            for(String oldStr : oldSet)   {
+                // modify each noun accordingly
+                String newStr = property.getSurfaceFormForNoun(oldStr, kb);
+                newSet.add(newStr);
+            }
+            variableMap.put(key, newSet);
+        }
+
     }
 
     /*****************************************************************

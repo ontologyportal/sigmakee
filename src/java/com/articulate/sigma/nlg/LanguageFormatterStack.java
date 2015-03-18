@@ -235,14 +235,16 @@ public class LanguageFormatterStack {
         if (areFormulaArgsProcessed()) {
             StringBuilder sb = new StringBuilder();
 
-            // Pass any entity properties, aka "attributes" on.
             for (SumoProcessCollector process : getCurrProcessMap().values()) {
                 // "Inherit" polarity from top-level if it is negative.
                 if (this.polarity.equals(VerbProperties.Polarity.NEGATIVE)) {
                     process.setPolarity(VerbProperties.Polarity.NEGATIVE);
                 }
 
+                // Pass any entity properties, aka "attributes" on.
                 process.setEntityProperties(getCurrStackElement().getEntityProperties());
+
+                // Generate the language.
                 String naturalLanguage = process.toNaturalLanguage();
                 if (!naturalLanguage.isEmpty()) {
                     sb.append(naturalLanguage).append(" and ");
@@ -477,5 +479,15 @@ public class LanguageFormatterStack {
                 }
             }
         }
+    }
+
+    /********************************************************************************
+     * Add the given key - property pair to the properties of the current stack element.
+     * @param key
+     * @param property
+     */
+    public void addToCurrProperties(String key, SumoProcessEntityProperty property) {
+        StackElement element = getCurrStackElement();
+        element.getEntityProperties().put(key, property);
     }
 }

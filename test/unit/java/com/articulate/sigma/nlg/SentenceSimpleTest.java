@@ -69,7 +69,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         assertEquals(expected, sentence.getSubject().getSurfaceForm());
 
         process.addRole("agent", "MedicalDoctor");
-        expected = "coffee, a human and a medicaldoctor";
+        expected = "coffee, a human and a medical doctor";
         sentence.setCaseRolesScratchpad(process.createNewRoleScratchPad());
         sentence.formulateNaturalSubject();
         assertEquals(expected, sentence.getSubject().getSurfaceForm());
@@ -123,7 +123,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         process.addRole("destination", "Albany");
         Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
 
-        String expected = "Maria and a medicaldoctor drive an automobile and a truck to Albany with a bell and a telephone";
+        String expected = "Maria and a medical doctor drive an automobile and a truck to Albany with a bell and a telephone";
         String actual = sentence.toNaturalLanguage();
         assertEquals(expected, actual);
     }
@@ -142,7 +142,7 @@ public class SentenceSimpleTest extends SigmaMockTestBase {
         process.addRole("destination", "Albany");
         Sentence sentence = new Sentence(process.createNewRoleScratchPad(), process.getSumoProcess(), knowledgeBase, entityProperties);
 
-        String expected = "Maria, Suzy and a medicaldoctor drive an automobile, a taxi and a truck to Albany with a bell, a book and a telephone";
+        String expected = "Maria, a medical doctor and Suzy drive an automobile, a taxi and a truck to Albany with a bell, a book and a telephone";
         String actual = sentence.toNaturalLanguage();
         assertEquals(expected, actual);
     }

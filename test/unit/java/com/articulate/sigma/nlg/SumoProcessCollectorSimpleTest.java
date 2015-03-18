@@ -75,7 +75,7 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         process.addRole("agent", "Tom");
         roleScratchPad = process.createNewRoleScratchPad();
 
-        Set<String> expectedAgents = Sets.newTreeSet(Sets.newHashSet("Tom", "human"));
+        Set<String> expectedAgents = Sets.newTreeSet(Sets.newHashSet("Human", "Tom"));
 
         Set<String> actualAgents = Sentence.getRoleEntities(CaseRole.AGENT, roleScratchPad);
         //Collections.sort(actualAgents);
@@ -86,15 +86,15 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         process.addRole("patient", "Automobile");
         roleScratchPad = process.createNewRoleScratchPad();
 
-        Set<String> expectedPatients = Sets.newTreeSet(Sets.newHashSet("automobile"));
+        Set<String> expectedPatients = Sets.newTreeSet(Sets.newHashSet("Automobile"));
         Set<String> actualPatients = Sentence.getRoleEntities(CaseRole.PATIENT, roleScratchPad);
 
         assertEquals(expectedPatients, actualPatients);
 
         // Test toString().
-        String expected = "agent Driving Tom\n" +
-                "agent Driving human\n" +
-                "patient Driving automobile\n";
+        String expected = "agent Driving Human\n" +
+                "agent Driving Tom\n" +
+                "patient Driving Automobile\n";
         assertEquals(expected, process.toString());
     }
 
@@ -114,7 +114,7 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         process.addRole("patient", "Sally");
         process.addRole("destination", "HospitalBuilding");
 
-        String expected = "agent Driving human\n" +
+        String expected = "agent Driving Human\n" +
                 "destination Driving HospitalBuilding\n" +
                 "patient Driving Sally\n";
         assertEquals(expected, process.toString());

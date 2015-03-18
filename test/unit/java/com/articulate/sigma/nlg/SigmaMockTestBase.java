@@ -105,13 +105,17 @@ public class SigmaMockTestBase {
 
 
     static  {
-        termFormatMap.put("Telephone", "telephone");
+        termFormatMap.put("Automobile", "automobile");
+        termFormatMap.put("City", "city");
+        termFormatMap.put("Clean", "clean");
+        termFormatMap.put("Female", "female");
         termFormatMap.put("Human", "human");
         termFormatMap.put("Male", "male");
-        termFormatMap.put("Female", "female");
-        termFormatMap.put("Clean", "clean");
-        termFormatMap.put("City", "city");
+        termFormatMap.put("MedicalDoctor", "medical doctor");
+        termFormatMap.put("Taxi", "taxi");
         termFormatMap.put("Tea", "tea");
+        termFormatMap.put("Telephone", "telephone");
+        termFormatMap.put("Truck", "truck");
 
         recognizedMap.put("Process", RECOGNIZED_PROCESSES);
         recognizedMap.put("CaseRole", RECOGNIZED_CASE_ROLES);

@@ -440,7 +440,7 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 kb, "EnglishLanguage");
 
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "there exist an entity, a process, , , another entity and an agent such that the entity is an instance of MedicalDoctor and the process is an instance of Giving and the other entity is an instance of tea and ServicePosition is an attribute of the agent and the process ends at the entity and the other entity is a patient of the process and the agent is an agent of the process";
+        String expectedResult = "there exist an entity, a process, , , another entity and an agent such that the entity is an instance of medical doctor and the process is an instance of Giving and the other entity is an instance of tea and ServicePosition is an attribute of the agent and the process ends at the entity and the other entity is a patient of the process and the agent is an agent of the process";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 

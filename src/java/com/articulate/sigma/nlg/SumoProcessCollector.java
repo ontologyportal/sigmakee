@@ -59,8 +59,7 @@ public class SumoProcessCollector {
             throw new IllegalArgumentException("Process parameter is not a Process: " + msg);
         }
 
-        // FIXME: there's no reason to be doing this at this point; but changing is not a simple matter
-        entity = SumoProcessCollector.lowercaseIfEntity(entity, kb);
+//        entity = SumoProcessCollector.getProperFormOfEntity(entity, kb);
 
         sumoProcess = new SumoProcess(process, kb);
         //name = process;
@@ -97,14 +96,12 @@ public class SumoProcessCollector {
      * @param arg
      */
     public void addRole(String role, String arg) {
-        String entity = SumoProcessCollector.lowercaseIfEntity(arg, kb);
-
-        String msg = "role = " + role + "; entity = " + entity + ".";
+        String msg = "role = " + role + "; entity = " + arg + ".";
         if (! kb.kbCache.isInstanceOf(role, "CaseRole")) {
             throw new IllegalArgumentException("Invalid role: " + msg);
         }
         CaseRole caseRole = CaseRole.toCaseRole(role, kb);
-        roles.put(caseRole, entity);
+        roles.put(caseRole, arg);
     }
 
 
@@ -134,7 +131,7 @@ public class SumoProcessCollector {
      * @param entity
      * @return
      */
-    public static String lowercaseIfEntity(String entity, KB kb) {
+    public static String getProperFormOfEntity(String entity, KB kb) {
 
         // FIXME: instances of human and geographical area/region are capitalized; also holidays/weekdays/months/centuries
         String temp = entity;

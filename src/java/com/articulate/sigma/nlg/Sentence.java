@@ -308,6 +308,9 @@ public class Sentence {
                 if  (Noun.takesIndefiniteArticle(noun, kb)) {
                     temp = Noun.aOrAn(temp) + " " + temp;
                 }
+                // Replace the noun with its SUMO representation if it has one.
+                String kbStr = SumoProcessCollector.getProperFormOfEntity(noun, kb);
+                temp = temp.replaceAll(noun, kbStr);
             }
             fixedNouns.add(temp);
             element.addConsumedCaseRole(role);
