@@ -1801,7 +1801,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
 
         languageFormatter.setDoInformalNLG(true);
         //expectedResult = "if an agent swims, then the agent is in a body of water";
-        expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an object such that the object is an instance of water area and the agent is located at the object";
+        expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an entity such that the entity is an instance of water area and event located the process and the entity";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
