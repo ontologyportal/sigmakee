@@ -1188,7 +1188,7 @@ public class Formula implements Comparable {
         } else {
             //commutative relation; going through all possible parameter permutations and comparing
             List<Set<VariableMapping>> unionMaps = new ArrayList<Set<VariableMapping>>();
-            List<int[]> permutations = FormulaUtil.getPermutations(args1.size());
+            List<int[]> permutations = FormulaUtil.getPermutations(args1.size(), (a,b)-> mapFormulaVariables(new Formula(args1.get(a)), new Formula(args2.get(b)), kb, memoMap) != null);
             for(int[] perm:permutations) {
                 List<Set<VariableMapping>> currentMaps = headMaps;
                 boolean currentPairingValid = true;

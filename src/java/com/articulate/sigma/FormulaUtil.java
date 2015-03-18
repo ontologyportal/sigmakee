@@ -4,39 +4,44 @@ import com.google.common.collect.ObjectArrays;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 /**
  * Created by sserban on 2/17/15.
  */
 public class FormulaUtil {
 
-    public static List<int[]> getPermutations(int size) {
+    public static List<int[]> getPermutations(int size, BiPredicate<Integer, Integer> validateFn) {
         int[] array = new int[size];
         for( int i = 0; i< size; i++) {
             array[i] = i;
         }
         List<int[]> result = new LinkedList<int[]>();
-        permutation(new int[0], array, result);
+        permutation(new int[0], array, result, validateFn);
         return result;
     }
 
-    private static void permutation(int[]  prefix, int[] array, List<int[]> permutations) {
+    private static void permutation(int[]  prefix, int[] array, List<int[]> permutations, BiPredicate<Integer, Integer> validateFn) {
+
         int n = array.length;
         if (n == 0) {
             permutations.add(prefix);
             return;
         } else {
             for (int i = 0; i < n; i++) {
-                int[] newPrefix = Arrays.copyOf(prefix, prefix.length + 1);
-                newPrefix[prefix.length] = array[i];
-                int[] leftovers = new int[n - 1];
-                for(int j = 0; j < i; j++) {
-                    leftovers[j] = array[j];
+                if(validateFn.test(prefix.length, array[i])) {
+                    int[] newPrefix = Arrays.copyOf(prefix, prefix.length + 1);
+                    newPrefix[prefix.length] = array[i];
+                    int[] leftovers = new int[n - 1];
+                    for (int j = 0; j < i; j++) {
+                        leftovers[j] = array[j];
+                    }
+                    for (int j = i + 1; j < n; j++) {
+                        leftovers[j - 1] = array[j];
+                    }
+                    permutation(newPrefix, leftovers, permutations, validateFn);
                 }
-                for(int j = i + 1; j < n; j++) {
-                    leftovers[j - 1] = array[j];
-                }
-                permutation(newPrefix, leftovers, permutations);
             }
         }
     }
