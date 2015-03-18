@@ -407,8 +407,8 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        // FIXME: this should change if Wading becomes an IntentionalProcess
-        //expectedResult = "if someone wades, then a water area experiences a wading";
+        // TODO: this will change when we can articulate passive voice
+        //expectedResult = "if someone wades, a water area is waded in";
         expectedResult = "if a process is an instance of wading, then there exists an entity such that the entity is an instance of water area and event located the process and the entity";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));

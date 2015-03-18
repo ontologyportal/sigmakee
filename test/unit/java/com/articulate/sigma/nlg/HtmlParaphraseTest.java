@@ -1755,7 +1755,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
     }
 
     @Test
-    public void testSwimmingWater()     {
+    public void testSwimmingAgentLocatedWater()     {
         String stmt =   "(=>\n" +
                 "           (and\n" +
                 "               (instance ?SWIM Swimming)\n" +
@@ -1770,6 +1770,32 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
         String expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an object such that the object is an instance of water area and the agent is located at the object";
+        String actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+
+        languageFormatter.setDoInformalNLG(true);
+        //expectedResult = "if an agent swims, then the agent is in a body of water";
+        expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an object such that the object is an instance of water area and the agent is located at the object";
+        actualResult = languageFormatter.htmlParaphrase("");
+        assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
+    }
+
+    @Test
+    public void testSwimmingProcessLocatedWater()     {
+        String stmt =   "(=>\n" +
+                "           (and\n" +
+                "               (instance ?SWIM Swimming)\n" +
+                "               (agent ?SWIM ?AGENT))\n" +
+                "           (exists (?AREA)\n" +
+                "               (and\n" +
+                "                   (instance ?AREA WaterArea)\n" +
+                "                   (eventLocated ?SWIM ?AREA))))";
+
+        LanguageFormatter languageFormatter = new LanguageFormatter(stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
+                SigmaTestBase.kb, "EnglishLanguage");
+        languageFormatter.setDoInformalNLG(false);
+        String expectedResult = "if a process is an instance of swimming and an agent is an agent of the process, then there exists an entity such that the entity is an instance of water area and event located the process and the entity";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
