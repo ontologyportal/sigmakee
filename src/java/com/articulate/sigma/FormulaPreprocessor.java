@@ -113,7 +113,9 @@ public class FormulaPreprocessor {
     Formula addTypeRestrictions(Formula form, KB kb) {
 
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);    // get variable types from domain definition
-        HashMap<String, HashSet<String>> varExplicitTypes = findExplicitTypes(form);        // get variable types explicitly defined in formula
+        HashMap<String,HashSet<String>> varExplicitTypes = new HashMap<String,HashSet<String>>();
+        HashMap<String,HashSet<String>> varExplicitClasses = new HashMap<String,HashSet<String>>();
+        findExplicitTypesClasses(form, varExplicitTypes, varExplicitClasses);        // get variable types explicitly defined in formula
 
         // only keep variables which are not explicitly defined in formula
         HashMap<String,HashSet<String>> varmap = (HashMap<String, HashSet<String>>) varDomainTypes.clone();
@@ -303,23 +305,25 @@ public class FormulaPreprocessor {
     public HashMap<String, HashSet<String>> findExplicitTypes(Formula form) {
 
         HashMap<String,HashSet<String>> varExplicitTypes = new HashMap<String,HashSet<String>>();
+        HashMap<String,HashSet<String>> varExplicitClasses = new HashMap<String,HashSet<String>>();
+        findExplicitTypesRecurse(form, false, varExplicitTypes, varExplicitClasses);
 
-        findExplicitTypesRecurse(form, varExplicitTypes, false);
+        varExplicitTypes.putAll(varExplicitClasses);
         return varExplicitTypes;
     }
 
     /*****************************************************************
-     * Recursively collect the types of any variables with an instance or subclass expression
-     *
-     * @param form The formula
-     *
-     * @param varExplicitTypes A set of explicit types for each variable
-     *
-     * @param isNegativeLiteral True if form is negative literal, and do not add the explicit type
-     * to the variable. For example, form = (not (foo1 ?X Human)) and isNegativeLiteral == true,
-     * then Human will not be added as the explicit type for ?X.
+     * This function is different from findExplicityTypes, in that,
+     * Collect types of any variables with an instance expression, and put them in varExplicitTypes;
+     * Collect classes of any variables with an subclass expression, and put them in varExplicitClasses;
      */
-    public static void findExplicitTypesRecurse(Formula form, HashMap<String,HashSet<String>> varExplicitTypes, boolean isNegativeLiteral) {
+    public void findExplicitTypesClasses(Formula form,
+           HashMap<String,HashSet<String>> varExplicitTypes, HashMap<String,HashSet<String>> varExplicitClasses) {
+
+        findExplicitTypesRecurse(form, false, varExplicitTypes, varExplicitClasses);
+    }
+
+    public static void findExplicitTypesRecurse(Formula form, boolean isNegativeLiteral, HashMap<String,HashSet<String>> varExplicitTypes, HashMap<String, HashSet<String>> varExplicitClasses) {
 
         if (form == null || StringUtil.emptyString(form.theFormula) || form.empty())
             return;
@@ -329,15 +333,15 @@ public class FormulaPreprocessor {
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
             if (carstr.equals(form.EQUANT) || carstr.equals(form.UQUANT)) {
                 for (int i = 2 ; i < form.listLength(); i++)  // (exists (?X ?Y) (foo1 ?X ?Y)), recurse from the second argument
-                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), varExplicitTypes, false);
+                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), false, varExplicitTypes, varExplicitClasses);
             }
             else if (carstr.equals(form.NOT)) {
                 for (int i = 1; i < form.listLength(); i++)   // (not (foo1 ?X ?Human)), set isNegativeLiteral = true, and recurse from the first argument
-                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), varExplicitTypes, true);
+                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), true, varExplicitTypes, varExplicitClasses);
             }
             else {
                 for (int i = 1; i < form.listLength(); i++)   // eg. (and (foo1 ?X ?Y) (foo2 ?X ?Z)), recurse from the first argument
-                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), varExplicitTypes, false);
+                    findExplicitTypesRecurse(new Formula(form.getArgument(i)), false, varExplicitTypes, varExplicitClasses);
             }
         }
         else if (form.isSimpleClause()) {
@@ -368,20 +372,20 @@ public class FormulaPreprocessor {
                 String cl = m.group(2);
                 HashSet<String> hs = new HashSet<>();
                 if (!cl.startsWith("?")) {
-                    if (varExplicitTypes.containsKey(var))
-                        hs = varExplicitTypes.get(var);
+                    if (varExplicitClasses.containsKey(var))
+                        hs = varExplicitClasses.get(var);
                     hs.add(cl + "+");
                 }
                 else {
-                    if (varExplicitTypes.containsKey(var))
-                        hs = varExplicitTypes.get(var);
+                    if (varExplicitClasses.containsKey(var))
+                        hs = varExplicitClasses.get(var);
                 }
-                varExplicitTypes.put(var, hs);
+                varExplicitClasses.put(var, hs);
             }
         }
         else {
-            findExplicitTypesRecurse(form.carAsFormula(), varExplicitTypes, false);
-            findExplicitTypesRecurse(form.cdrAsFormula(), varExplicitTypes, false);
+            findExplicitTypesRecurse(form.carAsFormula(), false, varExplicitTypes, varExplicitClasses);
+            findExplicitTypesRecurse(form.cdrAsFormula(), false, varExplicitTypes, varExplicitClasses);
         }
     }
 
