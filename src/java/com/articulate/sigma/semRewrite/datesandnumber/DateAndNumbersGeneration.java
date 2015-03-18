@@ -72,6 +72,7 @@ public class DateAndNumbersGeneration {
 	private SemanticGraph StanfordDependencies;
 	private int timeCount = 1;
 	private List<DateInfo> allDatesList = new LinkedList<DateInfo>();
+	
 	/** ***************************************************************
 	 */
 	public DateAndNumbersGeneration() {
@@ -225,8 +226,10 @@ public class DateAndNumbersGeneration {
 				flags.resetFlags();
 			}
 		}
-		dateList.add(dateInfo);
-		allDatesList.add(dateInfo);
+		if(!dateList.contains(dateInfo)) {
+			dateList.add(dateInfo);
+			allDatesList.add(dateInfo);
+		}
 		return dateList;
 	}
 
@@ -328,7 +331,7 @@ public class DateAndNumbersGeneration {
 		boolean flag = false;
 		int x = 0;
 		if (unitOfMeasurementNode != null) {
-			unitOfMeasurementStr = unitOfMeasurementNode.toString();
+			unitOfMeasurementStr = unitOfMeasurementNode.value();
 			measuredEntity = StanfordDependencies.getParent(unitOfMeasurementNode);
 			visitedNodes.add(unitOfMeasurementNode.toString()+"-"+unitOfMeasurementNode.index());
 		}
@@ -380,18 +383,6 @@ public class DateAndNumbersGeneration {
 				}
 			}
 		}
-		//IndexedWord measuredEntity = StanfordDependencies.getParent(unitOfMeasurementNode);    
-		//String measuredEntityStr = measuredEntity.toString();
-		posTagRemoverMatcher = POS_TAG_REMOVER.matcher(unitOfMeasurementNode.value());
-		if(posTagRemoverMatcher.find()) {
-			posTagRemover = posTagRemoverMatcher.group(1);
-			unitOfMeasurementStr = unitOfMeasurementNode.value().replace(posTagRemover, "");
-		}
-		/*posTagRemoverMatcher = POS_TAG_REMOVER.matcher(measuredEntityStr);
-        if(posTagRemoverMatcher.find()) {
-            posTagRemover = posTagRemoverMatcher.group(1);
-            measuredEntityStr = measuredEntityStr.replace(posTagRemover, "");
-        }*/
 		if (measuredEntity != null) {
 			sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
 		}
