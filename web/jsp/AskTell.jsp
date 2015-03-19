@@ -366,7 +366,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else if (resultEProver != null){
         	System.out.println("in AskTell.jsp: trying EProver--------------");
-        	TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(resultEProver);
+        	TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(resultEProver, kb);
         	System.out.println(tpp.toString());
         	System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
