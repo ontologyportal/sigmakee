@@ -316,6 +316,20 @@ public class LanguageFormatter {
                 updateVariables(variableToInstanceMapNLG, key, property);
                 updateVariables(variableTypesNLG, key, property);
             }
+            else if (pred.equals("names")) {
+                theStack.markFormulaArgAsProcessed(stmt);
+
+                // Get the name, with the quotation marks which surround it.
+                Formula forumulaCdr = f.cdrAsFormula();
+                String name = forumulaCdr.car();
+
+                // Get the variable.
+                String var = forumulaCdr.cdr().substring(1, forumulaCdr.cdr().length() - 1);
+
+                // Replace all variables with the name.
+                variableToInstanceMapNLG.put(var, Sets.newHashSet(name));
+                // TODO: not needed? variableTypesNLG.put(var, Sets.newHashSet(name));
+            }
 
             ans = paraphraseWithFormat(stmt, isNegMode);
             return ans;
@@ -964,6 +978,14 @@ public class LanguageFormatter {
                                                 boolean isClass, HashMap<String,Integer> typeMap) {
 
         String result = form;
+
+        // Make necessary changes if the variable is a quoted string, i.e. a name.
+        if (varPretty == null && varType.matches("\".*\""))    {
+            String name = varType.substring(1, varType.length() - 1);
+            result = result.replaceAll("\\?" + varString.substring(1), name);
+            return result;
+        }
+
         boolean isArabic = (language.matches(".*(?i)arabic.*")
                 || language.equalsIgnoreCase("ar"));
         if (StringUtil.emptyString(varPretty)) 

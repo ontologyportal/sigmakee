@@ -102,7 +102,8 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
                 "           (names \"John\" ?H)\n" +
                 "           (agent ?D ?H)))";
 
-        String expectedResult = "there exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        //String expectedResult = "there exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        String expectedResult = "John drives";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
                 kb.getTermFormatMap("EnglishLanguage"),
                 kb, "EnglishLanguage");
@@ -129,7 +130,8 @@ public class HtmlParaphraseMockTest extends SigmaMockTestBase {
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        expectedResult = "there don't exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        //expectedResult = "there don't exist a process and an agent such that the process is an instance of Driving and the agent is an instance of human and the agent has name \"John\" and the agent is an agent of the process";
+        expectedResult = "John doesn't drive";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
