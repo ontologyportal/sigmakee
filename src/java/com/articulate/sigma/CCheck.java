@@ -1,18 +1,12 @@
 package com.articulate.sigma;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.LineNumberReader;
-import java.io.PrintWriter;
-import java.io.StringReader;
+import TPTPWorld.InterfaceTPTP;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
-
-import com.articulate.sigma.KB;
-import TPTPWorld.*;
 
 public class CCheck implements Runnable {
     private KB kb;
@@ -248,7 +242,7 @@ public class CCheck implements Runnable {
         else if (inferenceEngine.equals("EProver")) {
     		StringReader sr = new StringReader(proof);
     		LineNumberReader lnr = new LineNumberReader(sr);
-    		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(lnr);
+    		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(lnr, kb);
             if (tpp.proof != null && tpp.proof.size() > 0) 
                 printReport(query,processedQ,sourceFile,false,proof,testType);            
         }

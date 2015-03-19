@@ -336,7 +336,7 @@ public class InferenceTestSuite {
                 try {
                     fw = new FileWriter(resultsFile);
                     pw = new PrintWriter(fw);
-                    tpp = TPTP3ProofProcessor.parseProofOutput(proof);
+                    tpp = TPTP3ProofProcessor.parseProofOutput(proof, kb);
                     pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, query, lineHtml, kb.name, language));
                 }
                 catch (java.io.IOException e) {
