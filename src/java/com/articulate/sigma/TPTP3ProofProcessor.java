@@ -261,6 +261,62 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * If the binding from E is skolem term, we find the most specific type for the binding;
+	 * For example,
+	 * binding = esk3_0
+	 * set binding = "An instance of Human" (Human is the most specific type for esk3_0 in the given proof)
+	 *
+	 * binding = esk3_1
+	 * set binding = "An instance of Human, Agent" (If multiple types are found for esk3_1)
+	 */
+	public static void findTypesForSkolemTerms(TPTP3ProofProcessor tpp, KB kb) {
+
+		ArrayList<String> bindings = tpp.bindings;
+		FormulaPreprocessor fp = new FormulaPreprocessor();
+		for (int i = 0; i < bindings.size(); i++) {
+			String binding = bindings.get(i);
+			if (binding.startsWith("esk")) {
+				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, tpp.proof);
+				HashSet<String> types = new HashSet<>();
+				for (String skolemStmt : skolemStmts) {
+					Pattern p = Pattern.compile("\\(instance ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-_]+)");
+					Matcher m = p.matcher(skolemStmt);
+					while (m.find()) {
+						String cl = m.group(2);
+						types.add(cl);
+					}
+
+					p = Pattern.compile("\\(subclass ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
+					m = p.matcher(skolemStmt);
+					while (m.find()) {
+						String cl = m.group(2);
+						types.add(cl);
+					}
+				}
+				fp.winnowTypeList(types, kb);
+				if (types!=null && types.size()>0) {
+					if (types.size() == 1) {
+						binding = "an instance of " + types.toArray()[0];
+						bindings.set(i, binding);
+					}
+					else {
+						binding = "an instance of ";
+						boolean start = true;
+						for (String t : types) {
+							if (start) { binding += t; start = false; }
+							else { binding += ", " + t; }
+						}
+					}
+				}
+			}
+			else {
+				binding = TPTP2SUMO.transformTerm(binding);
+				bindings.set(i, binding);
+			}
+		}
+	}
+
+	/** ***************************************************************
 	 * remove skolem symbol with arity n
 	 * Example Input1: esk2_1(s__Arc13_1)
 	 * Expected Output1: s__Arc13_1
@@ -308,7 +364,7 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 */
-	public static TPTP3ProofProcessor parseProofOutput (LineNumberReader lnr) {
+	public static TPTP3ProofProcessor parseProofOutput (LineNumberReader lnr, KB kb) {
 
 		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 		try {
@@ -348,6 +404,9 @@ public class TPTP3ProofProcessor {
 		// remove unnecessary steps, eg: conjectures, duplicate trues
 		tpp.proof = ProofStep.removeUnnecessary(tpp.proof);
 		tpp.proof = ProofStep.removeDuplicates(tpp.proof);
+
+		// find types for skolem terms
+		findTypesForSkolemTerms(tpp, kb);
 		return tpp;
 	}
 
@@ -359,56 +418,29 @@ public class TPTP3ProofProcessor {
 	 *
 	 * tuple_list = [[esk3_0]|_]
 	 * Output = [An instance of Human] (Human is the most specific type for esk3_0 in the given proof)
+	 *
+	 * For boolean query, return "Proof Found" if E finds contradiction
 	 */
 	public static ArrayList<String> parseAnswerTuples(String st, KB kb, FormulaPreprocessor fp) {
 
 		ArrayList<String> answers = new ArrayList<>();
-		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(st);
+		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(st, kb);
 		if (tpp.bindings == null || tpp.bindings.isEmpty()) {
 			if (tpp.proof != null && !tpp.proof.isEmpty()) {
-				answers.add("Proof Found");
+				answers.add("Proof Found");		// for boolean queries
 			}
 			return answers;
 		}
-		for (String binding : tpp.bindings) {
-			if (binding.startsWith("esk")) {
-				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, tpp.proof);
-				HashSet<String> types = new HashSet<>();
-				for (String skolemStmt : skolemStmts) {
-					Pattern p = Pattern.compile("\\(instance ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-_]+)");
-					Matcher m = p.matcher(skolemStmt);
-					while (m.find()) {
-						String cl = m.group(2);
-						types.add(cl);
-					}
-
-					p = Pattern.compile("\\(subclass ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
-					m = p.matcher(skolemStmt);
-					while (m.find()) {
-						String cl = m.group(2);
-						types.add(cl);
-					}
-				}
-				fp.winnowTypeList(types, kb);
-				for (String t : types) {
-					answers.add("an instance of " + t);
-				}
-			}
-			else {
-				String answer= TPTP2SUMO.transformTerm(binding);
-				answers.add(answer);
-			}
-		}
-		return answers;
+		return tpp.bindings;
 	}
 
 	/** ***************************************************************
 	 */
-	public static TPTP3ProofProcessor parseProofOutput (String st) {
+	public static TPTP3ProofProcessor parseProofOutput (String st, KB kb) {
 
 		StringReader sr = new StringReader(st);
 		LineNumberReader lnr = new LineNumberReader(sr);
-		return parseProofOutput(lnr);
+		return parseProofOutput(lnr, kb);
 
 	}
 
@@ -416,11 +448,12 @@ public class TPTP3ProofProcessor {
 	 */
 	public static void testParseProofFile () {
 
+		KB kb = null;
 		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 		try {
 			FileReader r = new FileReader("/home/apease/Programs/E/PROVER/eltb_out.txt");
 			LineNumberReader lnr = new LineNumberReader(r);
-			tpp = parseProofOutput(lnr);
+			tpp = parseProofOutput(lnr, kb);
 		}
 		catch (Exception ex) {
 			System.out.println(ex.getMessage());
@@ -445,7 +478,7 @@ public class TPTP3ProofProcessor {
 			String result = eprover.submitQuery("(subclass Patio Object)",kb);
 			StringReader sr = new StringReader(result);
 			LineNumberReader lnr = new LineNumberReader(sr);
-			TPTP3ProofProcessor tpp = parseProofOutput(lnr);
+			TPTP3ProofProcessor tpp = parseProofOutput(lnr, kb);
 			System.out.println("-------------------------------------------------");
 			System.out.println(tpp.proof);
 			eprover.terminate();
