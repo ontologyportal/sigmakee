@@ -80,21 +80,18 @@ public class CorefTest extends TestCase {
 
     @Parameterized.Parameters(name="<{0}> {1} ↔ {2}")
     public static Collection<Object[]> prepare() {
-        return JsonReader.transform("resources/corefTests.json", new Function<JSONObject, Object[]>() {
-            @Override
-            public Object[] apply(JSONObject jo) {
-                String fileName = (String) jo.get("file");
-                Long sentence = (Long) jo.get("sentence");
-                Long sentenceA = sentence != null ? sentence : (Long) jo.get("sentenceA");
-                Long sentenceB = sentence != null ? sentence : (Long) jo.get("sentenceB");
+        return JsonReader.transform("resources/corefTests.json",(JSONObject jo) -> {
+            String fileName = (String) jo.get("file");
+            Long sentence = (Long) jo.get("sentence");
+            Long sentenceA = sentence != null ? sentence : (Long) jo.get("sentenceA");
+            Long sentenceB = sentence != null ? sentence : (Long) jo.get("sentenceB");
 
-                String valueA = (String) jo.get("valueA");
-                String valueB = (String) jo.get("valueB");
-                return new Object[]{fileName,
-                        valueA == null ? CorefParam.of(sentenceA, (Long) jo.get("indexA")) : CorefParam.of(sentenceA, valueA),
-                        valueB == null ? CorefParam.of(sentenceB, (Long) jo.get("indexB")) : CorefParam.of(sentenceB, valueB)
-                };
-            }
+            String valueA = (String) jo.get("valueA");
+            String valueB = (String) jo.get("valueB");
+            return new Object[]{fileName,
+                    valueA == null ? CorefParam.of(sentenceA, (Long) jo.get("indexA")) : CorefParam.of(sentenceA, valueA),
+                    valueB == null ? CorefParam.of(sentenceB, (Long) jo.get("indexB")) : CorefParam.of(sentenceB, valueB)
+            };
         });
     }
 

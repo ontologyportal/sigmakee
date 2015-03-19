@@ -1,6 +1,5 @@
 package com.articulate.sigma.semRewrite;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -10,7 +9,6 @@ import com.articulate.sigma.test.JsonReader;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -46,16 +44,13 @@ public class InterpreterTest extends IntegrationTestBase {
     @Parameters(name="{0}")
     public static Collection<Object[]> prepare() {
         
-        //return JsonReader.transform("resources/translation_tiny.json", new Function<JSONObject, Object[]>() {
-            return JsonReader.transform("resources/translation_tests.json", new Function<JSONObject, Object[]>() {
-            @Override
-            public Object[] apply(JSONObject jo) {
-                String text = (String) jo.get("text");
-                //String tokens = (String) jo.get("tokens");
-                //String type = (String) jo.get("type");
-                String kif = (String) jo.get("kif");
-                return new Object[]{text,kif};
-            }
+        //return JsonReader.transform("resources/translation_tiny.json", (JSONObject jo) -> {
+        return JsonReader.transform("resources/translation_tests.json", (JSONObject jo) -> {
+            String text = (String) jo.get("text");
+            //String tokens = (String) jo.get("tokens");
+            //String type = (String) jo.get("type");
+            String kif = (String) jo.get("kif");
+            return new Object[]{text,kif};
         });
     }
 

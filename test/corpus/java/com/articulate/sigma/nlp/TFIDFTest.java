@@ -55,14 +55,11 @@ public class TFIDFTest extends TestCase {
 
     @Parameterized.Parameters(name="<{0}> {1}")
     public static Collection<Object[]> prepare() {
-        return JsonReader.transform("resources/IRtests.json", new Function<JSONObject, Object[]>() {
-            @Override
-            public Object[] apply(JSONObject jo) {
-                String fname = (String) jo.get("file");
-                String query = (String) jo.get("query");
-                String answer = (String) jo.get("answer");
-                return new Object[]{fname, query, answer};
-            }
+        return JsonReader.transform("resources/IRtests.json", (JSONObject jo) -> {
+            String fname = (String) jo.get("file");
+            String query = (String) jo.get("query");
+            String answer = (String) jo.get("answer");
+            return new Object[]{fname, query, answer};
         });
     }
 

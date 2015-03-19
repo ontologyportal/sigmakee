@@ -23,6 +23,9 @@ MA  02111-1307 USA
 
 import java.util.*;
 
+/**
+ * <b>Conjunctive Normal Form</b>
+ */
 public class CNF {
 
     public ArrayList<Disjunct> clauses = new ArrayList<Disjunct>();

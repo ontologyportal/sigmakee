@@ -29,8 +29,10 @@ import java.io.*;
 import com.articulate.sigma.*;
 import com.articulate.sigma.nlp.CorefSubstitutor;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import com.google.common.collect.Sets;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -108,75 +110,79 @@ public class Interpreter {
       }
       return purewords;
   }
-  
+
   /** *************************************************************
    */
   public static boolean excluded(String word) {
-      
+
       return (months.contains(word) || days.contains(word));
   }
-  
+
   /** *************************************************************
    * @return a list of strings in the format sumo(Class,word-num) 
    * that specify the SUMO class of each word that isn't a stopword.
    */
-  public static ArrayList<String> findWSD(ArrayList<String> clauses, HashMap<String,String> purewords) {
-      
+  public static List<String> findWSD(ArrayList<String> clauses) {
+
       //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
       KB kb = KBmanager.getMgr().getKB("SUMO");
       DependencyConverter.readFirstNames();
-      ArrayList<String> results = new ArrayList<String>();
-      ArrayList<String> pure = new ArrayList<String>();
-      pure.addAll(purewords.keySet());
+
+      Set<String> results = Sets.newHashSet();
+
+      HashMap<String,String> purewords = extractWords(clauses);
+      ArrayList<String> pure = Lists.newArrayList(purewords.keySet());
       //System.out.println("INFO in Interpreter.addWSD(): words: " + pure);
-      for (int i = 0; i < pure.size(); i++) {
-          String pureword = pure.get(i);
-          //System.out.println("INFO in Interpreter.addWSD(): pureword:  " + pureword);
-          if (WordNet.wn.stopwords.contains(pureword) || qwords.contains(pureword.toLowerCase()) || excluded(pureword))
+      ClauseGroups cg = new ClauseGroups(clauses);
+      for (Map.Entry<String, String> pureWordEntry : purewords.entrySet()) {
+          String clauseKey = pureWordEntry.getValue();
+          String pureWord = pureWordEntry.getKey();
+          //System.out.println("INFO in Interpreter.addWSD(): pureWord:  " + pureWord);
+          if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
               continue;
-          String id = WSD.findWordSenseInContext(pureword, pure);
+          String id = WSD.findWordSenseInContext(pureWord, pure);
           //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
-          if (!StringUtil.emptyString(id)) {
+          if (!Strings.isNullOrEmpty(id)) {
               String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
               //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
-              if (!StringUtil.emptyString(sumo)) {
-                  if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
+              if (!Strings.isNullOrEmpty(sumo)) {
+                  if (sumo.contains(" ")) {  // TODO: if multiple mappings...
                       sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                   }
                   if (kb.isInstance(sumo))
-                      results.add("equals(" + sumo + "," + purewords.get(pureword) + ")");
+                      results.add("equals(" + sumo + "," + cg.getGrouped(clauseKey) + ")");
                   else
-                      results.add("sumo(" + sumo + "," + purewords.get(pureword) + ")");
+                      results.add("sumo(" + sumo + "," + cg.getGrouped(clauseKey) + ")");
               }
           }
-          else if (DependencyConverter.maleNames.contains(pureword)) {
-              results.add("sumo(Human," + purewords.get(pureword) + ")");
-              results.add("attribute(" + purewords.get(pureword) + ",Male)");
+          else if (DependencyConverter.maleNames.contains(pureWord)) {
+              results.add("sumo(Human," + cg.getGrouped(clauseKey) + ")");
+              results.add("attribute(" + cg.getGrouped(clauseKey) + ",Male)");
           }
-          else if (DependencyConverter.femaleNames.contains(pureword)) {
-              results.add("sumo(Human," + purewords.get(pureword) + ")"); 
-              results.add("attribute(" + purewords.get(pureword) + ",Female)");
+          else if (DependencyConverter.femaleNames.contains(pureWord)) {
+              results.add("sumo(Human," + cg.getGrouped(clauseKey) + ")");
+              results.add("attribute(" + cg.getGrouped(clauseKey) + ",Female)");
           }      
           else {
-              String synset = WSD.getBestDefaultSense(pureword);
+              String synset = WSD.getBestDefaultSense(pureWord);
               //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
-              if (!StringUtil.emptyString(synset)) {
+              if (!Strings.isNullOrEmpty(synset)) {
                   String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
                   //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
-                  if (!StringUtil.emptyString(sumo)) {
+                  if (!Strings.isNullOrEmpty(sumo)) {
                       if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
                           sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                       }
-                      results.add("sumo(" + sumo + "," + purewords.get(pureword) + ")");
+                      results.add("sumo(" + sumo + "," + cg.getGrouped(clauseKey) + ")");
                   }
                   else
-                      results.add("sumo(Entity," + purewords.get(pureword) + ")");
+                      results.add("sumo(Entity," + cg.getGrouped(clauseKey) + ")");
               }
           }
       }
       //System.out.println("INFO in Interpreter.addWSD(): " + results);
       //results.addAll(clauses);
-      return results;
+      return Lists.newArrayList(results);
   }
 
   /** *************************************************************
@@ -273,8 +279,8 @@ public class Interpreter {
           e.printStackTrace();
           System.out.println(e.getMessage());
       }
-      HashMap<String,String> purewords = extractWords(results);
-      ArrayList<String> wsd = findWSD(results,purewords);
+
+      List<String> wsd = findWSD(results);
       results.addAll(wsd);
       
       String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
@@ -467,7 +473,7 @@ public class Interpreter {
               System.exit(1);
           }
           input = c.readLine("Enter sentence: ");
-          if (!StringUtil.emptyString(input)) {
+          if (!Strings.isNullOrEmpty(input)) {
               if (input.equals("reload")) {
                   System.out.println("reloading semantic rewriting rules");
                   loadRules();
@@ -515,7 +521,7 @@ public class Interpreter {
                   interpretSingle(input);
               }
           }
-      } while (!StringUtil.emptyString(input));
+      } while (!Strings.isNullOrEmpty(input));
   }
   
   /** ***************************************************************
@@ -544,7 +550,7 @@ public class Interpreter {
 
       String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "SemRewrite.txt";
       String pref = KBmanager.getMgr().getPref("SemRewrite");
-      if (!StringUtil.emptyString(pref))
+      if (!Strings.isNullOrEmpty(pref))
           filename = pref;
       loadRules(filename);
   }
@@ -703,8 +709,8 @@ public class Interpreter {
           e.printStackTrace();
           System.out.println(e.getMessage());
       }
-      HashMap<String,String> purewords = extractWords(results);
-      ArrayList<String> wsd = findWSD(results,purewords);
+
+      List<String> wsd = findWSD(results);
       System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
   }
 

@@ -46,13 +46,10 @@ public class CorefSubstitutorLarge extends TestCase {
 
     @Parameterized.Parameters(name="{0}")
     public static Collection<Object[]> prepare() {
-        return JsonReader.transform("resources/corefsSubstitution.json", new Function<JSONObject, Object[]>() {
-            @Override
-            public Object[] apply(JSONObject jo) {
-                String input = (String) jo.get("in");
-                String expected = (String) jo.get("out");
-                return new Object[]{input, expected};
-            }
+        return JsonReader.transform("resources/corefsSubstitution.json", (JSONObject jo) -> {
+            String input = (String) jo.get("in");
+            String expected = (String) jo.get("out");
+            return new Object[]{input, expected};
         });
     }
 
