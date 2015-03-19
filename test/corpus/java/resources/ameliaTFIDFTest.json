@@ -1,0 +1,82 @@
+[
+  {
+    "file": "AmeliaEarhart.txt",
+    "query": "Who was the first woman to fly long distance?",
+    "answer": "Amelia Mary Earhart \\(July 24, 1897 – July 2, 1937\\) was an American aviator, one of the first women to fly a plane long distances\\.|She was the first woman to fly a plane by herself across the Atlantic Ocean."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Who was Amelia Earhart?",
+	"answer":"Amelia Mary Earhart \\(July 24, 1897 – July 2, 1937\\) was an American aviator, one of the first women to fly a plane long distances\\."
+	},
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Who was the first woman to fly by herself across the Atlantic Ocean?",
+	"answer":"She was the first woman to fly a plane by herself across the Atlantic Ocean."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Who broke many records?",
+	"answer":"She broke many records and showed how air travel had moved forward."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Who wrote books about her flights?",
+	"answer":"She also wrote books, most of them were about her flights."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"When did Amelia Earhart vanish over the South Pacific?",
+	"answer":"Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"What was Amelia Earhart doing when she vanished over the South Pacific?",
+	"answer":"Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"When was Amelia Earhart declared dead?",
+	"answer":"She was declared dead on January 5, 1939."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Who was declared dead on January 5, 1939?",
+	"answer":"She was declared dead on January 5, 1939."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Who believes that the Electra ran out of fuel?",
+	"answer":"Many researchers including navigator and aeronautical engineer Elgen Long believe that the Electra ran out of fuel and that Earhart and Noonan ditched at sea."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Who believes that Earhart and Noonan ditched at sea?",
+	"answer":"Many researchers including navigator and aeronautical engineer Elgen Long believe that the Electra ran out of fuel and that Earhart and Noonan ditched at sea."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"What is the most widely accepted explanation of Earhart's and Noonan's fate?",
+	"answer":"The \"crash and sink\" theory is often the most widely accepted explanation of Earhart’s and Noonan’s fate\\.\\[1\\]"
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"What other hypothesis is there for Earhart and Noonan's fate?",
+	"answer":"However, there is a range of documented, archaeological, and anecdotal evidence supporting the hypothesis that Earhart and Noonan found Gardner Island, uninhabited at the time, landed the Electra on a flat reef near the wreck of a freighter, and sent sporadic radio messages from there."
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"What has been surmised?",
+	"answer":"It has been surmised that Earhart and Noonan might have survived on Nikumaroro for several weeks before succumbing\\.\\[2\\]"
+  },
+  {
+	"file": "AmeliaEarhart.txt",
+	"query":"Where might Earhart and Noonan survived?",
+	"answer":"It has been surmised that Earhart and Noonan might have survived on Nikumaroro for several weeks before succumbing\\.\\[2\\]"
+  },
+  {
+    "file": "AmeliaEarhart.txt",
+    "query":"How long might Earhart and Noonan survived after reaching Nikumaroro?",
+    "answer":"It has been surmised that Earhart and Noonan might have survived on Nikumaroro for several weeks before succumbing\\.\\[2\\]"
+  }
+]
