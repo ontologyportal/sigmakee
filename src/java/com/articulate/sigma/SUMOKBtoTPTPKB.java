@@ -222,7 +222,7 @@ public class SUMOKBtoTPTPKB {
 
         //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile()");
         ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
-        HashSet<String> notUsedPredicates = buildNotUsedPredicates();
+        HashSet<String> excludedPredicates = buildExcludedPredicates();
         HashSet<Formula> basicInferenceRules = buildBasicInferenceRules();
         String result = null;
         PrintWriter pr = null;
@@ -350,22 +350,24 @@ public class SUMOKBtoTPTPKB {
                         }
                     }
 
-                    // Filter1: only keep simpleClause and basic axioms
-                    // TODO: this should be removed in the future
-                    if (filterSimpleOnly) {
-                        if ((f.isSimpleClause() || isBasicInferenceRules(basicInferenceRules, f))
-                                && !containUnnecessaryPreidcates(notUsedPredicates, f)) {
+                    if (filterExcludePredicates(excludedPredicates, f) == false) {
+                        // Filter1: only keep simpleClause and basic axioms
+                        // TODO: this should be removed in the future
+                        if (filterSimpleOnly) {
+                            if ((f.isSimpleClause() || isBasicInferenceRules(basicInferenceRules, f))) {
+                                if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
+                                    pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                                    pr.println(",axiom,(" + theTPTPFormula + ")).");
+                                    alreadyWrittenTPTPs.add(theTPTPFormula);
+                                }
+                            }
+                        }
+                        else {
                             if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
                                 pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
                                 pr.println(",axiom,(" + theTPTPFormula + ")).");
                                 alreadyWrittenTPTPs.add(theTPTPFormula);
                             }
-                        }
-                    } else {
-                        if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
-                            pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
-                            pr.println(",axiom,(" + theTPTPFormula + ")).");
-                            alreadyWrittenTPTPs.add(theTPTPFormula);
                         }
                     }
                 }
@@ -436,16 +438,17 @@ public class SUMOKBtoTPTPKB {
     /** *************************************************************
      * define a set of predicates which will not be used for inference
      */
-    public static HashSet<String> buildNotUsedPredicates() {
+    public static HashSet<String> buildExcludedPredicates() {
 
-        HashSet<String> notUsedPredicates = new HashSet<>();
-        notUsedPredicates.add("documentation");
-        notUsedPredicates.add("format");
-        notUsedPredicates.add("termFormat");
-        notUsedPredicates.add("externalImage");
-        notUsedPredicates.add("relatedExternalConcept");
-        notUsedPredicates.add("relatedInternalConcept");
-        return notUsedPredicates;
+        HashSet<String> excludedPredicates = new HashSet<>();
+        excludedPredicates.add("documentation");
+        excludedPredicates.add("domain");
+        excludedPredicates.add("format");
+        excludedPredicates.add("termFormat");
+        excludedPredicates.add("externalImage");
+        excludedPredicates.add("relatedExternalConcept");
+        excludedPredicates.add("relatedInternalConcept");
+        return excludedPredicates;
     }
 
     /** *************************************************************
@@ -457,14 +460,17 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * check if the predicate in formula is in the notUsedPredicates or not
+     * return true if the given formula is simple clause,
+     *   and contains one of the excluded predicates;
+     * otherwise return true;
      */
-    public static boolean containUnnecessaryPreidcates(HashSet<String> notUsedPredicates, Formula formula) {
+    public static boolean filterExcludePredicates(HashSet<String> excludedPredicates, Formula formula) {
 
+        boolean pass = false;
         if (formula.isSimpleClause())
-            return notUsedPredicates.contains(formula.getArgument(0));
-        else
-            return false;
+            pass = excludedPredicates.contains(formula.getArgument(0));
+
+        return pass;
     }
 
     /** *************************************************************
