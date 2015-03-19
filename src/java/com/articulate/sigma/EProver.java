@@ -150,7 +150,7 @@ public class EProver {
                 executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
 
         _builder = new ProcessBuilder(commands);
-        _builder.redirectErrorStream(true);
+        _builder.redirectErrorStream(false);
         _eprover = _builder.start();
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
@@ -168,15 +168,12 @@ public class EProver {
      */
     public EProver (String executable) throws IOException {
 
-        if (_builder != null && _eprover != null)
-            terminate();
-
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
 
         _builder = new ProcessBuilder(commands);
-        _builder.redirectErrorStream(true);
+        _builder.redirectErrorStream(false);
         _eprover = _builder.start();
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
