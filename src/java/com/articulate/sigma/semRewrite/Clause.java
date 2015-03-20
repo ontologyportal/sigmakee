@@ -138,7 +138,7 @@ public class Clause {
         c.pred = pred;
         c.negated = negated;
         c.preserve = preserve;
-        if (StringUtil.emptyString(arg1) || StringUtil.emptyString(arg1)) {
+        if (StringUtil.emptyString(arg1) || StringUtil.emptyString(arg2)) {
             System.out.println("Error in Clause.applyBindings(): Empty argument(s): " + this);
             c.arg1 = arg1;
             c.arg2 = arg2;
