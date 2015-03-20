@@ -447,17 +447,20 @@ public class Interpreter {
   }
   
   /** ***************************************************************
+   * @param kifcs a list of String simple KIF clauses
+   * @return the response from the E prover, whether an acknowledgement
+   * of an assertion, or a formula with the answer bindings substituted in
    */
   public String fromKIFClauses(ArrayList<String> kifcs) {
       
       String s1 = toFOL(kifcs);
       String s2 = postProcess(s1);
       String s3 = addQuantification(s2);
-      System.out.println("INFO in Interpreter.interpret(): KIF: " + s3);
+      System.out.println("INFO in Interpreter.interpret(): KIF: " + (new Formula(s3)));
       if (inference) {
           KB kb = KBmanager.getMgr().getKB("SUMO");
           if (question) {
-//              System.out.println(kb.askNoProof(s3, 30, 1));
+              // System.out.println(kb.askNoProof(s3, 30, 1));
               Formula query = new Formula(s3);
               ArrayList<String> inferenceAnswers = kb.askNoProof(s3, 30, 1);
               if (query.isExistentiallyQuantified()) {
@@ -470,11 +473,13 @@ public class Interpreter {
                       String actual = lf.htmlParaphrase("");
                       actual = StringUtil.filterHtml(actual);
                       System.out.println(actual);
-                  } catch (Exception e) {
+                  } 
+                  catch (Exception e) {
                       e.printStackTrace();
                   }
               }
-          } else {
+          } 
+          else {
               System.out.println(kb.tell(s3));
           }
       }
