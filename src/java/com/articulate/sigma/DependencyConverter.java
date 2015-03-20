@@ -6,6 +6,15 @@ import java.io.*;
 import java.util.*;
 import java.text.ParseException;
 
+import com.google.common.collect.Lists;
+
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
+import edu.stanford.nlp.util.CoreMap;
+
 public class DependencyConverter {
 
     public static final List<String> MONTHS = Arrays.asList("January",
@@ -128,6 +137,7 @@ public class DependencyConverter {
     /** *************************************************************
      * Run the Stanford NLP tools on the given text file to split a 
      * text into sentences.
+     * @param infile the fully qualified filename of the input file
      */
     public static ArrayList<String> splitSentences(String infile) throws IOException {
         
@@ -143,7 +153,7 @@ public class DependencyConverter {
         String execString = "java -classpath " + stanfordCore + 
                 "/stanford-parser.jar edu.stanford.nlp.process.DocumentPreprocessor " + 
                 infile;
-        //System.out.println("INFO in DependencyConverter.splitSentences(): executing: " + execString);
+        System.out.println("INFO in DependencyConverter.splitSentences(): executing: " + execString);
         _nlp = Runtime.getRuntime().exec(execString);
         _reader = new BufferedReader(new InputStreamReader(_nlp.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_nlp.getErrorStream()));
@@ -151,6 +161,7 @@ public class DependencyConverter {
         String line = null; 
         while (true) {
             line = _reader.readLine(); 
+            System.out.println(line);
             if (line == null)
                 break;
             result.add(line);           
@@ -160,6 +171,7 @@ public class DependencyConverter {
     }
 
     /** ***************************************************************
+     * Read the FirstNames.cvs file into maleName and femaleNames
      */
     public static void readFirstNames() {
 
@@ -586,6 +598,30 @@ public class DependencyConverter {
         }
         return sb.toString();
     }
+
+    /** *************************************************************
+     * Take in a single quoted sentence from the command line and
+     * print out its dependency parse.
+     */
+    public static void test(String input) {
+        
+        try {
+            Properties props = new Properties();
+            props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+            StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+            Annotation document = new Annotation(input);
+            pipeline.annotate(document);
+            List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+            for (CoreMap sentence : sentences) {
+                SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+                System.out.println(Lists.newArrayList(dependencies.toList().split("\n")));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }    
+    }
     
     /** *************************************************************
      */
@@ -593,6 +629,7 @@ public class DependencyConverter {
         
         if (args != null && args.length > 0 && args[0].equals("-s")) {
             String input = args[1];
+            System.out.println("Info in DependencyConverter.main(): processing: " + input);
             try {
                 System.out.println(splitSentences(input));
             }
@@ -601,8 +638,12 @@ public class DependencyConverter {
                 ex.printStackTrace();
             }
         }
+        else if (args != null && args.length > 0 && args[0].equals("-i")) {
+            test(StringUtil.removeEnclosingQuotes(args[1]));
+        }
         else if (args != null && args.length > 0 && args[0].equals("-d")) {
             String input = args[1];
+            System.out.println("Info in DependencyConverter.main(): processing: " + input);
             try {
                 ArrayList<String> sents = splitSentences(input);
                 for (String s : sents)
@@ -612,6 +653,13 @@ public class DependencyConverter {
                 System.out.println(ex.getMessage());
                 ex.printStackTrace();
             }
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            System.out.println("Usage: ");
+            System.out.println("DependencyConvert -h                % show this help info");
+            System.out.println("                  -s filename       % split sentences from text in file");
+            System.out.println("                  -d filename       % split sentences and get dependencies in file");
+            System.out.println("                  -i \"blah blah\"  % get dependencies in input");
         }
         else {
             try {
