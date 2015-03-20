@@ -362,6 +362,15 @@ public class DateAndNumbersGeneration {
 				//IndexedWord tempMeasuredEntity = StanfordDependencies.getParent(measuredEntity);
 				if (StanfordDependencies.getParent(measuredEntity) == null) {
 					Set<IndexedWord> childrenSet = StanfordDependencies.getChildren(measuredEntity);
+					//which means it is unitOfMeasurementNode. Hence remove infinite looping condition
+					if ((childrenSet.size()==1)) {
+						measuredEntity = unitOfMeasurementNode;
+						sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
+						sumoTerms.add("unit(measure" + count + ", "+ "memberCount" + ")");
+						sumoTerms.add("value(measure" + count + ", " + token.getWord() + ")");
+						flag = true;
+						return;
+					}
 					for (IndexedWord child : childrenSet) {
 						String childPosTagRemover = null;
 						System.out.println(child.toString());
@@ -393,6 +402,9 @@ public class DateAndNumbersGeneration {
 		}
 		else 
 		{
+			if (unitOfMeasurementStr.equals(measuredEntity.toString())) {
+				unitOfMeasurementStr = "memberCount";
+			}
 			sumoUnitOfMeasure = unitOfMeasurementStr;
 		}
 		sumoTerms.add("unit(measure" + count + ", "+ sumoUnitOfMeasure + ")");
