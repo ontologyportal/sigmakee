@@ -136,6 +136,14 @@ public class Clause {
         //System.out.println("INFO in Clause.applyBindings(): bindings: " + bindings);
         Clause c = new Clause();
         c.pred = pred;
+        c.negated = negated;
+        c.preserve = preserve;
+        if (StringUtil.emptyString(arg1) || StringUtil.emptyString(arg1)) {
+            System.out.println("Error in Clause.applyBindings(): Empty argument(s): " + this);
+            c.arg1 = arg1;
+            c.arg2 = arg2;
+            return c;
+        }
         if (arg1.startsWith("?")) {
             if (bindings.containsKey(arg1))
                 c.arg1 = bindings.get(arg1);
@@ -152,8 +160,6 @@ public class Clause {
         }
         else
             c.arg2 = arg2;
-        c.negated = negated;
-        c.preserve = preserve;
         //System.out.println("INFO in Clause.applyBindings(): returning this: " + c);
         return c;
     }
