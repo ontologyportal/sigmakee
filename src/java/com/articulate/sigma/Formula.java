@@ -33,7 +33,7 @@ public class Formula implements Comparable {
     protected static final String IF     = "=>";
     protected static final String IFF    = "<=>";
     protected static final String UQUANT = "forall";
-    protected static final String EQUANT = "exists";
+    public static final String EQUANT = "exists";
     protected static final String EQUAL  = "equal";
     protected static final String GT     = "greaterThan";
     protected static final String GTET   = "greaterThanOrEqualTo";
@@ -1977,6 +1977,24 @@ public class Formula implements Comparable {
                     || pred.equals(UQUANT)));
     }
 
+    /** Tests if this formula is an existentially quantified formula
+     *
+     * @return
+     */
+    public boolean isExistentiallyQuantified() {
+
+        return EQUANT.equals(this.car());
+    }
+
+    /** Tests if this formula is an universally quantified formula
+     *
+     * @return
+     */
+    public boolean isUniversallyQuantified() {
+
+        return UQUANT.equals(this.car());
+    }
+
     /** ***************************************************************
      * A static utility method.
      * @param obj Any object, but should be a String.
@@ -2175,6 +2193,28 @@ public class Formula implements Comparable {
             newFormula = newFormula.append(f2.replaceVar(v,term));
         }
         return newFormula;
+    }
+
+    public Formula replaceQuantifierVars(String quantifier, List<String> vars) throws Exception {
+
+        if(!quantifier.equals(this.car())) {
+            throw new Exception("The formula is not properly quantified: " + this);
+        }
+
+        Formula param = new Formula();
+        param.read(this.cadr());
+        ArrayList<String> existVars = param.complexArgumentsToArrayList(0);
+
+        if(existVars.size() != vars.size()) {
+            throw new Exception("Wrong number of variables: " + vars + " to substitute in existentially quantified formula: " + this);
+        }
+
+        Formula result = this;
+        for(int i = 0; i < existVars.size(); i++) {
+            result = result.replaceVar(existVars.get(i), vars.get(i));
+        }
+
+        return result;
     }
 
     /** ***************************************************************

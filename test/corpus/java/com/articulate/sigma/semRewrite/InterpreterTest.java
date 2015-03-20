@@ -77,13 +77,7 @@ public class InterpreterTest extends IntegrationTestBase {
                 System.out.println("****** FAIL ******");
             else
                 System.out.println("pass");
-            if (passed) {
-                assertTrue("The following should be equal: \n" + fExpected + "\n and \n" + actual, passed);
-            } 
-            else {
-                assertFalse("The following should be equal: \n" + fExpected + "\n and \n" + actual, !passed);
-            }
-            //assertEquals(passed,true);
+            assertTrue("The following should be equal: \n" + fExpected + "\n and \n" + actual, passed);
         }
     }
 }

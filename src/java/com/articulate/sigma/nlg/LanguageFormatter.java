@@ -60,7 +60,7 @@ public class LanguageFormatter {
      */
     private boolean doInformalNLG = true;
 
-    void setDoInformalNLG(boolean doIt) {
+    public void setDoInformalNLG(boolean doIt) {
         doInformalNLG = doIt;
     }
 

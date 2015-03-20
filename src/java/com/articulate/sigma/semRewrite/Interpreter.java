@@ -27,6 +27,7 @@ import java.util.regex.*;
 import java.io.*;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlp.CorefSubstitutor;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.base.Strings;
@@ -455,10 +456,27 @@ public class Interpreter {
       System.out.println("INFO in Interpreter.interpret(): KIF: " + s3);
       if (inference) {
           KB kb = KBmanager.getMgr().getKB("SUMO");
-          if (question) 
-              System.out.println(kb.askNoProof(s3,30,1));
-          else
+          if (question) {
+//              System.out.println(kb.askNoProof(s3, 30, 1));
+              Formula query = new Formula(s3);
+              ArrayList<String> inferenceAnswers = kb.askNoProof(s3, 30, 1);
+              if (query.isExistentiallyQuantified()) {
+                  Formula answer;
+                  try {
+                      answer = query.replaceQuantifierVars(Formula.EQUANT, inferenceAnswers);
+                      LanguageFormatter lf = new LanguageFormatter(answer.theFormula, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"),
+                              kb, "EnglishLanguage");
+                      lf.setDoInformalNLG(true);
+                      String actual = lf.htmlParaphrase("");
+                      actual = StringUtil.filterHtml(actual);
+                      System.out.println(actual);
+                  } catch (Exception e) {
+                      e.printStackTrace();
+                  }
+              }
+          } else {
               System.out.println(kb.tell(s3));
+          }
       }
       return s3;
   }
