@@ -144,11 +144,13 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
         String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
         Formula expectedF = new Formula("(=>\n" +
+                "(and (instance ?SUBSTANCE Object))\n" +
+                "(=>\n" +
                 "  (and\n" +
                 "    (instance ?MIXTURE Mixture)\n" +
                 "    (part ?SUBSTANCE ?MIXTURE)\n" +
                 "    (not (instance ?SUBSTANCE Mixture) ))\n" +
-                "  (instance ?SUBSTANCE PureSubstance) )");
+                "  (instance ?SUBSTANCE PureSubstance) ))");
 
         String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
 
