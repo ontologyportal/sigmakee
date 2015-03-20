@@ -386,6 +386,7 @@ public class DateAndNumbersGeneration {
 							break;
 						}
 					}
+					flag = true;
 				}
 				else {
 					measuredEntity = StanfordDependencies.getParent(measuredEntity);
@@ -409,8 +410,8 @@ public class DateAndNumbersGeneration {
 		}
 		sumoTerms.add("unit(measure" + count + ", "+ sumoUnitOfMeasure + ")");
 		sumoTerms.add("value(measure" + count + ", " + token.getWord() + ")");
-		System.out.println(unitOfMeasurementStr);
-		System.out.println(measuredEntityStr);
+		//System.out.println(unitOfMeasurementStr);
+		//System.out.println(measuredEntityStr);
 		WordNet.wn.initOnce();
 		System.out.println();
 	}
