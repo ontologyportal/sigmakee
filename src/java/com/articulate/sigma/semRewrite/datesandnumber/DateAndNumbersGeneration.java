@@ -325,6 +325,7 @@ public class DateAndNumbersGeneration {
 		IndexedWord measuredEntity = null;
 		String posTagRemover = null;
 		String unitOfMeasurementStr = "";
+		String sumoUnitOfMeasure = "";
 		List<String> visitedNodes = new ArrayList<String>();
 		Matcher posTagRemoverMatcher = null;
 		String measuredEntityStr = null;
@@ -396,9 +397,9 @@ public class DateAndNumbersGeneration {
 		if (measuredEntity != null) {
 			sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
 		}
-		String sumoUnitOfMeasure = WSD.getBestDefaultSUMOsense(unitOfMeasurementNode.value(), 1);
+		sumoUnitOfMeasure = WSD.getBestDefaultSUMOsense(unitOfMeasurementNode.value(), 1);
 		System.out.println(sumoUnitOfMeasure);
-		if (!sumoUnitOfMeasure.isEmpty()) {
+		if ((sumoUnitOfMeasure != null) && (!sumoUnitOfMeasure.isEmpty())) {
 			sumoUnitOfMeasure = sumoUnitOfMeasure.replaceAll("[^\\p{Alpha}\\p{Digit}]+","");
 		}
 		else 
