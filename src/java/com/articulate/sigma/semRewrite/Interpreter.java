@@ -186,6 +186,9 @@ public class Interpreter {
   }
 
   /** *************************************************************
+   * Find all the variables that should be quantified - which are
+   * those that have an appended "-num" suffix indicating that it
+   * stands for a token from the parser.
    */
   private static ArrayList<String> findQuantification(String form) {
       
@@ -452,7 +455,7 @@ public class Interpreter {
       System.out.println("INFO in Interpreter.interpret(): KIF: " + s3);
       if (inference) {
           KB kb = KBmanager.getMgr().getKB("SUMO");
-          if (question)
+          if (question) 
               System.out.println(kb.askNoProof(s3,30,1));
           else
               System.out.println(kb.tell(s3));
