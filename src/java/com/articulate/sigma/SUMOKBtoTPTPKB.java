@@ -448,6 +448,11 @@ public class SUMOKBtoTPTPKB {
         excludedPredicates.add("externalImage");
         excludedPredicates.add("relatedExternalConcept");
         excludedPredicates.add("relatedInternalConcept");
+        excludedPredicates.add("formerName");
+        excludedPredicates.add("abbreviation");
+        excludedPredicates.add("conventionalShortName");
+        excludedPredicates.add("conventionalLongName");
+
         return excludedPredicates;
     }
 
