@@ -404,7 +404,7 @@ public class DateAndNumbersGeneration {
 		}
 		else 
 		{
-			if (unitOfMeasurementStr.equals(measuredEntity.toString())) {
+			if ((measuredEntity != null) && (unitOfMeasurementStr.equals(measuredEntity.value()))) {
 				unitOfMeasurementStr = "memberCount";
 			}
 			sumoUnitOfMeasure = unitOfMeasurementStr;
