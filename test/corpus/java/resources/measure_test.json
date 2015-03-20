@@ -1,0 +1,247 @@
+[
+{
+"text":"The city is divided into six divisions, four of which are on Malé Island: Henveiru, Galolhu, Maafannu and Macchangolhi.",
+"kif":
+"[value(measure1, six), unit(measure2, divisions), value(measure2, four), measure(city-2, measure1), unit(measure1, divisions), measure(city-2, measure2)]"
+},
+{
+"text":"Pasni is located on the Makran coast on Arabian Sea about 300 km from Karachi.",
+"kif":
+"[measure(distance, measure1), value(measure1, 300), unit(measure1, km)]"
+},
+{
+"text":"The Bay of Bengal occupies an area of 2,172,000 km².",
+"kif":
+"[unit(measure1, square Kilometer), measure(area-7, measure1), value(measure1, 2,172,000)]"
+},
+{
+"text":"As one component of the World Ocean, the Indian Ocean is delineated from the Atlantic Ocean by the 20° east meridian running south from Cape Agulhas, and from the Pacific Ocean by the meridian of 146°55' east.",
+"kif":
+"[measure(Ocean-17, measure6), value(measure6, 55), unit(measure1, component), value(measure5, °), unit(measure6, meridian), unit(measure2, °), unit(measure3, running), value(measure1, one), unit(measure4, °), value(measure3, °), measure(Ocean-17, measure2), measure(meridian-37, measure4), value(measure4, 146), measure(Ocean-17, measure1), value(measure2, 20), measure(meridian-37, measure5), measure(Ocean-17, measure3), unit(measure5, 55)]"
+},
+{
+"text":"Ma (for megaannus), is a unit of time equal to one million (106) years. ",
+"kif":
+"[measure(years-19, measure1), value(measure1, one), value(measure2, million), value(measure3, 106), unit(measure3, million), unit(measure2, Year), measure(years-19, measure3), unit(measure1, million), measure(time-11, measure2)]"
+},
+{
+"text":"Andromeda Galaxy, which is part of the same Local Group as our galaxy, contains about 10^12 stars.",
+"kif":
+"[]"
+},
+{
+"text":"Ma (for megaannus), is a unit of time equal to one million (106) years. ",
+"kif":
+"[measure(years-19, measure1), value(measure1, one), value(measure2, million), value(measure3, 106), unit(measure3, million), unit(measure2, Year), measure(years-19, measure3), unit(measure1, million), measure(time-11, measure2)]"
+},
+{
+"text":"Andromeda Galaxy, which is part of the same Local Group as our galaxy, contains about 10^12 stars.",
+"kif":
+"[]"
+},
+{
+"text":"Currently, the standard time interval (called conventional second, or simply second) is defined as 9,192,631,770 oscillations of a hyperfine transition in the 133 caesium atom.",
+"kif":
+"[value(measure1, 9,192,631,770), unit(measure1, oscillations), measure(transition-28, measure2), value(measure2, 133), unit(measure2, Atom), measure(interval-6, measure1)]"
+},
+{
+"text":"At and above a thousand million (≥ 109) the same names are used to refer to numbers differing by a factor of an integer power of 1,000.",
+"kif":
+"[]"
+},
+{
+"text":"Andhra Pradesh is one of the 29 states of India, situated on the country's southeastern coast.",
+"kif":
+"[value(measure2, 29), measure(Pradesh-2, measure2), unit(measure2, states)]"
+},
+{
+"text":"Andhra Pradesh has a Vidhan Sabha of 175 seats, and a Vidhan Parishad of 58 members.",
+"kif":
+"[value(measure1, 175), unit(measure2, members), value(measure2, 58), measure(Sabha-6, measure1), measure(Parishad-14, measure2), unit(measure1, seats)]"
+},
+{
+"text":"The state is the eighth largest state in India covering an area of 160205 km2.",
+"kif":
+"[unit(measure1, km2), measure(area-12, measure1), value(measure1, 160205)]"
+},
+{
+"text":"The state has the second longest coastline of 972 km among all the states of India, second only to Gujarat.",
+"kif":
+"[measure(coastline-7, measure1), unit(measure1, km), value(measure1, 972)]"
+},
+{
+"text":"A small enclave of 30 km2 (12 sq mi) of Yanam, a district of Pondicherry, lies south of Kakinada in the Godavari delta to the northeast of the state.",
+"kif":
+"[unit(measure1, km2), value(measure1, 30), measure(enclave-3, measure1), unit(measure2, mi), value(measure2, 12), measure(enclave-3, measure2)]"
+},
+{
+"text":"There are 13 districts with 9 in Coastal Andhra and 4 in Rayalaseema.",
+"kif":
+"[]"
+},
+{
+"text":"The Puranas list 30 Andhra rulers.",
+"kif":
+"[value(measure1, 30), unit(measure1, rulers), measure(list-3, measure1)]"
+},
+{
+"text":"Satakarni is said to have ruled for 56 years.",
+"kif":
+"[]"
+},
+{
+"text":"Hyderabad will remain as a joint capital for 10 years for both Andhra Pradesh and Telangana.",
+"kif":
+"[]"
+},
+{
+"text":"The total forest cover of the state after the bifurcation is left with an area of 22862 km2.",
+"kif":
+"[unit(measure1, km2), measure(area-15, measure1), value(measure1, 22862)]"
+},
+{
+"text":"Visakhapatnam district has the largest urban population of 47.5% and Srikakulam district with 83.8%, has the largest rural population, among others districts in the state.",
+"kif":
+"[unit(measure2, %), measure(district-13, measure2), value(measure1, 47.5), measure(population-7, measure1), unit(measure1, %), value(measure2, 83.8)]"
+},
+{
+"text":"The overall population of the state comprises 17.1% of Scheduled Caste and 5.3% of Scheduled Tribe population.",
+"kif":
+"[measure(Scheduled Caste, measure1), unit(measure1, %), unit(measure2, memberCount), measure(Scheduled Tribe, measure2), value(measure1, 17.1), value(measure2, 5.3)]"
+},
+{
+"text":"The average literacy rate stands at 67.41% with 29,772,532 literates, significantly lower the national average of 73.0%.",
+"kif":
+"[unit(measure2, literates), unit(measure3, %), measure(rate-4, measure1), unit(measure1, %), value(measure2, 29,772,532), value(measure3, 73.0), value(measure1, 67.41), measure(average-17, measure3), measure(%-8, measure2)]"
+},
+{
+"text":"West Godavari district has the highest literacy rate of 74.6% and Vizianagaram district has the least with 58.9%.",
+"kif":
+"[unit(measure2, %), measure(rate-8, measure1), unit(measure1, %), value(measure1, 74.6), measure(district-3, measure2), value(measure2, 58.9)]"
+},
+{
+"text":"It has a total of 13 districts, with nine in Coastal Andhra and four in Rayalaseema.",
+"kif":
+"[measure(total-4, measure3), unit(measure3, nine), unit(measure2, has), value(measure1, 13), measure(It-1, measure2), unit(measure1, districts), value(measure3, four), value(measure2, nine), measure(total-4, measure1)]"
+},
+{
+"text":"These 13 districts are further divided into 664 mandals under the administration of 49 revenue divisions.",
+"kif":
+"[measure(further-5, measure1), value(measure3, 49), value(measure1, 13), value(measure2, 664), unit(measure1, districts), measure(districts-3, measure2), unit(measure2, mandals), unit(measure3, divisions), measure(administration-12, measure3)]"
+},
+{
+"text":"There are as many as 6 revenue divisions in East Godavari district and only 2 in Vizianagaram district.",
+"kif":
+"[]"
+},
+{
+"text":"Chittoor district has the most number of mandals with 66 and Srikakulam district has the least with 37.",
+"kif":
+"[measure(district-2, measure1), unit(measure1, Number), unit(measure2, least), measure(district-2, measure2), value(measure1, 66), value(measure2, 37)]"
+},
+{
+"text":"Andhra Pradesh has a Vidhan Sabha of 175 seats, and a Vidhan Parishad of 58 members.",
+"kif":
+"[value(measure1, 175), unit(measure2, members), value(measure2, 58), measure(Sabha-6, measure1), measure(Parishad-14, measure2), unit(measure1, seats)]"
+},
+{
+"text":"In the Parliament of India Andhra Pradesh has 11 in the Rajya Sabha, the Upper House, and 25 in the Lok Sabha, the Lower House.",
+"kif":
+"[unit(measure2, Sabha), value(measure2, 25), value(measure1, 11), unit(measure1, memberCount), measure(Parliament-3, measure2), measure(Pradesh-7, measure1)]"
+},
+{
+"text":"Andhra Pradesh has a railway network of 5,046 km and have played a significant role in boosting the economy of the state alongside developing the industrial and the tourism sectors.",
+"kif":
+"[measure(network-6, measure1), unit(measure1, km), value(measure1, 5,046)]"
+},
+{
+"text":"Belum Caves in Kurnool district are the second largest natural caves of 3.229 km in length on the Indian subcontinent.​",
+"kif":
+"[measure(caves-11, measure1), value(measure1, 3.229), unit(measure1, km)]"
+},
+{
+"text":"Guntur district's coastline is approximately 100 kilometers.",
+"kif":
+"[unit(measure1, kilometers), measure(coastline-4, measure1), value(measure1, 100)]"
+},
+{
+"text":"Guntur district occupies an area of approximately 11391 square kilometres comparatively equivalent to Indonesia's Bangka Island.",
+"kif":
+"[unit(measure1, square kilometres), measure(area-5, measure1), value(measure1, 11391)]"
+},
+{
+"text":"According to the 2011 census Guntur district has a population of 4889230, roughly equal to the Central African Republic or the US state of Alabama.",
+"kif":
+"[year(time-1,2011), value(measure1, 4889230), unit(measure1, population), measure(census-5, measure1), time(has,time-1)]"
+},
+{
+"text":"The district has a population density of 429 inhabitants per square kilometre.",
+"kif":
+"[]"
+},
+{
+"text":"Guntur district covers an area of 11391 km2 and has a population of 4889230, of which 2441128 are males and 2448102 are females as of 2011.",
+"kif":
+"[]"
+},
+{
+"text":"As of 2011 Census, the district had a population of 4529009, of which 41.00% is urban and a literacy rate of 74.37%.",
+"kif":
+"[value(measure2, 41.00), value(measure3, 74.37), year(time-1,2011), unit(measure3, %), unit(measure2, %), measure(Census-4, measure1), unit(measure1, population), measure(rate-23, measure3), measure(population-10, measure2), value(measure1, 4529009), time(had,time-1)]"
+},
+{
+"text":"At first the district was administered by a chief and council at Masulipatnam but in 1794 Collectors, directly responsible to the Board of Revenue, were appointed at Masulipatnam.",
+"kif":
+"[]"
+},
+{
+"text":"The Krishna district occupies an area of 8727 square kilometres comparatively equivalent to Corsica.",
+"kif":
+"[]"
+},
+{
+"text":"The annual rainfall in the region is about 1028 mm and is contributed to by the Southwest monsoon.",
+"kif":
+"[]"
+},
+{
+"text":"The main hill range of the district known as Kondapalli runs between Nandigama and Vijayawada with a length of about 24 km",
+"kif":
+"[value(measure1, 24), measure(length-18, measure1), unit(measure1, km)]"
+},
+{
+"text":"The forest occupies only 9% of the total district area.",
+"kif":
+"[measure(forest-2, measure1), value(measure1, 9), unit(measure1, %)]"
+},
+{
+"text":"",
+"kif":
+"[]"
+},
+{
+"text":"",
+"kif":
+"[]"
+},
+{
+"text":"",
+"kif":
+"[]"
+},
+{
+"text":"",
+"kif":
+"[]"
+},
+{
+"text":"",
+"kif":
+"[]"
+},
+{
+"text":"",
+"kif":
+"[]"
+}
+]

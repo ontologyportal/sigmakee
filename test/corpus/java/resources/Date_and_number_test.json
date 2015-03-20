@@ -467,95 +467,160 @@
 "text":"He's eighty-five years old.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"How often do you see her?",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"Twice a week.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"How many are still here?",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"There are five bags.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"How much did that cost?",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"They cost thirty euros each.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"How big is your apartment?",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"My apartment has five rooms.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"How old is she?",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"She is two years old.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"She's five years old.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"Tell me how long that table is.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"How long is that table?",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"The table is five feet long.",
 "kif":
 "[]"
-}
-,
+},
 {
 "text":"It's five feet long.",
 "kif":
 "[]"
+},
+{
+"text":"The current President of the Maldives is Abdulla Yameen, who was elected in 2013 by defeating former President Mohamed Nasheed in a run off.",
+"kif":
+"[year(time-1,2013), time(elected,time-1)]"
+},
+{
+"text":"Sultan Imaaduddeen VI ascended the throne on 20 July 1893.",
+"kif":
+"[time(ascended,time-1), day(time-1,20), year(time-1,1893), month(time-1,July)]"
+},
+{
+"text":"A canonical explanation for the change was given in a two-part storyline on Star Trek: Enterprise, in the episodes Affliction and Divergence that aired in February 2005.",
+"kif":
+"[time(aired,time-1), month(time-1,February), year(time-1,2005)]"
+},
+{
+"text":"She died on 2 April 1634, and is buried with Galileo at the Basilica of Santa Croce, Florence.",
+"kif":
+"[time(died,time-1), month(time-1,April), day(time-1,2), year(time-1,1634)]"
+},
+{
+"text":"Ann Rosamund Oakley (born 17 January 1944), is a distinguished British sociologist, feminist, and writer.",
+"kif":
+"[year(time-1,1944), month(time-1,January), time(born,time-1), day(time-1,17)]"
+},
+{
+"text":"As per 2011 census of India, the state is tenth largest by population with 49386799 inhabitants.",
+"kif":
+"[measure(population-14, measure1), unit(measure1, inhabitants), year(time-1,2011), value(measure1, 49386799)]"
+},
+{
+"text":"The famous battle of Palnadu which is enshrined in legend and literature as Palnati Yuddham was fought in Guntur district in 1180 CE.",
+"kif":
+"[time(fought,time-1), year(time-1,1180)]"
+},
+{
+"text":"Guntur district was separated from Krishna in 1904 to form Krishna district which was further divided in 1925, to Krishna and West Godavari districts.",
+"kif":
+"[time(divided,time-1), time(separated,time-2), year(time-2,1904), year(time-1,1925)]"
+},
+{
+"text":"The meeting is scheduled for the 30th of June.",
+"kif":
+"[time(scheduled,time-1), month(time-1,June), day(time-1,30)]"
+},
+{
+"text":"We have had tricks played on us on April 1.",
+"kif":
+"[month(time-1,April), day(time-1,1), time(played,time-1)]"
+},
+{
+"text":"India remained a Dominion of the Crown until 26 January 1950, when the Constitution of India came into force, establishing the Republic of India.",
+"kif":
+"[time(remained,time-1), year(time-1,1950), month(time-1,January), day(time-1,26)]"
+},
+{
+"text":"The permission was granted and on 10 April 1591 three ships sailed from Torbay around the Cape of Good Hope to the Arabian Sea on one of the earliest English overseas Indian expeditions.",
+"kif":
+"[measure(expeditions-33, measure2), day(time-1,10), year(time-1,1591), unit(measure1, MeasureCount), measure(ships-11, measure1), value(measure1, three), month(time-1,April), value(measure2, one), time(granted,time-1), unit(measure2, MeasureCount)]"
+},
+{
+"text":"Vivekananda started his journey to the West on 31 May 1893 and visited several cities in Japan (including Nagasaki, Kobe, Yokohama, Osaka, Kyoto and Tokyo), China and Canada en route to the United States, reaching Chicago on 30 July 1893.",
+"kif":
+"[month(time-1,May), month(time-2,July), day(time-1,31), day(time-2,30), year(time-1,1893), time(reaching,time-2), time(started,time-1), year(time-2,1893)]"
+},
+{
+"text":"On 4 July 1902 (the day of his death) Vivekananda awoke early, went to the chapel at Belur Math and meditated for three hours. ",
+"kif":
+"[time(awoke,time-1), month(time-1,July), day(time-1,4), year(time-1,1902)]"
+},
+{
+"text":"Minardi was an Italian automobile racing team and constructor founded in Faenza in 1979 by Giancarlo Minardi.",
+"kif":
+"[time(founded,time-1), year(time-1,1979)]"
+},
+{
+"text":"Klum has hosted the 2002, 2006, 2007, and 2009 Victoria's Secret Fashion Shows. ",
+"kif":
+"[year(time-1,2002), time(hosted,time-4), time(hosted,time-2), time(hosted,time-3), year(time-4,20849609), time(hosted,time-1), year(time-2,2006), year(time-3,2007)]"
 }
 ]
