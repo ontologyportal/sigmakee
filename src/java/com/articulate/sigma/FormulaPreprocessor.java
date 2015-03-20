@@ -113,9 +113,7 @@ public class FormulaPreprocessor {
     Formula addTypeRestrictions(Formula form, KB kb) {
 
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);    // get variable types from domain definition
-        HashMap<String,HashSet<String>> varExplicitTypes = new HashMap<String,HashSet<String>>();
-        HashMap<String,HashSet<String>> varExplicitClasses = new HashMap<String,HashSet<String>>();
-        findExplicitTypesClasses(form, varExplicitTypes, varExplicitClasses);        // get variable types explicitly defined in formula
+        HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(form);
 
         // only keep variables which are not explicitly defined in formula
         HashMap<String,HashSet<String>> varmap = (HashMap<String, HashSet<String>>) varDomainTypes.clone();
@@ -148,7 +146,7 @@ public class FormulaPreprocessor {
             sb.append(")\n");
 
         // recursively add sortals for existentially quantified variables
-        addTypeRestrictionsRecurse(kb, form, sb, varmap);
+        addTypeRestrictionsRecurse(kb, form, sb);
 
         if (!begin)
             sb.append(")\n");
@@ -162,7 +160,7 @@ public class FormulaPreprocessor {
     /** ***************************************************************
      * Recursively add sortals for existentially quantified variable in formula
      */
-    private void addTypeRestrictionsRecurse(KB kb, Formula f, StringBuffer sb, HashMap<String, HashSet<String>> varmap) {
+    private void addTypeRestrictionsRecurse(KB kb, Formula f, StringBuffer sb) {
 
         if (f == null || StringUtil.emptyString(f.theFormula) || f.empty())
             return;
@@ -181,6 +179,17 @@ public class FormulaPreprocessor {
                 ArrayList<String> quantifiedVariables = collectVariables(f.getArgument(1));
                 boolean addSortals = false; // set addSortals = true, if at least one variable is existentially quantified variable,
                 //                           and it is not explicitly restricted
+                HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(f, kb);
+                HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(f);
+
+                // only keep variables which are not explicitly defined in formula
+                HashMap<String,HashSet<String>> varmap = (HashMap<String, HashSet<String>>) varDomainTypes.clone();
+                if (varExplicitTypes != null) {
+                    for (String v : varExplicitTypes.keySet()) {
+                        varmap.remove(v);
+                    }
+                }
+
                 for (String ev : quantifiedVariables) {
                     HashSet<String> types = varmap.get(ev);
                     if (types != null && !types.isEmpty()) {
@@ -207,7 +216,7 @@ public class FormulaPreprocessor {
                     sb.append(")");
 
                 for (int i = 2 ; i < f.listLength(); i++) {
-                    addTypeRestrictionsRecurse(kb, new Formula(f.getArgument(i)), sb, varmap);
+                    addTypeRestrictionsRecurse(kb, new Formula(f.getArgument(i)), sb);
                 }
                 if (addSortals)
                     sb.append(")");
@@ -215,7 +224,7 @@ public class FormulaPreprocessor {
             else {
                 // recurse from the first argument if the formula is not in (exists ...) / (forall ...) scope
                 for (int i = 1; i < f.listLength(); i++) {
-                    addTypeRestrictionsRecurse(kb, new Formula(f.getArgument(i)), sb, varmap);
+                    addTypeRestrictionsRecurse(kb, new Formula(f.getArgument(i)), sb);
                 }
             }
             sb.append(")");
@@ -224,8 +233,8 @@ public class FormulaPreprocessor {
             sb.append(f + " ");
         }
         else {
-            addTypeRestrictionsRecurse(kb, f.carAsFormula(), sb, varmap);
-            addTypeRestrictionsRecurse(kb, f.cdrAsFormula(), sb, varmap);
+            addTypeRestrictionsRecurse(kb, f.carAsFormula(), sb);
+            addTypeRestrictionsRecurse(kb, f.cdrAsFormula(), sb);
         }
     }
 
@@ -295,6 +304,42 @@ public class FormulaPreprocessor {
         Formula antecedent = f.cdrAsFormula().carAsFormula();
 
         return findExplicitTypes(antecedent);
+    }
+
+    /*****************************************************************
+     * Collect the types of any variables that are specifically defined
+     * in the antecedent of a rule with an instance expression;
+     * Collect the super classes of any variables that are specifically defined
+     * in the antecedent of a rule with an subclass expression;
+     */
+    public HashMap<String, HashSet<String>> findExplicitTypesClassesInAntecedent(Formula form) {
+
+        Formula f = new Formula();
+        f.read(form.theFormula);
+        Formula antecedent = findAntecedent(f);
+        HashMap<String, HashSet<String>> varExplicitTypes = new HashMap<>();
+        HashMap<String, HashSet<String>> varExplicitClasses = new HashMap<>();
+        findExplicitTypesClasses(antecedent, varExplicitTypes, varExplicitClasses);
+        return varExplicitTypes;
+    }
+
+    /** ***************************************************************
+     * Given a formula, return its antecedents
+     */
+    private static Formula findAntecedent(Formula f) {
+
+        if (f.isSimpleClause())
+            return f;
+        String carstr = f.car();
+        if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
+
+            if (carstr.equals(f.IF) || carstr.equals(f.IFF)) {
+                return f.cdrAsFormula().carAsFormula();
+            } else {
+                return f;
+            }
+        }
+        return f;
     }
 
     /*****************************************************************
