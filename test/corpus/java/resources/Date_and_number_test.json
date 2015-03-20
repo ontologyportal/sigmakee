@@ -2,28 +2,27 @@
 {
 "text":"John killed Mary on 31 March and also in July 1995 by travelling back in time.",
 "kif":
-"[(during killed (MonthFn July (YearFn 1995)), (during killed (DayFn 31 (MonthFn March))]"
+"[year(time-2,1995), month(time-2,July), time(killed,time-1), time(killed,time-2), day(time-1,31), month(time-1,March)]"
 },
-,
 {
 "text":"Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.",
 "kif":
-"[(birthday Amelia (DayFn 24 (MonthFn July (YearFn 1897))), (deathdate Amelia (DayFn 2 (MonthFn July (YearFn 1937)))]"
+"[day(time-1,24), month(time-2,July), BirthDate(Earhart,time-1), year(time-1,1897), day(time-2,2), DeathDate(Earhart,time-2), year(time-2,1937), month(time-1,July)]"
 },
 {
 "text":"Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.",
 "kif":
-"[(during vanished (MonthFn July (YearFn 1937))]"
+"[month(time-1,July), time(vanished,time-1), year(time-1,1937)]"
 },
 {
 "text":"She was declared dead on January 5, 1939.",
 "kif":
-"[(during declared (DayFn 5 (MonthFn January (YearFn 1939)))]"
+"[month(time-1,January), year(time-1,1939), time(declared,time-1), day(time-1,5)]"
 },
 {
 "text":"Bob went to work only 5 times in 2003.",
 "kif":
-"[(during work (YearFn 2003), (MeasureFn 5 times)]"
+"[unit(measure1, times), measure(went-2, measure1), year(time-1,2003), value(measure1, 5), time(work,time-1)]"
 },
 {
 "text":"John kicks the cart.",
@@ -33,45 +32,45 @@
 {
 "text":"John was killed on 8/15/2014 at 3:45 PM.",
 "kif":
-"[(during killed (DayFn 15 (MonthFn august (YearFn 2014))), (during killed (MinuteFn 45 (HourFn 15))]"
+"[month(time-1,august), year(time-1,2014), time(killed,time-1), time(killed,time-2), minute(time-2,45), hour(time-2,15), day(time-1,15)]"
 },
 {
 "text":"John murdered Mary in July 1995 at 4 in the morning.",
 "kif":
-"[(during murdered (MinuteFn 00 (HourFn 04)), (during murdered (MonthFn July (YearFn 1995))]"
+"[time(murdered,time-1), year(time-1,1995), month(time-1,July), time(murdered,time-2), hour(time-2,4), minute(time-2,00)]"
 },
 {
 "text":"John married Mary on December 22 at 5:45 PM.",
 "kif":
-"[(during married (MinuteFn 45 (HourFn 17)), (during married (DayFn 22 (MonthFn December))]"
+"[day(time-1,22), time(married,time-1), month(time-1,December), time(married,time-2), hour(time-2,17), minute(time-2,45)]"
 },
 {
 "text":"John was killed on 22 August 1999 at 18:45 hrs.",
 "kif":
-"[(during killed (MinuteFn 45 (HourFn 18)), (during killed (DayFn 22 (MonthFn august (YearFn 1999)))]"
+"[day(time-1,22), year(time-1,1999), month(time-1,august), time(killed,time-1), time(killed,time-2), hour(time-2,18), minute(time-2,45)]"
 },
 {
 "text":"This man is 170 centimeters tall.",
 "kif":
-"[(height man-2 (MeasureFn 170 Centimeter))]"
+"[measure(man-2, measure1), value(measure1, 170), unit(measure1, centimeters)]"
 }
 ,
 {
 "text":"This man is forty-feet high in the air.",
 "kif":
-"[]"
+"[measure(man-2,measure1), unit(measure1, feet), value(measure1, forty)]"
 }
 ,
 {
 "text":"The baby is twenty-five inches long.",
 "kif":
-"[(length baby-2 (MeasureFn 25 Inch))]"
+"[measure(baby-2, measure1), unit(measure1, inches), value(measure1, twenty-five)]"
 }
 ,
 {
 "text":"My office window is five-feet wide.",
 "kif":
-"[(width window-3 (MeasureFn 55 FootLength))]"
+"[measure(window-3,measure1), unit(measue1, feet), value(measure1,five)]"
 }
 ,
 {
@@ -107,13 +106,13 @@
 {
 "text":"The river is twelve feet deep.",
 "kif":
-"[(depth river-2 (MeasureFn 12 FootLength))]"
+"[unit(measure1, feet), measure(river-2, measure1), value(measure1, twelve)]"
 }
 ,
 {
 "text":"The wall is four meters high.",
 "kif":
-"[(height wall-2 (MeasureFn 4 Meter))]"
+"[value(measure1, four), unit(measure1, meters), measure(wall-2, measure1)]"
 }
 ,
 {
@@ -137,7 +136,7 @@
 {
 "text":"Grandfather is sixty years old.",
 "kif":
-"[(age grandfather-1 (MeasureFn 65 YearDuration))]"
+"[measure(age,measure1), unit(measure1,years), value(measure1,sixty)]"
 }
 ,
 {
@@ -255,7 +254,7 @@
 }
 ,
 {
-"text":""text":"This cheese is $12.50 per kilo.",
+"text":"This cheese is $12.50 per kilo.",
 "kif":
 "[]"
 }
@@ -351,9 +350,9 @@
 }
 ,
 {
-"text":""text":"The pond is eight centimeters deep.",
+"text":"The pond is eight centimeters deep.",
 "kif":
-"[(depth pond-2 (MeasureFn 8 Centimeters))]"
+"[unit(measure1, centimeters), value(measure1, eight), measure(pond-2, measure1)]"
 }
 ,
 {
@@ -449,7 +448,7 @@
 {
 "text":"That guy is eighty-five years old.",
 "kif":
-"[(age guy-2 (MeasureFn 85 YearDuration))]"
+"[]"
 }
 ,
 {
