@@ -382,7 +382,7 @@ public class KBmanager {
      * "configuration".  It also creates the KBs directory and an
      * empty configuration file if none exists.
      */
-    private SimpleElement readConfiguration(String configDirPath) {
+    protected SimpleElement readConfiguration(String configDirPath) {
         
         SimpleElement configuration = null;
         BufferedReader br = null;
