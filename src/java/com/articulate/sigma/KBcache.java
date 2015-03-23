@@ -303,6 +303,23 @@ public class KBcache {
         else
             return new HashSet<String>();
     }
+
+    /** ***************************************************************
+     * Get all instances for the given input class
+     *
+     * @param cl a class
+     * @return instances for cl
+     */
+    public HashSet<String> getInstancesForType(String cl) {
+        HashSet<String> instancesForType = new HashSet<>();
+        for (String inst : instances.keySet()) {
+            HashSet<String> parents = instances.get(inst);
+            if (parents.contains(cl))
+                instancesForType.add(inst);
+        }
+        return instancesForType;
+    }
+
     
     /** ***************************************************************
      * Get the HashSet of the given arguments from an ArrayList of Formulas.
