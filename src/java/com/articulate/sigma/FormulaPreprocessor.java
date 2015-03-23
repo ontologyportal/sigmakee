@@ -110,7 +110,7 @@ public class FormulaPreprocessor {
      *     (foo ?A B)
      *     (bar B ?A)))
      */
-    Formula addTypeRestrictions(Formula form, KB kb) {
+    public Formula addTypeRestrictions(Formula form, KB kb) {
 
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);    // get variable types from domain definition
         HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(form);

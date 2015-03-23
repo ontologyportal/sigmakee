@@ -1,0 +1,1032 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Classification of "About" Usages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Concerning, Regarding, Referring To (subject matter) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; verb about ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; announce about
+; ... she had already eat her Brunswick stew when Milo announced about old Mr. Gupton losing his teeth.
+
+;;;;; ask about
+; The use of short videos for patients in the waiting room encourages them to ask about choice, risk and benefits.
+
+;;;;; be about
+; Section five is about impact on student learning.
+; Who produced the Salzburg Statement in 2010, and what was it about?
+
+;;;;; boast about
+; ... Toyota officials boasted about the effectiveness of the effort in which Santucci and Tinto were involved ...
+
+;;;;; care about
+; An important consideration is to determine what you really care about.
+
+;;;;; complain about
+; They seldom complain about unsafe work environments because of fear of losing their jobs ...
+
+;;;;; consult about
+; Women consult about why their menstrual loss has changed.
+
+;;;;; disagree about
+; Stakeholders also disagreed about the relative importance of climate change ...
+
+;;;;; explain about
+; While I tried to explain about the naked women and my snagged hair, ...
+
+;;;;; feel about
+; ... with your urinary condition the way it is now, how would you feel about that?
+
+;;;;; forget about
+; Thus IP forgets about a packet and recycles its buffer immediately after forwarding (MRU replacement).
+
+;;;;; generalize about
+; When attempting to generalize about the varied and often conflicting viewpoints of many millions ...
+
+;;;;; glow about
+; He would glow about how smart she was.
+
+;;;;; gosship about
+; It was so we could gossip about everyone who wasn't there.
+
+;;;;; hear about
+; We hear very little about this type of transportation because it is the one method that least impacts our environment.
+
+;;;;; inquire about
+; After years of inquiring about a girlfriend, Jose Dominguez's dad finally stopped.
+
+;;;;; know about
+; ... he or she needs to know about the content to be taught over the next thirty years.
+; ... to establish what students know about a topic before instruction begins ...
+
+;;;;; laugh about
+; ... maybe, when she's in her 60s, we can sit and laugh about this.
+
+;;;;; learn about
+; ... we can learn both about the human drawings (by using the vocabulary of the algorithms) ...
+; ... more time for other teacher activities like mentoring students, differentiating instruction, or learning about new technologies.
+; ... both contexts provide a reference point for students to indicate what they have learned about important engineering concepts.
+
+;;;;; lie about
+; ... should I lie about the letter, and increase her paranoia?
+
+;;;;; love about
+; And that's what I love about it.
+
+;;;;; mutter about
+; Some passengers say the captain muttered about al-Qaeda ...
+
+;;;;; proclaim about
+; Here I kiss what those waters of baptism proclaimed about the world, about ourselves, and ...
+
+;;;;; read about
+; Young and Townsend don't know why anyone would want to read about them.
+
+;;;;; remember about
+; Then it started to rain and then he remembered about his children and he went home as fast as he could and they were fine ...
+
+;;;;; report about
+; She reports about the benefits and detriments of the proprietary Royal Scottish Geographical Society's Images ...
+
+;;;;; smile about
+; Proctor smiled about it Wednesday afternoon.
+
+;;;;; speak (up) about
+; Speak up about their concerns, questions and what's important to them ...
+
+;;;;; speculate about
+; ... policy-makers alike have speculated about the cause of this division.
+
+;;;;; study about
+; Teachers make decisions about what to study about themselves and then chart a pathway to new knowledge and skills to improve student learning.
+
+;;;; talk about
+; Patients talking about shared decision making ...
+
+;;;;; teach about
+; As a field that teaches about technological changes, it is important for educators to keep up with those technological changes.
+
+;;;;; think about
+; Programmers may even be encouraged to think about a problem in terms of a language that would better support the task.
+; In school settings, one way to help teachers think about and act upon professional development needs is to write a professional development
+
+;;;;; tweet about
+; ElBaradei did not attend the rally, but instead tweeted about the police crackdown.
+
+;;;;; understand about
+; And the more you understand about a mechanism, the more you can do to alter it.
+
+;;;;; wonder about
+; She wonders about issues such as authoritative provenance.
+
+;;;;; worry about
+; ... we worry about weight gain, the increased risk of hypos and less than ideal lipid profiles ...
+
+;;;;; write about
+; Kellyn S. Betts has written about environmental contaminants, hazards, and technology for solving environmental problems ...
+
+;;;;; yell about
+; Two girls saw it, yelled about how gross it was, then snapped pics with their phones!
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; verb object about ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; advise X about
+; The same study found that individuals regularly did not advise their airline about their allergy ...
+
+;;;;; brief X about
+; ... Mark Griffin enlisted three LT psychologists to brief the affected people about the dangerous possibility ...
+
+;;;;; call X about
+; ... when they see something they call us about it or they ask us ...
+
+;;;;; chat with X about
+; ... chat with the practice nurse about the warning signs when blood sugar is getting excessively high or excessively low.
+
+;;;;; change one’s mind about
+; She shrugged, and changed her mind about asking him to the country club dance.
+
+;;;;; do something/anything/nothing, etc. about
+; ... now is the time to do something about it ...
+; ... participants perceived that their grower did as much as possible about safety ...
+
+;;;;; educate X about
+; There are also initiatives dedicated to educating people about phishing scams, including StaySafeOnline.com.
+
+;;;;; excite X about
+; These technologies must simultaneously relate to course concepts while engaging and exciting students about technology.
+
+;;;;; feel good/bad, etc. about
+; It does allow a parent to feel good about keeping a home in the family while they are alive ...
+
+;;;;; find out (more/little, etc.) about
+; Another way to find out more about professors is simply being part of a student network ...
+
+;;;;; hear something/anything/nothing, etc. about
+; Jenkins' supervisor reassured him that nobody would hear anything about this from him ...
+
+;;;;; inform X about
+; ... an ETA that informs the user about the presence of a head-level obstacle.
+; Inform patients about their condition, about the treatment or self-management support options available ...
+; Have each group prepare a media presentation to inform class members about the diseases/abnormalities ...
+
+;;;;; know something/anything/nothing, etc. about
+; Therefore, while the children need to know something about the noun soup ...
+; Jenkins was asked by the OHA if he knew anything about cognitive behavioural therapy (CBT).
+
+;;;;; make notes about
+; Listen to their feedback and make notes about how you can improve your case.
+
+;;;;; remember something/anything/nothing, etc. about
+; He remembered something about that family with the names.
+
+;;;;; reveal (more/little, etc.) about
+; Dana's mother echoed this idea of the meeting process revealing more about the student ...
+
+;;;;; set the record straight about
+; ... set the record straight about rising health-care costs.
+
+;;;;; surprise X about
+; What surprises you the most about Snooki's revelations, Joan?
+
+;;;;; tell X about
+; Ensure you have travel insurance to cover all your activities and tell your insurer about your allergies ...
+
+;;;;; teach X about
+; The first is micro games designed to teach people about phish.
+
+;;;;; warn X about
+; ... an example is pretending to be a system administrator warning people about a new attack, urging them to install the attached patch.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; passive-verb about ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; concerned about
+; The transportation industry and consumers alike are concerned about the environment, energy resources, efficiencies, and economics.
+; Is the issue you are concerned about within your circle of concern or influence?
+
+;;;;; delighted about
+; But he seemed delighted as well as wary about the attention.
+
+;;;;; embarrassed about
+; They are embarrassed about being Astros fans because the team finished with the worst record in baseball.
+
+;;;;; excited about
+; Some communities are tremendously excited about the NSO's visit ...
+
+;;;;; impassioned about
+; New to the ways of Washington, but impassioned about what her husband had been elected to do, she saw herself as a guardian ...
+
+;;;;; informed about
+; ... the user is then informed about whether any of the items in his or her shopping list is in view.
+; In addition, teacher educators need to stay informed about advancements in the fields of technology and engineering, and ...
+; ... if we are better informed about just how strongly porn can influence us ...
+
+;;;;; known about
+; ... little is known about what markers of specific pathobiology we should be measuring to determine treatment success.
+
+;;;;; said about
+; Nevertheless, little more is said about where on a figure to place lines in order to best convey shape this decision ...
+
+;;;;; stressed about
+; ... if he was feeling stressed about any other matters.
+
+;;;;; worried about
+; I was also particularly worried about going on holidays abroad and ensuring that food was suitably prepared.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; adjective about ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; adamant about
+; I believe with one, there was an uncertainty, one that was pretty adamant about it.
+
+;;;;; ambivalent about
+; ... who sound most ambivalent about Sunday's election.
+
+;;;; candid about
+; Often it's embarrassing for patients to be candid [one-on-one with a doctor] about bad health habits such as smoking or drinking.
+
+;;;;; careful about
+; And so, you know, you have to be careful about running as a businessman ...
+
+;;;;; caring about
+; ... she is a wonderful, gracious person, very, very, very caring about the people of southern Arizona ...
+
+;;;;; cautious about
+; You should consider swabs for STIs and be cautious about allowing her to think that hormones are the cause of her problems.
+
+;;;;; clear about
+; You need to be clear about what it is you are trying to achieve.
+
+;;;;; confident about
+; ... you feel confident about what you want to say and can present yourself professionally.
+
+;;;;; discriminating about
+; ... by being more discriminating about which applicants they admit.
+
+;;;;; dubious about
+; Michaels was dubious about what she could pull out of Cruise, who is not a natural dancer.
+
+;;;;; enthusiastic about
+; ... he appeared to be enthusiastic about choosing a behavioral path and taking more responsibility ...
+
+;;;;; explicit about
+; Reviews published in journals are generally not as explicit about these two levels of procedural specification ...
+
+;;;;; forthright about
+; They are forthright about their qualifications, competencies, and roles ...
+
+;;;;; frank about
+; Jaffe is frank about the complexity that alcoholism treatment presents, however.
+
+;;;;; gentlemanly about
+; Well, it sounds -- he's very -- being very gentlemanly about it.
+
+;;;;; giddy about
+; Giddy about retracing the Dodgers' journey west, about the promise of instant celebrity ...
+
+;;;;; guilty about
+; ... making its followers and addicts feel guilty about their actions.
+
+;;;;; happy about
+; She's not very happy about it.
+
+;;;;; honest about
+; ... be honest with them about their options, and provide them with support to independently make important life decisions.
+
+;;;;; ignorant about
+; We are ignorant about the circumstances within which humanity of the future will be deciding ...
+
+;;;;; knowledgeable about
+; ... those principals who were highly knowledgeable about RTI were not the only participants to respond.
+
+;;;;; nervous about
+; Do you think he has reason, Edward Lozansky, to be nervous about these?
+
+;;;;; optimistic about
+; Birnbaum, for one, is cautiously optimistic about the promise of environment-wide association studies.
+
+;;;;; passionate about
+; We can all get passionate about things we have little or no direct control or influence over ...
+
+;;;;; pessimistic about
+; But Erskine Bowles, co-chair of the president's deficit commission sounded pessimistic about this panel's chance for success.
+
+;;;;; positive about
+; ... making us more positive about everything... including our appearance.
+
+;;;;; prescient about
+; Mosher was prescient about what would happen if school examiners began to rely solely on photography.
+
+;;;;; public about
+; ... my intention is to be very public about my desire to spread my culture and my cuisine ...
+
+;;;;; right about
+; ... if she was right about the rest, she was right about the direction of the shot.
+
+;;;;; self-conscious about
+; ... she " was very self-conscious about the way she looked " and often felt " embarrassed. " ...
+
+;;;;; sentimental about
+; ... she still felt sentimental about the cottage, with its familiar details, ...
+
+;;;;; serious about
+; I personally think he's serious about that ...
+
+;;;;; shy about
+; ... aren't shy about saying it's time for the first Englishman to be Masters champion ...
+
+;;;;; skeptical about
+; Although her mother and teacher were skeptical about her ability to handle this responsibility ...
+
+;;;;; sorry about
+; Sorry about that.
+
+;;;;; specific about
+; It's hard to get too specific about this.
+
+;;;;; sure about
+; ... excluded 653 (1.9%) participants who indicated that they were " not sure " about their sexual orientation, consistent with previous studies.
+
+;;;;; suspicious about
+; Bear in mind that if someone is suspicious about the side effects of inhalers ...
+
+;;;;; thrilled about
+; I have always loved this look, but we are especially thrilled about it right now ...
+
+;;;;; tight-lipped about
+; And Michael was very, you know, kind of tight-lipped about it.
+
+;;;;; uncertain about
+; ... each side remains uncertain about the other's future intentions within the Asian theater.
+
+;;;;; vigilant about
+; As a way of encouraging students and parents to remain ever-vigilant about carriage, general interest magazines featured advice columns ...
+
+;;;;; vocal about
+; The college was here, and the affluent residents were vocal about crime.
+
+;;;;; wary about
+; But he seemed delighted as well as wary about the attention.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; noun about ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; ad about
+; ... I don't think there'll be an ad about it.
+
+;;;;; alarm about
+; The WHO indeed sounded the alarm about the H1N1 virus pandemic but did not ensure that the message would be properly understood ...
+
+;;;;; adv
+ice about
+; Suggest reputable sources of information and advice about diet and activity, such as' The Pregnancy Book'.
+
+;;;;; agreement about
+; There are very few clinical decisions that are too urgent to allow discussion and agreement about the best option.
+
+;;;;; anxiety about
+; ... contributed even further to feelings of doubt and anxiety about the condition.
+
+;;;;; argument about
+; ... that arguments about cost containment and efficacy smack of socialist health care rationing.
+
+;;;;; article about
+; ... this article [is therefore] about the things you might just see if you look closely enough!
+
+;;;;; assumption about
+; Despite their whole-hearted endorsement of the principle, nurses made assumptions about what a patient might want ...
+
+;;;;; belief about
+; For example, parent-child discrepancies in cultural beliefs about family obligations, proper conduct, gender norms, and social role expectations ...
+
+;;;;; belief system about
+; ... workers described individualized belief systems about which domestic violence situations were " legitimate " ...
+
+;;;;; book about
+; Peggy Wayburn wrote two books about the north while her husband visited Washington to work the halls of Congress.
+
+;;;;; chat about
+; In fact, the chat about knowing the signs of labor evolved into a discussion ...
+
+;;;;; choice about
+; ... in making informed and considered choices about their future management and treatment.
+
+;;;;; comment about
+; One of her comments about it which made me realize she was taking an awful lot of notice was ...
+
+;;;;; commercial about
+; sIt's a new baby and a new commercial about a lottery winner.
+
+;;;;; communication about
+... may have selectively benefited from more effective communication about influenza vaccine (whether seasonal or H1N1).
+
+;;;;; complaint about
+; Hear their complaints about the unyielding speed of life.
+
+;;;;; concern about
+; Many travellers will share concerns about requiring unplanned medical care, blood transfusions, treatment with poorly sterilised medical equipment etc.
+; ... if the man has genuine concerns - family history, for example -- about prostate cancer.
+
+;;;;; conclusion about
+; This study allows us to make several quantitative conclusions about how people draw 3D shapes.
+
+;;;;; consensus about
+; ... it may be difficult for the committee to reach consensus about which research base to consider ...
+
+;;;;; conspiracy about
+; ... to preempt any further conspiracies about whether it was doctored.
+
+;;;;; conversation about
+; In the middle of a conversation about schoolwork, she said tenderly ...
+
+;;;;; counsel about
+; Stupak said he sought counsel from Washington lawyer Bob Barnett about how to announce his decision.
+
+;;;;; counseling about
+; Is office-based counseling about media use, timeouts, and firearm storage effective?
+
+;;;;; cue about
+; This is because optionally transitive verbs provide unreliable cues about the syntactic distribution of direct objects.
+
+;;;;; curiosity about
+; ... shared my curiosity about the post-Flavr Savr world ...
+
+;;;;; data about
+; In reviewing data about the results by competency, the faculty member discovered four competencies ...
+
+;;;;; debate about
+; ... there is ongoing debate about the amount of weight that women should gain during pregnancy.
+
+;;;;; decision about
+; Teachers make decisions about what to study about themselves and then chart a pathway to new knowledge and skills to improve student learning.
+; ... making clear standards-based decisions about what they need to improve.
+
+;;;;; detail about
+; Abstracting away details about specific hardware and physical location makes seamless migration possible.
+
+;;;;; disagreement about
+; ... a measure of the level of agreement or disagreement about the priority of the particular risk.
+; ... because of disagreement [among stakeholders] about the importance of the problem.
+
+;;;;; discovery about
+; Roberto's study's contribution, however, was a discovery about the second peptide, nociceptin ...
+
+;;;;; discussion about
+; There are very few clinical decisions that are too urgent to allow discussion and agreement about the best option.
+
+;;;;; documentary about
+; ... the winner of the DVD documentary about Mike the Headless Chicken ...
+
+;;;;; doubt about
+; However, skepticism about screening does not imply doubts about the existence and physical reality of the condition.
+
+;;;;; education about
+; ... patient education about self-adjustment of the insulin dose and management of hypoglycemia.
+
+;;;;; encouragement about
+; They have less encouragement about future economic prospects ...
+
+;;;;; entry about
+; Doug Johnson, another great survivor, has posted a series of entries about leading and managing the library program in lean times.
+
+;;;;; evidence about
+; ... tools designed to help people weigh up evidence about a test or a treatment ...
+
+;;;;; fact about
+; This article outlines the facts about malnutrition and how to tackle it ...
+
+;;;;; fantasy about
+; I had a fantasy about sneaking into the camp.
+
+;;;;; fear about
+; One of the biggest fears about the impact of climate change is that global thresholds will be breached ...
+
+;;;;; feedback about
+; ... staff members need to provide honest feedback about the college-based transition program.
+
+;;;;; feeling about
+; I had a good feeling about this.
+
+;;;;; film about
+; ... a coming-of-age film about these kids ...
+
+;;;;; figures about
+; In truth, authoritative figures about the sex industry are difficult to obtain ...
+
+;;;;; findings about
+; Prospects for Prevention Roberto's findings about nociceptin are a potentially great help ...
+
+;;;;; frustration about
+; ... there's a mounting frustration about what the city is not doing.
+
+;;;;; guidance about
+; MPEP offers guidance about implementation issues, including concerns about health disparities and access barriers.
+
+;;;;; guilt about
+; ... many future viewers will still be as susceptible as their contemporaries to feelings of guilt about what they have seen.
+
+;;;;; hypothesis about
+; The goal of the present study was to test a learnability-based hypothesis about the specific and the general contribution of the lexicon ...
+
+;;;;; idea about
+; ... that her family didn't care about her, which we had no idea about.
+
+;;;;; indication about
+; ... may give important indications about what kinds of treatments are most likely to be effective.
+
+;;;;; inference about
+; Inferences about language typology based on optional verbs ...
+
+;;;;; information about
+; This asymmetric information about sellers and their goods leads buyers to dramatically lower what they are willing to pay ...
+; Contextual information about the environment can also be provided to the VI user ...
+; ... to provide a blind person with information about an object (such as the brand of a can of food).
+; How much information would you like about the different available treatments, their risks and benefits, and the cost implications?
+
+;;;;; insight about
+; Underlying these insights about the complexities, contradictions, and multiplicities of culture ...
+
+;;;;; instruction about
+; We do not provide instructions about whether lines should represent shape features, lighting features, or anything else.
+
+;;;;; irony about
+; There is of course a huge irony about the impact of Internet porn.
+
+;;;;; issue about
+; The issue about jobs, about economic inequality is going to - is going to continue to resonate ...
+
+;;;;; joke about
+; Because like we'll sit here making jokes about everything and everyone will laugh.
+
+;;;;; judgment about
+; Use an' X' to make a value judgement about where you see each key stakeholder in relation to the issue.
+
+;;;;; knowledge about
+; In this way, teachers will be developing students' knowledge about medical technologies ...
+
+;;;;; language about
+; ... got rave reviews in part because of his plain language about taking on issues like Social Security.
+
+;;;;; learning about
+; ... improved scientific learning about implementing promotion programs ...
+
+;;;;; lesson about
+Indeed, students with and without disabilities can learn important lessons about shared responsibility ...
+
+;;;;; meeting about
+; I thought our meeting [was] about publicity and elections.
+
+;;;;; message about
+; ... teaching people who click on phishing email messages about such attacks.
+
+;;;;; metadata about
+; ... library information systems, which are based on MARC 21format and also can hold metadata about ETDs.
+
+;;;;; misconception about
+; Common misconceptions about traumatic brain injury (TBI).
+
+;;;;; movie about
+; No one ever made a movie about Nik Kershaw.
+
+;;;;; mystery about
+; There are many mysteries about which species confer what dynamics to ecosystems or what benefits to people ...
+
+;;;;; myth about
+; Dispel any myths about what and how much to eat during pregnancy, ...
+
+;;;;; news about
+; Wall Street rocketed higher today on upbeat news about the European debt crisis ...
+
+;;;;; note about
+; Listen to their feedback and make notes about how you can improve your case.
+
+;;;;; notion about
+; Furthermore, we had preconceived notions about the acceptability of the intervention package ...
+
+;;;;; observation about
+; The assessment and examination considered issues such as initial observations about Jenkins and his environment ...
+
+;;;;; op-ed about
+; It was an op-ed about the Flavr Savr where the term Frankenfood first appeared.
+
+;;;;; opinion about
+; Religion and public opinion about same-sex marriage.
+
+;;;;; perception about
+; Work safety climate describes the shared perceptions [of workers] about how employers operationalize, support, and value safety in the workplace.
+
+;;;;; period piece about
+; In both of these period pieces about masters and servants sharing a divided household, ...
+
+;;;;; perspective about
+; An exploration of Hispanic workers' perspectives about risks and hazards associated with orchard work.
+
+;;;;; point about
+; To your larger point about the press, I don't think markers are different ...
+
+;;;;; policy about
+; An organization could also publish its policies about what keys can sign content under a particular name prefix ...
+
+;;;;; prediction about
+; ... these categories differ in terms of predictions about specific effects of lexical development.
+
+;;;;; presentation about
+; The location and frequency of presentations about college shifted after the students entered high school.
+
+;;;;; program about
+; ... other postsecondary programs about the possibility of students with ID attending ...
+
+;;;;; qualms about
+; ... he has no qualms about any unfair advantage the hosts might have over legal restaurants like his.
+
+;;;;; query about
+; Send queries about the Smithsonian Institution to infosi.edu ...
+
+;;;;; question about
+; ... ask a question [anonymously] about anything to do with the prostate or their treatment ...
+
+;;;;; rage about
+; Gingrich who left Iowa incandescent with rage about Romney, but somehow lost his fire by the time he got here.
+
+;;;;; recommendation about
+; Complicating this is that recommendations about the amount of buffering have been influenced ...
+
+;;;;; reflection about
+; This section of the IPDP is for the teacher to demonstrate higher-order reflection about their professional development.
+
+;;;;; result about
+; There was an amazing Gallup result about people's concerns.
+
+;;;;; revelation about
+; ... despite revelations about his pornographic postings, she still believes in him as a donor.
+
+;;;;; rumor about
+; ... maybe even rumors about this cast getting back together.
+
+;;;;; scenario about
+; Students can ponder hypothetical scenarios about commonplace problematic situations pertaining to the academic, social, and financial realms ...
+
+;;;;; sense of peace about
+; I've got a sense of peace about it and prayed about it a lot.
+
+;;;;; show about
+; Maybe he was too rational for all the television shows about mediums and psychic children?
+
+;;;;; signal about
+; Is the Cryosphere Sending Signals about Climate Change?
+
+;;;;; skepticism about
+; Skepticism about scoliosis screening has been voiced at numerous points over the last several decades ...
+
+;;;;; snobbery about
+; ... an indie-rock snobbery about such trappings from rock's monolithic arena era remains.
+
+;;;;; speculation about
+; ... there is growing speculation about the potential contribution of climate change to violent conflicts ...
+
+;;;;; statement about
+; ... ranging from general statements about the importance of considering environ mental health impacts ...
+
+;;;;; suspicion about
+; Bear in mind that if someone is suspicious about the side effects of inhalers ...
+
+;;;;; statistics about
+; Luther includes statistics about the size of the market ...
+
+;;;;; story about
+; ... narrating the plan as a story about what Dana would be focusing on over the next year.
+
+;;;;; story line about
+; One of the story lines about the popular comic-strip character centers on the Great Dane being pressured ...
+
+;;;;; suggestion about
+; The article offers useful suggestions about embarking on an enterprise such as theirs.
+
+;;;;; sweating about
+; You're better off using your gadgets efficiently than sweating about your bloated archive.
+
+;;;;; task force about
+; he had established a special task force about three years ago to track Mladic ...
+
+;;;;; testimony about
+; In his public testimony about the service probe, Sullivan sometimes gave conflicting numbers ...
+
+;;;;; theory about
+; ... Aaron recommended that the new discipline create better theories about policy impacts ...
+
+;;;;; transparency about
+; In addition, there is often a lack of transparency about how the practices are actually determined.
+
+;;;;; trial about
+; This is really the testimony that court observers have been waiting for all this trial about the final moments of the singer's life.
+
+;;;;; truth about
+; I couldn't tell the truth about how I got it, so I figured I pull that journalistic thing and say ...
+
+;;;;; uncertainty about
+; Part of the problem, generally speaking, is that the multiple uncertainties about how ecosystems do what they do ...
+
+;;;;; unknowns about
+; ... which revealed significant unknowns about how oil and gas activities might affect local ecology.
+
+;;;;; views about
+; ... in line with views about the responsibility of decision makers in democratic states.
+
+;;;;; wonder about
+; Daniel's passion for sound recording emanated from his wonder about the sounds of public transportation.
+
+;;;;; word about
+; I never heard another word about it.
+
+;;;;; worries about
+; ... whose primary worry about spinal curvature was how it affected their cosmetic appearance ...
+
+;;;;; writing about
+; I have a student writing about a zombie.
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; In the Case Of X, As Far As X Is Concerned, ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(there is something/nothing ... about X; what is ... about X, etc.)
+
+;;;;; alarming about
+; Most alarming about Shands's results was not the incidence but rather the medical profession's inability ...
+
+;;;;; beneficial about
+; Experimentally disentangling what's beneficial about elderspeak from what's not.
+
+;;;;; courageous about
+; And I don't think there's anything courageous about asking for sacrifice ...
+
+;;;;; inappropriate about
+; ... that there was " nothing inappropriate about the way the guns were sold " to class participants.
+
+;;;;; inevitable about
+; However, there is nothing inevitable about any of the possible eventualities
+
+;;;;; interesting about
+; What struck me as so interesting about South Carolina, is indeed it is true ...
+
+;;;;; odd about
+; There was something odd about the man, about his look.
+
+;;;;; peculiar about
+; Something peculiar about it.
+
+;;;;; shameful about
+; ... there is nothing remotely shameful about any pornography ...
+
+;;;;; special about
+; What is special about special education?
+
+;;;;; striking about
+; Most striking about the American enthusiasm for scoliosis tests was that it occurred at the same time that ...
+
+;;;;; tough about
+; What's so tough about taking insulin?
+
+;;;;; unique about
+; What's unique about this police station is that they actually fired 100 percent of the police officers here ...
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Associated With ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; something about
+; There's something about your party that limits them to smaller landslides.
+; There's something about that.
+
+;;;;; spirit about
+; May Lynn had an adventurous spirit about her, and I think she was no more than a few months shy ...
+
+;;;;; thing about
+; And, you know, the thing about Romney is his opponents don't have to make a case ...
+; The nice thing about villages is there is no rule book, " says Mollison.
+; Because there are a few things about Southern food that the man just can't stand ...
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Approximately - applies to measures ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; multiple ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; On the other hand, long-lived N2O has about 300 times the warming potential of carbon dioxide.
+; The inpatient and outpatient visit rate among men was about 2 times that among women (Table 2).
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; fraction ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Indeed, about one-fourth of those reporting significant vision loss are 65 years of age and older.
+; Using the online calculators, you determine that your PV system can provide about half of your electricity needs, so you would save $1000/year.
+; Patients will report only about one in 400 episodes of tiredness to their GP.5 ...
+; This means that about one in 20 of the UK population has diabetes.
+; For instance, only about half of all the nitrogen applied to soils as fertilizer actually becomes part
+; Indeed a 2011 survey of the US population showed that about half of religious adherents believe that society should accept homosexuality ...
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; percentage ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Manipulating the Linux transmit queue on my laptop reduced latency Upload Bandwidth about 80% ...
+; Urine production is reduced by about 50% at night in response to the circadian rhythm of the antidiuretic hormone ...
+; ... concluded that about two percent of the state's population had non-disease-related scoliosis ...
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; frequency ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Dinners happen about twice month.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; probability ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; ... 2 for' Less than 1/2 the time', 3 for' About 1/2 the time', 4 for' More than 1/2 the time ...
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; distance ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; ... about 70 miles offshore in roughly 140 feet of water.
+; ... an innocuous office building about a ten-minute drive from Robbins Hall, is the birthplace of the most audacious plant ...
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; length ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; At the Arkansas-Texas boundary, average annual precipitation is about 125 centimeters ...
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; height ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; ... size each image so that it measures about 21/2 inches high.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; area ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; If you touch one, it explodes, spraying seeds over about a three-foot area around each plant.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; volume ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; In one study, people driving a car or riding in a bus inhaled about 4.5 L air per minute ...
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; time ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; ... about 10-second periods followed by long periods of what looked like normal behavior.
+; ... about five seconds pass without a drop ...
+; Notice the RTT ramps up quickly to about 1.2 seconds and mostly stays there.
+; ... delay is about 10ms initially; then the window size increases, the buffer fills up, and ...
+; ... the author of this article almost fell for about five years ago ...
+; If the test is positive, a wheal will appear after about 20 minutes ...
+; The dates of Ramadan follow a lunar calendar and the start gets about 10 days earlier each year ...
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; age ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; There is a peak in the childhood incidence of CFS/ME at about 13 years.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; currency ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; One bank the author has spoken to said it cost it about $1 million per attack in terms of call-center costs ...
+; Let's say the total bill for annual electrical consumption is about $2000, or $167 per month.
+; That's about 40 U.S. cents.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; domain-specific measure ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; environment
+; ... but possibly via a nonmonotonic relationship, with a decrease between about 3 ppb and 7 ppb.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; person ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; In regard to the younger U.S. population, about 60,000 individuals 21 years old or younger are legally blind.
+; ... with about 110,000 users in the U.S.
+; ... people are in need of organ transplants (113,075 in the U.S., with only about 1,000 donors per month giving organs or tissues to transplant) ...
+; There are about 30 million people in the United States who have been diagnosed with liver disease.
+; The Muslim Council for Britain estimates that there are about 1.6 million Muslims living in the UK ...
+; Of the 25 or more million Americans experiencing significant vision loss, about 1.3 million are legally blind ...
+; Dog guides may also support blind mobility, but have many fewer users (only about 7,000 in the U.S.).
+; ... that about 2,000 Taliban fighters, operating in more than 100 groups, use motorbikes ...
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; event ;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; He believes that Britain is likely the hardest hit, with about 2,000 deaths annually (Pearce, 2009).
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; relative measure ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; ... this does not mean ranks of individual titles all stayed about the same.
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; almost ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; That's about as easy as it gets.
+; Westwood and Poulter have both bitten that apple about as deeply as you'll ever see.
+; It's about time this event caught a break.
+; Stephen Colbert has about as much a chance of being elected president in South Carolina ...
+; Designed by a 6-foot-7 man who has modified just about everything to fit his height ...
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; around ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; ... she had taken cover and was watching the foam that was tossed about in the waves, ...
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; what/how about ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; What about involving a real sighted person in the loop, perhaps through crowdsourcing?
+; What's so tough about taking insulin?
+; ... how about the separation or the margin that is widening of women voters.
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Idiomatic Usages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; about to
+; ... he was convinced he was either about to die or go completely mad and that he needed help.
+
+;;;;; bring about
+; How much influence do you have to bring about this change?
+
+;;;;; come about
+; One's chief objection, when reading such poets, should come about as a result of noting the successes; ...
+
+;;;;; go about
+; ... practitioners should go about balancing this information with other constraints on problem solving ...
+
+;;;;; set about
+; ... that you are prepared to do something about it, you are ready to set about influencing.
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
