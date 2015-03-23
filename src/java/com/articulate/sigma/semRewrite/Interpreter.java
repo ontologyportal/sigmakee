@@ -83,6 +83,16 @@ public class Interpreter {
       
       return Clausifier.clausify(rsin);
   }
+
+  /** *************************************************************
+   * @return a string consisting of a token without a dash and its number in
+   * the sentence such as walks-5 -> walks 
+   */
+  private static String stripSuffix(String s) {
+      
+      int wordend1 = s.lastIndexOf('-');
+      return s.substring(0,wordend1);
+  }
   
   /** *************************************************************
    * @return a map of the word key and the value as a string 
@@ -137,6 +147,8 @@ public class Interpreter {
       ClauseGroups cg = new ClauseGroups(clauses);
       for (Map.Entry<String, String> pureWordEntry : purewords.entrySet()) {
           String clauseKey = pureWordEntry.getValue();
+          String clauseValue = cg.getGrouped(clauseKey);
+          String pureCGvalue = stripSuffix(clauseValue);
           String pureWord = pureWordEntry.getKey();
           //System.out.println("INFO in Interpreter.addWSD(): pureWord:  " + pureWord);
           if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
@@ -157,12 +169,14 @@ public class Interpreter {
               }
           }
           else if (DependencyConverter.maleNames.contains(pureWord)) {
-              results.add("sumo(Human," + cg.getGrouped(clauseKey) + ")");
-              results.add("attribute(" + cg.getGrouped(clauseKey) + ",Male)");
+              results.add("sumo(Human," + clauseValue + ")");
+              results.add("names(" + clauseValue + ",\"" + pureCGvalue + "\")");
+              results.add("attribute(" + clauseValue + ",Male)");
           }
           else if (DependencyConverter.femaleNames.contains(pureWord)) {
-              results.add("sumo(Human," + cg.getGrouped(clauseKey) + ")");
-              results.add("attribute(" + cg.getGrouped(clauseKey) + ",Female)");
+              results.add("sumo(Human," + clauseValue + ")");
+              results.add("names(" + clauseValue + ",\"" + pureCGvalue + "\")");
+              results.add("attribute(" + clauseValue + ",Female)");
           }      
           else {
               String synset = WSD.getBestDefaultSense(pureWord);
@@ -256,7 +270,7 @@ public class Interpreter {
   }
   
   /** *************************************************************
-   * Take in a sentence and output a SUO-KIF string
+   * Take in a sentence and output an English answer.
    */
   public String interpretSingle(String input) {
       
