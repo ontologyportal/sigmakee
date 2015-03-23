@@ -123,9 +123,12 @@ public class FormulaPreprocessor {
             }
         }
 
+        // compute quantifiedVariables and unquantifiedVariables
+        ArrayList<ArrayList<String>> quantifiedUnquantifiedVariables =
+                form.collectQuantifiedUnquantifiedVariables();
+        ArrayList<String> unquantifiedVariables = quantifiedUnquantifiedVariables.get(1);
         // add sortals for unquantifiedVariables
         StringBuffer sb = new StringBuffer();
-        ArrayList<String> unquantifiedVariables = form.collectUnquantifiedVariables();
         boolean begin = true;
         for (int i = 0; i < unquantifiedVariables.size(); i++) {
             String unquantifiedV = unquantifiedVariables.get(i);
@@ -265,7 +268,7 @@ public class FormulaPreprocessor {
      * for example, types of "?Writing" = [Entity, Physical, Process, IntentionalProcess, ContentDevelopment, Writing]
      * return the most specific type = Writing
      */
-    private String getMostRelevantType(KB kb, HashSet<String> types) {
+    protected String getMostRelevantType(KB kb, HashSet<String> types) {
 
         HashSet<String> insts = new HashSet<String>();
         Iterator<String> iter = types.iterator();
