@@ -116,7 +116,39 @@ public class DateInfo {
 	public void print() {
 		System.out.println("Day, " + this.day + " Month, " + this.month + " Year, " + this.year + " Start Index, " + this.startIndex + " EndIndex, " + this.endIndex);
 	}
+	
+	public boolean equals(DateInfo dateInfo) {
+		boolean dayFlag, monthFlag,yearFlag, weekDayFlag;
+		dayFlag = monthFlag = yearFlag = weekDayFlag = true;
+		if ((dateInfo.day != null) && (this.day != null) && !(dateInfo.day.equals(day))) {
+			dayFlag = false;
+		}
+		if ((dateInfo.month != null) && (this.month != null) && !(dateInfo.month.equals(month))) {
+			monthFlag = false;
+		}
+		if ((dateInfo.year != null) && (this.year != null) && !(dateInfo.year.equals(year))) {
+			yearFlag = false;
+		}
+		if ((dateInfo.weekDay != null) && (this.weekDay != null) && !(dateInfo.weekDay.equals(weekDay))) {
+			weekDayFlag = false;
+		}
+		return (dayFlag && monthFlag && yearFlag && weekDayFlag);
+	}
 
+	 public int hashCode() {
+	        int hash = 3;
+	        hash = 53 * hash + (this.day != null  ? this.day.hashCode() : 0);
+	        hash = 53 * hash + (this.month != null  ? this.month.hashCode() : 0);
+	        hash = 53 * hash + (this.year != null  ? this.year.hashCode() : 0);
+	        hash = 53 * hash + (this.weekDay != null  ? this.weekDay.hashCode() : 0);
+	        return hash;
+	    }
+	 
+	 public boolean isEmpty() {
+		 if(this.day == null && this.month == null && this.year == null && this.weekDay == null)
+			 return true;
+		 return false;
+	 }
 
 }
 

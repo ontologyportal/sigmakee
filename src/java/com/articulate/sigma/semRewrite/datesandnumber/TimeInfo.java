@@ -68,4 +68,12 @@ public class TimeInfo {
 		}
 		return (hourFlag && minuteFlag && secondFlag);
 	}
+	
+	public int hashCode() {
+        int hash = 3;
+        hash = 53 * hash + (this.hour != null  ? this.hour.hashCode() : 0);
+        hash = 53 * hash + (this.minute != null  ? this.minute.hashCode() : 0);
+        hash = 53 * hash + (this.second != null  ? this.second.hashCode() : 0);
+        return hash;
+    }
 }

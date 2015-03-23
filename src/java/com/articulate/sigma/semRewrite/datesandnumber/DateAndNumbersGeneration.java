@@ -218,6 +218,7 @@ public class DateAndNumbersGeneration {
 				}	
 			}
 			else if (flags.isYearFlag() && flags.isMonthFlag() && flags.isDayFlag()) {
+				System.out.println("***HERE***");
 				dateInfoTemp = new DateInfo(dateInfo);
 				dateList.add(dateInfoTemp);
 				allDatesList.add(dateInfoTemp);
@@ -226,7 +227,7 @@ public class DateAndNumbersGeneration {
 				flags.resetFlags();
 			}
 		}
-		if(!dateList.contains(dateInfo)) {
+		if(!dateList.contains(dateInfo) && !dateInfo.isEmpty()) {
 			dateList.add(dateInfo);
 			allDatesList.add(dateInfo);
 		}
@@ -548,7 +549,7 @@ public class DateAndNumbersGeneration {
 	/** ***************************************************************
 	 */
 	private void handleDurations() {
-		
+		System.out.println("Length of allDatesList ::" + allDatesList.size());
 		for(int i = 0; i < allDatesList.size() - 1; i++) {
 			if((allDatesList.get(i).getEndIndex() + 2) == (allDatesList.get(i + 1).getWordIndex())) {
 				//System.out.println("Duration consists of ::");
