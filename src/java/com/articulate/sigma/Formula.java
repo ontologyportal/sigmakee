@@ -15,6 +15,8 @@ Systems, August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
+import com.google.common.collect.Sets;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -1418,6 +1420,84 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
+     * A new method to collect all quantified and unquantified variables
+     * in this Formula. Return an ArrayList containing a pair of ArrayLists.
+     * The first contains all explicitly quantified varialbles.
+     * The second contains all variables that are not within the scope of
+     * some explicit quantifiers.
+     *
+     * This function is different from the old version collectVariables()
+     * in that it can keep track of some bad axioms where a variable is both
+     * in quantified list and unquantified list;
+     *
+     * @return An ArrayList containing two ArrayLists, each of which could be empty.
+     */
+    public ArrayList<ArrayList<String>> collectQuantifiedUnquantifiedVariables() {
+
+        ArrayList<ArrayList<String>> quantifiedUnquantifiedVariables = new ArrayList<ArrayList<String>>();
+        HashSet<String> unquantifiedVariables = new HashSet<>();
+        HashSet<String> quantifiedVariables = new HashSet<>();
+        HashMap<String, Boolean> varFlag = new HashMap<>();
+        collectQuantifiedUnquantifiedVariablesRecurse
+                (this, varFlag, unquantifiedVariables, quantifiedVariables);
+
+        Set<String> intersections = Sets.intersection(quantifiedVariables, unquantifiedVariables);
+        if (intersections != null && !intersections.isEmpty())
+            System.err.println("Some variables (" + intersections
+                    + ") are both quantified (" + quantifiedVariables
+                    + ") and unquantified (" + unquantifiedVariables + ")");
+
+        quantifiedUnquantifiedVariables.add(new ArrayList(quantifiedVariables));
+        quantifiedUnquantifiedVariables.add(new ArrayList(unquantifiedVariables));
+
+        return quantifiedUnquantifiedVariables;
+    }
+
+    /** ***************************************************************
+     * Collect quantified and unquantified variables recursively
+     */
+    public void collectQuantifiedUnquantifiedVariablesRecurse(Formula f, HashMap<String, Boolean> varFlag,
+                  HashSet<String> unquantifiedVariables, HashSet<String> quantifiedVariables) {
+
+        if (f == null || StringUtil.emptyString(f.theFormula) || f.empty())
+            return;
+
+        String carstr = f.car();
+        if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
+            if (carstr.equals(f.EQUANT) || carstr.equals(f.UQUANT)) {
+                String varString = f.getArgument(1);
+                String[] varArray = (varString.substring(1, varString.length()-1)).split(" ");
+                for (String var : varArray) {
+                    quantifiedVariables.add(var);
+                }
+
+                for (int i = 2 ; i < f.listLength(); i++) {
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)), varFlag, unquantifiedVariables, quantifiedVariables);
+                }
+            } else {
+                for (int i = 1; i < f.listLength(); i++) {
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)), varFlag, unquantifiedVariables, quantifiedVariables);
+                }
+            }
+
+        }
+        else {
+            for (int i = 0; i < f.listLength(); i++) {
+                String arg = f.getArgument(i);
+                if (arg.startsWith("?") || arg.startsWith("@")) {
+                    if (!varFlag.containsKey(arg) && !quantifiedVariables.contains(arg)) {
+                        unquantifiedVariables.add(arg);
+                        varFlag.put(arg, false);
+                    }
+                }
+                else {
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(arg), varFlag, unquantifiedVariables, quantifiedVariables);
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
      * Collects all variables in this Formula.  Returns an ArrayList
      * of String variable names (with initial '?').  Note that 
      * duplicates are not removed.
@@ -2012,7 +2092,7 @@ public class Formula implements Comparable {
      * Returns the dual logical operator of op, or null if op is not
      * an operator or has no dual.
      *
-     * @param term A String, assumed to be a SUO-KIF logical operator
+     * @param op A String, assumed to be a SUO-KIF logical operator
      *
      * @return A String, the dual operator of op, or null.
      */
