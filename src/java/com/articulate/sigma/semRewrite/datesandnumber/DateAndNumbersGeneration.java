@@ -99,7 +99,7 @@ public class DateAndNumbersGeneration {
 			tempDate.addWordIndex(token.getId());
 			tempDate.setTimeCount(timeCount);
 			allDatesList.add(tempDate);
-			sumoTerms.add("day(time-"+timeCount+","+token.getWord()+")");	
+			sumoTerms.add("day(time-"+timeCount+","+token.getWord()+"-"+token.getId()+")");	
 			timeCount++;
 		} 
 		else if (digitalPatternMatcher.find()) {
@@ -117,9 +117,9 @@ public class DateAndNumbersGeneration {
 			tempDate.addWordIndex(token.getId());
 			tempDate.setTimeCount(timeCount);
 			allDatesList.add(tempDate);
-			sumoTerms.add("month(time-"+timeCount+","+MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)+")");
-			sumoTerms.add("day(time-"+timeCount+","+westernYearMatcher.group(3)+")");
-			sumoTerms.add("year(time-"+timeCount+","+westernYearMatcher.group(5)+")");
+			sumoTerms.add("month(time-"+timeCount+","+MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)+"-"+token.getId()+")");
+			sumoTerms.add("day(time-"+timeCount+","+westernYearMatcher.group(3)+"-"+token.getId()+")");
+			sumoTerms.add("year(time-"+timeCount+","+westernYearMatcher.group(5)+"-"+token.getId()+")");
 			timeCount++;
 		} 
 		else if (dayMatcher.find()) {
@@ -272,13 +272,13 @@ public class DateAndNumbersGeneration {
 		for (DateInfo date : dateList) {
 			if ((date.getYear() != null) || (date.getMonth() != null) || (date.getDay() != null)) {
 				if (date.getDay() != null) {
-					sumoTerms.add("day(time-"+timeCount+","+date.getDay()+")");
+					sumoTerms.add("day(time-"+timeCount+","+date.getDay()+"-"+date.getWordIndex()+")");
 				}
 				if (date.getMonth() != null) {
-					sumoTerms.add("month(time-"+timeCount+","+date.getMonth()+")");
+					sumoTerms.add("month(time-"+timeCount+","+date.getMonth()+"-"+date.getWordIndex()+")");
 				}
 				if (date.getYear() != null) {
-					sumoTerms.add("year(time-"+timeCount+","+date.getYear()+")");
+					sumoTerms.add("year(time-"+timeCount+","+date.getYear()+"-"+date.getWordIndex()+")");
 				}
 				String tokenRoot = getRootWord(date.getWordIndex());
 				date.setTimeCount(timeCount);
@@ -299,13 +299,13 @@ public class DateAndNumbersGeneration {
 			if ((times.getSecond() != null) || (times.getMinute() != null) || (times.getHour() != null)) {
 				//StringBuffer timeFn = new StringBuffer();
 				if (times.getSecond() != null) {
-					sumoTerms.add("second("+"time-"+timeCount+","+times.getSecond()+")");
+					sumoTerms.add("second("+"time-"+timeCount+","+times.getSecond()+"-"+times.getWordIndex() +")");
 				}
 				if (times.getMinute() != null) {
-					sumoTerms.add("minute("+"time-"+timeCount+","+times.getMinute()+")");
+					sumoTerms.add("minute("+"time-"+timeCount+","+times.getMinute()+"-"+times.getWordIndex()+")");
 				}
 				if (times.getHour() != null) {
-					sumoTerms.add("hour("+"time-"+timeCount+","+times.getHour()+")");
+					sumoTerms.add("hour("+"time-"+timeCount+","+times.getHour()+"-"+times.getWordIndex()+")");
 				}
 				String tokenRoot = getRootWord(times.getWordIndex());
 				if (tokenRoot != null) {
@@ -369,7 +369,7 @@ public class DateAndNumbersGeneration {
 						measuredEntity = unitOfMeasurementNode;
 						sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
 						sumoTerms.add("unit(measure" + count + ", "+ "memberCount" + ")");
-						sumoTerms.add("value(measure" + count + ", " + token.getWord() + ")");
+						sumoTerms.add("value(measure" + count + ", " + token.getWord()+"-"+token.getId()+ ")");
 						flag = true;
 						return;
 					}
@@ -411,7 +411,7 @@ public class DateAndNumbersGeneration {
 			sumoUnitOfMeasure = unitOfMeasurementStr;
 		}
 		sumoTerms.add("unit(measure" + count + ", "+ sumoUnitOfMeasure + ")");
-		sumoTerms.add("value(measure" + count + ", " + token.getWord() + ")");
+		sumoTerms.add("value(measure" + count + ", " + token.getWord()+"-"+token.getId() + ")");
 		//System.out.println(unitOfMeasurementStr);
 		//System.out.println(measuredEntityStr);
 		WordNet.wn.initOnce();
@@ -447,7 +447,7 @@ public class DateAndNumbersGeneration {
 		while (!tempParent.equals(StanfordDependencies.getFirstRoot())) {
 			tempParent = StanfordDependencies.getParent(tempParent);
 			if (containsIndexWord(tempParent.tag())) {
-				return tempParent.word();
+				return tempParent.word()+"-"+tempParent.index();
 			}
 		}
 		return null;
@@ -544,14 +544,30 @@ public class DateAndNumbersGeneration {
 		Set<String> hashsetList = new HashSet<String>(sumoTerms);
 		sumoTerms.clear();
 		sumoTerms.addAll(hashsetList);
+		//List<String> removableList = new ArrayList<String>();
+		Set<String> removableSumoTerms = new HashSet<String>();
+		for (DateInfo d : allDatesList) {
+			if (d.isDuration()) {
+				//removableList.add("time-"+d.getTimeCount());
+				for(String sumoTerm : sumoTerms) {
+					if(sumoTerm.matches("^time\\(.*,time-"+d.getTimeCount()+"\\)$")) {
+						removableSumoTerms.add(sumoTerm);
+					}
+				}
+			}
+		}
+		sumoTerms.removeAll(removableSumoTerms);
+		//System.out.println(removableList.toString());
 	}
 	
 	/** ***************************************************************
 	 */
 	private void handleDurations() {
-		System.out.println("Length of allDatesList ::" + allDatesList.size());
+		//System.out.println("Length of allDatesList ::" + allDatesList.size());
 		for(int i = 0; i < allDatesList.size() - 1; i++) {
 			if((allDatesList.get(i).getEndIndex() + 2) == (allDatesList.get(i + 1).getWordIndex())) {
+				allDatesList.get(i).setDurationFlag(true);
+				allDatesList.get(i+1).setDurationFlag(true);
 				//System.out.println("Duration consists of ::");
 				//allDatesList.get(i).print();
 				//allDatesList.get(i+1).print();
@@ -566,18 +582,21 @@ public class DateAndNumbersGeneration {
 				if(tempParent != null) {
 					//System.out.println("Duration is associated with ::" + tempParent);
 					if(VerbTags.contains(tempParent.tag())) {
-						sumoTerms.add("StartTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
-						sumoTerms.add("EndTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
+						sumoTerms.add("StartTime(" + tempParent.value()+"-"+tempParent.index() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
+						sumoTerms.add("EndTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
+						
 					}
 					if(nounTags.contains(tempParent.tag())) {
 						if(tempParent.ner().equals("PERSON")) {
-							sumoTerms.add("BirthDate(" + tempParent.value() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
-							sumoTerms.add("DeathDate(" + tempParent.value() + "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
+							sumoTerms.add("BirthDate(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
+							sumoTerms.add("DeathDate(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
 						} else {
-							sumoTerms.add("StartTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
-							sumoTerms.add("EndTime(" + tempParent.value() + "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
+							sumoTerms.add("StartTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
+							sumoTerms.add("EndTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
 						}
 					}
+					allDatesList.get(i).setDurationFlag(true);
+					allDatesList.get(i+1).setDurationFlag(true);
 				}
 			}
 		}

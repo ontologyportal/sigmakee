@@ -35,7 +35,7 @@ public class DateInfo {
 	private int endIndex = -1;
 	private String weekDay = null;
 	private int timeCount = -1;
-	
+	private boolean durationFlag = false;
 	
 	public DateInfo(){
 		
@@ -48,6 +48,11 @@ public class DateInfo {
 		this.wordIndexes = info.wordIndexes;
 		processWordIndexes();
 	}
+	
+	public void setDurationFlag(boolean durationFlag) {
+		this.durationFlag = durationFlag;
+	}
+	
 	public String getYear() {
 		return year;
 	}
@@ -148,6 +153,10 @@ public class DateInfo {
 		 if(this.day == null && this.month == null && this.year == null && this.weekDay == null)
 			 return true;
 		 return false;
+	 }
+	 
+	 public boolean isDuration() {
+		 return durationFlag;
 	 }
 
 }
