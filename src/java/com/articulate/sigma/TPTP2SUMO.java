@@ -73,8 +73,8 @@ public class TPTP2SUMO {
       TPTPParser parser = TPTPParser.parse(reader);
       Hashtable<String,TPTPFormula> ftable = parser.ftable;
       Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
-      System.out.println("# of formulas: " + ftable.size());
-      System.out.println("# of Items: " + Items.size());
+//      System.out.println("# of formulas: " + ftable.size());
+//      System.out.println("# of Items: " + Items.size());
   
       //----Start SUMO output
       result.append("<queryResponse>\n");
