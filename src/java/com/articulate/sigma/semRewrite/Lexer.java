@@ -168,7 +168,7 @@ public class Lexer {
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
         tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+\\:?E?-?[0-9]*-?[0-9]*"));
-        tokenDefs.put(Ident,        Pattern.compile("\\'?[0-9a-zA-Z][_\\-a-z0-9_A-Z]*\\*?"));
+        tokenDefs.put(Ident,        Pattern.compile("\\\"?\\'?[0-9a-zA-Z][_\\-a-z0-9_A-Z]*\\*?\\\"?"));
         tokenDefs.put(Zero,         Pattern.compile("\\!"));
         tokenDefs.put(Stop,         Pattern.compile("stop"));
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
@@ -468,6 +468,7 @@ public class Lexer {
     private static String example2 = "bank2";
     private static String example3 = "at*";
     private static String example4 = "num(PM-6, 8:30-5)";
+    private static String example5 = "name(John-6, \"John\")";
     
     /** ***************************************************************
      * Test that comments and whitespace are normally ignored. 
@@ -632,6 +633,27 @@ public class Lexer {
     }
     
     /** ***************************************************************
+     * Check the positive case of AcceptLit(). 
+     */
+    private static void testAcceptClause2() {
+
+        System.out.println("-------------------------------------------------");
+        System.out.println("INFO in Lexer.testAcceptClause()");
+        Lexer lex = new Lexer(example5);
+        try {
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+            System.out.println(lex.next());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    /** ***************************************************************
      */
     public static void main(String[] args) {
         
@@ -640,6 +662,6 @@ public class Lexer {
         //testTerm();
         //testAcceptLit();
         //testErrors();
-        testAcceptClause();
+        testAcceptClause2();
     }
 }
