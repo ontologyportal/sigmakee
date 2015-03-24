@@ -541,7 +541,7 @@ public class PredVarInst {
             String arg0 = f.getArgument(0);
             //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): simple clause with: " + arg0);
             if (arg0.startsWith("?")) {
-                ArrayList<String> arglist = f.argumentsToArrayList(1);
+                ArrayList<String> arglist = f.complexArgumentsToArrayList(1);
                 if (arglist != null && arglist.size() > 0) {// a variable could be an argument to a higher-order formula
                     //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): adding: " + arg0 +
                     //        " with arglist: " + arglist);
