@@ -367,7 +367,8 @@ public class DateAndNumbersGeneration {
 						measuredEntity = unitOfMeasurementNode;
 						sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
 						sumoTerms.add("unit(measure" + count + ", "+ "memberCount" + ")");
-						sumoTerms.add("value(measure" + count + ", " + token.getWord()+"-"+token.getId()+ ")");
+						sumoTerms.add("value(measure" + count + ", " + token.getWord()+ ")");
+						sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId());
 						flag = true;
 						return;
 					}
@@ -385,7 +386,7 @@ public class DateAndNumbersGeneration {
 							break;
 						}
 					}
-					flag = true;
+					flag = true; 
 				}
 				else {
 					measuredEntity = StanfordDependencies.getParent(measuredEntity);
@@ -408,6 +409,7 @@ public class DateAndNumbersGeneration {
 		}
 		sumoTerms.add("unit(measure" + count + ", "+ sumoUnitOfMeasure + ")");
 		sumoTerms.add("value(measure" + count + ", " + token.getWord() + ")");
+		sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId());
 		WordNet.wn.initOnce();
 	}
 	/** ***************************************************************
