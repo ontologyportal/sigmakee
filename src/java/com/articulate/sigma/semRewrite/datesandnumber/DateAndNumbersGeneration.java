@@ -218,7 +218,6 @@ public class DateAndNumbersGeneration {
 				}	
 			}
 			else if (flags.isYearFlag() && flags.isMonthFlag() && flags.isDayFlag()) {
-				System.out.println("***HERE***");
 				dateInfoTemp = new DateInfo(dateInfo);
 				dateList.add(dateInfoTemp);
 				allDatesList.add(dateInfoTemp);
@@ -357,7 +356,6 @@ public class DateAndNumbersGeneration {
 			posTagRemoverMatcher = POS_TAG_REMOVER.matcher(measuredEntity.toString());
 			if(posTagRemoverMatcher.find()) {
 				posTagRemover = posTagRemoverMatcher.group(1);
-				System.out.println(posTagRemover);
 				if(nounTags.contains(posTagRemover)) {
 					break;
 				}
@@ -375,7 +373,6 @@ public class DateAndNumbersGeneration {
 					}
 					for (IndexedWord child : childrenSet) {
 						String childPosTagRemover = null;
-						System.out.println(child.toString());
 						posTagRemoverMatcher = POS_TAG_REMOVER.matcher(child.toString());
 						//childPosTagRemover = posTagRemoverMatcher.group(1);
 						if (posTagRemoverMatcher.find()) {
@@ -399,7 +396,6 @@ public class DateAndNumbersGeneration {
 			sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
 		}
 		sumoUnitOfMeasure = WSD.getBestDefaultSUMOsense(unitOfMeasurementNode.value(), 1);
-		System.out.println(sumoUnitOfMeasure);
 		if ((sumoUnitOfMeasure != null) && (!sumoUnitOfMeasure.isEmpty())) {
 			sumoUnitOfMeasure = sumoUnitOfMeasure.replaceAll("[^\\p{Alpha}\\p{Digit}]+","");
 		}
@@ -411,11 +407,8 @@ public class DateAndNumbersGeneration {
 			sumoUnitOfMeasure = unitOfMeasurementStr;
 		}
 		sumoTerms.add("unit(measure" + count + ", "+ sumoUnitOfMeasure + ")");
-		sumoTerms.add("value(measure" + count + ", " + token.getWord()+"-"+token.getId() + ")");
-		//System.out.println(unitOfMeasurementStr);
-		//System.out.println(measuredEntityStr);
+		sumoTerms.add("value(measure" + count + ", " + token.getWord() + ")");
 		WordNet.wn.initOnce();
-		System.out.println();
 	}
 	/** ***************************************************************
 	 */
@@ -557,20 +550,16 @@ public class DateAndNumbersGeneration {
 			}
 		}
 		sumoTerms.removeAll(removableSumoTerms);
-		//System.out.println(removableList.toString());
 	}
 	
 	/** ***************************************************************
 	 */
 	private void handleDurations() {
-		//System.out.println("Length of allDatesList ::" + allDatesList.size());
+		
 		for(int i = 0; i < allDatesList.size() - 1; i++) {
 			if((allDatesList.get(i).getEndIndex() + 2) == (allDatesList.get(i + 1).getWordIndex())) {
 				allDatesList.get(i).setDurationFlag(true);
 				allDatesList.get(i+1).setDurationFlag(true);
-				//System.out.println("Duration consists of ::");
-				//allDatesList.get(i).print();
-				//allDatesList.get(i+1).print();
 				IndexedWord tempParent = StanfordDependencies.getNodeByIndex(allDatesList.get(i).getWordIndex());	
 				while (!tempParent.equals(StanfordDependencies.getFirstRoot())) {
 					tempParent = StanfordDependencies.getParent(tempParent);
@@ -580,7 +569,6 @@ public class DateAndNumbersGeneration {
 					}
 				}
 				if(tempParent != null) {
-					//System.out.println("Duration is associated with ::" + tempParent);
 					if(VerbTags.contains(tempParent.tag())) {
 						sumoTerms.add("StartTime(" + tempParent.value()+"-"+tempParent.index() + "," + "time-" + allDatesList.get(i).getTimeCount() + ")");
 						sumoTerms.add("EndTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + allDatesList.get(i+1).getTimeCount() + ")");
