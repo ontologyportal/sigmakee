@@ -68,7 +68,7 @@ check_env()
 }
 
 change_src_home() {
-	log warn "Please provide the fill path (without '~') where do you want to put sources of SIGMA"
+	log warn "Please provide the full path (without '~') where you want to put sources of SIGMA"
 	read -p "  To use default \"$SIGMA_SRC\" just press [ENTER]: " src_home
 	[ -z "$src_home" ] || SIGMA_SRC=$src_home
 }
