@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ClauseGroups {
-    static final Pattern CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+-\\d+),\\s*(.+-\\d+)\\)");
+    public static final Pattern CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+-\\d+),\\s*(.+-\\d+)\\)");
     static final Pattern CLAUSE_PARAM = Pattern.compile("(.+)-(\\d+)");
 
     List<String> clauses;
@@ -78,14 +78,14 @@ public class ClauseGroups {
     }
 
     private void initGroupForAttributes(Multimap<String, String> groups) {
+        Multimap<String, String> crossGroups = HashMultimap.create();
         for(String root: groups.keySet()) {
             Collection<String> rootGroup = groups.get(root);
             rootGroup.stream()
                     .filter(attr -> !attr.equals(root))
-                    .forEach(attr -> {
-                        groups.putAll(attr, rootGroup);
-                    });
+                    .forEach(attr -> crossGroups.putAll(attr, rootGroup));
         }
+        groups.putAll(crossGroups);
     }
 
     private Map<String, String> mergeAttributes(Multimap<String, String> groupsFull) {

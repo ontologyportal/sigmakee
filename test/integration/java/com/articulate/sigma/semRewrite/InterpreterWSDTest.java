@@ -19,42 +19,65 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.google.common.collect.Lists;
-import junit.framework.TestCase;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class InterpreterWSDTest extends TestCase {
+import static junit.framework.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.junit.Assert.assertThat;
+
+public class InterpreterWSDTest extends IntegrationTestBase {
+
+    ArrayList<String> clauses = Lists.newArrayList("root(ROOT-0, aviator-18)"
+            , "nn(Earhart-3, Amelia-1)", "nn(Earhart-3, Mary-2)"
+            , "nsubj(aviator-18, Earhart-3)"
+            , "dep(Earhart-3, July-5)"
+            , "num(July-5, 24-6)", "num(July-5, 1897-8)"
+            , "dep(July-5, July-10)"
+            , "num(July-10, 2-11)", "num(July-10, 1937-13)"
+            , "cop(aviator-18, was-15)"
+            , "det(aviator-18, an-16)"
+            , "amod(aviator-18, American-17)");
+
+    @BeforeClass
+    public static void initClauses() {
+        KBmanager.getMgr().initializeOnce();
+    }
 
     @Test
-    public void testFindWSD() {
-        KBmanager.getMgr().initializeOnce();
-
-        ArrayList<String> clauses = Lists.newArrayList("root(ROOT-0, aviator-18)"
-                , "nn(Earhart-3, Amelia-1)", "nn(Earhart-3, Mary-2)"
-                , "nsubj(aviator-18, Earhart-3)"
-                , "dep(Earhart-3, July-5)"
-                , "num(July-5, 24-6)", "num(July-5, 1897-8)"
-                , "dep(July-5, July-10)"
-                , "num(July-10, 2-11)", "num(July-10, 1937-13)"
-                , "cop(aviator-18, was-15)"
-                , "det(aviator-18, an-16)"
-                , "amod(aviator-18, American-17)");
-
+    public void findWSDNoGroups() {
         List<String> wsds = Interpreter.findWSD(clauses);
+        String[] expected = {
+                "names(Amelia-1,\"Amelia\")",
+                "names(Mary-2,\"Mary\")",
+                "sumo(DiseaseOrSyndrome,Amelia-1)", // from WordNet: Amelia
+                "sumo(Woman,Mary-2)",
+                "sumo(Woman,Earhart-3)",
+                "sumo(UnitedStates,American-17)",
+                "sumo(Pilot,aviator-18)"
+        };
+        assertThat(wsds, hasItems(expected));
+        assertEquals(wsds.size(), expected.length);
+    }
 
-        /* Expected:
-           attribute(AmeliaMaryEarhart-1,Female)
-           sumo(Woman,AmeliaMaryEarhart-1)
-           sumo(Human,AmeliaMaryEarhart-1)
-           sumo(UnitedStates,American-17)
-           sumo(Pilot,aviator-18)
-         */
-        assertEquals(5, wsds.size());
-        assertTrue(wsds.toString(), wsds.contains("sumo(Human,AmeliaMaryEarhart-1)"));
-        assertTrue(wsds.toString(), wsds.contains("attribute(AmeliaMaryEarhart-1,Female)"));
+    @Test
+    public void findWSD() {
+        Interpreter.groupClauses(clauses);
+        List<String> wsds = Interpreter.findWSD(clauses);
+        String[] expected = {
+                "names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")",
+                "sumo(Woman,AmeliaMaryEarhart-1)",
+                "sumo(DiseaseOrSyndrome,AmeliaMaryEarhart-1)", // from WordNet: Amelia
+                "sumo(UnitedStates,American-17)",
+                "sumo(Pilot,aviator-18)"
+        };
+        assertThat(wsds, hasItems(expected));
+        assertEquals(wsds.size(), expected.length);
     }
 }

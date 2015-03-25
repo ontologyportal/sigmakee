@@ -82,6 +82,13 @@
 					<include>resources/*</include>
 				</includes>
 			</testResource>
+			<testResource>
+				<directory>test/corpus/java</directory>
+				<includes>
+					<include>**/*.java</include>
+					<include>resources/*</include>
+				</includes>
+			</testResource>
 		</testResources>
 		<pluginManagement>
 			<plugins>

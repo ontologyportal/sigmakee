@@ -17,7 +17,6 @@ import org.json.simple.*;
 import com.articulate.sigma.KBmanager;
 
 import java.util.*;
-import java.util.function.Function;
 
 @RunWith(Parameterized.class)
 public class InterpreterTest extends IntegrationTestBase {

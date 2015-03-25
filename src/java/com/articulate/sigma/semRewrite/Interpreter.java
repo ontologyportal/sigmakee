@@ -41,6 +41,8 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 
+import static com.articulate.sigma.StringUtil.splitCamelCase;
+
 public class Interpreter {
 
     // Canonicalize rules into CNF then unify.
@@ -91,7 +93,7 @@ public class Interpreter {
   private static String stripSuffix(String s) {
       
       int wordend1 = s.lastIndexOf('-');
-      return s.substring(0,wordend1);
+      return s.substring(0, wordend1);
   }
   
   /** *************************************************************
@@ -144,11 +146,8 @@ public class Interpreter {
       HashMap<String,String> purewords = extractWords(clauses);
       ArrayList<String> pure = Lists.newArrayList(purewords.keySet());
       //System.out.println("INFO in Interpreter.addWSD(): words: " + pure);
-      ClauseGroups cg = new ClauseGroups(clauses);
       for (Map.Entry<String, String> pureWordEntry : purewords.entrySet()) {
           String clauseKey = pureWordEntry.getValue();
-          String clauseValue = cg.getGrouped(clauseKey);
-          String pureCGvalue = stripSuffix(clauseValue);
           String pureWord = pureWordEntry.getKey();
           //System.out.println("INFO in Interpreter.addWSD(): pureWord:  " + pureWord);
           if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
@@ -163,41 +162,63 @@ public class Interpreter {
                       sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                   }
                   if (kb.isInstance(sumo))
-                      results.add("equals(" + sumo + "," + cg.getGrouped(clauseKey) + ")");
+                      results.add("equals(" + sumo + "," + clauseKey + ")");
                   else
-                      results.add("sumo(" + sumo + "," + cg.getGrouped(clauseKey) + ")");
+                      results.add("sumo(" + sumo + "," + clauseKey + ")");
               }
-          }
-          else if (DependencyConverter.maleNames.contains(pureWord)) {
-              results.add("sumo(Human," + clauseValue + ")");
-              results.add("names(" + clauseValue + ",\"" + pureCGvalue + "\")");
-              results.add("attribute(" + clauseValue + ",Male)");
-          }
-          else if (DependencyConverter.femaleNames.contains(pureWord)) {
-              results.add("sumo(Human," + clauseValue + ")");
-              results.add("names(" + clauseValue + ",\"" + pureCGvalue + "\")");
-              results.add("attribute(" + clauseValue + ",Female)");
-          }      
-          else {
-              String synset = WSD.getBestDefaultSense(pureWord);
-              //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
-              if (!Strings.isNullOrEmpty(synset)) {
-                  String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
-                  //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
-                  if (!Strings.isNullOrEmpty(sumo)) {
-                      if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
-                          sumo = sumo.substring(0,sumo.indexOf(" ")-1);
-                      }
-                      results.add("sumo(" + sumo + "," + cg.getGrouped(clauseKey) + ")");
+          } else {
+              String humanReadable = splitCamelCase(pureWord);
+              String[] split = humanReadable.split(" ");
+
+              boolean hitWordNet = false;
+              for(String s : split) {
+                  Set<String> wordNetResults = findWordNetResults(s, clauseKey);
+                  hitWordNet |= !wordNetResults.isEmpty();
+                  results.addAll(wordNetResults);
+              }
+
+              String sexAttribute = getSexAttribute(split[0]);
+              if (!sexAttribute.isEmpty()) {
+                  results.add("names(" + clauseKey + ",\"" + humanReadable + "\")");
+                  if (!hitWordNet) {
+                      results.add("sumo(Human," + clauseKey + ")");
+                      results.add("attribute(" + clauseKey + "," + sexAttribute + ")");
                   }
-                  else
-                      results.add("sumo(Entity," + cg.getGrouped(clauseKey) + ")");
               }
           }
       }
       //System.out.println("INFO in Interpreter.addWSD(): " + results);
       //results.addAll(clauses);
       return Lists.newArrayList(results);
+  }
+
+    private static Set<String> findWordNetResults(String pureWord, String valueToAdd) {
+        Set<String> results = Sets.newHashSet();
+        String synset = WSD.getBestDefaultSense(pureWord);
+        //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
+        if (!Strings.isNullOrEmpty(synset)) {
+            String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
+            //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
+            if (!Strings.isNullOrEmpty(sumo)) {
+                if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
+                    sumo = sumo.substring(0,sumo.indexOf(" ")-1);
+                }
+                results.add("sumo(" + sumo + "," + valueToAdd + ")");
+            } else {
+                results.add("sumo(Entity," + valueToAdd + ")");
+            }
+        }
+        return results;
+    }
+
+  private static String getSexAttribute(String object) {
+      if (DependencyConverter.maleNames.contains(object)) {
+          return "Male";
+      } else if (DependencyConverter.femaleNames.contains(object)) {
+          return "Female";
+      } else {
+          return "";
+      }
   }
 
   /** *************************************************************
@@ -215,7 +236,7 @@ public class Interpreter {
       //System.out.println("INFO in Interpreter.findQuantification(): vars: " + vars);
       for (String v : vars) {
           Matcher matcher = p.matcher(v);
-          if (matcher.matches()) 
+          if (matcher.matches())
               quantified.add(v);
       }
       return quantified;
@@ -298,6 +319,8 @@ public class Interpreter {
           System.out.println(e.getMessage());
       }
 
+      groupClauses(results);
+
       List<String> wsd = findWSD(results);
       results.addAll(wsd);
       
@@ -317,6 +340,30 @@ public class Interpreter {
       ArrayList<String> kifClauses = interpretCNF(inputs);
       return fromKIFClauses(kifClauses);
   }
+
+    protected static void groupClauses(ArrayList<String> clauses) {
+        ClauseGroups cg = new ClauseGroups(clauses);
+        Iterator<String> clauseIterator = clauses.iterator();
+        List<String> modifiedClauses = Lists.newArrayList();
+        while(clauseIterator.hasNext()) {
+            String clause = clauseIterator.next();
+            Matcher m = ClauseGroups.CLAUSE_SPLITTER.matcher(clause);
+            if(m.matches()) {
+                String attr1 = m.group(2);
+                String attr2 = m.group(3);
+                String attr1Grouped = cg.getGrouped(attr1);
+                String attr2Grouped = cg.getGrouped(attr2);
+                if(!attr1.equals(attr1Grouped) || !attr2.equals(attr2Grouped)) {
+                    clauseIterator.remove();
+                    if (!attr1Grouped.equals(attr2Grouped)) {
+                        String label = m.group(1);
+                        modifiedClauses.add(label + "(" + attr1Grouped + "," + attr2Grouped + ")");
+                    }
+                }
+            }
+        }
+        clauses.addAll(modifiedClauses);
+    }
 
   /** *************************************************************
    */
