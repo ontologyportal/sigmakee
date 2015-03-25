@@ -42,6 +42,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcess
 import edu.stanford.nlp.util.CoreMap;
 
 import static com.articulate.sigma.StringUtil.splitCamelCase;
+import static com.articulate.sigma.semRewrite.EntityType.PERSON;
 
 public class Interpreter {
 
@@ -136,7 +137,7 @@ public class Interpreter {
    * @return a list of strings in the format sumo(Class,word-num) 
    * that specify the SUMO class of each word that isn't a stopword.
    */
-  public static List<String> findWSD(ArrayList<String> clauses) {
+  public static List<String> findWSD(ArrayList<String> clauses, EntityTypeParser etp) {
 
       //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
       KB kb = KBmanager.getMgr().getKB("SUMO");
@@ -153,38 +154,42 @@ public class Interpreter {
           //System.out.println("INFO in Interpreter.addWSD(): pureWord:  " + pureWord);
           if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
               continue;
-          String id = WSD.findWordSenseInContext(pureWord, pure);
-          //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
-          if (!Strings.isNullOrEmpty(id)) {
-              String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
-              //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
-              if (!Strings.isNullOrEmpty(sumo)) {
-                  if (sumo.contains(" ")) {  // TODO: if multiple mappings...
-                      sumo = sumo.substring(0,sumo.indexOf(" ")-1);
-                  }
-                  if (kb.isInstance(sumo))
-                      results.add("equals(" + sumo + "," + clauseKey + ")");
-                  else
-                      results.add("sumo(" + sumo + "," + clauseKey + ")");
-              }
-          } 
-          else {
+          if (etp.equalsToEntityType(clauseKey, PERSON)) {
               String humanReadable = splitCamelCase(pureWord);
+              Set<String> wordNetResults = findWordNetResults(humanReadable, clauseKey);
+              results.addAll(wordNetResults);
+
               String[] split = humanReadable.split(" ");
-
-              boolean hitWordNet = false;
-              for(String s : split) {
-                  Set<String> wordNetResults = findWordNetResults(s, clauseKey);
-                  hitWordNet |= !wordNetResults.isEmpty();
-                  results.addAll(wordNetResults);
-              }
-
               String sexAttribute = getSexAttribute(split[0]);
               if (!sexAttribute.isEmpty()) {
                   results.add("names(" + clauseKey + ",\"" + humanReadable + "\")");
-                  if (!hitWordNet) {
+                  if (wordNetResults.isEmpty()) {
                       results.add("sumo(Human," + clauseKey + ")");
                       results.add("attribute(" + clauseKey + "," + sexAttribute + ")");
+                  }
+              }
+          } else {
+              String id = WSD.findWordSenseInContext(pureWord, pure);
+              //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
+              if (!Strings.isNullOrEmpty(id)) {
+                  String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
+                  //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
+                  if (!Strings.isNullOrEmpty(sumo)) {
+                      if (sumo.contains(" ")) {  // TODO: if multiple mappings...
+                          sumo = sumo.substring(0,sumo.indexOf(" ")-1);
+                      }
+                      if (kb.isInstance(sumo))
+                          results.add("equals(" + sumo + "," + clauseKey + ")");
+                      else
+                          results.add("sumo(" + sumo + "," + clauseKey + ")");
+                  }
+              }
+              else {
+                  String humanReadable = splitCamelCase(pureWord);
+                  String[] split = humanReadable.split(" ");
+                  for (String s : split) {
+                      Set<String> wordNetResults = findWordNetResults(s, clauseKey);
+                      results.addAll(wordNetResults);
                   }
               }
           }
@@ -202,6 +207,7 @@ public class Interpreter {
         String synset = WSD.getBestDefaultSense(pureWord);
         //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
         if (!Strings.isNullOrEmpty(synset)) {
+            //FIXME: this call doesn't work for "Amelia Earhart"
             String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
             //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
             if (!Strings.isNullOrEmpty(sumo)) {
@@ -313,11 +319,12 @@ public class Interpreter {
       }
 
       ArrayList<String> results = null;
+      Annotation document = null;
       try {
           Properties props = new Properties();
-          props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+          props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
           StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-          Annotation document = new Annotation(substitutedInput);
+          document = new Annotation(substitutedInput);
           pipeline.annotate(document);
           List<CoreMap> sentences = document.get(SentencesAnnotation.class);
           for (CoreMap sentence : sentences) {
@@ -330,9 +337,9 @@ public class Interpreter {
           System.out.println(e.getMessage());
       }
 
+      EntityTypeParser etp = new EntityTypeParser(document);
       groupClauses(results);
-
-      List<String> wsd = findWSD(results);
+      List<String> wsd = findWSD(results, etp);
       results.addAll(wsd);
       
       String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
@@ -812,7 +819,7 @@ public class Interpreter {
           System.out.println(e.getMessage());
       }
 
-      List<String> wsd = findWSD(results);
+      List<String> wsd = findWSD(results, EntityTypeParser.NULL_PARSER);
       System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
   }
 

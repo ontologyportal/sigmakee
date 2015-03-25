@@ -21,12 +21,20 @@ MA  02111-1307 USA
 
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.nlp.CorefSubstitutor;
 import com.google.common.collect.Lists;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
+import edu.stanford.nlp.util.CoreMap;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -52,10 +60,10 @@ public class InterpreterWSDTest extends IntegrationTestBase {
 
     @Test
     public void findWSDNoGroups() {
-        List<String> wsds = Interpreter.findWSD(clauses);
+        List<String> wsds = Interpreter.findWSD(clauses, EntityTypeParser.NULL_PARSER);
         String[] expected = {
-                "names(Amelia-1,\"Amelia\")",
-                "names(Mary-2,\"Mary\")",
+                //"names(Amelia-1,\"Amelia\")", // missed without real EntityParser information
+                //"names(Mary-2,\"Mary\")",
                 "sumo(DiseaseOrSyndrome,Amelia-1)", // from WordNet: Amelia
                 "sumo(Woman,Mary-2)",
                 "sumo(Woman,Earhart-3)",
@@ -69,11 +77,42 @@ public class InterpreterWSDTest extends IntegrationTestBase {
     @Test
     public void findWSD() {
         Interpreter.groupClauses(clauses);
-        List<String> wsds = Interpreter.findWSD(clauses);
+        List<String> wsds = Interpreter.findWSD(clauses, EntityTypeParser.NULL_PARSER);
         String[] expected = {
-                "names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")",
+                //"names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")", // missed without real EntityParser information
                 "sumo(Woman,AmeliaMaryEarhart-1)",
                 "sumo(DiseaseOrSyndrome,AmeliaMaryEarhart-1)", // from WordNet: Amelia
+                "sumo(UnitedStates,American-17)",
+                "sumo(Pilot,aviator-18)"
+        };
+        assertThat(wsds, hasItems(expected));
+        assertEquals(wsds.size(), expected.length);
+    }
+
+    @Test
+    public void fundWSDFull() {
+        String substitutedInput = CorefSubstitutor.substitute("Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator");
+
+        ArrayList<String> results = null;
+        Properties props = new Properties();
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        Annotation document = new Annotation(substitutedInput);
+        pipeline.annotate(document);
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        for (CoreMap sentence : sentences) {
+            SemanticGraph dependencies = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+            results = Lists.newArrayList(dependencies.toList().split("\n"));
+        }
+
+        EntityTypeParser etp = new EntityTypeParser(document);
+        Interpreter.groupClauses(results);
+        List<String> wsds = Interpreter.findWSD(results, etp);
+
+        String[] expected = {
+                "names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")",
+                "sumo(Human,AmeliaMaryEarhart-1)",
+                "attribute(AmeliaMaryEarhart-1,Female)",
                 "sumo(UnitedStates,American-17)",
                 "sumo(Pilot,aviator-18)"
         };

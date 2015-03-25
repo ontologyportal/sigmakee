@@ -16,20 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-MA  02111-1307 USA
+MA  02111-1307 USA 
 */
-package com.articulate.sigma.nlp;
+package com.articulate.sigma.semRewrite;
 
-import org.junit.Test;
-
-import static junit.framework.TestCase.assertEquals;
-
-public class CorefSubstitutorTest {
-
-    @Test
-    public void testSubstitute() throws Exception {
-        String input = "George Washington, sat on a wall. He had a great fall.";
-        String output = CorefSubstitutor.substitute(input);
-        assertEquals("George Washington, sat on a wall. George Washington had a great fall.", output);
-    }
+public enum EntityType {
+    PERSON, LOCATION
 }
