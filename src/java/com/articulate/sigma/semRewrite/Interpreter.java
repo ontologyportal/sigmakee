@@ -28,7 +28,7 @@ import java.io.*;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.nlg.LanguageFormatter;
-import com.articulate.sigma.nlp.CorefSubstitutor;
+import com.articulate.sigma.nlp.*;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -64,6 +64,7 @@ public class Interpreter {
   public static List<String> months = Lists.newArrayList("January","February","March","April","May","June",
           "July","August","September","October","November","December");
   public static List<String> days = Lists.newArrayList("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+  public static TFIDF tfidf = null;
   
   /** *************************************************************
    */
@@ -166,7 +167,8 @@ public class Interpreter {
                   else
                       results.add("sumo(" + sumo + "," + clauseKey + ")");
               }
-          } else {
+          } 
+          else {
               String humanReadable = splitCamelCase(pureWord);
               String[] split = humanReadable.split(" ");
 
@@ -192,7 +194,10 @@ public class Interpreter {
       return Lists.newArrayList(results);
   }
 
+  /** *************************************************************
+   */
     private static Set<String> findWordNetResults(String pureWord, String valueToAdd) {
+        
         Set<String> results = Sets.newHashSet();
         String synset = WSD.getBestDefaultSense(pureWord);
         //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
@@ -204,19 +209,25 @@ public class Interpreter {
                     sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                 }
                 results.add("sumo(" + sumo + "," + valueToAdd + ")");
-            } else {
+            } 
+            else {
                 results.add("sumo(Entity," + valueToAdd + ")");
             }
         }
         return results;
     }
 
+    /** *************************************************************
+     */
   private static String getSexAttribute(String object) {
+      
       if (DependencyConverter.maleNames.contains(object)) {
           return "Male";
-      } else if (DependencyConverter.femaleNames.contains(object)) {
+      } 
+      else if (DependencyConverter.femaleNames.contains(object)) {
           return "Female";
-      } else {
+      } 
+      else {
           return "";
       }
   }
@@ -341,7 +352,10 @@ public class Interpreter {
       return fromKIFClauses(kifClauses);
   }
 
+  /** *************************************************************
+   */
     protected static void groupClauses(ArrayList<String> clauses) {
+        
         ClauseGroups cg = new ClauseGroups(clauses);
         Iterator<String> clauseIterator = clauses.iterator();
         List<String> modifiedClauses = Lists.newArrayList();
@@ -868,6 +882,7 @@ public class Interpreter {
       if (args != null && args.length > 0 && (args[0].equals("-s") || args[0].equals("-i"))) {
           KBmanager.getMgr().initializeOnce();
           interp.loadRules();
+          tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "stopwords.txt");
       }
       if (args != null && args.length > 0 && args[0].equals("-s")) {
           interp.interpretSingle(args[1]);
