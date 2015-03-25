@@ -406,7 +406,7 @@ public class TPTP3ProofProcessor {
 		tpp.proof = ProofStep.removeDuplicates(tpp.proof);
 
 		// find types for skolem terms
-		findTypesForSkolemTerms(tpp, kb);
+	//	findTypesForSkolemTerms(tpp, kb);
 		return tpp;
 	}
 
