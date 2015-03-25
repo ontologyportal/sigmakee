@@ -131,7 +131,7 @@ public class DateAndNumbersGeneration {
 						utilities.sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
 						utilities.sumoTerms.add("unit(measure" + count + ", "+ "memberCount" + ")");
 						utilities.sumoTerms.add("value(measure" + count + ", " + token.getWord()+ ")");
-						utilities.sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId());
+						utilities.sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId()+")");
 						flag = true;
 						return;
 					}
@@ -172,7 +172,7 @@ public class DateAndNumbersGeneration {
 		}
 		utilities.sumoTerms.add("unit(measure" + count + ", "+ sumoUnitOfMeasure + ")");
 		utilities.sumoTerms.add("value(measure" + count + ", " + token.getWord() + ")");
-		utilities.sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId());
+		utilities.sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId()+")");
 		WordNet.wn.initOnce();
 	}
 	/** ***************************************************************
