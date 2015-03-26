@@ -1,4 +1,4 @@
-package com.articulate.sigma.semRewrite;/*
+/*
 Copyright 2014-2015 IPsoft
 
 Author: Andrei Holub andrei.holub@ipsoft.com
@@ -18,24 +18,20 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
+package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.nlp.CorefSubstitutor;
+import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.google.common.collect.Lists;
-import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
-import edu.stanford.nlp.util.CoreMap;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
+import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertThat;
@@ -59,7 +55,7 @@ public class InterpreterWSDTest extends IntegrationTestBase {
     }
 
     @Test
-    public void findWSDNoGroups() {
+    public void findWSD_NoGroups() {
         List<String> wsds = Interpreter.findWSD(clauses, EntityTypeParser.NULL_PARSER);
         String[] expected = {
                 //"names(Amelia-1,\"Amelia\")", // missed without real EntityParser information
@@ -75,7 +71,7 @@ public class InterpreterWSDTest extends IntegrationTestBase {
     }
 
     @Test
-    public void findWSD() {
+    public void findWSD_WithGroups() {
         Interpreter.groupClauses(clauses);
         List<String> wsds = Interpreter.findWSD(clauses, EntityTypeParser.NULL_PARSER);
         String[] expected = {
@@ -90,20 +86,12 @@ public class InterpreterWSDTest extends IntegrationTestBase {
     }
 
     @Test
-    public void fundWSDFull() {
-        String substitutedInput = CorefSubstitutor.substitute("Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator");
+    public void fundWSD_AmeliaMaryEarhart() {
+        String input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator";
 
-        ArrayList<String> results = null;
-        Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
-        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-        Annotation document = new Annotation(substitutedInput);
-        pipeline.annotate(document);
-        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-        for (CoreMap sentence : sentences) {
-            SemanticGraph dependencies = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
-            results = Lists.newArrayList(dependencies.toList().split("\n"));
-        }
+        Pipeline pipeline = new Pipeline();
+        Annotation document = pipeline.annotate(input);
+        ArrayList<String> results = toDependenciesList(document);
 
         EntityTypeParser etp = new EntityTypeParser(document);
         Interpreter.groupClauses(results);
@@ -115,6 +103,28 @@ public class InterpreterWSDTest extends IntegrationTestBase {
                 "attribute(AmeliaMaryEarhart-1,Female)",
                 "sumo(UnitedStates,American-17)",
                 "sumo(Pilot,aviator-18)"
+        };
+        assertThat(wsds, hasItems(expected));
+        assertEquals(wsds.size(), expected.length);
+    }
+
+    @Test
+    public void fundWSD_AmeliayEarhart() {
+        String inptu = "Amelia Earhart (July 24, 1897 – July 2, 1937) was an American aviator";
+
+        Pipeline pipeline = new Pipeline();
+        Annotation document = pipeline.annotate(inptu);
+        ArrayList<String> results = toDependenciesList(document);
+
+        EntityTypeParser etp = new EntityTypeParser(document);
+        Interpreter.groupClauses(results);
+        List<String> wsds = Interpreter.findWSD(results, etp);
+
+        String[] expected = {
+                "names(AmeliaEarhart-1,\"Amelia Earhart\")",
+                "sumo(Woman,AmeliaEarhart-1)",
+                "sumo(UnitedStates,American-16)",
+                "sumo(Pilot,aviator-17)"
         };
         assertThat(wsds, hasItems(expected));
         assertEquals(wsds.size(), expected.length);

@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+import com.google.common.collect.Lists;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
@@ -36,6 +37,8 @@ import edu.stanford.nlp.util.ScoredObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.*;
 
 public class SentenceUtil {
 
@@ -67,7 +70,7 @@ public class SentenceUtil {
             // Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
 
             // this is the Stanford dependency graph of the current sentence
-            SemanticGraph dependencies = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+            SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
             System.out.println(dependencies.toList());
             //System.out.println(dependencies.toPOSList());
             System.out.println(getFullNamedEntities(sentence));
@@ -147,7 +150,17 @@ public class SentenceUtil {
             }
         }
     }
-    
+
+    public static ArrayList<String> toDependenciesList(Annotation document) {
+        ArrayList<String> results = Lists.newArrayList();
+        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+        for (CoreMap sentence : sentences) {
+            SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+            results = Lists.newArrayList(dependencies.toList().split("\n"));
+        }
+        return results;
+    }
+
     /** ***************************************************************
      */
     public static void main(String[] args) {

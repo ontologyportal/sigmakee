@@ -1,6 +1,3 @@
-package com.articulate.sigma.semRewrite;
-
-
 /*
 Copyright 2014-2015 IPsoft
 
@@ -21,6 +18,7 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
+package com.articulate.sigma.semRewrite;
 
 import java.util.*;
 import java.util.regex.*;
@@ -29,6 +27,7 @@ import java.io.*;
 import com.articulate.sigma.*;
 import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlp.*;
+import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -36,12 +35,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 
 import static com.articulate.sigma.StringUtil.splitCamelCase;
+import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static com.articulate.sigma.semRewrite.EntityType.PERSON;
 
 public class Interpreter {
@@ -204,10 +203,9 @@ public class Interpreter {
     private static Set<String> findWordNetResults(String pureWord, String valueToAdd) {
         
         Set<String> results = Sets.newHashSet();
-        String synset = WSD.getBestDefaultSense(pureWord);
+        String synset = WSD.getBestDefaultSense(pureWord.replace(" ", "_"));
         //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
         if (!Strings.isNullOrEmpty(synset)) {
-            //FIXME: this call doesn't work for "Amelia Earhart"
             String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
             //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
             if (!Strings.isNullOrEmpty(sumo)) {
@@ -318,24 +316,9 @@ public class Interpreter {
           System.out.println("INFO input substituted to: " + substitutedInput);
       }
 
-      ArrayList<String> results = null;
-      Annotation document = null;
-      try {
-          Properties props = new Properties();
-          props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
-          StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-          document = new Annotation(substitutedInput);
-          pipeline.annotate(document);
-          List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-          for (CoreMap sentence : sentences) {
-              SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
-              results = Lists.newArrayList(dependencies.toList().split("\n"));
-          }
-      }
-      catch (Exception e) {
-          e.printStackTrace();
-          System.out.println(e.getMessage());
-      }
+      Pipeline pipeline = new Pipeline();
+      Annotation document = pipeline.annotate(substitutedInput);
+      ArrayList<String> results = toDependenciesList(document);
 
       EntityTypeParser etp = new EntityTypeParser(document);
       groupClauses(results);
