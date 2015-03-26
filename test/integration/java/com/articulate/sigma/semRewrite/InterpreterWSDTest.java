@@ -22,16 +22,13 @@ package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.google.common.collect.Lists;
-import edu.stanford.nlp.pipeline.Annotation;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertThat;
@@ -80,51 +77,6 @@ public class InterpreterWSDTest extends IntegrationTestBase {
                 "sumo(DiseaseOrSyndrome,AmeliaMaryEarhart-1)", // from WordNet: Amelia
                 "sumo(UnitedStates,American-17)",
                 "sumo(Pilot,aviator-18)"
-        };
-        assertThat(wsds, hasItems(expected));
-        assertEquals(wsds.size(), expected.length);
-    }
-
-    @Test
-    public void fundWSD_AmeliaMaryEarhart() {
-        String input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator";
-
-        Pipeline pipeline = new Pipeline();
-        Annotation document = pipeline.annotate(input);
-        ArrayList<String> results = toDependenciesList(document);
-
-        EntityTypeParser etp = new EntityTypeParser(document);
-        Interpreter.groupClauses(results);
-        List<String> wsds = Interpreter.findWSD(results, etp);
-
-        String[] expected = {
-                "names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")",
-                "sumo(Human,AmeliaMaryEarhart-1)",
-                "attribute(AmeliaMaryEarhart-1,Female)",
-                "sumo(UnitedStates,American-17)",
-                "sumo(Pilot,aviator-18)"
-        };
-        assertThat(wsds, hasItems(expected));
-        assertEquals(wsds.size(), expected.length);
-    }
-
-    @Test
-    public void fundWSD_AmeliayEarhart() {
-        String inptu = "Amelia Earhart (July 24, 1897 – July 2, 1937) was an American aviator";
-
-        Pipeline pipeline = new Pipeline();
-        Annotation document = pipeline.annotate(inptu);
-        ArrayList<String> results = toDependenciesList(document);
-
-        EntityTypeParser etp = new EntityTypeParser(document);
-        Interpreter.groupClauses(results);
-        List<String> wsds = Interpreter.findWSD(results, etp);
-
-        String[] expected = {
-                "names(AmeliaEarhart-1,\"Amelia Earhart\")",
-                "sumo(Woman,AmeliaEarhart-1)",
-                "sumo(UnitedStates,American-16)",
-                "sumo(Pilot,aviator-17)"
         };
         assertThat(wsds, hasItems(expected));
         assertEquals(wsds.size(), expected.length);

@@ -1,0 +1,51 @@
+[{
+  "input": "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator",
+  "test": [
+    "names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")",
+    "sumo(Human,AmeliaMaryEarhart-1)",
+    "attribute(AmeliaMaryEarhart-1,Female)",
+    "sumo(UnitedStates,American-17)",
+    "sumo(Pilot,aviator-18)"
+  ]
+},{
+  "input": "Amelia Earhart (July 24, 1897 – July 2, 1937) was an American aviator",
+  "test": [
+    "names(AmeliaEarhart-1,\"Amelia Earhart\")",
+    "sumo(Woman,AmeliaEarhart-1)",
+    "sumo(UnitedStates,American-16)",
+    "sumo(Pilot,aviator-17)"
+  ]
+},{
+  "input": "John kicks the cart.",
+  "test": [
+    "names(John-1,\"John\")",
+    "sumo(Human,John-1)",
+    "attribute(John-1,Male)",
+    "sumo(Kicking,kicks-2)",
+    "sumo(Wagon,cart-4)"
+  ]
+},{
+  "input": "Amelia Earhart flies the plane.",
+  "test": [
+    "names(AmeliaEarhart-1,\"Amelia Earhart\")",
+    "sumo(Woman,AmeliaEarhart-1)",
+    "sumo(Flying,flies-3)",
+    "sumo(Airplane,plane-5)"
+  ]
+},{
+  "input": "John Smith flies the plane",
+  "test": [
+    "names(JohnSmith-1,\"John Smith\")",
+    "sumo(Man,JohnSmith-1)",
+    "sumo(Flying,flies-3)",
+    "sumo(Airplane,plane-5)"
+  ]
+},{
+  "input": "George Washington Carver flies the plane.",
+  "test": [
+    "names(GeorgeWashingtonCarver-1,\"George Washington Carver\")",
+    "sumo(Man,GeorgeWashingtonCarver-1)",
+    "sumo(Flying,flies-4)",
+    "sumo(Airplane,plane-6)"
+  ]
+}]

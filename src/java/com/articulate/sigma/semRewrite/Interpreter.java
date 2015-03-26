@@ -30,14 +30,11 @@ import com.articulate.sigma.nlp.*;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import com.google.common.collect.Sets;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
-import edu.stanford.nlp.util.CoreMap;
 
 import static com.articulate.sigma.StringUtil.splitCamelCase;
 import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
@@ -155,15 +152,20 @@ public class Interpreter {
               continue;
           if (etp.equalsToEntityType(clauseKey, PERSON)) {
               String humanReadable = splitCamelCase(pureWord);
-              Set<String> wordNetResults = findWordNetResults(humanReadable, clauseKey);
-              results.addAll(wordNetResults);
+
+              results.add("names(" + clauseKey + ",\"" + humanReadable + "\")");
 
               String[] split = humanReadable.split(" ");
-              String sexAttribute = getSexAttribute(split[0]);
-              if (!sexAttribute.isEmpty()) {
-                  results.add("names(" + clauseKey + ",\"" + humanReadable + "\")");
-                  if (wordNetResults.isEmpty()) {
-                      results.add("sumo(Human," + clauseKey + ")");
+              Set<String> wordNetResults = ImmutableSet.of();
+              if(split.length > 1) {
+                  wordNetResults = findWordNetResults(humanReadable , clauseKey);
+                  results.addAll(wordNetResults);
+              }
+
+              if (wordNetResults.isEmpty()) {
+                  results.add("sumo(Human," + clauseKey + ")");
+                  String sexAttribute = getSexAttribute(split[0]);
+                  if (!sexAttribute.isEmpty()) {
                       results.add("attribute(" + clauseKey + "," + sexAttribute + ")");
                   }
               }

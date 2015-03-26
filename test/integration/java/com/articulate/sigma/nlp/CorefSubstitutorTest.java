@@ -27,9 +27,23 @@ import static junit.framework.TestCase.assertEquals;
 public class CorefSubstitutorTest {
 
     @Test
-    public void testSubstitute() throws Exception {
+    public void substitutePerson() throws Exception {
         String input = "George Washington, sat on a wall. He had a great fall.";
         String output = CorefSubstitutor.substitute(input);
         assertEquals("George Washington, sat on a wall. George Washington had a great fall.", output);
+    }
+
+    @Test
+    public void substituteAObject() throws Exception {
+        String input = "George Washington cut a tree. It was large.";
+        String output = CorefSubstitutor.substitute(input);
+        assertEquals("George Washington cut a tree. a tree was large.", output);
+    }
+
+    @Test
+    public void substituteTheObject() throws Exception {
+        String input = "George Washington cut the tree. It was large.";
+        String output = CorefSubstitutor.substitute(input);
+        assertEquals("George Washington cut the tree. the tree was large.", output);
     }
 }
