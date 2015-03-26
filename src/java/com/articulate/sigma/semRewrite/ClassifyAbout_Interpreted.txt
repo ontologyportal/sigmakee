@@ -810,6 +810,34 @@ Important lessons about shared responsibility should be imparted to every studen
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; width ;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; The lake is about 100 feet wide. - COVERED
+; Lake-Tahoe is about 1 mile wide. - COVERED
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; depth ;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; The lake is about 1 mile deep. - COVERED
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; length ;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; The road is about 1 kilometer long. - COVERED
+; The road is about 10 kilometers long. - COVERED
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; height ;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; The building is about 100 floors tall. - COVERED
+; Thomas is about 6 feet tall. - COVERED
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; multiple ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -972,7 +1000,7 @@ Important lessons about shared responsibility should be imparted to every studen
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; around ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; ... she had taken cover and was watching the foam that was tossed about in the waves, ...
+; The wreckages of the crashed airplane floated about in the ocean. - COVERED
 
 
 

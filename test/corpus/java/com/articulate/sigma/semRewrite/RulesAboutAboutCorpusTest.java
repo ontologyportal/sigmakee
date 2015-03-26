@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author sathenikos
  */
-public class RulesAboutAboutCorpusTest extends IntegrationTestBase {
+public class RulesAboutAboutCorpusTest {
 
     public static Interpreter interpreter;
 
@@ -2990,6 +2990,175 @@ public class RulesAboutAboutCorpusTest extends IntegrationTestBase {
                 "    (instance ?I-1 AlphabeticCharacter)\n" +
                 "    (instance ?zombie-8 Human)\n" +
                 "    (instance ?student-4 student)) )";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void testAboutAsAround() {
+        String input = "The wreckages of the crashed airplane floated about in the ocean.";
+
+        String expectedKifString = "(exists (?crasehd-5 ?wreckages-2 ?floated-7 ?airplane-6 ?ocean-11)\n" +
+                "  (and\n" +
+                "    (located ?wreckages-2,?ocean-11)\n" +
+                "    (orientation ?wreckages-2 ?ocean-11 Near)\n" +
+                "    (attribute ?airplane-6 ?crasehd-5)\n" +
+                "    (instance ?wreckages-2 Object)\n" +
+                "    (instance ?ocean-11 Ocean)\n" +
+                "    (instance ?airplane-6 Airplane)\n" +
+                "    (instance ?floated-7 Wind)) )";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void testAbout100FeetWide() {
+        String input = "The lake is about 100 feet wide.";
+
+        String expectedKifString = "(exists (?lake-2)\n" +
+                "  (and\n" +
+                "    (and\n" +
+                "      (width ?lake-2 ?Y)\n" +
+                "      (equal ?X\n" +
+                "        (MeasureFn 100 Foot))\n" +
+                "      (approximateValue ?X ?Y))\n" +
+                "    (instance ?lake-2 Lake)) )";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void test1MileWide() {
+        String input = "Lake-Tahoe is about 1 mile wide.";
+
+        String expectedKifString = "(and\n" +
+                "  (and\n" +
+                "    (width Lake-?Tahoe-1 ?Y)\n" +
+                "    (equal ?X\n" +
+                "      (MeasureFn 1 Mile))\n" +
+                "    (approximateValue ?X ?Y))\n" +
+                "  (instance Lake-?Tahoe-1 Lake))";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void test1MileDeep() {
+        String input = "The lake is about 1 mile deep.";
+
+        String expectedKifString = "(exists (?lake-2)\n" +
+                "  (and\n" +
+                "    (and\n" +
+                "      (depth ?lake-2 ?Y)\n" +
+                "      (equal ?X\n" +
+                "\n" +
+                "          (TopFn ?lake-2)\n" +
+                "          (BottomFn ?lake-2) 1))\n" +
+                "      (approximateValue ?X ?Y))\n" +
+                "    (instance ?lake-2 Lake)) )";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void testAbout1KilometerLong() {
+        String input = "The road is about 1 kilometer long.";
+
+        String expectedKifString = "(exists (?road-2)\n" +
+                "  (and\n" +
+                "    (and\n" +
+                "      (length ?road-2 ?Y)\n" +
+                "      (equal ?X\n" +
+                "        (MeasureFn 1 Kilometer))\n" +
+                "      (approximateValue ?X ?Y))\n" +
+                "    (instance ?road-2 Roadway)) )";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void testAbout10KilometersLong() {
+        String input = "The road is about 10 kilometers long.";
+
+        String expectedKifString = "(exists (?road-2)\n" +
+                "  (and\n" +
+                "    (and\n" +
+                "      (length ?road-2 ?Y)\n" +
+                "      (equal ?X\n" +
+                "        (MeasureFn 10 Kilometer))\n" +
+                "      (approximateValue ?X ?Y))\n" +
+                "    (instance ?road-2 Roadway)) )";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void testAbout100FloorsTall() {
+        String input = "The building is about 100 floors tall.";
+
+        String expectedKifString = "(exists (?building-2)\n" +
+                "  (and\n" +
+                "    (height ?building-2 ?Y)\n" +
+                "    (equal ?X\n" +
+                "      (MeasureFn 100 Floor))\n" +
+                "    (approximateValue ?X ?Y))\n" +
+                "  (instance ?building-2 Building))";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void testAbout6FeetTall() {
+        String input = "Thomas is about 6 feet tall.";
+
+        String expectedKifString = "(exists (?Thomas-1)\n" +
+                "  (and\n" +
+                "    (and\n" +
+                "      (height ?Thomas-1 ?Y)\n" +
+                "      (equal ?X\n" +
+                "        (MeasureFn 6 Foot))\n" +
+                "      (approximateValue ?X ?Y))\n" +
+                "    (instance ?Thomas-1 Man)) )";
 
         String actualKifString = interpreter.interpretSingle(input);
 
