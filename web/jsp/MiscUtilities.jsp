@@ -69,7 +69,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           if (kb != null) {
               if (action.equals("dotGraph")) {
                   Graph g = new Graph();
-                  g.createDotGraph(kb, term, relation, filename);
+                  g.createDotGraph(kb, term, relation, 2,2,filename);
+
               }
           }
       }
