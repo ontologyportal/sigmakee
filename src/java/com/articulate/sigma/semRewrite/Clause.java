@@ -297,7 +297,7 @@ public class Clause {
             cl.pred = lex.next();
             //System.out.println("INFO in Clause.parse(): " + lex.look());
             if (!lex.testTok(Lexer.OpenPar)) {
-                errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine);
+                errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine + " on input " + lex.line);
                 throw new ParseException(errStr, startLine);
             }
             lex.next();
@@ -305,7 +305,7 @@ public class Clause {
             cl.arg1 = lex.next();
             //System.out.println("INFO in Clause.parse(): " + lex.look());
             if (!lex.testTok(Lexer.Comma)) {
-                errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine);
+                errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine + " on input " + lex.line);
                 throw new ParseException(errStr, startLine);
             }
             lex.next();
@@ -313,7 +313,7 @@ public class Clause {
             cl.arg2 = lex.next();
             //System.out.println("INFO in Clause.parse(): " + lex.look());
             if (!lex.testTok(Lexer.ClosePar)) {
-                errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine);
+                errStr = (errStart + ": Invalid token '" + lex.look() + "' near line " + startLine + " on input " + lex.line);
                 throw new ParseException(errStr, startLine);
             } 
             lex.next();
