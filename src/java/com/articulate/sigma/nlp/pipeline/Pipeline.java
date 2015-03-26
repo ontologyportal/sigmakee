@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+import com.articulate.sigma.KBmanager;
 import edu.stanford.nlp.pipeline.*;
 
 import java.util.*;
@@ -37,6 +38,10 @@ public class Pipeline {
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
         props.setProperty("parse.kbest", "2");
 
+        props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
+        props.put("parser.model",KBmanager.getMgr().getPref("englishPCFG"));
+        props.put("parse.flags", "");
+
         // creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution
         pipeline = new StanfordCoreNLP(props);
     }
@@ -52,6 +57,12 @@ public class Pipeline {
         pipeline.annotate(document);
 
         return document;
+    }
+
+    public static void main(String[] args) {
+        Pipeline p = new Pipeline();
+        Annotation a= p.annotate("Amelia also wrote books, most of them were about her flights.");
+        SentenceUtil.printSentences(a);
     }
 
 }
