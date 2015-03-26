@@ -72,8 +72,7 @@ public class CorefSubstitutor {
                 if (corefs.get(corefClusterId).getMentionsInTextualOrder().size() > 1) {
                     Integer index = label.get(CoreAnnotations.IndexAnnotation.class);
                     Integer sentence = 1 + label.get(CoreAnnotations.SentenceIndexAnnotation.class);
-                    //CorefMention mention = corefs.get(corefClusterId).getMentionsInTextualOrder().get(0);
-                    CorefMention mention = corefs.get(corefClusterId).getRepresentativeMention();
+                    CorefMention mention = corefs.get(corefClusterId).getMentionsInTextualOrder().get(0);
                     if (sentence != mention.sentNum || index < mention.startIndex || index >= mention.endIndex) {
                         text = extractTextWithSameTag(mention);
                     }
