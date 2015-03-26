@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author sathenikos
  */
-public class RulesAboutAboutTest extends IntegrationTestBase {
+public class RulesAboutAboutCorpusTest extends IntegrationTestBase {
 
     public static Interpreter interpreter;
 
