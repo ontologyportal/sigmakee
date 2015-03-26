@@ -88,7 +88,7 @@ public class TFIDF {
     public TFIDF(String filename, String stopwordsFilename) {
         
         try {
-            List<String> documents = TFIDFUtil.readFile(filename, false);
+            List<String> documents = TextFileUtil.readLines(filename, false);
             prepare(documents, stopwordsFilename);
         } 
         catch (IOException e) {
@@ -632,7 +632,7 @@ public class TFIDF {
         List<String> documents = null;
         try {
             if (asResource)
-                documents = TFIDFUtil.readFile(fname, false);
+                documents = TextFileUtil.readLines(fname, false);
         } 
         catch (IOException e) {
             System.out.println("Couldn't read document: " + fname + ". Exiting");

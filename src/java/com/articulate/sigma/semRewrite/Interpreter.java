@@ -42,6 +42,9 @@ import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static com.articulate.sigma.semRewrite.EntityType.PERSON;
 
 public class Interpreter {
+  private static final String ANSWER_YES = "Yes.";
+  private static final String ANSWER_NO = "No.";
+    private static final String ANSWER_UNDEFINED = "I don't know.";
 
     // Canonicalize rules into CNF then unify.
 
@@ -299,8 +302,50 @@ public class Interpreter {
       ArrayList<String> vars = findQuantification(form);
       return prependQuantifier(vars, form);
   }
-  
-  /** *************************************************************
+
+    /**
+     *
+     * @param answer
+     * @return
+     */
+  private static Formula removeOuterQuantifiers(Formula answer) {
+
+      String head = answer.car();
+      if(head != null && head.equals(Formula.EQUANT)) {
+          Formula innerFormula = new Formula(answer.caddr());
+          if(innerFormula != null) {
+              head = innerFormula.car();
+              if (head != null && head.equals(Formula.UQUANT)) {
+                  return new Formula(innerFormula.caddr());
+              }
+          }
+      }
+      return null;
+  }
+
+    /**
+     *
+      * @param query
+     * @return
+     */
+  private static boolean isOuterQuantified(Formula query) {
+
+      String head = query.car();
+      if(head != null && head.equals(Formula.EQUANT)) {
+          Formula innerFormula = new Formula(query.caddr());
+          if(innerFormula != null) {
+              head = innerFormula.car();
+              if (head != null && head.equals(Formula.UQUANT)) {
+                  return true;
+              }
+          }
+      }
+      return false;
+  }
+
+
+
+    /** *************************************************************
    */
   public String toFOL(ArrayList<String> clauses) {
       
@@ -551,34 +596,49 @@ public class Interpreter {
           if (question) {
               Formula query = new Formula(s3);
               ArrayList<String> inferenceAnswers = kb.askNoProof(s3, 30, 1);
-              if (query.isExistentiallyQuantified()) {
-                  Formula answer;
-                  try {
-                      answer = query.replaceQuantifierVars(Formula.EQUANT, inferenceAnswers);
-                      LanguageFormatter lf = new LanguageFormatter(answer.theFormula, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"),
-                              kb, "EnglishLanguage");
-                      lf.setDoInformalNLG(true);
-                      String actual = lf.htmlParaphrase("");
-                      actual = StringUtil.filterHtml(actual);
-                      System.out.println(actual);
-                      return actual;
-                  }
-                  catch (Exception e) {
-                      //e.printStackTrace();
-                      // need proper logging, log4j maybe
-                      System.out.println("");
-                      return "No response.";
-                  }
-              }
-          } 
+              String answer = Interpreter.formatAnswer(query, inferenceAnswers, kb);
+              System.out.println(answer);
+              return answer;
+          }
           else {
               System.out.println(kb.tell(s3));
           }
       }
       return s3;
   }
-  
-  /** ***************************************************************
+
+    public static String formatAnswer(Formula query, List<String> inferenceAnswers, KB kb) {
+
+        if(Interpreter.isOuterQuantified(query)) {
+            Formula answer;
+            try {
+                answer = query.replaceQuantifierVars(Formula.EQUANT, inferenceAnswers);
+                answer = Interpreter.removeOuterQuantifiers(answer);
+                LanguageFormatter lf = new LanguageFormatter(answer.theFormula, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"),
+                        kb, "EnglishLanguage");
+                lf.setDoInformalNLG(true);
+                String actual = lf.htmlParaphrase("");
+                actual = StringUtil.filterHtml(actual);
+                return actual;
+            } catch (Exception e) {
+                //e.printStackTrace();
+                // need proper logging, log4j maybe
+                System.out.println(ANSWER_UNDEFINED);
+                return ANSWER_UNDEFINED;
+            }
+        } else if(query.isExistentiallyQuantified()) {
+            //the query is a yes/no question
+            if(inferenceAnswers != null && inferenceAnswers.size() > 0) {
+                return ANSWER_YES;
+            } else {
+                return ANSWER_NO;
+            }
+        } else {
+            return ANSWER_UNDEFINED;
+        }
+    }
+
+    /** ***************************************************************
    */
   public void interpInter() {
       

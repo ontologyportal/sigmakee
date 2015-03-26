@@ -84,7 +84,7 @@ public class RuleSet {
             String er = ex.getMessage() + ((ex instanceof ParseException)
                                            ? " at line " + ((ParseException)ex).getErrorOffset()
                                            : "");
-            System.out.println("Error in RuleSet.readFile(): " + er + " in file " + fname);
+            System.out.println("Error in RuleSet.readLines(): " + er + " in file " + fname);
         }
         finally {
             if (fr != null) {

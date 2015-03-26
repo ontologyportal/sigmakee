@@ -12,8 +12,6 @@ import org.junit.runners.Parameterized;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -43,7 +41,7 @@ public class TFIDFWikiTest {
         else {
             List<String> documents = null;
             try {
-                documents = TFIDFUtil.readFile("resources/textfiles/cmuWiki/" + filename, true);
+                documents = TextFileUtil.readLines("resources/textfiles/cmuWiki/" + filename, true);
             } catch (IOException e) {
                 System.out.println("Couldn't read document: " + filename + ". Exiting");
                 return;

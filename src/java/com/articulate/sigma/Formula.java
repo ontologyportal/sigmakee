@@ -34,7 +34,7 @@ public class Formula implements Comparable {
     protected static final String NOT    = "not";
     protected static final String IF     = "=>";
     protected static final String IFF    = "<=>";
-    protected static final String UQUANT = "forall";
+    public static final String UQUANT = "forall";
     public static final String EQUANT = "exists";
     protected static final String EQUAL  = "equal";
     protected static final String GT     = "greaterThan";
