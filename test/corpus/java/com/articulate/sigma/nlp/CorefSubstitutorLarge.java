@@ -24,6 +24,7 @@ MA  02111-1307 USA
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.test.JsonReader;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.util.StringUtils;
 import junit.framework.TestCase;
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -58,6 +59,6 @@ public class CorefSubstitutorLarge extends TestCase {
     public void test() {
         Annotation document = pipeline.annotate(input);
         CorefSubstitutor substitutor = new CorefSubstitutor(document);
-        assertEquals(expected, substitutor.substitute());
+        assertEquals(expected, StringUtils.join(substitutor.substitute(), " "));
     }
 }

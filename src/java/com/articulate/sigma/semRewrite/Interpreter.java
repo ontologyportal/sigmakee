@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 
 import com.google.common.collect.Sets;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.util.StringUtils;
 
 import static com.articulate.sigma.StringUtil.splitCamelCase;
 import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
@@ -63,6 +64,9 @@ public class Interpreter {
   public static List<String> days = Lists.newArrayList("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
   public static TFIDF tfidf = null;
   
+  //Collection of utterances by the user
+  private Document userInputs = new Document();
+
   /** *************************************************************
    */
   public Interpreter () {
@@ -85,6 +89,12 @@ public class Interpreter {
   }
 
   /** *************************************************************
+   */
+  protected Document getUserInputs() {
+      return userInputs;
+  }
+
+    /** *************************************************************
    * @return a string consisting of a token without a dash and its number in
    * the sentence such as walks-5 -> walks 
    */
@@ -306,17 +316,29 @@ public class Interpreter {
           sb.append(")\n");
       return sb.toString();
   }
-  
-  /** *************************************************************
-   * Take in a sentence and output an English answer.
-   */
-  public String interpretSingle(String input) {
-      
-      System.out.println("INFO in Interpreter.interpretSingle(): " + input);
-      String substitutedInput = CorefSubstitutor.substitute(input);
-      if (!input.equals(substitutedInput)) {
-          System.out.println("INFO input substituted to: " + substitutedInput);
-      }
+
+    /** *************************************************************
+     * Processes the user's input by adding coreferencing information
+     * Save processed input into Document
+     */
+    public String processInput(String input) {
+
+        System.out.println("INFO in Interpreter.interpretSingle(): " + input);
+        List<String> substitutedInputs = userInputs.addUtterance(input);
+        if (!input.equals(StringUtils.join(substitutedInputs, " "))) {
+            System.out.println("INFO input substituted to: " + substitutedInputs);
+        }
+
+        String substitutedInput = StringUtils.join(substitutedInputs, " ");
+        return substitutedInput;
+    }
+
+    /** *************************************************************
+     * Take in a sentence and output an English answer.
+     */
+    public String interpretSingle(String input) {
+
+        String substitutedInput = processInput(input);
 
       Pipeline pipeline = new Pipeline();
       Annotation document = pipeline.annotate(substitutedInput);
