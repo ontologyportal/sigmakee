@@ -135,6 +135,7 @@ public class DateAndNumbersGeneration {
 						flag = true;
 						return;
 					}
+					IndexedWord measuredEntity_temp = null;
 					for (IndexedWord child : childrenSet) {
 						String childPosTagRemover = null;
 						posTagRemoverMatcher = POS_TAG_REMOVER.matcher(child.toString());
@@ -143,13 +144,21 @@ public class DateAndNumbersGeneration {
 							childPosTagRemover = posTagRemoverMatcher.group(1); 
 						}
 						if (!(visitedNodes.contains(child.toString()+"-"+child.index())) && (Utilities.nounTags.contains(childPosTagRemover.replaceFirst("\\/", "")))){
-							measuredEntity = child;
+							if ((utilities.StanfordDependencies.reln(measuredEntity, child) != null) && (utilities.StanfordDependencies.reln(measuredEntity, child).getShortName().equals("nsubj"))) {
+								measuredEntity = child;
+								visitedNodes.add(child.toString()+"-"+child.index());
+								flag = true;
+								break;
+							}
+							measuredEntity_temp = child;
 							visitedNodes.add(child.toString()+"-"+child.index());
-							flag = true;
-							break;
 						}
 					}
-					flag = true; 
+					if (!flag) {
+						measuredEntity = measuredEntity_temp;
+						flag = true; 
+					}
+					
 				}
 				else {
 					measuredEntity = utilities.StanfordDependencies.getParent(measuredEntity);
@@ -283,6 +292,7 @@ public class DateAndNumbersGeneration {
 				case "DATE"  : datesandDurationHandler.processDate(token, stanfordParser.getDependencyList(),utilities);
 							   break;
 				case "NUMBER":
+				case "ORDINAL":
 				case "PERCENT" : measureFn(token,numberCount, utilities); ++numberCount;  //processNumber(token,stanfordParser.getDependencyList());
 								 break;
 				case "DURATION" : break;

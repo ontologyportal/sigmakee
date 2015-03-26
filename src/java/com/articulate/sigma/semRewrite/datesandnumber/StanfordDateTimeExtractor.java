@@ -48,7 +48,7 @@ public class StanfordDateTimeExtractor {
 	public static List<String> DATE_ENTITIES = new ArrayList<String>(Arrays.asList("DATE",
 			"DURATION", "TIME"));
 	public static List<String> MEASURE_ENTITIES = new ArrayList<String>(Arrays.asList(
-			"NUMBER", "PERCENT"));
+			"NUMBER", "PERCENT", "ORDINAL"));
 	
 	private List<String> dependencyList = new ArrayList<String>();
 	private SemanticGraph dependencies;
@@ -97,7 +97,7 @@ public class StanfordDateTimeExtractor {
 			tokenCount = 1;
 			for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
 				String namedEntity = token.get(NamedEntityTagAnnotation.class);       
-				if ((DATE_ENTITIES.contains(namedEntity)) || ((MEASURE_ENTITIES.contains(namedEntity))&& (token.get(PartOfSpeechAnnotation.class).equals("CD")))) {
+				if ((DATE_ENTITIES.contains(namedEntity)) || ((MEASURE_ENTITIES.contains(namedEntity))&& (token.get(PartOfSpeechAnnotation.class).equals("CD") || token.get(PartOfSpeechAnnotation.class).equals("JJ")))) {
 					Tokens tokens = new Tokens();
 					tokens.setId(tokenCount);
 					tokens.setWord(token.get(TextAnnotation.class));
