@@ -94,6 +94,7 @@ public class Lexer {
         init();
         //source = s;
         input = new LineNumberReader(new StringReader(s));
+        filename = "";
     }
   
     /** ***************************************************************
@@ -168,7 +169,7 @@ public class Lexer {
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
         tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+\\:?E?-?[0-9]*-?[0-9]*"));
-        tokenDefs.put(Ident,        Pattern.compile("\\\"?\\'?[0-9a-zA-Z][_\\-a-z0-9_A-Z]*\\*?\\\"?"));
+        tokenDefs.put(Ident,        Pattern.compile("\\\"?\\'?[0-9a-zA-Z ][_\\-a-z0-9_A-Z ]*\\*?\\\"?"));
         tokenDefs.put(Zero,         Pattern.compile("\\!"));
         tokenDefs.put(Stop,         Pattern.compile("stop"));
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
