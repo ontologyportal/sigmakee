@@ -539,11 +539,13 @@ public class Interpreter {
                       String actual = lf.htmlParaphrase("");
                       actual = StringUtil.filterHtml(actual);
                       System.out.println(actual);
-                  } 
+                      return actual;
+                  }
                   catch (Exception e) {
                       //e.printStackTrace();
                       // need proper logging, log4j maybe
                       System.out.println("");
+                      return "No response.";
                   }
               }
           } 
