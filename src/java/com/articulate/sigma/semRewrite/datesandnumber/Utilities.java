@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -12,7 +13,7 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 
 public class Utilities {
-	HashMap<Integer,String> dateMap = new HashMap<Integer,String>();
+	HashMap<Integer,String> dateMap = new LinkedHashMap<Integer,String>();
 	
 	public static final List<String> MONTHS = new ArrayList<String>(Arrays.asList("january",
 			"february","march","april","may","june","july","august",
@@ -23,7 +24,7 @@ public class Utilities {
 			"VBD","VBG","VBN","VBP","VBZ"));
 	public static final List<String> nounTags = new ArrayList<String>(Arrays.asList("NN","NNS","NNP","NNPS","/NN","/NNS","/NNP", "/NNPS"));
 	
-	List<String> sumoTerms = new ArrayList<String>();
+	List<String> sumoTerms = new LinkedList<String>();
 	List<DateInfo> allDatesList = new LinkedList<DateInfo>();
 	SemanticGraph StanfordDependencies;
 	int timeCount = 1;
@@ -53,7 +54,7 @@ public class Utilities {
 	 */
 	String getRootWord(int dateId) {
 
-		System.out.println("Id is ::" + dateId);
+		//System.out.println("Id is ::" + dateId);
 		return populateRootWord(dateId);
 
 	}
