@@ -260,13 +260,14 @@ public class Interpreter {
       
       ArrayList<String> quantified = new ArrayList<String>();
       String pattern = "\\?[A-Za-z0-9_]+\\-[0-9]+";
+      String pattern_wh = "(\\?[Hh][Oo][Ww][-_0-9]*)|(\\?[Ww][Hh][A-Za-z0-9_-]*)";
       Pattern p = Pattern.compile(pattern);
+      Pattern p_wh = Pattern.compile(pattern_wh);
       Formula f = new Formula(form);
       Set<String> vars = f.collectAllVariables();
       //System.out.println("INFO in Interpreter.findQuantification(): vars: " + vars);
       for (String v : vars) {
-          Matcher matcher = p.matcher(v);
-          if (matcher.matches())
+          if (p.matcher(v).matches()||p_wh.matcher(v).matches())
               quantified.add(v);
       }
       return quantified;
@@ -294,14 +295,51 @@ public class Interpreter {
       sb.append(") \n");
       return sb.toString();
   }
-  
-  /** *************************************************************
-   */
-  private static String addQuantification(String form) {
-      
-      ArrayList<String> vars = findQuantification(form);
-      return prependQuantifier(vars, form);
-  }
+
+    private static ArrayList<String> getQueryObjectsFromQuantification(ArrayList<String> quantified){
+        ArrayList<String> queryObjects=new ArrayList<String>();
+        String pattern_wh = "(\\?[Hh][Oo][Ww][-_0-9]*)|(\\?[Ww][Hh][A-Za-z0-9_-]*)";
+        Pattern p_wh = Pattern.compile(pattern_wh);
+        for(String k:quantified){
+            if(p_wh.matcher(k).matches()) {
+                queryObjects.add(k);
+            }
+        }
+        quantified.removeAll(queryObjects);
+        return queryObjects;
+    }
+    /** add wh-  how   words at outer most exists and remove these words from the original quantifier finder
+     */
+    private static String prependQueryQuantifier(ArrayList<String> queryObjects,String form){
+        StringBuilder sb=new StringBuilder();
+        if(queryObjects==null || queryObjects.size()<1)
+            return form;
+        sb.append("(exists (");
+        boolean first = true;
+        for (String v : queryObjects) {
+            if (!first) {
+                sb.append(" ");
+            }
+            sb.append(v);
+            first = false;
+        }
+        sb.append(") \n");
+        sb.append("(forall (?DUMMY) \n");
+        sb.append(form);
+        sb.append(")) \n");
+        return sb.toString();
+
+    }
+
+    /** *************************************************************
+     */
+    private static String addQuantification(String form) {
+
+        ArrayList<String> vars = findQuantification(form);
+        ArrayList<String> queryObjects=getQueryObjectsFromQuantification(vars);
+        String innerKIF = prependQuantifier(vars, form);
+        return prependQueryQuantifier(queryObjects,innerKIF);
+    }
 
     /**
      *
@@ -449,8 +487,8 @@ public class Interpreter {
       sb.append("------------------------------\n");
       return sb.toString();
   }
-  
-  /** *************************************************************
+
+    /** *************************************************************
    */
   public static String postProcess(String s) {
       
