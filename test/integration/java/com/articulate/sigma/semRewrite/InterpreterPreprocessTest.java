@@ -70,8 +70,20 @@ public class InterpreterPreprocessTest {
         assertEquals(2, i.getUserInputs().size());
         assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
 
-        expected = "Amelia Mary Earhart was the first woman to fly a plane by Amelia Mary Earhart across the Atlantic Ocean.";
+        expected = "Amelia Mary Earhart was the first woman to fly a plane by herself across the Atlantic Ocean.";
         assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
     }
 
+    /** *************************************************************
+     */
+    @Test
+    public void testReflexive() {
+
+        Interpreter i = new Interpreter();
+        i.processInput("Aimee went to the store. She laughed to herself.");
+
+        String expected = "Aimee laughed to herself.";
+
+        assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
+    }
 }

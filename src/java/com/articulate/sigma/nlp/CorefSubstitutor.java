@@ -22,6 +22,7 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
@@ -34,10 +35,13 @@ import edu.stanford.nlp.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CorefSubstitutor {
 
     final Annotation document;
+
+    public static final Set<String> ignorablePronouns = ImmutableSet.of("himself", "herself");
 
     public CorefSubstitutor(Annotation document) {
         this.document = document;
@@ -62,13 +66,14 @@ public class CorefSubstitutor {
 
     private String replaceCoref(final CoreLabel label, Map<Integer, CorefChain> corefs) {
         String text = label.get(CoreAnnotations.OriginalTextAnnotation.class);
-        if(isPronoun(label)) {
+        if(isPronoun(label) && !ignorablePronouns.contains(label.originalText())) {
             Integer corefClusterId = label.get(CorefCoreAnnotations.CorefClusterIdAnnotation.class);
             if (corefClusterId != null) {
                 if (corefs.get(corefClusterId).getMentionsInTextualOrder().size() > 1) {
                     Integer index = label.get(CoreAnnotations.IndexAnnotation.class);
                     Integer sentence = 1 + label.get(CoreAnnotations.SentenceIndexAnnotation.class);
-                    CorefMention mention = corefs.get(corefClusterId).getMentionsInTextualOrder().get(0);
+                    //CorefMention mention = corefs.get(corefClusterId).getMentionsInTextualOrder().get(0);
+                    CorefMention mention = corefs.get(corefClusterId).getRepresentativeMention();
                     if (sentence != mention.sentNum || index < mention.startIndex || index >= mention.endIndex) {
                         text = extractTextWithSameTag(mention);
                     }
@@ -81,7 +86,7 @@ public class CorefSubstitutor {
 
     private boolean isPronoun(CoreLabel label) {
         String pos = label.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-        return "PRP".equals(pos);
+        return "PRP".equals(pos) || "PRP$".equals(pos);
     }
 
     private String extractTextWithSameTag(CorefMention mention) {

@@ -1,10 +1,16 @@
 [{
   "in":"Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator. She was the first woman to fly a plane by herself across the Atlantic Ocean.",
-  "out":"Amelia Mary Earhart ( July 24, 1897 – July 2, 1937) was an American aviator. Amelia Mary Earhart was the first woman to fly a plane by Amelia Mary Earhart across the Atlantic Ocean."
+  "out":"Amelia Mary Earhart ( July 24, 1897 – July 2, 1937) was an American aviator. Amelia Mary Earhart was the first woman to fly a plane by herself across the Atlantic Ocean."
 }, {
   "in":"George Washington sat on a wall. He had a great fall.",
   "out":"George Washington sat on a wall. George Washington had a great fall."
 }, {
   "in":"George Washington was born on February 22, 1732 in Westmoreland County, Virginia, although he grew up near Fredericksburg.",
   "out":"George Washington was born on February 22, 1732 in Westmoreland County, Virginia, although George Washington grew up near Fredericksburg."
+}, {
+  "in":"She calls herself Aimee.",
+  "out":"Aimee calls herself Aimee."
+}, {
+  "in":"Despite her best efforts, Wilma couldn't pass the test.",
+  "out":"Despite Wilma's best efforts, Wilma couldn't pass the test."
 }]
