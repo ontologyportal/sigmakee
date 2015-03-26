@@ -182,7 +182,24 @@ public class KBcache {
 	    	}
     	return false;
     }
- 
+
+    /** ***************************************************************
+     * Find whether the given class is the subAttribute of the given parent class.
+     */
+    public boolean subAttributeOf(String child, String parent) {
+
+        HashMap<String,HashSet<String>> prentsForRel = parents.get("subAttribute");
+        if (prentsForRel != null) {
+            HashSet<String> prents = prentsForRel.get(child);
+            if (prents != null)
+                return prents.contains(parent);
+            else
+                return false;
+        }
+        return false;
+    }
+
+
     /** ***************************************************************
      * Record instances and their explicitly defined parent classes
      */

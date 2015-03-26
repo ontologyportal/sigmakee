@@ -29,7 +29,6 @@ Author: Adam Pease apease@articulatesoftware.com
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.*;
 
 import com.articulate.sigma.utils.ProgressPrinter;

@@ -1,3 +1,5 @@
+; author: Sofia Athenikos - sofia.athenikos@ipsoft.com
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Classification of "About" Usages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13,71 +15,65 @@
 ;;;;;;;;;; verb about ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;; announce about
+;;;;; announce about - COVERED
 ; John announced about his plan.
 
-; ... she had already eat her Brunswick stew when Milo announced about old Mr. Gupton losing his teeth.
-
-;;;;; ask about
+;;;;; ask about - COVERED
 ; John asked about my opinion.
 
-; The use of short videos for patients in the waiting room encourages them to ask about choice, risk and benefits.
+;;;;; be about - COVERED
+; Section Five is about the impact on student learning.
 
-;;;;; be about
-; Section five is about impact on student learning.
-
-; Who produced the Salzburg Statement in 2010, and what was it about?
-
-;;;;; boast about
-; ... Toyota officials boasted about the effectiveness of the effort in which Santucci and Tinto were involved ...
+;;;;; boast about - COVERED
+; ... Toyota officials boasted about the effectiveness of the new measures.
 
 ;;;;; care about
 ; An important consideration is to determine what you really care about.
 
-;;;;; complain about
-; They seldom complain about unsafe work environments because of fear of losing their jobs ...
+;;;;; chat about
+; He chatted with her about his promotion.
+
+;;;;; complain about - COVERED
+; They seldom complain about unsafe work environments because of fear of losing their jobs.
 
 ;;;;; consult about
-; Women consult about why their menstrual loss has changed.
+; Women consult about the reason for sudden weight gains.
 
-;;;;; disagree about
-; Stakeholders also disagreed about the relative importance of climate change ...
+;;;;; disagree about - COVERED
+; Stakeholders disagreed about the relative importance of climate change.
 
-;;;;; explain about
-; While I tried to explain about the naked women and my snagged hair, ...
+;;;;; explain about - COVERED
+; He explained about the reason for his sudden absence.
 
-;;;;; feel about
-; ... with your urinary condition the way it is now, how would you feel about that?
+;;;;; feel about - COVERED
+; How do you feel about the current state of economy?
 
-;;;;; forget about
-; Thus IP forgets about a packet and recycles its buffer immediately after forwarding (MRU replacement).
+;;;;; forget about - COVERED
+; Thus IP forgets about a packet and recycles its buffer immediately after forwarding.
 
-;;;;; generalize about
-; When attempting to generalize about the varied and often conflicting viewpoints of many millions ...
+;;;;; generalize about - COVERED
+; We often attempt to generalize about the varied and often conflicting viewpoints of many millions.
 
 ;;;;; glow about
 ; He would glow about how smart she was.
 
-;;;;; gosship about
-; It was so we could gossip about everyone who wasn't there.
+;;;;; gossip about - COVERED
+; It was so we could gossip about everyone who was not there.
 
-;;;;; hear about
-; We hear very little about this type of transportation because it is the one method that least impacts our environment.
+;;;;; hear about - COVERED
+; We hear about this type of transportation very little because it is the one method that least impacts our environment.
 
-;;;;; inquire about
+;;;;; inquire about - COVERED
 ; After years of inquiring about a girlfriend, Jose Dominguez's dad finally stopped.
 
 ;;;;; know about
-; ... he or she needs to know about the content to be taught over the next thirty years.
-; ... to establish what students know about a topic before instruction begins ...
+; A teacher should establish what students know about a topic before the course begins.
 
-;;;;; laugh about
-; ... maybe, when she's in her 60s, we can sit and laugh about this.
+;;;;; laugh about - COVERED
+; Maybe, when she is in her 60's, we can sit and laugh about this.
 
 ;;;;; learn about
-; ... we can learn both about the human drawings (by using the vocabulary of the algorithms) ...
-; ... more time for other teacher activities like mentoring students, differentiating instruction, or learning about new technologies.
-; ... both contexts provide a reference point for students to indicate what they have learned about important engineering concepts.
+; Students learn about important engineering concepts in this course.
 
 ;;;;; lie about
 ; ... should I lie about the letter, and increase her paranoia?
@@ -85,81 +81,76 @@
 ;;;;; love about
 ; And that's what I love about it.
 
-;;;;; mutter about
-; Some passengers say the captain muttered about al-Qaeda ...
+;;;;; mutter about - COVERED
+; Some passengers say the captain muttered about al-Qaeda.
 
-;;;;; proclaim about
-; Here I kiss what those waters of baptism proclaimed about the world, about ourselves, and ...
+;;;;; proclaim about - COVERED
+; Here I kiss what those waters of baptism proclaimed about the world.
 
-;;;;; read about
+;;;;; read about - COVERED
 ; Young and Townsend don't know why anyone would want to read about them.
 
-;;;;; remember about
-; Then it started to rain and then he remembered about his children and he went home as fast as he could and they were fine ...
+;;;;; remember about - COVERED
+; Then it started to rain and then he remembered about his children and he went home as fast as he could and they were fine.
 
-;;;;; report about
-; She reports about the benefits and detriments of the proprietary Royal Scottish Geographical Society's Images ...
+;;;;; report about - COVERED
+; She reports about the benefits and detriments of the proprietary Royal Scottish Geographical Society's Images.
 
-;;;;; smile about
-; Proctor smiled about it Wednesday afternoon.
+;;;;; smile about - COVERED
+; Proctor smiled about the encounter Wednesday afternoon.
 
-;;;;; speak (up) about
-; Speak up about their concerns, questions and what's important to them ...
+;;;;; speak about - COVERED
+; They often spoke about events from a long past.
 
-;;;;; speculate about
-; ... policy-makers alike have speculated about the cause of this division.
+;;;;; speak up about - COVERED
+; They should speak up about their concerns.
 
-;;;;; study about
-; Teachers make decisions about what to study about themselves and then chart a pathway to new knowledge and skills to improve student learning.
+;;;;; speculate about - COVERED
+; Policy-makers alike have speculated about the cause of this division.
 
-;;;; talk about
-; Patients talking about shared decision making ...
+;;;;; study about - COVERED
+; They study about human biology in this course.
 
-;;;;; teach about
+;;;; talk about - COVERED
+; Patients talk about shared decision-making.
+
+;;;;; teach about - COVERED
 ; As a field that teaches about technological changes, it is important for educators to keep up with those technological changes.
 
 ;;;;; think about
-; Programmers may even be encouraged to think about a problem in terms of a language that would better support the task.
-; In school settings, one way to help teachers think about and act upon professional development needs is to write a professional development
+; Employees should think about their career development plans.
 
 ;;;;; tweet about
-; ElBaradei did not attend the rally, but instead tweeted about the police crackdown.
+; He did not attend the rally but tweeted about the police crackdown.
 
-;;;;; understand about
-; And the more you understand about a mechanism, the more you can do to alter it.
-
+;;;;; understand about - COVERED
+; The more you understand about a mechanism, the more you can do to alter it.
 
 ;;;;; wonder about
 ; She wonders about issues such as authoritative provenance.
 
 ;;;;; worry about
-; ... we worry about weight gain, the increased risk of hypos and less than ideal lipid profiles ...
+; We worry worry about weight gain, the increased risk of hypos, and less than ideal lipid profiles ...
 
-;;;;; write about
-; Kellyn S. Betts has written about environmental contaminants, hazards, and technology for solving environmental problems ...
+;;;;; write about - COVERED
+; He has written about environmental contaminants, hazards, and technology for solving environmental problems.
 
-;;;;; yell about
-; Two girls saw it, yelled about how gross it was, then snapped pics with their phones!
+;;;;; yell about - COVERED
+; Two girls yelled about the traffic accident.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;; verb object about ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;; advise X about
-; The same study found that individuals regularly did not advise their airline about their allergy ...
+;;;;; advise X about - COVERED
+; The airline did not advise the passengers about the carry-on luggage.
 
 ;;;;; brief X about
-; ... Mark Griffin enlisted three LT psychologists to brief the affected people about the dangerous possibility ...
+; ... Mark Griffin enlisted three psychologists to brief the affected people about the dangerous possibility ...
 
 ;;;;; call X about
 ; ... when they see something they call us about it or they ask us ...
-
-;;;;; chat with X about
-; ... chat with the practice nurse about the warning signs when blood sugar is getting excessively high or excessively low.
-
-;;;;; change one’s mind about
-; She shrugged, and changed her mind about asking him to the country club dance.
 
 ;;;;; do something/anything/nothing, etc. about
 ; ... now is the time to do something about it ...
@@ -168,35 +159,31 @@
 ;;;;; educate X about
 ; There are also initiatives dedicated to educating people about phishing scams, including StaySafeOnline.com.
 
-;;;;; excite X about
-; These technologies must simultaneously relate to course concepts while engaging and exciting students about technology.
-
-;;;;; feel good/bad, etc. about
-; It does allow a parent to feel good about keeping a home in the family while they are alive ...
+;;;;; excite X about - COVERED
+; Great teachers excite students about learning.
 
 ;;;;; find out (more/little, etc.) about
 ; Another way to find out more about professors is simply being part of a student network ...
 
-;;;;; hear something/anything/nothing, etc. about
-; Jenkins' supervisor reassured him that nobody would hear anything about this from him ...
+;;;;; hear something/anything/nothing, etc. about - COVERED
+; I did not hear anything about this before.
 
 ;;;;; inform X about
 ; ... an ETA that informs the user about the presence of a head-level obstacle.
-; Inform patients about their condition, about the treatment or self-management support options available ...
+; Inform patients about their condition and about the treatment options available ...
 ; Have each group prepare a media presentation to inform class members about the diseases/abnormalities ...
 
-;;;;; know something/anything/nothing, etc. about
-; Therefore, while the children need to know something about the noun soup ...
-; Jenkins was asked by the OHA if he knew anything about cognitive behavioural therapy (CBT).
+;;;;; know something/anything/nothing, etc. about - COVERED
+; Jenkins was asked by the OHA if he knew anything about cognitive behavioural therapy.
 
-;;;;; make notes about
-; Listen to their feedback and make notes about how you can improve your case.
+;;;;; make notes about - COVERED
+; Listen to their feedback and make notes about the areas for improvement.
 
-;;;;; remember something/anything/nothing, etc. about
+;;;;; remember something/anything/nothing, etc. about - COVERED
 ; He remembered something about that family with the names.
 
 ;;;;; reveal (more/little, etc.) about
-; Dana's mother echoed this idea of the meeting process revealing more about the student ...
+; Subsequent events revealed more about his character.
 
 ;;;;; set the record straight about
 ; ... set the record straight about rising health-care costs.
@@ -263,7 +250,7 @@
 ; ... who sound most ambivalent about Sunday's election.
 
 ;;;; candid about
-; Often it's embarrassing for patients to be candid [one-on-one with a doctor] about bad health habits such as smoking or drinking.
+; He was candid about his bad health habits.
 
 ;;;;; careful about
 ; And so, you know, you have to be careful about running as a businessman ...
@@ -512,7 +499,7 @@
 
 ;;;;; fact about - COVERED
 ; This article outlines the facts about malnutrition.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;;; fantasy about - COVERED
 ; I had a fantasy about the country.
 
@@ -543,223 +530,211 @@
 ;;;;; guilt about - COVERED
 ; He had a guilt about the incident.
 
-;;;;; hypothesis about
+;;;;; hypothesis about - COVERED
 ; The goal of the present study was to test a hypothesis about the contribution of the lexicon.
 
-;;;;; idea about
-; ... that her family didn't care about her, which we had no idea about.
+;;;;; idea about - COVERED
+; We had no idea about the fact that her family did not care.
 
-;;;;; indication about
-; ... may give important indications about what kinds of treatments are most likely to be effective.
+;;;;; indication about - COVERED
+; There are indications about economic recovery.
 
-;;;;; inference about
-; Inferences about language typology based on optional verbs ...
+;;;;; inference about - COVERED
+; Inferences about language typology based on optional verbs are not always accurate.
 
-;;;;; information about
-; This asymmetric information about sellers and their goods leads buyers to dramatically lower what they are willing to pay ...
-; Contextual information about the environment can also be provided to the VI user ...
-; ... to provide a blind person with information about an object (such as the brand of a can of food).
-; How much information would you like about the different available treatments, their risks and benefits, and the cost implications?
+;;;;; information about - COVERED
+; This asymmetric information about sellers and their goods leads buyers to dramatically lower what they are willing to pay.
 
-;;;;; insight about
-; Underlying these insights about the complexities, contradictions, and multiplicities of culture ...
+;;;;; insight about - COVERED
+; The book conveys insights about the complexities, contradictions, and multiplicities of culture.
 
-;;;;; instruction about
-; We do not provide instructions about whether lines should represent shape features, lighting features, or anything else.
+;;;;; instruction about - COVERED
+; They did not provide instructions about the assembly.
 
-;;;;; irony about
-; There is of course a huge irony about the impact of Internet porn.
+;;;;; irony about - COVERED
+; There is a huge irony about the impact of Internet porn.
 
-;;;;; issue about
-; The issue about jobs, about economic inequality is going to - is going to continue to resonate ...
+;;;;; issue about - COVERED
+; The issue about economic inequality is going to continue to resonate.
 
-;;;;; joke about
-; Because like we'll sit here making jokes about everything and everyone will laugh.
+;;;;; joke about - COVERED
+; I have heard the joke about it before.
 
-;;;;; judgment about
-; Use an' X' to make a value judgement about where you see each key stakeholder in relation to the issue.
+;;;;; judgment about - COVERED
+; His judgment about the matter is flawed.
 
-;;;;; knowledge about
-; In this way, teachers will be developing students' knowledge about medical technologies ...
+;;;;; knowledge about - COVERED
+; Teachers will be developing students' knowledge about medical technologies in this way.
 
-;;;;; language about
-; ... got rave reviews in part because of his plain language about taking on issues like Social Security.
+;;;;; language about - COVERED
+; His use of plain language about issues such as Social Security earned His rave reviews.
 
-;;;;; learning about
-; ... improved scientific learning about implementing promotion programs ...
+;;;;; learning about - COVERED
+; We have acquired improved scientific learning about implementing promotion programs.
 
-;;;;; lesson about
-Indeed, students with and without disabilities can learn important lessons about shared responsibility ...
+;;;;; lesson about - COVERED
+Important lessons about shared responsibility should be imparted to every student.
 
-;;;;; meeting about
-; I thought our meeting [was] about publicity and elections.
+;;;;; meeting about - COVERED
+; The meeting about publicity and elections was of no interest to me.
 
-;;;;; message about
-; ... teaching people who click on phishing email messages about such attacks.
+;;;;; message about - COVERED
+; Email messages about various scams inundate our mailboxes.
 
-;;;;; metadata about
-; ... library information systems, which are based on MARC 21format and also can hold metadata about ETDs.
+;;;;; metadata about - COVERED
+; You can find metadata about books and authors in a library information system.
+
+;;;;; mind about
+; She shrugged, and changed her mind about asking him to the country club dance.
 
 ;;;;; misconception about
 ; Common misconceptions about traumatic brain injury (TBI).
 
-;;;;; movie about
-; No one ever made a movie about Nik Kershaw.
+;;;;; movie about - COVERED
+; The movie about the famous battle is soon to hit the theaters.
 
 ;;;;; mystery about
 ; There are many mysteries about which species confer what dynamics to ecosystems or what benefits to people ...
 
-;;;;; myth about
-; Dispel any myths about what and how much to eat during pregnancy, ...
+;;;;; myth about - COVERED
+; Many urban myths about the famous incident are merely products of imagination.
 
 ;;;;; news about
-; Wall Street rocketed higher today on upbeat news about the European debt crisis ...
+; Stock market skyrocketed today on upbeat news about the European debt crisis ...
 
-;;;;; note about
-; Listen to their feedback and make notes about how you can improve your case.
+;;;;; note about - COVERED
+; Listen to their feedback and make notes about possible improvements.
 
-;;;;; notion about
-; Furthermore, we had preconceived notions about the acceptability of the intervention package ...
+;;;;; notion about - COVERED
+; We had clear notions about the acceptability of the intervention package ...
 
-;;;;; observation about
-; The assessment and examination considered issues such as initial observations about Jenkins and his environment ...
+;;;;; observation about - COVERED
+; The assessment and examination considered issues such as initial observations about Jenkins and his environment.
 
 ;;;;; op-ed about
 ; It was an op-ed about the Flavr Savr where the term Frankenfood first appeared.
 
-;;;;; opinion about
-; Religion and public opinion about same-sex marriage.
+;;;;; opinion about - COVERED
+; People have different opinions about same-sex marriage.
 
-;;;;; perception about
-; Work safety climate describes the shared perceptions [of workers] about how employers operationalize, support, and value safety in the workplace.
+;;;;; perception about - COVERED
+; Different people have different perceptions about the same situation.
 
-;;;;; period piece about
-; In both of these period pieces about masters and servants sharing a divided household, ...
-
-;;;;; perspective about
-; An exploration of Hispanic workers' perspectives about risks and hazards associated with orchard work.
+;;;;; perspective about - COVERED
+; What is your perspective about the risks and hazards associated with orchard work?
 
 ;;;;; point about
 ; To your larger point about the press, I don't think markers are different ...
 
 ;;;;; policy about
-; An organization could also publish its policies about what keys can sign content under a particular name prefix ...
+; An organization could also publish its policies about the sources of funding.
 
-;;;;; prediction about
-; ... these categories differ in terms of predictions about specific effects of lexical development.
+;;;;; prediction about - COVERED
+; These categories differ in terms of predictions about specific effects of lexical development.
 
-;;;;; presentation about
+;;;;; presentation about - COVERED
 ; The location and frequency of presentations about college shifted after the students entered high school.
 
-;;;;; program about
-; ... other postsecondary programs about the possibility of students with ID attending ...
+;;;;; program about - COVERED
+; Despite the fierce competition, he was easily accepted into the prestigious program about economics.
 
-;;;;; qualms about
-; ... he has no qualms about any unfair advantage the hosts might have over legal restaurants like his.
+;;;;; qualms about - COVERED
+; She has no qualms about insects.
 
-;;;;; query about
-; Send queries about the Smithsonian Institution to infosi.edu ...
+;;;;; query about - COVERED
+; The system can handle queries about general topics.
 
-;;;;; question about
-; ... ask a question [anonymously] about anything to do with the prostate or their treatment ...
+;;;;; question about - COVERED
+; Any questions about possible treatment options should be directed to the doctor.
 
 ;;;;; rage about
-; Gingrich who left Iowa incandescent with rage about Romney, but somehow lost his fire by the time he got here.
+; All the rage about the president was soon gone.
 
-;;;;; recommendation about
-; Complicating this is that recommendations about the amount of buffering have been influenced ...
+;;;;; recommendation about - COVERED
+; The committee made public its recommendations about the amount of buffering.
 
-;;;;; reflection about
-; This section of the IPDP is for the teacher to demonstrate higher-order reflection about their professional development.
+;;;;; reflection about - COVERED
+; Reflections about the past, present, and future of the organization led to a new plan.
 
-;;;;; result about
-; There was an amazing Gallup result about people's concerns.
+;;;;; result about - COVERED
+; The poll result about people's interests in politics was not surprising.
 
-;;;;; revelation about
-; ... despite revelations about his pornographic postings, she still believes in him as a donor.
+;;;;; revelation about - COVERED
+; Despite the revelations about his pornographic postings, she still believes in him as a donor.
 
-;;;;; rumor about
-; ... maybe even rumors about this cast getting back together.
+;;;;; rumor about - COVERED
+; Rumors about imminent terrorist attacks abound.
 
-;;;;; scenario about
-; Students can ponder hypothetical scenarios about commonplace problematic situations pertaining to the academic, social, and financial realms ...
+;;;;; scenario about - COVERED
+; Hypothetical scenarios about commonplace problematic situations are the topics of the exercise.
 
-;;;;; sense of peace about
-; I've got a sense of peace about it and prayed about it a lot.
-
-;;;;; show about
+;;;;; show about - COVERED
 ; Maybe he was too rational for all the television shows about mediums and psychic children?
 
-;;;;; signal about
-; Is the Cryosphere Sending Signals about Climate Change?
+;;;;; signal about - COVERED
+; We are receiving signals about climate change.
 
-;;;;; skepticism about
-; Skepticism about scoliosis screening has been voiced at numerous points over the last several decades ...
+;;;;; skepticism about - COVERED
+; Skepticism about scoliosis screening has been voiced at numerous points over the last several decades.
 
-;;;;; snobbery about
-; ... an indie-rock snobbery about such trappings from rock's monolithic arena era remains.
+;;;;; snobbery about - COVERED
+; An indie-rock snobbery about such trappings from rock's monolithic arena era remains.
 
-;;;;; speculation about
-; ... there is growing speculation about the potential contribution of climate change to violent conflicts ...
+;;;;; speculation about - COVERED
+; There is growing speculation about the potential contribution of climate change to violent conflicts.
 
-;;;;; statement about
-; ... ranging from general statements about the importance of considering environ mental health impacts ...
+;;;;; statement about - COVERED
+; A statement about the government's position on the issue is long overdue.
 
-;;;;; suspicion about
-; Bear in mind that if someone is suspicious about the side effects of inhalers ...
+;;;;; statistics about - COVERED
+; Luther includes statistics about the size of the market.
 
-;;;;; statistics about
-; Luther includes statistics about the size of the market ...
+;;;;; story about - COVERED
+; Pinocchio is a story about a wooden puppet who wanted to become a boy.
 
-;;;;; story about
-; ... narrating the plan as a story about what Dana would be focusing on over the next year.
+;;;;; story line about - COVERED
+; The storyline about the popular comic-strip character is very funny.
 
-;;;;; story line about
-; One of the story lines about the popular comic-strip character centers on the Great Dane being pressured ...
+;;;;; suggestion about - COVERED
+; The author's suggestions about embarking on a new enterprise are highly useful.
 
-;;;;; suggestion about
-; The article offers useful suggestions about embarking on an enterprise such as theirs.
+;;;;; suspicion about - COVERED
+; We had our suspicions about the new drug.
 
-;;;;; sweating about
-; You're better off using your gadgets efficiently than sweating about your bloated archive.
-
-;;;;; task force about
-; he had established a special task force about three years ago to track Mladic ...
-
-;;;;; testimony about
-; In his public testimony about the service probe, Sullivan sometimes gave conflicting numbers ...
+;;;;; testimony about - COVERED
+; In his public testimony about the service probe, Sullivan sometimes gave conflicting numbers.
 
 ;;;;; theory about
 ; ... Aaron recommended that the new discipline create better theories about policy impacts ...
 
-;;;;; transparency about
-; In addition, there is often a lack of transparency about how the practices are actually determined.
+;;;;; transparency about - COVERED
+; There is often a lack of transparency about governmental decision-making.
 
-;;;;; trial about
-; This is really the testimony that court observers have been waiting for all this trial about the final moments of the singer's life.
+;;;;; trial about - COVERED
+; The trial about the murder case became a global sensation.
 
-;;;;; truth about
-; I couldn't tell the truth about how I got it, so I figured I pull that journalistic thing and say ...
+;;;;; truth about - COVERED
+; The truth about the source of privileged information could not be revealed.
 
-;;;;; uncertainty about
-; Part of the problem, generally speaking, is that the multiple uncertainties about how ecosystems do what they do ...
+;;;;; uncertainty about - COVERED
+; The uncertainty about the economic prospect looms large.
 
 ;;;;; unknowns about
 ; ... which revealed significant unknowns about how oil and gas activities might affect local ecology.
 
-;;;;; views about
-; ... in line with views about the responsibility of decision makers in democratic states.
+;;;;; views about - COVERED
+; The senator's views about the responsibility of decision makers clash with those of many other senators.
 
-;;;;; wonder about
-; Daniel's passion for sound recording emanated from his wonder about the sounds of public transportation.
+;;;;; wonder about - COVERED
+; His wonders about the natural world stayed with him all his life.
 
-;;;;; word about
-; I never heard another word about it.
+;;;;; word about - COVERED
+; The police chief did not give the reporters any word about the case.
 
 ;;;;; worries about
-; ... whose primary worry about spinal curvature was how it affected their cosmetic appearance ...
+; All the worries about the economic collapse could not save the market.
 
-;;;;; writing about
+;;;;; writing about - COVERED
 ; I have a student writing about a zombie.
 
 
@@ -906,7 +881,8 @@ Indeed, students with and without disabilities can learn important lessons about
 ; If you touch one, it explodes, spraying seeds over about a three-foot area around each plant.
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;0
+.
 ;;;;;;;;;; volume ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

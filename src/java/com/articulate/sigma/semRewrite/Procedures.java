@@ -4,6 +4,7 @@ package com.articulate.sigma.semRewrite;
 Copyright 2014-2015 IPsoft
 
 Author: Adam Pease adam.pease@ipsoft.com
+Author: Sofia Athenikos sofia.athenikos@ipsoft.com
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -80,4 +81,17 @@ public class Procedures {
         else
             return "false";
     }
+
+    /** ***************************************************************
+     */
+    public static String isSubAttribute(Clause c) {
+
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        if (kb.isSubAttribute(c.arg1, c.arg2)) {
+            return "true";
+        } else {
+            return "false";
+        }
+    }
+
 }

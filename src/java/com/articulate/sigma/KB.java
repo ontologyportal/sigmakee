@@ -34,6 +34,28 @@ being present in the ontology in order to function as intended.  They are:
 /*************************************************************************************************/
 package com.articulate.sigma;
 
+/*
+Copyright 2014-2015 IPsoft
+
+Author: Adam Pease adam.pease@ipsoft.com
+Author: Sofia Athenikos sofia.athenikos@ipsoft.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA
+*/
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -414,6 +436,7 @@ public class KB {
 
     /** *************************************************************
      * Returns true if i is c, is an instance of c, or is subclass of c,
+     * or is subAttribute of c,
      * else returns false.
     *
     * @param i A String denoting an instance.
@@ -422,7 +445,7 @@ public class KB {
     */
    public boolean isChildOf(String i, String c) {
 
-       return i.equals(c) || isInstanceOf(i,c) || isSubclass(i,c);
+       return i.equals(c) || isInstanceOf(i,c) || isSubclass(i,c) || isSubAttribute(i,c);
    }
 
     /** *************************************************************
@@ -430,7 +453,6 @@ public class KB {
      * returns false.
      *
      * @param i A String denoting an instance.
-     * @param c A String denoting a Class.
      * @return true or false.
      */
     public static boolean isRelationInAnyKB(String i) {
@@ -473,7 +495,8 @@ public class KB {
             return true;
         if (kbCache.childOfP("instance",parent,child) ||
             kbCache.childOfP("subclass",parent,child) || 
-            kbCache.childOfP("subrelation",parent,child))
+            kbCache.childOfP("subrelation",parent,child) ||
+            kbCache.childOfP("subAttribute",parent,child))
             return true;
         return false;
     }
@@ -492,7 +515,23 @@ public class KB {
             return kbCache.childOfP("subclass",c2,c1);
         return false;
     }
-    
+
+    /** *************************************************************
+     * Returns true if the KB cache supports the conclusion that
+     * c1 is a subAttribute of c2, else returns false.
+     *
+     * @param c1 A String, the name of a SetOrClass.
+     * @param c2 A String, the name of a SetOrClass.
+     * @return boolean
+     */
+    public boolean isSubAttribute(String c1, String c2) {
+
+        if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(c2)) {
+            return kbCache.childOfP("subAttribute", c2, c1);
+        }
+        return false;
+    }
+
     /** *************************************************************
      * Converts all Formula objects in the input List to ArrayList
      * tuples.
