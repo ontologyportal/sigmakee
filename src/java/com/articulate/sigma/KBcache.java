@@ -119,9 +119,9 @@ public class KBcache {
             return false;
         //System.out.println("INFO in KBcache.childOfP(): rel,parent,child: " + rel + " " + parent + " " + child);
         HashMap<String,HashSet<String>> childMap = children.get(rel);
-        HashSet<String> childSet = childMap.get(parent);
+        HashSet<String> childSet = (childMap != null) ? childMap.get(parent) : null;
         if (childSet == null) {
-        	System.out.println("INFO in KBcache.childOfP(): null childset for rel, parent, child: "
+        	System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
                 + rel + " " + parent + " " + child);
         	return false;
         }
