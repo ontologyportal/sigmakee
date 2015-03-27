@@ -21,10 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
 
-import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.test.JsonReader;
-import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.util.StringUtils;
 import junit.framework.TestCase;
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -32,33 +29,38 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collection;
-import java.util.function.Function;
 
 @RunWith(Parameterized.class)
 public class CorefSubstitutorLarge extends TestCase {
-
-    static Pipeline pipeline = new Pipeline();
 
     @Parameterized.Parameter(value= 0)
     public String input;
     @Parameterized.Parameter(value= 1)
     public String expected;
+    @Parameterized.Parameter(value= 2)
+    public String titlePrefix;
 
 
-    @Parameterized.Parameters(name="{0}")
+    @Parameterized.Parameters(name="{2}{0}")
     public static Collection<Object[]> prepare() {
+
         return JsonReader.transform("resources/corefsSubstitution.json", (JSONObject jo) -> {
+
             String input = (String) jo.get("in");
             String expected = (String) jo.get("out");
-            return new Object[]{input, expected};
+            String prefix = "";
+            if (Boolean.TRUE.equals(jo.get("failed"))) {
+                prefix = "TODO: ";
+            }
+
+            return new Object[]{input, expected, prefix};
         });
     }
 
 
     @Test
     public void test() {
-        Annotation document = pipeline.annotate(input);
-        CorefSubstitutor substitutor = new CorefSubstitutor(document);
-        assertEquals(expected, StringUtils.join(substitutor.substitute(), " "));
+        String actual = CorefSubstitutor.substitute(input);
+        assertEquals(expected, actual);
     }
 }

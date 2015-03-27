@@ -8,18 +8,29 @@
   "in":"George Washington was born on February 22, 1732 in Westmoreland County, Virginia, although he grew up near Fredericksburg.",
   "out":"George Washington was born on February 22, 1732 in Westmoreland County, Virginia, although George Washington grew up near Fredericksburg."
 }, {
+  "in":"George Washington cut a tree. It was large.",
+  "out":"George Washington cut a tree. a tree was large."
+}, {
+  "in":"George Washington cut the tree. It was large.",
+  "out":"George Washington cut the tree. the tree was large."
+}, {
+  "failed": true,
   "in":"She calls herself Aimee.",
   "out":"Aimee calls herself Aimee."
 }, {
+  "failed": true,
   "in":"Despite her best efforts, Wilma couldn't pass the test.",
   "out":"Despite Wilma's best efforts, Wilma couldn't pass the test."
 }, {
+  "failed": true,
   "in":"Domingo Galdos with his Harley Davidson motorcycle",
   "out":"Domingo Galdos with Domingo Galdos' Harley Davidson motorcycle"
 }, {
+  "failed": true,
   "in":"A younger Billy Standley with his Harley Davidson motorcycle",
   "out":"A younger Billy Standley with Billy Standley's Harley Davidson motorcycle"
 }, {
+  "failed": true,
   "in":"Billionaire businessman Bill Gates said a recent investor letter written by his friend Warren Buffett isn't getting as much attention as it deserves.",
   "out":"Billionaire businessman Bill Gates said a recent investor letter written by Bill Gates' friend Warren Buffett isn't getting as much attention as it deserves."
 }, {
