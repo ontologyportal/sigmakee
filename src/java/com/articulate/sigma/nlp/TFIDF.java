@@ -698,6 +698,7 @@ public class TFIDF {
      */
     private static void staticTest() {
         
+        System.out.println("Info in TFIDF.staticTest(): ");
         List<String> input = new ArrayList<String>();
         /*input.add("I eat an apple.");
         input.add("People have an apple.");
@@ -713,9 +714,9 @@ public class TFIDF {
         TFIDF cb = new TFIDF("testfiles/stopwords.txt");
         cb.addInput("John kicks the cart.");
         cb.addInput("Mary pushes the wagon.");
-        cb.matchInput("Who kicks the cart?");
+        System.out.println(cb.matchInput("Who kicks the cart?"));
     }
-
+    
     /** *************************************************************
      * Run a series of tests containing a filename,
      * a query and an expected answer.
