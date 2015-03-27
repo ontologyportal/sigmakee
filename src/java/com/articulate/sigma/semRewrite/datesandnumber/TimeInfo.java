@@ -57,6 +57,9 @@ public class TimeInfo {
 	public boolean equals(TimeInfo timeInfo) {
 		boolean hourFlag,minuteFlag,secondFlag;
 		hourFlag = minuteFlag = secondFlag = true;
+		if ((this.hour == null) && (this.minute == null) && (this.second == null)) {
+			hourFlag = minuteFlag = secondFlag = false;
+		}
 		if ((timeInfo.hour != null) && (this.hour != null) && !(timeInfo.hour.equals(hour))) {
 			hourFlag = false;
 		}
