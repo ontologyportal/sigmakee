@@ -38,9 +38,9 @@ public class Pipeline {
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
         props.setProperty("parse.kbest", "2");
 
-        props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
-        props.put("parser.model",KBmanager.getMgr().getPref("englishPCFG"));
-        props.put("parse.flags", "");
+//        props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
+//        props.put("parser.model",KBmanager.getMgr().getPref("englishPCFG"));
+//        props.put("parse.flags", "");
 
         // creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution
         pipeline = new StanfordCoreNLP(props);
