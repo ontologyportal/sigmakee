@@ -26,7 +26,7 @@ public class AmeliaQATest {
         interpreter = new Interpreter();
 
         interpreter.inference = true;
-        interpreter.loadRules();
+        interpreter.initialize();
     }
 
     @Test
@@ -35,12 +35,24 @@ public class AmeliaQATest {
         setKB();
         String assertion = "Amelia flies a plane.";
         String query = "What does Amelia fly?";
+        String query2 = "Who flies a plane?";
+        String query3 = "Does Amelia fly a plane?";
 
         interpreter.question = false;
         interpreter.interpretSingle(assertion);
 
         interpreter.question = true;
-        String actualAnswer = interpreter.interpretSingle(query);
+        String actualAnswer = null;
+
+        actualAnswer = interpreter.interpretSingle(query);
+        System.out.println("actualAnswer = " + actualAnswer);
+        assertNotEquals(actualAnswer,"No response.");
+
+        actualAnswer = interpreter.interpretSingle(query2);
+        System.out.println("actualAnswer = " + actualAnswer);
+        assertNotEquals(actualAnswer,"No response.");
+
+        actualAnswer = interpreter.interpretSingle(query3);
         System.out.println("actualAnswer = " + actualAnswer);
         assertNotEquals(actualAnswer,"No response.");
     }

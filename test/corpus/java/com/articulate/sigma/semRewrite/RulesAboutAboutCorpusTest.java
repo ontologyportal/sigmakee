@@ -41,7 +41,7 @@ public class RulesAboutAboutCorpusTest {
     public static void initInterpreter() {
         interpreter = new Interpreter();
         KBmanager.getMgr().initializeOnce();
-        interpreter.loadRules();
+        interpreter.initialize();
     }
 
     @Test

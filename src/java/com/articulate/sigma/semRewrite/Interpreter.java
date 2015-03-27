@@ -683,18 +683,40 @@ public class Interpreter {
      */
     public static String formatAnswer(Formula query, List<String> inferenceAnswers, KB kb) {
 
+        if (inferenceAnswers == null || inferenceAnswers.size() < 1) {
+            return ANSWER_UNDEFINED;
+        }
+
         if (Interpreter.isOuterQuantified(query)) {
-            Formula answer;
             try {
-                answer = query.replaceQuantifierVars(Formula.EQUANT, inferenceAnswers);
-                answer = Interpreter.removeOuterQuantifiers(answer);
-                LanguageFormatter lf = new LanguageFormatter(answer.theFormula, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"),
-                        kb, "EnglishLanguage");
-                lf.setDoInformalNLG(true);
-                String actual = lf.htmlParaphrase("");
-                actual = StringUtil.filterHtml(actual);
-                return actual;
-            } 
+                //this NLG code will replace the simplistic answer formatting above, once NLG works properly
+                // ATTENTION: when uncommenting the code also remove the call to findTypesForSkolemTerms() in
+                // the TPTP3ProofProcessor class which causes problems in replaceQuantifierVars()  below because
+                // it replaces the skolem vars with "an instance of blabla" texts
+                // Instead, use a new method in TPTP3ProofProcessor which gives you a maping skolem->specific type
+                // and use that in NLG, or something similar
+//                Formula answer = query.replaceQuantifierVars(Formula.EQUANT, inferenceAnswers);
+//                answer = Interpreter.removeOuterQuantifiers(answer);
+//                LanguageFormatter lf = new LanguageFormatter(answer.theFormula, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"),
+//                        kb, "EnglishLanguage");
+//                lf.setDoInformalNLG(true);
+//                String actual = lf.htmlParaphrase("");
+//                actual = StringUtil.filterHtml(actual);
+//                return actual;
+                StringBuilder answerBuilder = new StringBuilder();
+                int count = 0;
+                for(String binding:inferenceAnswers) {
+                    count++;
+                    answerBuilder.append(binding);
+                    if( count < inferenceAnswers.size()) {
+                        answerBuilder.append(" and ");
+                    } else {
+                        answerBuilder.append(".");
+                    }
+                }
+                String answer = answerBuilder.toString();
+                return Character.toUpperCase(answer.charAt(0)) + answer.substring(1);
+            }
             catch (Exception e) {
                 //e.printStackTrace();
                 // need proper logging, log4j maybe
@@ -821,6 +843,13 @@ public class Interpreter {
 
     /** ***************************************************************
      */
+    public void initialize() {
+        loadRules();
+        tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "stopwords.txt");
+    }
+
+    /** ***************************************************************
+     */
     public static void testUnify() {
 
         String input = "sense(212345678,hired-3), det(bank-2, The-1), nsubj(hired-3, bank-2), root(ROOT-0, hired-3), dobj(hired-3, John-4).";
@@ -851,7 +880,7 @@ public class Interpreter {
         try {
             KBmanager.getMgr().initializeOnce();
             Interpreter interp = new Interpreter();
-            interp.loadRules();
+            interp.initialize();
             String sent = "John walks to the store.";
             System.out.println("INFO in Interpreter.testInterpret(): " + sent);
             String input = "nsubj(runs-2,John-1), root(ROOT-0,runs-2), det(store-5,the-4), prep_to(runs-2,store-5), sumo(Human,John-1), attribute(John-1,Male), sumo(RetailStore,store-5), sumo(Running,runs-2).";
@@ -985,7 +1014,7 @@ public class Interpreter {
         System.out.println("INFO in Interpreter.testTimeDateExtraction()");
         Interpreter interp = new Interpreter();
         KBmanager.getMgr().initializeOnce();
-        interp.loadRules();
+        interp.initialize();
 
         System.out.println("----------------------");
         String input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
@@ -1043,8 +1072,7 @@ public class Interpreter {
         Interpreter interp = new Interpreter();
         if (args != null && args.length > 0 && (args[0].equals("-s") || args[0].equals("-i"))) {
             KBmanager.getMgr().initializeOnce();
-            interp.loadRules();
-            tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "stopwords.txt", false);
+            interp.initialize();
         }
         if (args != null && args.length > 0 && args[0].equals("-s")) {
             interp.interpretSingle(args[1]);

@@ -35,7 +35,7 @@ public class InterpreterTest extends IntegrationTestBase {
         
         interp = new Interpreter();
         KBmanager.getMgr().initializeOnce();
-        interp.loadRules();
+        interp.initialize();
     }
     
     /** ***************************************************************

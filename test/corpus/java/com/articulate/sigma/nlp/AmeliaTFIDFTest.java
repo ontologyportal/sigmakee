@@ -37,7 +37,7 @@ public class AmeliaTFIDFTest extends TestCase {
 
     @Parameterized.Parameters(name="<{0}> {1}")
     public static Collection<Object[]> prepare() {
-        return JsonReader.transform("resources/ameliaTFIDFTest.json", (JSONObject jo) -> {
+        return JsonReader.transform("resources/inferenceWikiTest.json", (JSONObject jo) -> {
             String fname = (String) jo.get("file");
             String query = (String) jo.get("query");
             String answer = (String) jo.get("answer");
