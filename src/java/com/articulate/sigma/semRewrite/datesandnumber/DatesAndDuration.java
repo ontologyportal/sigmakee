@@ -69,7 +69,8 @@ public class DatesAndDuration {
 		 */
 	 List<DateInfo> generateSumoDateTerms(Utilities utilities){
 
-		List<DateInfo> dateList = gatherDateSet(utilities);
+		//List<DateInfo> dateList = gatherDateSet(utilities);
+		List<DateInfo> dateList = mergeDateSet(utilities);
 		for (DateInfo date : dateList) {
 			if ((date.getYear() != null) || (date.getMonth() != null) || (date.getDay() != null)) {
 				if (date.getDay() != null) {
@@ -179,6 +180,204 @@ public class DatesAndDuration {
 		}
 		return dateList;
 	}
+	 
+	 /** ***************************************************************
+		 */
+	 List<DateInfo> mergeDateSet(Utilities utilities) {
+		 List<DateInfo> dateList = new ArrayList<DateInfo>();
+		 Iterator<HashMap.Entry<Integer, String>> dateEntries = utilities.dateMap.entrySet().iterator();
+		 List<String> monthDateGroup = new ArrayList<String>();
+		 List<String> dateDateGroup = new ArrayList<String>();
+		 List<String> yearGroup = new ArrayList<String>();
+		 int count = 0;
+		 int prevIndex = -1;
+		 String wordToken;
+		 	while (dateEntries.hasNext()){
+		 		HashMap.Entry<Integer, String> dateEntry = dateEntries.next();
+		 		wordToken = dateEntry.getValue().split("@")[1];
+		 		if(dateEntry.getValue().contains("MONTH") ) {
+		 			if(count == 0) {
+		 				monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+			 			count++;
+			 			prevIndex = dateEntry.getKey();
+		 			}
+		 			else if(count == 1) {
+		 				if(dateDateGroup.size() == 1 && (dateEntry.getKey()-prevIndex) <= 2) {
+		 					dateDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+		 					count ++;
+		 					prevIndex = dateEntry.getKey();
+		 				} else if(dateEntry.getKey() - prevIndex >= 2) {
+		 					if(monthDateGroup.size() != 0 ) {
+			 					addDateInfoToList(monthDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 					else if(dateDateGroup.size() != 0 ) {
+			 					addDateInfoToList(dateDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 				}
+		 			} else {
+		 				if(dateEntry.getKey() - prevIndex >= 2) {
+		 					if(monthDateGroup.size() != 0 ) {
+			 					addDateInfoToList(monthDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 					else if(dateDateGroup.size() != 0 ) {
+			 					addDateInfoToList(dateDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 				}
+		 			}
+		 			
+		 		}
+		 		else if(dateEntry.getValue().contains("DAY") ) {
+		 			if(count == 0) {
+		 				dateDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+			 			count++;
+			 			prevIndex = dateEntry.getKey();
+		 			}
+		 			else if(count == 1) {
+		 				if(monthDateGroup.size() == 1 && (dateEntry.getKey()-prevIndex) <= 2) {
+		 					monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+		 					count ++;
+		 					prevIndex = dateEntry.getKey();
+		 				} else if(dateEntry.getKey() - prevIndex >= 2) {
+		 					if(monthDateGroup.size() != 0 ) {
+			 					addDateInfoToList(monthDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			dateDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 					else if(dateDateGroup.size() != 0 ) {
+			 					addDateInfoToList(dateDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			dateDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 				}
+		 			}
+		 			else {
+		 				if(dateEntry.getKey() - prevIndex >= 2) {
+		 					if(monthDateGroup.size() != 0 ) {
+			 					addDateInfoToList(monthDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			dateDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 					else if(dateDateGroup.size() != 0 ) {
+			 					addDateInfoToList(dateDateGroup, dateList, utilities);
+			 					monthDateGroup.clear();
+					 			dateDateGroup.clear();
+					 			yearGroup.clear();
+					 			count = 0;
+					 			dateDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} 
+		 				}
+		 			}
+		 			
+		 		}
+		 		else if(dateEntry.getValue().contains("YEAR")) { 
+		 			if(count == 0) {
+		 				DateInfo dateInfo = new DateInfo();
+		 				dateInfo.setYear(wordToken);
+		 				dateInfo.addWordIndex(dateEntry.getKey());
+		 				dateList.add(dateInfo);
+		 				utilities.allDatesList.add(dateInfo);
+		 				prevIndex = dateEntry.getKey();
+		 			} else {
+		 				if(monthDateGroup.size() != 0 && (dateEntry.getKey()-prevIndex) <= 2) {
+		 					monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+		 					addDateInfoToList(monthDateGroup, dateList, utilities);
+		 					monthDateGroup.clear();
+				 			dateDateGroup.clear();
+				 			yearGroup.clear();
+				 			count = 0;
+		 				} else if(dateDateGroup.size() != 0 && (dateEntry.getKey()-prevIndex) <= 2) {
+		 					dateDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
+		 					addDateInfoToList(dateDateGroup, dateList, utilities);
+		 					monthDateGroup.clear();
+				 			dateDateGroup.clear();
+				 			yearGroup.clear();
+				 			count = 0;
+		 				}
+		 				
+		 			}
+		 		}
+		 		else if(count == 3) {
+		 			if(monthDateGroup.size() == 3) {
+		 				addDateInfoToList(monthDateGroup, dateList, utilities);
+		 			} else if(dateDateGroup.size() == 3) {
+		 				addDateInfoToList(dateDateGroup, dateList, utilities);
+		 			}
+		 			monthDateGroup.clear();
+		 			dateDateGroup.clear();
+		 			yearGroup.clear();
+		 			count = 0;
+		 		}
+		 	}
+		 return dateList;
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	 void addDateInfoToList(List<String> dateGroup, List<DateInfo> dateList, Utilities utilities) {
+		 DateInfo dateInfo = new DateInfo();
+			for(String data : dateGroup) {
+				int index = Integer.valueOf(data.split("::")[0]);
+				String word = data.split("::")[1].split("@")[1];
+				String type = data.split("::")[1].split("@")[0];
+				switch(type) {
+					case "MONTH": dateInfo.setMonth(word);
+								break;
+					case "YEAR": dateInfo.setYear(word);
+								 break;
+					case "DAYS": dateInfo.setDay(word);
+					             break;
+				}
+				dateInfo.addWordIndex(index);
+			}
+			
+			dateList.add(dateInfo);
+			utilities.allDatesList.add(dateInfo);
+	 }
 	 
 	 /** ***************************************************************
 		 */
@@ -305,8 +504,8 @@ public class DatesAndDuration {
 			if((utilities.allDatesList.get(i).getEndIndex() + 2) == (utilities.allDatesList.get(i + 1).getWordIndex())) {
 				utilities.allDatesList.get(i).setDurationFlag(true);
 				utilities.allDatesList.get(i+1).setDurationFlag(true);
-				utilities.allDatesList.get(i).print();
-				utilities.allDatesList.get(i+1).print();
+				//utilities.allDatesList.get(i).print();
+				//utilities.allDatesList.get(i+1).print();
 				IndexedWord tempParent = utilities.StanfordDependencies.getNodeByIndex(utilities.allDatesList.get(i).getWordIndex());	
 				tempParent = getAssociatedWord(utilities, tempParent);
 				generateDurationSumoTerms(tempParent, utilities, utilities.allDatesList.get(i), utilities.allDatesList.get(i+1));
