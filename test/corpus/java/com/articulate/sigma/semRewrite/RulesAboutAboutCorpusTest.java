@@ -1,5 +1,3 @@
-package com.articulate.sigma.semRewrite;
-
 /*
 Copyright 2014-2015 IPsoft
 
@@ -21,18 +19,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
 
+package com.articulate.sigma.semRewrite;
+
 import com.articulate.sigma.Formula;
-import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * @author sathenikos
- */
 public class RulesAboutAboutCorpusTest {
 
     public static Interpreter interpreter;

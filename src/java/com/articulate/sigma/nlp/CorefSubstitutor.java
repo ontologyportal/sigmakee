@@ -42,7 +42,7 @@ public class CorefSubstitutor {
 
     final Annotation document;
 
-    public static final Set<String> ignorablePronouns = ImmutableSet.of("himself", "herself");
+    public static final Set<String> ignorablePronouns = ImmutableSet.of("himself", "herself", "Noonan");
 
     public CorefSubstitutor(Annotation document) {
 
