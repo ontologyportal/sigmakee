@@ -3168,4 +3168,27 @@ public class RulesAboutAboutCorpusTest {
         assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
     }
 
+    @Test
+    public void testAmeliaWikiSentenceAbout() {
+        String input = "She also wrote books, most of them were about her flights.";
+
+        String expectedKifString = "exists (?She-1 ?wrote-3 ?books-4 ?flights-12 ?also-2)\n" +
+                "(and\n" +
+                "  (and\n" +
+                "  (authors ?She-1 ?books-4)\n" +
+                "  (instance ?books-4 Book)\n" +
+                "  (refers ?books-4 ?flights-12))\n" +
+                "  (attribute ?wrote-3 ?also-2)\n" +
+                "  (instance ?flights-12 Group)\n" +
+                "  (instance ?wrote-3 WrittenCommunication))\n" +
+                ")";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
 }
