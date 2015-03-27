@@ -268,15 +268,13 @@ public class Interpreter {
     private static ArrayList<String> findQuantification(String form) {
 
         ArrayList<String> quantified = new ArrayList<String>();
-        String pattern = "\\?[A-Za-z0-9_]+\\-[0-9]+";
-        String pattern_wh = "(\\?[Hh][Oo][Ww][-_0-9]*)|(\\?[Ww][Hh][A-Za-z0-9_-]*)";
+        String pattern = "\\?[A-Za-z0-9_-]+";
         Pattern p = Pattern.compile(pattern);
-        Pattern p_wh = Pattern.compile(pattern_wh);
         Formula f = new Formula(form);
         Set<String> vars = f.collectAllVariables();
         //System.out.println("INFO in Interpreter.findQuantification(): vars: " + vars);
         for (String v : vars) {
-            if (p.matcher(v).matches()||p_wh.matcher(v).matches())
+            if (p.matcher(v).matches())
                 quantified.add(v);
         }
         return quantified;
@@ -310,7 +308,7 @@ public class Interpreter {
     private static ArrayList<String> getQueryObjectsFromQuantification(ArrayList<String> quantified) {
 
         ArrayList<String> queryObjects=new ArrayList<String>();
-        String pattern_wh = "(\\?[Hh][Oo][Ww][-_0-9]*)|(\\?[Ww][Hh][A-Za-z0-9_-]*)";
+        String pattern_wh = "(\\?[Hh][Oo][Ww][0-9-_]*)|(\\?[wW][Hh]((en)|(EN)|(ere)|(ERE)|(at)|(AT)|(o)|(O)|(ich)|(ICH))?[0-9-_]*)";
         Pattern p_wh = Pattern.compile(pattern_wh);
         for (String k:quantified) {
             if (p_wh.matcher(k).matches()) {
