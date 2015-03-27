@@ -1,5 +1,3 @@
-package com.articulate.sigma.nlp;
-
 /*
 Copyright 2014-2015 IPsoft
 
@@ -20,14 +18,17 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
+package com.articulate.sigma.nlp;
 
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
-import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
-import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.util.CoreMap;
@@ -44,16 +45,21 @@ public class CorefSubstitutor {
     public static final Set<String> ignorablePronouns = ImmutableSet.of("himself", "herself");
 
     public CorefSubstitutor(Annotation document) {
+
         this.document = document;
     }
 
     public CorefSubstitutor(String input) {
+
         Pipeline pipeline = new Pipeline();
         this.document = pipeline.annotate(input);
     }
 
+    /** *************************************************************
+     */
     private boolean needSpaceBefore(CoreLabel label) {
-        String text = label.get(CoreAnnotations.OriginalTextAnnotation.class);
+
+        String text = label.originalText();
         boolean skipSpace = text.length() == 1 && (
                 ",".equals(text)
                         || ".".equals(text)
@@ -64,17 +70,24 @@ public class CorefSubstitutor {
         return !skipSpace;
     }
 
+    /** *************************************************************
+     */
     private String replaceCoref(final CoreLabel label, Map<Integer, CorefChain> corefs) {
-        String text = label.get(CoreAnnotations.OriginalTextAnnotation.class);
-        if(isPronoun(label) && !ignorablePronouns.contains(label.originalText())) {
-            Integer corefClusterId = label.get(CorefCoreAnnotations.CorefClusterIdAnnotation.class);
+
+        String text =  label.originalText();
+        String tag = label.tag();
+        if (("PRP".equals(tag) || "PRP$".equals(tag)) && !ignorablePronouns.contains(text)) {
+            Integer corefClusterId = label.get(CorefClusterIdAnnotation.class);
             if (corefClusterId != null) {
                 if (corefs.get(corefClusterId).getMentionsInTextualOrder().size() > 1) {
-                    Integer index = label.get(CoreAnnotations.IndexAnnotation.class);
-                    Integer sentence = 1 + label.get(CoreAnnotations.SentenceIndexAnnotation.class);
+                    int index = label.index();
+                    int sentence = 1 + label.sentIndex();
                     CorefMention mention = corefs.get(corefClusterId).getMentionsInTextualOrder().get(0);
                     if (sentence != mention.sentNum || index < mention.startIndex || index >= mention.endIndex) {
                         text = extractTextWithSameTag(mention);
+                        if ("PRP$".equals(tag)) {
+                            text += text.endsWith("s")?"'":"'s";
+                        }
                     }
                 }
             }
@@ -83,42 +96,50 @@ public class CorefSubstitutor {
         return text;
     }
 
-    private boolean isPronoun(CoreLabel label) {
-        String pos = label.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-        return "PRP".equals(pos) || "PRP$".equals(pos);
-    }
-
+    /** *************************************************************
+     */
     private String extractTextWithSameTag(CorefMention mention) {
+
         List<String> out = Lists.newArrayListWithCapacity(mention.endIndex - mention.startIndex);
         List<CoreLabel> tokens = getSentenceTokens(mention.sentNum - 1);
         String tag = "";
-        for(int i = mention.startIndex; i < mention.endIndex; i++) {
-            if(tag.isEmpty() || "DT".equals(tag)) {
+        for (int i = mention.startIndex; i < mention.endIndex; i++) {
+            if (tag.isEmpty() || "DT".equals(tag)) {
                 tag = tokens.get(i - 1).tag();
             }
             CoreLabel coreLabel = tokens.get(i - 1);
-            if(tag.equals(coreLabel.tag())) {
-                out.add(coreLabel.get(CoreAnnotations.OriginalTextAnnotation.class));
-            } else {
+            if (tag.equals(coreLabel.tag())) {
+                out.add(coreLabel.originalText());
+            }
+            else {
                 break;
             }
         }
         return String.join(" ", out);
     }
 
+    /** *************************************************************
+     */
     private List<CoreLabel> getSentenceTokens(int sentenceNumber) {
-        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+
+        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
         CoreMap sentence = sentences.get(sentenceNumber);
-        List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+        List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
         return tokens;
     }
 
+    /** *************************************************************
+     */
     public static String substitute(String input) {
+
         CorefSubstitutor substitutor = new CorefSubstitutor(input);
         return StringUtils.join(substitutor.substitute(), " ");
     }
 
+    /** *************************************************************
+     */
     public static List<String> substitute(List<String> input) {
+
         CorefSubstitutor substitutor = new CorefSubstitutor(StringUtils.join(input, " "));
         return substitutor.substitute();
     }
@@ -128,12 +149,13 @@ public class CorefSubstitutor {
      * @return returns a list of Strings with coref substitutions
      */
     public List<String> substitute() {
-        Map<Integer, CorefChain> corefs = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);
+
+        Map<Integer, CorefChain> corefs = document.get(CorefChainAnnotation.class);
         List<String> sentences = Lists.newArrayList();
-        for (CoreMap sentence : document.get(CoreAnnotations.SentencesAnnotation.class)) {
+        for (CoreMap sentence : document.get(SentencesAnnotation.class)) {
             StringBuilder builder = new StringBuilder();
-            for(CoreLabel label : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-                if(builder.length() != 0 && needSpaceBefore(label)) {
+            for (CoreLabel label : sentence.get(TokensAnnotation.class)) {
+                if (builder.length() != 0 && needSpaceBefore(label)) {
                     builder.append(" ");
                 }
                 builder.append(replaceCoref(label, corefs));

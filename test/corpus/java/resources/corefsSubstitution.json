@@ -13,4 +13,19 @@
 }, {
   "in":"Despite her best efforts, Wilma couldn't pass the test.",
   "out":"Despite Wilma's best efforts, Wilma couldn't pass the test."
+}, {
+  "in":"Domingo Galdos with his Harley Davidson motorcycle",
+  "out":"Domingo Galdos with Domingo Galdos' Harley Davidson motorcycle"
+}, {
+  "in":"A younger Billy Standley with his Harley Davidson motorcycle",
+  "out":"A younger Billy Standley with Billy Standley's Harley Davidson motorcycle"
+}, {
+  "in":"Billionaire businessman Bill Gates said a recent investor letter written by his friend Warren Buffett isn't getting as much attention as it deserves.",
+  "out":"Billionaire businessman Bill Gates said a recent investor letter written by Bill Gates' friend Warren Buffett isn't getting as much attention as it deserves."
+}, {
+  "in":"Gates earned the majority of his vast fortune as one of the founders of Microsoft Corporation",
+  "out":"Gates earned the majority of Gates' vast fortune as one of the founders of Microsoft Corporation"
+}, {
+  "in":"Tim Cook is going to give away his entire fortune multi-million dollar fortune to charitable causes.",
+  "out":"Tim Cook is going to give away Tim Cook's entire fortune multi-million dollar fortune to charitable causes."
 }]

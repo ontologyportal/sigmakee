@@ -35,9 +35,12 @@ public class EntityTypeParser {
     public static final EntityTypeParser NULL_PARSER = new EntityTypeParser();
     Multimap<String, EntityType> parsedEntities = HashMultimap.create();
 
-    private EntityTypeParser(){}
+    private EntityTypeParser(){
+
+    }
 
     public EntityTypeParser(Annotation document) {
+
         List<CoreMap> coreMaps = document.get(CoreAnnotations.MentionsAnnotation.class);
         if (coreMaps == null) {
             System.out.println("ERROR: MentionsAnnotation map not found");
@@ -54,10 +57,12 @@ public class EntityTypeParser {
     }
 
     public Collection<EntityType> getEntityTypes(String entity) {
+
         return parsedEntities.get(entity);
     }
 
     public boolean equalsToEntityType(String entity, EntityType type) {
+
         return parsedEntities.get(entity).contains(type);
     }
 }
