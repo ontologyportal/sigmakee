@@ -53,7 +53,7 @@ public class Interpreter {
     public String fname = "";
 
     // execution options
-    public static boolean inference = false;
+    public static boolean inference = true;
     public static boolean question = false;
     public static boolean addUnprocessed = false;
 
@@ -402,7 +402,7 @@ public class Interpreter {
      * Processes the user's input by adding coreferencing information
      * Save processed input into Document
      */
-    public String processInput(String input) {
+    public List<String> processInput(String input) {
 
         System.out.println("INFO in Interpreter.interpretSingle(): " + input);
         List<String> substitutedInputs = userInputs.addUtterance(input);
@@ -410,8 +410,7 @@ public class Interpreter {
             System.out.println("INFO input substituted to: " + substitutedInputs);
         }
 
-        String substitutedInput = StringUtils.join(substitutedInputs, " ");
-        return substitutedInput;
+        return substitutedInputs;
     }
 
     /** *************************************************************
@@ -419,9 +418,15 @@ public class Interpreter {
      */
     public String interpretSingle(String input) {
 
-        String substitutedInput = processInput(input);
-        if (!question)
-            tfidf.addInput(input);
+        List<String> substitutedInputs = processInput(input);
+
+        if (!question) {
+            for (String i : substitutedInputs) {
+                tfidf.addInput(i);
+            }
+        }
+        String substitutedInput = StringUtils.join(substitutedInputs, " ");
+
         Pipeline pipeline = new Pipeline();
         Annotation document = pipeline.annotate(substitutedInput);
         ArrayList<String> results = toDependenciesList(document);
@@ -446,9 +451,11 @@ public class Interpreter {
         inputs.add(cnf);
         ArrayList<String> kifClauses = interpretCNF(inputs);
         String result = fromKIFClauses(kifClauses);
-        //System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
-        if (question && StringUtil.emptyString(result))
+        System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
+        if (question && ANSWER_UNDEFINED.equals(result)) {
+            System.out.println("Interpreter had no response so trying TFIDF");
             result = tfidf.matchInput(substitutedInput).toString();
+        }
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
         return result;
     }
@@ -744,7 +751,8 @@ public class Interpreter {
                     else
                         question = false;
                     System.out.println("INFO in Interpreter.interpretIter(): " + input); 
-                    interpretSingle(input);
+                    String result = interpretSingle(input);
+                    System.out.println("Final Answer: " + result);
                 }
             }
         } while (!Strings.isNullOrEmpty(input));
@@ -1006,7 +1014,7 @@ public class Interpreter {
         if (args != null && args.length > 0 && (args[0].equals("-s") || args[0].equals("-i"))) {
             KBmanager.getMgr().initializeOnce();
             interp.loadRules();
-            tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "stopwords.txt");
+            tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "stopwords.txt", false);
         }
         if (args != null && args.length > 0 && args[0].equals("-s")) {
             interp.interpretSingle(args[1]);

@@ -81,6 +81,14 @@ public class TFIDF {
 
     /** ***************************************************************
      */
+    public TFIDF(String stopwordsFilename, boolean resource) {
+        asResource = resource;
+        //System.out.println("Info in TFIDF(): Initializing");
+        readStopWords(stopwordsFilename);
+    }
+
+    /** ***************************************************************
+     */
     public TFIDF(List<String> documents, String stopwordsFilename) {
         
         //System.out.println("Info in TFIDF(): Initializing");
@@ -248,7 +256,7 @@ public class TFIDF {
                 filename = stopWordsFile.getPath();
             }
             else
-                filename = "stopwords.txt";
+                filename = stopwordsFilename;
             FileReader r = new FileReader(filename);
             LineNumberReader lr = new LineNumberReader(r);
             String line;
@@ -566,7 +574,6 @@ public class TFIDF {
     /** *************************************************************
      */
     public String matchInput(String input) {
-        
         return matchInput(input,1).get(0);        
     }
     
