@@ -197,7 +197,7 @@ public class Clause {
         }
         if (s1.indexOf('*') > -1 && s2.indexOf('-') > -1) {  // when wildcard, both have to be matching variables
                                                              // except for suffix
-            if (!s1.substring(0,s1.lastIndexOf('*')).equals(s2.substring(0,s2.lastIndexOf('-'))))
+            if (!s1.substring(0,s1.lastIndexOf('*')).equalsIgnoreCase(s2.substring(0,s2.lastIndexOf('-'))))
                 return false;
         }
         return true;
@@ -263,11 +263,11 @@ public class Clause {
                 //System.out.println("INFO in Clause.mguTermList(): t1 " + t1 + " t2 " + t2);
                 if (!t1.equals(t2)) {
                     if (t1.indexOf('*') > -1 && t2.indexOf('-') > -1) {
-                        if (!t1.substring(0,t1.lastIndexOf('*')).equals(t2.substring(0,t2.lastIndexOf('-'))))
+                        if (!t1.substring(0,t1.lastIndexOf('*')).equalsIgnoreCase(t2.substring(0,t2.lastIndexOf('-'))))
                             return null;
                     }
                     else if (t2.indexOf('*') > -1 && t1.indexOf('-') > -1) {
-                        if (!t2.substring(0,t2.lastIndexOf('*')).equals(t1.substring(0,t1.lastIndexOf('-'))))
+                        if (!t2.substring(0,t2.lastIndexOf('*')).equalsIgnoreCase(t1.substring(0,t1.lastIndexOf('-'))))
                             return null;
                     }
                     else
