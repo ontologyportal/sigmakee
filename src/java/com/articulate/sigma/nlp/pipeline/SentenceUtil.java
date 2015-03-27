@@ -21,9 +21,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+import com.articulate.sigma.nlp.constants.LangLib;
 import com.google.common.collect.Lists;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -37,6 +39,8 @@ import edu.stanford.nlp.util.ScoredObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.*;
 
@@ -151,7 +155,7 @@ public class SentenceUtil {
         }
     }
 
-    public static ArrayList<String> toDependenciesList(Annotation document) {
+    public static List<String> toDependenciesList(Annotation document) {
         ArrayList<String> results = Lists.newArrayList();
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
         for (CoreMap sentence : sentences) {
@@ -160,6 +164,92 @@ public class SentenceUtil {
         }
         return results;
     }
+
+    //TODO: I'm a monster! Refactor me
+    /** *************************************************************
+     * returns a list of strings that add tense, number, etc. information about words in input
+     * ex.  tense(PAST, Verb)
+     *      number(SINGULAR, Noun)
+     */
+    public static List<String> findPOSInformation(Annotation document, List<String> dependenciesList) {
+
+        List<String> posInformation = Lists.newArrayList();
+        List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
+        for (CoreLabel label : tokens) {
+            Pattern auxPattern = Pattern.compile("aux\\(.*, " + label.toString() + "\\)");
+            boolean isAux = false;
+            for (String dep : dependenciesList) {
+                if (auxPattern.matcher(dep).find()) {
+                    isAux = true;
+                    break;
+                }
+            }
+            if (!isAux) {
+                boolean progressive = false;
+                boolean perfect = false;
+                String pos = label.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                if (LangLib.POS_VBD.equals(pos)) {
+                    posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PAST, label.toString()));
+                } else if (LangLib.POS_VBP.equals(pos) || LangLib.POS_VBZ.equals(pos)) {
+                    posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PRESENT, label.toString()));
+                } else if (LangLib.POS_VBG.equals(pos) || LangLib.POS_VB.equals(pos) || LangLib.POS_VBN.equals(pos)) {
+                    Pattern reverseAuxPattern = Pattern.compile("aux\\(" + label.toString() + ", .*-(\\d+)\\)");
+                    for (String dep : dependenciesList) {
+                        Matcher auxMatcher = reverseAuxPattern.matcher(dep);
+                        if (auxMatcher.find()) {
+                            int i = Integer.parseInt(auxMatcher.group(1));
+                            CoreLabel t = tokens.get(i-1);
+                            if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("be")) {
+                                if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBP) || t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBZ)) {
+                                    posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PRESENT, label.toString()));
+                                } else if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBD)) {
+                                    posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PAST, label.toString()));
+                                }
+                                progressive = true;
+                            } else if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("will")) {
+                                posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_FUTURE, label.toString()));
+                            } else if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("have")) {
+                                if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBP) || t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBZ)) {
+                                    posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PRESENT, label.toString()));
+                                } else if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBD)) {
+                                    posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PAST, label.toString()));
+                                }
+                                perfect = true;
+                            }
+                        }
+                    }
+                } else if (LangLib.POS_NN.equals(pos) || LangLib.POS_NNP.equals(pos)) {
+                    posInformation.add(makeBinaryRelationship("number", LangLib.NUMBER_SINGULAR, label.toString()));
+                } else if (LangLib.POS_NNS.equals(pos) || LangLib.POS_NNPS.equals(pos)) {
+                    posInformation.add(makeBinaryRelationship("number", LangLib.NUMBER_PLURAL, label.toString()));
+                }
+
+                if (progressive && perfect) {
+                    posInformation.add(makeBinaryRelationship("aspect", LangLib.ASPECT_PROGRESSIVE_PERFECT, label.toString()));
+                } else if (progressive) {
+                    posInformation.add(makeBinaryRelationship("aspect", LangLib.ASPECT_PROGRESSIVE, label.toString()));
+                } else if (perfect) {
+                    posInformation.add(makeBinaryRelationship("aspect", LangLib.ASPECT_PERFECT, label.toString()));
+                }
+            }
+        }
+        return posInformation;
+    }
+
+    //TODO: see if this exists somewhere else or move to utility class
+    /** *************************************************************
+     */
+    public static String makeBinaryRelationship(String relationship, String argument1, String argument2) {
+
+        StringBuilder sb = new StringBuilder(relationship);
+        sb.append("(");
+        sb.append(argument1);
+        sb.append(", ");
+        sb.append(argument2);
+        sb.append(")");
+        return sb.toString();
+    }
+
 
     /** ***************************************************************
      */

@@ -27,7 +27,9 @@ import java.io.*;
 import com.articulate.sigma.*;
 import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlp.*;
+import com.articulate.sigma.nlp.constants.LangLib;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -36,10 +38,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.parser.lexparser.CNFTransformers;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
-import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
 import static com.articulate.sigma.StringUtil.splitCamelCase;
@@ -102,6 +101,7 @@ public class Interpreter {
     /** *************************************************************
      */
     protected Document getUserInputs() {
+
         return userInputs;
     }
 
@@ -120,7 +120,7 @@ public class Interpreter {
      * consisting of the word plus a dash and its number in
      * the sentence such as walks -> walks-5
      */
-    private static HashMap<String,String> extractWords(ArrayList<String> clauses) {
+    private static HashMap<String,String> extractWords(List<String> clauses) {
 
         HashMap<String,String> purewords = new HashMap<String,String>();
         for (int i = 0; i < clauses.size(); i++) {
@@ -154,7 +154,7 @@ public class Interpreter {
      * @return a list of strings in the format sumo(Class,word-num) 
      * that specify the SUMO class of each word that isn't a stopword.
      */
-    public static List<String> findWSD(ArrayList<String> clauses, EntityTypeParser etp) {
+    public static List<String> findWSD(List<String> clauses, EntityTypeParser etp) {
 
         //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
         KB kb = KBmanager.getMgr().getKB("SUMO");
@@ -445,12 +445,7 @@ public class Interpreter {
             }
         }
 
-        ArrayList<String> results = toDependenciesList(document);
-
-        EntityTypeParser etp = new EntityTypeParser(document);
-        groupClauses(results);
-        List<String> wsd = findWSD(results, etp);
-        results.addAll(wsd);
+        List<String> results = getCNFInputs(document);
 
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
         System.out.println("INFO in Interpreter.interpretSingle(): " + in);
@@ -475,15 +470,36 @@ public class Interpreter {
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
         return result;
     }
+
+    /** *************************************************************
+     * Get Dependency, SUMO, POS, etc. information from the parser
+     */
+    private List<String> getCNFInputs(Annotation document) {
+
+        List<String> results = Lists.newArrayList();
+
+        List<String> dependenciesList = toDependenciesList(document);
+        results.addAll(dependenciesList);
+
+        EntityTypeParser etp = new EntityTypeParser(document);
+        groupClauses(results);
+        List<String> wsd = findWSD(results, etp);
+        results.addAll(wsd);
+        List<String> posInformation = SentenceUtil.findPOSInformation(document, dependenciesList);
+        results.addAll(posInformation);
+        return results;
+    }
+
     /** *************************************************************
      */
     private void printLabel(CoreLabel label) {
+
         System.out.println(label.get(CoreAnnotations.ValueAnnotation.class) + " " + label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
     }
 
     /** *************************************************************
      */
-    protected static void groupClauses(ArrayList<String> clauses) {
+    protected static void groupClauses(List<String> clauses) {
 
         ClauseGroups cg = new ClauseGroups(clauses);
         Iterator<String> clauseIterator = clauses.iterator();

@@ -33,15 +33,22 @@ public class Pipeline {
     /** ***************************************************************
      */
     public Pipeline() {
-        
+        this(false);
+    }
+
+    /** ***************************************************************
+     */
+    public Pipeline(boolean useDefaultPCFGModel) {
+
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
         props.setProperty("parse.kbest", "2");
 
-        // TODO: In the future, we will use the trained englishPCFG.ser.gz
-//        props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
-//        props.put("parser.model",KBmanager.getMgr().getPref("englishPCFG"));
-//        props.put("parse.flags", "");
+        if (!useDefaultPCFGModel) {
+            props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
+            props.put("parser.model", KBmanager.getMgr().getPref("englishPCFG"));
+            props.put("parse.flags", "");
+        }
 
         // creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution
         pipeline = new StanfordCoreNLP(props);

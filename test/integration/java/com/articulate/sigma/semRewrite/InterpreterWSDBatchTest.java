@@ -73,7 +73,7 @@ public class InterpreterWSDBatchTest extends IntegrationTestBase {
     private List<String> doFullWSD(String input) {
         Pipeline pipeline = new Pipeline();
         Annotation document = pipeline.annotate(input);
-        ArrayList<String> results = toDependenciesList(document);
+        List<String> results = toDependenciesList(document);
 
         EntityTypeParser etp = new EntityTypeParser(document);
         Interpreter.groupClauses(results);
