@@ -38,6 +38,7 @@ public class Pipeline {
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
         props.setProperty("parse.kbest", "2");
 
+        // TODO: In the future, we will use the trained englishPCFG.ser.gz
 //        props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
 //        props.put("parser.model",KBmanager.getMgr().getPref("englishPCFG"));
 //        props.put("parse.flags", "");
