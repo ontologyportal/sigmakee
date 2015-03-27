@@ -34,7 +34,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import com.google.common.collect.Sets;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.parser.lexparser.CNFTransformers;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
+import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
 import static com.articulate.sigma.StringUtil.splitCamelCase;
@@ -46,6 +51,8 @@ public class Interpreter {
     private static final String ANSWER_NO = "No.";
     private static final String ANSWER_UNDEFINED = "I don't know.";
 
+    private static final Pattern ENDING_IN_PUNC_PATTERN = Pattern.compile(".*[.?!]$");
+
     // Canonicalize rules into CNF then unify.
 
     public RuleSet rs = null;
@@ -56,6 +63,7 @@ public class Interpreter {
     public static boolean inference = true;
     public static boolean question = false;
     public static boolean addUnprocessed = false;
+    public static boolean verboseParse = true;
 
     // debug options
     public static boolean showrhs = false;
@@ -403,7 +411,9 @@ public class Interpreter {
      * Save processed input into Document
      */
     public List<String> processInput(String input) {
-
+        if (!ENDING_IN_PUNC_PATTERN.matcher(input).find()) {
+            input = input + ".";
+        }
         System.out.println("INFO in Interpreter.interpretSingle(): " + input);
         List<String> substitutedInputs = userInputs.addUtterance(input);
         if (!input.equals(StringUtils.join(substitutedInputs, " "))) {
@@ -429,6 +439,14 @@ public class Interpreter {
 
         Pipeline pipeline = new Pipeline();
         Annotation document = pipeline.annotate(substitutedInput);
+
+        if (verboseParse) {
+            List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
+            for (CoreLabel label : tokens) {
+                printLabel(label);
+            }
+        }
+
         ArrayList<String> results = toDependenciesList(document);
 
         EntityTypeParser etp = new EntityTypeParser(document);
@@ -458,6 +476,11 @@ public class Interpreter {
         }
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
         return result;
+    }
+    /** *************************************************************
+     */
+    private void printLabel(CoreLabel label) {
+        System.out.println(label.get(CoreAnnotations.ValueAnnotation.class) + " " + label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
     }
 
     /** *************************************************************
@@ -699,14 +722,12 @@ public class Interpreter {
 
         String input = "";
         ArrayList<String> results = null;
+        Scanner scanner = new Scanner(System.in);
         do {
-            Console c = System.console();
-            if (c == null) {
-                System.err.println("No console.");
-                System.exit(1);
-            }
-            input = c.readLine("Enter sentence: ");
-            if (!Strings.isNullOrEmpty(input)) {
+
+            System.out.print("Enter sentence: ");
+            input = scanner.nextLine();
+            if (!Strings.isNullOrEmpty(input) && !"exit".equals(input)) {
                 if (input.equals("reload")) {
                     System.out.println("reloading semantic rewriting rules");
                     loadRules();
@@ -745,7 +766,16 @@ public class Interpreter {
                 }
                 else if (input.startsWith("load "))
                     loadRules(input.substring(input.indexOf(' ')+1));
-                else {
+                else if (input.equals("showpos")) {
+                    if (verboseParse) {
+                        verboseParse = false;
+                        System.out.println("STOP: Outputting Part Of Speech information");
+                    } else {
+                        verboseParse = true;
+                        System.out.println("START: Outputting Part Of Speech information");
+                    }
+
+                } else {
                     if (input.trim().endsWith("?"))
                         question = true;
                     else
@@ -755,7 +785,7 @@ public class Interpreter {
                     System.out.println("Final Answer: " + result);
                 }
             }
-        } while (!Strings.isNullOrEmpty(input));
+        } while (!"exit".equals(input));
     }
 
     /** ***************************************************************
