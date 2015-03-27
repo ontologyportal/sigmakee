@@ -230,45 +230,86 @@ public class DatesAndDuration {
 				   break;
 		}
 	}
+	 
+	 /** ***************************************************************
+		 */
+	 void processDuration(Tokens token, Utilities utilities) {
+		
+		// System.out.println("Duration word is ::" + token.getWord());
+		 if(token.getWord().matches("[0-9]{4}\\-[0-9]{4}")) {
+			 String years[] = token.getWord().split("-");
+			 IndexedWord tempParent = utilities.StanfordDependencies.getNodeByIndex(token.getId());
+			 tempParent = getAssociatedWord(utilities, tempParent);
+			 DateInfo newDateInfo = new DateInfo();
+			 newDateInfo.setYear(years[0]);
+			 newDateInfo.addWordIndex(token.getId());
+			 newDateInfo.setTimeCount(utilities.timeCount);
+			 utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+years[0]+"-"+token.getId()+")");
+			 utilities.timeCount++;
+			 
+			 DateInfo endDateInfo = new DateInfo();
+			 endDateInfo.setYear(years[1]);
+			 endDateInfo.addWordIndex(token.getId());
+			 endDateInfo.setTimeCount(utilities.timeCount);
+			 utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+years[1]+"-"+token.getId()+")");
+			 utilities.timeCount++;
+			 
+			 generateDurationSumoTerms(tempParent,utilities, newDateInfo, endDateInfo);
+		 }
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	 void generateDurationSumoTerms(IndexedWord tempParent, Utilities utilities, DateInfo startDateInfo, DateInfo endDateInfo) {
+		 if(tempParent != null) {
+				if(Utilities.VerbTags.contains(tempParent.tag())) {
+					utilities.sumoTerms.add("StartTime(" + tempParent.value()+"-"+tempParent.index() + "," + "time-" + startDateInfo.getTimeCount() + ")");
+					utilities.sumoTerms.add("EndTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + endDateInfo.getTimeCount() + ")");
+					
+				}
+				if(Utilities.nounTags.contains(tempParent.tag())) {
+					if(tempParent.ner().equals("PERSON")) {
+						utilities.sumoTerms.add("BirthDate(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + startDateInfo.getTimeCount() + ")");
+						utilities.sumoTerms.add("DeathDate(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + endDateInfo.getTimeCount() + ")");
+					} else {
+						utilities.sumoTerms.add("StartTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + startDateInfo.getTimeCount() + ")");
+						utilities.sumoTerms.add("EndTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + endDateInfo.getTimeCount() + ")");
+					}
+				}
+				startDateInfo.setDurationFlag(true);
+				endDateInfo.setDurationFlag(true);
+			}
+	 }
 	
 	 /** ***************************************************************
 		 */
+	 IndexedWord getAssociatedWord(Utilities utilities, IndexedWord tempParent) {
+		 
+		 
+			while (!tempParent.equals(utilities.StanfordDependencies.getFirstRoot())) {
+				tempParent = utilities.StanfordDependencies.getParent(tempParent);
+				if (Utilities.VerbTags.contains(tempParent.tag()) ||
+						Utilities.nounTags.contains(tempParent.tag())) {
+					break;
+				}
+			}
+			return tempParent;
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	
 	 void handleDurations(Utilities utilities) {
 
-		System.out.println("Length of allDatesList ::" + utilities.allDatesList.size());
 		for(int i = 0; i < utilities.allDatesList.size() - 1; i++) {
 			if((utilities.allDatesList.get(i).getEndIndex() + 2) == (utilities.allDatesList.get(i + 1).getWordIndex())) {
 				utilities.allDatesList.get(i).setDurationFlag(true);
 				utilities.allDatesList.get(i+1).setDurationFlag(true);
-				System.out.println("Duration consists of ::");
 				utilities.allDatesList.get(i).print();
 				utilities.allDatesList.get(i+1).print();
 				IndexedWord tempParent = utilities.StanfordDependencies.getNodeByIndex(utilities.allDatesList.get(i).getWordIndex());	
-				while (!tempParent.equals(utilities.StanfordDependencies.getFirstRoot())) {
-					tempParent = utilities.StanfordDependencies.getParent(tempParent);
-					if (Utilities.VerbTags.contains(tempParent.tag()) ||
-							Utilities.nounTags.contains(tempParent.tag())) {
-						break;
-					}
-				}
-				if(tempParent != null) {
-					if(Utilities.VerbTags.contains(tempParent.tag())) {
-						utilities.sumoTerms.add("StartTime(" + tempParent.value()+"-"+tempParent.index() + "," + "time-" + utilities.allDatesList.get(i).getTimeCount() + ")");
-						utilities.sumoTerms.add("EndTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + utilities.allDatesList.get(i+1).getTimeCount() + ")");
-						
-					}
-					if(Utilities.nounTags.contains(tempParent.tag())) {
-						if(tempParent.ner().equals("PERSON")) {
-							utilities.sumoTerms.add("BirthDate(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + utilities.allDatesList.get(i).getTimeCount() + ")");
-							utilities.sumoTerms.add("DeathDate(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + utilities.allDatesList.get(i+1).getTimeCount() + ")");
-						} else {
-							utilities.sumoTerms.add("StartTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + utilities.allDatesList.get(i).getTimeCount() + ")");
-							utilities.sumoTerms.add("EndTime(" + tempParent.value() +"-"+tempParent.index()+ "," + "time-" + utilities.allDatesList.get(i+1).getTimeCount() + ")");
-						}
-					}
-					utilities.allDatesList.get(i).setDurationFlag(true);
-					utilities.allDatesList.get(i+1).setDurationFlag(true);
-				}
+				tempParent = getAssociatedWord(utilities, tempParent);
+				generateDurationSumoTerms(tempParent, utilities, utilities.allDatesList.get(i), utilities.allDatesList.get(i+1));
 			}
 		}
 	}

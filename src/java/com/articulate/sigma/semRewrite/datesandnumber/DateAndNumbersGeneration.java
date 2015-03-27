@@ -295,7 +295,7 @@ public class DateAndNumbersGeneration {
 				case "ORDINAL":
 				case "PERCENT" : measureFn(token,numberCount, utilities); ++numberCount;  //processNumber(token,stanfordParser.getDependencyList());
 								 break;
-				case "DURATION" : break;
+				case "DURATION" : datesandDurationHandler.processDuration(token,utilities); break;
 				case "TIME" : tokenIdNormalizedTimeMap.add(token.getId() + "@" + token.getNormalizedNer());
 			}
 		}
