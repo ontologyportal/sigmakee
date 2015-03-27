@@ -149,8 +149,10 @@ public class DatesAndDuration {
 					populateDate(flags, DateComponent.YEAR, wordToken, dateInfo,dateEntry.getKey());
 				}
 				else if (!flags.isDayFlag() && !flags.isMonthFlag()){
-					dateList.add(dateInfo);
+					dateList.add(new DateInfo(dateInfo));
 					utilities.allDatesList.add(dateInfo);
+					utilities.allDatesList.add(new DateInfo(dateInfo));
+					dateInfo.clear();
 					dateInfoTemp = new DateInfo();
 					dateInfoTemp.setYear(wordToken);
 					dateInfoTemp.addWordIndex(dateEntry.getKey());
