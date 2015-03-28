@@ -765,7 +765,7 @@ public class Interpreter {
 
             System.out.print("Enter sentence: ");
             input = scanner.nextLine();
-            if (!Strings.isNullOrEmpty(input) && !"exit".equals(input)) {
+            if (!Strings.isNullOrEmpty(input) && !"exit".equals(input) && !"quit".equals(input)) {
                 if (input.equals("reload")) {
                     System.out.println("reloading semantic rewriting rules");
                     loadRules();
@@ -889,6 +889,29 @@ public class Interpreter {
         System.out.println("result: " + r.rhs.applyBindings(bindings));
     }
 
+    /** ***************************************************************
+     */
+    public static void testUnify2() {
+
+        String input = "root(ROOT-0,American-4), nsubj(American-4,John-1), cop(American-4,is-2), det(American-4,an-3), " +
+                "sumo(UnitedStates,American-4), names(John-1,\"John\"), attribute(John-1,Male), sumo(Human,John-1), " + 
+                "number(SINGULAR,John-1), tense(PRESENT,is-2).";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+
+        //  cop(?C,is*),
+        String rule = "nsubj(?C,?X), det(?C,?D), sumo(?Y,?C), isInstance(?Y,Nation) ==> (citizen(?X,?Y)).";
+        Rule r = new Rule();
+        r = Rule.parseString(rule);
+        CNF cnf = Clausifier.clausify(r.lhs);
+        System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
+        System.out.println("INFO in Interpreter.testUnify(): CNF rule antecedent: " + cnf);
+        HashMap<String,String> bindings = cnf.unify(cnfInput);
+        System.out.println("bindings: " + bindings);  
+        if (bindings != null)
+            System.out.println("result: " + r.rhs.applyBindings(bindings));
+    }
+    
     /** ***************************************************************
      */
     public static void testInterpret() {
@@ -1114,12 +1137,13 @@ public class Interpreter {
         }
         else {
             //testUnify();
+            testUnify2();
             //testInterpret();
             //testPreserve();
             //testQuestionPreprocess();
             //testPostProcess();
             //testTimeDateExtraction();
-            testAddQuantification();
+            //testAddQuantification();
         }
     }
 }
