@@ -155,7 +155,10 @@ public class SentenceUtil {
         }
     }
 
+    /** ***************************************************************
+     */
     public static List<String> toDependenciesList(Annotation document) {
+        
         ArrayList<String> results = Lists.newArrayList();
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
         for (CoreMap sentence : sentences) {
@@ -190,9 +193,11 @@ public class SentenceUtil {
                 String pos = label.get(CoreAnnotations.PartOfSpeechAnnotation.class);
                 if (LangLib.POS_VBD.equals(pos)) {
                     posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PAST, label.toString()));
-                } else if (LangLib.POS_VBP.equals(pos) || LangLib.POS_VBZ.equals(pos)) {
+                } 
+                else if (LangLib.POS_VBP.equals(pos) || LangLib.POS_VBZ.equals(pos)) {
                     posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PRESENT, label.toString()));
-                } else if (LangLib.POS_VBG.equals(pos) || LangLib.POS_VB.equals(pos) || LangLib.POS_VBN.equals(pos)) {
+                } 
+                else if (LangLib.POS_VBG.equals(pos) || LangLib.POS_VB.equals(pos) || LangLib.POS_VBN.equals(pos)) {
                     Pattern reverseAuxPattern = Pattern.compile("aux\\(" + label.toString() + ", .*-(\\d+)\\)");
                     for (String dep : dependenciesList) {
                         Matcher auxMatcher = reverseAuxPattern.matcher(dep);
@@ -202,33 +207,41 @@ public class SentenceUtil {
                             if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("be")) {
                                 if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBP) || t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBZ)) {
                                     posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PRESENT, label.toString()));
-                                } else if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBD)) {
+                                } 
+                                else if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBD)) {
                                     posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PAST, label.toString()));
                                 }
                                 progressive = true;
-                            } else if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("will")) {
+                            } 
+                            else if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("will")) {
                                 posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_FUTURE, label.toString()));
-                            } else if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("have")) {
+                            } 
+                            else if (t.get(CoreAnnotations.LemmaAnnotation.class).equals("have")) {
                                 if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBP) || t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBZ)) {
                                     posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PRESENT, label.toString()));
-                                } else if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBD)) {
+                                } 
+                                else if (t.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(LangLib.POS_VBD)) {
                                     posInformation.add(makeBinaryRelationship("tense", LangLib.TENSE_PAST, label.toString()));
                                 }
                                 perfect = true;
                             }
                         }
                     }
-                } else if (LangLib.POS_NN.equals(pos) || LangLib.POS_NNP.equals(pos)) {
+                } 
+                else if (LangLib.POS_NN.equals(pos) || LangLib.POS_NNP.equals(pos)) {
                     posInformation.add(makeBinaryRelationship("number", LangLib.NUMBER_SINGULAR, label.toString()));
-                } else if (LangLib.POS_NNS.equals(pos) || LangLib.POS_NNPS.equals(pos)) {
+                } 
+                else if (LangLib.POS_NNS.equals(pos) || LangLib.POS_NNPS.equals(pos)) {
                     posInformation.add(makeBinaryRelationship("number", LangLib.NUMBER_PLURAL, label.toString()));
                 }
 
                 if (progressive && perfect) {
                     posInformation.add(makeBinaryRelationship("aspect", LangLib.ASPECT_PROGRESSIVE_PERFECT, label.toString()));
-                } else if (progressive) {
+                } 
+                else if (progressive) {
                     posInformation.add(makeBinaryRelationship("aspect", LangLib.ASPECT_PROGRESSIVE, label.toString()));
-                } else if (perfect) {
+                } 
+                else if (perfect) {
                     posInformation.add(makeBinaryRelationship("aspect", LangLib.ASPECT_PERFECT, label.toString()));
                 }
             }
@@ -249,7 +262,6 @@ public class SentenceUtil {
         sb.append(")");
         return sb.toString();
     }
-
 
     /** ***************************************************************
      */

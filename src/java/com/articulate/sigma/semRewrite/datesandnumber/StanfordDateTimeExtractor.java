@@ -114,6 +114,4 @@ public class StanfordDateTimeExtractor {
 		}
 		return tokenList;
 	}
-
-	
 }

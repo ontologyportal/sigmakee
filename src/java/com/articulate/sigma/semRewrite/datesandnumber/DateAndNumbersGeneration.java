@@ -80,7 +80,6 @@ public class DateAndNumbersGeneration {
 
 	/** ***************************************************************
 	 */
-
 	private void measureFn(Tokens token, int count, Utilities utilities) {
 
 		IndexedWord tokenNode = utilities.StanfordDependencies.getNodeByIndex(token.getId());
@@ -184,19 +183,20 @@ public class DateAndNumbersGeneration {
 		utilities.sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId()+")");
 		WordNet.wn.initOnce();
 	}
+	
 	/** ***************************************************************
 	 */
 	public List<String> getMeasureTerms(Utilities utilities) {
 		
 		return utilities.sumoTerms;
 	}
+	
 	/** ***************************************************************
 	 */
 	public void setMeasureTerms(List<String> measureTerms) {
 		
 		this.measureTerms = measureTerms;
 	}
-
 
 	/** ***************************************************************
 	 */
@@ -255,6 +255,7 @@ public class DateAndNumbersGeneration {
 		}
 		return timesList;
 	}
+	
 	/** ***************************************************************
 	 */
 	public boolean containsTimeInfo(List<TimeInfo> timeList, TimeInfo timeObject) {
@@ -266,6 +267,7 @@ public class DateAndNumbersGeneration {
 		}
 		return false;
 	}
+	
 	/** ***************************************************************
 	 */
 	private boolean checkValueInMap(String value, Utilities utilities) {

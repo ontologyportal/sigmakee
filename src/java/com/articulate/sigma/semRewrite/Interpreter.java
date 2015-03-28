@@ -325,7 +325,7 @@ public class Interpreter {
     private static String prependQueryQuantifier(ArrayList<String> queryObjects,String form) {
 
         StringBuilder sb=new StringBuilder();
-        if(queryObjects==null || queryObjects.size()<1)
+        if (queryObjects==null || queryObjects.size()<1)
             return form;
         sb.append("(exists (");
         boolean first = true;
@@ -358,9 +358,9 @@ public class Interpreter {
     private static Formula removeOuterQuantifiers(Formula answer) {
 
         String head = answer.car();
-        if(head != null && head.equals(Formula.EQUANT)) {
+        if (head != null && head.equals(Formula.EQUANT)) {
             Formula innerFormula = new Formula(answer.caddr());
-            if(innerFormula != null) {
+            if (innerFormula != null) {
                 head = innerFormula.car();
                 if (head != null && head.equals(Formula.UQUANT)) {
                     return new Formula(innerFormula.caddr());
@@ -375,9 +375,9 @@ public class Interpreter {
     private static boolean isOuterQuantified(Formula query) {
 
         String head = query.car();
-        if(head != null && head.equals(Formula.EQUANT)) {
+        if (head != null && head.equals(Formula.EQUANT)) {
             Formula innerFormula = new Formula(query.caddr());
-            if(innerFormula != null) {
+            if (innerFormula != null) {
                 head = innerFormula.car();
                 if (head != null && head.equals(Formula.UQUANT)) {
                     return true;
@@ -409,6 +409,7 @@ public class Interpreter {
      * Save processed input into Document
      */
     public List<String> processInput(String input) {
+        
         if (!ENDING_IN_PUNC_PATTERN.matcher(input).find()) {
             input = input + ".";
         }
@@ -719,12 +720,13 @@ public class Interpreter {
 //                return actual;
                 StringBuilder answerBuilder = new StringBuilder();
                 int count = 0;
-                for(String binding:inferenceAnswers) {
+                for (String binding:inferenceAnswers) {
                     count++;
                     answerBuilder.append(binding);
-                    if( count < inferenceAnswers.size()) {
+                    if (count < inferenceAnswers.size()) {
                         answerBuilder.append(" and ");
-                    } else {
+                    } 
+                    else {
                         answerBuilder.append(".");
                     }
                 }

@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ClauseGroups {
+    
     public static final Pattern CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+-\\d+),\\s*(.+-\\d+)\\)");
     static final Pattern CLAUSE_PARAM = Pattern.compile("(.+)-(\\d+)");
 
@@ -36,18 +37,26 @@ public class ClauseGroups {
     boolean initialized = false;
     Map<String, String> groups;
 
+    /** ***************************************************************
+     */
     public ClauseGroups(List<String> clauses) {
         this.clauses = clauses;
     }
 
+    /** ***************************************************************
+     */
     public String getGrouped(String key) {
+        
         initialize();
         String value = groups.get(key);
         return value == null ? key : value;
     }
 
+    /** ***************************************************************
+     */
     private void initialize() {
-        if(!initialized) {
+        
+        if (!initialized) {
             Multimap<String, String> groupsFull = parseGroupsAndCollectRoots(clauses);
             initGroupForAttributes(groupsFull);
             groups = mergeAttributes(groupsFull);
@@ -57,19 +66,23 @@ public class ClauseGroups {
         }
     }
 
+    /** ***************************************************************
+     */
     private Multimap<String, String> parseGroupsAndCollectRoots(List<String> clauses) {
+        
         Multimap<String, String> groupsFull = HashMultimap.create();
-        for(String clause : clauses) {
+        for (String clause : clauses) {
             Matcher m = CLAUSE_SPLITTER.matcher(clause);
-            if(m.matches()) {
+            if (m.matches()) {
                 String label = m.group(1);
-                if("nn".equals(label)) {
+                if ("nn".equals(label)) {
                     String attr1 = m.group(2);
                     String attr2 = m.group(3);
                     groupsFull.put(attr1, attr1);
                     groupsFull.put(attr1, attr2);
                 }
-            } else {
+            } 
+            else {
                 System.out.println("ERROR: wrong clause " + clause);
             }
         }
@@ -77,9 +90,12 @@ public class ClauseGroups {
         return groupsFull;
     }
 
+    /** ***************************************************************
+     */
     private void initGroupForAttributes(Multimap<String, String> groups) {
+        
         Multimap<String, String> crossGroups = HashMultimap.create();
-        for(String root: groups.keySet()) {
+        for (String root: groups.keySet()) {
             Collection<String> rootGroup = groups.get(root);
             rootGroup.stream()
                     .filter(attr -> !attr.equals(root))
@@ -88,21 +104,25 @@ public class ClauseGroups {
         groups.putAll(crossGroups);
     }
 
+    /** ***************************************************************
+     */
     private Map<String, String> mergeAttributes(Multimap<String, String> groupsFull) {
+        
         Map<String, String> groupsWithMergedAttributes = Maps.newTreeMap();
-        for(Map.Entry<String, Collection<String>> entry : groupsFull.asMap().entrySet()) {
+        for (Map.Entry<String, Collection<String>> entry : groupsFull.asMap().entrySet()) {
             SortedMap<Integer, String> attributesMerged = Maps.newTreeMap();
             Integer firstIndex = null;
-            for(String attr : entry.getValue()) {
+            for (String attr : entry.getValue()) {
                 Matcher m = CLAUSE_PARAM.matcher(attr);
-                if(m.matches()) {
+                if (m.matches()) {
                     String value = m.group(1);
                     Integer idx = Integer.valueOf(m.group(2));
-                    if(firstIndex == null || idx.compareTo(firstIndex) < 0) {
+                    if (firstIndex == null || idx.compareTo(firstIndex) < 0) {
                         firstIndex = idx;
                     }
                     attributesMerged.put(idx, value);
-                } else {
+                } 
+                else {
                     System.out.println("ERROR: wrong clause parameter " + m);
                 }
             }

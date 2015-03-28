@@ -67,9 +67,12 @@ public class Pipeline {
         return document;
     }
 
+    /** ***************************************************************
+     */
     public static void main(String[] args) {
+        
         Pipeline p = new Pipeline();
-        Annotation a= p.annotate("Amelia also wrote books, most of them were about her flights.");
+        Annotation a = p.annotate("Amelia also wrote books, most of them were about her flights.");
         SentenceUtil.printSentences(a);
     }
 

@@ -32,19 +32,25 @@ import java.util.Collection;
 import java.util.List;
 
 public class EntityTypeParser {
+    
     public static final EntityTypeParser NULL_PARSER = new EntityTypeParser();
     Multimap<String, EntityType> parsedEntities = HashMultimap.create();
 
+    /** ***************************************************************
+     */
     private EntityTypeParser(){
 
     }
 
+    /** ***************************************************************
+     */
     public EntityTypeParser(Annotation document) {
 
         List<CoreMap> coreMaps = document.get(CoreAnnotations.MentionsAnnotation.class);
         if (coreMaps == null) {
             System.out.println("ERROR: MentionsAnnotation map not found");
-        } else {
+        } 
+        else {
             for (CoreMap coreMap : coreMaps) {
                 Optional<EntityType> type = Enums.getIfPresent(EntityType.class, coreMap.get(CoreAnnotations.EntityTypeAnnotation.class));
                 if (type.isPresent()) {
@@ -56,11 +62,15 @@ public class EntityTypeParser {
         }
     }
 
+    /** ***************************************************************
+     */
     public Collection<EntityType> getEntityTypes(String entity) {
 
         return parsedEntities.get(entity);
     }
 
+    /** ***************************************************************
+     */
     public boolean equalsToEntityType(String entity, EntityType type) {
 
         return parsedEntities.get(entity).contains(type);

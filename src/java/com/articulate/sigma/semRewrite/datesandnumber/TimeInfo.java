@@ -54,7 +54,10 @@ public class TimeInfo {
 		this.wordIndex = wordindex;
 	}
 
+	/** ***************************************************************
+     */
 	public boolean equals(TimeInfo timeInfo) {
+	    
 		boolean hourFlag,minuteFlag,secondFlag;
 		hourFlag = minuteFlag = secondFlag = true;
 		if ((this.hour == null) && (this.minute == null) && (this.second == null)) {
@@ -72,7 +75,10 @@ public class TimeInfo {
 		return (hourFlag && minuteFlag && secondFlag);
 	}
 	
+	/** ***************************************************************
+     */
 	public int hashCode() {
+	    
         int hash = 3;
         hash = 53 * hash + (this.hour != null  ? this.hour.hashCode() : 0);
         hash = 53 * hash + (this.minute != null  ? this.minute.hashCode() : 0);

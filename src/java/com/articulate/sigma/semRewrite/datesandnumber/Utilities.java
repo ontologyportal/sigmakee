@@ -1,5 +1,27 @@
 package com.articulate.sigma.semRewrite.datesandnumber;
 
+/*
+Copyright 2014-2015 IPsoft
+
+Author: Nagaraj Bhat nagaraj.bhat@ipsoft.com
+        Rashmi Rao
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA 
+*/
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +35,7 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 
 public class Utilities {
+    
 	HashMap<Integer,String> dateMap = new LinkedHashMap<Integer,String>();
 	
 	public static final List<String> MONTHS = new ArrayList<String>(Arrays.asList("january",
@@ -29,7 +52,9 @@ public class Utilities {
 	SemanticGraph StanfordDependencies;
 	int timeCount = 1;
 	
-	boolean containsIndexWord(String word) {
+	/** ***************************************************************
+     */
+	public boolean containsIndexWord(String word) {
 
 		for (String verbTag: VerbTags) {
 			if (verbTag.contains(word)) {
@@ -39,7 +64,9 @@ public class Utilities {
 		return false;
 	}
 
-	String populateRootWord(int wordIndex) {
+	/** ***************************************************************
+     */
+	public String populateRootWord(int wordIndex) {
 
 		IndexedWord tempParent = StanfordDependencies.getNodeByIndex(wordIndex);
 		while (!tempParent.equals(StanfordDependencies.getFirstRoot())) {
@@ -50,16 +77,18 @@ public class Utilities {
 		}
 		return null;
 	}
+	
 	/** ***************************************************************
 	 */
-	String getRootWord(int dateId) {
+	public String getRootWord(int dateId) {
 
 		//System.out.println("Id is ::" + dateId);
 		return populateRootWord(dateId);
-
 	}
 	
-	 void filterSumoTerms() {
+	/** ***************************************************************
+     */
+	public void filterSumoTerms() {
 		
 		Set<String> hashsetList = new HashSet<String>(sumoTerms);
 		sumoTerms.clear();

@@ -28,7 +28,7 @@ import com.articulate.sigma.KBmanager;
 
 public class InterpretNumerics {
 
-	/**
+    /** ***************************************************************
 	 * Returns a list of SU-KIF statements, each corresponding to a date/time/measure found in the input 
 	 * natural language string.
 	 * @param input: The natural language string.
@@ -41,6 +41,7 @@ public class InterpretNumerics {
 		DateAndNumbersGeneration generator = new DateAndNumbersGeneration();
 		return generator.generateSumoTerms(tokensList, sde);
 	}
+	
 	/** ***************************************************************
 	 */
 	public static void main(String[] args) {
@@ -63,7 +64,5 @@ public class InterpretNumerics {
         input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
         System.out.println(input);
         System.out.println(getSumoTerms(input));
-        
     }
-	
 }
