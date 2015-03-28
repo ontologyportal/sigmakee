@@ -45,7 +45,6 @@ public class DateAndNumbersGeneration {
 	static final Pattern YEAR_MONTH_TIME_PATTERN = Pattern.compile("^([0-9X]{4})(\\-[0-9]{2})?(\\-[0-9]{2})?T([0-9]{2}):([0-9]{2})(:[0-9]{2})?");
 	static final Pattern POS_TAG_REMOVER = Pattern.compile("(\\/[A-Z]+)$");
 
-	
 	List<String> measureTerms = new ArrayList<String>();
 	
 	/** ***************************************************************
@@ -214,12 +213,14 @@ public class DateAndNumbersGeneration {
 				timeObj.setMinute(hourMinPatternMatcher.group(2));
 				timeObj.setHour(hourMinPatternMatcher.group(1));
 				timeObj.setWordIndex(id);
-			} else if (hourMinSecPatternMatcher.find() && (utilities.StanfordDependencies.getNodeByIndexSafe(id)!=null)) {
+			} 
+			else if (hourMinSecPatternMatcher.find() && (utilities.StanfordDependencies.getNodeByIndexSafe(id)!=null)) {
 				timeObj.setMinute(hourMinSecPatternMatcher.group(2));
 				timeObj.setHour(hourMinSecPatternMatcher.group(1));
 				timeObj.setSecond(hourMinSecPatternMatcher.group(3));
 				timeObj.setWordIndex(id);
-			} else if (yearMonthTimePatternMatcher.find() && (utilities.StanfordDependencies.getNodeByIndexSafe(id)!=null)) {
+			} 
+			else if (yearMonthTimePatternMatcher.find() && (utilities.StanfordDependencies.getNodeByIndexSafe(id)!=null)) {
 				String year = yearMonthTimePatternMatcher.group(1);
 				int tokenCnt = new StanfordDateTimeExtractor().getTokenCount() + 1;
 				if (!year.equals("XXXX")) {
