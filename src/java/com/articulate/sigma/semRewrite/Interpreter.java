@@ -128,7 +128,9 @@ public class Interpreter {
             int paren = clause.indexOf('(');
             int comma = clause.indexOf(',');
 
-            String arg1 = clause.substring(paren+1,comma).trim();
+            if (paren < 2 || comma < 4 || comma < paren)
+                System.out.println("Error in Interpreter.extractWords(): bad clause format: " + clause);
+            String arg1 = clause.substring(paren + 1,comma).trim();
             int wordend1 = arg1.indexOf('-');
             String purearg1 = arg1.substring(0,wordend1);
             if (!purearg1.equals("ROOT"))
