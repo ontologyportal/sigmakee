@@ -89,7 +89,8 @@ public class Procedures {
         KB kb = KBmanager.getMgr().getKB("SUMO");
         if (kb.isSubAttribute(c.arg1, c.arg2)) {
             return "true";
-        } else {
+        } 
+        else {
             return "false";
         }
     }
