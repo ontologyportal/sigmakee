@@ -657,11 +657,6 @@ public class FormulaPreprocessor {
 
         ArrayList<Formula> result = new ArrayList<Formula>();
 
-        if (SUMOKBtoTPTPKB.filterSimpleOnly){
-            result.add(form);
-            return result;
-        }
-
         Formula startF = new Formula();
         startF.read(form.theFormula);
         LinkedHashSet<Formula> accumulator = new LinkedHashSet<Formula>();
