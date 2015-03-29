@@ -16,8 +16,12 @@ public class AddQueryObjectQuantifierTest {
     String input;
     String output;
     Method findQueryObjects = null;
+    Interpreter interpreter = null;
 
     public AddQueryObjectQuantifierTest() {
+
+        interpreter = new Interpreter();
+        interpreter.question = true;
         Class[] argTypes = new Class[]{String.class};
         try {
             findQueryObjects = Interpreter.class.getDeclaredMethod("addQuantification", String.class);
