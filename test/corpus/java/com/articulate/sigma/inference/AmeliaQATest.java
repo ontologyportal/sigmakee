@@ -80,7 +80,24 @@ public class AmeliaQATest {
 
         actualAnswer = interpreter.interpretSingle(query);
         System.out.println("actualAnswer = " + actualAnswer);
-        assertNotEquals(actualAnswer,"No response.");
-        assertEquals(actualAnswer,"UnitedStates");
+        assertEquals(actualAnswer,"UnitedStates.");
+    }
+
+    @Test
+    public void test2() {
+
+        setKB();
+        String assertion = "John kicks a cart.";
+        String query = "Who hits the cart?";
+
+        interpreter.question = false;
+        interpreter.interpretSingle(assertion);
+
+        interpreter.question = true;
+        String actualAnswer = null;
+
+        actualAnswer = interpreter.interpretSingle(query);
+        System.out.println("actualAnswer = " + actualAnswer);
+        assertEquals(actualAnswer,"'John'.");
     }
 }
