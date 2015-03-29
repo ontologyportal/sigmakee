@@ -12,15 +12,17 @@ import java.lang.reflect.Method;
  * Created by peigenyou on 3/26/15.
  */
 public class AddQueryObjectQuantifierTest {
+
     String input;
     String output;
-    Method findQueryObjects=null;
+    Method findQueryObjects = null;
 
-    public AddQueryObjectQuantifierTest(){
-        Class[] argTypes=new Class[]{String.class};
+    public AddQueryObjectQuantifierTest() {
+        Class[] argTypes = new Class[]{String.class};
         try {
-            findQueryObjects=Interpreter.class.getDeclaredMethod("addQuantification", String.class);
-        } catch (NoSuchMethodException e) {
+            findQueryObjects = Interpreter.class.getDeclaredMethod("addQuantification", String.class);
+        }
+        catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
         assert findQueryObjects != null;
@@ -44,8 +46,9 @@ public class AddQueryObjectQuantifierTest {
                 "      (instance ?cart-4 Wagon)\n" +
                 "      (patient ?moves-2 ?cart-4)\n" +
                 "      (instance ?moves-2 Transportation)) )))";
-        Assert.assertTrue(compareInputResultAndExpectedResult(input,output));
+        Assert.assertTrue(compareInputResultAndExpectedResult(input, output));
     }
+
     @Test
     public void testAddQueryObjectQuantifierTest2() {
         input = "(and\n" +
@@ -63,8 +66,9 @@ public class AddQueryObjectQuantifierTest {
                 "      (names ?Amelia-3 \"Amelia\")\n" +
                 "      (patient ?fly-4 ?What-1)\n" +
                 "      (instance ?Amelia-3 Human)) )))";
-        Assert.assertTrue(compareInputResultAndExpectedResult(input,output));
+        Assert.assertTrue(compareInputResultAndExpectedResult(input, output));
     }
+
     @Test
     public void testAddQueryObjectQuantifierTest3() {
         input = "  (and\n" +
@@ -82,8 +86,9 @@ public class AddQueryObjectQuantifierTest {
                 "      (instance ?did-2 IntentionalProcess)\n" +
                 "      (names ?Amelia-3 \"Amelia\")\n" +
                 "      (instance ?Amelia-3 DiseaseOrSyndrome)) )))";
-        Assert.assertTrue(compareInputResultAndExpectedResult(input,output));
+        Assert.assertTrue(compareInputResultAndExpectedResult(input, output));
     }
+
     @Test
     public void testAddQueryObjectQuantifierTest4() {
         input = "  (and\n" +
@@ -107,7 +112,7 @@ public class AddQueryObjectQuantifierTest {
                 "      (instance ?John-1 Bathroom)\n" +
                 "      (patient ?had-5 ?car-7)\n" +
                 "      (instance ?asked-2 Questioning)) )))";
-        Assert.assertTrue(compareInputResultAndExpectedResult(input,output));
+        Assert.assertTrue(compareInputResultAndExpectedResult(input, output));
     }
 
     @Test
@@ -125,20 +130,38 @@ public class AddQueryObjectQuantifierTest {
                 "      (attribute ?feel-4 ?How-1)\n" +
                 "      (instance ?feel-4 EmotionalState)\n" +
                 "      (instance ?food-7 PreparedFood)) )))";
-        Assert.assertTrue(compareInputResultAndExpectedResult(input,output));
+        Assert.assertTrue(compareInputResultAndExpectedResult(input, output));
     }
 
-    private boolean compareInputResultAndExpectedResult(String input,String output){
-        Formula f1=new Formula();
+    @Test
+    public void testAddQueryObjectSingleCharVariable() {
+        input = "  (and\n" +
+                "    (attribute ?John-3 Male)\n" +
+                "    (inhabits ?John-3 ?Y)\n" +
+                "    (names ?John-3 \"John\"))";
+        output = "(exists (?Y)\n" +
+                "  (forall (?DUMMY)\n" +
+                "    (exists (?John-3)\n" +
+                "      (and\n" +
+                "        (attribute ?John-3 Male)\n" +
+                "        (inhabits ?John-3 ?Y)\n" +
+                "        (names ?John-3 \"John\")) )))";
+        Assert.assertTrue(compareInputResultAndExpectedResult(input, output));
+    }
+
+    private boolean compareInputResultAndExpectedResult(String input, String output) {
+        Formula f1 = new Formula();
         try {
-            input = String.valueOf(findQueryObjects.invoke(null,input));
-        } catch (IllegalAccessException e) {
+            input = String.valueOf(findQueryObjects.invoke(null, input));
+        }
+        catch (IllegalAccessException e) {
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        }
+        catch (InvocationTargetException e) {
             e.printStackTrace();
         }
         f1.read(input);
-        Formula f2=new Formula();
+        Formula f2 = new Formula();
         f2.read(output);
         return f1.equals(f2);
     }

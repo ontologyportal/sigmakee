@@ -317,6 +317,15 @@ public class Interpreter {
                 queryObjects.add(k);
             }
         }
+        if(queryObjects.size()==0){
+            pattern_wh="\\?[A-Za-z]";
+            p_wh=Pattern.compile(pattern_wh);
+            for (String k:quantified) {
+                if (p_wh.matcher(k).matches()) {
+                    queryObjects.add(k);
+                }
+            }
+        }
         quantified.removeAll(queryObjects);
         return queryObjects;
     }
