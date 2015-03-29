@@ -211,7 +211,10 @@ public class PredVarInst {
         Set<Formula> result = new HashSet<Formula>();
         //System.out.println("INFO in PredVarInst.instantiatePredVars(): formula: " + input);
         // If there are no predicate variables, return empty()
-        if (gatherPredVars(input).size() == 0)
+        HashSet<String> predVars = gatherPredVars(input);
+        if (predVars == null )
+            return null;
+        if (predVars.size() == 0)
             return result;
         HashMap<String,HashSet<String>> varTypes = findPredVarTypes(input,kb);
         varTypes = addExplicitTypes(input,varTypes);
