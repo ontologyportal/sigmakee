@@ -391,7 +391,9 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "      (instance ?BELIEF Formula)\n" +
                 "      (forall (?MEMB)\n" +
                 "        (=>\n" +
-                "          (and (instance ?MEMB SelfConnectedObject))\n" +
+                "          (and " +
+                "            (instance ?MEMB SelfConnectedObject)" +
+                "            (instance ?MEMB CognitiveAgent))\n" +
                 "          (=>\n" +
                 "            (member ?MEMB ?GROUP)\n" +
                 "            (believes ?MEMB ?BELIEF) ))))))");
@@ -429,6 +431,43 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "        (equal ?OBJ\n" +
                 "          (MereologicalSumFn ?PART1 ?PART2))\n" +
                 "        (connected ?PART1 ?PART2) ))))");
+
+        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
+
+        assertEquals(expectedTPTP, actualTPTP);
+    }
+
+    @Test
+    public void testAddTypeRestrictions12() {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        KB kb = SigmaTestBase.kb;
+        String stmt = "(=>\n" +
+                "  (instance ?S Seafood)\n" +
+                "  (exists (?X ?SEA)\n" +
+                "    (and\n" +
+                "      (meatOfAnimal ?S ?ANIMAL)\n" +
+                "      (instance ?X ?ANIMAL)\n" +
+                "      (instance ?SEA BodyOfWater)\n" +
+                "      (inhabits ?X ?SEA))))";
+        Formula f = new Formula();
+        f.read(stmt);
+        Formula actualF = fp.addTypeRestrictions(f, kb);
+        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
+
+        Formula expectedF = new Formula("(=>\n" +
+                "  (and\n" +
+                "    (subclass ?S Meat)\n" +
+                "    (subclass ?ANIMAL Animal)\n" +
+                "    (instance ?ANIMAL SetOrClass))\n" +
+                "  (=>\n" +
+                "    (instance ?S Seafood)\n" +
+                "    (exists (?X ?SEA)\n" +
+                "      (and\n" +
+                "        (meatOfAnimal ?S ?ANIMAL)\n" +
+                "        (instance ?X ?ANIMAL)\n" +
+                "        (instance ?SEA BodyOfWater)\n" +
+                "        (inhabits ?X ?SEA))))))");
 
         String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
 
