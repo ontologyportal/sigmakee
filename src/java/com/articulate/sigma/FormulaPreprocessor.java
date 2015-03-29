@@ -116,10 +116,24 @@ public class FormulaPreprocessor {
         HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(form);
 
         // only keep variables which are not explicitly defined in formula
-        HashMap<String,HashSet<String>> varmap = (HashMap<String, HashSet<String>>) varDomainTypes.clone();
-        if (varExplicitTypes != null) {
-            for (String v : varExplicitTypes.keySet()) {
-                varmap.remove(v);
+        HashMap<String,HashSet<String>> varmap = new HashMap<String, HashSet<String>>();
+        for (String var : varDomainTypes.keySet()) {
+            if (!varExplicitTypes.containsKey(var)) {
+                // var is not explicitly defined
+                varmap.put(var, varDomainTypes.get(var));
+            }
+            else {
+                // var is explicitly defined
+                HashSet<String> domainTypes = varDomainTypes.get(var);
+                HashSet<String> explicitTypes = varExplicitTypes.get(var);
+                HashSet<String> types = new HashSet();
+                for (String dt : domainTypes) {
+                    if (dt.endsWith("+")) types.add(dt);
+                }
+                for (String et : explicitTypes) {
+                    if (et.endsWith("+")) types.add(et);
+                }
+                varmap.put(var, types);
             }
         }
 
@@ -134,13 +148,15 @@ public class FormulaPreprocessor {
             String unquantifiedV = unquantifiedVariables.get(i);
             HashSet<String> types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
-                String mostRelevantType = getMostRelevantType(kb, types);   // get most specific type for unquantifiedV
-                if (mostRelevantType != null && !mostRelevantType.isEmpty()) {
+                for (String t : types) {
                     if (begin) {
                         sb.append("(=> \n  (and \n");
                         begin = false;
                     }
-                    sb.append(" (instance " + unquantifiedV + " " + mostRelevantType + ") ");
+                    if (!t.endsWith("+"))
+                        sb.append(" (instance " + unquantifiedV + " " + t + ") ");
+                    else
+                        sb.append(" (subclass " + unquantifiedV + " " + t.substring(0,t.length()-1) + ") ");
                 }
             }
         }
@@ -209,9 +225,11 @@ public class FormulaPreprocessor {
                     String existentiallyQV = quantifiedVariables.get(i);
                     HashSet<String> types = varmap.get(existentiallyQV);
                     if (types != null && !types.isEmpty()) {
-                        String mostRelevantType = getMostRelevantType(kb, types);  // get most relevant type for existentiallyQV
-                        if (mostRelevantType != null && !mostRelevantType.isEmpty()) {
-                            sb.append("(instance " + existentiallyQV + " " + mostRelevantType + ") ");
+                        for (String t : types) {
+                            if (!t.endsWith("+"))
+                                sb.append(" (instance " + existentiallyQV + " " + t + ") ");
+                            else
+                                sb.append(" (subclass " + existentiallyQV + " " + t.substring(0,t.length()-1) + ") ");
                         }
                     }
                 }
@@ -638,6 +656,12 @@ public class FormulaPreprocessor {
     private ArrayList<Formula> replacePredVarsAndRowVars(Formula form, KB kb, boolean addHoldsPrefix) {
 
         ArrayList<Formula> result = new ArrayList<Formula>();
+
+        if (SUMOKBtoTPTPKB.filterSimpleOnly){
+            result.add(form);
+            return result;
+        }
+
         Formula startF = new Formula();
         startF.read(form.theFormula);
         LinkedHashSet<Formula> accumulator = new LinkedHashSet<Formula>();
