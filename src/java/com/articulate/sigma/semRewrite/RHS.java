@@ -42,9 +42,9 @@ public class RHS {
         else if (cnf != null)
             sb.append("(" + cnf + ")");
         else if (form == null)
-            sb.append("0");
+            sb.append("!");
         else 
-            sb.append("{"+form.toString()+"}");
+            sb.append("{" + form.toString() + "}");
         return sb.toString();
     }
     
