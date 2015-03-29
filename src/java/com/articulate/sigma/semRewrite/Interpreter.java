@@ -359,6 +359,8 @@ public class Interpreter {
     private static String addQuantification(String form) {
 
         ArrayList<String> vars = findQuantification(form);
+        if (!question)
+            return prependQuantifier(vars, form);
         ArrayList<String> queryObjects=getQueryObjectsFromQuantification(vars);
         String innerKIF = prependQuantifier(vars, form);
         return prependQueryQuantifier(queryObjects,innerKIF);
