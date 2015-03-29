@@ -6,7 +6,7 @@ import java.util.*;
 public class SUMOKBtoTPTPKB {
 
     // TODO: In future, should turn filterSimpleOnly off
-    public static final boolean filterSimpleOnly = false;
+    public static final boolean filterSimpleOnly = true;
 
     public KB kb;
 
@@ -114,7 +114,6 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** ***************************************************************
-     * @param kb - The KB used to compute variable arity relations.
      * @param relationMap is a Map of String keys and values where
      *                    the key is the renamed relation and the
      *                    value is the original name.
@@ -354,7 +353,8 @@ public class SUMOKBtoTPTPKB {
                         // Filter1: only keep simpleClause and basic axioms
                         // TODO: this should be removed in the future
                         if (filterSimpleOnly) {
-                            if ((f.isSimpleClause() || isBasicInferenceRules(basicInferenceRules, f))) {
+                            if ((!f.gatherRelationConstants().contains("agent"))
+                                    && (!f.gatherRelationConstants().contains("patient"))) {
                                 if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
                                     pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
                                     pr.println(",axiom,(" + theTPTPFormula + ")).");
