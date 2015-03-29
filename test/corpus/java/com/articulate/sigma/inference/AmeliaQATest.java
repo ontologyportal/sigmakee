@@ -6,6 +6,7 @@ import com.articulate.sigma.semRewrite.Interpreter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 /**
@@ -46,14 +47,40 @@ public class AmeliaQATest {
 
         actualAnswer = interpreter.interpretSingle(query);
         System.out.println("actualAnswer = " + actualAnswer);
-        assertNotEquals(actualAnswer,"No response.");
+    //    assertNotEquals(actualAnswer,"No response.");
+        assertEquals(actualAnswer, "An instance of Airplane.");
 
         actualAnswer = interpreter.interpretSingle(query2);
         System.out.println("actualAnswer = " + actualAnswer);
-        assertNotEquals(actualAnswer,"No response.");
+    //    assertNotEquals(actualAnswer,"No response.");
+        assertEquals(actualAnswer, "'Amelia'.");
 
         actualAnswer = interpreter.interpretSingle(query3);
         System.out.println("actualAnswer = " + actualAnswer);
         assertNotEquals(actualAnswer,"No response.");
+    //    assertEquals(actualAnswer, "Yes.");
+    }
+
+    @Test
+    public void test1() {
+
+        setKB();
+        String assertion = "John was an American.";
+        String query = "Where does John live?";
+
+        kb.tell("(=>\n" +
+                "  (citizen ?X ?Y)\n" +
+                "  (inhabits ?X ?Y))");
+
+        interpreter.question = false;
+        interpreter.interpretSingle(assertion);
+
+        interpreter.question = true;
+        String actualAnswer = null;
+
+        actualAnswer = interpreter.interpretSingle(query);
+        System.out.println("actualAnswer = " + actualAnswer);
+        assertNotEquals(actualAnswer,"No response.");
+        assertEquals(actualAnswer,"UnitedStates");
     }
 }
