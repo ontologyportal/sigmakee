@@ -25,9 +25,7 @@ import java.util.regex.*;
 import java.io.*;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlp.*;
-import com.articulate.sigma.nlp.constants.LangLib;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
@@ -192,7 +190,7 @@ public class Interpreter {
                         results.add("attribute(" + clauseKey + "," + sexAttribute + ")");
                     }
                 }
-            } 
+            }
             else {
                 String id = WSD.findWordSenseInContext(pureWord, pure);
                 //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
@@ -211,11 +209,8 @@ public class Interpreter {
                 }
                 else {
                     String humanReadable = splitCamelCase(pureWord);
-                    String[] split = humanReadable.split(" ");
-                    for (String s : split) {
-                        Set<String> wordNetResults = findWordNetResults(s, clauseKey);
-                        results.addAll(wordNetResults);
-                    }
+                    Set<String> wordNetResults = findWordNetResults(humanReadable, clauseKey);
+                    results.addAll(wordNetResults);
                 }
             }
         }

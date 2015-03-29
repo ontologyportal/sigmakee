@@ -1,5 +1,3 @@
-package com.articulate.sigma.nlp.pipeline;
-
 /*
 Copyright 2014-2015 IPsoft
 
@@ -20,6 +18,7 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
+package com.articulate.sigma.nlp.pipeline;
 
 import com.articulate.sigma.test.CVSExporter;
 import com.articulate.sigma.test.JsonReader;
@@ -46,7 +45,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
+
+import static org.junit.runners.Parameterized.*;
 
 @RunWith(Parameterized.class)
 public class CorefTest extends TestCase {
@@ -55,6 +55,7 @@ public class CorefTest extends TestCase {
             .build(new CacheLoader<String, Annotation>() {
                 @Override
                 public Annotation load(String fileName) throws Exception {
+
                     URL url = Resources.getResource("resources/textfiles/" + fileName);
                     Pipeline pipeline = new Pipeline();
                     Annotation document = pipeline.annotate(Resources.toString(url, Charsets.UTF_8));
@@ -62,11 +63,11 @@ public class CorefTest extends TestCase {
                 }
             });
 
-    @Parameterized.Parameter(value= 0)
+    @Parameter(value = 0)
     public String fileName;
-    @Parameterized.Parameter(value= 1)
+    @Parameter(value = 1)
     public CorefParam corefA;
-    @Parameterized.Parameter(value= 2)
+    @Parameter(value = 2)
     public CorefParam corefB;
 
     // swallows output by default
@@ -74,13 +75,15 @@ public class CorefTest extends TestCase {
 
     @AfterClass
     public static void cleanUp() throws IOException {
+
         DOCUMENTS_CACHED.invalidateAll();
         exportResults.flushIfEnabled();
     }
 
-    @Parameterized.Parameters(name="<{0}> {1} ↔ {2}")
+    @Parameters(name = "<{0}> {1} ↔ {2}")
     public static Collection<Object[]> prepare() {
-        return JsonReader.transform("resources/corefTests.json",(JSONObject jo) -> {
+
+        return JsonReader.transform("resources/corefTests.json", (JSONObject jo) -> {
             String fileName = (String) jo.get("file");
             Long sentence = (Long) jo.get("sentence");
             Long sentenceA = sentence != null ? sentence : (Long) jo.get("sentenceA");
@@ -97,41 +100,33 @@ public class CorefTest extends TestCase {
 
     @Test
     public void test() throws Exception {
+
         Annotation document = DOCUMENTS_CACHED.get(fileName);
         Collection<CorefChain> corefs = document.get(CorefChainAnnotation.class).values();
         boolean hasBoth = FluentIterable.from(corefs)
-                .filter(new Predicate<CorefChain>() {
-                    @Override
-                    public boolean apply(CorefChain corefChain) {
-                        return FluentIterable.from(corefChain.getMentionsInTextualOrder())
-                                .anyMatch(new Predicate<CorefChain.CorefMention>() {
-                                    @Override
-                                    public boolean apply(CorefChain.CorefMention corefMention) {
-                                        boolean same = corefA.equals(corefMention);
-                                        if(same) {
-                                            System.out.println("1st pass: " + corefMention.toString());
-                                        }
-                                        return same;
-                                    }
-                                });
-                    }
+                .filter(corefChain -> {
+
+                    return FluentIterable.from(corefChain.getMentionsInTextualOrder())
+                            .anyMatch(corefMention -> {
+
+                                boolean same = corefA.equals(corefMention);
+                                if(same) {
+                                    System.out.println("1st pass: " + corefMention.toString());
+                                }
+                                return same;
+                            });
                 })
-                .anyMatch(new Predicate<CorefChain>() {
-                    @Override
-                    public boolean apply(CorefChain corefChain) {
-                        return FluentIterable.from(corefChain.getMentionsInTextualOrder())
-                                .anyMatch(new Predicate<CorefChain.CorefMention>() {
-                                    @Override
-                                    public boolean apply(CorefChain.CorefMention corefMention) {
-                                        boolean same = corefB.equals(corefMention);
-                                        if(same) {
-                                            System.out.println("2nd pass: " + corefMention.toString());
-                                        }
-                                        return same;
+                .anyMatch((CorefChain corefChain) ->
+
+                        FluentIterable.from(corefChain.getMentionsInTextualOrder())
+                                .anyMatch(corefMention -> {
+
+                                    boolean same = corefB.equals(corefMention);
+                                    if (same) {
+                                        System.out.println("2nd pass: " + corefMention.toString());
                                     }
-                                });
-                    }
-                });
+                                    return same;
+                                }));
 
         // Export results if export enabled
         List<CoreMap> coreMaps = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -140,8 +135,8 @@ public class CorefTest extends TestCase {
                 , coreMaps.get(corefA.getSentenceIndex()).toString()
                 , corefA.getSentenceIndex() == corefB.getSentenceIndex() ? "" : coreMaps.get(corefB.getSentenceIndex()).toString()});
 
-        if(!hasBoth) {
-            for(CorefChain chain : corefs) {
+        if (!hasBoth) {
+            for (CorefChain chain : corefs) {
                 System.out.println(chain);
             }
             fail("Not found: " + corefA + " ↔ " + corefB);
