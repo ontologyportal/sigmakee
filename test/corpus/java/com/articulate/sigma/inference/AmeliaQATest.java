@@ -48,7 +48,8 @@ public class AmeliaQATest {
         actualAnswer = interpreter.interpretSingle(query);
         System.out.println("actualAnswer = " + actualAnswer);
     //    assertNotEquals(actualAnswer,"No response.");
-        assertEquals(actualAnswer, "An instance of Airplane.");
+    //    assertEquals(actualAnswer, "An instance of Airplane.");
+        assertEquals(actualAnswer, "Flying.");
 
         actualAnswer = interpreter.interpretSingle(query2);
         System.out.println("actualAnswer = " + actualAnswer);
