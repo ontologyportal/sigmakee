@@ -775,10 +775,9 @@ public class Interpreter {
         ArrayList<String> results = null;
         Scanner scanner = new Scanner(System.in);
         do {
-
             System.out.print("Enter sentence: ");
             input = scanner.nextLine();
-            if (!Strings.isNullOrEmpty(input) || !"exit".equals(input) || !"quit".equals(input)) {
+            if (!Strings.isNullOrEmpty(input) || "exit".equals(input) || "quit".equals(input)) {
                 if (input.equals("reload")) {
                     System.out.println("reloading semantic rewriting rules");
                     loadRules();
