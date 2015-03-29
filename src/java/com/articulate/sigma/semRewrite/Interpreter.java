@@ -777,7 +777,7 @@ public class Interpreter {
         do {
             System.out.print("Enter sentence: ");
             input = scanner.nextLine();
-            if (!Strings.isNullOrEmpty(input) || "exit".equals(input) || "quit".equals(input)) {
+            if (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit")) {
                 if (input.equals("reload")) {
                     System.out.println("reloading semantic rewriting rules");
                     loadRules();
@@ -820,12 +820,14 @@ public class Interpreter {
                     if (verboseParse) {
                         verboseParse = false;
                         System.out.println("STOP: Outputting Part Of Speech information");
-                    } else {
+                    } 
+                    else {
                         verboseParse = true;
                         System.out.println("START: Outputting Part Of Speech information");
                     }
 
-                } else {
+                } 
+                else {
                     if (input.trim().endsWith("?"))
                         question = true;
                     else
@@ -835,7 +837,7 @@ public class Interpreter {
                     System.out.println("Final Answer: " + result);
                 }
             }
-        } while (!"exit".equals(input));
+        } while (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit"));
     }
 
     /** ***************************************************************
