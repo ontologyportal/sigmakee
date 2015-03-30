@@ -208,13 +208,23 @@ public class DatesAndDuration {
 	 
 	 /** ***************************************************************
 		 */
+	 private int clearDateGroups(List<String> monthDateGroup, List<String> dateDateGroup, List<String> yearDateGroup) {
+		   
+		 monthDateGroup.clear();
+			dateDateGroup.clear();
+			yearDateGroup.clear();
+			return 0;
+	 }
+	 
+	 /** ***************************************************************
+		 */
 	 public List<DateInfo> mergeDateSet(Utilities utilities) {
 	     
 		 List<DateInfo> dateList = new ArrayList<DateInfo>();
 		 Iterator<HashMap.Entry<Integer, String>> dateEntries = utilities.dateMap.entrySet().iterator();
 		 List<String> monthDateGroup = new ArrayList<String>();
 		 List<String> dateDateGroup = new ArrayList<String>();
-		 List<String> yearGroup = new ArrayList<String>();
+		 List<String> yearDateGroup = new ArrayList<String>();
 		 int count = 0;
 		 int prevIndex = -1;
 		 String wordToken;
@@ -232,24 +242,28 @@ public class DatesAndDuration {
 		 					dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 		 					count ++;
 		 					prevIndex = dateEntry.getKey();
-		 				} 
+		 				} else if(yearDateGroup.size() == 1 && (dateEntry.getKey() - prevIndex) <= 2) {
+		 					yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
+		 					count++;
+		 					prevIndex = dateEntry.getKey();
+		 				}
 		 				else if (dateEntry.getKey() - prevIndex >= 2) {
 		 					if (monthDateGroup.size() != 0) {
 			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
 			 				} 
 		 					else if (dateDateGroup.size() != 0) {
 			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
+					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} else if (yearDateGroup.size() != 0) {
+			 					addDateInfoToList(yearDateGroup, dateList, utilities);
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
@@ -260,20 +274,20 @@ public class DatesAndDuration {
 		 				if (dateEntry.getKey() - prevIndex >= 2) {
 		 					if (monthDateGroup.size() != 0 ) {
 			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);;
 					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
 			 				} 
 		 					else if (dateDateGroup.size() != 0) {
 			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
+					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
+					 			count++;
+					 			prevIndex = dateEntry.getKey();
+			 				} else if (yearDateGroup.size() != 0) {
+			 					addDateInfoToList(yearDateGroup, dateList, utilities);
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
@@ -297,44 +311,47 @@ public class DatesAndDuration {
 		 				else if (dateEntry.getKey() - prevIndex >= 2) {
 		 					if (monthDateGroup.size() != 0 ) {
 			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 					 			dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
 			 				} 
 		 					else if (dateDateGroup.size() != 0 ) {
 			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 					 			dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
 			 				} 
 		 				}
+		 			} else if(count == 2) {
+		 				if (yearDateGroup.size() == 2 && (dateEntry.getKey()-prevIndex) <= 2) {
+		 					yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
+		 					count ++;
+		 					prevIndex = dateEntry.getKey();
+		 				} 
+		 				if (monthDateGroup.size() == 3) {
+			 				addDateInfoToList(monthDateGroup, dateList, utilities);
+			 			} 
+			 			else if (dateDateGroup.size() == 3) {
+			 				addDateInfoToList(dateDateGroup, dateList, utilities);
+			 			} else if(yearDateGroup.size() == 3) {
+			 				addDateInfoToList(yearDateGroup, dateList, utilities);
+			 			}
+			 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 		 			}
 		 			else {
 		 				if (dateEntry.getKey() - prevIndex >= 2) {
 		 					if (monthDateGroup.size() != 0 ) {
 			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 					 			dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
 			 				} 
 		 					else if (dateDateGroup.size() != 0 ) {
 			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-			 					monthDateGroup.clear();
-					 			dateDateGroup.clear();
-					 			yearGroup.clear();
-					 			count = 0;
+					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 					 			dateDateGroup.add(dateEntry.getKey()+ "::" + dateEntry.getValue());
 					 			count++;
 					 			prevIndex = dateEntry.getKey();
@@ -345,29 +362,27 @@ public class DatesAndDuration {
 		 		}
 		 		else if (dateEntry.getValue().contains("YEAR")) { 
 		 			if (count == 0) {
-		 				DateInfo dateInfo = new DateInfo();
-		 				dateInfo.setYear(wordToken);
-		 				dateInfo.addWordIndex(dateEntry.getKey());
-		 				dateList.add(dateInfo);
-		 				utilities.allDatesList.add(dateInfo);
-		 				prevIndex = dateEntry.getKey();
+		 				yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
+			 			count++;
+			 			prevIndex = dateEntry.getKey();
 		 			} 
 		 			else {
 		 				if (monthDateGroup.size() != 0 && (dateEntry.getKey() - prevIndex) <= 2) {
 		 					monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
 		 					addDateInfoToList(monthDateGroup, dateList, utilities);
-		 					monthDateGroup.clear();
-				 			dateDateGroup.clear();
-				 			yearGroup.clear();
-				 			count = 0;
+				 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 		 				} 
 		 				else if (dateDateGroup.size() != 0 && (dateEntry.getKey()-prevIndex) <= 2) {
 		 					dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 		 					addDateInfoToList(dateDateGroup, dateList, utilities);
-		 					monthDateGroup.clear();
-				 			dateDateGroup.clear();
-				 			yearGroup.clear();
+				 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
+		 				} else if(yearDateGroup.size() == 1) {
+		 					addDateInfoToList(yearDateGroup, dateList, utilities);
+		 					yearDateGroup.clear();
 				 			count = 0;
+				 			yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
+				 			count++;
+				 			prevIndex = dateEntry.getKey();
 		 				}
 		 				
 		 			}
@@ -378,11 +393,10 @@ public class DatesAndDuration {
 		 			} 
 		 			else if (dateDateGroup.size() == 3) {
 		 				addDateInfoToList(dateDateGroup, dateList, utilities);
+		 			} else if(yearDateGroup.size() == 3) {
+		 				addDateInfoToList(yearDateGroup, dateList, utilities);
 		 			}
-		 			monthDateGroup.clear();
-		 			dateDateGroup.clear();
-		 			yearGroup.clear();
-		 			count = 0;
+		 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 		 		}
 		 	}
 		 return dateList;
