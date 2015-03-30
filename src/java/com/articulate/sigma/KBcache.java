@@ -87,6 +87,10 @@ public class KBcache {
     // The number of arguments to each relation.  Variable arity is -1
     public HashMap<String,Integer> valences = new HashMap<String,Integer>();
 
+    // Disjoint relations which were explicitly defined in "partition", "disjoint",
+    // "disjointDecomposition" and "exhaustiveDecomposition" expressions
+    public HashMap<String, HashSet<String>> explicitDisjointRelations = new HashMap<>();
+
     /** ***************************************************************
      * Constructor
      */
@@ -220,7 +224,111 @@ public class KBcache {
         	instances.put(child, iset);
         }
     }
-    
+
+    /** ***************************************************************
+     * build a disjoint-relations-map which were explicitly defined in the
+     * "partition", "disjoint", "disjointDecomposition" and
+     * "exhaustiveDecomposition" expressions;
+     */
+    public void buildDisjointRelationsMap() {
+        // Find explicit-disjoint-relations-map
+        ArrayList<Formula> explicitDisjontFormulae = new ArrayList<Formula>();
+        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "partition"));
+        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "disjoint"));
+        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "disjointDecomposition"));
+        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "exhaustiveDecomposition"));
+        for (Formula f : explicitDisjontFormulae) {
+            System.out.println(f + "\t" + f.argumentsToArrayList(0).size());
+            ArrayList<String> arguments = f.argumentsToArrayList(0);
+
+            if (arguments != null && !arguments.isEmpty()) {
+                int i = 2;
+                if (f.getArgument(0).equals("disjoint")) {
+                    i = 1;
+                }
+                for ( ; i < arguments.size(); i++) {
+                    String key = arguments.get(i);
+                    int j = 2;
+                    if (f.getArgument(0).equals("disjoint"))
+                        j = 1;
+                    for ( ; j < arguments.size(); j++) {
+                        if (j != i) {
+                            String val = arguments.get(j);
+                            if (!explicitDisjointRelations.containsKey(key)) {
+                                HashSet<String> vals = new HashSet<String>();
+                                vals.add(val);
+                                explicitDisjointRelations.put(key, vals);
+                            } else {
+                                HashSet<String> vals = explicitDisjointRelations.get(key);
+                                vals.add(val);
+                                explicitDisjointRelations.put(key, vals);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
+     * check if there are any two types in typeSet are disjoint or not;
+     */
+    public static boolean checkDisjoint(KB kb, HashSet<String> typeSet) {
+
+        ArrayList<String> typeList = new ArrayList<>(typeSet);
+        int size = typeList.size();
+        for (int i = 0; i < size; i++) {
+            String rel1 = typeList.get(i);
+            for (int j = i+1; j < size; j++) {
+                String rel2 = typeList.get(j);
+                if (checkDisjoint(kb, rel1, rel2) == true)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     * check if rel1 and rel2 are disjoint
+     * return true if rel1 and rel2 are disjoint;
+     * return false if rel1 and rel2 are not disjoint;
+     */
+    public static boolean checkDisjoint(KB kb, String rel1, String rel2) {
+
+        HashSet<String> ancestors_rel1 = kb.kbCache.getParentClasses(rel1);
+        HashSet<String> ancestors_rel2 = kb.kbCache.getParentClasses(rel2);
+        if (ancestors_rel1 == null || ancestors_rel2 == null)
+            return false;
+
+        ancestors_rel1.add(rel1);
+        ancestors_rel2.add(rel2);
+        for (String s1 : ancestors_rel1) {
+            for (String s2 : ancestors_rel2) {
+                if (kb.kbCache.isExplicitDisjoint(kb.kbCache.explicitDisjointRelations, s1, s2)) {
+                    // System.out.println(rel1 + " and " + rel2 + " are disjoint relations, because of " + s1 + " and " + s2);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     * return true if rel1 and rel2 are explicitly defined as disjoint relation;
+     * otherwise return false;
+     */
+    public boolean isExplicitDisjoint(HashMap<String, HashSet<String>> explicitDisjointRelations,
+                                      String rel1, String rel2) {
+
+        if (explicitDisjointRelations.containsKey(rel1)) {
+            return explicitDisjointRelations.get(rel1).contains(rel2);
+        } else if (explicitDisjointRelations.containsKey(rel2)) {
+            return explicitDisjointRelations.get(rel2).contains(rel1);
+        } else {
+            return false;
+        }
+    }
+
     /** ***************************************************************
      * Cache whether a given instance has a given parent class.  
      * Include paths the have transitive relations between instances such
@@ -858,6 +966,7 @@ public class KBcache {
         collectDomains();  // note that buildInstTransRels() depends on this
         buildInstTransRels();
         buildDirectInstances();
+        buildDisjointRelationsMap(); // find relations under partition definition
         System.out.println("INFO in KBcache.buildCaches(): size: " + instances.keySet().size());
     }
     
