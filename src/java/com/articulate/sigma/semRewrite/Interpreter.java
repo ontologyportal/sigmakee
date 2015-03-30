@@ -520,17 +520,19 @@ public class Interpreter {
                     Integer id = Integer.parseInt(arg1Matcher.group(2));
                     //ROOT is ID 0 so ignore
                     if (id != 0) {
-                        arg1 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
+                        if (!tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNP") || tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNPS")) {
+                            arg1 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
+                        }
                     }
-
-
                 }
 
                 if (arg2Matcher.matches()) {
                     Integer id = Integer.parseInt(arg2Matcher.group(2));
                     //ROOT is ID 0 so ignore
                     if (id != 0) {
-                        arg2 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
+                        if (!tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNP") || tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNPS")) {
+                            arg2 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
+                        }
                     }
                 }
 
