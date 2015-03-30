@@ -253,27 +253,41 @@ public class CNF {
         
         CNF cnfnew2 = cnf.deepCopy();  // sentence        
         CNF cnfnew1 = this.deepCopy(); // rule
+        boolean negatedClause = false;
         //System.out.println("INFO in CNF.unify(): cnf 1 " + cnf);
         //System.out.println("INFO in CNF.unify(): this " + this);
         HashMap<String,String> result = new HashMap<String,String>();
         for (int i = 0; i < cnfnew1.clauses.size(); i++) {  // rule
             Disjunct d1 = cnfnew1.clauses.get(i);
+            if (d1.disjuncts.size() == 1 && d1.disjuncts.get(0).negated)
+                negatedClause = true;
             HashMap<String,String> result2 = unifyDisjunct(d1,cnfnew2,cnfnew1,result);
             //System.out.println("INFO in CNF.unify(): results2 " + result2);
             //System.out.println("INFO in CNF.unify(): cnfnew1 " + cnfnew1);
             //System.out.println("INFO in CNF.unify(): cnfnew2 " + cnfnew2);
-            if (result2 == null) { // every clause in the rule must match to succeed
-                cnf.clearBound(); // if no success, wipe all the intermediate bindings.
-                return null;
+            if (negatedClause) {
+                if (result2 != null) { // successful binding is a failure for a negated clause
+                    //System.out.println("INFO in CNF.unify(): found a binding for a negated clause " + cnfnew1 +  " with " + cnfnew2);
+                    cnf.clearBound();
+                    return null;
+                }
+                //System.out.println("INFO in CNF.unify(): no binding for a negated clause " + d1 +  " with " + cnfnew2);
+                cnf.clearBound(); 
             }
             else {
-                cnf.copyBoundFlags(cnfnew2);
-                cnfnew1 = cnfnew1.applyBindings(result2);
-                //System.out.println("INFO in CNF.unify(): cnf 1 " + cnfnew1);
-                //System.out.println("INFO in CNF.unify(): cnf 2 " + cnfnew2);    
-                cnfnew2 = cnfnew2.applyBindings(result2);
-                result.putAll(result2);
-                //System.out.println("INFO in CNF.unify(): bindings " + result); 
+                if (result2 == null) { // every clause in the rule must match to succeed
+                    cnf.clearBound(); // if no success, wipe all the intermediate bindings.
+                    return null;
+                }
+                else {
+                    cnf.copyBoundFlags(cnfnew2);
+                    cnfnew1 = cnfnew1.applyBindings(result2);
+                    //System.out.println("INFO in CNF.unify(): cnf 1 " + cnfnew1);
+                    //System.out.println("INFO in CNF.unify(): cnf 2 " + cnfnew2);    
+                    cnfnew2 = cnfnew2.applyBindings(result2);
+                    result.putAll(result2);
+                    //System.out.println("INFO in CNF.unify(): bindings " + result); 
+                }
             }
         }
         if (result.keySet().size() == 0)
