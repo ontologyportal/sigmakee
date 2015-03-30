@@ -297,7 +297,6 @@ public class TPTP3ProofProcessor {
 				if (types!=null && types.size()>0) {
 					if (types.size() == 1) {
 						binding = "an instance of " + types.toArray()[0];
-						bindings.set(i, binding);
 					}
 					else {
 						binding = "an instance of ";
@@ -307,6 +306,7 @@ public class TPTP3ProofProcessor {
 							else { binding += ", " + t; }
 						}
 					}
+					bindings.set(i, binding);
 				}
 			}
 			else {
