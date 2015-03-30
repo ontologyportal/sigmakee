@@ -1,0 +1,1028 @@
+[
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia Mary Earhart, by profession?",
+"answer":"(.*(American aviation pioneer).*)&(.*(author).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What did Amelia do ?",
+"answer":"(.*(American aviation pioneer).*)&(.*(author).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What career did Amelia choose?",
+"answer":"(.*(American aviation pioneer).*)&(.*(author).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell me who was Amelia?",
+"answer":"(.*(American aviation pioneer).*)&(.*(author).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who Amelia was?",
+"answer":"(.*(American aviation pioneer).*)&(.*(author).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia Mary Earhart an author?",
+"answer":".*(Yes|true).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Amelia Author anything?",
+"answer":".*(Yes|true).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was an author. Isn't it?",
+"answer":".*(Yes|true).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"I wonder if Amelia was an author too.",
+"answer":".*(Yes|true).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Could you tell me if Amelia was an author?",
+"answer":".*(Yes|true).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"When was Amelia born?",
+"answer":".*(July 24, 1897).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"When Amelia came to this world?",
+"answer":".*(July 24, 1897).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia took birth on what date?",
+"answer":".*(July 24, 1897).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"When was it that Amelia born?",
+"answer":".*(July 24, 1897).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Please tell me Amelia's date of birth.",
+"answer":".*(July 24, 1897).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"I wonder if you know when was Amelia born?",
+"answer":".*(July 24, 1897).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How old was Amelia when she disappeared?",
+"answer":".*(39).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's age when she disappeared?",
+"answer":".*(39).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How old Amelia had been when she disappeared?",
+"answer":".*(39).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Why did Amelia receive the Distinguished Flying Cross?",
+"answer":".*(first female aviator).*(fly solo).*(Atlantic Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What made Amelia get the Distinguished Flying Cross?",
+"answer":".*(first female aviator).*(fly solo).*(Atlantic Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia got the Distinguished Flying Cross for what?",
+"answer":".*(first female aviator).*(fly solo).*(Atlantic Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell me the reason for Amelia getting the Distinguished Flying Cross award.",
+"answer":".*(first female aviator).*(fly solo).*(Atlantic Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Let me know the reason for Amelia getting The Distinguished Flying Cross award.",
+"answer":".*(first female aviator).*(fly solo).*(Atlantic Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was the name of the organization for female pilots which Amelia had helped to form?",
+"answer":".*(The Ninety-Nines).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Name the organization for female pilots which Amelia had helped to form.",
+"answer":".*(The Ninety-Nines).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell me the organization for female pilots that is formed with Amelia's help.",
+"answer":".*(The Ninety-Nines).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"The organization for female pilots that is formed with Amelia's help is?",
+"answer":".*(The Ninety-Nines).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who funded the Lockheed Model 10 Electra?",
+"answer":".*(Purdue University).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Lockheed Model 10 Electra was funded by whom?",
+"answer":".*(Purdue University).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who do you think managed funding for Lockheed Model 10 Electra?",
+"answer":".*(Purdue University).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Give me the name of the person who funded the Lockheed Model 10 Electra.",
+"answer":".*(Purdue University).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where is Howland Island situated?",
+"answer":".*(Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What is location of Howland Island?",
+"answer":".*(Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where does Howland Island lie?",
+"answer":".*(Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What did Amelia endevour to do in 1937?",
+"answer":".*(circumnavigational flight).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia wanted to achieve what in 1937?",
+"answer":".*(circumnavigational flight).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell about plans of Amelia in 1937.",
+"answer":".*(circumnavigational flight).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"In 1937, Amelia aimed to achieve what?",
+"answer":".*(circumnavigational flight).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Why did Amelia join Purdue University as a visiting faculty?",
+"answer":"(.*(counsel women on careers).*) & (.*(help inspire others with her love for aviation).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"By what means did Amelia attempt to circumnavigate the globe when she disappeared?",
+"answer":".*(Aircraft|Flight).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How did Amelia attempt to roam around the world when she disappeared?",
+"answer":".*(Aircraft|Flight).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia disappeared while trying to circumnavigate around the globe by what means?",
+"answer":".*(Aircraft|Flight).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where did Amelia disappear?",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia disappeared at what location?",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What do you think was the place where Amelia disappeared?",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell me the location of Amelia when she disappeared.",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Can I know Amelia's location when she disappeared?",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Disappearance of Amelia happened at what place?",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where did Amelia go missing?",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia vanished at what place?",
+"answer":".*(Howland Island | Pacific Ocean).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Name an organization that Amelia was a member of.",
+"answer":".*(National Woman's Party).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Let me know the organization that Amelia was a member of.",
+"answer":".*(National Woman's Party).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was member of which organization?",
+"answer":".*(National Woman's Party).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Name the organization what Amelia had membership of.",
+"answer":".*(National Woman's Party).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell me the name of organization to which Amelia belonged.",
+"answer":".*(National Woman's Party).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Will you please tell me the organization's name with what Amelia was associated?",
+"answer":".*(National Woman's Party).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's stand on the Equal Rights Amendment?",
+"answer":".*(support).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia in favor of Equal Rights Amendment?",
+"answer":".*(support).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Equal Rights Amendment supported by Amelia?",
+"answer":".*(support).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Equal Rights Amendment get Amelia's consent?",
+"answer":".*(support).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What did Amelia think about Equal Rights Amendment?",
+"answer":".*(support).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was amelia's father?",
+"answer":".*(Samuel  | Edwin | Stanton | Lawyer).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was profession of Amelia's father?",
+"answer":".*(Lawyer).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Introduce father of Amelia?",
+"answer":".*(Samuel  | Edwin | Stanton).*&.*(Lawyer).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's father was?",
+"answer":".*(Samuel  | Edwin | Stanton | Lawyer).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell about biological father of Amelia?",
+"answer":".*(Samuel  | Edwin | Stanton | Lawyer).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was born to whom?",
+"answer":".*(Samuel  | Edwin | Stanton).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was full name of Amelia?",
+"answer":".*(Amelia Mary Earhart).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was named as?",
+"answer":".*(Amelia Mary Earhart).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How was Amelia named?",
+"answer":".*((Amelia Mary Earhart) | grandmother).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was official name of Amelia?",
+"answer":".*(Amelia Mary Earhart).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was mother of Amelia?",
+"answer":".*(Amelia | Amy | Otis).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who gave birth to Amelia?",
+"answer":".*(Amelia | Amy | Otis).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was name of Amelia's mother?",
+"answer":".*(Amelia | Amy | Otis).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's mother was?",
+"answer":".*(Amelia | Amy | Otis).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who were parents of Amelia?",
+"answer":"(.*(Amelia | Amy | Otis).*) & (.*(Samuel  | Edwin | Stanton | Lawyer).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Introduce Amelia's parents?",
+"answer":"(.*(Amelia | Amy | Otis).*) & (.*(Samuel  | Edwin | Stanton | Lawyer).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was born to whom?",
+"answer":"(.*(Amelia | Amy | Otis).*) & (.*(Samuel  | Edwin | Stanton | Lawyer).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who gave birth to Amelia?",
+"answer":"(.*(Amelia | Amy | Otis).*) & (.*(Samuel  | Edwin | Stanton | Lawyer).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What is birth place of Amelia?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was born at?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia took birth at?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where was amelia born?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was her parents' age when Amelia was born?",
+"answer":"(.*(30).*) & (.*(28).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell us about Amelia's parents' age when she born.",
+"answer":"(.*(30).*) & (.*(28).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"On the birth of Amelia what her parents' age had been?",
+"answer":"(.*(30).*) & (.*(28).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How old were Amelia's parents at the time of her birth?",
+"answer":"(.*(30).*) & (.*(28).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Come up with the age of Amelia's parents when she was born.",
+"answer":"(.*(30).*) & (.*(28).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where was Amelia's mom when Amelia was born?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where was Amelia's mom putting up when she was born?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's mom was residing where when Amelia was born?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where was mom of Amelia staying when Amelia took birth?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was born when her mother was at?",
+"answer":".*(Atchison|Kansas|home|maternal grandfather).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's grandfather?",
+"answer":".*(federal judge|president|Atchison Savings Bank|leading citizen).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What Amelia's grandfather used to do?",
+"answer":".*(federal judge|president|Atchison Savings Bank|leading citizen).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was Amelia's grandfather?",
+"answer":".*(federal judge|president|Atchison Savings Bank|leading citizen).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was profession of Amelia's grandfather?",
+"answer":".*(federal judge|president|Atchison Savings Bank|leading citizen).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What grandfather of Amelia used to do?",
+"answer":".*(federal judge|president|Atchison Savings Bank|leading citizen).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's grandfather's profession?",
+"answer":".*(federal judge|president|Atchison Savings Bank|leading citizen).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was partly German?",
+"answer":".*(Amelia|mary).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Amelia's maternal grandfather like her parents' marriage?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Do you think Amelia's maternal grandfather favor her parents' marriage?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia's parents' marriage supported by her maternal grandfather?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was it acceptable for Amelia's maternal grandfather to get her parents married?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was the first child of Amelia's parents' marriage?",
+"answer":".*(infant|stillborn).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia first child of her parents?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell me if Amelia was the first child to her parents?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What Alfred did not like in Edwin?",
+"answer":"(.*(progress).*) & (.*(lawyer).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Why Alfred was not willing to get Amelia's parents married?",
+"answer":"(.*(progress).*) & (.*(lawyer).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Alfred was reluctant to Amelia's parents' marriage, why?",
+"answer":"(.*(progress).*) & (.*(lawyer).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's parents' marriage was not supported by Alfred. Was it?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was nick name of Amelia's father?",
+"answer":".*(Edwin).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's father was fondly known as?",
+"answer":".*(Edwin).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's dad's pet name?",
+"answer":".*(Edwin).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Nick name of AMelia's dad was?",
+"answer":".*(Edwin).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's father's pen name?",
+"answer":".*(Edwin).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's father fondly addressed as?",
+"answer":".*(Edwin).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was nick for Amelia's mother?",
+"answer":".*(Amy).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's mother was fondly known as?",
+"answer":".*(Amy).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's mom's pet name?",
+"answer":".*(Amy).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Nick name of AMelia's mom was?",
+"answer":".*(Amy).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's mother's pen name?",
+"answer":".*(Amy).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's mother fondly addressed as?",
+"answer":".*(Amy).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What were the names of Amelia's grandmother's?",
+"answer":"(.*(Amelia Josephine Harres).*) & (.*(Mary Wells Patton).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How were Amelia's grannys addressed?",
+"answer":"(.*(Amelia Josephine Harres).*) & (.*(Mary Wells Patton).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's grannys were?",
+"answer":"(.*(Amelia Josephine Harres).*) & (.*(Mary Wells Patton).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who were Amelia's grandmas?",
+"answer":"(.*(Amelia Josephine Harres).*) & (.*(Mary Wells Patton).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's nick name?",
+"answer":".*(Meeley|Millie).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was fondly known as?",
+"answer":".*(Meeley|Millie).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's pet name?",
+"answer":".*(Meeley|Millie).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Nick name of Amelia was?",
+"answer":".*(Meeley|Millie).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's pen name?",
+"answer":".*(Meeley|Millie).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia fondly addressed as?",
+"answer":".*(Meeley|Millie).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was ringleader?",
+"answer":".*(Amelia|Meeley|Millie).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Ringleader is the word for whom?",
+"answer":".*(Grace Muriel Earhart|Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was Amelia's sister?",
+"answer":".*(Grace Muriel Earhart|Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell the name of sister of Amelia.",
+"answer":".*(Grace Muriel Earhart|Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who Amelia had, as a sister?",
+"answer":".*(Grace Muriel Earhart|Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's sister was younger or elder to Amelia?",
+"answer":".*(younger).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How much senior Amelia was to her sister?",
+"answer":".*(2|two).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How many years younger Amelia's sister was to her?",
+"answer":".*(2|two).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How many months younger Amelia's sister was to her?",
+"answer":".*(24|twenty four).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was more obidient, Amelia or her sister?",
+"answer":".*(sister|Grace Muriel Earhart|Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia or her sister, who was more obidient?",
+"answer":".*(sister|Grace Muriel Earhart|Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who out of Amelia and her sister was more obidient?",
+"answer":".*(sister|Grace Muriel Earhart|Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was nick name of Amelia's sister?",
+"answer":".*(Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's sister was fondly known as?",
+"answer":".*(Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's sister's pet name?",
+"answer":".*(Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Nick name of Amelia's sister was?",
+"answer":".*(Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's sister's pen name?",
+"answer":".*(Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's sister fondly addressed as?",
+"answer":".*(Pidge).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who was Pidge?",
+"answer":".*(sister|Grace Muriel Earhart).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What do you know about Pidge?",
+"answer":".*(sister|Grace Muriel Earhart).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Introduce Pidge.",
+"answer":".*(sister|Grace Muriel Earhart).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Can I know about Pidge?",
+"answer":".*(sister|Grace Muriel Earhart).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Earhart sisters carry their nick names to their adulthood?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Amelia sisters' adulthood have their nick names?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did AMelia sisters use their nick names in their adulthood?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Why were Amelia and her sister not brought up in conventional way?",
+"answer":"(.*(Amy|mother).*)&(.*(believe).*)"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Were Amelia and her sister not brought up in an unconventional way?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia's maternal granny happy with her upbringing?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia's upbringing in accordance with her granny's expectation?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Amelia know about disparity in their and neighbouhood kids' upbringing?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia aware that Amelia sisters were privileged in their upbringing?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"The difference in bringing up of amelia sisters' and neighborhood kids was realised by Amelai or not?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How Amelia sisters used to feel while exploring the neighborhood?",
+"answer":".*(happy|adventure).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia sisters' feeling while they used to visit their neighborhood?",
+"answer":".*(happy|adventure).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Express Amelia sisters's feeling about visiting their neighborhood.",
+"answer":".*(happy|adventure).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What activities included as a part of Amelia's play?",
+"answer":".*(Pidge|climbing trees|hunting rats).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What were Amelia's pastimes?",
+"answer":".*(Pidge|climbing trees|hunting rats).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia a tomboy?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia was a Tomboy. Wasn't she?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Amelia used to play with her sister?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia pally with her sister?",
+"answer":".*(yes|true|correct).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What all, did Amelia and her sister gather?",
+"answer":".*(worms|moths|katydids|tree toad).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What constituted Amelia and her sister's collection?",
+"answer":".*(worms|moths|katydids|tree toad).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia and her sister's collection included what?",
+"answer":".*(worms|moths|katydids|tree toad).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where was Edwin working in 1907?",
+"answer":".*(Rock Island Railroad).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where was Edwin living in 1907?",
+"answer":" .*(Des Moines).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Tell us about Amelia's age when her father got tranferred to Des Moines.",
+"answer":".*(10).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Where did Amelia see her first aircraft?",
+"answer":".*(Iowa State Fair).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was the place where Amelia saw her first aircraft?",
+"answer":".*(Iowa State Fair).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who lured Amelia and her sister for a flight?",
+"answer":".*(Father|Samuel|Edwin|Stanton).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"It was who that tried to take Amelia and her sister's interest for flying.",
+"answer":".*(Father|Samuel|Edwin|Stanton).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Who took Amelia and her siter to Iowa State fair??",
+"answer":".*(Father|Samuel|Edwin|Stanton).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"With whom, Amelia and her siter visited Iowa State fair?",
+"answer":".*(Father|Samuel|Edwin|Stanton).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Amelia like the aircraft?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was the aircraft liked by Amelia?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Was Amelia attracted to the aircraft?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Aircraft didnot lure Amelia. Did it?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia liked what, aircraft or merry-go-round?",
+"answer":".*(merry-go-round).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What did Amelia like more aircraft or merry-go-round?",
+"answer":".*(merry-go-round).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What was Amelia's preference, aircraft or merry-go-round?",
+"answer":".*(merry-go-round).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Aircraft or merry-go-round, what was Amelia inclined to?",
+"answer":".*(merry-go-round).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How was the plane at Iowa State fair?",
+"answer":".*(rusty wire|not at all interesting|rickety|flivver|biplane).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Describe the plane at Iowa State fair?",
+"answer":".*(rusty wire|not at all interesting|rickety|flivver|biplane).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Plane at Iowa State fair was?",
+"answer":".*(rusty wire|not at all interesting|rickety|flivver|biplane).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"In author's view how was the plane?",
+"answer":".*(rickety|flivver|biplane).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"How did Amelia describe the plane?",
+"answer":".*(rusty wire|not at all interesting|biplane).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Describe the plane in Amelia's words?",
+"answer":".*(rusty wire|not at all interesting|biplane).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Did Amelia like the Plane?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia liked the plane. Didn't she?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"What were Amelia's thought about the plane?",
+"answer":".*(no|false|incorrect).*"
+},
+{
+"file":"AmeliaWiki.txt",
+"query":"Amelia's view about the plane was?",
+"answer":".*(no|false|incorrect).*"
+}
+]
+
