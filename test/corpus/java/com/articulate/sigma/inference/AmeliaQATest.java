@@ -66,8 +66,8 @@ public class AmeliaQATest {
     public void test1() {
 
         setKB();
-        String assertion = "John was an American.";
-        String query = "Where does John live?";
+        String assertion = "Amelia (July 24, 1897 – July 2, 1937) was an American aviator.";
+        String query = "Where does Amelia live?";
 
         kb.tell("(=>\n" +
                 "  (citizen ?X ?Y)\n" +
