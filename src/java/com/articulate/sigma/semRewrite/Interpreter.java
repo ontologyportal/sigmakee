@@ -318,10 +318,10 @@ public class Interpreter {
         String quantifierStart = "(exists (";
         String quantifierEnd = ")";
 
-        int start;
-        int end;
+        int start = -1;
+        int end = -1;
 
-        if ((start = form.indexOf(quantifierStart)) > 0) {
+        while ((start = form.indexOf(quantifierStart, end)) >= 0) {
             end = form.indexOf(quantifierEnd, start+1);
             String varList = form.substring(start+(quantifierStart.length()), end);
             String[] variables = varList.split(" ");
