@@ -52,7 +52,7 @@ public class MeasureFunctionTest {
 	@Test
 	public void test() {
 		System.out.println("Running date number tests for sentence : "+fInput);
-		assertEquals(fExpected, InterpretNumerics.getSumoTerms(fInput).toString());
+		assertEquals(fExpected, InterpretNumerics.getSumoTerms(fInput, null).toString());
 	}
 
 }
