@@ -110,6 +110,32 @@ public class WSD {
         else
             return "";
     }
+
+    public static String findWordSendInContextWithPos(String word, List<String> words, int pos) {
+        int bestScore = -1;
+        String bestSynset = "";
+        String newWord = "";
+        if (pos == 1)
+            newWord = WordNet.wn.nounRootForm(word,word.toLowerCase());
+        if (pos == 2)
+            newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
+        if (newWord != null && newWord != "")
+            word = newWord;
+        List<String> al = findWordSensePOS(word, words, pos);
+        if (al != null && al.size() > 0) {
+            String synset = (String) al.get(0); // 9-digit
+            String bestTotal = (String) al.get(1);
+            int total = (new Integer(bestTotal)).intValue();
+            if (total >= bestScore) {
+                bestScore = total;
+                bestSynset = synset;
+            }
+        }
+        if (bestScore > 5)
+            return bestSynset;
+        else
+            return "";
+    }
         
     /** ***************************************************************
      * Return the best guess at the synset for the given word in the

@@ -211,10 +211,8 @@ public class Interpreter {
                         Integer idx = Integer.valueOf(m.group(2));
                         pos = posMap.get(idx);
                     }
-                    List<String> senses = WSD.findWordSensePOS(pureWord, pure, WordNetUtilities.sensePOS(pos));
-                    if (!senses.isEmpty()) {
-                        id = senses.get(0);
-                    }
+                    id = WSD.findWordSendInContextWithPos(pureWord, pure, WordNetUtilities.sensePOS(pos));
+
                 }
                 //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
                 if (!Strings.isNullOrEmpty(id)) {
