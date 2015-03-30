@@ -293,20 +293,28 @@ public class TPTP3ProofProcessor {
 						types.add(cl);
 					}
 				}
-				fp.winnowTypeList(types, kb);
-				if (types!=null && types.size()>0) {
-					if (types.size() == 1) {
-						binding = "an instance of " + types.toArray()[0];
-					}
-					else {
-						binding = "an instance of ";
-						boolean start = true;
-						for (String t : types) {
-							if (start) { binding += t; start = false; }
-							else { binding += ", " + t; }
+				if (kb.kbCache.checkDisjoint(kb, types) == true) {
+					// check if there are contradiction among the types returned from E
+					bindings.remove(binding);
+					binding = "Get type contradiction for " + binding + " in " + types;
+					bindings.add(binding);
+				}
+				else {
+					fp.winnowTypeList(types, kb);
+					if (types!=null && types.size()>0) {
+						if (types.size() == 1) {
+							binding = "an instance of " + types.toArray()[0];
 						}
+						else {
+							binding = "an instance of ";
+							boolean start = true;
+							for (String t : types) {
+								if (start) { binding += t; start = false; }
+								else { binding += ", " + t; }
+							}
+						}
+						bindings.set(i, binding);
 					}
-					bindings.set(i, binding);
 				}
 			}
 			else {
