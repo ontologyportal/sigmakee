@@ -29,8 +29,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ClauseGroups {
-    
+
+    // predicate(word-1, word-2)
     public static final Pattern CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+-\\d+),\\s*(.+-\\d+)\\)");
+    // predicate(word, word-1)
+    // predicate(word, word)
+    // predicate(word-1, word)
+    public static final Pattern GENERIC_CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+),\\s*(.+)\\)");
     static final Pattern CLAUSE_PARAM = Pattern.compile("(.+)-(\\d+)");
 
     List<String> clauses;

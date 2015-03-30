@@ -41,6 +41,7 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.util.StringUtils;
 
 import static com.articulate.sigma.StringUtil.splitCamelCase;
+import static com.articulate.sigma.nlp.pipeline.SentenceUtil.makeBinaryRelationship;
 import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static com.articulate.sigma.semRewrite.EntityType.PERSON;
 
@@ -374,7 +375,7 @@ public class Interpreter {
             return prependQuantifier(vars, form);
         ArrayList<String> queryObjects=getQueryObjectsFromQuantification(vars);
         String innerKIF = prependQuantifier(vars, form);
-        return prependQueryQuantifier(queryObjects,innerKIF);
+        return prependQueryQuantifier(queryObjects, innerKIF);
     }
 
     /** *************************************************************
@@ -463,14 +464,16 @@ public class Interpreter {
         Pipeline pipeline = new Pipeline();
         Annotation document = pipeline.annotate(substitutedInput);
 
+        List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
+
         if (verboseParse) {
-            List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
             for (CoreLabel label : tokens) {
                 printLabel(label);
             }
         }
 
         List<String> results = getCNFInputs(document);
+        results = lemmatizeResults(results, tokens);
 
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
         System.out.println("INFO in Interpreter.interpretSingle(): " + in);
@@ -497,6 +500,50 @@ public class Interpreter {
     }
 
     /** *************************************************************
+     * Lemmatize the results of the dependency parser, WSD, etc.
+     */
+    public static List<String> lemmatizeResults(List<String> results, List<CoreLabel> tokens) {
+
+        List<String> lemmatizeResults = Lists.newArrayList();
+
+        for (String r : results) {
+            Matcher m = ClauseGroups.GENERIC_CLAUSE_SPLITTER.matcher(r);
+            if (m.matches()) {
+                String predicate = m.group(1);
+                String arg1 = m.group(2);
+                String arg2 = m.group(3);
+
+                Matcher arg1Matcher = ClauseGroups.CLAUSE_PARAM.matcher(arg1);
+                Matcher arg2Matcher = ClauseGroups.CLAUSE_PARAM.matcher(arg2);
+
+                if (arg1Matcher.matches()) {
+                    Integer id = Integer.parseInt(arg1Matcher.group(2));
+                    //ROOT is ID 0 so ignore
+                    if (id != 0) {
+                        arg1 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
+                    }
+
+
+                }
+
+                if (arg2Matcher.matches()) {
+                    Integer id = Integer.parseInt(arg2Matcher.group(2));
+                    //ROOT is ID 0 so ignore
+                    if (id != 0) {
+                        arg2 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
+                    }
+                }
+
+                lemmatizeResults.add(makeBinaryRelationship(predicate, arg1, arg2));
+
+            } else {
+                lemmatizeResults.add(r);
+            }
+        }
+        return lemmatizeResults;
+    }
+
+    /** *************************************************************
      * Get Dependency, SUMO, POS, etc. information from the parser
      */
     private List<String> getCNFInputs(Annotation document) {
@@ -512,6 +559,7 @@ public class Interpreter {
         results.addAll(wsd);
         List<String> posInformation = SentenceUtil.findPOSInformation(document, dependenciesList);
         results.addAll(posInformation);
+
         return results;
     }
 
