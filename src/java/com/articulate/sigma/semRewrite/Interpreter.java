@@ -293,12 +293,48 @@ public class Interpreter {
         Pattern p = Pattern.compile(pattern);
         Formula f = new Formula(form);
         Set<String> vars = f.collectAllVariables();
-        //System.out.println("INFO in Interpreter.findQuantification(): vars: " + vars);
+//        System.out.println("INFO in Interpreter.findQuantification(): vars: " + vars);
+
         for (String v : vars) {
             if (p.matcher(v).matches())
                 quantified.add(v);
         }
+
+//        System.out.println("INFO in Interpreter.findQuantification(): quantified before: " + quantified);
+
+        quantified = filterAlreadyQuantifiedVariables(form, quantified);
+
+//        System.out.println("INFO in Interpreter.findQuantification(): quantified after: " + quantified);
+
         return quantified;
+    }
+
+    /** *************************************************************
+     */
+    private static ArrayList<String> filterAlreadyQuantifiedVariables(String form, ArrayList<String> vars) {
+
+        ArrayList<String> alreadyQuantifiedVars = new ArrayList<String>();
+
+        String quantifierStart = "(exists (";
+        String quantifierEnd = ")";
+
+        int start;
+        int end;
+
+        if ((start = form.indexOf(quantifierStart)) > 0) {
+            end = form.indexOf(quantifierEnd, start+1);
+            String varList = form.substring(start+(quantifierStart.length()), end);
+            String[] variables = varList.split(" ");
+            for (String variable : variables) {
+                alreadyQuantifiedVars.add(variable);
+            }
+        }
+
+        if (!alreadyQuantifiedVars.isEmpty()) {
+            vars.removeAll(alreadyQuantifiedVars);
+        }
+
+        return vars;
     }
 
     /** *************************************************************
