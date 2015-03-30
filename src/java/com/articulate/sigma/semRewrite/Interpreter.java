@@ -1105,6 +1105,25 @@ public class Interpreter {
     
     /** ***************************************************************
      */
+    public static void testUnify4() {
+
+        String input = "advmod(die-6,when-1), aux(die-6,do-2),sumo(Death,die-6), nsubj(die-6,AmeliaMaryEarhart-3), sumo(IntentionalProcess,do-2).";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+        String rule = "advmod(?V,when-1), aux(?V,do*), sumo(?C,?V), +nsubj(?V,?A), -sumo(?C2,do*)  ==> {(and (agent ?V ?A) (instance ?V ?C) (equals ?WHEN (WhenFn ?V)}.";
+        Rule r = new Rule();
+        r = Rule.parseString(rule);
+        CNF cnf = Clausifier.clausify(r.lhs);
+        System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
+        System.out.println("INFO in Interpreter.testUnify(): CNF rule antecedent: " + cnf);
+        HashMap<String,String> bindings = cnf.unify(cnfInput);
+        System.out.println("bindings: " + bindings);  
+        if (bindings != null)
+            System.out.println("result: " + r.rhs.applyBindings(bindings));    
+    }
+        
+    /** ***************************************************************
+     */
     public static void testInterpret() {
 
         try {
