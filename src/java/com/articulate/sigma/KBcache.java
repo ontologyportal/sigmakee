@@ -238,7 +238,6 @@ public class KBcache {
         explicitDisjontFormulae.addAll(kb.ask("arg", 0, "disjointDecomposition"));
         explicitDisjontFormulae.addAll(kb.ask("arg", 0, "exhaustiveDecomposition"));
         for (Formula f : explicitDisjontFormulae) {
-            System.out.println(f + "\t" + f.argumentsToArrayList(0).size());
             ArrayList<String> arguments = f.argumentsToArrayList(0);
 
             if (arguments != null && !arguments.isEmpty()) {
