@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class RulesAboutOnCorpusTest {
+public class RulesAboutOfCorpusTest {
 
     public static Interpreter interpreter;
 
@@ -58,6 +58,28 @@ public class RulesAboutOnCorpusTest {
                 "  (attribute ?accepted-6 ?widely-5)\n" +
                 "  (instance ?Noonan-12 Human)\n" +
                 "  (instance ?Earhart-9 Human))\n" +
+                ")";
+
+        String actualKifString = interpreter.interpretSingle(input);
+
+        Formula expectedKifFormula = new Formula(expectedKifString);
+        Formula actualKifFormula = new Formula(actualKifString);
+
+        assertEquals(expectedKifFormula.toString(), actualKifFormula.toString());
+    }
+
+    @Test
+    public void testRunOutOf() {
+        String input = "The airplane ran out of fuel.";
+
+        String expectedKifString = "(exists (?PROCESS ?airplane-2 ?fuel-6)\n" +
+                "(and\n" +
+                "  (and\n" +
+                "  (instance ?PROCESS Process)\n" +
+                "  (patient ?PROCESS ?airplane-2)\n" +
+                "  (instance ?fuel-6 Fuel)\n" +
+                "  (resourceExhausted ?PROCESS ?fuel-6)))\n" +
+                "  (instance ?airplane-2 Airplane))\n" +
                 ")";
 
         String actualKifString = interpreter.interpretSingle(input);
