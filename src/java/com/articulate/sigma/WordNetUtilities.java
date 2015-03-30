@@ -1,4 +1,3 @@
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -220,6 +219,14 @@ public class WordNetUtilities {
         if (sense.indexOf("_JJ_") != -1)
             return WordNet.ADJECTIVE;
         if (sense.indexOf("_RB_") != -1)
+            return WordNet.ADVERB;
+        if (sense.indexOf("NN") != -1)
+            return WordNet.NOUN;
+        if (sense.indexOf("JJ") != -1)
+            return WordNet.ADJECTIVE;
+        if (sense.indexOf("VB") != -1)
+            return WordNet.VERB;
+        if (sense.indexOf("RB") != -1)
             return WordNet.ADVERB;
         System.out.println("Error in WordNetUtilities.sensePOS(): Unknown part of speech type in sense code: " + sense);
         return 0;

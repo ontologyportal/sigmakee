@@ -24,6 +24,7 @@ import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.test.JsonReader;
+import com.google.common.collect.Maps;
 import edu.stanford.nlp.pipeline.Annotation;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -77,7 +78,7 @@ public class InterpreterWSDBatchTest extends IntegrationTestBase {
 
         EntityTypeParser etp = new EntityTypeParser(document);
         Interpreter.groupClauses(results);
-        List<String> wsds = Interpreter.findWSD(results, etp);
+        List<String> wsds = Interpreter.findWSD(results, Maps.newHashMap(), etp);
 
         return wsds;
     }

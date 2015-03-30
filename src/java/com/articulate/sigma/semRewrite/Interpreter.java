@@ -33,6 +33,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -154,7 +155,7 @@ public class Interpreter {
      * @return a list of strings in the format sumo(Class,word-num) 
      * that specify the SUMO class of each word that isn't a stopword.
      */
-    public static List<String> findWSD(List<String> clauses, EntityTypeParser etp) {
+    public static List<String> findWSD(List<String> clauses, Map<Integer, String> posMap, EntityTypeParser etp) {
 
         //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
         KB kb = KBmanager.getMgr().getKB("SUMO");
@@ -192,7 +193,21 @@ public class Interpreter {
                 }
             }
             else {
-                String id = WSD.findWordSenseInContext(pureWord, pure);
+                String id = null;
+                if (posMap.isEmpty()) {
+                    id = WSD.findWordSenseInContext(pureWord, pure);
+                } else {
+                    String pos = "";
+                    Matcher m = ClauseGroups.CLAUSE_PARAM.matcher(clauseKey);
+                    if (m.matches()) {
+                        Integer idx = Integer.valueOf(m.group(2));
+                        pos = posMap.get(idx);
+                    }
+                    List<String> senses = WSD.findWordSensePOS(pureWord, pure, WordNetUtilities.sensePOS(pos));
+                    if (!senses.isEmpty()) {
+                        id = senses.get(0);
+                    }
+                }
                 //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
                 if (!Strings.isNullOrEmpty(id)) {
                     String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
@@ -492,11 +507,24 @@ public class Interpreter {
 
         EntityTypeParser etp = new EntityTypeParser(document);
         groupClauses(results);
-        List<String> wsd = findWSD(results, etp);
+        List<String> wsd = findWSD(results, getPartOfSpeechList(document.get(CoreAnnotations.TokensAnnotation.class)), etp);
         results.addAll(wsd);
         List<String> posInformation = SentenceUtil.findPOSInformation(document, dependenciesList);
         results.addAll(posInformation);
         return results;
+    }
+
+    /** *************************************************************
+     */
+    private Map<Integer, String> getPartOfSpeechList(List<CoreLabel> tokens) {
+        Map<Integer, String> posMap = Maps.newHashMap();
+
+        for (CoreLabel token : tokens) {
+            posMap.put(token.index(), token.get(CoreAnnotations.PartOfSpeechAnnotation.class));
+        }
+
+        return posMap;
+
     }
 
     /** *************************************************************
@@ -1051,7 +1079,7 @@ public class Interpreter {
             System.out.println(e.getMessage());
         }
 
-        List<String> wsd = findWSD(results, EntityTypeParser.NULL_PARSER);
+        List<String> wsd = findWSD(results, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
         System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
     }
 

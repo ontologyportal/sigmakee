@@ -22,12 +22,15 @@ package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -45,6 +48,30 @@ public class InterpreterWSDTest extends IntegrationTestBase {
             , "cop(aviator-18, was-15)"
             , "det(aviator-18, an-16)"
             , "amod(aviator-18, American-17)");
+    
+    public static Map<Integer, String> posMap = Maps.newHashMap();
+
+    static {
+        posMap.put(1, "NNP");
+        posMap.put(2, "NNP");
+        posMap.put(3,"NNP");
+        posMap.put(4, "-LRB-");
+        posMap.put(5, "NNP");
+        posMap.put(6, "CD");
+        posMap.put(7, ",");
+        posMap.put(8, "CD");
+        posMap.put(9, ":");
+        posMap.put(10, "NNP");
+        posMap.put(11, "CD");
+        posMap.put(12, ",");
+        posMap.put(13, "CD");
+        posMap.put(14, "-RBR-");
+        posMap.put(15, "VBD");
+        posMap.put(16, "DT");
+        posMap.put(17, "JJ");
+        posMap.put(18, "NN");
+        posMap.put(19, ".");
+    }
 
     @BeforeClass
     public static void initClauses() {
@@ -53,7 +80,7 @@ public class InterpreterWSDTest extends IntegrationTestBase {
 
     @Test
     public void findWSD_NoGroups() {
-        List<String> wsds = Interpreter.findWSD(clauses, EntityTypeParser.NULL_PARSER);
+        List<String> wsds = Interpreter.findWSD(clauses, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
         String[] expected = {
                 //"names(Amelia-1,\"Amelia\")", // missed without real EntityParser information
                 //"names(Mary-2,\"Mary\")",
@@ -70,11 +97,10 @@ public class InterpreterWSDTest extends IntegrationTestBase {
     @Test
     public void findWSD_WithGroups() {
         Interpreter.groupClauses(clauses);
-        List<String> wsds = Interpreter.findWSD(clauses, EntityTypeParser.NULL_PARSER);
+        List<String> wsds = Interpreter.findWSD(clauses, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
         String[] expected = {
                 //"names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")", // missed without real EntityParser information
                 "sumo(Woman,AmeliaMaryEarhart-1)",
-                "sumo(DiseaseOrSyndrome,AmeliaMaryEarhart-1)", // from WordNet: Amelia
                 "sumo(UnitedStates,American-17)",
                 "sumo(Pilot,aviator-18)"
         };

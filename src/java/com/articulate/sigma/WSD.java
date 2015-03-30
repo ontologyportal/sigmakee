@@ -78,7 +78,7 @@ public class WSD {
      * context of the sentence.  @return the 9-digit synset but only
      * if there's a reasonable amount of data.
      */
-    public static String findWordSenseInContext(String word, ArrayList<String> words) {
+    public static String findWordSenseInContext(String word, List<String> words) {
 
         //System.out.println("INFO in findWordSenseInContext(): word, words: " + 
         //        word + ", " + words);
@@ -92,12 +92,12 @@ public class WSD {
                 newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
             if (newWord != null && newWord != "")
                 word = newWord;
-            ArrayList<String> al = findWordSensePOS(word, words, i);
+            List<String> al = findWordSensePOS(word, words, i);
             if (al != null && al.size() > 0) {
                 String synset = (String) al.get(0); // 9-digit
                 String bestTotal = (String) al.get(1);
                 int total = (new Integer(bestTotal)).intValue();
-                if (total > bestScore) {
+                if (total >= bestScore) {
                     bestScore = total;
                     bestSynset = synset;
                 }
@@ -117,7 +117,7 @@ public class WSD {
      * a 9-digit WordNet synset, and the score
      * reflecting the quality of the guess the given synset is the right one.
      */
-    private static ArrayList<String> findWordSensePOS(String word, ArrayList<String> words, int POS) {
+    public static List<String> findWordSensePOS(String word, List<String> words, int POS) {
 
         //System.out.println("INFO in WordNet.findWordSensePOS(): word, POS, text, " + 
         //        word + ", " + POS + ", " + words);
