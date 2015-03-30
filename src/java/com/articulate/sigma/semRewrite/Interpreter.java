@@ -63,7 +63,10 @@ public class Interpreter {
     public static boolean question = false;
     public static boolean addUnprocessed = false;
     public static boolean verboseParse = true;
-    public static boolean tfidfEnabled = true;
+    //tfidf flags
+    public static boolean autoir = true;
+    public static boolean ir = false;
+
 
     // debug options
     public static boolean showrhs = false;
@@ -491,8 +494,10 @@ public class Interpreter {
         ArrayList<String> kifClauses = interpretCNF(inputs);
         String result = fromKIFClauses(kifClauses);
         System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
-        if (question && tfidfEnabled && ANSWER_UNDEFINED.equals(result)) {
-            System.out.println("Interpreter had no response so trying TFIDF");
+        if (question && ((ANSWER_UNDEFINED.equals(result) && autoir) || ir)) {
+            if (autoir) {
+                System.out.println("Interpreter had no response so trying TFIDF");
+            }
             result = tfidf.matchInput(substitutedInput).toString();
         }
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
@@ -888,6 +893,20 @@ public class Interpreter {
                     showrhs = true;
                     System.out.println("showing right hand sides that are asserted");
                 }
+                else if (input.equals("ir")) {
+                    ir = true;
+                    autoir = false;
+                    System.out.println("always calling TF/IDF");
+                }
+                else if (input.equals("noir")) {
+                    ir = false;
+                    autoir = false;
+                    System.out.println("never calling TF/IDF");
+                }
+                else if (input.equals("autoir")) {
+                    autoir = true;
+                    System.out.println("call TF/IDF on inference failure");
+                }
                 else if (input.startsWith("load "))
                     loadRules(input.substring(input.indexOf(' ')+1));
                 else if (input.equals("showpos")) {
@@ -1215,6 +1234,7 @@ public class Interpreter {
             System.out.println("  -i - runs a loop of conversions of one sentence at a time,");
             System.out.println("       prompting the user for more.  Empty line to exit.");
             System.out.println("       'load filename' will load a specified rewriting rule set.");
+            System.out.println("       'ir/autoir/noir' will determine whether TF/IDF is run always, on inference failure or never.");
             System.out.println("       'reload' (no quotes) will reload the rewriting rule set.");
             System.out.println("       'inference/noinference' will turn on/off inference.");
             System.out.println("       'addUnprocessed/noUnprocessed' will add/not add unprocessed clauses.");
