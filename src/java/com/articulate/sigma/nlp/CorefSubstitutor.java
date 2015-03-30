@@ -21,6 +21,7 @@ MA  02111-1307 USA
 package com.articulate.sigma.nlp;
 
 import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.nlp.dcoref.CorefChain;
@@ -74,20 +75,26 @@ public class CorefSubstitutor {
      */
     private String replaceCoref(final CoreLabel label, Map<Integer, CorefChain> corefs) {
 
-        String text =  label.originalText();
-        String tag = label.tag();
-        if (("PRP".equals(tag) || "PRP$".equals(tag)) && !ignorablePronouns.contains(text)) {
-            Integer corefClusterId = label.get(CorefClusterIdAnnotation.class);
-            if (corefClusterId != null) {
-                if (corefs.get(corefClusterId).getMentionsInTextualOrder().size() > 1) {
-                    int index = label.index();
-                    int sentence = 1 + label.sentIndex();
-                    CorefMention mention = corefs.get(corefClusterId).getMentionsInTextualOrder().get(0);
-                    if (sentence != mention.sentNum || index < mention.startIndex || index >= mention.endIndex) {
-                        text = extractTextWithSameTag(mention);
-                        if ("PRP$".equals(tag)) {
-                            text += text.endsWith("s")?"'":"'s";
+        String text = label.originalText();
+        Integer corefClusterId = label.get(CorefClusterIdAnnotation.class);
+        if (corefClusterId != null) {
+            List<CorefMention> mentions = corefs.get(corefClusterId).getMentionsInTextualOrder();
+            if (mentions.size() > 1) {
+                int index = label.index();
+                int sentence = 1 + label.sentIndex();
+                CorefMention firstMention = mentions.get(0);
+                if (sentence != firstMention.sentNum || index < firstMention.startIndex || index >= firstMention.endIndex) {
+                    String masterTag = label.tag();
+                    if (isSubstitutablePronoun(label)) {
+                        masterTag = "";
+                    }
+                    String candidateText = extractTextWithSameTag(firstMention, masterTag);
+                    if (!Strings.isNullOrEmpty(candidateText)) {
+                        if ("PRP$".equals(label.tag())) {
+                            candidateText += candidateText.endsWith("s") ? "'" : "'s";
                         }
+
+                        text = candidateText;
                     }
                 }
             }
@@ -98,13 +105,22 @@ public class CorefSubstitutor {
 
     /** *************************************************************
      */
-    private String extractTextWithSameTag(CorefMention mention) {
+    private boolean isSubstitutablePronoun(CoreLabel label) {
+
+        String text =  label.originalText();
+        String tag = label.tag();
+        return ("PRP".equals(tag) || "PRP$".equals(tag)) && !ignorablePronouns.contains(text);
+    }
+
+    /** *************************************************************
+     */
+    private String extractTextWithSameTag(CorefMention mention, String masterTag) {
 
         List<String> out = Lists.newArrayListWithCapacity(mention.endIndex - mention.startIndex);
         List<CoreLabel> tokens = getSentenceTokens(mention.sentNum - 1);
-        String tag = "";
+        String tag = masterTag;
         for (int i = mention.startIndex; i < mention.endIndex; i++) {
-            if (tag.isEmpty() || "DT".equals(tag)) {
+            if (Strings.isNullOrEmpty(tag) || "DT".equals(tag)) {
                 tag = tokens.get(i - 1).tag();
             }
             CoreLabel coreLabel = tokens.get(i - 1);

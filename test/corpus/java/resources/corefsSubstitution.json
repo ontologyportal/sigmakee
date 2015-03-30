@@ -5,6 +5,12 @@
   "in":"George Washington sat on a wall. He had a great fall.",
   "out":"George Washington sat on a wall. George Washington had a great fall."
 }, {
+  "in":"George Washington sat on a wall. Washington had a great fall.",
+  "out":"George Washington sat on a wall. George Washington had a great fall."
+}, {
+  "in":"George Washington sat on a wall. George had a great fall.",
+  "out":"George Washington sat on a wall. George Washington had a great fall."
+}, {
   "in":"George Washington was born on February 22, 1732 in Westmoreland County, Virginia, although he grew up near Fredericksburg.",
   "out":"George Washington was born on February 22, 1732 in Westmoreland County, Virginia, although George Washington grew up near Fredericksburg."
 }, {

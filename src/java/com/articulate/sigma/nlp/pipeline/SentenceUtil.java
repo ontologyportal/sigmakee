@@ -157,7 +157,7 @@ public class SentenceUtil {
 
     /** ***************************************************************
      */
-    public static List<String> toDependenciesList(Annotation document) {
+    public static ArrayList<String> toDependenciesList(Annotation document) {
         
         ArrayList<String> results = Lists.newArrayList();
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
