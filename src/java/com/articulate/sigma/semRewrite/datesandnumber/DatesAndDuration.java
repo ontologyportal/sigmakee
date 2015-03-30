@@ -59,7 +59,7 @@ public class DatesAndDuration {
 			tempDate.addWordIndex(token.getId());
 			tempDate.setTimeCount(utilities.timeCount);
 			utilities.allDatesList.add(tempDate);
-			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+token.getWord()+"-"+token.getId()+")");	
+			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+token.getWord()+")");	
 			utilities.timeCount++;
 		} 
 		else if (digitalPatternMatcher.find()) {
@@ -77,9 +77,9 @@ public class DatesAndDuration {
 			tempDate.addWordIndex(token.getId());
 			tempDate.setTimeCount(utilities.timeCount);
 			utilities.allDatesList.add(tempDate);
-			utilities.sumoTerms.add("month(time-"+utilities.timeCount+","+ Utilities.MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)+"-"+token.getId()+")");
-			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+westernYearMatcher.group(3)+"-"+token.getId()+")");
-			utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+westernYearMatcher.group(5)+"-"+token.getId()+")");
+			utilities.sumoTerms.add("month(time-"+utilities.timeCount+","+ Utilities.MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)+")");
+			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+westernYearMatcher.group(3)+")");
+			utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+westernYearMatcher.group(5)+")");
 			utilities.timeCount++;
 		} 
 		else if (dayMatcher.find()) {
@@ -96,13 +96,13 @@ public class DatesAndDuration {
 		for (DateInfo date : dateList) {
 			if ((date.getYear() != null) || (date.getMonth() != null) || (date.getDay() != null)) {
 				if (date.getDay() != null) {
-					utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+date.getDay()+"-"+date.getWordIndex()+")");
+					utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+date.getDay()+")");
 				}
 				if (date.getMonth() != null) {
-					utilities.sumoTerms.add("month(time-"+utilities.timeCount+","+date.getMonth()+"-"+date.getWordIndex()+")");
+					utilities.sumoTerms.add("month(time-"+utilities.timeCount+","+date.getMonth()+")");
 				}
 				if (date.getYear() != null) {
-					utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+date.getYear()+"-"+date.getWordIndex()+")");
+					utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+date.getYear()+")");
 				}
 				String tokenRoot = utilities.getRootWord(date.getWordIndex());
 				date.setTimeCount(utilities.timeCount);
@@ -134,8 +134,10 @@ public class DatesAndDuration {
 					populateDate(flags, DateComponent.MONTH, wordToken, dateInfo,dateEntry.getKey());
 				}
 				else if (!flags.isDayFlag() && !flags.isYearFlag()) {
-					dateList.add(dateInfo);
-					utilities.allDatesList.add(dateInfo);
+					DateInfo dateTemp = new DateInfo(dateInfo);
+					dateList.add(dateTemp);
+					utilities.allDatesList.add(dateTemp);
+					dateInfo.clear();
 					dateInfoTemp = new DateInfo();
 					dateInfoTemp.setMonth(wordToken);
 					dateInfoTemp.addWordIndex(dateEntry.getKey());
@@ -153,8 +155,10 @@ public class DatesAndDuration {
 					populateDate(flags, DateComponent.DAY, wordToken, dateInfo,dateEntry.getKey());
 				}
 				else if (!flags.isMonthFlag() && !flags.isYearFlag()) {
-					dateList.add(dateInfo);
-					utilities.allDatesList.add(dateInfo);
+					DateInfo dateTemp = new DateInfo(dateInfo);
+					dateList.add(dateTemp);
+					utilities.allDatesList.add(dateTemp);
+					dateInfo.clear();
 					dateInfoTemp = new DateInfo();
 					dateInfoTemp.setDay(wordToken);
 					dateInfoTemp.addWordIndex(dateEntry.getKey());
@@ -171,9 +175,9 @@ public class DatesAndDuration {
 					populateDate(flags, DateComponent.YEAR, wordToken, dateInfo,dateEntry.getKey());
 				}
 				else if (!flags.isDayFlag() && !flags.isMonthFlag()){
-					dateList.add(new DateInfo(dateInfo));
-					utilities.allDatesList.add(dateInfo);
-					utilities.allDatesList.add(new DateInfo(dateInfo));
+					DateInfo dateTemp = new DateInfo(dateInfo);
+					dateList.add(dateTemp);
+					utilities.allDatesList.add(dateTemp);
 					dateInfo.clear();
 					dateInfoTemp = new DateInfo();
 					dateInfoTemp.setYear(wordToken);
@@ -472,14 +476,14 @@ public class DatesAndDuration {
 			 newDateInfo.setYear(years[0]);
 			 newDateInfo.addWordIndex(token.getId());
 			 newDateInfo.setTimeCount(utilities.timeCount);
-			 utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+years[0]+"-"+token.getId()+")");
+			 utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+years[0]+")");
 			 utilities.timeCount++;
 			 
 			 DateInfo endDateInfo = new DateInfo();
 			 endDateInfo.setYear(years[1]);
 			 endDateInfo.addWordIndex(token.getId());
 			 endDateInfo.setTimeCount(utilities.timeCount);
-			 utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+years[1]+"-"+token.getId()+")");
+			 utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+years[1]+")");
 			 utilities.timeCount++;
 			 
 			 generateDurationSumoTerms(tempParent,utilities, newDateInfo, endDateInfo);
