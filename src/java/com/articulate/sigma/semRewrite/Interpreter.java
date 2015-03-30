@@ -475,7 +475,18 @@ public class Interpreter {
             }
         }
 
-        List<String> results = getCNFInputs(document);
+        List<String> results = Lists.newArrayList();
+        List<String> dependenciesList = toDependenciesList(document);
+        results.addAll(dependenciesList);
+
+        ClauseGroups cg = new ClauseGroups(results);
+        groupClauses(results, cg);
+
+        EntityTypeParser etp = new EntityTypeParser(document);
+        List<String> wsd = findWSD(results, getPartOfSpeechList(document.get(CoreAnnotations.TokensAnnotation.class)), etp);
+        results.addAll(wsd);
+        List<String> posInformation = SentenceUtil.findPOSInformation(document, dependenciesList);
+        results.addAll(posInformation);
         results = lemmatizeResults(results, tokens);
 
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
@@ -551,26 +562,6 @@ public class Interpreter {
     }
 
     /** *************************************************************
-     * Get Dependency, SUMO, POS, etc. information from the parser
-     */
-    private List<String> getCNFInputs(Annotation document) {
-
-        List<String> results = Lists.newArrayList();
-
-        List<String> dependenciesList = toDependenciesList(document);
-        results.addAll(dependenciesList);
-
-        EntityTypeParser etp = new EntityTypeParser(document);
-        groupClauses(results);
-        List<String> wsd = findWSD(results, getPartOfSpeechList(document.get(CoreAnnotations.TokensAnnotation.class)), etp);
-        results.addAll(wsd);
-        List<String> posInformation = SentenceUtil.findPOSInformation(document, dependenciesList);
-        results.addAll(posInformation);
-
-        return results;
-    }
-
-    /** *************************************************************
      */
     private Map<Integer, String> getPartOfSpeechList(List<CoreLabel> tokens) {
         Map<Integer, String> posMap = Maps.newHashMap();
@@ -592,9 +583,8 @@ public class Interpreter {
 
     /** *************************************************************
      */
-    protected static void groupClauses(List<String> clauses) {
+    protected static void groupClauses(List<String> clauses, ClauseGroups cg) {
 
-        ClauseGroups cg = new ClauseGroups(clauses);
         Iterator<String> clauseIterator = clauses.iterator();
         List<String> modifiedClauses = Lists.newArrayList();
         while(clauseIterator.hasNext()) {
@@ -615,6 +605,14 @@ public class Interpreter {
             }
         }
         clauses.addAll(modifiedClauses);
+    }
+
+    /** *************************************************************
+     */
+    protected static void groupClauses(List<String> clauses) {
+
+        ClauseGroups cg = new ClauseGroups(clauses);
+        groupClauses(clauses, cg);
     }
 
     /** *************************************************************
