@@ -22,6 +22,7 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.KBmanager;
+import com.google.common.base.Strings;
 import edu.stanford.nlp.pipeline.*;
 
 import java.util.*;
@@ -44,7 +45,7 @@ public class Pipeline {
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
         props.setProperty("parse.kbest", "2");
 
-        if (!useDefaultPCFGModel) {
+        if (!useDefaultPCFGModel && !Strings.isNullOrEmpty(KBmanager.getMgr().getPref("englishPCFG"))) {
             props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
             props.put("parser.model", KBmanager.getMgr().getPref("englishPCFG"));
             props.put("parse.flags", "");
