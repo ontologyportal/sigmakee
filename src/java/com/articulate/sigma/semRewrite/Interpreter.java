@@ -66,6 +66,9 @@ public class Interpreter {
     //tfidf flags
     public static boolean autoir = true;
     public static boolean ir = false;
+    public static boolean verboseAnswer = false;
+    public static boolean verboseProof = false;
+    public static boolean tfidfEnabled = true;
 
 
     // debug options
@@ -772,7 +775,19 @@ public class Interpreter {
             KB kb = KBmanager.getMgr().getKB("SUMO");
             if (question) {
                 Formula query = new Formula(s3);
-                ArrayList<String> inferenceAnswers = kb.askNoProof(s3, 30, 1);
+                ArrayList<String> inferenceAnswers = Lists.newArrayList();
+                if (verboseProof) {
+                    inferenceAnswers = kb.ask(s3, 30, 1);
+                }
+                else {
+                    inferenceAnswers = kb.askNoProof(s3, 30, 1);
+                }
+                if (verboseAnswer) {
+                    System.out.println("Inference Answers: " + inferenceAnswers);
+                }
+                else {
+
+                }
                 String answer = Interpreter.formatAnswer(query, inferenceAnswers, kb);
                 System.out.println(answer);
                 return answer;
@@ -904,6 +919,22 @@ public class Interpreter {
                 else if (input.equals("autoir")) {
                     autoir = true;
                     System.out.println("call TF/IDF on inference failure");
+                }
+                else if (input.equals("showproof")) {
+                    if (verboseProof) {
+                        verboseProof = false;
+                    }
+                    else {
+                        verboseProof = true;
+                    }
+                }
+                else if (input.equals("inferenceanswer")) {
+                    if (verboseAnswer) {
+                        verboseAnswer = false;
+                    }
+                    else {
+                        verboseAnswer = true;
+                    }
                 }
                 else if (input.startsWith("load "))
                     loadRules(input.substring(input.indexOf(' ')+1));

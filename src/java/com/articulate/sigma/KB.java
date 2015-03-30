@@ -1493,7 +1493,7 @@ public class KB {
      *
      * @return A String indicating the status of the ask operation.
      */
-    public String ask(String suoKifFormula, int timeout, int maxAnswers) {
+    public ArrayList<String> ask(String suoKifFormula, int timeout, int maxAnswers) {
 
     	String result = "";
     	// Start by assuming that the ask is futile.
@@ -1510,9 +1510,16 @@ public class KB {
     		if (!processedStmts.isEmpty() && this.eprover != null) {
     			String strQuery = processedStmts.get(0).theFormula;                
     			result = this.eprover.submitQuery(strQuery,this);
+                if (result==null || result.isEmpty())
+                    System.out.println("No response from EProver!");
+                else
+                    System.out.println("Get response from EProver, start for parsing ...");
+                //System.out.println("Results returned from E = \n" + EResult);
+                ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(result, this, fp);
+                return answers;
     		}
     	}
-    	return result;
+    	return null;
     }
 
     /** *************************************************************

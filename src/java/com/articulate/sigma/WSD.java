@@ -156,18 +156,18 @@ public class WSD {
                 }
             }
         }
-        if (bestSense == -1) {             // if no word cooccurrances have been found
-            if (firstSense == -1)         // if there were no words of the right part of speech
-                return new ArrayList<String>();            
-            bestSense = firstSense;
+        if (bestTotal > 5) {
+            String senseValue = (String) senses.get(bestSense);
+            String synset = WordNet.wn.senseIndex.get(senseValue.intern());
+            ArrayList<String> result = new ArrayList<String>();
+            result.add((new Integer(POS)).toString() + synset);
+            result.add(Integer.toString(bestTotal));
+            //System.out.println("INFO in WordNet.findWordSensePOS(): result: " + result);
+            return result;
         }
-        String senseValue = (String) senses.get(bestSense);
-        String synset = WordNet.wn.senseIndex.get(senseValue.intern());
-        ArrayList<String> result = new ArrayList<String>();
-        result.add((new Integer(POS)).toString()+synset);
-        result.add(Integer.toString(bestTotal));
-        //System.out.println("INFO in WordNet.findWordSensePOS(): result: " + result);
-        return result;
+        else {
+            return Lists.newArrayList();
+        }
     }
     
     /** ***************************************************************

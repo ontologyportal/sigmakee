@@ -1,6 +1,7 @@
 package com.articulate.sigma;
 
 import TPTPWorld.InterfaceTPTP;
+import edu.stanford.nlp.util.StringUtils;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -121,7 +122,7 @@ public class CCheck implements Runnable {
         String result = "";
         try {
             if (chosenEngine.equals("EProver")) {
-                result = kb.ask("(instance instance BinaryPredicate)", 10, 1);
+                result = StringUtils.join(kb.ask("(instance instance BinaryPredicate)", 10, 1), " ");
                 inferenceEngine = "EProver";
                 return true;
             }
@@ -391,7 +392,7 @@ public class CCheck implements Runnable {
         
         try {
             if (inferenceEngine.equals("EProver")) {
-                result = empty.ask(query, timeOut, 1);
+                result = StringUtils.join(empty.ask(query, timeOut, 1), " ");
             }
             else if (inferenceEngine.equals("SInE")) {
                 result = empty.askSInE(query, timeOut, 1);

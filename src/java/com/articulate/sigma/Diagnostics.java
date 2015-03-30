@@ -27,6 +27,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.articulate.sigma.KB;
+import edu.stanford.nlp.util.StringUtils;
 
 /** *****************************************************************
  * A class that finds problems in a knowledge base.  It is not meant
@@ -789,7 +790,7 @@ public class Diagnostics {
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.theFormula);
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
-                    proof = empty.ask(processedQuery,timeout,maxAnswers);
+                    proof = StringUtils.join(empty.ask(processedQuery,timeout,maxAnswers), " ");
                     StringBuffer a = new StringBuffer();
                     a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
                     //  if (answer.length() != 0) return answer;
@@ -797,7 +798,7 @@ public class Diagnostics {
 
                     StringBuffer negatedQuery = new StringBuffer();
                     negatedQuery.append("(not " + processedQuery + ")");
-                    proof = empty.ask(negatedQuery.toString(),timeout,maxAnswers);
+                    proof = StringUtils.join(empty.ask(negatedQuery.toString(),timeout,maxAnswers), " ");
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
                     if (a.length() != 0) {
                         answer.append(a);
