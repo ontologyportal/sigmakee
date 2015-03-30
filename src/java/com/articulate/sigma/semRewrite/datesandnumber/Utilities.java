@@ -29,7 +29,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.articulate.sigma.semRewrite.ClauseGroups;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -46,6 +51,8 @@ public class Utilities {
 	public static final List<String> VerbTags = new ArrayList<String>(Arrays.asList("VB",
 			"VBD","VBG","VBN","VBP","VBZ"));
 	public static final List<String> nounTags = new ArrayList<String>(Arrays.asList("NN","NNS","NNP","NNPS","/NN","/NNS","/NNP", "/NNPS"));
+	
+	public static final Pattern sumoTermPattern = Pattern.compile("^([a-zA-Z]+)\\(([a-zA-Z\\-0-9]+)(\\s)?,(\\s)?([a-zA-Z(\\-)?0-9]+)\\)");
 	
 	List<String> sumoTerms = new LinkedList<String>();
 	List<DateInfo> allDatesList = new LinkedList<DateInfo>();
@@ -88,7 +95,7 @@ public class Utilities {
 	
 	/** ***************************************************************
      */
-	public void filterSumoTerms() {
+	public void filterSumoTerms(ClauseGroups cg) {
 		
 		Set<String> hashsetList = new HashSet<String>(sumoTerms);
 		sumoTerms.clear();
@@ -106,5 +113,21 @@ public class Utilities {
 			}
 		}
 		sumoTerms.removeAll(removableSumoTerms);
+		if (cg != null) {
+			for(int i = 0; i < sumoTerms.size(); ++i) {
+				System.out.println();
+				Matcher sumoMatcher = sumoTermPattern.matcher(sumoTerms.get(i));
+				if(sumoMatcher.find()) {
+					String group2 = sumoMatcher.group(2);
+					String group5 = sumoMatcher.group(5);
+					if(!cg.getGrouped(group2).equals(group2)) {
+						sumoTerms.set(i, sumoTerms.get(i).replace(group2, cg.getGrouped(group2)));
+					} 
+					else if (!cg.getGrouped(group5).equals(group5)) {
+						sumoTerms.set(i, sumoTerms.get(i).replace(group5, cg.getGrouped(group5)));
+					}
+				}
+			}
+		}
 	}
 }

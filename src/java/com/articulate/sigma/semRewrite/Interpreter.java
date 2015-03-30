@@ -32,14 +32,17 @@ import com.articulate.sigma.semRewrite.datesandnumber.*;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.util.StringUtils;
-
 import static com.articulate.sigma.StringUtil.splitCamelCase;
 import static com.articulate.sigma.nlp.pipeline.SentenceUtil.makeBinaryRelationship;
 import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
@@ -495,8 +498,7 @@ public class Interpreter {
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
-
-        List<String> measures = InterpretNumerics.getSumoTerms(substitutedInput);
+        List<String> measures = InterpretNumerics.getSumoTerms(substitutedInput,cg);
         for (String m : measures) {
             lex = new Lexer(m);
             CNF cnfnew = CNF.parseSimple(lex);
@@ -607,7 +609,7 @@ public class Interpreter {
         }
         clauses.addAll(modifiedClauses);
     }
-
+    
     /** *************************************************************
      */
     protected static void groupClauses(List<String> clauses) {
@@ -789,7 +791,7 @@ public class Interpreter {
                 String answer = Interpreter.formatAnswer(query, inferenceAnswers, kb);
                 System.out.println(answer);
                 return answer;
-            }
+            } 
             else {
                 System.out.println(kb.tell(s3));
             }
