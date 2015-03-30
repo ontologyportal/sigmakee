@@ -84,17 +84,19 @@ public class CorefSubstitutor {
                 int sentence = 1 + label.sentIndex();
                 CorefMention firstMention = mentions.get(0);
                 if (sentence != firstMention.sentNum || index < firstMention.startIndex || index >= firstMention.endIndex) {
-                    String masterTag = label.tag();
-                    if (isSubstitutablePronoun(label)) {
-                        masterTag = "";
-                    }
-                    String candidateText = extractTextWithSameTag(firstMention, masterTag);
-                    if (!Strings.isNullOrEmpty(candidateText)) {
-                        if ("PRP$".equals(label.tag())) {
-                            candidateText += candidateText.endsWith("s") ? "'" : "'s";
+                    if(!ignorablePronouns.contains(text)) {
+                        String masterTag = label.tag();
+                        if (isSubstitutablePronoun(label)) {
+                            masterTag = "";
                         }
+                        String candidateText = extractTextWithSameTag(firstMention, masterTag);
+                        if (!Strings.isNullOrEmpty(candidateText)) {
+                            if ("PRP$".equals(label.tag())) {
+                                candidateText += candidateText.endsWith("s") ? "'" : "'s";
+                            }
 
-                        text = candidateText;
+                            text = candidateText;
+                        }
                     }
                 }
             }
@@ -109,7 +111,7 @@ public class CorefSubstitutor {
 
         String text =  label.originalText();
         String tag = label.tag();
-        return ("PRP".equals(tag) || "PRP$".equals(tag)) && !ignorablePronouns.contains(text);
+        return "PRP".equals(tag) || "PRP$".equals(tag);
     }
 
     /** *************************************************************

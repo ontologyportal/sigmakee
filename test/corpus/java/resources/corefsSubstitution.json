@@ -45,4 +45,7 @@
 }, {
   "in":"Tim Cook is going to give away his entire fortune multi-million dollar fortune to charitable causes.",
   "out":"Tim Cook is going to give away Tim Cook's entire fortune multi-million dollar fortune to charitable causes."
+}, {
+  "in":"She sings by herself.",
+  "out":"She sings by herself."
 }]
