@@ -62,6 +62,7 @@ public class Interpreter {
     public static boolean question = false;
     public static boolean addUnprocessed = false;
     public static boolean verboseParse = true;
+    public static boolean tfidfEnabled = true;
 
     // debug options
     public static boolean showrhs = false;
@@ -487,7 +488,7 @@ public class Interpreter {
         ArrayList<String> kifClauses = interpretCNF(inputs);
         String result = fromKIFClauses(kifClauses);
         System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
-        if (question && ANSWER_UNDEFINED.equals(result)) {
+        if (question && tfidfEnabled && ANSWER_UNDEFINED.equals(result)) {
             System.out.println("Interpreter had no response so trying TFIDF");
             result = tfidf.matchInput(substitutedInput).toString();
         }
