@@ -100,7 +100,6 @@ public class InterpreterWSDTest extends IntegrationTestBase {
         List<String> wsds = Interpreter.findWSD(clauses, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
         String[] expected = {
                 //"names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")", // missed without real EntityParser information
-                "sumo(Woman,AmeliaMaryEarhart-1)",
                 "sumo(UnitedStates,American-17)",
                 "sumo(Pilot,aviator-18)"
         };
