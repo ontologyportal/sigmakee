@@ -71,7 +71,6 @@ public class Interpreter {
     public static boolean ir = false;
     public static boolean verboseAnswer = false;
     public static boolean verboseProof = false;
-    public static boolean tfidfEnabled = true;
 
 
     // debug options
