@@ -24,6 +24,7 @@ MA  02111-1307 USA
 import java.text.ParseException;
 import java.util.*;
 import java.lang.reflect.*;
+
 import com.articulate.sigma.*;
 
 /** *************************************************************
@@ -86,10 +87,10 @@ public class LHS {
         try {
             //System.out.println("INFO in LHS.parse(): " + lex.look());
             if (lex.testTok(Lexer.Plus)) {
-                Clause c = Clause.parse(lex,startLine);
-                lhs.operator = LHSop.DELETE;
-                lhs.clause = c;
-                return lhs;
+               // Clause c = Clause.parse(lex,startLine);
+               // lhs.operator = LHSop.DELETE;
+               // lhs.clause = c;
+               // return lhs;
             }
             else if (lex.testTok(Lexer.OpenPar)) {
                 lex.next();
@@ -179,8 +180,19 @@ public class LHS {
     /** *************************************************************
      * A test method
      */
+    public static void testParseProc2() {
+        
+        String s = "+nsubj(?C2,?X), +amod(?C2,?C), cop(?C2,be*), det(?C2,?D), sumo(?Y,?C), sumo(Human,?X), isInstanceOf(?Y,Nation) ==> (citizen(?X,?Y)).";
+        Lexer lex = new Lexer(s);
+        LHS lhs = new LHS();
+        System.out.println("INFO in LHS.testParseProc2(): " + lhs.parse(lex, 0));
+    }
+    
+    /** *************************************************************
+     * A test method
+     */
     public static void main (String args[]) {
         
-        testParse();
+        testParseProc2();
     }
 }
