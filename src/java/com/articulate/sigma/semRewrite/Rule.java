@@ -161,7 +161,9 @@ public class Rule {
      */
     public static void testParse() {
         
-        String s = "num(?O,?N), +sumo(?C,?O) ==> (instance(?O,Collection), membersType(?O,?C), membersCount(?O,?N)).";
+        String s = "+num(?O,?N), +sumo(?C,?O) ==> (instance(?O,Collection), membersType(?O,?C), membersCount(?O,?N)).";
+        //System.out.println("INFO in Rule.testParse(): " + parseString(s));
+        s = "+nsubj(?C2,?X), +amod(?C2,?C), cop(?C2,be*), det(?C2,?D), sumo(?Y,?C), sumo(Human,?X), isInstanceOf(?Y,Nation) ==> (citizen(?X,?Y)).";
         System.out.println("INFO in Rule.testParse(): " + parseString(s));
     }
     
