@@ -383,8 +383,7 @@ public class DatesAndDuration {
 				 			yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
 				 			count++;
 				 			prevIndex = dateEntry.getKey();
-		 				}
-		 				
+		 				} 
 		 			}
 		 		}
 		 		else if (count == 3) {
@@ -398,6 +397,12 @@ public class DatesAndDuration {
 		 			}
 		 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
 		 		}
+		 	}
+		 	if(yearDateGroup.size() == 1) {
+		 		addDateInfoToList(yearDateGroup, dateList, utilities);
+		 	}
+		 	if(monthDateGroup.size() == 1) {
+		 		addDateInfoToList(monthDateGroup, dateList, utilities);
 		 	}
 		 return dateList;
 	 }
