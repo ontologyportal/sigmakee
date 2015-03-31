@@ -28,6 +28,36 @@
   },
   {
     "file": "AmeliaEarhart.txt",
+    "query": "What language does Amelia speak?",
+    "answer": "EnglishLanguage."
+  },
+  {
+    "file": "AmeliaEarhart.txt",
+    "query": "Where did Amelia fly?",
+    "answer": "AtlanticOcean."
+  },
+  {
+    "file": "AmeliaEarhart.txt",
+    "query": "What was Amelia interested in?",
+    "answer": "An instance of Airplane."
+  },
+  {
+    "file": "AmeliaEarhart.txt",
+    "query": "Where did Amelia live?",
+    "answer": "UnitedStates."
+  },
+  {
+    "file": "AmeliaEarhart.txt",
+    "query": "When was Amelia born?",
+    "answer": "DayFn(24,s__MonthFn(s__July,s__YearFn(1897)))."
+  },
+  {
+    "file": "AmeliaEarhart.txt",
+    "query": "When did Amelia die?",
+    "answer": "DayFn(2,s__MonthFn(s__July,s__YearFn(1937)))."
+  },
+  {
+    "file": "AmeliaEarhart.txt",
     "query": "Did Amelia die in Europe?",
     "answer": "No."
   },

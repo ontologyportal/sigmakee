@@ -77,7 +77,7 @@ public class InferenceWikiTest {
         System.out.println("\nQuestion: " + query);
         String actual = interpreter.interpretSingle(query);
         System.out.println("Answer: " + answer);
-        assertEquals(answer.replaceAll("\\W"," ").trim(), actual.replaceAll("\\W"," ").trim());
+        assertEquals(answer.replaceAll("\\W$"," ").trim(), actual.replaceAll("\\W$"," ").trim());
 
     }
 
