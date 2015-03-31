@@ -353,8 +353,9 @@ public class SUMOKBtoTPTPKB {
                         // Filter1: only keep simpleClause and basic axioms
                         // TODO: this should be removed in the future
                         if (filterSimpleOnly) {
-                            if ((!f.gatherRelationConstants().contains("agent"))
-                                    && (!f.gatherRelationConstants().contains("patient"))) {
+                            if ((f.sourceFile.equals(KBmanager.getMgr().getPref("kbDir") + File.separator + "Amelia.kif"))
+                                    || (!f.gatherRelationConstants().contains("agent")
+                                        && (!f.gatherRelationConstants().contains("patient")))) {
                                 if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
                                     pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
                                     pr.println(",axiom,(" + theTPTPFormula + ")).");
