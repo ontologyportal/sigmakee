@@ -490,7 +490,25 @@ public class Interpreter {
     }
 
     /** *************************************************************
-     * Take in a sentence and output an English answer.
+     * Take in a any number of sentences and return kif strings of declaratives
+     * or answer to questions.
+     */
+
+    public List<String> interpret(String input) {
+
+        List<String> results = Lists.newArrayList();
+
+        List<String> substitutedInputs = processInput(input);
+        System.out.println("Interpreting " + substitutedInputs.size() + " inputs.");
+        for (String subInput : substitutedInputs) {
+            results.add(interpretSingle(subInput));
+        }
+
+        return results;
+    }
+
+    /** *************************************************************
+     * Take in a single sentence and output an English answer.
      */
     public String interpretSingle(String input) {
 
@@ -499,17 +517,15 @@ public class Interpreter {
         else
             question = false;
 
-        List<String> substitutedInputs = processInput(input);
+
 
         if (!question) {
-            for (String i : substitutedInputs) {
-                tfidf.addInput(i);
-            }
+                tfidf.addInput(input);
+
         }
-        String substitutedInput = StringUtils.join(substitutedInputs, " ");
 
         Pipeline pipeline = new Pipeline();
-        Annotation document = pipeline.annotate(substitutedInput);
+        Annotation document = pipeline.annotate(input);
 
         List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
 
@@ -533,12 +549,12 @@ public class Interpreter {
         results.addAll(posInformation);
         results = lemmatizeResults(results, tokens);
 
-        String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']'); 
+        String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
         System.out.println("INFO in Interpreter.interpretSingle(): " + in);
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
-        List<String> measures = InterpretNumerics.getSumoTerms(substitutedInput,cg);
+        List<String> measures = InterpretNumerics.getSumoTerms(input, cg);
         for (String m : measures) {
             lex = new Lexer(m);
             CNF cnfnew = CNF.parseSimple(lex);
@@ -552,7 +568,7 @@ public class Interpreter {
             if (autoir) {
                 System.out.println("Interpreter had no response so trying TFIDF");
             }
-            result = tfidf.matchInput(substitutedInput).toString();
+            result = tfidf.matchInput(input).toString();
         }
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
         return result;
@@ -825,9 +841,7 @@ public class Interpreter {
                 if (verboseAnswer) {
                     System.out.println("Inference Answers: " + inferenceAnswers);
                 }
-                else {
 
-                }
                 String answer = Interpreter.formatAnswer(query, inferenceAnswers, kb);
                 System.out.println(answer);
                 return answer;
@@ -904,11 +918,10 @@ public class Interpreter {
     public void interpInter() {
 
         String input = "";
-        ArrayList<String> results = null;
         Scanner scanner = new Scanner(System.in);
         do {
             System.out.print("Enter sentence: ");
-            input = scanner.nextLine();
+            input = scanner.nextLine().trim();
             if (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit")) {
                 if (input.equals("reload")) {
                     System.out.println("reloading semantic rewriting rules");
@@ -991,8 +1004,12 @@ public class Interpreter {
                 } 
                 else {
                     System.out.println("INFO in Interpreter.interpretIter(): " + input); 
-                    String result = interpretSingle(input);
-                    System.out.println("Final Answer: " + result);
+                    List<String> results = interpret(input);
+                    int count = 1;
+                    for (String result : results) {
+                        System.out.println("Result " + count + ": " + result);
+                        count++;
+                    }
                 }
             }
         } while (!input.equals("exit") && !input.equals("quit"));
