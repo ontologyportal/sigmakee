@@ -1,14 +1,18 @@
 package com.articulate.sigma.semRewrite;
 
+import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static org.junit.Assert.*;
-
 import static org.junit.Assert.*;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.test.JsonReader;
+
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,7 +20,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.semRewrite.datesandnumber.InterpretNumerics;
+import com.google.common.collect.Lists;
+
+import edu.stanford.nlp.pipeline.Annotation;
 
 @RunWith(Parameterized.class)
 public class MeasureFunctionTest {
@@ -48,11 +56,41 @@ public class MeasureFunctionTest {
 			}
 			});
 	}
-
+	 /** ***************************************************************
+     */
 	@Test
 	public void test() {
 		System.out.println("Running date number tests for sentence : "+fInput);
-		assertEquals(fExpected, InterpretNumerics.getSumoTerms(fInput, null).toString());
+		String fout = InterpretNumerics.getSumoTerms(fInput, getNERGroupedClauses (fInput)).toString();
+		System.out.println(fout);
+		System.out.println(fExpected);
+		assertEquals(fExpected, fout);
+	}
+	 /** ***************************************************************
+     */
+	private ClauseGroups getNERGroupedClauses (String fInputString) {
+		Pipeline pipeline = new Pipeline();
+        Annotation document = pipeline.annotate(fInputString);
+		List<String> results = Lists.newArrayList();
+		List<String> dependenciesList = toDependenciesList(document);
+		results.addAll(dependenciesList);
+
+		ClauseGroups cg = new ClauseGroups(results);
+		Iterator<String> clauseIterator = results.iterator();
+        while(clauseIterator.hasNext()) {
+            String clause = clauseIterator.next();
+            Matcher m = ClauseGroups.CLAUSE_SPLITTER.matcher(clause);
+            if(m.matches()) {
+                String attr1 = m.group(2);
+                String attr2 = m.group(3);
+                String attr1Grouped = cg.getGrouped(attr1);
+                String attr2Grouped = cg.getGrouped(attr2);
+                if(!attr1.equals(attr1Grouped) || !attr2.equals(attr2Grouped)) {
+                    clauseIterator.remove();
+                }
+            }
+        }
+        return cg;
 	}
 
 }

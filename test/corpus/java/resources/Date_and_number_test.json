@@ -2,22 +2,22 @@
 {
 "text":"John killed Mary on 31 March and also in July 1995 by travelling back in time.",
 "kif":
-"[year(time-2,1995), month(time-2,July), time(killed,time-1), time(killed,time-2), day(time-1,31), month(time-1,March)]"
+"[year(time-2,1995), month(time-2,July), day(time-1,31), month(time-1,March), time(killed-2,time-1), time(killed-2,time-2)]"
 },
 {
 "text":"Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.",
 "kif":
-"[day(time-1,24), month(time-2,July), BirthDate(Earhart,time-1), year(time-1,1897), day(time-2,2), DeathDate(Earhart,time-2), year(time-2,1937), month(time-1,July)]"
+"[day(time-1,24), month(time-2,July), DeathDate(AmeliaMaryEarhart-1,time-2), year(time-1,1897), day(time-2,2), year(time-2,1937), month(time-1,July), BirthDate(AmeliaMaryEarhart-1,time-1)]"
 },
 {
 "text":"Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.",
 "kif":
-"[month(time-1,July), time(vanished,time-1), year(time-1,1937)]"
+"[time(vanished-2,time-1), month(time-1,July), year(time-1,1937)]"
 },
 {
 "text":"She was declared dead on January 5, 1939.",
 "kif":
-"[month(time-1,January), year(time-1,1939), time(declared,time-1), day(time-1,5)]"
+"[time(declared-3,time-1), month(time-1,January), year(time-1,1939), day(time-1,5)]"
 },
 {
 "text":"Bob went to work only 5 times in 2003.",
@@ -32,12 +32,12 @@
 {
 "text":"John was killed on 8/15/2014 at 3:45 PM.",
 "kif":
-"[month(time-1,august), year(time-1,2014), time(killed,time-1), time(killed,time-2), minute(time-2,45), hour(time-2,15), day(time-1,15)]"
+"[time(killed-3,time-1), month(time-1,august), year(time-1,2014), time(killed-3,time-2), hour(time-2,15-5), day(time-1,15), minute(time-2,45-5)]"
 },
 {
 "text":"John murdered Mary in July 1995 at 4 in the morning.",
 "kif":
-"[time(murdered,time-1), year(time-1,1995), month(time-1,July), time(murdered,time-2), hour(time-2,4), minute(time-2,00)]"
+"[hour(time-2,04-8), minute(time-2,00-8), year(time-1,1995), time(murdered-2,time-2), time(murdered-2,time-1), month(time-1,July)]"
 },
 {
 "text":"John married Mary on December 22 at 5:45 PM.",
@@ -52,7 +52,7 @@
 {
 "text":"This man is 170 centimeters tall.",
 "kif":
-"[measure(man-2, measure1), value(measure1, 170), unit(measure1, centimeters)]"
+"[measure(man-2, measure1), value(measure1, 170), unit(measure1, centimeters), valueToken(170,170-4)]"
 }
 ,
 {
@@ -64,7 +64,7 @@
 {
 "text":"The baby is twenty-five inches long.",
 "kif":
-"[measure(baby-2, measure1), unit(measure1, inches), value(measure1, twenty-five)]"
+"[measure(baby-2, measure1), unit(measure1, inches), valueToken(twenty-five,twenty-five-4), value(measure1, twenty-five)]"
 }
 ,
 {
@@ -76,61 +76,61 @@
 {
 "text":"The Chicago river is 156 miles long.",
 "kif":
-"[]"
+"[valueToken(156,156-5), measure(Chicagoriver-2, measure1), unit(measure1, miles), value(measure1, 156)]"
 }
 ,
 {
 "text":"The Amazon is between 6 and 30 miles wide.",
 "kif":
-"[]"
+"[measure(Amazon-2, measure1), valueToken(30,30-7), value(measure1, 6), measure(miles-8, measure2), unit(measure2, 6), value(measure2, 30), unit(measure1, miles), valueToken(6,6-5)]"
 }
 ,
 {
 "text":"The Grand Canyon ranges from four to eighteen miles wide.",
 "kif":
-"[]"
+"[value(measure2, eighteen), valueToken(eighteen,eighteen-8), measure(GrandCanyon-2, measure2), measure(GrandCanyon-2, measure1), value(measure1, four), unit(measure2, miles), valueToken(four,four-6), unit(measure1, ranges)]"
 }
 ,
 {
 "text":"The dining table is 100 centimeters long.",
 "kif":
-"[]"
+"[measure(diningtable-2, measure1), unit(measure1, centimeters), valueToken(100,100-5), value(measure1, 100)]"
 }
 ,
 {
 "text":"The side table is sixty-five centimeters wide.",
 "kif":
-"[]"
+"[valueToken(sixty-five,sixty-five-5), measure(sidetable-2, measure1), unit(measure1, centimeters), value(measure1, sixty-five)]"
 }
 ,
 {
 "text":"The river is twelve feet deep.",
 "kif":
-"[unit(measure1, feet), measure(river-2, measure1), value(measure1, twelve)]"
+"[unit(measure1, feet), measure(river-2, measure1), value(measure1, twelve), valueToken(twelve,twelve-4)]"
 }
 ,
 {
 "text":"The wall is four meters high.",
 "kif":
-"[value(measure1, four), unit(measure1, meters), measure(wall-2, measure1)]"
+"[value(measure1, four), unit(measure1, meters), valueToken(four,four-4), measure(wall-2, measure1)]"
 }
 ,
 {
 "text":"Jack is 178 centimeters tall.",
 "kif":
-"[]"
+"[measure(Jack-1, measure1), unit(measure1, centimeters), valueToken(178,178-3), value(measure1, 178)]"
 }
 ,
 {
 "text":"The pool is fifty meters long. ",
 "kif":
-"[]"
+"[valueToken(fifty,fifty-4), measure(pool-2, measure1), value(measure1, fifty), unit(measure1, meters)]"
 }
 ,
 {
 "text":"The pool is twenty feet wide. ",
 "kif":
-"[]"
+"[valueToken(twenty,twenty-4), unit(measure1, feet), measure(pool-2, measure1), value(measure1, twenty)]"
 }
 ,
 {
@@ -142,19 +142,19 @@
 {
 "text":"The tree is ten meters around.",
 "kif":
-"[]"
+"[unit(measure1, meters), measure(tree-2, measure1), value(measure1, ten), valueToken(ten,ten-4)]"
 }
 ,
 {
 "text":"The tree is ten meters in circumference.",
 "kif":
-"[]"
+"[unit(measure1, meters), measure(tree-2, measure1), value(measure1, ten), valueToken(ten,ten-4)]"
 }
 ,
 {
 "text":"The beach is ten miles away. ",
 "kif":
-"[]"
+"[measure(beach-2, measure1), unit(measure1, miles), value(measure1, ten), valueToken(ten,ten-4)]"
 }
 ,
 {
@@ -214,7 +214,7 @@
 {
 "text":"The engine is designed to take minimum space and weighs 55 kg.",
 "kif":
-"[]"
+"[unit(measure1, kg), value(measure1, 55), valueToken(55,55-11), measure(engine-2, measure1)]"
 }
 ,
 {
@@ -226,7 +226,7 @@
 {
 "text":"The bath holds 500 liters before it overflows.",
 "kif":
-"[]"
+"[unit(measure1, liters), measure(rate-14, measure1), valueToken(15,15-16), measure(tap-23, measure2), unit(measure2, liters), value(measure2, 12), valueToken(12,12-25), value(measure1, 15)]"
 }
 ,
 {
@@ -292,19 +292,19 @@
 {
 "text":"The shelves are 10 inches deep.",
 "kif":
-"[]"
+"[measure(shelves-2, measure1), value(measure1, 10), unit(measure1, inches), valueToken(10,10-4)]"
 }
 ,
 {
 "text":"I stood three feet deep in the water.",
 "kif":
-"[]"
+"[unit(measure1, feet), valueToken(three,three-3), measure(water-8, measure1), value(measure1, three)]"
 }
 ,
 {
 "text":"The table is two meters long.",
 "kif":
-"[]"
+"[measure(table-2, measure1), value(measure1, two), unit(measure1, meters), valueToken(two,two-4)]"
 }
 ,
 {
@@ -322,13 +322,13 @@
 {
 "text":"It's two meters long.",
 "kif":
-"[]"
+"[value(measure1, two), unit(measure1, meters), valueToken(two,two-3)]"
 }
 ,
 {
 "text":"The table is three feet wide.",
 "kif":
-"[]"
+"[measure(table-2, measure1), valueToken(three,three-4), unit(measure1, feet), value(measure1, three)]"
 }
 ,
 {
@@ -346,13 +346,13 @@
 {
 "text":"It's three feet wide.",
 "kif":
-"[]"
+"[unit(measure1, feet), valueToken(three,three-3), value(measure1, three)]"
 }
 ,
 {
 "text":"The pond is eight centimeters deep.",
 "kif":
-"[unit(measure1, centimeters), value(measure1, eight), measure(pond-2, measure1)]"
+"[unit(measure1, centimeters), value(measure1, eight), measure(pond-2, measure1), valueToken(eight,eight-4)]"
 }
 ,
 {
@@ -370,13 +370,13 @@
 {
 "text":"It's eight centimeters deep.",
 "kif":
-"[]"
+"[unit(measure1, centimeters), value(measure1, eight), valueToken(eight,eight-3)]"
 }
 ,
 {
 "text":"The ice is two inches thick.",
 "kif":
-"[]"
+"[measure(ice-2, measure1), value(measure1, two), unit(measure1, inches), valueToken(two,two-4)]"
 }
 ,
 {
@@ -394,13 +394,13 @@
 {
 "text":"It's two inches thick.",
 "kif":
-"[]"
+"[value(measure1, two), unit(measure1, inches), valueToken(two,two-3)]"
 }
 ,
 {
 "text":"The mountain is two miles high.",
 "kif":
-"[]"
+"[value(measure1, two), measure(mountain-2, measure1), unit(measure1, miles), valueToken(two,two-4)]"
 }
 ,
 {
@@ -418,13 +418,13 @@
 {
 "text":"It's two miles high.",
 "kif":
-"[]"
+"[value(measure1, two), unit(measure1, miles), valueToken(two,two-3)]"
 }
 ,
 {
 "text":"The woman is two meters tall.",
 "kif":
-"[]"
+"[value(measure1, two), measure(woman-2, measure1), unit(measure1, meters), valueToken(two,two-4)]"
 }
 ,
 {
@@ -486,7 +486,7 @@
 {
 "text":"There are five bags.",
 "kif":
-"[]"
+"[value(measure1, five), unit(measure1, bags), valueToken(five,five-3)]"
 },
 {
 "text":"How much did that cost?",
@@ -506,7 +506,7 @@
 {
 "text":"My apartment has five rooms.",
 "kif":
-"[]"
+"[measure(apartment-2, measure1), value(measure1, five), valueToken(five,five-4), unit(measure1, Room)]"
 },
 {
 "text":"How old is she?",
@@ -536,12 +536,12 @@
 {
 "text":"The table is five feet long.",
 "kif":
-"[]"
+"[measure(table-2, measure1), unit(measure1, feet), value(measure1, five), valueToken(five,five-4)]"
 },
 {
 "text":"It's five feet long.",
 "kif":
-"[]"
+"[unit(measure1, feet), value(measure1, five), valueToken(five,five-3)]"
 },
 {
 "text":"The current President of the Maldives is Abdulla Yameen, who was elected in 2013 by defeating former President Mohamed Nasheed in a run off.",
@@ -551,27 +551,27 @@
 {
 "text":"Sultan Imaaduddeen VI ascended the throne on 20 July 1893.",
 "kif":
-"[time(ascended,time-1), day(time-1,20), year(time-1,1893), month(time-1,July)]"
+"[time(ascended-4,time-1), day(time-1,20), year(time-1,1893), month(time-1,July)]"
 },
 {
 "text":"A canonical explanation for the change was given in a two-part storyline on Star Trek: Enterprise, in the episodes Affliction and Divergence that aired in February 2005.",
 "kif":
-"[time(aired,time-1), month(time-1,February), year(time-1,2005)]"
+"[time(aired-26,time-1), month(time-1,February), year(time-1,2005)]"
 },
 {
 "text":"She died on 2 April 1634, and is buried with Galileo at the Basilica of Santa Croce, Florence.",
 "kif":
-"[time(died,time-1), month(time-1,April), day(time-1,2), year(time-1,1634)]"
+"[month(time-1,April), time(died-2,time-1), day(time-1,2), year(time-1,1634)]"
 },
 {
 "text":"Ann Rosamund Oakley (born 17 January 1944), is a distinguished British sociologist, feminist, and writer.",
 "kif":
-"[year(time-1,1944), month(time-1,January), time(born,time-1), day(time-1,17)]"
+"[year(time-1,1944), time(born-5,time-1), month(time-1,January), day(time-1,17)]"
 },
 {
 "text":"As per 2011 census of India, the state is tenth largest by population with 49386799 inhabitants.",
 "kif":
-"[measure(population-14, measure1), unit(measure1, inhabitants), year(time-1,2011), value(measure1, 49386799)]"
+"[measure(population-14, measure1), unit(measure1, inhabitants), value(measure1, 49386799), valueToken(49386799,49386799-16)]"
 },
 {
 "text":"The famous battle of Palnadu which is enshrined in legend and literature as Palnati Yuddham was fought in Guntur district in 1180 CE.",
@@ -596,22 +596,22 @@
 {
 "text":"India remained a Dominion of the Crown until 26 January 1950, when the Constitution of India came into force, establishing the Republic of India.",
 "kif":
-"[time(remained,time-1), year(time-1,1950), month(time-1,January), day(time-1,26)]"
+"[year(time-1,1950), time(remained-2,time-1), month(time-1,January), day(time-1,26)]"
 },
 {
 "text":"The permission was granted and on 10 April 1591 three ships sailed from Torbay around the Cape of Good Hope to the Arabian Sea on one of the earliest English overseas Indian expeditions.",
 "kif":
-"[measure(expeditions-33, measure2), day(time-1,10), year(time-1,1591), unit(measure1, MeasureCount), measure(ships-11, measure1), value(measure1, three), month(time-1,April), value(measure2, one), time(granted,time-1), unit(measure2, MeasureCount)]"
+"[measure(ships-11, measure2), day(time-1,10), valueToken(three,three-10), time(granted-4,time-1), unit(measure2, sailed), year(time-1,1591), unit(measure1, ships), measure(permission-2, measure1), value(measure1, three), month(time-1,April), value(measure2, one), valueToken(one,one-26)]"
 },
 {
 "text":"Vivekananda started his journey to the West on 31 May 1893 and visited several cities in Japan (including Nagasaki, Kobe, Yokohama, Osaka, Kyoto and Tokyo), China and Canada en route to the United States, reaching Chicago on 30 July 1893.",
 "kif":
-"[month(time-1,May), month(time-2,July), day(time-1,31), day(time-2,30), year(time-1,1893), time(reaching,time-2), time(started,time-1), year(time-2,1893)]"
+"[month(time-1,May), month(time-2,July), time(started-2,time-1), day(time-1,31), day(time-2,30), year(time-1,1893), time(reaching-43,time-2), year(time-2,1893)]"
 },
 {
 "text":"On 4 July 1902 (the day of his death) Vivekananda awoke early, went to the chapel at Belur Math and meditated for three hours. ",
 "kif":
-"[time(awoke,time-1), month(time-1,July), day(time-1,4), year(time-1,1902)]"
+"[time(awoke-13,time-1), month(time-1,July), day(time-1,4), year(time-1,1902)]"
 },
 {
 "text":"Minardi was an Italian automobile racing team and constructor founded in Faenza in 1979 by Giancarlo Minardi.",
