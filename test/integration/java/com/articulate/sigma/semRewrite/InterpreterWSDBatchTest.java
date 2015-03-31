@@ -68,7 +68,7 @@ public class InterpreterWSDBatchTest extends IntegrationTestBase {
     public void test() {
         List<String> wsds = doFullWSD(input);
         assertThat(wsds, hasItems(expected));
-        assertEquals(wsds.size(), expected.length);
+        assertEquals(expected.length, wsds.size());
     }
 
     private List<String> doFullWSD(String input) {

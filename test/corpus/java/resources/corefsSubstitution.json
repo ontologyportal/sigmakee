@@ -2,6 +2,9 @@
   "in":"Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator. She was the first woman to fly a plane by herself across the Atlantic Ocean.",
   "out":"Amelia Mary Earhart ( July 24, 1897 – July 2, 1937) was an American aviator. Amelia Mary Earhart was the first woman to fly a plane by herself across the Atlantic Ocean."
 }, {
+  "in":"Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator, one of the first women to fly a plane long distances. Many researchers including navigator and aeronautical engineer Elgen Long believe that the Electra ran out of fuel and that Earhart and Noonan ditched at sea.",
+  "out":"Amelia Mary Earhart ( July 24, 1897 – July 2, 1937) was an American aviator, one of the first women to fly a plane long distances. Many researchers including navigator and aeronautical engineer Elgen Long believe that the Electra ran out of fuel and that Amelia Mary Earhart and Noonan ditched at sea."
+}, {
   "in":"George Washington sat on a wall. He had a great fall.",
   "out":"George Washington sat on a wall. George Washington had a great fall."
 }, {

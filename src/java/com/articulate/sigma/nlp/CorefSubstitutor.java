@@ -22,6 +22,7 @@ package com.articulate.sigma.nlp;
 
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.nlp.dcoref.CorefChain;
@@ -76,27 +77,24 @@ public class CorefSubstitutor {
     private String replaceCoref(final CoreLabel label, Map<Integer, CorefChain> corefs) {
 
         String text = label.originalText();
-        Integer corefClusterId = label.get(CorefClusterIdAnnotation.class);
-        if (corefClusterId != null) {
-            List<CorefMention> mentions = corefs.get(corefClusterId).getMentionsInTextualOrder();
-            if (mentions.size() > 1) {
-                int index = label.index();
-                int sentence = 1 + label.sentIndex();
-                CorefMention firstMention = mentions.get(0);
-                if (sentence != firstMention.sentNum || index < firstMention.startIndex || index >= firstMention.endIndex) {
-                    if(!ignorablePronouns.contains(text)) {
-                        String masterTag = label.tag();
-                        if (isSubstitutablePronoun(label)) {
-                            masterTag = "";
+        List<CorefMention> mentions = getMentions(label, corefs);
+        if (mentions.size() > 1) {
+            int index = label.index();
+            int sentence = 1 + label.sentIndex();
+            CorefMention firstMention = mentions.get(0);
+            if (sentence != firstMention.sentNum || index < firstMention.startIndex || index >= firstMention.endIndex) {
+                if (!ignorablePronouns.contains(text)) {
+                    String masterTag = label.tag();
+                    if (isSubstitutablePronoun(label)) {
+                        masterTag = "";
+                    }
+                    String candidateText = extractTextWithSameTag(firstMention, masterTag);
+                    if (!Strings.isNullOrEmpty(candidateText)) {
+                        if ("PRP$".equals(label.tag())) {
+                            candidateText += candidateText.endsWith("s") ? "'" : "'s";
                         }
-                        String candidateText = extractTextWithSameTag(firstMention, masterTag);
-                        if (!Strings.isNullOrEmpty(candidateText)) {
-                            if ("PRP$".equals(label.tag())) {
-                                candidateText += candidateText.endsWith("s") ? "'" : "'s";
-                            }
 
-                            text = candidateText;
-                        }
+                        text = candidateText;
                     }
                 }
             }
@@ -107,9 +105,31 @@ public class CorefSubstitutor {
 
     /** *************************************************************
      */
+    private List<CorefMention> getMentions(final CoreLabel label, Map<Integer, CorefChain> corefs) {
+
+        List<CorefMention> mentions = ImmutableList.of();
+        Integer corefClusterId = label.get(CorefClusterIdAnnotation.class);
+        while(mentions.size() <= 1 && corefClusterId != null && corefClusterId.compareTo(0) > 0) {
+            if(corefs.containsKey(corefClusterId)) {
+                List<CorefMention> candidateMentions = corefs.get(corefClusterId).getMentionsInTextualOrder();
+                boolean areMentionsContainLabel = candidateMentions.stream().anyMatch(mention ->
+                        mention.sentNum == label.sentIndex() + 1
+                        && mention.startIndex == label.index()
+                );
+                if(areMentionsContainLabel) {
+                    mentions = candidateMentions;
+                }
+            }
+            corefClusterId = corefClusterId - 1;
+        }
+
+        return mentions;
+    }
+
+    /** *************************************************************
+     */
     private boolean isSubstitutablePronoun(CoreLabel label) {
 
-        String text =  label.originalText();
         String tag = label.tag();
         return "PRP".equals(tag) || "PRP$".equals(tag);
     }
