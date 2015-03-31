@@ -286,7 +286,7 @@
 			<mapper type="flatten"/>
 		</unzip>
 
-		<get dest="${sigma.install.downloads}" src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.8/E.tgz" usetimestamp="true" />
+		<!-- get dest="${sigma.install.downloads}" src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.8/E.tgz" usetimestamp="true" /-->
 	</target>
 	
 <path id="javadoc.classpath">

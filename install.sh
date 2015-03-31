@@ -57,12 +57,15 @@ check_env()
 			if ! hash mvn 2>/dev/null; then
 				brew install maven
 			fi
+			if ! hash e_ltb_runner2>/dev/null; then
+				brew install eprover
+			fi
 
 			;;
 		ubuntu)
 			log warn "Ubuntu is going to ask your user's password for missed packages check."
 			sudo apt-get -y update
-			sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cvs ant maven
+			sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cvs ant maven eprover
 			;;
 	esac
 }
