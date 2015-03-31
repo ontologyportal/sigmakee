@@ -494,6 +494,11 @@ public class Interpreter {
      */
     public String interpretSingle(String input) {
 
+        if (input.trim().endsWith("?"))
+            question = true;
+        else
+            question = false;
+
         List<String> substitutedInputs = processInput(input);
 
         if (!question) {
@@ -985,16 +990,12 @@ public class Interpreter {
 
                 } 
                 else {
-                    if (input.trim().endsWith("?"))
-                        question = true;
-                    else
-                        question = false;
                     System.out.println("INFO in Interpreter.interpretIter(): " + input); 
                     String result = interpretSingle(input);
                     System.out.println("Final Answer: " + result);
                 }
             }
-        } while (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit"));
+        } while (!input.equals("exit") && !input.equals("quit"));
     }
 
     /** ***************************************************************
