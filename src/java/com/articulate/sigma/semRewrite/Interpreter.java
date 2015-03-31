@@ -127,7 +127,7 @@ public class Interpreter {
     /** *************************************************************
      * @return a map of the word key and the value as a string 
      * consisting of the word plus a dash and its number in
-     * the sentence such as walks -> walks-5
+     * the sentence such as walks-5 -> walks
      */
     private static HashMap<String,String> extractWords(List<String> clauses) {
 
@@ -143,13 +143,13 @@ public class Interpreter {
             int wordend1 = arg1.indexOf('-');
             String purearg1 = arg1.substring(0,wordend1);
             if (!purearg1.equals("ROOT"))
-                purewords.put(purearg1,arg1);
+                purewords.put(arg1,purearg1);
 
             String arg2 = clause.substring(comma + 1, clause.length()-1).trim();
             int wordend2 = arg2.indexOf('-');
             String purearg2 = arg2.substring(0,wordend2);
             if (!purearg2.equals("ROOT"))
-                purewords.put(purearg2,arg2);
+                purewords.put(arg2,purearg2);
         }
         return purewords;
     }
@@ -177,8 +177,8 @@ public class Interpreter {
         ArrayList<String> pure = Lists.newArrayList(purewords.keySet());
         //System.out.println("INFO in Interpreter.addWSD(): words: " + pure);
         for (Map.Entry<String, String> pureWordEntry : purewords.entrySet()) {
-            String clauseKey = pureWordEntry.getValue();
-            String pureWord = pureWordEntry.getKey();
+            String clauseKey = pureWordEntry.getKey();
+            String pureWord = pureWordEntry.getValue();
             //System.out.println("INFO in Interpreter.addWSD(): pureWord:  " + pureWord);
             if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
                 continue;
