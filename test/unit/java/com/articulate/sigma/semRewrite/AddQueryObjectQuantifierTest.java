@@ -35,6 +35,7 @@ public class AddQueryObjectQuantifierTest {
 
     @Test
     public void testAddQueryObjectQuantifierTest1() {
+
         input = "(and\n" +
                 "    (instance ?WH Human)\n" +
                 "    (agent ?moves-2 ?WH)\n" +
@@ -55,6 +56,7 @@ public class AddQueryObjectQuantifierTest {
 
     @Test
     public void testAddQueryObjectQuantifierTest2() {
+
         input = "(and\n" +
                 "    (agent ?fly-4 ?Amelia-3)\n" +
                 "    (instance ?fly-4 Flying)\n" +
@@ -75,6 +77,7 @@ public class AddQueryObjectQuantifierTest {
 
     @Test
     public void testAddQueryObjectQuantifierTest3() {
+
         input = "  (and\n" +
                 "    (agent ?go-4 ?Amelia-3)\n" +
                 "    (attribute ?go-4 ?Where-1)\n" +
@@ -95,6 +98,7 @@ public class AddQueryObjectQuantifierTest {
 
     @Test
     public void testAddQueryObjectQuantifierTest4() {
+
         input = "  (and\n" +
                 "    (agent ?asked-2 ?John-1)\n" +
                 "    (instance ?car-7 Automobile)\n" +
@@ -121,6 +125,7 @@ public class AddQueryObjectQuantifierTest {
 
     @Test
     public void testAddQueryObjectQuantifierTest5() {
+
         input = "  (and\n" +
                 "    (agent ?feel-4 ?you-3)\n" +
                 "    (attribute ?feel-4 ?How-1)\n" +
@@ -139,6 +144,7 @@ public class AddQueryObjectQuantifierTest {
 
     @Test
     public void testAddQueryObjectSingleCharVariable() {
+
         input = "  (and\n" +
                 "    (attribute ?John-3 Male)\n" +
                 "    (inhabits ?John-3 ?Y)\n" +
@@ -154,6 +160,7 @@ public class AddQueryObjectQuantifierTest {
     }
 
     private boolean compareInputResultAndExpectedResult(String input, String output) {
+
         Formula f1 = new Formula();
         try {
             input = String.valueOf(findQueryObjects.invoke(null, input));
