@@ -43,9 +43,9 @@ public class SigmaTestBase {
         checkConfiguration();
     }
 
-    private static void checkConfiguration() {
+    protected static void checkConfiguration() {
         List<String> problemList = Lists.newArrayList();
-        if(NLGUtils.getKeywordMap().isEmpty()) {
+        if(NLGUtils.getKeywordMap() == null || NLGUtils.getKeywordMap().isEmpty()) {
             problemList.add("LanguageFormatter.keywordMap is empty.");
         }
         if(WordNet.wn.synsetsToWords.isEmpty()) {

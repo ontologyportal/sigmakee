@@ -358,6 +358,9 @@ public class NLGUtils {
      * Return a defensive copy of the keyword map.
      */
     public static HashMap<String, HashMap<String, String>> getKeywordMap() {
+        if (keywordMap == null)     {
+            return null;
+        }
         return Maps.newHashMap(keywordMap);
     }
 
