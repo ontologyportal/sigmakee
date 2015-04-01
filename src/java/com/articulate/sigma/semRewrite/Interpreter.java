@@ -233,7 +233,31 @@ public class Interpreter {
                 else {
                     String humanReadable = splitCamelCase(pureWord);
                     Set<String> wordNetResults = findWordNetResults(humanReadable, clauseKey);
-                    results.addAll(wordNetResults);
+                    if (!wordNetResults.isEmpty()) {
+                        results.addAll(wordNetResults);
+                    }
+                    else {
+                        Collection<EntityType> knownTypes = etp.getEntityTypes(clauseKey);
+                        if (!knownTypes.isEmpty()) {
+                            String[] split = humanReadable.split(" ");
+                            for (String word : split) {
+                                String synset = WSD.getBestDefaultSense(word.replace(" ", "_"));
+                                if (!Strings.isNullOrEmpty(synset)) {
+                                    String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
+                                    if (!Strings.isNullOrEmpty(sumo)) {
+                                        if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
+                                            sumo = sumo.substring(0, sumo.indexOf(" ") - 1);
+                                        }
+                                        for (EntityType type : knownTypes) {
+                                            if (kb.isSubclass(sumo, type.getSumoClass())) {
+                                                results.add("sumo(" + sumo + "," + clauseKey + ")");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

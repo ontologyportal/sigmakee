@@ -33,6 +33,15 @@
     "sumo(Airplane,plane-5)"
   ]
 },{
+  "input": "Earhart and Noonan found Gardner Island.",
+  "test": [
+    "names(Earhart-1,\"Earhart\")",
+    "names(Noonan-3,\"Noonan\")",
+    "sumo(Human,Earhart-1)",
+    "sumo(Human,Noonan-3)",
+    "sumo(Island,GardnerIsland-5)"
+  ]
+},{
   "input": "John Smith flies the plane",
   "test": [
     "names(JohnSmith-1,\"John Smith\")",
