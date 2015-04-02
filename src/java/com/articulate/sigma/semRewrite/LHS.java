@@ -5,6 +5,8 @@ Copyright 2014-2015 IPsoft
 
 Author: Adam Pease adam.pease@ipsoft.com
 
+This class represents the left hand side of a rule.
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -78,6 +80,15 @@ public class LHS {
     }
     
     /** ***************************************************************
+     * @param lex is a Lexer which has been initialized with the 
+     * textual version of the LHS
+     * @param startLine is the line in the text file at which the
+     * LHS appears.  If it is in a large rule the start line
+     * could be different than the actual line of text for the LHS.
+     * If the LHS is just from a string rather than directly from
+     * a text file then the startLine will be 0.
+     * @return a LHS corresponding to the input text passed to the
+     * Lexer.
      */
     public static LHS parse(Lexer lex, int startLine) {
         
