@@ -185,14 +185,14 @@ public class Clausifier {
         CNF cnf = new CNF();
         if (lhs.operator.equals(LHS.LHSop.AND)) {
             if (lhs.lhs1.clause != null) {
-                Disjunct d = new Disjunct();
+                Clause d = new Clause();
                 d.disjuncts.add(lhs.lhs1.clause);
                 cnf.clauses.add(d);
             }
             else
                 cnf.clauses.addAll(separateConjunctions(lhs.lhs1).clauses);
             if (lhs.lhs2.clause != null){
-                Disjunct d = new Disjunct();
+                Clause d = new Clause();
                 d.disjuncts.add(lhs.lhs2.clause);
                 cnf.clauses.add(d);
             }
@@ -200,13 +200,13 @@ public class Clausifier {
                 cnf.clauses.addAll(separateConjunctions(lhs.lhs2).clauses);
         }
         else if (lhs.operator.equals(LHS.LHSop.OR)) {
-            Disjunct d = new Disjunct();
+            Clause d = new Clause();
             d.disjuncts.add(lhs.lhs1.clause);
             d.disjuncts.add(lhs.lhs2.clause);
             cnf.clauses.add(d);
         }
         else if (lhs.clause != null) {
-            Disjunct d = new Disjunct();
+            Clause d = new Clause();
             d.disjuncts.add(lhs.clause);
             cnf.clauses.add(d);
         }

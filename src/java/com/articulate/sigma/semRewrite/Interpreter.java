@@ -737,10 +737,10 @@ public class Interpreter {
     public static void addUnprocessed(ArrayList<String> kifoutput, CNF cnf) {
 
         StringBuilder sb = new StringBuilder();
-        for (Disjunct d : cnf.clauses) {
+        for (Clause d : cnf.clauses) {
             if (d.disjuncts.size() > 1)
                 sb.append("(or \n");
-            for (Clause c : d.disjuncts) {
+            for (Literal c : d.disjuncts) {
                 kifoutput.add("(" + c.pred + " " + c.arg1  + " " + c.arg2 + ") ");
             }
             if (d.disjuncts.size() > 1)

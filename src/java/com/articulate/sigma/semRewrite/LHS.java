@@ -38,7 +38,7 @@ LHS ::= ClausePattern        Match & delete atomic clause
 public class LHS {
 
     public enum LHSop {AND,OR,NOT,PRESERVE,DELETE,PROC}
-    public Clause clause;
+    public Literal clause;
     public LHS lhs1;
     public LHS lhs2;
     public LHSop operator;
@@ -118,7 +118,7 @@ public class LHS {
             else if (lex.testTok(Lexer.OpenBracket)) {
                 lex.next();
                 lhs.operator = LHSop.PROC;
-                Clause c = Clause.parse(lex,startLine);
+                Literal c = Literal.parse(lex,startLine);
                 lhs.clause = c;
                 //lex.next();
                 if (!lex.testTok(Lexer.CloseBracket)) {
@@ -129,7 +129,7 @@ public class LHS {
                 return lhs;
             }
             // Now it's either just a clause or a left hand side
-            Clause c = Clause.parse(lex,startLine);
+            Literal c = Literal.parse(lex,startLine);
             //System.out.println("INFO in LHS.parse(): found a clause: " + c);
             //System.out.println("INFO in LHS.parse(): " + lex.look());
             if (lex.testTok(Lexer.Comma)) {

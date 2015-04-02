@@ -28,7 +28,7 @@ import java.util.*;
  */
 public class CNF {
 
-    public ArrayList<Disjunct> clauses = new ArrayList<Disjunct>();
+    public ArrayList<Clause> clauses = new ArrayList<Clause>();
     
     /** ***************************************************************
      */
@@ -37,7 +37,7 @@ public class CNF {
         StringBuffer sb = new StringBuffer();
         //sb.append("[");
         for (int i = 0; i < clauses.size(); i++) {
-            Disjunct d = clauses.get(i);
+            Clause d = clauses.get(i);
             sb.append(d.toString());
             if (clauses.size() > 1 && i < clauses.size() - 1)
                 sb.append(", ");
@@ -89,7 +89,7 @@ public class CNF {
      */
     public void preProcessQuestionWords(List<String> qwords) {
         
-        for (Disjunct d: clauses)
+        for (Clause d: clauses)
             d.preProcessQuestionWords(qwords);
     }
     
@@ -98,9 +98,9 @@ public class CNF {
     public void clearBound() {
         
         //System.out.println("INFO in CNF.clearBound(): before " + this);
-        ArrayList<Disjunct> newclauses = new ArrayList<Disjunct>();
+        ArrayList<Clause> newclauses = new ArrayList<Clause>();
         for (int i = 0; i < clauses.size(); i++) {
-            Disjunct d = clauses.get(i);
+            Clause d = clauses.get(i);
             d.clearBound();       
             if (!d.empty())
                 newclauses.add(d);
@@ -113,9 +113,9 @@ public class CNF {
     public void clearPreserve() {
         
         //System.out.println("INFO in CNF.clearBound(): before " + this);
-        ArrayList<Disjunct> newclauses = new ArrayList<Disjunct>();
+        ArrayList<Clause> newclauses = new ArrayList<Clause>();
         for (int i = 0; i < clauses.size(); i++) {
-            Disjunct d = clauses.get(i);
+            Clause d = clauses.get(i);
             d.clearPreserve();       
             if (!d.empty())
                 newclauses.add(d);
@@ -141,7 +141,7 @@ public class CNF {
         //System.out.println("INFO in CNF.removeBound(): before " + this);
         CNF newCNF = new CNF();
         for (int i = 0; i < clauses.size(); i++) {
-            Disjunct d = clauses.get(i);
+            Clause d = clauses.get(i);
             d.removeBound();
             if (!d.empty())
                 newCNF.clauses.add(d);
@@ -164,8 +164,8 @@ public class CNF {
             tokens.add(Lexer.ClosePar);
             tokens.add(Lexer.FullStop);
             while (!lex.testTok(tokens)) {
-                Disjunct d = new Disjunct();
-                Clause c = Clause.parse(lex, 0);
+                Clause d = new Clause();
+                Literal c = Literal.parse(lex, 0);
                 d.disjuncts.add(c);
                 cnf.clauses.add(d);
                 if (lex.testTok(Lexer.Comma))
@@ -197,12 +197,12 @@ public class CNF {
         
         CNF cnf = new CNF();
         for (int i = 0; i < clauses.size(); i++) {
-            Disjunct d = clauses.get(i);
-            Disjunct dnew = new Disjunct();
+            Clause d = clauses.get(i);
+            Clause dnew = new Clause();
             for (int j = 0; j < d.disjuncts.size(); j++) {
-                Clause c = d.disjuncts.get(j);
+                Literal c = d.disjuncts.get(j);
                 //System.out.println("INFO in CNF.applyBindings(): 1 " + c);
-                Clause c2 = c.applyBindings(bindings);
+                Literal c2 = c.applyBindings(bindings);
                 //System.out.println("INFO in CNF.applyBindings(): 1.5 " + c2);
                 dnew.disjuncts.add(c2);
                 //System.out.println("INFO in CNF.applyBindings(): 2 " + dnew);
@@ -227,11 +227,11 @@ public class CNF {
      * for the rule to be bound.  If a binding is found, it can exit
      * without trying all the options.
      */
-    private HashMap<String,String> unifyDisjunct(Disjunct d1, CNF cnf2, CNF cnf1, HashMap<String,String> bindings) {
+    private HashMap<String,String> unifyDisjunct(Clause d1, CNF cnf2, CNF cnf1, HashMap<String,String> bindings) {
         
         //System.out.println("INFO in CNF.unifyDisjunct(): checking " + d1 + " against " + cnf2);
         HashMap<String,String> result = new HashMap<String,String>();
-        for (Disjunct d2 : cnf2.clauses) {  // sentence
+        for (Clause d2 : cnf2.clauses) {  // sentence
             //System.out.println("INFO in CNF.unifyDisjunct(): checking " + d1 + " against " + d2);
             HashMap<String,String> bindings2 = d2.unify(d1);
             //System.out.println("INFO in CNF.unifyDisjunct(): d1 " + d1 + " d2 " + d2);
@@ -258,7 +258,7 @@ public class CNF {
         //System.out.println("INFO in CNF.unify(): this " + this);
         HashMap<String,String> result = new HashMap<String,String>();
         for (int i = 0; i < cnfnew1.clauses.size(); i++) {  // rule
-            Disjunct d1 = cnfnew1.clauses.get(i);
+            Clause d1 = cnfnew1.clauses.get(i);
             if (d1.disjuncts.size() == 1 && d1.disjuncts.get(0).negated)
                 negatedClause = true;
             HashMap<String,String> result2 = unifyDisjunct(d1,cnfnew2,cnfnew1,result);

@@ -42,7 +42,7 @@ public class Rule {
     public LHS lhs;
     public RuleOp operator;  
     public RHS rhs;
-    public Clause clause;
+    public Literal clause;
     public int startLine = -1;
     
     /** ***************************************************************
@@ -105,7 +105,7 @@ public class Rule {
         try {                                                               
             if (lex.testTok(Lexer.Clause)) {
                 r.operator = RuleOp.CLAUSE;    
-                r.clause = Clause.parse(lex,r.startLine);  
+                r.clause = Literal.parse(lex,r.startLine);  
             }
             else {
                 do {

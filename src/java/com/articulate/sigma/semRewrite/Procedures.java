@@ -29,7 +29,7 @@ public class Procedures {
     /** ***************************************************************
      * CELT classes which are not SUMO classes, like "person"
      */
-    public static String isCELTclass(Clause c) {
+    public static String isCELTclass(Literal c) {
     
         KB kb = KBmanager.getMgr().getKB("SUMO");  
         //System.out.println("INFO in Procedures.isCELTclass(): " + c);
@@ -58,7 +58,7 @@ public class Procedures {
    
     /** ***************************************************************
      */
-    public static String isSubclass(Clause c) {
+    public static String isSubclass(Literal c) {
         
         KB kb = KBmanager.getMgr().getKB("SUMO");  
         //System.out.println("INFO in Procedures.isSubclass(): " + c);
@@ -71,7 +71,7 @@ public class Procedures {
     
     /** ***************************************************************
      */
-    public static String isInstanceOf(Clause c) {
+    public static String isInstanceOf(Literal c) {
         
         KB kb = KBmanager.getMgr().getKB("SUMO");
         //System.out.println("INFO in Procedures.isInstanceOf(): " + c);
@@ -84,7 +84,7 @@ public class Procedures {
 
     /** ***************************************************************
      */
-    public static String isSubAttribute(Clause c) {
+    public static String isSubAttribute(Literal c) {
 
         KB kb = KBmanager.getMgr().getKB("SUMO");
         if (kb.isSubAttribute(c.arg1, c.arg2)) {
