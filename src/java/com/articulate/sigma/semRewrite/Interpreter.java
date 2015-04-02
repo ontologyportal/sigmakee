@@ -33,11 +33,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-
-
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -49,9 +45,15 @@ import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static com.articulate.sigma.semRewrite.EntityType.PERSON;
 
 public class Interpreter {
+
     private static final String ANSWER_YES = "Yes.";
     private static final String ANSWER_NO = "No.";
     private static final String ANSWER_UNDEFINED = "I don't know.";
+
+    private static final String PHRASAL_VERB_PARTICLE_TAG = "prt(";
+    private static final String SUMO_TAG = "sumo(";
+    private static final String TENSE_TAG = "tense(";
+    private static final String NUMBER_TAG = "number(";
 
     private static final Pattern ENDING_IN_PUNC_PATTERN = Pattern.compile(".*[.?!]$");
 
@@ -536,16 +538,14 @@ public class Interpreter {
      */
     public String interpretSingle(String input) {
 
-        if (input.trim().endsWith("?"))
+        if (input.trim().endsWith("?")) {
             question = true;
-        else
+        } else {
             question = false;
-
-
+        }
 
         if (!question) {
-                tfidf.addInput(input);
-
+            tfidf.addInput(input);
         }
 
         Pipeline pipeline = new Pipeline();
@@ -569,12 +569,16 @@ public class Interpreter {
         EntityTypeParser etp = new EntityTypeParser(document);
         List<String> wsd = findWSD(results, getPartOfSpeechList(document.get(CoreAnnotations.TokensAnnotation.class)), etp);
         results.addAll(wsd);
+
         List<String> posInformation = SentenceUtil.findPOSInformation(document, dependenciesList);
         results.addAll(posInformation);
         results = lemmatizeResults(results, tokens);
 
+        results = processPhrasalVerbs(results);
+
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
         System.out.println("INFO in Interpreter.interpretSingle(): " + in);
+
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
@@ -585,17 +589,122 @@ public class Interpreter {
             cnf.merge(cnfnew);
         }
         inputs.add(cnf);
+
         ArrayList<String> kifClauses = interpretCNF(inputs);
         String result = fromKIFClauses(kifClauses);
         System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
+
         if (question && ((ANSWER_UNDEFINED.equals(result) && autoir) || ir)) {
             if (autoir) {
                 System.out.println("Interpreter had no response so trying TFIDF");
             }
             result = tfidf.matchInput(input).toString();
         }
+
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
         return result;
+    }
+
+    /** *************************************************************
+     * Combine phrasal verbs in dependency parsing results.
+     */
+    public static List<String> processPhrasalVerbs(List<String> results) {
+
+        if (!containsPhrasalVerbs(results)) {
+            return results;
+        }
+
+        String verb = null;
+        String particle = null;
+        String[] elems;
+
+        for (String dependency : results) {
+            if (dependency.startsWith(PHRASAL_VERB_PARTICLE_TAG)) {
+                int index = (PHRASAL_VERB_PARTICLE_TAG).length();
+                String verbAndParticle = dependency.substring(index, dependency.length()-1);
+                elems = verbAndParticle.split(",");
+                verb = elems[0].trim();
+                particle = elems[1].trim();
+                break;
+            }
+        }
+
+        if (null == verb || null == particle) {
+            return results;
+        }
+
+        elems = verb.split("-");
+        String verbWord = elems[0];
+        int verbNum = Integer.parseInt(elems[1]);
+
+        elems = particle.split("-");
+        String particleWord = elems[0];
+
+        String phrasalVerb = verbWord + "-" + particleWord + "-" + verbNum;
+
+        List<String> newResults = Lists.newArrayList();
+
+        for (String dependency : results) {
+            if (!dependency.startsWith(PHRASAL_VERB_PARTICLE_TAG) && !(dependency.startsWith(SUMO_TAG) && dependency.contains(verb))) {
+                String newDependency = modifyDependencyElem(dependency, verbNum);
+                if (newDependency.contains(verb)) {
+                    newDependency = newDependency.replace(verb, phrasalVerb);
+                }
+                newResults.add(newDependency);
+            }
+        }
+
+        return newResults;
+    }
+
+    /** *************************************************************
+     */
+    private static boolean containsPhrasalVerbs(List<String> results) {
+
+        for (String dependency : results) {
+            if (dependency.startsWith(PHRASAL_VERB_PARTICLE_TAG)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** *************************************************************
+     */
+    private static String modifyDependencyElem(String dependency, int verbNum) {
+
+        String newDependency = dependency;
+        int index = newDependency.indexOf("(");
+        String dependencyElems = newDependency.substring(index+1, newDependency.length()-1);
+
+        String[] elems = dependencyElems.split(",");
+
+        String elem;
+        String newElem;
+        String[] subElems;
+        int subElemNum;
+
+        if (!newDependency.startsWith(SUMO_TAG) && !newDependency.startsWith(TENSE_TAG) && !newDependency.startsWith(NUMBER_TAG)) {
+            elem = elems[0].trim();
+            subElems = elem.split("-");
+            subElemNum = Integer.parseInt(subElems[1]);
+            if (subElemNum > verbNum) {
+                subElemNum--;
+            }
+            newElem = subElems[0] + "-" + subElemNum;
+            newDependency = newDependency.replace(elem, newElem);
+        }
+
+        elem = elems[1].trim();
+        subElems = elem.split("-");
+        subElemNum = Integer.parseInt(subElems[1]);
+        if (subElemNum > verbNum) {
+            subElemNum--;
+        }
+        newElem = subElems[0] + "-" + subElemNum;
+        newDependency = newDependency.replace(elem, newElem);
+
+        return newDependency;
     }
 
     /** *************************************************************
