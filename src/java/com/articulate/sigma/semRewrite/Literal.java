@@ -30,6 +30,10 @@ import com.articulate.sigma.*;
  * pred(arg1,arg2).  
  * arg1 and/or arg2 can be variables which are denoted by a 
  * leading '?'
+ * The literal can be negated.  It also has flags for whether it
+ * needs to be preserved, rather than consumed, during unification,
+ * and whether it has already been successfully bound to another
+ * literal during unification.
  */
 public class Literal {
 
@@ -100,6 +104,10 @@ public class Literal {
     }
     
     /** *************************************************************
+     * If the tokens in the literal are derived from words parsed
+     * from the Stanford dependency parser, and therefore in the form
+     * word-xx, where xx are digits, prepend a '?' to signify that
+     * it's a variable.
      */
     public void preProcessQuestionWords(List<String> qwords) {
         
@@ -113,7 +121,7 @@ public class Literal {
     }
     
     /** ***************************************************************
-     * Apply variable substitutions to a clause  
+     * Apply variable substitutions to a literal  
      */
     public void applyBindingSelf(HashMap<String,String> bindings) {
         
@@ -128,7 +136,7 @@ public class Literal {
     }
     
     /** ***************************************************************
-     * Apply variable substitutions to a clause  
+     * @return a literal after applying variable substitutions to a literal  
      */
     public Literal applyBindings(HashMap<String,String> bindings) {
         
@@ -165,8 +173,10 @@ public class Literal {
     }
     
     /** ***************************************************************
-     * A degenerate case of an occurs check since we have no functions
-     * and argument lists are always of length 2.
+     * @return a boolean indicating whether a variable occurs in a literal.
+     * This is a degenerate case of general case of occurs check during
+     * unification, since we have no functions and argument lists are 
+     * always of length 2.
      */
     private static boolean occursCheck(String t, Literal c) {
         
@@ -177,8 +187,10 @@ public class Literal {
     }
     
     /** ***************************************************************
-     * @return false if there are wildcards and they don't match (or there's an error)
-     * and true if there are no wildcards.  Only
+     * @return false if there are wildcards and they don't match (or 
+     * there's an error) and true if there are no wildcards.  Match
+     * is case-insensitive.  Wildcards only allow for ignoring the
+     * word-number suffix as in wildcard-5 would match wildcard*.
      */
     private static boolean wildcardMatch(String t1, String t2) {
         
@@ -207,6 +219,8 @@ public class Literal {
      * Unify all terms in term1 with the corresponding terms in term2 with a
      * common substitution. Note that unlike general unification, we have
      * a fixed argument list of 2.   
+     * @return the set of substitutions with the variable as the key and
+     * the binding as the value in the HashMap.
      */
     public HashMap<String,String> mguTermList(Literal l2) {
 
@@ -280,7 +294,16 @@ public class Literal {
     }
     
     /** ***************************************************************
-     * The predicate must already have been read
+     * @param lex is a Lexer which has been initialized with the 
+     * textual version of the Literal
+     * @param startLine is the line in the text file at which the
+     * literal appears.  If it is in a large rule the start line
+     * could be different than the actual line of text for the literal.
+     * If the literal is just from a string rather than directly from
+     * a text file then the startLine will be 0.
+     * @return a Literal corresponding to the input text passed to the
+     * Lexer.  Note that the predicate in this literal must already 
+     * have been read
      */
     public static Literal parse(Lexer lex, int startLine) {
 
@@ -328,7 +351,7 @@ public class Literal {
     }
     
     /** *************************************************************
-     * A test method
+     * A test method for unification
      */
     public static void testUnify() {
         
@@ -354,7 +377,7 @@ public class Literal {
     }
     
     /** *************************************************************
-     * A test method
+     * A test method for wildcard unification
      */
     public static void testRegexUnify() {
         
@@ -389,7 +412,7 @@ public class Literal {
     }
     
     /** *************************************************************
-     * A test method
+     * A test method for parsing a Literal
      */
     public static void testParse() {
         
