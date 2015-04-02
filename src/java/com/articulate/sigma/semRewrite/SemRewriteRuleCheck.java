@@ -1,18 +1,34 @@
 package com.articulate.sigma.semRewrite;
 
-import com.articulate.sigma.KBmanager;
-
 import java.util.*;
 
-import static com.articulate.sigma.semRewrite.Interpreter.canon;
+/*
+Copyright 2014-2015 IPsoft
 
-/**
- * Created by peigenyou on 3/31/15.
- */
+Author: Peigen You Peigen.You@ipsoft.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA
+*/
 public class SemRewriteRuleCheck {
 
-    /**
-     * check the ruleset if there is any subsumes happens inside
+    public static boolean isIgnoreCNFOnRight = true;
+
+    /***********************************************************
+     * Check the whole Ruleset. Print all possible subsumptions.
+     * Change isIgnoreCNFOnRight value to control if CNF on right rule conflict should be printed.
      */
     public static Map<Integer, HashSet<Integer>> checkRuleSet(RuleSet rs) {
 
@@ -55,9 +71,11 @@ public class SemRewriteRuleCheck {
         for (Integer r : subsumMap.keySet()) {
             for (Integer k : subsumMap.get(r)) {
                 if (k > r) {
-                    if(rs.rules.get(r).rhs.cnf!=null) continue;
+                    if (isIgnoreCNFOnRight)
+                        if (rs.rules.get(r).rhs.cnf != null)
+                            continue;
                     count++;
-                    System.out.println("\nLine "+rs.rules.get(r).startLine + " and  " + rs.rules.get(k).startLine);
+                    System.out.println("\nLine " + rs.rules.get(r).startLine + " and  " + rs.rules.get(k).startLine);
                     System.out.println("rules = \n" + rs.rules.get(r) + "\n" + rs.rules.get(k));
                 }
             }
@@ -66,7 +84,12 @@ public class SemRewriteRuleCheck {
         return subsumMap;
     }
 
+    /***********************************************************
+     * get all the Rules in Ruleset that would be subsumed or subsums the rule r
+     * should pass in the arraylist as result space
+     */
     public static void isRuleSubsumedByRuleSet(Rule r, RuleSet rs, ArrayList<Integer> getSubsumedRules, ArrayList<Integer> subsumerRules) {
+
         getSubsumedRules.clear();
         subsumerRules.clear();
         CNF lc = Clausifier.clausify(r.lhs.deepCopy());
@@ -81,6 +104,9 @@ public class SemRewriteRuleCheck {
         }
     }
 
+    /***********************************************************
+     * check if CNF subsumed, naive implementation
+     */
     public static boolean isCNFSubsumedNaive(CNF subsumer, CNF subsumed) {
 
         HashMap<String, String> binding = subsumer.unify(subsumed);
@@ -96,14 +122,13 @@ public class SemRewriteRuleCheck {
         return false;
     }
 
+    /***********************************************************
+     * //TODO
+     */
     public static boolean isCNFSubsumed(CNF subsumer, CNF subsumed) {
-
-        //TODO
-
 
         return false;
     }
-
 
 
 }

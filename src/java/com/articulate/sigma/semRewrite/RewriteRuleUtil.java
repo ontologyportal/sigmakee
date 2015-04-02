@@ -11,9 +11,27 @@ import java.util.Scanner;
 
 import static com.articulate.sigma.semRewrite.Interpreter.canon;
 
-/**
- * Created by peigenyou on 4/1/15.
- */
+/*
+Copyright 2014-2015 IPsoft
+
+Author: Peigen You Peigen.You@ipsoft.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA
+*/
+
 public final class RewriteRuleUtil extends RuleSet {
 
     static String fileLocation = "/Users/peigenyou/workspace/sigma/KBs/WordNetMappings/SemRewrite.txt";
@@ -22,9 +40,8 @@ public final class RewriteRuleUtil extends RuleSet {
 
     }
 
-
-
-    /** *************************************************************
+    /*************************************************************
+     * update a Ruleset's indexed rule's CNF
      */
     public static void updateCNF(int index, CNF f, RuleSet rs) {
 
@@ -42,10 +59,10 @@ public final class RewriteRuleUtil extends RuleSet {
     }
 
 
-    /** *************************************************************
+    /*************************************************************
+     * //TODO
      */
     public static CNF applyBindings(CNF cnf, HashMap<String, String> bindings) {
-//TODO chage to fit better algorithm
 
         CNF cnfnew = new CNF();
         for (int i = 0; i < cnf.clauses.size(); i++) {
@@ -64,10 +81,10 @@ public final class RewriteRuleUtil extends RuleSet {
     }
 
 
-    /** *************************************************************
+    /*************************************************************
+     * //TODO
      */
     public static Literal applyBindings(Literal origin, HashMap<String, String> bindings) {
-//TODO chage to fit better algorithm
 
         //System.out.println("INFO in Clause.applyBindings(): this: " + this);
         //System.out.println("INFO in Clause.applyBindings(): bindings: " + bindings);
@@ -102,7 +119,8 @@ public final class RewriteRuleUtil extends RuleSet {
     }
 
 
-    /** *************************************************************
+
+    /*************************************************************
      */
     public static void updateCNFTest(RuleSet rs) {
 
@@ -134,7 +152,11 @@ public final class RewriteRuleUtil extends RuleSet {
     }
 
 
-    private static RuleSet loadRuleSet(){
+    /*************************************************************
+     * load RuleSet from "SemRewrite.txt"
+     */
+    private static RuleSet loadRuleSet() {
+
         KBmanager kb = KBmanager.getMgr();
         kb.initializeOnce();
 
@@ -143,7 +165,7 @@ public final class RewriteRuleUtil extends RuleSet {
         String pref = KBmanager.getMgr().getPref("SemRewrite");
         if (!Strings.isNullOrEmpty(pref))
             f = pref;
-        if (f.indexOf(File.separator.toString(),2) < 0)
+        if (f.indexOf(File.separator.toString(), 2) < 0)
             f = "/home/apease/SourceForge/KBs/WordNetMappings" + f;
         try {
             RuleSet rsin = RuleSet.readFile(f);
@@ -158,13 +180,14 @@ public final class RewriteRuleUtil extends RuleSet {
         return rs;
     }
 
-    /** *************************************************************
+
+    /*************************************************************
      */
     public static void main(String[] args) {
 
         ArrayList<Integer> getSubsumed = new ArrayList<Integer>();
         ArrayList<Integer> subsumer = new ArrayList<Integer>();
-        RuleSet rs=loadRuleSet();
+        RuleSet rs = loadRuleSet();
         String input = "";
         System.out.println("SemRewrite.txt loaded. There are " + rs.rules.size() + " rules.");
         SemRewriteRuleCheck.checkRuleSet(rs);
@@ -176,7 +199,7 @@ public final class RewriteRuleUtil extends RuleSet {
                 input = scanner.nextLine().trim();
                 if (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit")) {
                     Rule r = Rule.parseString(input);
-                    System.out.println("The rule entered is :: " + r+"\n");
+                    System.out.println("The rule entered is :: " + r + "\n");
                     SemRewriteRuleCheck.isRuleSubsumedByRuleSet(r, rs, getSubsumed, subsumer);
 
                     System.out.println("Following " + getSubsumed.size() + " rules would subsume the rule entered: \n");
