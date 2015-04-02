@@ -157,10 +157,10 @@ public final class RewriteRuleUtil extends RuleSet {
      */
     private static RuleSet loadRuleSet() {
 
+        RuleSet rs;
         KBmanager kb = KBmanager.getMgr();
         kb.initializeOnce();
 
-        RuleSet rs;
         String f = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "SemRewrite.txt";
         String pref = KBmanager.getMgr().getPref("SemRewrite");
         if (!Strings.isNullOrEmpty(pref))
@@ -198,6 +198,11 @@ public final class RewriteRuleUtil extends RuleSet {
                 System.out.print("\nEnter rule: ");
                 input = scanner.nextLine().trim();
                 if (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit")) {
+                    if(input.equals("reload")){
+                        rs=loadRuleSet();
+                        SemRewriteRuleCheck.checkRuleSet(rs);
+                        continue;
+                    }
                     Rule r = Rule.parseString(input);
                     System.out.println("The rule entered is :: " + r + "\n");
                     SemRewriteRuleCheck.isRuleSubsumedByRuleSet(r, rs, getSubsumed, subsumer);

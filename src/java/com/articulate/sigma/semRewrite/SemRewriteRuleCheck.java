@@ -1,7 +1,5 @@
 package com.articulate.sigma.semRewrite;
 
-import java.util.*;
-
 /*
 Copyright 2014-2015 IPsoft
 
@@ -22,6 +20,9 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
+
+import java.util.*;
+
 public class SemRewriteRuleCheck {
 
     public static boolean isIgnoreCNFOnRight = true;
@@ -76,7 +77,7 @@ public class SemRewriteRuleCheck {
                             continue;
                     count++;
                     System.out.println("\nLine " + rs.rules.get(r).startLine + " and  " + rs.rules.get(k).startLine);
-                    System.out.println("rules = \n" + rs.rules.get(r) + "\n" + rs.rules.get(k));
+                    System.out.println("rules = \n" + rs.rules.get(r) + "\n.\n" + rs.rules.get(k));
                 }
             }
         }
