@@ -5,6 +5,9 @@ Copyright 2014-2015 IPsoft
 
 Author: Adam Pease adam.pease@ipsoft.com
 
+In conjunctive normal form (CNF) a formula is a conjunct of 
+disjuncts.  This is the list of disjuncts.
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -90,29 +93,31 @@ public class Clause {
     }
     
     /** ***************************************************************
+     * Clear the bound flags on each Literal
      */
     public void clearBound() {
         
         for (int i = 0; i < disjuncts.size(); i++) {
-            Literal c = disjuncts.get(i);
-            if (c.bound)
-                c.bound = false;
+            Literal l = disjuncts.get(i);
+            if (l.bound)
+                l.bound = false;
         }
     }
     
     /** ***************************************************************
+     * Clear the preserve flags on each Literal
      */
     public void clearPreserve() {
         
         for (int i = 0; i < disjuncts.size(); i++) {
-            Literal c = disjuncts.get(i);
-            if (c.preserve)
-                c.preserve = false;
+            Literal l = disjuncts.get(i);
+            if (l.preserve)
+                l.preserve = false;
         }
     }
     
     /** ***************************************************************
-     * If clause is not marked "preserve" then remove it if bound and
+     * If literal is not marked "preserve" then remove it if bound and
      * then reset the preserve flag.  Note this should only be called
      * on inputs, not rules.
      */
@@ -121,11 +126,11 @@ public class Clause {
         //System.out.println("INFO in Disjunct.removeBound(): before " + this);
         ArrayList<Literal> newdis = new ArrayList<Literal>();
         for (int i = 0; i < disjuncts.size(); i++) {
-            Literal c = disjuncts.get(i);
-            if (!c.bound || c.preserve) {
-                c.bound = false;
-                c.preserve = false;
-                newdis.add(c);
+            Literal l = disjuncts.get(i);
+            if (!l.bound || l.preserve) {
+                l.bound = false;
+                l.preserve = false;
+                newdis.add(l);
             }
         }
         disjuncts = newdis;
@@ -146,19 +151,23 @@ public class Clause {
     }
     
     /** *************************************************************
+     * @return a clause that results from applying a binding list
+     * to this clause.
      */
     public Clause applyBindings(HashMap<String,String> bindings) {
         
-        Clause d = new Clause();
+        Clause c = new Clause();
         for (int i = 0; i < disjuncts.size(); i++) {
-            Literal c = disjuncts.get(i);
-            d.disjuncts.add(c.applyBindings(bindings));
+            Literal l = disjuncts.get(i);
+            c.disjuncts.add(l.applyBindings(bindings));
         }            
-        return d;
+        return c;
     }
         
     /** *************************************************************
-     * argument is the rule and this is the sentence
+     * The argument to this method is the rule and this is the sentence
+     * @return the set of variable bindings.  The key is the variable
+     * and the value is the binding.
      */
     public HashMap<String,String> unify(Clause d) {
         
