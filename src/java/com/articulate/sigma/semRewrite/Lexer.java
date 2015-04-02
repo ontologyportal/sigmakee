@@ -10,8 +10,12 @@ tokens.  Java's StreamTokenizer can't be used since it only can
      
 This will convert a string into a sequence of
 tokens that can be inspected and processed in-order. It is a bit
-of an overkill for the simple application, but makes actual
+of an overkill for a simple application, but makes actual
 parsing later much easier and more robust than a quicker hack.
+
+Initialize the Lexer with a String or a filename then
+iterate through the tokens with next() or testTok() to check
+for expected token types and error if it's not an expected type.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,10 +37,9 @@ import java.util.*;
 import java.util.regex.*;
 import java.text.*;
 
-public class Lexer {
+import com.articulate.sigma.KBmanager;
 
-    public int ttype = 0;
-    public String sval = "";
+public class Lexer {
        
     public static final String NoToken        = "No Token";
     public static final String WhiteSpace     = "White Space";
@@ -98,6 +101,8 @@ public class Lexer {
     }
   
     /** ***************************************************************
+     * Read a text file into the "input" String variables.  Throws an
+     * error on file not found.
      */
     public Lexer(File f) {
         
@@ -114,6 +119,7 @@ public class Lexer {
     }
     
     /** ***************************************************************
+     * Read the contents of a text file into a String.  Throws IOException
      */
     public String file2string(File f) {
 
@@ -140,7 +146,7 @@ public class Lexer {
     }
     
     /** ***************************************************************
-     * Return the line number of the token by counting all the
+     * @return the line number of the token by counting all the
      * newlines in the position up to the current token.
      */
     public int linepos() {
@@ -150,6 +156,7 @@ public class Lexer {
     }        
 
     /** ***************************************************************
+     * Set up the regular expressions to recognize each token type.
      */
     private static void init() {
         
@@ -184,7 +191,16 @@ public class Lexer {
     }
     
     /** ***************************************************************
-     * Return the next token without consuming it.
+     * @return the next token type without consuming it.
+     */
+    public String lookType() throws ParseException {
+
+        look();
+        return type;
+    }
+
+    /** ***************************************************************
+     * @return the next token without consuming it.
      */
     public String look() throws ParseException {
 
@@ -195,7 +211,7 @@ public class Lexer {
     }
 
     /** ***************************************************************
-     * Return the literal value of the next token, i.e. the string
+     * @return the literal value of the next token, i.e. the string
      * generating the token.
      */
     public String lookLit() throws ParseException {
@@ -205,8 +221,8 @@ public class Lexer {
     }
             
     /** ***************************************************************
-     * Take a list of expected token types. Return True if the
-     * next token is expected, False otherwise.
+     * Take a list of expected token types. 
+     * @return True if the next token is expected, False otherwise.
      */
     public boolean testTok(ArrayList<String> tokens) throws ParseException {
 
@@ -259,6 +275,10 @@ public class Lexer {
     }
 
     /** ***************************************************************
+     * Take an expected token type. If the next token is
+     * the same as the expected one, consume and return it. Otherwise, exit 
+     * with an error. 
+     * @return the token matching the type of the input
      */
     public String acceptTok(String token) throws ParseException {
 
@@ -272,6 +292,7 @@ public class Lexer {
      * Take a list of expected token types. If the next token is
      * among the expected ones, consume and return it. Otherwise, exit 
      * with an error. 
+     * @return the token matching one of the types in the inputs
      */
     public String acceptTok(ArrayList<String> tokens) throws ParseException {
 
@@ -280,6 +301,9 @@ public class Lexer {
     }
 
     /** ***************************************************************
+     * @param litval an expected literal string. 
+     * @return True if the
+     * next token's string value the same as the input, False otherwise.
      */
     public boolean testLit(String litval) throws ParseException {
 
@@ -289,8 +313,9 @@ public class Lexer {
     }
     
     /** ***************************************************************
-     * Take a list of expected literal strings. Return True if the
-     * next token's string value is among them, False otherwise. 
+     * @param litval a list of expected literal strings
+     * @return True if the next token's string value is among the input
+     * string and false otherwise. 
      */
     public boolean testLit(ArrayList<String> litvals) throws ParseException {
 
@@ -303,6 +328,9 @@ public class Lexer {
     }
     
     /** ***************************************************************
+     * Take an expected literal string. If the next token's
+     * literal is not the expected one, exit with an
+     * error. Otherwise do nothing. 
      */
     private void checkLit(String litval) throws ParseException {
 
@@ -349,24 +377,8 @@ public class Lexer {
     }
 
     /** ***************************************************************
-     */
-    public void processComment(String line) {
-        
-        Pattern value = Pattern.compile("\\%\\sStatus[\\s]+([^\\n]*)");
-        //Pattern value = Pattern.compile("\\%\\sStatus");
-        Matcher m = value.matcher(line);
-        //System.out.println("INFO in processComment(): comment: " + line);
-        if (m.lookingAt()) {
-            if (m.group(1).indexOf("Unsatisfiable") > -1 || m.group().indexOf("Theorem") > -1) 
-                SZS = m.group(1);
-            if (m.group(1).indexOf("Satisfiable") > -1 || m.group().indexOf("CounterSatisfiable") > -1) 
-                SZS = m.group(1);        
-            //System.out.println("# problem SZS status: " + SZS);
-        }
-    }
-    
-    /** ***************************************************************
-     * Return next semantically relevant token. 
+     * @return next semantically relevant token (not whitespace, 
+     * comments etc)
      */
     public String next() throws ParseException {
 
@@ -374,8 +386,6 @@ public class Lexer {
         while ((type.equals(WhiteSpace) || type.equals(SemiComment)) &&
                 !res.equals(EOFToken)) {
             //System.out.println(type + ":" + line);
-            if (type.equals(SemiComment))
-                processComment(line);
             res = nextUnfiltered();
         }
         //System.out.println("INFO in next(): returning token: " + res);
@@ -383,7 +393,8 @@ public class Lexer {
     }
     
     /** ***************************************************************
-     * Return next token, including tokens ignored by most languages. 
+     * @return next token, including tokens, such as whitespace and
+     * comments, that are ignored by most languages. 
      */
     public String nextUnfiltered() throws ParseException {
 
@@ -448,12 +459,27 @@ public class Lexer {
         ArrayList<String> res = new ArrayList<String>();
         while (!testTok(EOFToken)) {
             String tok = next();
-            System.out.println("INFO in Lexer.lex(): " + tok);
+            //System.out.println("INFO in Lexer.lex(): " + tok);
             res.add(tok);
         }
         return res;
     }
 
+    /** ***************************************************************
+     * Return a list of all tokens in the source. 
+     */
+    private ArrayList<String> lexTypes() throws ParseException {
+
+        ArrayList<String> res = new ArrayList<String>();
+        while (!testTok(EOFToken)) {
+            String type = lookType();
+            String tok = next();
+            //System.out.println("INFO in Lexer.lex(): " + type);
+            res.add(type);
+        }
+        return res;
+    }
+    
     /** ***************************************************************
      ** ***************************************************************
      */
@@ -493,6 +519,7 @@ public class Lexer {
     }
     
     /** ***************************************************************
+     * Test accepTok()
      */
     private static void testString() {
 
@@ -535,6 +562,7 @@ public class Lexer {
     }
 
     /** ***************************************************************
+     * Do a deep compare to two ArrayList<String> for equality.
      */
     private static boolean compareArrays(ArrayList<String> s1, ArrayList<String> s2) {
         
@@ -654,15 +682,39 @@ public class Lexer {
             e.printStackTrace();
         }
     }
+    
     /** ***************************************************************
      */
     public static void main(String[] args) {
         
-        //testString();
-        //testLex();
-        //testTerm();
-        //testAcceptLit();
-        //testErrors();
-        testAcceptClause2();
+        System.out.println("INFO in Lexer.main()");
+        Interpreter interp = new Interpreter();
+        if (args != null && args.length > 1 && args[0].equals("-s")) {
+            Lexer lex = new Lexer(args[1]);
+            try {
+                System.out.println(lex.lex());
+                lex = new Lexer(args[1]);
+                System.out.println(lex.lexTypes());
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }        
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            System.out.println("Semantic Rewriting with SUMO, Sigma and E");
+            System.out.println("  options:");
+            System.out.println("  -h - show this help screen");
+            System.out.println("  -s - runs one conversion of one quoted input");
+            System.out.println("  with no options this falls through to some tests.");
+        }
+        else {
+            //testString();
+            //testLex();
+            //testTerm();
+            //testAcceptLit();
+            //testErrors();
+            testAcceptClause2();
+        }
     }
 }
