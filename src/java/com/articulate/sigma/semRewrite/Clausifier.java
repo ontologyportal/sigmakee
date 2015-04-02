@@ -25,12 +25,20 @@ import java.lang.reflect.Method;
 import com.articulate.sigma.semRewrite.*;
 
 // Note that because the language is so simple we only have to 
-// handle moving negations and disjunctions.
+// handle moving negations and disjunctions.  The clausifier
+// creates an expression in Conjunctive Normal Form (CNF).
+// This is a special case of a general clausification algorithm, 
+// such as described in (Sutcliffe&Melville, 1996)
+// http://www.cs.miami.edu/~geoff/Papers/Journal/1996_SM96_SACJ.pdf
+// CNF has only three operators - negation, conjunction and disjunction
+
 public class Clausifier {
 
     public static boolean changed = false;
     
     /** ***************************************************************
+     * -(p | q) becomes -p , -q
+     * -(p , q) becomes -p | -q
      */
     private static LHS moveNegationsInRecurse(LHS lhs, boolean flip) {  
         
@@ -42,7 +50,7 @@ public class Clausifier {
         newlhs.operator = lhs.operator;
         newlhs.method = lhs.method;
         if (flip) {            
-            switch(lhs.operator) {
+            switch (lhs.operator) {
                 case AND : newlhs.lhs1 = moveNegationsInRecurse(lhs.lhs1,true);
                            newlhs.lhs2 = moveNegationsInRecurse(lhs.lhs2,true);
                            newlhs.operator = LHS.LHSop.OR;
@@ -179,6 +187,8 @@ public class Clausifier {
     }
     
     /** ***************************************************************
+     * @return the CNF of a an LHS.  This turns a nested set of 
+     * conjunctions into a flat list of conjunctions.
      */
     private static CNF separateConjunctions(LHS lhs) {  
         
@@ -217,6 +227,9 @@ public class Clausifier {
     }
     
     /** ***************************************************************
+     * @return the CNF equivalent for the given LHS of a rule.  This is
+     * a very limited case of clausification since we have no quantification.
+     * and no implication or equivalence to worry about.
      */
     public static CNF clausify(LHS lhs) {  
         
@@ -227,6 +240,8 @@ public class Clausifier {
     }
     
     /** ***************************************************************
+     * @return a RuleSet that is the result of clausifying the LHS of
+     * each rule in the input RuleSet
      */
     public static RuleSet clausify(RuleSet rs) {  
         
