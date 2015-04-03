@@ -22,14 +22,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.articulate.sigma.semRewrite.datesandnumber.DateAndNumbersGeneration.DateComponent;
 
 import edu.stanford.nlp.ling.IndexedWord;
 
@@ -37,17 +32,19 @@ public class DatesAndDuration {
 	
 	static final Pattern DIGITAL_YEAR_PATTERN = Pattern.compile("^[0-9]{4}$");
 	static final Pattern WESTERN_YEAR_PATTERN = Pattern.compile("^([0-9]{1,2})(\\/|\\-|\\.)([0-9]{1,2})(\\/|\\-|\\.)([0-9]{4})$");
-	static final Pattern DAY_PATTERN = Pattern.compile("^[0-9]{1,2}$");
+	static final Pattern DAY_PATTERN = Pattern.compile("^[0-9]{1,2}(th)?$");
+	static final Pattern DURATION_PATTERN = Pattern.compile("^P([0-9])+[A-Z]");
 	
 	/** ***************************************************************
 	 */
-	 public void processDate(Tokens token, List<String> dependencyList, Utilities utilities) {
+	 public void processDate(Tokens token, Utilities utilities, List<Tokens> tempDateList, Tokens prevToken) {
 
 		Matcher digitalPatternMatcher = DIGITAL_YEAR_PATTERN.matcher(token.getWord());
 		Matcher westernYearMatcher = WESTERN_YEAR_PATTERN.matcher(token.getWord());
 		Matcher dayMatcher = DAY_PATTERN.matcher(token.getWord());
 		if (Utilities.MONTHS.contains(token.getWord().toLowerCase())) {
-			utilities.dateMap.put(token.getId(), "MONTH@"+token.getWord());
+			token.setTokenType("MONTH");
+			populateDateList(token, tempDateList, prevToken, utilities);
 		} 
 		else if (Utilities.DAYS.contains(token.getWord().toLowerCase())) {
 			String tokenRoot = utilities.getRootWord(token.getId());
@@ -63,7 +60,8 @@ public class DatesAndDuration {
 			utilities.timeCount++;
 		} 
 		else if (digitalPatternMatcher.find()) {
-			utilities.dateMap.put(token.getId(), "YEAR@" + token.getWord());
+			token.setTokenType("YEAR");
+			populateDateList(token, tempDateList, prevToken, utilities);
 		} 
 		else if (westernYearMatcher.find()) {
 			String tokenRoot = utilities.getRootWord(token.getId());
@@ -76,23 +74,88 @@ public class DatesAndDuration {
 			tempDate.setYear(westernYearMatcher.group(5));
 			tempDate.addWordIndex(token.getId());
 			tempDate.setTimeCount(utilities.timeCount);
+			utilities.datesList.add(tempDate);
 			utilities.allDatesList.add(tempDate);
-			utilities.sumoTerms.add("month(time-"+utilities.timeCount+","+ Utilities.MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1)+")");
-			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+westernYearMatcher.group(3)+")");
-			utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+westernYearMatcher.group(5)+")");
-			utilities.timeCount++;
 		} 
 		else if (dayMatcher.find()) {
-			utilities.dateMap.put(token.getId(), "DAYS@" + token.getWord());
+			if(token.getWord().contains("th")) {
+				token.setWord(token.getWord().replace("th", ""));
+			}
+			token.setTokenType("DAYS");
+			populateDateList(token, tempDateList, prevToken, utilities);
 		}
 	}
-	
+	 
 	 /** ***************************************************************
 		 */
-	 public List<DateInfo> generateSumoDateTerms(Utilities utilities){
+	 private void addInfoToDateList(List<Tokens> tempDateList, Utilities utilities) {
+		 DateInfo tempDateInfo = new DateInfo();
+		 for(Tokens token : tempDateList) {
+			 switch(token.getTokenType()) {
+			 case "MONTH" : tempDateInfo.setMonth(token.getWord());
+				 			break;
+			 case "YEAR" : tempDateInfo.setYear(token.getWord());
+				           break;
+			 case "DAYS" : tempDateInfo.setDay(token.getWord());
+				            break;
+			 }
+			 tempDateInfo.addWordIndex(token.getId());
+		 }
+		 if(!tempDateInfo.isEmpty()) {
+			 utilities.datesList.add(tempDateInfo);
+			 utilities.allDatesList.add(tempDateInfo);
+		 }
+		 
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	 private boolean checkTokenInList(List<Tokens> tempDateList, Tokens token) {
+		 for(Tokens tempToken : tempDateList) {
+			 if(tempToken.getTokenType().equals(token.getTokenType())) {
+				 return false;
+			 }
+		 }
+		 return true;
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	 private void clearTempDateList(List<Tokens> tempDateList, Utilities utilities, Tokens token) {
+		 addInfoToDateList(tempDateList, utilities);
+		 tempDateList.clear();
+		 tempDateList.add(token);
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	 public void populateDateList(Tokens token, List<Tokens> tempDateList, Tokens prevToken, Utilities utilities) {
+		 
+		 if(prevToken == null) {
+			 tempDateList.add(token);
+			 return;
+		 }
+		 if((token.getId() - prevToken.getId()) <= 2 && !token.getTokenType().equals(prevToken.getTokenType())) {
+			 if(checkTokenInList(tempDateList,token)) {
+				 tempDateList.add(token);
+			 } else {
+				 clearTempDateList(tempDateList, utilities, token);
+			 }
+			 
+		 } else {
+			 clearTempDateList(tempDateList, utilities, token);
+		 }
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	 public List<DateInfo> generateSumoDateTerms(Utilities utilities, List<Tokens> tempDateList){
 
-		//List<DateInfo> dateList = gatherDateSet(utilities);
-		List<DateInfo> dateList = mergeDateSet(utilities);
+		 if(!tempDateList.isEmpty()) {
+			 addInfoToDateList(tempDateList, utilities);
+			 tempDateList.clear();
+		 }
+		List<DateInfo> dateList = utilities.datesList;
 		for (DateInfo date : dateList) {
 			if ((date.getYear() != null) || (date.getMonth() != null) || (date.getDay() != null)) {
 				if (date.getDay() != null) {
@@ -114,379 +177,11 @@ public class DatesAndDuration {
 		}
 		return dateList;
 	}
-	
+	 	
 	 /** ***************************************************************
 		 */
-	 public List<DateInfo> gatherDateSet(Utilities utilities) {
-
-		FlagUtilities flags = new FlagUtilities();
-		DateInfo dateInfo = new DateInfo();
-		List<DateInfo> dateList = new ArrayList<DateInfo>();
-		DateInfo dateInfoTemp;
-		String wordToken;
-		Iterator<HashMap.Entry<Integer, String>> dateEntries = utilities.dateMap.entrySet().iterator();
-		while (dateEntries.hasNext()) {
-			HashMap.Entry<Integer, String> dateEntry = dateEntries.next();
-			wordToken = dateEntry.getValue().split("@")[1];
-
-			if (dateEntry.getValue().contains("MONTH")) {
-				if (!flags.isMonthFlag()){
-					populateDate(flags, DateComponent.MONTH, wordToken, dateInfo,dateEntry.getKey());
-				}
-				else if (!flags.isDayFlag() && !flags.isYearFlag()) {
-					DateInfo dateTemp = new DateInfo(dateInfo);
-					dateList.add(dateTemp);
-					utilities.allDatesList.add(dateTemp);
-					dateInfo.clear();
-					dateInfoTemp = new DateInfo();
-					dateInfoTemp.setMonth(wordToken);
-					dateInfoTemp.addWordIndex(dateEntry.getKey());
-					dateList.add(dateInfoTemp);
-					utilities.allDatesList.add(dateInfoTemp);
-					flags.setMonthFlag(true);
-
-				}
-				else {
-					dateInfo = addAndResetFlags(dateInfo, dateList, flags, DateComponent.MONTH, wordToken,dateEntry.getKey(), utilities);
-				}
-			}
-			else if (dateEntry.getValue().contains("DAYS")) {
-				if (!flags.isDayFlag()){
-					populateDate(flags, DateComponent.DAY, wordToken, dateInfo,dateEntry.getKey());
-				}
-				else if (!flags.isMonthFlag() && !flags.isYearFlag()) {
-					DateInfo dateTemp = new DateInfo(dateInfo);
-					dateList.add(dateTemp);
-					utilities.allDatesList.add(dateTemp);
-					dateInfo.clear();
-					dateInfoTemp = new DateInfo();
-					dateInfoTemp.setDay(wordToken);
-					dateInfoTemp.addWordIndex(dateEntry.getKey());
-					dateList.add(dateInfoTemp);
-					utilities.allDatesList.add(dateInfoTemp);
-					flags.setDayFlag(true);
-				}
-				else {
-					dateInfo = addAndResetFlags(dateInfo, dateList, flags, DateComponent.DAY, wordToken,dateEntry.getKey(), utilities);
-				}
-			}
-			else if (dateEntry.getValue().contains("YEAR")){
-				if (!flags.isYearFlag()) {
-					populateDate(flags, DateComponent.YEAR, wordToken, dateInfo,dateEntry.getKey());
-				}
-				else if (!flags.isDayFlag() && !flags.isMonthFlag()){
-					DateInfo dateTemp = new DateInfo(dateInfo);
-					dateList.add(dateTemp);
-					utilities.allDatesList.add(dateTemp);
-					dateInfo.clear();
-					dateInfoTemp = new DateInfo();
-					dateInfoTemp.setYear(wordToken);
-					dateInfoTemp.addWordIndex(dateEntry.getKey());
-					dateList.add(dateInfoTemp);
-					utilities.allDatesList.add(dateInfoTemp);
-					flags.setYearFlag(true);
-				}
-				else {
-					dateInfo = addAndResetFlags(dateInfo, dateList, flags, DateComponent.YEAR, wordToken,dateEntry.getKey(), utilities);
-				}	
-			}
-			else if (flags.isYearFlag() && flags.isMonthFlag() && flags.isDayFlag()) {
-				dateInfoTemp = new DateInfo(dateInfo);
-				dateList.add(dateInfoTemp);
-				utilities.allDatesList.add(dateInfoTemp);
-				dateInfoTemp.addWordIndex(dateEntry.getKey());
-				dateInfo.clear();
-				flags.resetFlags();
-			}
-		}
-		if (!dateList.contains(dateInfo) && !dateInfo.isEmpty()) {
-			dateList.add(dateInfo);
-			utilities.allDatesList.add(dateInfo);
-		}
-		return dateList;
-	}
-	 
-	 /** ***************************************************************
-		 */
-	 private int clearDateGroups(List<String> monthDateGroup, List<String> dateDateGroup, List<String> yearDateGroup) {
-		   
-		 monthDateGroup.clear();
-			dateDateGroup.clear();
-			yearDateGroup.clear();
-			return 0;
-	 }
-	 
-	 /** ***************************************************************
-		 */
-	 public List<DateInfo> mergeDateSet(Utilities utilities) {
-	     
-		 List<DateInfo> dateList = new ArrayList<DateInfo>();
-		 Iterator<HashMap.Entry<Integer, String>> dateEntries = utilities.dateMap.entrySet().iterator();
-		 List<String> monthDateGroup = new ArrayList<String>();
-		 List<String> dateDateGroup = new ArrayList<String>();
-		 List<String> yearDateGroup = new ArrayList<String>();
-		 int count = 0;
-		 int prevIndex = -1;
-		 String wordToken;
-		 	while (dateEntries.hasNext()){
-		 		HashMap.Entry<Integer, String> dateEntry = dateEntries.next();
-		 		wordToken = dateEntry.getValue().split("@")[1];
-		 		if (dateEntry.getValue().contains("MONTH") ) {
-		 			if (count == 0) {
-		 				monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-			 			count++;
-			 			prevIndex = dateEntry.getKey();
-		 			}
-		 			else if(count == 1) {
-		 				if (dateDateGroup.size() == 1 && (dateEntry.getKey() - prevIndex) <= 2) {
-		 					dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-		 					count ++;
-		 					prevIndex = dateEntry.getKey();
-		 				} else if(yearDateGroup.size() == 1 && (dateEntry.getKey() - prevIndex) <= 2) {
-		 					yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-		 					count++;
-		 					prevIndex = dateEntry.getKey();
-		 				}
-		 				else if (dateEntry.getKey() - prevIndex >= 2) {
-		 					if (monthDateGroup.size() != 0) {
-			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 					else if (dateDateGroup.size() != 0) {
-			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} else if (yearDateGroup.size() != 0) {
-			 					addDateInfoToList(yearDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 				}
-		 			} 
-		 			else {
-		 				if (dateEntry.getKey() - prevIndex >= 2) {
-		 					if (monthDateGroup.size() != 0 ) {
-			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);;
-					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 					else if (dateDateGroup.size() != 0) {
-			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} else if (yearDateGroup.size() != 0) {
-			 					addDateInfoToList(yearDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 				}
-		 			}
-		 			
-		 		}
-		 		else if (dateEntry.getValue().contains("DAY") ) {
-		 			if (count == 0) {
-		 				dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-			 			count++;
-			 			prevIndex = dateEntry.getKey();
-		 			}
-		 			else if (count == 1) {
-		 				if (monthDateGroup.size() == 1 && (dateEntry.getKey()-prevIndex) <= 2) {
-		 					monthDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-		 					count ++;
-		 					prevIndex = dateEntry.getKey();
-		 				} 
-		 				else if (dateEntry.getKey() - prevIndex >= 2) {
-		 					if (monthDateGroup.size() != 0 ) {
-			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 					else if (dateDateGroup.size() != 0 ) {
-			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 				}
-		 			} else if(count == 2) {
-		 				if (yearDateGroup.size() == 2 && (dateEntry.getKey()-prevIndex) <= 2) {
-		 					yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-		 					count ++;
-		 					prevIndex = dateEntry.getKey();
-		 				} 
-		 				if (monthDateGroup.size() == 3) {
-			 				addDateInfoToList(monthDateGroup, dateList, utilities);
-			 			} 
-			 			else if (dateDateGroup.size() == 3) {
-			 				addDateInfoToList(dateDateGroup, dateList, utilities);
-			 			} else if(yearDateGroup.size() == 3) {
-			 				addDateInfoToList(yearDateGroup, dateList, utilities);
-			 			}
-			 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-		 			}
-		 			else {
-		 				if (dateEntry.getKey() - prevIndex >= 2) {
-		 					if (monthDateGroup.size() != 0 ) {
-			 					addDateInfoToList(monthDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 					else if (dateDateGroup.size() != 0 ) {
-			 					addDateInfoToList(dateDateGroup, dateList, utilities);
-					 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-					 			dateDateGroup.add(dateEntry.getKey()+ "::" + dateEntry.getValue());
-					 			count++;
-					 			prevIndex = dateEntry.getKey();
-			 				} 
-		 				}
-		 			}
-		 			
-		 		}
-		 		else if (dateEntry.getValue().contains("YEAR")) { 
-		 			if (count == 0) {
-		 				yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-			 			count++;
-			 			prevIndex = dateEntry.getKey();
-		 			} 
-		 			else {
-		 				if (monthDateGroup.size() != 0 && (dateEntry.getKey() - prevIndex) <= 2) {
-		 					monthDateGroup.add(dateEntry.getKey()+"::"+dateEntry.getValue());
-		 					addDateInfoToList(monthDateGroup, dateList, utilities);
-				 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-		 				} 
-		 				else if (dateDateGroup.size() != 0 && (dateEntry.getKey()-prevIndex) <= 2) {
-		 					dateDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-		 					addDateInfoToList(dateDateGroup, dateList, utilities);
-				 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-		 				} else if(yearDateGroup.size() == 1) {
-		 					addDateInfoToList(yearDateGroup, dateList, utilities);
-		 					yearDateGroup.clear();
-				 			count = 0;
-				 			yearDateGroup.add(dateEntry.getKey() + "::" + dateEntry.getValue());
-				 			count++;
-				 			prevIndex = dateEntry.getKey();
-		 				} 
-		 			}
-		 		}
-		 		else if (count == 3) {
-		 			if (monthDateGroup.size() == 3) {
-		 				addDateInfoToList(monthDateGroup, dateList, utilities);
-		 			} 
-		 			else if (dateDateGroup.size() == 3) {
-		 				addDateInfoToList(dateDateGroup, dateList, utilities);
-		 			} else if(yearDateGroup.size() == 3) {
-		 				addDateInfoToList(yearDateGroup, dateList, utilities);
-		 			}
-		 			count = clearDateGroups(monthDateGroup,dateDateGroup, yearDateGroup);
-		 		}
-		 	}
-		 	if(yearDateGroup.size() == 1) {
-		 		addDateInfoToList(yearDateGroup, dateList, utilities);
-		 	}
-		 	if(monthDateGroup.size() == 1) {
-		 		addDateInfoToList(monthDateGroup, dateList, utilities);
-		 	}
-		 return dateList;
-	 }
-	 
-	 /** ***************************************************************
-		 */
-	 public void addDateInfoToList(List<String> dateGroup, List<DateInfo> dateList, Utilities utilities) {
-	     
-		 DateInfo dateInfo = new DateInfo();
-			for (String data : dateGroup) {
-				int index = Integer.valueOf(data.split("::")[0]);
-				String word = data.split("::")[1].split("@")[1];
-				String type = data.split("::")[1].split("@")[0];
-				switch(type) {
-					case "MONTH": dateInfo.setMonth(word);
-								break;
-					case "YEAR": dateInfo.setYear(word);
-								 break;
-					case "DAYS": dateInfo.setDay(word);
-					             break;
-				}
-				dateInfo.addWordIndex(index);
-			}
-			
-			dateList.add(dateInfo);
-			utilities.allDatesList.add(dateInfo);
-	 }
-	 
-	 /** ***************************************************************
-		 */
-	 public DateInfo addAndResetFlags(DateInfo dateSet, List<DateInfo> dateList, FlagUtilities flags, 
-			 DateComponent dateComponent, String token,int wordId, Utilities utilities) {
-
-		DateInfo dateSetTemp;
-		dateSetTemp = new DateInfo(dateSet);
-		dateList.add(dateSetTemp);
-		utilities.allDatesList.add(dateSetTemp);
-		dateSet.clear();
-		flags.resetFlags();
-		DateInfo newDateInfo = new DateInfo();
-		switch (dateComponent) {
-			case DAY :
-				newDateInfo.setDay(token);
-				newDateInfo.addWordIndex(wordId);
-				flags.setDayFlag(true);
-				break;
-			case MONTH:
-				newDateInfo.setMonth(token);
-				newDateInfo.addWordIndex(wordId);
-				flags.setMonthFlag(true);
-				break;
-			case YEAR:
-				newDateInfo.setYear(token);
-				newDateInfo.addWordIndex(wordId);
-				flags.setYearFlag(true);
-		}
-		return newDateInfo;
-	}
-	
-	 /** ***************************************************************
-		 */
-	 public void populateDate(FlagUtilities flags,DateComponent dateComponent, String wordToken, DateInfo dateSet,int wordId) {
-
-		switch(dateComponent) {
-		case MONTH : flags.setMonthFlag(true);
-					 dateSet.setMonth(wordToken);
-					 dateSet.addWordIndex(wordId);
-					 break;
-		case YEAR : flags.setYearFlag(true);
-					dateSet.setYear(wordToken);
-					dateSet.addWordIndex(wordId);
-					break;
-		case DAY : flags.setDayFlag(true);
-				   dateSet.setDay(wordToken);
-				   dateSet.addWordIndex(wordId);
-				   break;
-		}
-	}
-	 
-	 /** ***************************************************************
-		 */
-	 public void processDuration(Tokens token, Utilities utilities) {
+	 public Tokens processDuration(Tokens token, Utilities utilities, Tokens prevDurationToken) {
 		
-		// System.out.println("Duration word is ::" + token.getWord());
 		 if (token.getWord().matches("[0-9]{4}\\-[0-9]{4}")) {
 			 String years[] = token.getWord().split("-");
 			 IndexedWord tempParent = utilities.StanfordDependencies.getNodeByIndex(token.getId());
@@ -506,7 +201,20 @@ public class DatesAndDuration {
 			 utilities.timeCount++;
 			 
 			 generateDurationSumoTerms(tempParent,utilities, newDateInfo, endDateInfo);
+		 } else  {
+			 if(prevDurationToken == null) {
+				 Matcher durationMatcher = DURATION_PATTERN.matcher(token.getNormalizedNer());
+				 if(durationMatcher.find()) {
+					 return token;
+				 }
+			 } else if(!(token.getNormalizedNer().equals(prevDurationToken.getNormalizedNer())) || !(token.getId() - 1 == prevDurationToken.getId())) {
+				 Matcher durationMatcher = DURATION_PATTERN.matcher(token.getNormalizedNer());
+				 if(durationMatcher.find()) {
+					 return token;
+				 }
+			 }
 		 }
+		 return null;
 	 }
 	 
 	 /** ***************************************************************
@@ -556,8 +264,6 @@ public class DatesAndDuration {
 			if ((utilities.allDatesList.get(i).getEndIndex() + 2) == (utilities.allDatesList.get(i + 1).getWordIndex())) {
 				utilities.allDatesList.get(i).setDurationFlag(true);
 				utilities.allDatesList.get(i+1).setDurationFlag(true);
-				//utilities.allDatesList.get(i).print();
-				//utilities.allDatesList.get(i+1).print();
 				IndexedWord tempParent = utilities.StanfordDependencies.getNodeByIndex(utilities.allDatesList.get(i).getWordIndex());	
 				tempParent = getAssociatedWord(utilities, tempParent);
 				generateDurationSumoTerms(tempParent, utilities, utilities.allDatesList.get(i), utilities.allDatesList.get(i+1));

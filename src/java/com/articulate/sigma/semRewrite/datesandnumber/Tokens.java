@@ -30,6 +30,14 @@ public class Tokens {
 	String normalizedNer;
 	int charBegin;
 	
+	String tokenType = "DEFAULT";
+	
+	public String getTokenType() {
+		return tokenType;
+	}
+	public void setTokenType(String tokenType) {
+		this.tokenType = tokenType;
+	}
 	public int getCharBegin() {
 		return charBegin;
 	}
@@ -67,4 +75,31 @@ public class Tokens {
 	public void setNormalizedNer(String normalizedNer) {
 		this.normalizedNer = normalizedNer;
 	}
+	
+public boolean equals(Tokens token) {
+	    
+		boolean wordFlag,tokenTypeFlag;
+		wordFlag  = tokenTypeFlag = true;
+		if ((this.word == null) && (this.tokenType == null)) {
+			wordFlag = tokenTypeFlag = false;
+		}
+		if ((token.word != null) && (this.word != null) && !(token.word.equalsIgnoreCase(word))) {
+			wordFlag = false;
+		}
+		if ((token.tokenType != null) && (this.tokenType != null) && !(token.tokenType.equalsIgnoreCase(tokenType))) {
+			tokenTypeFlag = false;
+		}
+		return (wordFlag && tokenTypeFlag);
+	}
+	
+	/** ***************************************************************
+     */
+	public int hashCode() {
+	    
+        int hash = 2;
+        hash = 49 * hash + (this.word != null  ? this.word.hashCode() : 0);
+        hash = 49 * hash + (this.tokenType != null  ? this.tokenType.hashCode() : 0);
+        return hash;
+    }
+	
 }

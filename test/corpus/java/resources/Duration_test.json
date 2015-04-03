@@ -2,42 +2,42 @@
 {
 "text":"The American philosopher Charles Sanders Peirce (1839–1914) first introduced the term as guessing.",
 "kif":
-"[year(time-1,1839), DeathDate(Peirce,time-2), year(time-2,1914), BirthDate(Peirce,time-1)]"
+"[year(time-1,1839), BirthDate(philosopherCharlesSandersPeirce-3,time-1), DeathDate(philosopherCharlesSandersPeirce-3,time-2), year(time-2,1914)]"
 },
 {
 "text":"Galileo Galilei (15 February 1564 – 8 January 1642), often known mononymously as Galileo, was an Italian physicist, mathematician, engineer, astronomer, and philosopher who played a major role in the scientific revolution during the Renaissance.",
 "kif":
-"[month(time-2,January), year(time-2,1642), DeathDate(Galilei,time-2), BirthDate(Galilei,time-1), month(time-1,February), year(time-1,1564), day(time-1,15), day(time-2,8)]"
+"[month(time-2,January), BirthDate(Galilei-2,time-1), year(time-1,1564), day(time-1,15), year(time-2,1642), month(time-1,February), day(time-2,8), DeathDate(Galilei-2,time-2)]"
 },
 {
 "text":"Georg Simmel (March 1, 1858 – September 28, 1918, Berlin, Germany) was one of the first generation of German nonpositivist sociologists.",
 "kif":
-"[year(time-1,1858), BirthDate(Simmel,time-1), month(time-2,September), DeathDate(Simmel,time-2), day(time-1,1), day(time-2,28), year(time-2,1918), month(time-1,March)]"
+"[year(time-1,1858), measure(GeorgSimmel-1, measure2), valueToken(first,first-22), month(time-2,September), unit(measure2, generation), value(measure2, first), day(time-1,1), DeathDate(GeorgSimmel-1,time-2), BirthDate(GeorgSimmel-1,time-1), day(time-2,28), year(time-2,1918), month(time-1,March)]"
 },
 {
 "text":"Its population growth rate over the decade 2001-2011 was 8.15%.",
 "kif":
-"[measure(rate-4, measure1), unit(measure1, %), value(measure1, 8.15), StartTime(growth,time-1), EndTime(growth,time-2), year(time-1,2001), year(time-2,2011)]"
+"[year(time-1,2001), measure(populationgrowthrate-2, measure1), StartTime(decade-7,time-1), EndTime(decade-7,time-2), unit(measure1, %), value(measure1, 8.15), year(time-2,2011), valueToken(8.15,8.15-10)]"
 },
 {
 "text":"Second World War (after the recent Great War), was a global war that lasted from 1939 to 1945.",
 "kif":
-"[StartTime(War,time-1), year(time-2,1945), year(time-1,1939), EndTime(War,time-2)]"
+"[year(time-1,1939-19), StartTime(War-3,time-1), year(time-2,1945-21), EndTime(War-3,time-2)]"
 },
 {
 "text":"136 buildings, settlements and altars were found in the initial excavations in 1965–1970.",
 "kif":
-"[StartTime(excavations,time-1), year(time-2,1970), EndTime(excavations,time-2), year(time-1,1965), unit(measure1, MeasureCount), value(measure1, 136), measure(buildings-2, measure1)]"
+"[year(time-1,1965), StartTime(excavations-12,time-1), EndTime(excavations-12,time-2), unit(measure1, buildings), valueToken(136,136-1), value(measure1, 136), measure(excavations-12, measure1), year(time-2,1970)]"
 },
 {
 "text":"A series of famines and plagues, such as the Great Famine of 1315–1317 and the Black Death killed people in a matter of days, reducing the population of some areas by half as many survivors fled.",
 "kif":
-"[StartTime(Famine,time-1), EndTime(Famine,time-2), year(time-2,1317), year(time-1,1315)]"
+"[year(time-2,1317), EndTime(GreatFamine-11,time-2), StartTime(GreatFamine-11,time-1), year(time-1,1315)]"
 },
 {
 "text":"The term Indian Independence Movement encompasses activities and ideas aiming to end first East India Company rule (1757–1858), then the British Raj (1858–1947).",
 "kif":
-"[StartTime(rule,time-1), EndTime(rule,time-2), year(time-1,1757), year(time-2,1858), StartTime(British Raj,time-3), EndTime(British Raj,time-4), year(time-3,1858), year(time-4,1947)]"
+"[year(time-2,1858), EndTime(EastIndiaCompanyrule-14,time-2), BirthDate(Raj-27,time-3), year(time-3,1858), DeathDate(Raj-27,time-4), year(time-4,1947), year(time-1,1757), StartTime(EastIndiaCompanyrule-14,time-1)]"
 },
 {
 "text":"Kerala Varma Pazhassi Raja (also known as Cotiote Rajah or Pychy Rajah) (3 January 1753 – 30 November 1805) was one of the earliest freedom fighters in India. ",
@@ -62,6 +62,6 @@
 {
 "text":"Heidi Klum was married to English R&B singer Seal from 2005 until 2012.",
 "kif":
-"[EndTime(married,time-2), year(time-2,2012), StartTime(married,time-1), year(time-1,2005)]"
+"[EndTime(married-4,time-2), year(time-2,2012), year(time-1,2005), StartTime(married-4,time-1)]"
 }
 ]

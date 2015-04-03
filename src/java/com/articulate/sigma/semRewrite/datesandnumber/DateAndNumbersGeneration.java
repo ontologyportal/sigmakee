@@ -198,10 +198,22 @@ public class DateAndNumbersGeneration {
 		
 		this.measureTerms = measureTerms;
 	}
-
+	
 	/** ***************************************************************
 	 */
-	private List<TimeInfo> processTime(List<String> tokenIdNormalizedTimeMap, Utilities utilities) {
+	private boolean checkTokenInList(Tokens token, List<Tokens> tempDateList) {
+		
+		for(Tokens tempToken : tempDateList) {
+			if(tempToken.equals(token)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/** ***************************************************************
+	 */
+	private List<TimeInfo> processTime(List<String> tokenIdNormalizedTimeMap, Utilities utilities, List<Tokens> tempDateList, DatesAndDuration datesandDurationHandler, Tokens presentTimeToken, Tokens prevTimeToken) {
 
 		List<TimeInfo> timesList = new ArrayList<TimeInfo>();
 		for (String timeToken : tokenIdNormalizedTimeMap) {
@@ -226,21 +238,46 @@ public class DateAndNumbersGeneration {
 				String year = yearMonthTimePatternMatcher.group(1);
 				int tokenCnt = new StanfordDateTimeExtractor().getTokenCount() + 1;
 				if (!year.equals("XXXX")) {
-					if(!checkValueInMap("YEAR@" + year,utilities)) {
-						utilities.dateMap.put(id, "YEAR@" + year);
+					Tokens yearToken = new Tokens();
+					yearToken.setWord(year);
+					yearToken.setTokenType("YEAR");
+					yearToken.setId(id);
+					
+					if(!checkTokenInList(yearToken, tempDateList)) {
+						presentTimeToken = yearToken;
+						datesandDurationHandler.populateDateList(yearToken, tempDateList, prevTimeToken, utilities);
+						prevTimeToken = presentTimeToken;
 					}
 				}
 				if (yearMonthTimePatternMatcher.group(2) != null) {
 					String month = yearMonthTimePatternMatcher.group(2).replaceAll("\\-", "");
-					if(!checkValueInMap("MONTH@" + month,utilities) && !checkValueInMap("MONTH@" + Utilities.MONTHS.get(Integer.valueOf(month) - 1),utilities)) {
-						utilities.dateMap.put(tokenCnt + id, "MONTH@" + Utilities.MONTHS.get(Integer.valueOf(month) - 1));
-						tokenCnt ++;
+					Tokens monthToken = new Tokens();
+					Tokens digitMonthToken = new Tokens();
+					monthToken.setWord(month);
+					monthToken.setId(id);
+					monthToken.setTokenType("MONTH");
+					
+					digitMonthToken.setWord(Utilities.MONTHS.get(Integer.valueOf(month) - 1));
+					digitMonthToken.setId(id);
+					digitMonthToken.setTokenType("MONTH");
+					
+					if(!checkTokenInList(monthToken, tempDateList) && !checkTokenInList(digitMonthToken, tempDateList)) {
+						presentTimeToken = digitMonthToken;
+						datesandDurationHandler.populateDateList(digitMonthToken, tempDateList, prevTimeToken, utilities);
+						prevTimeToken = presentTimeToken;
 					}
 				}
 				if (yearMonthTimePatternMatcher.group(3) != null) {
 					String day = yearMonthTimePatternMatcher.group(3).replaceAll("\\-", "");
-					if(!checkValueInMap("DAYS@" + day,utilities)) {
-						utilities.dateMap.put(tokenCnt + id, "DAYS@" + day);
+					Tokens dayToken = new Tokens();
+					dayToken.setWord(day);
+					dayToken.setId(id);
+					dayToken.setTokenType("DAYS");
+					
+					if(!checkTokenInList(dayToken, tempDateList)) {
+						presentTimeToken = dayToken;
+						datesandDurationHandler.populateDateList(dayToken, tempDateList, prevTimeToken, utilities);
+						prevTimeToken = presentTimeToken;
 					}
 				}
 				timeObj.setMinute(yearMonthTimePatternMatcher.group(5));
@@ -271,17 +308,6 @@ public class DateAndNumbersGeneration {
 		return false;
 	}
 	
-	/** ***************************************************************
-	 */
-	private boolean checkValueInMap(String value, Utilities utilities) {
-		
-		for (int key : utilities.dateMap.keySet()) {
-			if (utilities.dateMap.get(key).equalsIgnoreCase(value)) {
-				return true;
-			}
-		}
-		return false;
-	}
 		
 	/** ***************************************************************
 	 */
@@ -292,20 +318,36 @@ public class DateAndNumbersGeneration {
 		utilities.StanfordDependencies = stanfordParser.getDependencies();
 		List<String> tokenIdNormalizedTimeMap = new ArrayList<String>();
 		int numberCount = 1;
+		List<Tokens> tempDateList = new ArrayList<>();
+		Tokens presentDateToken = new Tokens();
+		Tokens prevDateToken = null;
+		Tokens presentTimeToken = new Tokens();
+		Tokens prevTimeToken = null;
+		Tokens numberToken = new Tokens();
+		Tokens presentDurationToken = new Tokens();
+		Tokens prevDurationToken = null;
 		for(Tokens token : tokensList) {
+			presentDateToken = token;
+			presentDurationToken = token;
 			switch(token.getNer()) {
-				case "DATE"  : datesandDurationHandler.processDate(token, stanfordParser.getDependencyList(),utilities);
+				case "DATE"  : datesandDurationHandler.processDate(token, utilities, tempDateList, prevDateToken);
+					           prevDateToken = presentDateToken;
 							   break;
 				case "NUMBER":
 				case "ORDINAL":
 				case "PERCENT" : measureFn(token,numberCount, utilities); ++numberCount;  //processNumber(token,stanfordParser.getDependencyList());
 								 break;
-				case "DURATION" : datesandDurationHandler.processDuration(token,utilities); break;
+				case "DURATION" :numberToken = datesandDurationHandler.processDuration(token,utilities, prevDurationToken); 
+				                 if(numberToken != null) {
+				                	 measureFn(numberToken, numberCount, utilities);
+				                 }
+				                 prevDurationToken = presentDurationToken;
+				                 break;
 				case "TIME" : tokenIdNormalizedTimeMap.add(token.getId() + "@" + token.getNormalizedNer());
 			}
 		}
-		List<TimeInfo> timesList = processTime(tokenIdNormalizedTimeMap,utilities);
-		datesandDurationHandler.generateSumoDateTerms(utilities);
+		List<TimeInfo> timesList = processTime(tokenIdNormalizedTimeMap,utilities, tempDateList, datesandDurationHandler, presentTimeToken, prevTimeToken);
+		datesandDurationHandler.generateSumoDateTerms(utilities, tempDateList);
 		datesandDurationHandler.handleDurations(utilities);
 		generateSumoTimeTerms(timesList,utilities);
 		utilities.filterSumoTerms(cg);

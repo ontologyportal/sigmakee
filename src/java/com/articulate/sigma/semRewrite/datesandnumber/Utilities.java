@@ -41,7 +41,7 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 
 public class Utilities {
     
-	HashMap<Integer,String> dateMap = new LinkedHashMap<Integer,String>();
+	//HashMap<Integer,String> dateMap = new LinkedHashMap<Integer,String>();
 	
 	public static final List<String> MONTHS = new ArrayList<String>(Arrays.asList("january",
 			"february","march","april","may","june","july","august",
@@ -54,8 +54,11 @@ public class Utilities {
 	
 	public static final Pattern sumoTermPattern = Pattern.compile("^([a-zA-Z]+)\\(([a-zA-Z\\-0-9]+)(\\s)?,(\\s)?([a-zA-Z(\\-)?0-9]+)\\)");
 	
+	public static final List<String> stopWords = new ArrayList<String>(Arrays.asList("of",",","-"));
+	
 	List<String> sumoTerms = new LinkedList<String>();
 	List<DateInfo> allDatesList = new LinkedList<DateInfo>();
+	List<DateInfo> datesList = new LinkedList<DateInfo>();
 	SemanticGraph StanfordDependencies;
 	int timeCount = 1;
 	

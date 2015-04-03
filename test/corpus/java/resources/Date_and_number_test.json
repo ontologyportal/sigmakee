@@ -22,7 +22,7 @@
 {
 "text":"Bob went to work only 5 times in 2003.",
 "kif":
-"[unit(measure1, times), measure(went-2, measure1), year(time-1,2003), value(measure1, 5), time(work,time-1)]"
+"[unit(measure1, times), time(work-4,time-1), measure(Bob-1, measure1), year(time-1,2003), value(measure1, 5), valueToken(5,5-6)]"
 },
 {
 "text":"John kicks the cart.",
@@ -42,12 +42,12 @@
 {
 "text":"John married Mary on December 22 at 5:45 PM.",
 "kif":
-"[day(time-1,22), time(married,time-1), month(time-1,December), time(married,time-2), hour(time-2,17), minute(time-2,45)]"
+"[day(time-1,22), minute(time-2,45-8), hour(time-2,17-8), month(time-1,December), time(married-2,time-2), time(married-2,time-1)]"
 },
 {
 "text":"John was killed on 22 August 1999 at 18:45 hrs.",
 "kif":
-"[day(time-1,22), year(time-1,1999), month(time-1,august), time(killed,time-1), time(killed,time-2), hour(time-2,18), minute(time-2,45)]"
+"[day(time-1,22), year(time-1,1999), time(killed-3,time-1), hour(time-2,18-5), time(killed-3,time-2), month(time-1,August), minute(time-2,45-5)]"
 },
 {
 "text":"This man is 170 centimeters tall.",
@@ -160,13 +160,13 @@
 {
 "text":"The statue is eight feet high and stands on a two foot tall pedestal.",
 "kif":
-"[]"
+"[value(measure2, two), unit(measure1, feet), measure(pedestal-14, measure2), unit(measure2, foot), value(measure1, eight), valueToken(two,two-11), measure(statue-2, measure1), valueToken(eight,eight-4)]"
 }
 ,
 {
 "text":"It is an eight foot high statue.",
 "kif":
-"[]"
+"[measure(statue-7, measure1), unit(measure1, foot), value(measure1, eight), valueToken(eight,eight-4)]"
 }
 ,
 {
@@ -178,7 +178,7 @@
 {
 "text":"The depth of the Amazon river is over 20 meters.",
 "kif":
-"[]"
+"[value(measure1, 20), valueToken(20,20-9), measure(depth-2, measure1), unit(measure1, meters)]"
 }
 ,
 {
@@ -546,7 +546,7 @@
 {
 "text":"The current President of the Maldives is Abdulla Yameen, who was elected in 2013 by defeating former President Mohamed Nasheed in a run off.",
 "kif":
-"[year(time-1,2013), time(elected,time-1)]"
+"[year(time-1,2013), time(elected-13,time-1)]"
 },
 {
 "text":"Sultan Imaaduddeen VI ascended the throne on 20 July 1893.",
@@ -571,27 +571,27 @@
 {
 "text":"As per 2011 census of India, the state is tenth largest by population with 49386799 inhabitants.",
 "kif":
-"[measure(population-14, measure1), unit(measure1, inhabitants), value(measure1, 49386799), valueToken(49386799,49386799-16)]"
+"[measure(population-14, measure1), unit(measure1, inhabitants), year(time-1,2011), value(measure1, 49386799), valueToken(49386799,49386799-16)]"
 },
 {
 "text":"The famous battle of Palnadu which is enshrined in legend and literature as Palnati Yuddham was fought in Guntur district in 1180 CE.",
 "kif":
-"[time(fought,time-1), year(time-1,1180)]"
+"[time(fought-17,time-1), year(time-1,1180)]"
 },
 {
 "text":"Guntur district was separated from Krishna in 1904 to form Krishna district which was further divided in 1925, to Krishna and West Godavari districts.",
 "kif":
-"[time(divided,time-1), time(separated,time-2), year(time-2,1904), year(time-1,1925)]"
+"[time(separated-4,time-1), time(divided-16,time-2), year(time-2,1925), year(time-1,1904)]"
 },
 {
 "text":"The meeting is scheduled for the 30th of June.",
 "kif":
-"[time(scheduled,time-1), month(time-1,June), day(time-1,30)]"
+"[month(time-1,June), day(time-1,30), time(scheduled-4,time-1)]"
 },
 {
 "text":"We have had tricks played on us on April 1.",
 "kif":
-"[month(time-1,April), day(time-1,1), time(played,time-1)]"
+"[time(played-5,time-1), month(time-1,April), day(time-1,1)]"
 },
 {
 "text":"India remained a Dominion of the Crown until 26 January 1950, when the Constitution of India came into force, establishing the Republic of India.",
@@ -616,7 +616,7 @@
 {
 "text":"Minardi was an Italian automobile racing team and constructor founded in Faenza in 1979 by Giancarlo Minardi.",
 "kif":
-"[time(founded,time-1), year(time-1,1979)]"
+"[time(founded-10,time-1), year(time-1,1979)]"
 },
 {
 "text":"Klum has hosted the 2002, 2006, 2007, and 2009 Victoria's Secret Fashion Shows. ",
