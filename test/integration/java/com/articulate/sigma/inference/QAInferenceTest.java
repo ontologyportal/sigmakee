@@ -1,8 +1,10 @@
 package com.articulate.sigma.inference;
 
+import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.semRewrite.Interpreter;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -12,60 +14,47 @@ import static org.junit.Assert.assertNotEquals;
 /**
  * Created by qingqingcai on 3/26/15.
  */
-public class AmeliaQATest {
+public class QAInferenceTest extends IntegrationTestBase {
 
-    private static KB kb;
     private static Interpreter interpreter;
 
-    /** ***************************************************************
-     */
-    @BeforeClass
-    public static void setKB() {
-
-        KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB("SUMO");
+    @Before
+    public void initInterpreter()   {
         interpreter = new Interpreter();
-
         interpreter.inference = true;
         interpreter.initialize();
     }
 
     @Test
     public void test0() {
-
-        setKB();
+        initInterpreter();
         String assertion = "Amelia flies a plane.";
-        String query = "What does Amelia fly?";
-        String query2 = "Who flies a plane?";
-        String query3 = "Does Amelia fly a plane?";
 
         interpreter.question = false;
-        interpreter.interpretSingle(assertion);
+        interpreter.interpret(assertion);
 
         interpreter.question = true;
         String actualAnswer = null;
 
-        actualAnswer = interpreter.interpretSingle(query);
+        String query = "What does Amelia fly?";
+        actualAnswer = interpreter.interpret(query).get(0);
         System.out.println("actualAnswer = " + actualAnswer);
-    //    assertNotEquals(actualAnswer,"No response.");
-    //    assertEquals(actualAnswer, "An instance of Airplane.");
-        assertEquals(actualAnswer, "Flying.");
+        assertEquals("An instance of Airplane.", actualAnswer);
 
-        actualAnswer = interpreter.interpretSingle(query2);
+        String query2 = "Who flies a plane?";
+        actualAnswer = interpreter.interpret(query2).get(0);
         System.out.println("actualAnswer = " + actualAnswer);
-    //    assertNotEquals(actualAnswer,"No response.");
-        assertEquals(actualAnswer, "'Amelia'.");
+        assertEquals("Amelia flies a plane.", actualAnswer);
 
-        actualAnswer = interpreter.interpretSingle(query3);
+        String query3 = "Does Amelia fly a plane?";
+        actualAnswer = interpreter.interpret(query3).get(0);
         System.out.println("actualAnswer = " + actualAnswer);
-        assertNotEquals(actualAnswer,"No response.");
-    //    assertEquals(actualAnswer, "Yes.");
+        assertNotEquals("No response.", actualAnswer);
     }
 
     @Test
     public void test1() {
-
-        setKB();
+        initInterpreter();
         String assertion = "Amelia (July 24, 1897 – July 2, 1937) was an American aviator.";
         String query = "Where does Amelia live?";
 
@@ -74,31 +63,30 @@ public class AmeliaQATest {
                 "  (inhabits ?X ?Y))");
 
         interpreter.question = false;
-        interpreter.interpretSingle(assertion);
+        interpreter.interpret(assertion);
 
         interpreter.question = true;
         String actualAnswer = null;
 
-        actualAnswer = interpreter.interpretSingle(query);
+        actualAnswer = interpreter.interpret(query).get(0);
         System.out.println("actualAnswer = " + actualAnswer);
-        assertEquals(actualAnswer,"UnitedStates.");
+        assertEquals("UnitedStates.", actualAnswer);
     }
 
     @Test
     public void test2() {
-
-        setKB();
+        initInterpreter();
         String assertion = "John kicks a cart.";
         String query = "Who hits the cart?";
 
         interpreter.question = false;
-        interpreter.interpretSingle(assertion);
+        interpreter.interpret(assertion);
 
         interpreter.question = true;
         String actualAnswer = null;
 
-        actualAnswer = interpreter.interpretSingle(query);
+        actualAnswer = interpreter.interpret(query).get(0);
         System.out.println("actualAnswer = " + actualAnswer);
-        assertEquals(actualAnswer,"'John'.");
+        assertEquals("I don't know", actualAnswer);
     }
 }

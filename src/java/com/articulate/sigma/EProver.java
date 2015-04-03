@@ -40,7 +40,7 @@ public class EProver {
             pw.println("division.category LTB.SMO");
             pw.println("output.required Assurance");
             pw.println("output.desired Proof Answer");
-            pw.println("limit.time.problem.wc 10");
+            pw.println("limit.time.problem.wc 60");
             pw.println("% SZS end BatchConfiguration");
             pw.println("% SZS start BatchIncludes");
             pw.println("include('" + inputFilename + "').");
@@ -99,7 +99,7 @@ public class EProver {
             pw.println("division.category LTB.SMO");
             pw.println("output.required Assurance");
             pw.println("output.desired Proof Answer");
-            pw.println("limit.time.problem.wc 10");
+            pw.println("limit.time.problem.wc 60");
             pw.println("% SZS end BatchConfiguration");
             pw.println("% SZS start BatchIncludes");
             for (String ebatchfile : ebatchfiles) {
