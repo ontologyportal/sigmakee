@@ -196,8 +196,10 @@ public class FormulaPreprocessor {
                 sb.append(f.getArgument(1) + " ");
 
                 ArrayList<String> quantifiedVariables = collectVariables(f.getArgument(1));
-                boolean addSortals = false; // set addSortals = true, if at least one variable is existentially quantified variable,
-                //                           and it is not explicitly restricted
+                // set addSortals = true, if at least one variable is existentially quantified variable,
+                // and it is not explicitly restricted
+                boolean addSortals = false;
+
                 HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(f, kb);
                 HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(f);
 
@@ -259,7 +261,7 @@ public class FormulaPreprocessor {
         }
     }
 
-    /**
+    /** ***************************************************************
      * Collect variables from strings. For example,
      * Input = (?X ?Y ?Z)
      * Output = list [?X, ?Y, ?Z]
@@ -282,8 +284,8 @@ public class FormulaPreprocessor {
     }
 
     /** ************************************************************************
-     * Get the most specific type for variables
-     * for example, types of "?Writing" = [Entity, Physical, Process, IntentionalProcess, ContentDevelopment, Writing]
+     * Get the most specific type for variables. For example, types of "?Writing"
+     * = [Entity, Physical, Process, IntentionalProcess, ContentDevelopment, Writing]
      * return the most specific type = Writing
      */
     protected String getMostRelevantType(KB kb, HashSet<String> types) {
@@ -507,8 +509,6 @@ public class FormulaPreprocessor {
         if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): \n" + form);
         Formula f = new Formula();
         f.read(form.theFormula);
-        //f.read(_f.makeQuantifiersExplicit(false));
-        FormulaPreprocessor fp = new FormulaPreprocessor();
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         return computeVariableTypesRecurse(kb,form,result);
     }
@@ -521,7 +521,7 @@ public class FormulaPreprocessor {
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         if (f == null || StringUtil.emptyString(f.theFormula) || f.empty())
             return result;
-        //System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): \n" + f);
+        if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): \n" + f);
         String carstr = f.car();
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {// equals may require special treatment
             result.putAll(input);
@@ -537,7 +537,7 @@ public class FormulaPreprocessor {
                     String arg = newf.car();
                     if (Formula.isVariable(arg)) {
                         String cl = findType(argnum,pred,kb);
-                        //System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
+                        if (debug) System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
                         if (StringUtil.emptyString(cl)) {
                             if (!kb.kbCache.transInstOf(pred, "VariableArityRelation"))
                                 System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): no type information for arg " +
@@ -559,7 +559,6 @@ public class FormulaPreprocessor {
             result = mergeToMap(input,computeVariableTypesRecurse(kb,f.carAsFormula(),input), kb);
             result = mergeToMap(result,computeVariableTypesRecurse(kb,f.cdrAsFormula(),input), kb);
         }
-        //System.out.println("result: " + result);
         return result;
     }
 
@@ -666,7 +665,7 @@ public class FormulaPreprocessor {
         Formula f = null;
         while (accumulator.size() != prevAccumulatorSize) {
             prevAccumulatorSize = accumulator.size();
-            // Do pred var instantiations if we are not adding holds prefixes.
+            // Initialize predicate variables if we are not adding holds prefixes.
             if (!addHoldsPrefix) {
                 working.clear();
                 working.addAll(accumulator);
@@ -911,7 +910,6 @@ public class FormulaPreprocessor {
         }
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
-        //    if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): result: " + results);
         return results;
     }
 
@@ -1020,9 +1018,9 @@ public class FormulaPreprocessor {
      */
     public static void main(String[] args) {
 
-        //testFindTypes();
+        testFindTypes();
         testAddTypes();
-        //testFindExplicit();
+        testFindExplicit();
     }
 
 }

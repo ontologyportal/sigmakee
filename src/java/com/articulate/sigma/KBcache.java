@@ -34,6 +34,8 @@ import java.util.*;
 public class KBcache {
 
     public KB kb = null;
+
+    private static boolean debug = false;
     
     /** The String constant that is the suffix for files of cached assertions. */
     public static final String _cacheFileSuffix      = "_Cache.kif";
@@ -121,7 +123,6 @@ public class KBcache {
         
         if (parent.equals(child))
             return false;
-        //System.out.println("INFO in KBcache.childOfP(): rel,parent,child: " + rel + " " + parent + " " + child);
         HashMap<String,HashSet<String>> childMap = children.get(rel);
         HashSet<String> childSet = (childMap != null) ? childMap.get(parent) : null;
         if (childSet == null) {
@@ -231,7 +232,6 @@ public class KBcache {
      * "exhaustiveDecomposition" expressions;
      */
     public void buildDisjointRelationsMap() {
-        // Find explicit-disjoint-relations-map
         ArrayList<Formula> explicitDisjontFormulae = new ArrayList<Formula>();
         explicitDisjontFormulae.addAll(kb.ask("arg", 0, "partition"));
         explicitDisjontFormulae.addAll(kb.ask("arg", 0, "disjoint"));
@@ -304,7 +304,7 @@ public class KBcache {
         for (String s1 : ancestors_rel1) {
             for (String s2 : ancestors_rel2) {
                 if (kb.kbCache.isExplicitDisjoint(kb.kbCache.explicitDisjointRelations, s1, s2)) {
-                    // System.out.println(rel1 + " and " + rel2 + " are disjoint relations, because of " + s1 + " and " + s2);
+                    if (debug) System.out.println(rel1 + " and " + rel2 + " are disjoint relations, because of " + s1 + " and " + s2);
                     return true;
                 }
             }
@@ -341,27 +341,21 @@ public class KBcache {
                                                        // during creation of the @see children map
         while (titer.hasNext()) {
             String child = titer.next();
-            //System.out.println();
-            //System.out.println("INFO in KBcache.buildTransInstOf(): child: " + child);
             ArrayList<Formula> forms = kb.ask("arg",1,child);
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = forms.get(i);
                 String rel = f.getArgument(0);
                 if (instTransRels.contains(rel) && !rel.equals("subclass")) {
-                    //System.out.println("INFO in KBcache.buildTransInstOf(): considering formula: " + f);
                     HashMap<String,HashSet<String>> prentList = parents.get(rel);
                     if (prentList != null) {
                         HashSet<String> prents = prentList.get(f.getArgument(1));  // include all parents of the child 
                         if (prents != null) {
-                            //System.out.println("INFO in KBcache.buildTransInstOf(): prents: " + prents);
                             Iterator<String> it = prents.iterator();
                             while (it.hasNext()) {
                                 String p = it.next();
-                                //System.out.println("INFO in KBcache.buildTransInstOf(): parent: " + p);
                                 ArrayList<Formula> forms2 = kb.askWithRestriction(0,"instance",1,p);
                                 for (int j = 0; j < forms2.size(); j++) {
                                     Formula f2 = forms2.get(j);
-                                    //System.out.println("INFO in KBcache.buildTransInstOf(): formula: " + f2);
                                     String cl = f2.getArgument(2);
                                     HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
                                     HashSet<String> pset = new HashSet<String>();
@@ -369,10 +363,7 @@ public class KBcache {
                                         pset = instances.get(child);
                                     pset.add(cl);
                                     pset.addAll(superclasses.get(cl));
-                                    //System.out.println("INFO in KBcache.buildTransInstOf(): child,pset: " + child +
-                                    //        ": " + pset);
                                     instances.put(child, pset);
-                                    //System.out.println("INFO in KBcache.buildTransInstOf(): size: " + instances.keySet().size());
                                 }
                             }
                         }
@@ -470,24 +461,19 @@ public class KBcache {
         HashSet<String> rels = new HashSet<String>();  
         rels.add("TransitiveRelation");
         while (!rels.isEmpty()) {
-            //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): rels: " + rels);
-            //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): transRels: " + transRels);
             HashSet<String> relSubs = new HashSet<String>();
             Iterator<String> it = rels.iterator();
             while (it.hasNext()){
                 String rel = it.next();
-                //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): checking rel: " + rel);
                 relSubs = new HashSet<String>();
-                ArrayList<Formula> forms = kb.askWithRestriction(0,"subclass",2,rel);
-                ArrayList<Formula> forms2 = kb.ask("arg",2,rel);
-                //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): formulas: " + forms2);
+                ArrayList<Formula> forms = kb.askWithRestriction(0, "subclass", 2, rel);
 
                 if (forms != null) {
-                    //System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): subclasses: " + forms);
+                    if (debug) System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): subclasses: " + forms);
                     relSubs.addAll(collectArgFromFormulas(1,forms));
                 }
-                //else
-                //    System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): no subclasses for : " + rels);
+                else
+                    if (debug) System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): no subclasses for : " + rels);
                 forms = kb.askWithRestriction(0,"instance",2,rel);
                 if (forms != null) 
                     transRels.addAll(collectArgFromFormulas(1,forms));
@@ -511,13 +497,10 @@ public class KBcache {
         HashSet<String> rels = new HashSet<String>();  
         rels.add("Relation");
         while (!rels.isEmpty()) {
-            //System.out.println();
-            //System.out.println("INFO in KBcache.buildRelationsSet(): rels: " + rels);
             HashSet<String> relSubs = new HashSet<String>();
             Iterator<String> it = rels.iterator();
             while (it.hasNext()) {
                 String rel = it.next();
-                //System.out.println("INFO in KBcache.buildRelationsSet(): rel: " + rel);
                 ArrayList<Formula> forms = kb.askWithRestriction(0,"subclass",2,rel);
                 if (forms != null) 
                     relSubs.addAll(collectArgFromFormulas(1,forms));
@@ -531,8 +514,7 @@ public class KBcache {
                 if (forms != null) { 
                     relations.addAll(collectArgFromFormulas(1,forms));
                     relSubs.addAll(collectArgFromFormulas(1,forms));
-                }    
-                //System.out.println("INFO in KBcache.buildRelations(): subs: " + relSubs);
+                }
             }
             rels = new HashSet<String>();
             rels.addAll(relSubs);
@@ -566,7 +548,6 @@ public class KBcache {
         HashSet<String> arg2s = collectArgFromFormulas(2,forms);
         arg1s.removeAll(arg2s);
         result.addAll(arg1s);
-        //System.out.println("INFO in KBcache.findRoots(): " + result);
         return result;
     }
     
@@ -628,19 +609,18 @@ public class KBcache {
             System.out.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
             return;
         }
-        //else
-        //    System.out.println("INFO in KBcache.breadthFirst(): trying relation " + rel);
+        if (debug) System.out.println("INFO in KBcache.breadthFirst(): trying relation " + rel);
         ArrayDeque<String> Q = new ArrayDeque<String>();
         HashSet<String> V = new HashSet<String>();
         Q.add(root);
         V.add(root);
         while (!Q.isEmpty()) {
             String t = Q.remove();
-            //System.out.println("visiting " + t);
+            if (debug) System.out.println("visiting " + t);
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,1,t);
             if (forms != null) {
                 HashSet<String> relSubs = collectArgFromFormulas(2,forms);
-                //System.out.println("visiting subs of t: " + relSubs);
+                if (debug) System.out.println("visiting subs of t: " + relSubs);
                 Iterator<String> it = relSubs.iterator();
                 while (it.hasNext()) {
                     String newTerm = it.next();
@@ -656,7 +636,6 @@ public class KBcache {
                     if (newTermChildren != null)
                         newChildren.addAll(newTermChildren);
                     relChildren.put(newTerm, newChildren);
-                    //System.out.println(newTerm + ": " + newParents);
                     if (!V.contains(newTerm)) {
                         V.add(newTerm);
                         Q.addFirst(newTerm);
@@ -755,7 +734,6 @@ public class KBcache {
         Iterator<String> it = relations.iterator();
         while (it.hasNext()) {
             String rel = it.next();
-            //System.out.println("INFO in KBcache.collectDomains(): trying relation " + rel);
             String[] domainArray = new String[Formula.MAX_PREDICATE_ARITY];
             int maxIndex = 0;
             domainArray[0] = "";
@@ -775,7 +753,6 @@ public class KBcache {
             if (forms != null) {
                 for (int i = 0; i < forms.size(); i++) {
                     Formula form = forms.get(i);
-                    //System.out.println("INFO in KBcache.collectDomains(): form " + form);
                     int arg = Integer.valueOf(form.getArgument(2));
                     String type = form.getArgument(3);                
                     domainArray[arg] = type + "+";
@@ -783,8 +760,7 @@ public class KBcache {
                         maxIndex = arg;
                 }
             }
-            //System.out.println("INFO in KBcache.collectDomains(): domains " + domains);
-            fillArray("Entity",domainArray,1,maxIndex);                    
+            fillArray("Entity",domainArray,1,maxIndex);
             ArrayList<String> domains = new ArrayList<String>();
             for (int i = 0; i <= maxIndex; i++)
                 domains.add(domainArray[i]);
@@ -800,15 +776,12 @@ public class KBcache {
      */
     private void breadthFirstInheritDomains(String root) {
         
-        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): trying relation " + root);
         String rel = "subrelation";
         HashMap<String,HashSet<String>> relParents = parents.get("subrelation");
         if (relParents == null) {
             System.out.println("Error in KBcache.breadthFirst(): no relation subrelation");
             return;
         }
-        //else
-            //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): trying relation " + rel);
         ArrayDeque<String> Q = new ArrayDeque<String>();
         HashSet<String> V = new HashSet<String>();
         Q.add(root);
@@ -816,31 +789,20 @@ public class KBcache {
         while (!Q.isEmpty()) {
             String t = Q.remove();
             ArrayList<String> tdomains = signatures.get(t);
-            //System.out.println("visiting " + t);
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
             if (forms != null) {
                 HashSet<String> relSubs = collectArgFromFormulas(1,forms);
-                //System.out.println("visiting subs of t: " + relSubs);
                 Iterator<String> it = relSubs.iterator();
                 while (it.hasNext()) {
                     String newTerm = it.next();                    
                     ArrayList<String> newDomains = signatures.get(newTerm);
-                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): valence for new term " + 
-                    //    newTerm + ":" + valences.get(newTerm));
-                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): valence for " + 
-                    //        t + ":" + valences.get(t));
-                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newTerm + " : " + newDomains);
-                    //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + t + ": " + tdomains);
                     if (valences.get(newTerm) == null || valences.get(newTerm) < valences.get(t)) {
-                        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newDomains);
                         fillArrayList("Entity",newDomains,valences.get(newTerm)+1,valences.get(t)+1);
-                        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): " + newDomains);
                         valences.put(newTerm, valences.get(t));
                     }
                     for (int i = 1; i < valences.get(t); i++) {
                         String childArgType = newDomains.get(i);
                         String parentArgType = tdomains.get(i);
-                        //System.out.println("INFO in KBcache.breadthFirstInheritDomains(): comparing child to parent: " + childArgType + " " + parentArgType);
                         // If child-relation does not have definition of argument-type, we use parent-relation's argument-type
                         // TODO: if parent-relation does not have definition of argument-type, we continue to find its parent until we find the definition of argument-type
                         if (kb.askWithTwoRestrictions(0, "domain", 1, newTerm, 3, childArgType).isEmpty()) {
@@ -976,7 +938,6 @@ public class KBcache {
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB("SUMO");
         System.out.println("**** Finished loading KB ***");
-        //KBcache nkbc = new KBcache(kb);
         KBcache nkbc = kb.kbCache;
         //nkbc.buildCaches();
         //nkbc.buildRelationsSet();
@@ -1052,6 +1013,5 @@ public class KBcache {
             String inst = it6.next();
             System.out.println(inst + ": " + nkbc.instances.get(inst));
         }
-        
     }
 }

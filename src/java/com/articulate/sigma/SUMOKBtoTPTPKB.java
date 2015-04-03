@@ -10,6 +10,8 @@ public class SUMOKBtoTPTPKB {
 
     public KB kb;
 
+    private static boolean debug = false;
+
     /** *************************************************************
      * This method translates the entire KB to TPTP format, storing
      * the translation for each Formula in the List identified by the
@@ -130,12 +132,14 @@ public class SUMOKBtoTPTPKB {
                 for (int i = 0; i < result.size(); i++) {
                     Formula f = result.get(i);
                     String s = f.theFormula.replace(value,key);
-                    if (onlyPlainFOL)
-                        pr.println("%FOL fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                                ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
-                    else
+                    if (!onlyPlainFOL) {
                         pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                                ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s,false) + ")).");
+                                ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
+                    }
+                    else {
+                    //    pr.println("%FOL fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                    //            ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
+                    }
                 }
             }
         }
@@ -219,10 +223,10 @@ public class SUMOKBtoTPTPKB {
     public String writeTPTPFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
                                 String reasoner, boolean isQuestion, PrintWriter pw) {
 
-        //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile()");
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile()");
+
         ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
         HashSet<String> excludedPredicates = buildExcludedPredicates();
-        HashSet<Formula> basicInferenceRules = buildBasicInferenceRules();
         String result = null;
         PrintWriter pr = null;
         try {
@@ -253,38 +257,19 @@ public class SUMOKBtoTPTPKB {
                 pr.println("% This is a translation to TPTP of KB " + sanitizedKBName);
                 pr.println("");
             }
-            /*
-            TreeSet<Formula> orderedFormulae = new TreeSet<Formula>(new Comparator() {
-                    public int compare(Object o1, Object o2) {
-                        Formula f1 = (Formula) o1;
-                        Formula f2 = (Formula) o2;
-                        int fileCompare = f1.sourceFile.compareTo(f2.sourceFile);
-                        if (fileCompare == 0) {
-                            fileCompare = (new Integer(f1.startLine))
-                                .compareTo(new Integer(f2.startLine));
-                            if (fileCompare == 0) {
-                                fileCompare = (new Long(f1.endFilePosition))
-                                    .compareTo(new Long(f2.endFilePosition));
-                            }
-                        }
-                        return fileCompare;
-                    } });
-                    */
+
             OrderedFormulae orderedFormulae = new OrderedFormulae();
             orderedFormulae.addAll(kb.formulaMap.values());
-            //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
-            //kb.kbCache.buildCaches();
+            if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
             List<String> tptpFormulas = null;
             String oldSourceFile = "";
             String sourceFile = "";
             File sf = null;
             Iterator<Formula> ite = orderedFormulae.iterator();
             String theTPTPFormula = null;
-            //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): writing file: " + sanitizedKBName);
             int counter = 0;
             while (ite.hasNext()) {
                 Formula f = ite.next();
-                //System.out.println(f);
                 counter++;
                 if (counter == 100) {
                     System.out.print(".");
@@ -350,7 +335,6 @@ public class SUMOKBtoTPTPKB {
                     }
 
                     if (filterExcludePredicates(excludedPredicates, f) == false) {
-                        // Filter1: only keep simpleClause and basic axioms
                         // TODO: this should be removed in the future
                         if (filterSimpleOnly) {
                             if ((f.sourceFile.equals(KBmanager.getMgr().getPref("kbDir") + File.separator + "Amelia.kif"))
@@ -411,32 +395,6 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * define a set of basic inference rules
-     * TODO: In the future, inference should be working on whole SUMO
-     */
-    public static HashSet<Formula> buildBasicInferenceRules() {
-
-        HashSet<Formula> basicInferenceRules = new HashSet<Formula>();
-        Formula basicFormula = new Formula();
-        basicFormula.read("(=>\n" +
-                "  (subclass ?X ?Y)\n" +
-                "  (and\n" +
-                "    (instance ?X SetOrClass)\n" +
-                "    (instance ?Y SetOrClass)))");
-        basicInferenceRules.add(basicFormula);
-
-        basicFormula = new Formula();
-        basicFormula.read("(=>\n" +
-                "  (and\n" +
-                "    (subclass ?X ?Y)\n" +
-                "    (instance ?Z ?X))\n" +
-                "  (instance ?Z ?Y))");
-        basicInferenceRules.add(basicFormula);
-
-        return basicInferenceRules;
-    }
-
-    /** *************************************************************
      * define a set of predicates which will not be used for inference
      */
     public static HashSet<String> buildExcludedPredicates() {
@@ -455,14 +413,6 @@ public class SUMOKBtoTPTPKB {
         excludedPredicates.add("conventionalLongName");
 
         return excludedPredicates;
-    }
-
-    /** *************************************************************
-     * check if formula is a basic inference rule
-     */
-    public static boolean isBasicInferenceRules(HashSet<Formula> basicInferenceRules, Formula formula) {
-
-        return basicInferenceRules.contains(formula);
     }
 
     /** *************************************************************
@@ -486,7 +436,6 @@ public class SUMOKBtoTPTPKB {
         KBmanager.getMgr().initializeOnce();
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
         skbtptpkb.kb = KBmanager.getMgr().getKB("SUMO");
-        //System.out.println("INFO in SUMOKBtoTPTPKB.main(): " + skbtptpkb.kb.formulaMap.values().size());
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
         String fileWritten = skbtptpkb.writeTPTPFile(filename, null, true, "none");
         if (StringUtil.isNonEmptyString(fileWritten))
