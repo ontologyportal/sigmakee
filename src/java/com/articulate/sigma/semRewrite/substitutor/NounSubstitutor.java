@@ -1,5 +1,3 @@
-package com.articulate.sigma.semRewrite;
-
 /*
 Copyright 2014-2015 IPsoft
 
@@ -20,55 +18,32 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
+package com.articulate.sigma.semRewrite.substitutor;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.*;
 
 import java.util.*;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class ClauseGroups {
+public class NounSubstitutor extends SimpleSubstitutorStorage {
 
-    // predicate(word-1, word-2)
-    public static final Pattern CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+-\\d+),\\s*(.+-\\d+)\\)");
-    // predicate(word, word-1)
-    // predicate(word, word)
-    // predicate(word-1, word)
-    public static final Pattern GENERIC_CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+),\\s*(.+)\\)");
-    static final Pattern CLAUSE_PARAM = Pattern.compile("(.+)-(\\d+)");
-
-    List<String> clauses;
-    boolean initialized = false;
-    Map<String, String> groups;
 
     /** ***************************************************************
      */
-    public ClauseGroups(List<String> clauses) {
-        this.clauses = clauses;
+    public NounSubstitutor(List<String> clauses) {
+        initialize(clauses);
     }
 
     /** ***************************************************************
      */
-    public String getGrouped(String key) {
-        
-        initialize();
-        String value = groups.get(key);
-        return value == null ? key : value;
-    }
+    private void initialize(List<String> clauses) {
 
-    /** ***************************************************************
-     */
-    private void initialize() {
-        
-        if (!initialized) {
-            Multimap<String, String> groupsFull = parseGroupsAndCollectRoots(clauses);
-            initGroupForAttributes(groupsFull);
-            groups = mergeAttributes(groupsFull);
-
-            clauses = null;
-            initialized = true;
-        }
+        Multimap<String, String> groupsFull = parseGroupsAndCollectRoots(clauses);
+        initGroupForAttributes(groupsFull);
+        setGroups(
+                mergeAttributes(groupsFull)
+        );
     }
 
     /** ***************************************************************
@@ -77,7 +52,7 @@ public class ClauseGroups {
         
         Multimap<String, String> groupsFull = HashMultimap.create();
         for (String clause : clauses) {
-            Matcher m = CLAUSE_SPLITTER.matcher(clause);
+            Matcher m = SubstitutionUtil.CLAUSE_SPLITTER.matcher(clause);
             if (m.matches()) {
                 String label = m.group(1);
                 if ("nn".equals(label)) {
@@ -118,7 +93,7 @@ public class ClauseGroups {
             SortedMap<Integer, String> attributesMerged = Maps.newTreeMap();
             Integer firstIndex = null;
             for (String attr : entry.getValue()) {
-                Matcher m = CLAUSE_PARAM.matcher(attr);
+                Matcher m = SubstitutionUtil.CLAUSE_PARAM.matcher(attr);
                 if (m.matches()) {
                     String value = m.group(1);
                     Integer idx = Integer.valueOf(m.group(2));
@@ -136,4 +111,5 @@ public class ClauseGroups {
 
         return groupsWithMergedAttributes;
     }
+
 }

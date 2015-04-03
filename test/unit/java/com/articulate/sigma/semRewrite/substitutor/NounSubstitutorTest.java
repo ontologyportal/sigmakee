@@ -1,5 +1,3 @@
-package com.articulate.sigma.semRewrite;
-
 /*
 Copyright 2014-2015 IPsoft
 
@@ -20,6 +18,7 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
+package com.articulate.sigma.semRewrite.substitutor;
 
 import com.google.common.collect.Lists;
 import junit.framework.TestCase;
@@ -27,7 +26,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-public class ClauseGroupsTest extends TestCase {
+public class NounSubstitutorTest extends TestCase {
 
     @Test
     public void testGetGrouped() {
@@ -42,7 +41,7 @@ public class ClauseGroupsTest extends TestCase {
                 , "det(aviator-18, an-16)"
                 , "amod(aviator-18, American-17)");
 
-        ClauseGroups cg = new ClauseGroups(clauses);
+        NounSubstitutor cg = new NounSubstitutor(clauses);
 
         assertEquals("AmeliaMaryEarhart-1", cg.getGrouped("Amelia-1"));
         assertEquals("AmeliaMaryEarhart-1", cg.getGrouped("Mary-2"));

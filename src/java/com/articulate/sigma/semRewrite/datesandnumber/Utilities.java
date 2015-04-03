@@ -24,17 +24,14 @@ MA  02111-1307 USA
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.semRewrite.ClauseGroups;
+import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -98,7 +95,7 @@ public class Utilities {
 	
 	/** ***************************************************************
      */
-	public void filterSumoTerms(ClauseGroups cg) {
+	public void filterSumoTerms(ClauseSubstitutor substitutor) {
 		
 		Set<String> hashsetList = new HashSet<String>(sumoTerms);
 		sumoTerms.clear();
@@ -116,18 +113,18 @@ public class Utilities {
 			}
 		}
 		sumoTerms.removeAll(removableSumoTerms);
-		if (cg != null) {
+		if (substitutor != null) {
 			for(int i = 0; i < sumoTerms.size(); ++i) {
 				System.out.println();
 				Matcher sumoMatcher = sumoTermPattern.matcher(sumoTerms.get(i));
 				if(sumoMatcher.find()) {
 					String group2 = sumoMatcher.group(2);
 					String group5 = sumoMatcher.group(5);
-					if(!cg.getGrouped(group2).equals(group2)) {
-						sumoTerms.set(i, sumoTerms.get(i).replace(group2, cg.getGrouped(group2)));
+					if(!substitutor.getGrouped(group2).equals(group2)) {
+						sumoTerms.set(i, sumoTerms.get(i).replace(group2, substitutor.getGrouped(group2)));
 					} 
-					else if (!cg.getGrouped(group5).equals(group5)) {
-						sumoTerms.set(i, sumoTerms.get(i).replace(group5, cg.getGrouped(group5)));
+					else if (!substitutor.getGrouped(group5).equals(group5)) {
+						sumoTerms.set(i, sumoTerms.get(i).replace(group5, substitutor.getGrouped(group5)));
 					}
 				}
 			}

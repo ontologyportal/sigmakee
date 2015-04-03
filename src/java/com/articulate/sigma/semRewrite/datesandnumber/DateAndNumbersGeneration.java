@@ -24,14 +24,13 @@ MA  02111-1307 USA
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.articulate.sigma.WSD;
 import com.articulate.sigma.WordNet;
-import com.articulate.sigma.semRewrite.ClauseGroups;
+import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
@@ -311,7 +310,7 @@ public class DateAndNumbersGeneration {
 		
 	/** ***************************************************************
 	 */
-	public List<String> generateSumoTerms(List<Tokens> tokensList, StanfordDateTimeExtractor stanfordParser, ClauseGroups cg) {
+	public List<String> generateSumoTerms(List<Tokens> tokensList, StanfordDateTimeExtractor stanfordParser, ClauseSubstitutor substitutor) {
 
 		DatesAndDuration datesandDurationHandler = new DatesAndDuration();
 		Utilities utilities = new Utilities();
@@ -350,7 +349,7 @@ public class DateAndNumbersGeneration {
 		datesandDurationHandler.generateSumoDateTerms(utilities, tempDateList);
 		datesandDurationHandler.handleDurations(utilities);
 		generateSumoTimeTerms(timesList,utilities);
-		utilities.filterSumoTerms(cg);
+		utilities.filterSumoTerms(substitutor);
 		return utilities.sumoTerms;
 	}
 }

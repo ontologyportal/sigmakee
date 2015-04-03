@@ -29,6 +29,7 @@ import com.articulate.sigma.nlp.*;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.articulate.sigma.semRewrite.datesandnumber.*;
+import com.articulate.sigma.semRewrite.substitutor.*;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -210,7 +211,7 @@ public class Interpreter {
                     id = WSD.findWordSenseInContext(pureWord, pure);
                 } else {
                     String pos = "";
-                    Matcher m = ClauseGroups.CLAUSE_PARAM.matcher(clauseKey);
+                    Matcher m = SubstitutionUtil.CLAUSE_PARAM.matcher(clauseKey);
                     if (m.matches()) {
                         Integer idx = Integer.valueOf(m.group(2));
                         pos = posMap.get(idx);
@@ -563,8 +564,11 @@ public class Interpreter {
         List<String> dependenciesList = toDependenciesList(document);
         results.addAll(dependenciesList);
 
-        ClauseGroups cg = new ClauseGroups(results);
-        groupClauses(results, cg);
+        ClauseSubstitutor substitutor = SubstitutorsUnion.of(
+                new IdiomSubstitutor(document.get(CoreAnnotations.TokensAnnotation.class)),
+                new NounSubstitutor(results)
+        );
+        SubstitutionUtil.groupClauses(substitutor, results);
 
         EntityTypeParser etp = new EntityTypeParser(document);
         List<String> wsd = findWSD(results, getPartOfSpeechList(document.get(CoreAnnotations.TokensAnnotation.class)), etp);
@@ -582,7 +586,7 @@ public class Interpreter {
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
-        List<String> measures = InterpretNumerics.getSumoTerms(input, cg);
+        List<String> measures = InterpretNumerics.getSumoTerms(input, substitutor);
         for (String m : measures) {
             lex = new Lexer(m);
             CNF cnfnew = CNF.parseSimple(lex);
@@ -715,14 +719,14 @@ public class Interpreter {
         List<String> lemmatizeResults = Lists.newArrayList();
 
         for (String r : results) {
-            Matcher m = ClauseGroups.GENERIC_CLAUSE_SPLITTER.matcher(r);
+            Matcher m = SubstitutionUtil.GENERIC_CLAUSE_SPLITTER.matcher(r);
             if (m.matches()) {
                 String predicate = m.group(1);
                 String arg1 = m.group(2);
                 String arg2 = m.group(3);
 
-                Matcher arg1Matcher = ClauseGroups.CLAUSE_PARAM.matcher(arg1);
-                Matcher arg2Matcher = ClauseGroups.CLAUSE_PARAM.matcher(arg2);
+                Matcher arg1Matcher = SubstitutionUtil.CLAUSE_PARAM.matcher(arg1);
+                Matcher arg2Matcher = SubstitutionUtil.CLAUSE_PARAM.matcher(arg2);
 
                 if (arg1Matcher.matches()) {
                     Integer id = Integer.parseInt(arg1Matcher.group(2));
@@ -771,40 +775,6 @@ public class Interpreter {
     private void printLabel(CoreLabel label) {
 
         System.out.println(label.get(CoreAnnotations.ValueAnnotation.class) + " " + label.get(CoreAnnotations.PartOfSpeechAnnotation.class));
-    }
-
-    /** *************************************************************
-     */
-    protected static void groupClauses(List<String> clauses, ClauseGroups cg) {
-
-        Iterator<String> clauseIterator = clauses.iterator();
-        List<String> modifiedClauses = Lists.newArrayList();
-        while(clauseIterator.hasNext()) {
-            String clause = clauseIterator.next();
-            Matcher m = ClauseGroups.CLAUSE_SPLITTER.matcher(clause);
-            if(m.matches()) {
-                String attr1 = m.group(2);
-                String attr2 = m.group(3);
-                String attr1Grouped = cg.getGrouped(attr1);
-                String attr2Grouped = cg.getGrouped(attr2);
-                if(!attr1.equals(attr1Grouped) || !attr2.equals(attr2Grouped)) {
-                    clauseIterator.remove();
-                    if (!attr1Grouped.equals(attr2Grouped)) {
-                        String label = m.group(1);
-                        modifiedClauses.add(label + "(" + attr1Grouped + "," + attr2Grouped + ")");
-                    }
-                }
-            }
-        }
-        clauses.addAll(modifiedClauses);
-    }
-    
-    /** *************************************************************
-     */
-    protected static void groupClauses(List<String> clauses) {
-
-        ClauseGroups cg = new ClauseGroups(clauses);
-        groupClauses(clauses, cg);
     }
 
     /** *************************************************************

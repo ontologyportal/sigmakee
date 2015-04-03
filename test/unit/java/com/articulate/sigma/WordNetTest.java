@@ -1,6 +1,9 @@
 package com.articulate.sigma;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
+
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,4 +40,20 @@ public class WordNetTest extends UnitTestBase {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void testIdiom() {
+
+        ArrayList<String> input = Lists.newArrayList("many", "raining", "cats", "and", "dogs", "and", "sheep");
+        ArrayList<String> synset = Lists.newArrayList();
+        int endIndex = WordNet.wn.collectMultiWord(input, 0, synset);
+
+        assertEquals(0, endIndex);
+        assertEquals(0, synset.size());
+
+        synset = Lists.newArrayList();
+        endIndex = WordNet.wn.collectMultiWord(input, 1, synset);
+
+        assertEquals(5, endIndex);
+        assertEquals(1, synset.size());
+    }
 }

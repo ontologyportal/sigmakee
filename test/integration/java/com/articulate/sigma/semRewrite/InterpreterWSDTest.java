@@ -22,7 +22,7 @@ package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
-import com.google.common.collect.ImmutableMap;
+import com.articulate.sigma.semRewrite.substitutor.SubstitutionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.junit.BeforeClass;
@@ -96,7 +96,7 @@ public class InterpreterWSDTest extends IntegrationTestBase {
 
     @Test
     public void findWSD_WithGroups() {
-        Interpreter.groupClauses(clauses);
+        SubstitutionUtil.groupNouns(clauses);
         List<String> wsds = Interpreter.findWSD(clauses, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
         String[] expected = {
                 //"names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")", // missed without real EntityParser information

@@ -23,6 +23,7 @@ package com.articulate.sigma.semRewrite;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.semRewrite.substitutor.SubstitutionUtil;
 import com.articulate.sigma.test.JsonReader;
 import com.google.common.collect.Maps;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -33,7 +34,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -76,8 +76,9 @@ public class InterpreterWSDBatchTest extends IntegrationTestBase {
         Annotation document = pipeline.annotate(input);
         List<String> results = toDependenciesList(document);
 
+        SubstitutionUtil.groupNouns(results);
+
         EntityTypeParser etp = new EntityTypeParser(document);
-        Interpreter.groupClauses(results);
         List<String> wsds = Interpreter.findWSD(results, Maps.newHashMap(), etp);
 
         return wsds;

@@ -26,23 +26,24 @@ import java.util.List;
 
 
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.semRewrite.ClauseGroups;
+import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
+import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
 
 public class InterpretNumerics {
 
     /** ***************************************************************
 	 * Returns a list of SU-KIF statements, each corresponding to a date/time/measure found in the input 
 	 * natural language string.
-     * @param cg 
 	 * @param input: The natural language string.
-	 * @return List of SU-KIF statements, each date/time/measures are obtained from parser.
+     * @param substitutor
+     * @return List of SU-KIF statements, each date/time/measures are obtained from parser.
 	 */
-	public static List<String> getSumoTerms(String input, ClauseGroups cg) {
+	public static List<String> getSumoTerms(String input, ClauseSubstitutor substitutor) {
 		
 		StanfordDateTimeExtractor sde = new StanfordDateTimeExtractor();
 		List<Tokens> tokensList = sde.populateParserInfo(input);
 		DateAndNumbersGeneration generator = new DateAndNumbersGeneration();
-		return generator.generateSumoTerms(tokensList, sde, cg);
+		return generator.generateSumoTerms(tokensList, sde, substitutor);
 	}
 	
 	/** ***************************************************************

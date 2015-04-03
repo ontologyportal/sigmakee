@@ -2,7 +2,6 @@ package com.articulate.sigma.semRewrite;
 
 import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
 import static org.junit.Assert.*;
-import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -11,6 +10,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
+import com.articulate.sigma.semRewrite.substitutor.SubstitutionUtil;
 import com.articulate.sigma.test.JsonReader;
 
 import org.json.simple.JSONObject;
@@ -66,18 +67,18 @@ public class DurationTest {
 	}
 	 /** ***************************************************************
      */
-	private ClauseGroups getNERGroupedClauses (String fInputString) {
+	private NounSubstitutor getNERGroupedClauses (String fInputString) {
 		Pipeline pipeline = new Pipeline();
         Annotation document = pipeline.annotate(fInputString);
 		List<String> results = Lists.newArrayList();
 		List<String> dependenciesList = toDependenciesList(document);
 		results.addAll(dependenciesList);
 
-		ClauseGroups cg = new ClauseGroups(results);
+		NounSubstitutor cg = new NounSubstitutor(results);
 		Iterator<String> clauseIterator = results.iterator();
         while(clauseIterator.hasNext()) {
             String clause = clauseIterator.next();
-            Matcher m = ClauseGroups.CLAUSE_SPLITTER.matcher(clause);
+            Matcher m = SubstitutionUtil.CLAUSE_SPLITTER.matcher(clause);
             if(m.matches()) {
                 String attr1 = m.group(2);
                 String attr2 = m.group(3);
