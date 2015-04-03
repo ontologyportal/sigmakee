@@ -1446,7 +1446,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
 
-        String expectedResult = "there exist a motion and an object such that the motion is an instance of body motion and the object is an instance of artifact and the object is a moves of the motion";
+        String expectedResult = "there exist a motion and an object such that the motion is an instance of body motion and the object is an instance of artifact and moves the motion and the object";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
@@ -1471,7 +1471,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
 
-        String expectedResult = "there doesn't exist a motion such that the motion is an instance of body motion and Thing1 is an instance of artifact and Thing1 is a moves of the motion";
+        String expectedResult = "there doesn't exist a motion such that the motion is an instance of body motion and Thing1 is an instance of artifact and moves the motion and Thing1";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
@@ -1496,7 +1496,7 @@ public class HtmlParaphraseTest extends UnitTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
 
-        String expectedResult = "there exist a motion and an object such that the motion is an instance of body motion and the object is an instance of artifact and the object is not a moves of the motion";
+        String expectedResult = "there exist a motion and an object such that the motion is an instance of body motion and the object is an instance of artifact and moves the motion and the object";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
