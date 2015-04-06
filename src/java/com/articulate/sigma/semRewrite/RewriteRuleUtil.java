@@ -5,9 +5,7 @@ import com.articulate.sigma.StringUtil;
 import com.google.common.base.Strings;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 import static com.articulate.sigma.semRewrite.Interpreter.canon;
 
@@ -197,7 +195,7 @@ public final class RewriteRuleUtil extends RuleSet {
             try {
                 System.out.print("\nEnter rule: ");
                 input = scanner.nextLine().trim();
-                if (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit")) {
+                if (!Strings.isNullOrEmpty(input) &&  !input.equals("exit") && !input.equals("quit")) {
                     if(input.equals("reload")){
                         rs=loadRuleSet();
                         SemRewriteRuleCheck.checkRuleSet(rs);

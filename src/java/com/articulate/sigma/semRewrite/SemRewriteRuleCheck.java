@@ -25,7 +25,78 @@ import java.util.*;
 
 public class SemRewriteRuleCheck {
 
-    public static boolean isIgnoreCNFOnRight = true;
+    private static boolean isIgnoreCNFOnRight = true;
+
+
+
+
+    /***********************************************************
+     * //TODO
+     */
+    public static void printRuleSetTree(ArrayList<Rule> rset,Map<Integer,HashSet<Integer>> links){
+
+        class RuleNode{
+            RuleNode p=null;
+            Integer r=null;
+            ArrayList<RuleNode> getSubsumedList;
+            ArrayList<Integer> childCNFList;
+            RuleNode(Integer r,RuleNode p){
+                this.r=r;
+                this.p=p;
+            }
+        }
+
+
+        ArrayList<RuleNode> rootNodes=new ArrayList<RuleNode>();
+        RuleNode[] visited=new RuleNode[rset.size()];
+        Arrays.fill(visited,null);
+        HashSet<Integer> children=null;
+        for(int i=rset.size()-1;i>=0;--i){
+            children=links.get(i);
+            RuleNode rn=visited[i];
+            if(rn==null){
+                rn=new RuleNode(i,null);
+                rootNodes.add(rn);
+                visited[i]=rn;
+            }
+            if(children==null)
+                continue;
+            for(Integer k:children){
+                RuleNode rnc=visited[k];
+                if(rnc==null) {
+                    rnc = new RuleNode(k, rn);
+                    visited[k] = rnc;
+                }else continue;
+                if(rn.getSubsumedList==null) rn.getSubsumedList=new ArrayList<RuleNode>();
+                rn.getSubsumedList.add(rnc);
+            }
+        }
+
+        for(RuleNode rn:rootNodes){
+            System.out.print("Root:");
+            Queue<RuleNode> q=new LinkedList<RuleNode>();
+            q.offer(rn);
+            RuleNode father=null;
+            while(!q.isEmpty()){
+                RuleNode e=q.poll();
+                if(e.r==null){
+                    System.out.print("=>");
+                    father=null;
+                    continue;
+                }
+                if(father!=e.p){
+                    System.out.print("||");
+                    father=e.p;
+                    q.offer(new RuleNode(null,null));
+                }
+                System.out.print(e.r+" ");
+                if(e.getSubsumedList!=null) q.addAll(e.getSubsumedList);
+            }
+            System.out.println();
+        }
+
+    }
+
 
     /***********************************************************
      * Check the whole Ruleset. Print all possible subsumptions.
