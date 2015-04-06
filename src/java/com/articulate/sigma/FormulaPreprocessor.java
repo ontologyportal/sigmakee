@@ -9,9 +9,9 @@ import java.util.regex.Pattern;
 public class FormulaPreprocessor {
 
     /** ***************************************************************
-     * For any given formula, stop generating new pred var
-     * instantiations and row var expansions if this threshold value
-     * has been exceeded.  The default value is 2000.
+     * For any given formula, stop generating new pred var instantiations
+     * and row var expansions if this threshold value has been exceeded.
+     * The default value is 2000.
      */
     private static final int AXIOM_EXPANSION_LIMIT = 2000;
 
@@ -21,8 +21,8 @@ public class FormulaPreprocessor {
      * A + is appended to the type if the parameter must be a class
      *
      * @return the type for each argument to the given predicate, where
-     * ArrayList element 0 is the result, if a function, 1 is the
-     * first argument, 2 is the second etc.
+     * ArrayList element 0 is the result, if a function, 1 is the first
+     * argument, 2 is the second etc.
      */
     private ArrayList<String> getTypeList(String pred, KB kb) {
 
@@ -31,19 +31,19 @@ public class FormulaPreprocessor {
 
     /** ***************************************************************
      * Find the argument type restriction for a given predicate and
-     * argument number that is inherited from one of its
-     * super-relations.  A "+" is appended to the type if the
-     * parameter must be a class, meaning that a domainSubclass is defined for
-     * this argument in one of the loaded .kif files.  Argument number 0 is used for the
-     * return type of a Function.  Asking for a non-existent arg
-     * will return null;
+     * argument number that is inherited from one of its super-relations.
+     * A "+" is appended to the type if the parameter must be a class,
+     * meaning that a domainSubclass is defined for this argument in one
+     * of the loaded .kif files.  Argument number 0 is used for the return
+     * type of a Function.  Asking for a non-existent arg will return null;
      */
     public static String findType(int numarg, String pred, KB kb) {
 
         ArrayList<String> sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
             if (!kb.isInstanceOf(pred, "VariableArityRelation"))
-                System.out.println("Error in FormulaPreprocessor.findType(): no type information for predicate " + pred);
+                System.out.println("Error in FormulaPreprocessor.findType(): " +
+                        "no type information for predicate " + pred);
             return null;
         }
         if (numarg >= sig.size())
@@ -112,7 +112,9 @@ public class FormulaPreprocessor {
      */
     public Formula addTypeRestrictions(Formula form, KB kb) {
 
-        HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);    // get variable types from domain definition
+        // get variable types from domain definitions
+        HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);
+        // get variable types which are explicitly defined in formula
         HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(form);
 
         // only keep variables which are not explicitly defined in formula
@@ -177,7 +179,11 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Recursively add sortals for existentially quantified variable in formula
+     * Recursively add sortals for existentially quantified variables
+     *
+     * @param kb The KB used to add type restrictions.
+     * @param f The formula in KIF syntax
+     * @param sb A StringBuilder used to store the new formula with sortals
      */
     private void addTypeRestrictionsRecurse(KB kb, Formula f, StringBuffer sb) {
 
@@ -262,9 +268,14 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Collect variables from strings. For example,
+     * Collect variables from strings.
+     *
+     * For example,
      * Input = (?X ?Y ?Z)
-     * Output = list [?X, ?Y, ?Z]
+     * Output = a list of ?X, ?Y and ?Z
+     *
+     * Input = ?X
+     * Output = a list of ?X
      */
     private ArrayList<String> collectVariables(String argstr) {
 
@@ -284,9 +295,16 @@ public class FormulaPreprocessor {
     }
 
     /** ************************************************************************
-     * Get the most specific type for variables. For example, types of "?Writing"
-     * = [Entity, Physical, Process, IntentionalProcess, ContentDevelopment, Writing]
-     * return the most specific type = Writing
+     * Get the most specific type for variables.
+     *
+     * @param kb The KB to be used for processing
+     * @param types a list of sumo types for a sumo term/variable
+     * @return the most specific sumo type for the term/variable
+     *
+     * For example
+     * types of ?Writing = [Entity, Physical, Process, IntentionalProcess,
+     *                      ContentDevelopment, Writing]
+     * return the most specific type Writing
      */
     protected String getMostRelevantType(KB kb, HashSet<String> types) {
 
@@ -332,8 +350,8 @@ public class FormulaPreprocessor {
     /*****************************************************************
      * Collect the types of any variables that are specifically defined
      * in the antecedent of a rule with an instance expression;
-     * Collect the super classes of any variables that are specifically defined
-     * in the antecedent of a rule with an subclass expression;
+     * Collect the super classes of any variables that are specifically
+     * defined in the antecedent of a rule with an subclass expression;
      */
     public HashMap<String, HashSet<String>> findExplicitTypesClassesInAntecedent(Formula form) {
 
@@ -347,7 +365,7 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Given a formula, return its antecedents
+     * Return a formula's antecedents
      */
     private static Formula findAntecedent(Formula f) {
 
@@ -366,9 +384,16 @@ public class FormulaPreprocessor {
     }
 
     /*****************************************************************
-     * Collect the types of any variables with an instance or subclass expression.
-     * TODO: This may ultimately require CNF conversion and then checking negative
-     * literals, but for now it's just a hack to grab preconditions.
+     * Collect variable names and their types from instance or subclass
+     * expressions. subclass restrictions are marked with a '+'.
+     *
+     * @param form The formula in KIF syntax
+     *
+     * @return A map of variables paired with a set of sumo types collected
+     * from instance and subclass expressions.
+     *
+     * TODO: This may ultimately require CNF conversion and then checking
+     * negative literals, but for now it's just a hack to grab preconditions.
      */
     public HashMap<String, HashSet<String>> findExplicitTypes(Formula form) {
 
@@ -381,17 +406,28 @@ public class FormulaPreprocessor {
     }
 
     /*****************************************************************
-     * This function is different from findExplicityTypes, in that,
-     * Collect types of any variables with an instance expression, and put them in varExplicitTypes;
-     * Collect classes of any variables with an subclass expression, and put them in varExplicitClasses;
+     * Collect variable names and their types from instance or subclass
+     * expressions.
+     *
+     * @param form The formula in KIF syntax
+     * @param varExplicitTypes A map of variables paired with sumo types
+     *                         collected from instance expressions
+     * @param varExplicitClasses A map of variables paired with sumo types
+     *                           collected from subclass expression
      */
     public void findExplicitTypesClasses(Formula form,
-           HashMap<String,HashSet<String>> varExplicitTypes, HashMap<String,HashSet<String>> varExplicitClasses) {
+           HashMap<String,HashSet<String>> varExplicitTypes,
+           HashMap<String,HashSet<String>> varExplicitClasses) {
 
         findExplicitTypesRecurse(form, false, varExplicitTypes, varExplicitClasses);
     }
 
-    public static void findExplicitTypesRecurse(Formula form, boolean isNegativeLiteral, HashMap<String,HashSet<String>> varExplicitTypes, HashMap<String, HashSet<String>> varExplicitClasses) {
+    /*****************************************************************
+     * Recursively collect a variable name and its types.
+     */
+    public static void findExplicitTypesRecurse(Formula form, boolean isNegativeLiteral,
+                 HashMap<String,HashSet<String>> varExplicitTypes,
+                 HashMap<String, HashSet<String>> varExplicitClasses) {
 
         if (form == null || StringUtil.emptyString(form.theFormula) || form.empty())
             return;
@@ -471,8 +507,8 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * utility method to merge two HashMaps of String
-     * keys and a values of an HashSet of Strings
+     * utility method to merge two HashMaps of String keys and a values
+     * of an HashSet of Strings
      */
     static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
                                                        HashMap<String, HashSet<String>> map2, KB kb) {
@@ -492,16 +528,20 @@ public class FormulaPreprocessor {
     }
 
     /*****************************************************************
-     * This method returns a HashMap that maps each String variable in this the names
-     * of types (classes) of which the variable must be an instance or the names
-     * of types of which the variable must be a subclass. Note that this does not capture explicit type
-     * assertions such as (=> (instance ?Foo Bar) ...) just the restrictions
-     * implicit from the arg types of relations.
-     * @param kb is the KB used to compute the sortal constraints for each
-     *            variable.
+     * This method returns a HashMap that maps each String variable in
+     * this the names of types (classes) of which the variable must be
+     * an instance or the names of types of which the variable must be
+     * a subclass. Note that this method does not capture explicit type
+     * from assertions such as (=> (instance ?Foo Bar) ...). This method
+     * just consider restrictions implicitly defined from the arg types
+     * of relations.
+     *
+     * @param kb The KB to be used to compute the sortal constraints
+     *           for each variable.
      * @return A HashMap of variable names and their types. Subclass
-     *         restrictions are marked with a '+', meaning that a domainSubclass is defined for this
-     *         argument in one of the loaded .kif files. Instance restrictions have no
+     *         restrictions are marked with a '+', meaning that a
+     *         domainSubclass is defined for this argument in one of
+     *         the loaded .kif files. Instance restrictions have no
      *         special mark.
      */
     public HashMap<String,HashSet<String>> computeVariableTypes(Formula form, KB kb) {
@@ -540,8 +580,8 @@ public class FormulaPreprocessor {
                         if (debug) System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
                         if (StringUtil.emptyString(cl)) {
                             if (!kb.kbCache.transInstOf(pred, "VariableArityRelation"))
-                                System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): no type information for arg " +
-                                        argnum + " of relation " + pred + " in formula: \n" + f);
+                                System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
+                                        "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
                         }
                         else
                             addToMap(result,arg,cl);
@@ -563,10 +603,10 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Pre-process a formula before sending it to the theorem prover. This includes
-     * ignoring meta-knowledge like documentation strings, translating
-     * mathematical operators, quoting higher-order formulas, expanding
-     * row variables and prepending the 'holds__' predicate.
+     * Pre-process a formula before sending it to the theorem prover.
+     * This includes ignoring meta-knowledge like documentation strings,
+     * translating mathematical operators, quoting higher-order formulas,
+     * expanding row variables and prepending the 'holds__' predicate.
      * @return an ArrayList of Formula(s)
      */
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
@@ -732,15 +772,8 @@ public class FormulaPreprocessor {
         boolean pass = false;
         // kb isn't used yet, because the checks below are purely
         // syntactic.  But it probably will be used in the future.
-        pass = !(// (equal ?X ?Y ?Z ...) - equal is strictly binary.
-                // No longer necessary?  NS: 2009-06-12
-                // this.theFormula.matches(".*\\(\\s*equal\\s+\\?*\\w+\\s+\\?*\\w+\\s+\\?*\\w+.*")
-
-                // The formula contains non-ASCII characters.
-                // was: this.theFormula.matches(".*[\\x7F-\\xFF].*")
-                // ||
+        pass = !(
                 StringUtil.containsNonAsciiChars(f.theFormula)
-
                         // (<relation> ?X ...) - no free variables in an
                         // atomic formula that doesn't contain a string
                         // unless the formula is a query.
@@ -776,7 +809,7 @@ public class FormulaPreprocessor {
      * the input List, variableReplacements, or could be empty.
      */
     private ArrayList<Formula> addInstancesOfSetOrClass(Formula form, KB kb,
-                                                        boolean isQuery, ArrayList<Formula> variableReplacements) {
+                               boolean isQuery, ArrayList<Formula> variableReplacements) {
 
         ArrayList<Formula> result = new ArrayList<Formula>();
         if ((variableReplacements != null) && !variableReplacements.isEmpty()) {
@@ -814,11 +847,7 @@ public class FormulaPreprocessor {
                                     ioF.read(ioStr);
                                     ioF.sourceFile = form.sourceFile;
                                     if (!kb.formulaMap.containsKey(ioStr)) {
-                                        //Map<String,Object> stc = kb.kbCache.getSortalTypeCache();
-                                        //if (stc.get(ioStr) == null) {
-                                        //stc.put(ioStr, ioStr);
                                         formulae.add(ioF);
-                                        //}
                                     }
                                 }
                             }
@@ -832,11 +861,10 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Pre-process a formula before sending it to the theorem
-     * prover. This includes ignoring meta-knowledge like
-     * documentation strings, translating mathematical operators,
-     * quoting higher-order formulas, expanding row variables and
-     * prepending the 'holds__' predicate.
+     * Pre-process a formula before sending it to the theorem prover.
+     * This includes ignoring meta-knowledge like documentation strings,
+     * translating mathematical operators, quoting higher-order formulas,
+     * expanding row variables and prepending the 'holds__' predicate.
      *
      * @param isQuery If true the Formula is a query and should be
      *                existentially quantified, else the Formula is a
@@ -849,7 +877,6 @@ public class FormulaPreprocessor {
      */
     public ArrayList<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
-        //    if (isQuery) System.out.println("INFO in FormulaPreprocessor.preProcess(): input: " + form.theFormula);
         ArrayList<Formula> results = new ArrayList<Formula>();
         if (!StringUtil.emptyString(form.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
