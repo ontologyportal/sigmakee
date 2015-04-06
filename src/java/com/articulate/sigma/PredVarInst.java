@@ -4,8 +4,6 @@ import java.util.*;
 
 public class PredVarInst {
     
-    //private static Formula _f;
-    
     // The implied arity of a predicate variable from its use in a Formula
     private static HashMap<String,Integer> predVarArity = new HashMap<String,Integer>();
     
@@ -13,161 +11,6 @@ public class PredVarInst {
     private static HashMap<String,HashSet<String>> candidatePredicates = new HashMap<String,HashSet<String>>();
     
     /** ***************************************************************
-     * Returns an ArrayList of the Formulae that result from replacing
-     * all arg0 predicate variables in the input Formula with
-     * predicate names.
-     *
-     * Note this routine seems to check for correct arity after
-     * substituting in a relation, but checking upfront would
-     * be more efficient.
-     *
-     * @param kb A KB that is used for processing the Formula.
-     *
-     * @return An ArrayList of Formulas, or an empty ArrayList if no
-     * instantiations can be generated.
-     
-     public static ArrayList<Formula> instantiatePredVars(Formula input, KB kb) {
-     
-    	_f = input;
-     ArrayList<Formula> ans = new ArrayList<Formula>();
-     if (_f.listP()) {
-     String arg0 = _f.getArgument(0);
-     // First we do some checks to see if it is worth processing the formula.
-     if (Formula.isLogicalOperator(arg0) && _f.theFormula.matches(".*\\(\\s*\\?\\w+.*")) {
-     // Get all pred vars, and then compute query lits for the pred vars, indexed by var.
-     HashMap<String,HashSet<String>> varsWithTypes = findPredVarTypes(kb);
-     //System.out.println("INFO in PredVarInst.instantiatePredVars(): " + varsWithTypes);
-     if (!varsWithTypes.containsKey("arg0"))
-     ans.add(_f); // The formula has no predicate variables in arg0 position, so just return it
-     else {
-     List indexedQueryLits = prepareIndexedQueryLiterals(kb, varsWithTypes);
-     List substForms = new ArrayList();
-     List varQueryTuples = null;
-     List substTuples = null;
-     List litsToRemove = null;
-     
-					// First, gather all substitutions.
-     Iterator it1 = indexedQueryLits.iterator();
-     while (it1.hasNext()) {
-     varQueryTuples = (List) it1.next();
-     substTuples = computeSubstitutionTuples(kb, varQueryTuples);
-     if (substTuples != null && !substTuples.isEmpty()) {
-     if (substForms.isEmpty())
-     substForms.add(substTuples);
-     else {
-     int stSize = substTuples.size();
-     int iSize = -1;
-     int sfSize = substForms.size();
-     int sfLast = (sfSize - 1);
-     for (int i = 0 ; i < sfSize ; i++) {
-     iSize = ((List) substForms.get(i)).size();
-     if (stSize < iSize) {
-     substForms.add(i, substTuples);
-     break;
-     }
-     if (i == sfLast)
-     substForms.add(substTuples);
-     }
-     }
-     }
-     }
-     
-     if (!substForms.isEmpty()) {
-     // Try to simplify the Formula.
-     Formula f = _f;
-     Iterator it2 = substForms.iterator();
-     while (it2.hasNext()) {
-     substTuples = (List) it2.next();
-     litsToRemove = (List) substTuples.get(0);
-     Iterator it3 = litsToRemove.iterator();
-     while (it3.hasNext()) {
-     List lit = (List) it3.next();
-     f = maybeRemoveMatchingLits(lit);
-     }
-     }
-     
-     // Now generate pred var instantiations from the possibly simplified formula.
-     List<String> templates = new ArrayList<String>();
-     templates.add(f.theFormula);
-     HashSet<String> accumulator = new HashSet<String>();
-     String template = null;
-     String var = null;
-     String term = null;
-     ArrayList quantVars = null;
-     int i = 0;
-     // Iterate over all var plus query lits forms, getting
-     // a list of substitution literals.
-     Iterator it4 = substForms.iterator();
-     while (it4.hasNext()) {
-     substTuples = (List) it4.next();
-     if ((substTuples instanceof List) && !substTuples.isEmpty()) {
-     // Iterate over all ground lits ...
-     // Remove litsToRemove, which we have already used above.
-     litsToRemove = (List) substTuples.remove(0);
-     
-     // Remove and hold the tuple that indicates the variable substitution pattern.
-     List varTuple = (List) substTuples.remove(0);
-     Iterator it5 = substTuples.iterator();
-     while (it5.hasNext()) {
-     List groundLit = (List) it5.next();
-     String groundTerm = (String) groundLit.get(1);
-     // Iterate over all formula templates, substituting terms from each
-     // ground lit for vars in the template.
-     Iterator it6 = templates.iterator();
-     Formula templateF = new Formula();
-     while (it6.hasNext()) {
-     template = (String) it6.next();
-     templateF.read(template);
-     quantVars = templateF.collectVariables().get(0);
-     for (i = 0; i < varTuple.size(); i++) {
-     var = (String) varTuple.get(i);
-     if (Formula.isVariable(var)) {
-     term = (String) groundLit.get(i);
-     // Don't replace variables that are explicitly quantified.
-     if (!quantVars.contains(var)) {
-     List patternStrings = Arrays.asList("(\\W*\\()(\\s*holds\\s+\\"
-     + var + ")(\\W+)",
-     // "(\\W*\\()(\\s*\\" + var + ")(\\W+)",
-     "(\\W*)(\\" + var + ")(\\W+)");
-     int pslen = patternStrings.size();
-     List patterns = new ArrayList();
-     for (int j = 0; j < pslen; j++)
-     patterns.add(Pattern.compile((String) (patternStrings.get(j))));
-     int plen = patterns.size();
-     Pattern p = null;
-     Matcher m = null;
-     for (int j = 0; j < plen; j++) {
-     p = (Pattern) patterns.get(j);
-     m = p.matcher(template);
-     template = m.replaceAll("$1" + term + "$3");
-     }
-     }
-     }
-     }
-     if (hasCorrectArity(new Formula(template), kb))
-     accumulator.add(template);
-     else {
-     // System.out.println("Formula rejected because of incorrect arity: " + template);
-     break;
-     }
-     }
-     }
-     templates.clear();
-     templates.addAll(accumulator);
-     accumulator.clear();
-     }
-     }
-     ans.addAll(KB.stringsToFormulas(templates));
-     }
-     //if (ans.isEmpty())
-					//	ans.add("reject");
-     }
-     }
-     }
-     return ans;
-     }
-     
-     /** ***************************************************************
      * There are two type conditions:
      * one type condition is extracted from domain expression;
      * second type condition is specifically define in the antecedent
@@ -209,50 +52,37 @@ public class PredVarInst {
     public static Set<Formula> instantiatePredVars(Formula input, KB kb) {
         
         Set<Formula> result = new HashSet<Formula>();
-        //System.out.println("INFO in PredVarInst.instantiatePredVars(): formula: " + input);
-        // If there are no predicate variables, return empty()
         HashSet<String> predVars = gatherPredVars(input);
         if (predVars == null )
             return null;
-        if (predVars.size() == 0)
+        if (predVars.size() == 0)   // Return empty if input does not have predicate variables
             return result;
+        // 1. get types for predicate variables from domain definitions
         HashMap<String,HashSet<String>> varTypes = findPredVarTypes(input,kb);
+        // 2. add explicitly defined types for predicate variables
         varTypes = addExplicitTypes(input,varTypes);
         Iterator<String> it = varTypes.keySet().iterator();
         while (it.hasNext()) {
             String var = it.next();
-            //System.out.println("INFO in PredVarInst.instantiatePredVars(): checking var: " + var);
-            //System.out.println("INFO in PredVarInst.instantiatePredVars(): var arity: " + predVarArity.get(var));
-            //System.out.println("INFO in PredVarInst.instantiatePredVars(): varTypes: " + varTypes.get(var));
             Iterator<String> it2 = kb.kbCache.relations.iterator();
-            // predVarArity should match arity of substituted relation
+            // 3.1 check: predVarArity should match arity of substituted relation
             while (it2.hasNext()) {
                 String rel = it2.next();
-                //System.out.println("INFO in PredVarInst.instantiatePredVars(): checking rel: " + rel);
-                //System.out.println("INFO in PredVarInst.instantiatePredVars(): with valence: " + kb.kbCache.valences.get(rel));
-                //System.out.println("INFO in PredVarInst.instantiatePredVars(): var arity: " + predVarArity.get(var));
                 if (kb.kbCache.valences.get(rel).equals(predVarArity.get(var))) {
-                    //System.out.println("INFO in PredVarInst.instantiatePredVars(): matching arity");
                     boolean ok = true;
                     Iterator<String> it3 = varTypes.get(var).iterator();
                     while (it3.hasNext()) {
                         String varType = it3.next();
-                        //System.out.println("INFO in PredVarInst.instantiatePredVars(): checking rel type: rel, varType: " +
-                        //		rel + ", " + varType);
+                        // 3.2 check: candidate relation should be the instance of predicate variables' types
                         if (!kb.isInstanceOf(rel, varType)) {
                             ok = false;
                             break;
                         }
                     }
-                    //System.out.println("INFO in PredVarInst.instantiatePredVars(): formula (2): " + input);
+                    // 4. If ok, instantiate the predicate variable using the candidate relation
                     if (ok == true) {
-                        //Pattern p = Pattern.compile("\\" + var + "([^a-zA-Z0-9])");
-                        //Matcher m = p.matcher(input.theFormula);
-                        //String fstr = m.replaceAll(rel + "$1");
                         Formula f = input.deepCopy();
                         f = f.replaceVar(var, rel);
-                        //System.out.println("INFO in PredVarInst.instantiatePredVars(): formula (3): " + f);
-                        //System.out.println("INFO in PredVarInst.instantiatePredVars(): ok to substitute: " + rel);
                         Formula f2 = input.deepCopy();
                         f2.theFormula = f.theFormula;
                         result.add(f);
@@ -260,8 +90,7 @@ public class PredVarInst {
                 }
             }
         }
-        // If there are predicate variables but cannot be initialized, return null
-        if (result.size() == 0) {
+        if (result.size() == 0) {   // Return null if input contains predicate variables but cannot be initialized
             String errStr = "No predicate instantiations for ";
             errStr += input.theFormula;
             input.errors.add(errStr);
@@ -269,35 +98,12 @@ public class PredVarInst {
         }
         return result;
     }
-    
+     
     /** ***************************************************************
-     * Returns the number of SUO-KIF variables (only ? variables, not
-     * @ROW variables) in the input query literal.
      *
-     * @param queryLiteral A List representing a Formula.
-     *
-     * @return An int.
-     
-     private static int getVarCount(List<String> queryLiteral) {
-     
-     int ans = 0;
-     if (queryLiteral instanceof List) {
-     String term = null;
-     Iterator<String> it = queryLiteral.iterator();
-     while (it.hasNext()) {
-     term = it.next();
-     if (term.startsWith("?"))
-     ans++;
-     }
-     }
-     return ans;
-     }
-     
-     /** ***************************************************************
      */
     private static String hasCorrectArityRecurse(Formula f, KB kb) {
         
-        //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() f: " + f);
         if (f == null || StringUtil.emptyString(f.theFormula) || f.empty() ||
             Formula.atom(f.theFormula) || f.isVariable())
             return null;
@@ -368,9 +174,9 @@ public class PredVarInst {
      * template for doing the variable substitutions.  All subsequent
      * elements are ground literals (ArrayLists).
      *
-     * @param kb A KB to query for answers.
+     * kb A KB to query for answers.
      *
-     * @param queryLits A List of query literals.  The first item in
+     * queryLits A List of query literals.  The first item in
      * the list will be a SUO-KIF variable (String), which indexes the
      * list.  Each subsequent item is a query literal (List).
      *
@@ -491,12 +297,12 @@ public class PredVarInst {
      * The subsequent objects in each element are query literals
      * (ArrayLists).
      *
-     * @param kb The KB to use for computing variable type signatures.
+     * kb The KB to use for computing variable type signatures.
      *
-     * @param varTypeMap A Map from variables to their types, as
+     * varTypeMap A Map from variables to their types, as
      * explained in the javadoc entry for gatherPredVars(kb)
      *
-     * @see Formula.gatherPredVars(KB kb)
+     * Formula.gatherPredVars(KB kb)
      *
      * @return An ArrayList, or null if the input formula contains no
      * predicate variables.
@@ -610,10 +416,7 @@ public class PredVarInst {
     }
     
     /** ***************************************************************
-     * This method collects and returns all predicate variables
-     *
-     * @param kb The KB to be used for computations involving
-     * assertions.
+     * Collect and return all predicate variables for the given formula
      */
     protected static HashSet<String> gatherPredVars(Formula f) {
         
@@ -631,7 +434,7 @@ public class PredVarInst {
      * Formula during predicate variable instantiation, and so only
      * attempts removals that are likely to be safe in that context.
      *
-     * @param litArr A List object representing a SUO-KIF atomic
+     * litArr A List object representing a SUO-KIF atomic
      * formula.
      *
      * @return A new Formula with at least some occurrences of litF
@@ -648,7 +451,7 @@ public class PredVarInst {
      * Formula during predicate variable instantiation, and so only
      * attempts removals that are likely to be safe in that context.
      *
-     * @param litF A SUO-KIF literal (atomic Formula).
+     * litF A SUO-KIF literal (atomic Formula).
      *
      * @return A new Formula with at least some occurrences of litF
      * removed, or the original Formula if no removals are possible.
@@ -743,7 +546,7 @@ public class PredVarInst {
      * as templates for retrieving predicates to be substituted for
      * var.
      *
-     * @param varWithTypes A List containing a variable followed,
+     * varWithTypes A List containing a variable followed,
      * optionally, by class names indicating the type of the variable.
      *
      * @return An ArrayList of literals (Lists) with var at the head.
@@ -972,9 +775,5 @@ public class PredVarInst {
          
          System.out.println(instantiatePredVars(f,kb));
          */
-    }
-
-    private void doNothing()    {
-
     }
 }
