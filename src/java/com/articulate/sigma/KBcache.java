@@ -40,13 +40,13 @@ public class KBcache {
     /** The String constant that is the suffix for files of cached assertions. */
     public static final String _cacheFileSuffix      = "_Cache.kif";
     
-    // all the relations in the kb 
+    /** all the relations in the kb **/
     public HashSet<String> relations = new HashSet<String>();
     
-    // all the transitive relations in the kb
+    /** all the transitive relations in the kb **/
     public HashSet<String> transRels = new HashSet<String>();
 
-    // all the transitive relations between instances in the kb
+    /** all the transitive relations between instances in the kb **/
     public HashSet<String> instTransRels = new HashSet<String>();
     
     /** All the cached "parent" relations of all transitive relations
@@ -64,9 +64,8 @@ public class KBcache {
     public HashMap<String,HashSet<String>> instances = 
             new HashMap<String,HashSet<String>>();
     
-    // A temporary list of instances built during creation of the
-    // @see children map, in order to efficiently create the
-    // @see instances map.
+    /** A temporary list of instances built during creation of the
+    children map, in order to efficiently create the instances map **/
     // TODO: make private
     public HashSet<String> insts = new HashSet<String>();
     
@@ -79,18 +78,18 @@ public class KBcache {
     public HashMap<String,HashMap<String,HashSet<String>>> children = 
             new HashMap<String,HashMap<String,HashSet<String>>>();
     
-    // Relation name keys and argument types with 0th arg always "".
-    // Variable arity relations may have a type for the last argument,
-    // which will be the type repeated for all extended arguments.
-    // Note that types can be functions, rather than just terms.
+    /** Relation name keys and argument types with 0th arg always "".
+     Variable arity relations may have a type for the last argument,
+     which will be the type repeated for all extended arguments.
+     Note that types can be functions, rather than just terms. **/
     public HashMap<String,ArrayList<String>> signatures =
             new HashMap<String,ArrayList<String>>();
     
-    // The number of arguments to each relation.  Variable arity is -1
+    /** The number of arguments to each relation.  Variable arity is -1 **/
     public HashMap<String,Integer> valences = new HashMap<String,Integer>();
 
-    // Disjoint relations which were explicitly defined in "partition", "disjoint",
-    // "disjointDecomposition" and "exhaustiveDecomposition" expressions
+    /** Disjoint relations which were explicitly defined in "partition", "disjoint",
+     "disjointDecomposition" and "exhaustiveDecomposition" expressions **/
     public HashMap<String, HashSet<String>> explicitDisjointRelations = new HashMap<>();
 
     /** ***************************************************************
@@ -126,7 +125,7 @@ public class KBcache {
         HashMap<String,HashSet<String>> childMap = children.get(rel);
         HashSet<String> childSet = (childMap != null) ? childMap.get(parent) : null;
         if (childSet == null) {
-        	System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
+        	if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
                 + rel + " " + parent + " " + child);
         	return false;
         }
@@ -204,7 +203,6 @@ public class KBcache {
         return false;
     }
 
-
     /** ***************************************************************
      * Record instances and their explicitly defined parent classes
      */
@@ -227,9 +225,9 @@ public class KBcache {
     }
 
     /** ***************************************************************
-     * build a disjoint-relations-map which were explicitly defined in the
-     * "partition", "disjoint", "disjointDecomposition" and
-     * "exhaustiveDecomposition" expressions;
+     * build a disjoint-relations-map which were explicitly defined in
+     * "partition", "exhaustiveDecomposition", "disjointDecomposition"
+     * and "disjoint" expressions;
      */
     public void buildDisjointRelationsMap() {
         ArrayList<Formula> explicitDisjontFormulae = new ArrayList<Formula>();
@@ -289,8 +287,7 @@ public class KBcache {
 
     /** ***************************************************************
      * check if rel1 and rel2 are disjoint
-     * return true if rel1 and rel2 are disjoint;
-     * return false if rel1 and rel2 are not disjoint;
+     * return true if rel1 and rel2 are disjoint; otherwise return false.
      */
     public static boolean checkDisjoint(KB kb, String rel1, String rel2) {
 
@@ -313,8 +310,8 @@ public class KBcache {
     }
 
     /** ***************************************************************
-     * return true if rel1 and rel2 are explicitly defined as disjoint relation;
-     * otherwise return false;
+     * return true if rel1 and rel2 are explicitly defined as disjoint
+     * relations; otherwise return false.
      */
     public boolean isExplicitDisjoint(HashMap<String, HashSet<String>> explicitDisjointRelations,
                                       String rel1, String rel2) {
@@ -386,7 +383,8 @@ public class KBcache {
         buildDirectInstances();
     }
     
-    /** ***************************************************************    
+    /** ***************************************************************
+     * return parent classes for the given cl from subclass expressions.
      */
     public HashSet<String> getParentClasses(String cl) {
         
@@ -397,7 +395,8 @@ public class KBcache {
             return null;
     }
     
-    /** ***************************************************************    
+    /** ***************************************************************
+     * return child classes for the given cl from subclass expressions.
      */
     public HashSet<String> getChildClasses(String cl) {
         
@@ -408,7 +407,12 @@ public class KBcache {
             return null;
     }
 
-    /** ***************************************************************    
+    /** ***************************************************************
+     * return classes for the given instance cl.
+     *
+     * For example, if we know (instance UnitedStates Nation), then
+     * getParentClassesOfInstances(UnitedStates) returns Nation and its
+     * super claasses from subclass expressions.
      */
     public HashSet<String> getParentClassesOfInstance(String cl) {
         
@@ -422,8 +426,8 @@ public class KBcache {
     /** ***************************************************************
      * Get all instances for the given input class
      *
-     * @param cl a class
-     * @return instances for cl
+     * For example, given the class "Nation", getInstancesForType(Nation)
+     * returns all instances, like "America", "Austria", "Albania", etc.
      */
     public HashSet<String> getInstancesForType(String cl) {
         HashSet<String> instancesForType = new HashSet<>();
@@ -552,6 +556,7 @@ public class KBcache {
     }
     
     /** ***************************************************************
+     * Build "parent" relations based on breadth first search algorithm.
      */
     private void breadthFirstBuildParents(String root, String rel) {
         
@@ -601,6 +606,7 @@ public class KBcache {
     }
     
     /** ***************************************************************
+     * Build "children" relations based on breadth first search algorithm.
      */
     private void breadthFirstBuildChildren(String root, String rel) {
         
@@ -650,8 +656,6 @@ public class KBcache {
      * For each transitive relation, find its transitive closure.  If
      * rel is transitive, and (rel A B) and (rel B C) then the entry for
      * rel is a HashMap where the key A has value ArrayList of {B,C}.
-     *     public HashMap<String,HashMap<String,ArrayList<String>>> parents = 
-            new HashMap<String,HashMap<String,ArrayList<String>>>();
      */
     public void buildParents() {
     
@@ -673,8 +677,6 @@ public class KBcache {
      * For each transitive relation, find its transitive closure.  If
      * rel is transitive, and (rel A B) and (rel B C) then the entry for
      * rel is a HashMap where the key A has value ArrayList of {B,C}.
-     *     public HashMap<String,HashMap<String,ArrayList<String>>> children = 
-            new HashMap<String,HashMap<String,ArrayList<String>>>();
      */
     public void buildChildren() {
     
