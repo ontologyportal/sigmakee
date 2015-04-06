@@ -188,7 +188,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     if (tstpFormat == null) 
         tstpFormat = "";
 
-    String resultEProver = null;        
+    ArrayList<String> resultEProver = null;        
     String resultSoTPTP = null;           
     String resultLeo = null;    
 

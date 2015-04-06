@@ -417,7 +417,56 @@ public class TPTP3ProofProcessor {
 		findTypesForSkolemTerms(tpp, kb);
 		return tpp;
 	}
+    /** ***************************************************************
+     */
+    public static TPTP3ProofProcessor parseProofOutput (ArrayList<String> lines, KB kb) {
 
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        try {
+            boolean inProof = false;
+            boolean finishAnswersTuple = false;
+            String line;
+            Iterator<String> it = lines.iterator();
+            while (it.hasNext()) {
+                line = it.next();
+                if (line.indexOf("SZS output start") != -1) {
+                    inProof = true;
+                    line = it.next();
+                }
+                if (line.indexOf("SZS status") != -1) {
+                    tpp.status = line.substring(15);
+                }
+                if (line.indexOf("SZS answers") != -1) {
+                    if (!finishAnswersTuple) {
+                        tpp.processAnswers(line.substring(20).trim());
+                        finishAnswersTuple = true;
+                    }
+                }
+                if (inProof) {
+                    if (line.indexOf("SZS output end") != -1) {
+                        inProof = false;
+                    }
+                    else {
+                        ProofStep ps = tpp.parseProofStep(line);
+                        if (ps != null) {
+                            tpp.proof.add(ps);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        // remove unnecessary steps, eg: conjectures, duplicate trues
+        tpp.proof = ProofStep.removeUnnecessary(tpp.proof);
+        tpp.proof = ProofStep.removeDuplicates(tpp.proof);
+
+        // find types for skolem terms
+        findTypesForSkolemTerms(tpp, kb);
+        return tpp;
+    }
+    
 	/** ***************************************************************
 	 * Take E's infernece results, extract answers from the_list_of_definite_answer_tuples
 	 * For example,
