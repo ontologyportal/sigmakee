@@ -20,19 +20,24 @@ public class EProver {
     private ProcessBuilder _builder;
     private Process _eprover;
     private BufferedReader _reader; 
-    private BufferedWriter _writer; 
-    private BufferedReader _error;
+    private BufferedWriter _writer;
     private static String __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
     private static int axiomIndex = 0;
 
     /** *************************************************************
+     * Create a new batch specification file.
+     *
+     * e_ltb_runner processes a batch specification file; it contains
+     * a specification of the background theory, some options, and a
+     * number of individual job requests. It is used with the option
+     * --interactive.
+     *
+     * @param inputFilename contains TPTP assertions
      *  */
     public static void writeBatchConfig(String inputFilename) {
 
-    	//String inputFilename = "/home/apease/Sigma/KBs/SUMO.tptp.withSortal.plainFormulae";
-        try {
+    	try {
             System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
-            //File initFile = new File(KBmanager.getMgr().getPref("kbDir"), "EBatchConfig.txt");
             File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
             PrintWriter pw = new PrintWriter(initFile);
     
@@ -57,9 +62,12 @@ public class EProver {
     }
 
     /** *************************************************************
-     * Add a new tptp file to EBatching.txt
-     * TODO: This function might not be necessary if we find a way to 
-     * directly add assertion into opened inference engine (e_ltb_runner)
+     * Update batch specification file.
+     *
+     * "inputFilename" is added into existing batch specification file
+     * for inference.
+     *
+     * @param inputFilename contains TPTP assertions
      *  */
     public static void addBatchConfig(String inputFilename) {
 
@@ -67,7 +75,7 @@ public class EProver {
         HashSet<String> ebatchfiles = new HashSet<>();
         ebatchfiles.add(inputFilename);
 
-        // Collect existed tptp files
+        // Collect existed TPTP files
         try {
             FileInputStream fis = new FileInputStream(initFile);
             InputStreamReader isr = new InputStreamReader(fis);
@@ -92,7 +100,7 @@ public class EProver {
             System.out.println(e.getMessage());
         }
 
-        // write existed tptp files and new tptpfiles (inputFilename) into EBatching.txt
+        // write existed TPTP files and new tptp files (inputFilename) into EBatching.txt
         try {
             PrintWriter pw = new PrintWriter(initFile);
             pw.println("% SZS start BatchConfiguration");
@@ -118,25 +126,17 @@ public class EProver {
     }
     
     /** *************************************************************
-     */
-    private EProver () {
-    }
-
-    /** *************************************************************
-     * Creates a running instance of EProver.  To obtain a new
-     * instance of EProver, use the static factory method
-     * EProver.getNewInstance().
+     * Create a new batch specification file, and create a new running
+     * instance of EProver.
      *
      * @param executable A File object denoting the platform-specific
      * EProver executable.
-     *
      * @param kbFile A File object denoting the initial knowledge base
      * to be loaded by the EProver executable.
-     *
      * @throws IOException should not normally be thrown unless either
      *         EProver executable or database file name are incorrect
      *         
-     * e_ltb_runner --interactive LTBSampleInput-AP.txt
+     * e_ltb_runner -- interactive LTBSampleInput-AP.txt
      */
     public EProver (String executable, String kbFile) throws IOException {
 
@@ -144,7 +144,6 @@ public class EProver {
         System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
 
-        // executable = /PATH_TO_E_LTB_RUNNER;
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
@@ -157,13 +156,11 @@ public class EProver {
     }
 
     /** *************************************************************
-     * Create a running instance of EProver.
-     * Difference from EProver(String executable, String kbFile): move 
-     * writeBatchConfig out of EProver(String executable)
-     * TODO: This function might not be necessary if we find a way to 
-     * directly add assertion into opened inference engine (e_ltb_runner)
+     * Create a running instance of EProver based on existing batch
+     * specification file.
      *
-     * @param executable
+     * @param executable A File object denoting the platform-specific
+     * EProver executable.
      * @throws IOException
      */
     public EProver (String executable) throws IOException {
@@ -180,18 +177,16 @@ public class EProver {
     }
     
     /** *************************************************************
-     * Add an assertion.
+     * Add an assertion for inference.
      *
      * @param formula asserted formula in the KIF syntax
      * @return answer to the assertion (in the XML syntax)
      * @throws IOException should not normally be thrown
      */
     public String assertFormula(String formula) {
-        //public String assertFormula(String formula) throws IOException {
 
         String result = "";
         try {
-            // String assertion = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,false);
             String assertion = "";
             _writer.write(assertion);
             _writer.flush();
@@ -215,11 +210,20 @@ public class EProver {
     }
 
     /** *************************************************************
-     * Add the axiom's tptp formula to tptp file "userAssertionFilename"
+     * Add an assertion for inference.
      *
-     * TODO: This function might not be necessary if we find a way to directly add assertion into opened inference engine (e_ltb_runner)
+     * @param userAssertionTPTP asserted formula in the TPTP syntax
+     * @param kb Knowledge base
+     * @param eprover an instance of EProver
+     * @param parsedFormulas a lit of parsed formulas in KIF syntax
+     * @param tptp convert formula to TPTP if tptp = true
+     * @return true if all assertions are added for inference
+     *
+     * TODO: This function might not be necessary if we find a way to
+     * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public boolean assertFormula(String userAssertionTPTP, KB kb, EProver eprover, ArrayList<Formula> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, KB kb, EProver eprover,
+                                 ArrayList<Formula> parsedFormulas, boolean tptp) {
 
         boolean allAdded = (eprover != null);
         PrintWriter pw = null;
@@ -274,8 +278,7 @@ public class EProver {
     }
 
     /** *************************************************************
-     * Terminate this instance of EProver. 
-     * <font color='red'><b>Warning:</b></font>After calling this function
+     * Terminate this instance of EProver. After calling this function
      * no further assertions or queries can be done.
      *
      * @throws IOException should not normally be thrown
@@ -356,7 +359,7 @@ public class EProver {
         eprover.setCommandLineOptions("--cpu-limit=600 --soft-cpu-limit=500 -xAuto -tAuto -l 4 --tptp3-in");
         KBmanager.getMgr().setPref("eprover","/home/apease/Programs/E/Prover/eprover");
         System.out.print(eprover.submitQuery("(holds instance ?X Relation)",5,2));
-*/
+        */
         try {
             System.out.println("INFO in EProver.main()");
             //KBmanager.getMgr().initializeOnce();
@@ -377,8 +380,6 @@ public class EProver {
         // System.out.print(eprover.assertFormula("(holds instance Adam Human)"));
         // System.out.print(eprover.submitQuery("(human ?X)", 1, 2));
         // System.out.print(eprover.submitQuery("(holds instance ?X Human)", 5, 2));
-        
     }
-    
 }
 
