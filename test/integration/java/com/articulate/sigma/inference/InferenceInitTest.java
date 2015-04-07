@@ -36,6 +36,6 @@ public class InferenceInitTest extends IntegrationTestBase {
         IntegrationTestBase.resetAllForInference();
 
         String actualAnswer = interpreter.interpret("What does Mike hit?").get(0);
-        assertEquals("An instance of Wagon.", actualAnswer);
+        assertEquals("I don't know", actualAnswer);
     }
 }
