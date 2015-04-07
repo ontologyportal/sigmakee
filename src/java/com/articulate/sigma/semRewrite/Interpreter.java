@@ -68,11 +68,14 @@ public class Interpreter {
     public static boolean inference = true;
     public static boolean question = false;
     public static boolean addUnprocessed = false;
+    //if true, show POS tags during parse
     public static boolean verboseParse = true;
     //tfidf flags
     public static boolean autoir = true;
     public static boolean ir = false;
+    //log response from prover before sending to answer generator
     public static boolean verboseAnswer = false;
+    //show the proof in console
     public static boolean verboseProof = false;
 
 
@@ -113,7 +116,6 @@ public class Interpreter {
     /** *************************************************************
      */
     protected Document getUserInputs() {
-
         return userInputs;
     }
 
@@ -758,6 +760,11 @@ public class Interpreter {
     }
 
     /** *************************************************************
+     * @param tokens - List of CoreLabel tokens representing a sentence/input
+     * @return Map of token position -> POS
+     * ex.  1 -> NN
+     *      2 -> VBG
+     *      3 -> NN
      */
     private Map<Integer, String> getPartOfSpeechList(List<CoreLabel> tokens) {
         Map<Integer, String> posMap = Maps.newHashMap();
