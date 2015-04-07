@@ -51,76 +51,9 @@ public final class RewriteRuleUtil extends RuleSet {
         rs.rules.set(index, newr);
     }
 
-    //TODO
-    public void updateLHS(int index, LHS lhs) {
-
-    }
-
-
-    /*************************************************************
-     * //TODO
-     */
-    public static CNF applyBindings(CNF cnf, HashMap<String, String> bindings) {
-
-        CNF cnfnew = new CNF();
-        for (int i = 0; i < cnf.clauses.size(); i++) {
-            Clause d = cnf.clauses.get(i);
-            Clause dnew = new Clause();
-            for (int j = 0; j < d.disjuncts.size(); j++) {
-                Literal c = d.disjuncts.get(j);
-                Literal c2 = c.applyBindings(bindings);
-                dnew.disjuncts.add(c2);
-                //System.out.println("INFO in CNF.applyBindings(): 2 " + dnew);
-            }
-            //System.out.println("INFO in CNF.applyBindings(): 3 " + dnew);
-            cnfnew.clauses.add(dnew);
-        }
-        return cnfnew;
-    }
-
-
-    /*************************************************************
-     * //TODO
-     */
-    public static Literal applyBindings(Literal origin, HashMap<String, String> bindings) {
-
-        //System.out.println("INFO in Clause.applyBindings(): this: " + this);
-        //System.out.println("INFO in Clause.applyBindings(): bindings: " + bindings);
-        Literal c = new Literal();
-        c.pred = origin.pred;
-        c.negated = origin.negated;
-        c.preserve = origin.preserve;
-        if (StringUtil.emptyString(origin.arg1) || StringUtil.emptyString(origin.arg2)) {
-            System.out.println("Error in Clause.applyBindings(): Empty argument(s): " + origin);
-            c.arg1 = origin.arg1;
-            c.arg2 = origin.arg2;
-            return c;
-        }
-        if (origin.arg1.startsWith("?")) {
-            if (bindings.containsKey(origin.arg1))
-                c.arg1 = bindings.get(origin.arg1);
-            else
-                c.arg1 = origin.arg1;
-        }
-        else
-            c.arg1 = origin.arg1;
-        if (origin.arg2.startsWith("?")) {
-            if (bindings.containsKey(origin.arg2))
-                c.arg2 = bindings.get(origin.arg2);
-            else
-                c.arg2 = origin.arg2;
-        }
-        else
-            c.arg2 = origin.arg2;
-        //System.out.println("INFO in Clause.applyBindings(): returning this: " + c);
-        return c;
-    }
-
-
-
     /*************************************************************
      */
-    public static void updateCNFTest(RuleSet rs) {
+    private static void updateCNFTest(RuleSet rs) {
 
         rs = new RuleSet().parse(new Lexer("prep_about(?X,?Y) ==> {refers(?X,?Y)}.\n" + "prep_about(?H,?Y) ==> {refers(?H,?Y)}.\n"));
         rs = Clausifier.clausify(rs);
@@ -153,7 +86,7 @@ public final class RewriteRuleUtil extends RuleSet {
     /*************************************************************
      * load RuleSet from "SemRewrite.txt"
      */
-    private static RuleSet loadRuleSet() {
+    public static RuleSet loadRuleSet() {
 
         RuleSet rs;
         KBmanager kb = KBmanager.getMgr();
