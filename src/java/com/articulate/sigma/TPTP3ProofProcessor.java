@@ -36,6 +36,7 @@ public class TPTP3ProofProcessor {
 	int idCounter = 0;
 
 	/** ***************************************************************
+	 * Convert bindings in list to string
 	 */
 	public String toString () {
 
@@ -49,10 +50,10 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Remove brackets if it contains
 	 */
 	public static String trimBrackets (String line) {
 
-		// System.out.println("Info in trimBrackets: " + line);
 		if (line.startsWith("[") && line.endsWith("]"))
 			return line.substring(1,line.length()-1);
 		else {
@@ -62,10 +63,10 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Remove parentheses if it contains
 	 */
 	public static String trimParens (String line) {
 
-		// line does not always starts with "("; eg: ?[X1]:(s__instance(X1,s__SetOrClass)=>s__subclass(X1,s__Object))
 		if (line.indexOf("(")!=-1 && line.indexOf(")")!=-1) {
 			return line.substring(line.indexOf("(")+1, line.lastIndexOf(")"));
 		}
@@ -78,8 +79,6 @@ public class TPTP3ProofProcessor {
 	/** ***************************************************************
 	 */
 	public ArrayList<Integer> parseInferenceObject(String supportId) {
-
-		//System.out.println("Info in TPTP3ProofProcessor.parseInferenceObject(): " + supportId);
 
 		ArrayList<Integer> prems = new ArrayList<Integer>();
 		int firstParen = supportId.indexOf("(");
@@ -111,6 +110,7 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Parse support / proof statements in E's response
 	 */
 	public ArrayList<Integer> parseSupports(String supportId) {
 
@@ -149,8 +149,6 @@ public class TPTP3ProofProcessor {
 		else {
 			Integer stepnum = idTable.get(supportId);
 			if (stepnum == null) {
-	//			System.out.println("Error in TPTP3ProofProcessor.parseSupports() no id: " + stepnum +
-	//					" for premises at step " + supportId);
 				return prems;
 			}
 			else {
@@ -206,8 +204,8 @@ public class TPTP3ProofProcessor {
 
 		String stmnt = trimParens(rest.substring(0,statementEnd+1).trim());
 		// System.out.println("stmnt    : " + stmnt);
-		//line = line.replaceAll("\\$answer\\(","answer(");
-		//System.out.println("after remove $answer: " + line);
+		// line = line.replaceAll("\\$answer\\(","answer(");
+		// System.out.println("after remove $answer: " + line);
 		StringReader reader = new StringReader(line);
 		// kif = TPTP2SUMO.convert(reader, false);
 		try {
@@ -236,10 +234,10 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Return bindings from E's answer tuples
 	 */
 	public void processAnswers (String line) {
 
-		//System.out.println("Info in TPTP3ProofProcessor.processAnswers(): " + line);
 		String trimmed = trimBrackets(line);
 		if (trimmed == null) {
 			System.out.println("Error in TPTP3ProofProcessor.processAnswers() bad format: " + line);
@@ -261,13 +259,19 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 * If the binding from E is skolem term, we find the most specific type for the binding;
-	 * For example,
-	 * binding = esk3_0
-	 * set binding = "An instance of Human" (Human is the most specific type for esk3_0 in the given proof)
+	 * Return the most specific type for skolem variable.
 	 *
-	 * binding = esk3_1
-	 * set binding = "An instance of Human, Agent" (If multiple types are found for esk3_1)
+	 * @param tpp The structure learned from E's response
+	 * @param kb The knowledge base used to find skolem term's types
+	 *
+	 * For example,
+	 * original binding = esk3_0
+	 * set binding = "An instance of Human" (Human is the most specific
+	 *              type for esk3_0 in the given proof)
+	 *
+	 * original binding = esk3_1
+	 * set binding = "An instance of Human, Agent" (If multiple types
+	 *              are found for esk3_1)
 	 */
 	public static void findTypesForSkolemTerms(TPTP3ProofProcessor tpp, KB kb) {
 
@@ -326,8 +330,10 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 * remove skolem symbol with arity n
-	 * Example Input1: esk2_1(s__Arc13_1)
-	 * Expected Output1: s__Arc13_1
+	 *
+	 * For example,
+	 * Input: esk2_1(s__Arc13_1)
+	 * Output: s__Arc13_1
 	 */
 	private String removeEsk(String line) {
 
@@ -341,6 +347,7 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Print out E's bindings
 	 */
 	public void printAnswers () {
 
@@ -350,27 +357,7 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 */
-	public static void testParseProofStep () {
-
-		String ps1 = "fof(c_0_5, axiom, (s__subclass(s__Artifact,s__Object)), c_0_3).";
-		String ps2 = "fof(c_0_2, negated_conjecture,(~(?[X1]:(s__subclass(X1,s__Object)&~$answer(esk1_1(X1)))))," +
-				"inference(assume_negation,[status(cth)],[inference(add_answer_literal,[status(thm)],[c_0_0, theory(answers)])])).";
-		String ps3 = "cnf(c_0_14,negated_conjecture,($false), " +
-				"inference(eval_answer_literal,[status(thm)], [inference(spm,[status(thm)],[c_0_12, c_0_13, theory(equality)]), theory(answers)]), ['proof']).";
-		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-		tpp.idTable.put("c_0_0", new Integer(0));
-		tpp.idTable.put("c_0_3", new Integer(1));
-		tpp.idTable.put("c_0_12", new Integer(2));
-		tpp.idTable.put("c_0_13", new Integer(3));
-		System.out.println(tpp.parseProofStep(ps1));
-		System.out.println();
-		System.out.println(tpp.parseProofStep(ps1));
-		System.out.println();
-		System.out.println(tpp.parseProofStep(ps3));
-	}
-
-	/** ***************************************************************
+	 * Compute bindings and proof from E's response
 	 */
 	public static TPTP3ProofProcessor parseProofOutput (LineNumberReader lnr, KB kb) {
 
@@ -417,7 +404,9 @@ public class TPTP3ProofProcessor {
 		findTypesForSkolemTerms(tpp, kb);
 		return tpp;
 	}
+
     /** ***************************************************************
+	 * Compute binding and proof from E's response
      */
     public static TPTP3ProofProcessor parseProofOutput (ArrayList<String> lines, KB kb) {
 
@@ -468,15 +457,16 @@ public class TPTP3ProofProcessor {
     }
     
 	/** ***************************************************************
-	 * Take E's infernece results, extract answers from the_list_of_definite_answer_tuples
+	 * Return a list of answers if E finds bindings for wh- queries.
+	 * Return "Proof Found" if E finds contradiction for boolean queries.
+	 *
 	 * For example,
 	 * tuple_list = [[esk3_1(s__Org1_1)]|_]
 	 * Output = [Org1_1]
 	 *
 	 * tuple_list = [[esk3_0]|_]
-	 * Output = [An instance of Human] (Human is the most specific type for esk3_0 in the given proof)
-	 *
-	 * For boolean query, return "Proof Found" if E finds contradiction
+	 * Output = [An instance of Human] (Human is the most specific type
+	 * for esk3_0 in the given proof)
 	 */
 	public static ArrayList<String> parseAnswerTuples(String st, KB kb, FormulaPreprocessor fp) {
 
@@ -543,6 +533,27 @@ public class TPTP3ProofProcessor {
 		catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+	}
+
+	/** ***************************************************************
+	 */
+	public static void testParseProofStep () {
+
+		String ps1 = "fof(c_0_5, axiom, (s__subclass(s__Artifact,s__Object)), c_0_3).";
+		String ps2 = "fof(c_0_2, negated_conjecture,(~(?[X1]:(s__subclass(X1,s__Object)&~$answer(esk1_1(X1)))))," +
+				"inference(assume_negation,[status(cth)],[inference(add_answer_literal,[status(thm)],[c_0_0, theory(answers)])])).";
+		String ps3 = "cnf(c_0_14,negated_conjecture,($false), " +
+				"inference(eval_answer_literal,[status(thm)], [inference(spm,[status(thm)],[c_0_12, c_0_13, theory(equality)]), theory(answers)]), ['proof']).";
+		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+		tpp.idTable.put("c_0_0", new Integer(0));
+		tpp.idTable.put("c_0_3", new Integer(1));
+		tpp.idTable.put("c_0_12", new Integer(2));
+		tpp.idTable.put("c_0_13", new Integer(3));
+		System.out.println(tpp.parseProofStep(ps1));
+		System.out.println();
+		System.out.println(tpp.parseProofStep(ps1));
+		System.out.println();
+		System.out.println(tpp.parseProofStep(ps3));
 	}
 
 	/** ***************************************************************
