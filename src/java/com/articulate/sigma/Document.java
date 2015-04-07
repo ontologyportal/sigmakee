@@ -47,16 +47,26 @@ public class Document {
         return newSentences;
     }
 
+    /** *************************************************************
+     * @return the number of lines of dialog in the Document
+     */
     public int size() {
+
         return documentContent.size();
     }
 
+    /** *************************************************************
+     */
     public boolean contains(String s) {
+
         return documentContent.contains(s);
     }
 
+    /** *************************************************************
+     */
     @Override
     public String toString() {
+
         return documentContent.toString();
     }
 }

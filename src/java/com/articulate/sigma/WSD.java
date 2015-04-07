@@ -111,7 +111,16 @@ public class WSD {
             return "";
     }
 
+    /**
+     * Return the best guess at the synset for the given word in the
+     * context of the sentence with the given POS.
+     * @param word - word to disambiguate
+     * @param words - words in context
+     * @param pos - part of speech of @word
+     * @return the 9-digit synset but only if there's a reasonable amount of data.
+     */
     public static String findWordSendInContextWithPos(String word, List<String> words, int pos) {
+
         int bestScore = -1;
         String bestSynset = "";
         String newWord = "";

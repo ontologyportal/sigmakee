@@ -19,8 +19,11 @@ import static org.junit.Assert.assertThat;
  */
 public class UnificationTest extends IntegrationTestBase {
 
+    /** *************************************************************
+     */
     @Test
     public void testUnifyWhatDoesMaryDo() {
+
         Interpreter interp = new Interpreter();
         interp.initialize();
 
@@ -41,8 +44,11 @@ public class UnificationTest extends IntegrationTestBase {
         assertThat(results, hasItems(expected));
     }
 
+    /** *************************************************************
+     */
     @Test
     public void testUnifyWhatDoesMaryKick() {
+
         Interpreter interp = new Interpreter();
         interp.initialize();
 
@@ -66,12 +72,13 @@ public class UnificationTest extends IntegrationTestBase {
         assertThat(results, hasItems(expected));
     }
 
-    /**
+    /** *************************************************************
      * We have a special rule which takes effect whenever input contains "sumo(DiseaseOrSyndrome, ?X)"
      */
     @Ignore
     @Test
     public void testUnifyWasDiseaseOrSyndromeAmerican() {
+
         Interpreter interp = new Interpreter();
         interp.initialize();
 
