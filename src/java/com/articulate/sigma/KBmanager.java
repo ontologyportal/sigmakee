@@ -291,7 +291,7 @@ public class KBmanager {
             kb.kbCache.writeCacheFile();                
         kb.checkArity();
         // load inference engine only when "TPTP" is turned on
-        if (KBmanager.getMgr().getPref("TPTP").equals("Yes"))
+        if (KBmanager.getMgr().getPref("TPTP").equals("yes"))
             kb.loadEProver();
         return true;
     }
