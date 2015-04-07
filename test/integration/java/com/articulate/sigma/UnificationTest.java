@@ -3,15 +3,12 @@ package com.articulate.sigma;
 import com.articulate.sigma.semRewrite.CNF;
 import com.articulate.sigma.semRewrite.Interpreter;
 import com.articulate.sigma.semRewrite.Lexer;
-import org.hamcrest.CoreMatchers;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.hasItems;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -58,6 +55,7 @@ public class UnificationTest extends IntegrationTestBase {
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         inputs.add(cnfInput);
 
+        // Mary kicks a cart.
         String[] expected = {
                 "(attribute Mary-1 Female)",
                 "(instance cart-4 Wagon)",
@@ -73,27 +71,51 @@ public class UnificationTest extends IntegrationTestBase {
     }
 
     /** *************************************************************
-     * We have a special rule which takes effect whenever input contains "sumo(DiseaseOrSyndrome, ?X)"
      */
-    @Ignore
     @Test
-    public void testUnifyWasDiseaseOrSyndromeAmerican() {
-
+    public void testUnifyWasAmeliaMaryEarhartAFemale() {
         Interpreter interp = new Interpreter();
         interp.initialize();
 
-        String input = "root(ROOT-0,American-3), cop(American-3,be-1), nsubj(American-3,Amelia-2), sumo(Entity,be-1), sumo(UnitedStates,American-3), sumo(DiseaseOrSyndrome,Amelia-2), tense(PAST,be-1), number(SINGULAR,Amelia-2), number(SINGULAR,American-3)";
+        String input = "root(ROOT-0,female-6), cop(female-6,be-1), det(female-6,a-5), nsubj(female-6,AmeliaMaryEarhart-2), attribute(AmeliaMaryEarhart-2,Female), sumo(Female,female-6), sumo(Entity,be-1), names(AmeliaMaryEarhart-2,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-2), tense(PAST,be-1), number(SINGULAR,Amelia-2), number(SINGULAR,Mary-3), number(SINGULAR,Earhart-4), number(SINGULAR,female-6)";
         Lexer lex = new Lexer(input);
         CNF cnfInput = CNF.parseSimple(lex);
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         inputs.add(cnfInput);
 
-        String expected = "(and\n" +
-                "    (instance Amelia-2 Human)\n" +
-                "    (attribute Amelia-2 Female)\n" +
-                "    (names Amelia-2 \"Amelia Mary Earhart\"))";
+        // Was Amelia Mary Earhart a female?
+        String[] expected = {
+                "(attribute AmeliaMaryEarhart-2 Female)",
+                "(names AmeliaMaryEarhart-2 \"Amelia Mary Earhart\")",
+                "(instance AmeliaMaryEarhart-2 Human)"
+        };
 
         List<String> results = interp.interpretCNF(inputs);
-        assertEquals(expected.replaceAll(" +", " "), results.get(0).replaceAll(" +", " "));
+        assertThat(results, hasItems(expected));
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testWhereDidAmeliaMaryEarhartLive() {
+
+        Interpreter interp = new Interpreter();
+        interp.initialize();
+
+        String input = "root(ROOT-0, live-6), advmod(live-6, where-1), aux(live-6, do-2), nsubj(live-6, AmeliaMaryEarhart-3), attribute(AmeliaMaryEarhart-3, Female), sumo(IntentionalProcess, do-2), sumo(Living, live-6), names(AmeliaMaryEarhart-3, \"Amelia Mary Earhart\"), sumo(Human, AmeliaMaryEarhart-3), number(SINGULAR, Amelia-3), number(SINGULAR, Mary-4), number(SINGULAR, Earhart-5)";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+        ArrayList<CNF> inputs = new ArrayList<CNF>();
+        inputs.add(cnfInput);
+
+        // Where did Amelia Mary Earhart live?
+        String[] expected = {
+                "(attribute AmeliaMaryEarhart-3 Female)",
+                "(inhabits AmeliaMaryEarhart-3 ?Y)",
+                "(names AmeliaMaryEarhart-3 \"Amelia Mary Earhart\")"
+        };
+
+        List<String> results = interp.interpretCNF(inputs);
+        assertThat(results, hasItems(expected));
     }
 }
