@@ -2190,29 +2190,14 @@ public class KB {
         String toRemove = null;
         for (String name : constituents) {
             if (name.endsWith(_userAssertionsString))    {
-                // Remove the assertions in the files.
-                File userAssertionsFile = new File(name);
-                if (userAssertionsFile.exists()) {
-                    userAssertionsFile.delete();
-                    userAssertionsFile.createNewFile();
-                    userAssertionsFile.deleteOnExit();
-                }
-
-                String tptpFileName = name.replace(".kif", ".tptp");
-                userAssertionsFile = new File(tptpFileName);
-                if (userAssertionsFile.exists()) {
-                    userAssertionsFile.delete();
-                    userAssertionsFile.createNewFile();
-                    userAssertionsFile.deleteOnExit();
-                }
-
                 toRemove = name;
+                break;
             }
         }
-        // Remove the string from the map.
-        if(toRemove != null)
+        // Remove the string from the list.
+        if(toRemove != null) {
             constituents.remove(toRemove);
-
+        }
     }
 
     /** ***************************************************************

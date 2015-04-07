@@ -66,5 +66,21 @@ public class IntegrationTestBase extends SigmaTestBase {
     public static void resetAllForInference() throws IOException {
         kb = new KB(kbBackup);
         kb.deleteUserAssertions();
+
+        // Remove the assertions in the files.
+        File userAssertionsFile = new File(KB_PATH, "SUMO" + kb._userAssertionsString);
+        if (userAssertionsFile.exists()) {
+            userAssertionsFile.delete();
+            userAssertionsFile.createNewFile();
+            userAssertionsFile.deleteOnExit();
+        }
+
+        String tptpFileName = userAssertionsFile.getAbsolutePath().replace(".kif", ".tptp");
+        userAssertionsFile = new File(tptpFileName);
+        if (userAssertionsFile.exists()) {
+            userAssertionsFile.delete();
+            userAssertionsFile.createNewFile();
+            userAssertionsFile.deleteOnExit();
+        }
     }
 }
