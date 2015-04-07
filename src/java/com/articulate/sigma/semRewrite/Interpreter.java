@@ -509,7 +509,7 @@ public class Interpreter {
         if (!ENDING_IN_PUNC_PATTERN.matcher(input).find()) {
             input = input + ".";
         }
-        System.out.println("INFO in Interpreter.interpretSingle(): " + input);
+        System.out.println("INFO in Interpreter.processInput(): " + input);
         List<String> substitutedInputs = userInputs.addUtterance(input);
         if (!input.equals(StringUtils.join(substitutedInputs, " "))) {
             System.out.println("INFO input substituted to: " + substitutedInputs);

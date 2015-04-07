@@ -2,13 +2,13 @@ package com.articulate.sigma.inference;
 
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.semRewrite.Interpreter;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 @Ignore
 public class DemoScript20150401Test extends IntegrationTestBase {
@@ -16,10 +16,12 @@ public class DemoScript20150401Test extends IntegrationTestBase {
     private static Interpreter interpreter;
 
     @BeforeClass
-    public static void initInterpreter()   {
+    public static void initInterpreter() throws IOException {
         interpreter = new Interpreter();
-        interpreter.inference = true;
+        Interpreter.inference = true;
         interpreter.initialize();
+
+        IntegrationTestBase.resetAllForInference();
     }
 
     @Test

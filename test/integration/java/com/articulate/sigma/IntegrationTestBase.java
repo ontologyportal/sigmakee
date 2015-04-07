@@ -3,6 +3,7 @@ package com.articulate.sigma;
 import org.junit.BeforeClass;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -13,6 +14,8 @@ import java.net.URISyntaxException;
 public class IntegrationTestBase extends SigmaTestBase {
     //private static final String CONFIG_FILE_PATH = "resources/config_all.xml";
     private static final Class CLASS = IntegrationTestBase.class;
+
+    protected static KB kbBackup;
 
     /**
      * File object pointing to this test's resources directory.
@@ -37,12 +40,14 @@ public class IntegrationTestBase extends SigmaTestBase {
 //    }
 
     @BeforeClass
-    public static void setup()  {
+    public static void setup() throws IOException {
         long startTime = System.currentTimeMillis();
 
         //SigmaTestBase.doSetUp(xmlReader);
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB("SUMO");
+
+        kbBackup = new KB(kb);
 
         checkConfiguration();
 
@@ -54,4 +59,12 @@ public class IntegrationTestBase extends SigmaTestBase {
         }
     }
 
+    /****************************************************************
+     * Undo all parts of the state that have anything to do with user assertions made during inference.
+     * @throws IOException
+     */
+    public static void resetAllForInference() throws IOException {
+        kb = new KB(kbBackup);
+        kb.deleteUserAssertions();
+    }
 }

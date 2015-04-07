@@ -1,12 +1,11 @@
 package com.articulate.sigma.inference;
 
 import com.articulate.sigma.IntegrationTestBase;
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.semRewrite.Interpreter;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -19,21 +18,20 @@ public class QAInferenceTest extends IntegrationTestBase {
     private static Interpreter interpreter;
 
     @Before
-    public void initInterpreter()   {
+    public void init() throws IOException {
         interpreter = new Interpreter();
-        interpreter.inference = true;
+        Interpreter.inference = true;
         interpreter.initialize();
+
+        IntegrationTestBase.resetAllForInference();
     }
 
     @Test
-    public void test0() {
-        initInterpreter();
+    public void test0() throws IOException {
         String assertion = "Amelia flies a plane.";
 
-        interpreter.question = false;
         interpreter.interpret(assertion);
 
-        interpreter.question = true;
         String actualAnswer = null;
 
         String query = "What does Amelia fly?";
@@ -53,40 +51,24 @@ public class QAInferenceTest extends IntegrationTestBase {
     }
 
     @Test
-    public void test1() {
-        initInterpreter();
-        String assertion = "Amelia (July 24, 1897 – July 2, 1937) was an American aviator.";
-        String query = "Where does Amelia live?";
+    public void test1() throws IOException {
 
         kb.tell("(=>\n" +
                 "  (citizen ?X ?Y)\n" +
                 "  (inhabits ?X ?Y))");
 
-        interpreter.question = false;
-        interpreter.interpret(assertion);
+        interpreter.interpret("Amelia (July 24, 1897 – July 2, 1937) was an American aviator.");
 
-        interpreter.question = true;
-        String actualAnswer = null;
-
-        actualAnswer = interpreter.interpret(query).get(0);
-        System.out.println("actualAnswer = " + actualAnswer);
+        String actualAnswer = interpreter.interpret("Where does Amelia live?").get(0);
         assertEquals("UnitedStates.", actualAnswer);
     }
 
     @Test
-    public void test2() {
-        initInterpreter();
-        String assertion = "John kicks a cart.";
-        String query = "Who hits the cart?";
+    public void test2() throws IOException {
 
-        interpreter.question = false;
-        interpreter.interpret(assertion);
+        interpreter.interpret("John kicks a cart.");
 
-        interpreter.question = true;
-        String actualAnswer = null;
-
-        actualAnswer = interpreter.interpret(query).get(0);
-        System.out.println("actualAnswer = " + actualAnswer);
+        String actualAnswer = interpreter.interpret("Who hits the cart?").get(0);
         assertEquals("I don't know", actualAnswer);
     }
 }

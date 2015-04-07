@@ -57,6 +57,7 @@ MA  02111-1307 USA
 */
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.*;
@@ -159,11 +160,78 @@ public class KB {
     }
     
     public KB(String n, String dir, boolean visibility) {
-    	
+
         this(n, dir);
         isVisible = visibility;        
     }
-    
+
+    /** *************************************************************
+     * Perform a deep copy of the kb input
+     * @param kbIn
+     * @throws IOException
+     */
+    public KB(KB kbIn) throws IOException {
+        this.isVisible = kbIn.isVisible;
+
+        if (kbIn.eprover != null) {
+            this.eprover = kbIn.eprover;
+        }
+
+        this.name = kbIn.name;
+
+        if(kbIn.constituents != null)   {
+            this.constituents = Lists.newArrayList(kbIn.constituents);
+        }
+
+        this.language = kbIn.language;
+
+        this.kbDir = kbIn.kbDir;
+
+        if (kbIn.terms != null)   {
+            this.terms = Collections.synchronizedSortedSet(new TreeSet<String>(kbIn.terms));
+        }
+
+        if (kbIn.formulaMap != null)   {
+            for (Map.Entry<String, Formula> pair : kbIn.formulaMap.entrySet())    {
+                String key = pair.getKey();
+                Formula newFormula = new Formula(pair.getValue());
+                this.formulaMap.put(key, newFormula);
+            }
+        }
+
+        if (kbIn.formulas != null)   {
+            //this.formulas = Maps.newHashMap(kbIn.formulas);
+            for (Map.Entry<String, ArrayList<String>> pair : kbIn.formulas.entrySet()) {
+                String key = pair.getKey();
+                ArrayList<String> newList = Lists.newArrayList(pair.getValue());
+                this.formulas.put(key, newList);
+            }
+        }
+
+        if (kbIn.formatMap != null)   {
+            this.formatMap = Maps.newHashMap(kbIn.formatMap);
+        }
+
+        if (kbIn.termFormatMap != null)   {
+            this.termFormatMap = Maps.newHashMap(kbIn.termFormatMap);
+        }
+
+        if(kbIn.errors != null)   {
+            this.errors = Sets.newTreeSet(kbIn.errors);
+        }
+
+        this.modifiedContents = kbIn.modifiedContents;
+
+        this.kbCache = new KBcache(this);
+
+        // Must be done after kb manager set.
+        if (kbIn.celt != null)   {
+            this.celt = new CELT();
+        }
+
+
+    }
+
     public boolean isVisible() {
         return isVisible;
     }
@@ -184,7 +252,7 @@ public class KB {
             }                       
         }
         catch (IOException ioe) {
-        	System.out.println("Error in KB(): " + ioe.getMessage());
+            System.out.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
     }
@@ -335,7 +403,7 @@ public class KB {
         ArrayList<String> toRemove = new ArrayList<String>();
         System.out.print("INFO in KB.checkArity(): Performing Arity Check");
         if (formulaMap != null && formulaMap.size() > 0) {
-        	int counter = 0;
+            int counter = 0;
             Iterator<String> formulas = formulaMap.keySet().iterator();
             while (formulas.hasNext()) {
                 Formula f = (Formula) formulaMap.get(formulas.next());
@@ -909,12 +977,12 @@ public class KB {
         ArrayList<Formula> result = new ArrayList<Formula>();
         if (strings == null) return result;
         for (int i = 0; i < strings.size(); i++) {
-        	String s = strings.get(i);
-        	Formula f = formulaMap.get(s);
-        	if (f != null)
-        		result.add(f);
-        	else
-        		System.out.println("Error in KB.stringsToFormulas(): null formula for key: " + s);
+            String s = strings.get(i);
+            Formula f = formulaMap.get(s);
+            if (f != null)
+                result.add(f);
+            else
+                System.out.println("Error in KB.stringsToFormulas(): null formula for key: " + s);
         }
         return result;
     }
@@ -1236,7 +1304,7 @@ public class KB {
             accumulator.clear();
             for (String term : working)
                 accumulator.addAll(getTermsViaPredicateSubsumption(relation,
-                		idxArgnum,term,targetArgnum,useInverses));
+                        idxArgnum,term,targetArgnum,useInverses));
         }
         ans.addAll(reduced);
         return ans;
@@ -1433,7 +1501,7 @@ public class KB {
                     Formula parsedF = it.next();   
                     String term = PredVarInst.hasCorrectArity(parsedF,this);
                     if (!StringUtil.emptyString(term)) {
-                    	result = result + "Formula in " + parsedF.sourceFile + 
+                        result = result + "Formula in " + parsedF.sourceFile +
                                 " rejected due to arity error of predicate " + term +
                                 " in formula: \n" + parsedF.theFormula;
                     }                       
@@ -1495,21 +1563,21 @@ public class KB {
      */
     public ArrayList<String> ask(String suoKifFormula, int timeout, int maxAnswers) {
 
-    	String result = "";
-    	// Start by assuming that the ask is futile.
-    	result = ("<queryResponse>" + System.getProperty("line.separator")
-    			+ "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
-    			+ "  <summary proofs=\"0\"/>" + System.getProperty("line.separator")
-    			+ "</queryResponse>" + System.getProperty("line.separator"));
-    	if (StringUtil.isNonEmptyString(suoKifFormula)) {
-    		Formula query = new Formula();
-    		query.read(suoKifFormula);
-    		FormulaPreprocessor fp = new FormulaPreprocessor();
-    		ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
+        String result = "";
+        // Start by assuming that the ask is futile.
+        result = ("<queryResponse>" + System.getProperty("line.separator")
+                + "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
+                + "  <summary proofs=\"0\"/>" + System.getProperty("line.separator")
+                + "</queryResponse>" + System.getProperty("line.separator"));
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
 
-    		if (!processedStmts.isEmpty() && this.eprover != null) {
-    			String strQuery = processedStmts.get(0).theFormula;                
-    			result = this.eprover.submitQuery(strQuery,this);
+            if (!processedStmts.isEmpty() && this.eprover != null) {
+                String strQuery = processedStmts.get(0).theFormula;
+                result = this.eprover.submitQuery(strQuery,this);
                 if (result==null || result.isEmpty())
                     System.out.println("No response from EProver!");
                 else
@@ -1517,9 +1585,9 @@ public class KB {
                 //System.out.println("Results returned from E = \n" + EResult);
                 ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(result, this, fp);
                 return answers;
-    		}
-    	}
-    	return null;
+            }
+        }
+        return null;
     }
 
     /** *************************************************************
@@ -1710,7 +1778,7 @@ public class KB {
                 }
             }
             catch (IOException ex){
-            	System.out.println("Error in KB.askLEO(): " + ex.getMessage());
+                System.out.println("Error in KB.askLEO(): " + ex.getMessage());
                 ex.printStackTrace();
             }
             List<Formula> selectedFormulas = new ArrayList();
@@ -1750,7 +1818,7 @@ public class KB {
             }
         }
         catch (Exception ex) {
-        	System.out.println("Error in KB.askLEO(): " + ex.getMessage());
+            System.out.println("Error in KB.askLEO(): " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -1831,7 +1899,7 @@ public class KB {
      *  An accessor providing a Formula
      */
     public Formula getFormulaByKey(String key) {
-    	
+
         Formula f = null;
         ArrayList<String> al = formulas.get(key);
         if ((al != null) && !al.isEmpty())
@@ -2013,7 +2081,7 @@ public class KB {
         if (!loadFormatMapsAttempted.contains(lang)) {
             ArrayList<Formula> col = askWithRestriction(0,"format",1,lang);
             if ((col == null) || col.isEmpty()) 
-            	System.out.println("Error in KB.loadFormatMaps(): No relation format file loaded for language " + lang);                
+                System.out.println("Error in KB.loadFormatMaps(): No relation format file loaded for language " + lang);
             else {
                 HashMap<String,String> langFormatMap = formatMap.get(lang);
                 Iterator<Formula> ite = col.iterator();
@@ -2027,7 +2095,7 @@ public class KB {
             }
             col = askWithRestriction(0,"termFormat",1,lang);
             if ((col == null) || col.isEmpty()) 
-            	System.out.println("Error in KB.loadFormatMaps(): No term format file loaded for language: " + lang);                
+                System.out.println("Error in KB.loadFormatMaps(): No term format file loaded for language: " + lang);
             else {
                 HashMap<String,String> langTermFormatMap = termFormatMap.get(lang);
                 Iterator<Formula> ite = col.iterator();
@@ -2116,9 +2184,41 @@ public class KB {
     }
 
     /** ***************************************************************
-     * Deletes the user assertions file, and then reloads the KB.
+     * Deletes user assertions, both in the files and in the constituents list.
      */
-    public void deleteUserAssertions() {
+    public void deleteUserAssertions() throws IOException {
+        String toRemove = null;
+        for (String name : constituents) {
+            if (name.endsWith(_userAssertionsString))    {
+                // Remove the assertions in the files.
+                File userAssertionsFile = new File(name);
+                if (userAssertionsFile.exists()) {
+                    userAssertionsFile.delete();
+                    userAssertionsFile.createNewFile();
+                    userAssertionsFile.deleteOnExit();
+                }
+
+                String tptpFileName = name.replace(".kif", ".tptp");
+                userAssertionsFile = new File(tptpFileName);
+                if (userAssertionsFile.exists()) {
+                    userAssertionsFile.delete();
+                    userAssertionsFile.createNewFile();
+                    userAssertionsFile.deleteOnExit();
+                }
+
+                toRemove = name;
+            }
+        }
+        // Remove the string from the map.
+        if(toRemove != null)
+            constituents.remove(toRemove);
+
+    }
+
+    /** ***************************************************************
+     * Deletes the user assertions key in the constituents map, and then reloads the KBs.
+     */
+    public void deleteUserAssertionsAndReload() {
 
         String cname = null;
         for (int i = 0 ; i < constituents.size() ; i++) {
@@ -2130,11 +2230,10 @@ public class KB {
                     reload();
                 }
                 catch (IOException ioe) {
-                    System.out.println("Error in KB.deleteUserAssertions(): writing configuration: " + ioe.getMessage());
+                    System.out.println("Error in KB.deleteUserAssertionsAndReload(): writing configuration: " + ioe.getMessage());
                 }
             }
         }
-        return;
     }
 
     /** *************************************************************
@@ -2150,19 +2249,19 @@ public class KB {
     public void addConstituent(String filename) {
     //, boolean buildCachesP, boolean loadEProverP, boolean performArity) {
 
-    	String canonicalPath = null;
-    	KIF file = new KIF();
-    	try {
-	        if (filename.endsWith(".owl") || filename.endsWith(".OWL") ||
-	            filename.endsWith(".rdf") || filename.endsWith(".RDF")) {
-	            OWLtranslator.read(filename);
-	            filename = filename + ".kif";
-	        }
-	        File constituent = new File(filename);
-	        
-	        canonicalPath = constituent.getCanonicalPath();
-	        if (constituents.contains(canonicalPath))
-	            errors.add("Error. " + canonicalPath + " already loaded.");
+        String canonicalPath = null;
+        KIF file = new KIF();
+        try {
+            if (filename.endsWith(".owl") || filename.endsWith(".OWL") ||
+                filename.endsWith(".rdf") || filename.endsWith(".RDF")) {
+                OWLtranslator.read(filename);
+                filename = filename + ".kif";
+            }
+            File constituent = new File(filename);
+
+            canonicalPath = constituent.getCanonicalPath();
+            if (constituents.contains(canonicalPath))
+                errors.add("Error. " + canonicalPath + " already loaded.");
             file.readFile(canonicalPath);
             errors.addAll(file.warningSet);
         }
@@ -2185,18 +2284,18 @@ public class KB {
             
          // temporary debug test to find nulls
             for (int i = 0; i < newlist.size(); i++) {
-            	String form = newlist.get(i);
-            	if (StringUtil.emptyString(form))
-            		System.out.println("Error in KB.addConstituent() 1: formula is null ");
+                String form = newlist.get(i);
+                if (StringUtil.emptyString(form))
+                    System.out.println("Error in KB.addConstituent() 1: formula is null ");
             }
             ArrayList<String> list = formulas.get(key);   
             
             if (list != null) {
                 // temporary debug test to find nulls
                 for (int i = 0; i < list.size(); i++) {
-                	String form = list.get(i);
-                	if (StringUtil.emptyString(form))
-                		System.out.println("Error in KB.addConstituent() 2: formula is null ");
+                    String form = list.get(i);
+                    if (StringUtil.emptyString(form))
+                        System.out.println("Error in KB.addConstituent() 2: formula is null ");
                 }
                 newlist.addAll(list);
             }                 
@@ -2299,8 +2398,8 @@ public class KB {
             }
         }
         catch (java.io.IOException e) {
-        	System.out.println("Error in KB.writeFile(): Error writing file " + fname);
-        	e.printStackTrace();
+            System.out.println("Error in KB.writeFile(): Error writing file " + fname);
+            e.printStackTrace();
         }
         finally {
             if (pr != null) { pr.close(); }
@@ -2516,10 +2615,10 @@ public class KB {
                 Iterator<String> it = ai.iterator();
                 int valence = 0;
                 while (it.hasNext()) {
-                	String inst = (String) it.next();
+                    String inst = (String) it.next();
                     valence = kbCache.valences.get(inst);
                     if (valence > 0) {
-                    	String fStr = ("(valence " + inst + " " + valence + ")");
+                        String fStr = ("(valence " + inst + " " + valence + ")");
                         Formula f = new Formula();
                         f.read(fStr);
                         ans.add(f);
@@ -2562,7 +2661,7 @@ public class KB {
      * if no answers are retrieved.
      */
     public ArrayList<Formula> askWithLiteral(Formula queryLit) {
-    	
+
         List<String> input = queryLit.literalToArrayList();
         return askWithLiteral(input);
     }
@@ -2711,7 +2810,7 @@ public class KB {
      * the term "Process", if present in the knowledge base.
      */
     public String formatDocumentation(String href, String documentation, String language) {
-    	
+
         String formatted = documentation;
         if (StringUtil.isNonEmptyString(formatted)) {
             boolean isStaticFile = false;
@@ -2774,7 +2873,7 @@ public class KB {
         try {
             String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
             if (StringUtil.isNonEmptyString(inferenceEngine)) {
-            	File executable = new File(inferenceEngine);
+                File executable = new File(inferenceEngine);
                 if (executable.exists()) {
                     File dir = executable.getParentFile();
                     File file = new File(dir, (this.name + "-v.kif"));
@@ -2788,19 +2887,19 @@ public class KB {
                     }
                 }
                 else
-                	System.out.println("Error in KB.writeInferenceEngineFormulas(): no executable " + inferenceEngine);
+                    System.out.println("Error in KB.writeInferenceEngineFormulas(): no executable " + inferenceEngine);
             }
         }
         catch (IOException ioe) {
-        	System.out.println("Error in KB.writeInferenceEngineFormulas(): writing file: " + filename);
-        	System.out.println(ioe.getMessage());
+            System.out.println("Error in KB.writeInferenceEngineFormulas(): writing file: " + filename);
+            System.out.println(ioe.getMessage());
             ioe.printStackTrace();
         }
         finally {
-        	try {
-	            if (pw != null) { pw.close(); }
-	            if (fw != null) { fw.close(); }
-        	}
+            try {
+                if (pw != null) { pw.close(); }
+                if (fw != null) { fw.close(); }
+            }
             catch (Exception ex) {
             }
         }
@@ -2830,7 +2929,7 @@ public class KB {
             }
         }
         catch (Exception e) {
-        	System.out.println("Error in KB.createInterenceEngine():" + e.getMessage());
+            System.out.println("Error in KB.createInterenceEngine():" + e.getMessage());
             e.printStackTrace();
         }
         return res;
@@ -2845,17 +2944,17 @@ public class KB {
         KBmanager mgr = KBmanager.getMgr();
         try {
             if (!formulaMap.isEmpty()) {
-            	HashSet<String> formulaStrings = new HashSet<String>();
-            	formulaStrings.addAll(formulaMap.keySet());
+                HashSet<String> formulaStrings = new HashSet<String>();
+                formulaStrings.addAll(formulaMap.keySet());
                 if (eprover != null) 
-                	eprover.terminate();                
+                    eprover.terminate();
                 eprover = null;
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 skb.writeTPTPFile(tptpFilename, true);
                 if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
-                	eprover = new EProver(mgr.getPref("inferenceEngine"),tptpFilename);
+                    eprover = new EProver(mgr.getPref("inferenceEngine"),tptpFilename);
             }
         }
         catch (Exception e) {
@@ -2890,8 +2989,8 @@ public class KB {
                 System.out.print(".");
             Formula f = formulaMap.get(form);
             if (f == null) {
-            	System.out.println("Error in KB.preProcess(): No formula for : " + form);
-            	continue;
+                System.out.println("Error in KB.preProcess(): No formula for : " + form);
+                continue;
             }
             //System.out.println("INFO in KB.preProcess(): form : " + form);
             //System.out.println("INFO in KB.preProcess(): f : " + f);
@@ -2899,9 +2998,9 @@ public class KB {
             ArrayList<Formula> processed = fp.preProcess(f,false, this);   // not queries
             if (tptpParseP) {
                 try {
-                	SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                	stptp._f = f;
-                	stptp.tptpParse(f,false, this, processed);   // not a query
+                    SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                    stptp._f = f;
+                    stptp.tptpParse(f,false, this, processed);   // not a query
                 }
                 catch (ParseException pe) {
                     String er = ("Error in KB.preProcess() " + pe.getMessage() + " at line "
@@ -2922,7 +3021,7 @@ public class KB {
                     errors.addAll(p.getErrors());
                 }
                 else {
-                	System.out.println("Error in KB.preProcess(): empty formula: " + p);
+                    System.out.println("Error in KB.preProcess(): empty formula: " + p);
                 }
             }
         }

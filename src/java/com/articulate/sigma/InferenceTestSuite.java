@@ -253,7 +253,7 @@ public class InferenceTestSuite {
         for (int i = 0; i < files.size(); i++) {
             // This probably isn't necessary.  Make this a preferences parameter.
             int timeout = defaultTimeout;
-            kb.deleteUserAssertions();   
+            kb.deleteUserAssertionsAndReload();
             File f = (File) files.get(i);
             if (f.getCanonicalPath().endsWith(".tq")) {
                 System.out.println();
@@ -390,7 +390,7 @@ public class InferenceTestSuite {
         result = result.append("Total failed: ");
         result = result.append(String.valueOf(fail));
         result = result.append("<P>\n");
-        kb.deleteUserAssertions();
+        kb.deleteUserAssertionsAndReload();
         return result.toString();
     }
 
