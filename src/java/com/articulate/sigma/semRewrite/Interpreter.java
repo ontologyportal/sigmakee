@@ -321,20 +321,13 @@ public class Interpreter {
         Pattern p = Pattern.compile(pattern);
         Formula f = new Formula(form);
         Set<String> vars = f.collectAllVariables();
-//        System.out.println("INFO in Interpreter.findQuantification(): vars: " + vars);
 
         for (String v : vars) {
             if (p.matcher(v).matches())
                 quantified.add(v);
         }
 
-//        System.out.println("INFO in Interpreter.findQuantification(): quantified before: " + quantified);
-
-        quantified = filterAlreadyQuantifiedVariables(form, quantified);
-
-//        System.out.println("INFO in Interpreter.findQuantification(): quantified after: " + quantified);
-
-        return quantified;
+        return filterAlreadyQuantifiedVariables(form, quantified);
     }
 
     /** *************************************************************
@@ -580,7 +573,7 @@ public class Interpreter {
         results.addAll(posInformation);
         results = lemmatizeResults(results, tokens);
 
-        results = processPhrasalVerbs(results);
+//        results = processPhrasalVerbs(results);
 
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
         System.out.println("INFO in Interpreter.interpretSingle(): " + in);
@@ -609,6 +602,19 @@ public class Interpreter {
 
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
         return result;
+    }
+
+    /** *************************************************************
+     * Method (mainly for testing) to get list of CNFs from input sentence.
+     * @param input string representing input sentence
+     * @return list of CNFs
+     */
+    protected ArrayList<CNF> getCNFInput(String input) {
+        Lexer lex = new Lexer(input);
+        CNF cnf = CNF.parseSimple(lex);
+        ArrayList<CNF> cnfInput = new ArrayList<CNF>();
+        cnfInput.add(cnf);
+        return cnfInput;
     }
 
     /** *************************************************************
@@ -652,7 +658,8 @@ public class Interpreter {
 
         for (String dependency : results) {
             if (!dependency.startsWith(PHRASAL_VERB_PARTICLE_TAG) && !(dependency.startsWith(SUMO_TAG) && dependency.contains(verb))) {
-                String newDependency = modifyDependencyElem(dependency, verbNum);
+//                String newDependency = modifyDependencyElem(dependency, verbNum);
+                String newDependency = dependency;
                 if (newDependency.contains(verb)) {
                     newDependency = newDependency.replace(verb, phrasalVerb);
                 }
