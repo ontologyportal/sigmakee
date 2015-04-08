@@ -200,7 +200,6 @@ public class KB {
         }
 
         if (kbIn.formulas != null)   {
-            //this.formulas = Maps.newHashMap(kbIn.formulas);
             for (Map.Entry<String, ArrayList<String>> pair : kbIn.formulas.entrySet()) {
                 String key = pair.getKey();
                 ArrayList<String> newList = Lists.newArrayList(pair.getValue());
@@ -222,7 +221,7 @@ public class KB {
 
         this.modifiedContents = kbIn.modifiedContents;
 
-        this.kbCache = new KBcache(this);
+         this.kbCache = new KBcache(kbIn.kbCache, this);
 
         // Must be done after kb manager set.
         if (kbIn.celt != null)   {

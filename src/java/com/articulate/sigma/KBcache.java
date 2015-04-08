@@ -28,6 +28,10 @@ being present in the ontology in order to function as intended.  They are:
 
 package com.articulate.sigma;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import java.io.*;
 import java.util.*;
 
@@ -99,7 +103,90 @@ public class KBcache {
         
         this.kb = kb;
     }
-    
+
+    public KBcache(KBcache kbCacheIn, KB kbIn) {
+        this.kb = kbIn;
+
+        if (kbCacheIn.relations != null)   {
+            this.relations = Sets.newHashSet(kbCacheIn.relations);
+        }
+
+        if (kbCacheIn.transRels != null)   {
+            this.transRels = Sets.newHashSet(kbCacheIn.transRels);
+        }
+
+        if (kbCacheIn.instTransRels != null)   {
+            this.instTransRels = Sets.newHashSet(kbCacheIn.instTransRels);
+        }
+
+        if (kbCacheIn.parents != null)   {
+            for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.parents.entrySet())    {
+                String outerKey = outerEntry.getKey();
+
+                HashMap<String, HashSet<String>> newInnerMap = Maps.newHashMap();
+                HashMap<String, HashSet<String>> oldInnerMap = outerEntry.getValue();
+                for (Map.Entry<String, HashSet<String>> innerEntry : oldInnerMap.entrySet()) {
+                    String innerKey = innerEntry.getKey();
+
+                    HashSet newInnerSet = Sets.newHashSet(innerEntry.getValue());
+                    newInnerMap.put(innerKey, newInnerSet);
+                }
+
+                this.parents.put(outerKey, newInnerMap);
+            }
+        }
+
+        if (kbCacheIn.instances != null)   {
+            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.instances.entrySet()) {
+                String key = entry.getKey();
+                HashSet<String> newSet = Sets.newHashSet(entry.getValue());
+                this.instances.put(key, newSet);
+            }
+        }
+
+        if (kbCacheIn.insts != null)   {
+            this.insts = Sets.newHashSet(kbCacheIn.insts);
+        }
+
+        if (kbCacheIn.children != null)   {
+            for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.children.entrySet())    {
+                String outerKey = outerEntry.getKey();
+
+                HashMap<String, HashSet<String>> newInnerMap = Maps.newHashMap();
+                HashMap<String, HashSet<String>> oldInnerMap = outerEntry.getValue();
+                for (Map.Entry<String, HashSet<String>> innerEntry : oldInnerMap.entrySet()) {
+                    String innerKey = innerEntry.getKey();
+
+                    HashSet newInnerSet = Sets.newHashSet(innerEntry.getValue());
+                    newInnerMap.put(innerKey, newInnerSet);
+                }
+
+                this.children.put(outerKey, newInnerMap);
+            }
+        }
+
+        if (kbCacheIn.signatures != null)   {
+            for (Map.Entry<String, ArrayList<String>> entry : kbCacheIn.signatures.entrySet()) {
+                String key = entry.getKey();
+                ArrayList<String> newSet = Lists.newArrayList(entry.getValue());
+                this.signatures.put(key, newSet);
+            }
+        }
+
+        if (kbCacheIn.valences != null)   {
+            this.valences = Maps.newHashMap(kbCacheIn.valences);
+        }
+
+        if (kbCacheIn.explicitDisjointRelations != null)   {
+            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.explicitDisjointRelations.entrySet()) {
+                String key = entry.getKey();
+                HashSet<String> newSet = Sets.newHashSet(entry.getValue());
+                this.explicitDisjointRelations.put(key, newSet);
+            }
+        }
+
+    }
+
     /** ***************************************************************
      * An ArrayList utility method
      */
