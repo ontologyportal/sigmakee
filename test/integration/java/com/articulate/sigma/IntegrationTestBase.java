@@ -65,6 +65,7 @@ public class IntegrationTestBase extends SigmaTestBase {
      */
     public static void resetAllForInference() throws IOException {
         kb = new KB(kbBackup);
+        KBmanager.getMgr().kbs.put("SUMO", kb);
         kb.deleteUserAssertions();
 
         // Remove the assertions in the files.
