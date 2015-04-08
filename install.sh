@@ -127,6 +127,7 @@ sigma_start() {
 	if [[ -z "$sigma_run" || $sigma_run =~ [yY] ]]; then
 		cd ${SIGMA_SRC}/sigma
 		export SIGMA_HOME=${SIGMA_HOME}
+		export MAVEN_OPTS="-Xmx1024m"
 		mvn -DskipTests clean install tomcat7:run
 	fi
 }
