@@ -123,8 +123,11 @@ sigma_done() {
 }
 
 sigma_start() {
+	stty sane
+
     read -p "  Do you want me to run SIGMA for you this time? [Y/n]: " sigma_run
-	if [[ -z "$sigma_run" || $sigma_run =~ [yY] ]]; then
+	if [ "$sigma_run" == "y" ]; then
+	#if [[ -z "$sigma_run" || "$sigma_run" =~ [yY] ]]; then
 		cd ${SIGMA_SRC}/sigma
 		export SIGMA_HOME=${SIGMA_HOME}
 		export MAVEN_OPTS="-Xmx1024m"
