@@ -118,4 +118,82 @@ public class UnificationTest extends IntegrationTestBase {
         List<String> results = interp.interpretCNF(inputs);
         assertThat(results, hasItems(expected));
     }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testWhenWasAmeliaMaryEarhartBorn() {
+
+        Interpreter interp = new Interpreter();
+        interp.initialize();
+
+        String input = "root(ROOT-0,bear-6), advmod(bear-6,when-1), auxpass(bear-6,be-2), nsubjpass(bear-6,AmeliaMaryEarhart-3), attribute(AmeliaMaryEarhart-3,Female), names(AmeliaMaryEarhart-3,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-3), sumo(Attribute,bear-6), tense(PAST,be-2), number(SINGULAR,Amelia-3), number(SINGULAR,Mary-4), number(SINGULAR,Earhart-5)";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+        ArrayList<CNF> inputs = new ArrayList<CNF>();
+        inputs.add(cnfInput);
+
+        // When was Amelia Mary Earhart born?
+        String[] expected = {
+                "(birthdate AmeliaMaryEarhart-3 ?WH)",
+                "(attribute AmeliaMaryEarhart-3 Female)",
+                "(names AmeliaMaryEarhart-3 \"Amelia Mary Earhart\")",
+                "(instance AmeliaMaryEarhart-3 Human)"
+        };
+
+        List<String> results = interp.interpretCNF(inputs);
+        assertThat(results, hasItems(expected));
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testWhenDidAmeliaMaryEarhartDie() {
+
+        Interpreter interp = new Interpreter();
+        interp.initialize();
+
+        String input = "root(ROOT-0,die-6), advmod(die-6,when-1), aux(die-6,do-2), nsubj(die-6,AmeliaMaryEarhart-3), attribute(AmeliaMaryEarhart-3,Female), sumo(IntentionalProcess,do-2), names(AmeliaMaryEarhart-3,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-3), sumo(Death,die-6), number(SINGULAR,Amelia-3), number(SINGULAR,Mary-4), number(SINGULAR,Earhart-5)";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+        ArrayList<CNF> inputs = new ArrayList<CNF>();
+        inputs.add(cnfInput);
+
+        // When did Amelia Mary Earhart die?
+        String[] expected = {
+                "(deathdate AmeliaMaryEarhart-3 ?WH)",
+                "(attribute AmeliaMaryEarhart-3 Female)",
+                "(names AmeliaMaryEarhart-3 \"Amelia Mary Earhart\")",
+                "(instance AmeliaMaryEarhart-3 Human)"
+        };
+
+        List<String> results = interp.interpretCNF(inputs);
+        assertThat(results, hasItems(expected));
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testWhatWasAmeliaMaryEarhartInterestedIn() {
+
+        Interpreter interp = new Interpreter();
+        interp.initialize();
+
+        String input = "root(ROOT-0,interested-6), pobj(interested-6,what-1), cop(interested-6,be-2), prep(interested-6,in-7), nsubj(interested-6,AmeliaMaryEarhart-3), attribute(AmeliaMaryEarhart-3,Female), sumo(inScopeOfInterest,interested-6), names(AmeliaMaryEarhart-3,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-3), tense(PAST,be-2), number(SINGULAR,Amelia-3), number(SINGULAR,Mary-4), number(SINGULAR,Earhart-5)";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+        ArrayList<CNF> inputs = new ArrayList<CNF>();
+        inputs.add(cnfInput);
+
+        // What was Amelia Mary Earhart interested in?
+        String[] expected = {
+                "(inScopeOfInterest AmeliaMaryEarhart-3 ?O)",
+                "(attribute AmeliaMaryEarhart-3 Female)",
+                "(names AmeliaMaryEarhart-3 \"Amelia Mary Earhart\")",
+                "(instance AmeliaMaryEarhart-3 Human)"
+        };
+
+        List<String> results = interp.interpretCNF(inputs);
+        assertThat(results, hasItems(expected));
+    }
 }
