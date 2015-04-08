@@ -2335,12 +2335,11 @@ public class KB {
                 addConstituent(cName);
                 //addConstituent(cName, false, false, false);
             }            
-            checkArity();  // Reperform arity checks on everything            
-            kbCache = new KBcache(this);
-            kbCache.buildCaches();
-            // If cache == yes, write the cache file.
+            checkArity();  // Reperform arity checks on everything
+            // build kb cache when "cache" = "yes"
             if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
-                kbCache.writeCacheFile();
+                kbCache = new KBcache(this);
+                kbCache.buildCaches();
             }
             // At this point, we have reloaded all constituents, have
             // rebuilt the relation caches, and, if cache == yes, have

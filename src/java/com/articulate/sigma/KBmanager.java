@@ -285,12 +285,14 @@ public class KBmanager {
         	e.printStackTrace();
             return false;
         }
-        kb.kbCache = new KBcache(kb);
-        kb.kbCache.buildCaches();
-        if (useCacheFile) 
-            kb.kbCache.writeCacheFile();                
+
+        // build kb cache when "cache" = "yes"
+        if (useCacheFile) {
+            kb.kbCache = new KBcache(kb);
+            kb.kbCache.buildCaches();
+        }
         kb.checkArity();
-        // load inference engine only when "TPTP" is turned on
+        // load inference engine only when "TPTP" = "yes"
         if (KBmanager.getMgr().getPref("TPTP").equals("yes"))
             kb.loadEProver();
         return true;
