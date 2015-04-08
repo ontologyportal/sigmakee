@@ -42,7 +42,7 @@ public class QAInferenceTest extends IntegrationTestBase {
         String query2 = "Who flies a plane?";
         actualAnswer = interpreter.interpret(query2).get(0);
         System.out.println("actualAnswer = " + actualAnswer);
-        assertEquals("Amelia flies a plane.", actualAnswer);
+        assertEquals("'Amelia'.", actualAnswer);
 
         String query3 = "Does Amelia fly a plane?";
         actualAnswer = interpreter.interpret(query3).get(0);
@@ -69,6 +69,6 @@ public class QAInferenceTest extends IntegrationTestBase {
         interpreter.interpret("John kicks a cart.");
 
         String actualAnswer = interpreter.interpret("Who hits the cart?").get(0);
-        assertEquals("I don't know", actualAnswer);
+        assertEquals("'John'.", actualAnswer);
     }
 }
