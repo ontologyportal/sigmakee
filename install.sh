@@ -107,8 +107,8 @@ sigma_install() {
 	cd "${SIGMA_SRC}/sigma"
 	ant install
 	cp ${SIGMA_SRC}/sigma/config_vagrant.xml $SIGMA_HOME/KBs/config.xml
-	sed -i 's|/home/vagrant/\.sigmakee|$SIGMA_HOME|g' $SIGMA_HOME/KBs/config.xml
-	sed -i 's|/home/vagrant/workspace/sigma|$SIGMA_SRC|g' $SIGMA_HOME/KBs/config.xml
+	sed -i "s|/home/vagrant/\.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
+	sed -i "s|/home/vagrant/workspace/sigma|$SIGMA_SRC|g" $SIGMA_HOME/KBs/config.xml
 }
 
 sigma_done() {
