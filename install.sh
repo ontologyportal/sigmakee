@@ -64,8 +64,18 @@ check_env()
 			;;
 		ubuntu)
 			log warn "Ubuntu is going to ask your user's password for missed packages check."
+			sudo add-apt-repository ppa:webupd8team/java
 			sudo apt-get -y update
-			sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cvs ant maven eprover
+			sudo apt-get -y install oracle-java8-installer
+			sudo apt-get -y install oracle-java8-set-default
+			sudo apt-get -y install graphviz
+
+			sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cvs ant maven
+			wget http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.8/E.tgz
+			tar -xzf E.tgz
+			cd E
+			./configure
+			make
 			;;
 	esac
 }
@@ -96,6 +106,9 @@ sigma_install() {
 	log info "Setting SIGMA_HOME to: $SIGMA_HOME"
 	cd "${SIGMA_SRC}/sigma"
 	ant install
+	cp ${SIGMA_SRC}/sigma/config_vagrant.xml $SIGMA_HOME/KBs/config.xml
+	sed -i 's|/home/vagrant/\.sigmakee|$SIGMA_HOME|g' $SIGMA_HOME/KBs/config.xml
+	sed -i 's|/home/vagrant/workspace/sigma|$SIGMA_SRC|g' $SIGMA_HOME/KBs/config.xml
 }
 
 sigma_done() {
@@ -111,7 +124,7 @@ sigma_done() {
 
 sigma_start() {
     read -p "  Do you want me to run SIGMA for you this time? [Y/n]: " sigma_run
-	if [[ -z "$sigma_run" || $sigma_run =~ [yY][eE][sS]|[yY] ]]; then
+	if [[ -z "$sigma_run" || $sigma_run =~ [yY] ]]; then
 		cd ${SIGMA_SRC}/sigma
 		export SIGMA_HOME=${SIGMA_HOME}
 		mvn -DskipTests clean install tomcat7:run
