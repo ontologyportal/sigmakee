@@ -196,4 +196,31 @@ public class UnificationTest extends IntegrationTestBase {
         List<String> results = interp.interpretCNF(inputs);
         assertThat(results, hasItems(expected));
     }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testWasAmeliaMaryEarhartInterestedInAirplanes() {
+
+        Interpreter interp = new Interpreter();
+        interp.initialize();
+
+        String input = "root(ROOT-0,interested-5), cop(interested-5,be-1), prep_in(interested-5,airplane-7), nsubj(interested-5,AmeliaMaryEarhart-2), sumo(Airplane,airplane-7), attribute(AmeliaMaryEarhart-2,Female), sumo(inScopeOfInterest,interested-5), sumo(Entity,be-1), names(AmeliaMaryEarhart-2,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-2), tense(PAST,be-1), number(SINGULAR,Amelia-2), number(SINGULAR,Mary-3), number(SINGULAR,Earhart-4), number(PLURAL,airplane-7)";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+        ArrayList<CNF> inputs = new ArrayList<CNF>();
+        inputs.add(cnfInput);
+
+        // Was Amelia Mary Earhart interested in airplanes?
+        String[] expected = {
+                "(inScopeOfInterest AmeliaMaryEarhart-2 airplane-7)",
+                "(attribute AmeliaMaryEarhart-2 Female)",
+                "(names AmeliaMaryEarhart-2 \"Amelia Mary Earhart\")",
+                "(instance airplane-7 Airplane)",
+                "(instance AmeliaMaryEarhart-2 Human)"
+        };
+
+        List<String> results = interp.interpretCNF(inputs);
+        assertThat(results, hasItems(expected));
+    }
 }
