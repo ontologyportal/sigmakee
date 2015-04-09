@@ -1,19 +1,14 @@
 package com.articulate.sigma.semRewrite;
 
-import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.UnitTestBase;
 import com.google.common.collect.Sets;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 /**
  * Tests the SemRewrite of a given parse.
@@ -294,7 +289,7 @@ public class SemRewriteTest extends UnitTestBase {
      * prep_since(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (starts(?Y,?X)).
      */
     @Test
-    public void testMaryWalkSinceYesterday() {
+    public void testMaryWalkSinceTuesday() {
 
         Interpreter interpreter = new Interpreter();
         interpreter.initialize();
@@ -317,4 +312,147 @@ public class SemRewriteTest extends UnitTestBase {
 
         assertEquals(expected, cleanedActual);
     }
+
+    /** *************************************************************
+     * Mary walked through the day.
+     * prep_through(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (duration(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkThroughWinter() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "det(day-5,the-4), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_through(walk-2,day-5), names(Mary-1,\"Mary\"), sumo(Day,day-5), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,day-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(attribute Mary-1 Female)",
+                "(duration walk-2 day-5)",
+                "(names Mary-1 \"Mary\")",
+                "(instance Mary-1 Human)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
+    /** *************************************************************
+     * Mary walked through the house.
+     * prep_through(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (traverses(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkThroughHouse() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "det(house-5,the-4), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_through(walk-2,house-5), sumo(House,house-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,house-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(traverses walk-2 house-5)",
+                "(instance house-5 House)",
+                "(instance Mary-1 Human)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
+    /** *************************************************************
+     * Mary walks with John.
+     * prep_with(?X,?Y), +sumo(Human,?Y) ==> (agent(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkWithJohn() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_with(walk-2,John-4), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), attribute(John-4,Male), sumo(Human,Mary-1), sumo(Human,John-4), names(John-4,\"John\"), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(SINGULAR,John-4)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-2 John-4)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(instance Mary-1 Human)",
+                "(agent walk-2 Mary-1)",
+                "(attribute John-4 Male)",
+                "(names John-4 \"John\")",
+                "(instance John-4 Human)",
+                "(instance walk-2 Walking)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
+    /** *************************************************************
+     * Mary walks with the man.
+     * prep_with(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Person) ==> (agent(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkWithMan() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(man-5,the-4), prep_with(walk-2,man-5), sumo(Man,man-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(SINGULAR,man-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-2 man-5)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(instance man-5 Man)",
+                "(agent walk-2 Mary-1)",
+                "(instance Mary-1 Human)",
+                "(instance walk-2 Walking)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
+    /** *************************************************************
+     * Mary walks with the artifact.
+     * prep_with(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Person) ==> (agent(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkWithArtifact() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(artifact-5,the-4), prep_with(walk-2,artifact-5), sumo(Artifact,artifact-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(SINGULAR,artifact-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-2 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(instrument walk-2 artifact-5)",
+                "(names Mary-1 \"Mary\")",
+                "(instance artifact-5 Artifact)",
+                "(instance Mary-1 Human)",
+                "(instance walk-2 Walking)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
 }
