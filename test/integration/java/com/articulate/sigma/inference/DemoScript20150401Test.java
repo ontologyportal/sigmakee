@@ -10,7 +10,6 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
-@Ignore
 public class DemoScript20150401Test extends IntegrationTestBase {
 
     private static Interpreter interpreter;
@@ -25,10 +24,14 @@ public class DemoScript20150401Test extends IntegrationTestBase {
     }
 
     @Test
-    public void test() {
+    public void test1() {
         String input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator, one of the first women to fly a plane long distances.";
         interpreter.interpret(input).get(0);
         input = "She was the first woman to fly a plane by herself across the Atlantic Ocean.";
+        interpreter.interpret(input).get(0);
+        input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
+        interpreter.interpret(input).get(0);
+        input = "She was declared dead on January 5, 1939.";
         interpreter.interpret(input).get(0);
 
         input = "What language did Amelia speak?";
@@ -76,22 +79,42 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("An instance of Airplane.", actualAnswer);
 
-        input = "Was Amelia female?";
+        // We cannot answer "Was Amelia female?" because Amelia is an instance of DiseaseOrSyndrome
+        input = "Was Amelia Mary Earhart female?";
         interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("Yes.", actualAnswer);
 
+        input = "Where did she disappear?";
+        interpreter.interpret(input).get(0);
+        actualAnswer = interpreter.interpret(input).get(0);
+        assertEquals("SouthPacificOcean.", actualAnswer);
+    }
+
+    @Ignore
+    @Test
+    public void test2() {
+        String input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator, one of the first women to fly a plane long distances.";
+        interpreter.interpret(input).get(0);
+        input = "She was the first woman to fly a plane by herself across the Atlantic Ocean.";
+        interpreter.interpret(input).get(0);
+        input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
+        interpreter.interpret(input).get(0);
+        input = "She was declared dead on January 5, 1939.";
+        interpreter.interpret(input).get(0);
+
         // Incorrect, but this is the current output.
         input = "What was her nationality?";
         interpreter.interpret(input).get(0);
-        actualAnswer = interpreter.interpret(input).get(0);
+        String actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("UnitedStates.", actualAnswer);
 
         input = "Where did she disappear?";
         interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
-        assertEquals("I don't know", actualAnswer);
+        assertEquals("SouthPacificOcean.", actualAnswer);
 
+        // Wait Rashmi to fix the vanished-4 (stemming) issue
         input = "When did she disappear?";
         interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
@@ -102,5 +125,4 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("I don't know", actualAnswer);
     }
-
 }
