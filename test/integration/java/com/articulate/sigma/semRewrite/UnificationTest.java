@@ -224,7 +224,7 @@ public class UnificationTest extends IntegrationTestBase {
 
     /** *************************************************************
      * Where did she fly?
-     * advmod(?X,where*), aux(?X,do*) ==> {(traverses ?X ?WH)}.
+     * advmod(?X,where*), aux(?X,do*), +sumo(?T,?X), isSubclass(?T,Process) ==> {(destination ?X ?WH)}.
      */
     @Test
     public void testWhereDidSheFly() {
@@ -236,7 +236,7 @@ public class UnificationTest extends IntegrationTestBase {
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         Set<String> expected = Sets.newHashSet(
-                "(traverses fly-6 ?WH)",
+                "(destination fly-6 ?WH)",
                 "(agent fly-6 AmeliaMaryEarhart-3)",
                 "(attribute AmeliaMaryEarhart-3 Female)",
                 "(names AmeliaMaryEarhart-3 \"Amelia Mary Earhart\")",
@@ -270,6 +270,58 @@ public class UnificationTest extends IntegrationTestBase {
                 "(names AmeliaMaryEarhart-4 \"Amelia Mary Earhart\")",
                 "(instance AmeliaMaryEarhart-4 Human)",
                 "(instance speak-7 Speaking)");
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+        assertEquals(expected, cleanedActual);
+    }
+
+    /** *************************************************************
+     * Where did she disappear?
+     * advmod(?X,where*), aux(?X,do*), +sumo(?T,?X), isSubclass(?T,Process) ==> {(destination ?X ?WH)}.
+     */
+    @Test
+    public void testWhereDidSheDisappear() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,disappear-4), advmod(disappear-4,where-1), aux(disappear-4,do-2), nsubj(disappear-4,Earhart-3), sumo(Human,Earhart-3), names(Earhart-3,\"Earhart\"), sumo(IntentionalProcess,do-2), sumo(Disappearing,disappear-4), number(SINGULAR,Earhart-3)";
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(destination disappear-4 ?WH)",
+                "(agent disappear-4 Earhart-3)",
+                "(names Earhart-3 \"Earhart\")",
+                "(instance Earhart-3 Human)",
+                "(instance disappear-4 Disappearing)");
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+        assertEquals(expected, cleanedActual);
+    }
+
+    /** *************************************************************
+     * When did Earhart disappear?
+     * advmod(?V,when*), aux(?V,do*), +sumo(?C,?V), isSubclass(?C,Physical) ==> {(time ?V ?WH)}.
+     */
+    @Test
+    public void testWhenDidEarhartDisappear() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,disappear-4), advmod(disappear-4,when-1), aux(disappear-4,do-2), nsubj(disappear-4,Earhart-3), sumo(Human,Earhart-3), names(Earhart-3,\"Earhart\"), sumo(IntentionalProcess,do-2), sumo(Disappearing,disappear-4), number(SINGULAR,Earhart-3)";
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(time disappear-4 ?WH)",
+                "(agent disappear-4 Earhart-3)",
+                "(names Earhart-3 \"Earhart\")",
+                "(instance Earhart-3 Human)",
+                "(instance disappear-4 Disappearing)");
 
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
         Set<String> actual = Sets.newHashSet(kifClauses);
