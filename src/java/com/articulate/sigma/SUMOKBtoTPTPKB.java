@@ -282,15 +282,18 @@ public class SUMOKBtoTPTPKB {
                     kb.errors.add("Source file has changed to " + sourceFile);
                 oldSourceFile = sourceFile;
                 tptpFormulas = f.getTheTptpFormulas();
-                // If onlyPlainFOL, rename all VariableArityRelations so that each
-                // relation name has a numeric suffix corresponding to the
-                // number of the relation's arguments.  
-                //if (onlyPlainFOL && !tptpFormulas.isEmpty()
-                //    && !mgr.getPref("holdsPrefix").equalsIgnoreCase("yes")
-                //    && f.containsVariableArityRelation(kb)) {
+
+                // TODO: this should be removed in the future
+                if (filterSimpleOnly) {
+                    // only consider ground statements and axioms in Amelia.kif
+                    if (!(f.sourceFile.equals(KBmanager.getMgr().getPref("kbDir") + File.separator + "Amelia.kif"))
+                            && !(f.isSimpleClause())) {
+                        continue;
+                    }
+                }
+
                 Formula tmpF = new Formula();
                 tmpF.read(f.theFormula);
-                //System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): " + f.theFormula);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 List<Formula> processed = fp.preProcess(tmpF,false, kb);
                 if (!processed.isEmpty()) {
@@ -335,24 +338,10 @@ public class SUMOKBtoTPTPKB {
                     }
 
                     if (filterExcludePredicates(excludedPredicates, f) == false) {
-                        // TODO: this should be removed in the future
-                        if (filterSimpleOnly) {
-                            if ((f.sourceFile.equals(KBmanager.getMgr().getPref("kbDir") + File.separator + "Amelia.kif"))
-                                    || (!f.gatherRelationConstants().contains("agent")
-                                        && (!f.gatherRelationConstants().contains("patient")))) {
-                                if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
-                                    pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
-                                    pr.println(",axiom,(" + theTPTPFormula + ")).");
-                                    alreadyWrittenTPTPs.add(theTPTPFormula);
-                                }
-                            }
-                        }
-                        else {
-                            if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
-                                pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
-                                pr.println(",axiom,(" + theTPTPFormula + ")).");
-                                alreadyWrittenTPTPs.add(theTPTPFormula);
-                            }
+                        if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
+                            pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                            pr.println(",axiom,(" + theTPTPFormula + ")).");
+                            alreadyWrittenTPTPs.add(theTPTPFormula);
                         }
                     }
                 }
