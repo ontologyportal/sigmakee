@@ -3,7 +3,7 @@
   <preference name="adminBrowserLimit" value="200" />
   <preference name="leoExecutable" value="$SIGMA_HOME/../cvs/sigma/leo" />
   <preference name="TPTPDisplay" value="no" />
-  <preference name="cache" value="no" />
+  <preference name="cache" value="yes" />
   <preference name="testOutputDir" value="/usr/local/Cellar/tomcat7/7.0.57/libexec/webapps/sigma/tests" />
   <preference name="userBrowserLimit" value="25" />
   <preference name="hostname" value="localhost" />
