@@ -1,14 +1,16 @@
-package com.articulate.sigma;
+package com.articulate.sigma.semRewrite;
 
-import com.articulate.sigma.semRewrite.CNF;
-import com.articulate.sigma.semRewrite.Interpreter;
-import com.articulate.sigma.semRewrite.Lexer;
+import com.articulate.sigma.IntegrationTestBase;
+import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -269,26 +271,24 @@ public class UnificationTest extends IntegrationTestBase {
     @Test
     public void testWhatLanguageDidAmeliaSpeak() {
 
-        Interpreter interp = new Interpreter();
-        interp.initialize();
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
 
         String input = "root(ROOT-0,speak-7), det(language-2,what-1), dobj(speak-7,language-2), aux(speak-7,do-3), nsubj(speak-7,AmeliaMaryEarhart-4), sumo(Speaking,speak-7), sumo(Language,language-2), sumo(IntentionalProcess,do-3), sumo(Human,AmeliaMaryEarhart-4), names(AmeliaMaryEarhart-4,\"Amelia Mary Earhart\"), attribute(AmeliaMaryEarhart-4,Female), number(SINGULAR,language-2), number(SINGULAR,Amelia-4), number(SINGULAR,Mary-5), number(SINGULAR,Earhart-6)";
-        Lexer lex = new Lexer(input);
-        CNF cnfInput = CNF.parseSimple(lex);
-        ArrayList<CNF> inputs = new ArrayList<CNF>();
-        inputs.add(cnfInput);
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         // Where did she fly?
-        String[] expected = {
+        Set<String> expected = Sets.newHashSet(
                 "(patient speak-7 ?WH)",
                 "(agent speak-7 AmeliaMaryEarhart-4)",
                 "(attribute AmeliaMaryEarhart-4 Female)",
                 "(names AmeliaMaryEarhart-4 \"Amelia Mary Earhart\")",
                 "(instance AmeliaMaryEarhart-4 Human)",
-                "(instance speak-7 Speaking)"
-        };
+                "(instance speak-7 Speaking)");
 
-        List<String> results = interp.interpretCNF(inputs);
-        assertThat(results, hasItems(expected));
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+        assertEquals(expected, cleanedActual);
     }
 }
