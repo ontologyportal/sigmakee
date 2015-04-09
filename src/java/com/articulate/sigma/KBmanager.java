@@ -290,6 +290,8 @@ public class KBmanager {
         if (useCacheFile) {
             kb.kbCache = new KBcache(kb);
             kb.kbCache.buildCaches();
+        } else {
+            kb.kbCache = new KBcache(kb);
         }
         kb.checkArity();
         // load inference engine only when "TPTP" = "yes"

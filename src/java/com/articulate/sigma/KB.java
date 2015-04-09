@@ -2340,6 +2340,8 @@ public class KB {
             if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
                 kbCache = new KBcache(this);
                 kbCache.buildCaches();
+            } else {
+                kbCache = new KBcache(this);
             }
             // At this point, we have reloaded all constituents, have
             // rebuilt the relation caches, and, if cache == yes, have
