@@ -33,8 +33,9 @@ public class EProver {
      * --interactive.
      *
      * @param inputFilename contains TPTP assertions
+     * @param timeout time limit in E
      *  */
-    public static void writeBatchConfig(String inputFilename) {
+    public static void writeBatchConfig(String inputFilename, int timeout) {
 
     	try {
             System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
@@ -45,7 +46,7 @@ public class EProver {
             pw.println("division.category LTB.SMO");
             pw.println("output.required Assurance");
             pw.println("output.desired Proof Answer");
-            pw.println("limit.time.problem.wc 60");
+            pw.println("limit.time.problem.wc " + timeout);
             pw.println("% SZS end BatchConfiguration");
             pw.println("% SZS start BatchIncludes");
             pw.println("include('" + inputFilename + "').");
@@ -68,12 +69,14 @@ public class EProver {
      * for inference.
      *
      * @param inputFilename contains TPTP assertions
+     * @param timeout time limit in E
      *  */
-    public static void addBatchConfig(String inputFilename) {
+    public static void addBatchConfig(String inputFilename, int timeout) {
 
         File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
         HashSet<String> ebatchfiles = new HashSet<>();
-        ebatchfiles.add(inputFilename);
+        if (inputFilename != null && !inputFilename.isEmpty())
+            ebatchfiles.add(inputFilename);
 
         // Collect existed TPTP files
         try {
@@ -107,7 +110,7 @@ public class EProver {
             pw.println("division.category LTB.SMO");
             pw.println("output.required Assurance");
             pw.println("output.desired Proof Answer");
-            pw.println("limit.time.problem.wc 60");
+            pw.println("limit.time.problem.wc " + timeout);
             pw.println("% SZS end BatchConfiguration");
             pw.println("% SZS start BatchIncludes");
             for (String ebatchfile : ebatchfiles) {
@@ -140,7 +143,7 @@ public class EProver {
      */
     public EProver (String executable, String kbFile) throws IOException {
 
-        writeBatchConfig(kbFile);
+        writeBatchConfig(kbFile, 60);
         System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
 
