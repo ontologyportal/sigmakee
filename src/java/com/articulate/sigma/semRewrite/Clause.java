@@ -183,6 +183,11 @@ public class Clause {
             if (c1.pred.equals("isInstanceOf") && c1.isGround())
                 if (Procedures.isInstanceOf(c1).equals("true"))
                     return new HashMap<String,String>();
+            if (c1.pred.equals("isSubAttribute") && c1.isGround())
+                if (Procedures.isSubAttribute(c1).equals("true")) {
+                    return new HashMap<String,String>();
+                }
+
             for (int j = 0; j < disjuncts.size(); j++) {
                 Literal c2 = disjuncts.get(j);
                 HashMap<String,String> bindings = c2.mguTermList(c1);

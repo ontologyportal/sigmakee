@@ -206,20 +206,25 @@ public class KBcache {
      * transitive relation.  Return false if they are equal
      */
     public boolean childOfP(String rel, String parent, String child) {
-        
-        if (parent.equals(child))
+
+        if (parent.equals(child)) {
             return false;
+        }
+
         HashMap<String,HashSet<String>> childMap = children.get(rel);
         HashSet<String> childSet = (childMap != null) ? childMap.get(parent) : null;
+
         if (childSet == null) {
         	if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
                 + rel + " " + parent + " " + child);
         	return false;
         }
-        if (childSet.contains(child))
+        if (childSet.contains(child)) {
             return true;
-        else
+        }
+        else {
             return false;
+        }
     }
 
     /** *************************************************************
