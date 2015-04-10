@@ -1575,7 +1575,13 @@ public class KB {
             ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
 
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                eprover.addBatchConfig(null, timeout);
+                // set timeout in EBatchConfig file and reload eprover
+                try {
+                    eprover.addBatchConfig(null, timeout);
+                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 String strQuery = processedStmts.get(0).theFormula;
                 result = this.eprover.submitQuery(strQuery,this);
                 if (result==null || result.isEmpty())
@@ -1610,7 +1616,13 @@ public class KB {
             ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
 
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                eprover.addBatchConfig(null, timeout);
+                // set timeout in EBatchConfig file and reload eprover
+                try {
+                    eprover.addBatchConfig(null, timeout);
+                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 String strQuery = processedStmts.get(0).theFormula;
                 String EResult = this.eprover.submitQuery(strQuery,this);
                 if (EResult==null || EResult.isEmpty())
