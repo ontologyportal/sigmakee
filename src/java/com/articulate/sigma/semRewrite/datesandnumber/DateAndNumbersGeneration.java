@@ -77,6 +77,17 @@ public class DateAndNumbersGeneration {
 			}
 		}
 	}
+	
+	/** ***************************************************************
+	 */
+	private String lemmatizeWord(IndexedWord measuredEntity) {
+		
+		String value = measuredEntity.value();
+		if(!measuredEntity.tag().equals("NNP") || !measuredEntity.tag().equals("NNPS")) {
+			value = measuredEntity.lemma();
+		}
+		return value;
+	}
 
 	/** ***************************************************************
 	 */
@@ -94,7 +105,7 @@ public class DateAndNumbersGeneration {
 		boolean flag = false;
 		//int x = 0;
 		if (unitOfMeasurementNode != null) {
-			unitOfMeasurementStr = unitOfMeasurementNode.value();
+			unitOfMeasurementStr = lemmatizeWord(unitOfMeasurementNode);
 			measuredEntity = utilities.StanfordDependencies.getParent(unitOfMeasurementNode);
 			visitedNodes.add(unitOfMeasurementNode.toString()+"-"+unitOfMeasurementNode.index());
 		}
@@ -127,7 +138,8 @@ public class DateAndNumbersGeneration {
 					//which means it is unitOfMeasurementNode. Hence remove infinite looping condition
 					if ((childrenSet.size()==1)) {
 						measuredEntity = unitOfMeasurementNode;
-						utilities.sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
+						String lemmatizedWord = lemmatizeWord(measuredEntity);
+						utilities.sumoTerms.add("measure(" + lemmatizedWord + "-" + measuredEntity.index() + ", measure" + count + ")");
 						utilities.sumoTerms.add("unit(measure" + count + ", "+ "memberCount" + ")");
 						utilities.sumoTerms.add("value(measure" + count + ", " + token.getWord()+ ")");
 						utilities.sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId()+")");
@@ -165,9 +177,11 @@ public class DateAndNumbersGeneration {
 			}
 		}
 		if (measuredEntity != null) {
-			utilities.sumoTerms.add("measure(" + measuredEntity.value() + "-" + measuredEntity.index() + ", measure" + count + ")");
+			String lemmatizedWord = lemmatizeWord(measuredEntity);
+			utilities.sumoTerms.add("measure(" + lemmatizedWord + "-" + measuredEntity.index() + ", measure" + count + ")");
 		}
-		sumoUnitOfMeasure = WSD.getBestDefaultSUMOsense(unitOfMeasurementNode.value(), 1);
+		sumoUnitOfMeasure = lemmatizeWord(unitOfMeasurementNode);
+		sumoUnitOfMeasure = WSD.getBestDefaultSUMOsense(sumoUnitOfMeasure, 1);
 		if ((sumoUnitOfMeasure != null) && (!sumoUnitOfMeasure.isEmpty())) {
 			sumoUnitOfMeasure = sumoUnitOfMeasure.replaceAll("[^\\p{Alpha}\\p{Digit}]+","");
 		}
@@ -244,7 +258,7 @@ public class DateAndNumbersGeneration {
 					
 					if(!checkTokenInList(yearToken, tempDateList)) {
 						presentTimeToken = yearToken;
-						datesandDurationHandler.populateDateList(yearToken, tempDateList, prevTimeToken, utilities);
+						datesandDurationHandler.mergeDates(yearToken, tempDateList, prevTimeToken, utilities);
 						prevTimeToken = presentTimeToken;
 					}
 				}
@@ -262,7 +276,7 @@ public class DateAndNumbersGeneration {
 					
 					if(!checkTokenInList(monthToken, tempDateList) && !checkTokenInList(digitMonthToken, tempDateList)) {
 						presentTimeToken = digitMonthToken;
-						datesandDurationHandler.populateDateList(digitMonthToken, tempDateList, prevTimeToken, utilities);
+						datesandDurationHandler.mergeDates(digitMonthToken, tempDateList, prevTimeToken, utilities);
 						prevTimeToken = presentTimeToken;
 					}
 				}
@@ -275,7 +289,7 @@ public class DateAndNumbersGeneration {
 					
 					if(!checkTokenInList(dayToken, tempDateList)) {
 						presentTimeToken = dayToken;
-						datesandDurationHandler.populateDateList(dayToken, tempDateList, prevTimeToken, utilities);
+						datesandDurationHandler.mergeDates(dayToken, tempDateList, prevTimeToken, utilities);
 						prevTimeToken = presentTimeToken;
 					}
 				}
@@ -326,6 +340,7 @@ public class DateAndNumbersGeneration {
 		Tokens presentDurationToken = new Tokens();
 		Tokens prevDurationToken = null;
 		for(Tokens token : tokensList) {
+			utilities.lemmatize(token);
 			presentDateToken = token;
 			presentDurationToken = token;
 			switch(token.getNer()) {

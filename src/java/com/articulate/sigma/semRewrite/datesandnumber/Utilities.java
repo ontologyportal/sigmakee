@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
 
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 
@@ -54,7 +55,6 @@ public class Utilities {
 	public static final List<String> stopWords = new ArrayList<String>(Arrays.asList("of",",","-"));
 	
 	List<String> sumoTerms = new LinkedList<String>();
-	List<DateInfo> allDatesList = new LinkedList<DateInfo>();
 	List<DateInfo> datesList = new LinkedList<DateInfo>();
 	SemanticGraph StanfordDependencies;
 	int timeCount = 1;
@@ -79,7 +79,7 @@ public class Utilities {
 		while (!tempParent.equals(StanfordDependencies.getFirstRoot())) {
 			tempParent = StanfordDependencies.getParent(tempParent);
 			if (containsIndexWord(tempParent.tag())) {
-				return tempParent.word()+"-"+tempParent.index();
+				return tempParent.lemma()+"-"+tempParent.index();
 			}
 		}
 		return null;
@@ -93,6 +93,12 @@ public class Utilities {
 		return populateRootWord(dateId);
 	}
 	
+	public void lemmatize(Tokens token) {
+		if(!token.getPos().equals("NNP") || !token.getPos().equals("NNPS")) {
+			token.setWord(token.getLemma());
+		}
+	}
+	
 	/** ***************************************************************
      */
 	public void filterSumoTerms(ClauseSubstitutor substitutor) {
@@ -102,7 +108,7 @@ public class Utilities {
 		sumoTerms.addAll(hashsetList);
 		//List<String> removableList = new ArrayList<String>();
 		Set<String> removableSumoTerms = new HashSet<String>();
-		for (DateInfo d : allDatesList) {
+		for (DateInfo d : datesList) {
 			if (d.isDuration()) {
 				//removableList.add("time-"+d.getTimeCount());
 				for(String sumoTerm : sumoTerms) {
@@ -115,7 +121,7 @@ public class Utilities {
 		sumoTerms.removeAll(removableSumoTerms);
 		if (substitutor != null) {
 			for(int i = 0; i < sumoTerms.size(); ++i) {
-				System.out.println();
+				//System.out.println();
 				Matcher sumoMatcher = sumoTermPattern.matcher(sumoTerms.get(i));
 				if(sumoMatcher.find()) {
 					String group2 = sumoMatcher.group(2);

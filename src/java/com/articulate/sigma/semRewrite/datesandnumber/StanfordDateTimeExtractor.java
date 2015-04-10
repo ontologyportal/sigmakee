@@ -35,6 +35,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.NormalizedNamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -105,6 +106,8 @@ public class StanfordDateTimeExtractor {
 					tokens.setNormalizedNer(token.get(NormalizedNamedEntityTagAnnotation.class));
 					tokens.setCharBegin(token.get(BeginIndexAnnotation.class));
 					tokens.setCharEnd(token.get(EndIndexAnnotation.class));
+					tokens.setPos(token.get(PartOfSpeechAnnotation.class));
+					tokens.setLemma(token.get(LemmaAnnotation.class));
 					tokenList.add(tokens);					
 				}
 				tokenCount++;

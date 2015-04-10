@@ -28,6 +28,8 @@ public class Tokens {
 	String word;
 	String ner;
 	String normalizedNer;
+	String lemma;
+	String pos;
 	int charBegin;
 	
 	String tokenType = "DEFAULT";
@@ -76,6 +78,19 @@ public class Tokens {
 		this.normalizedNer = normalizedNer;
 	}
 	
+	public String getLemma() {
+		return lemma;
+	}
+	public void setLemma(String lemma) {
+		this.lemma = lemma;
+	}
+	
+public String getPos() {
+		return pos;
+	}
+	public void setPos(String pos) {
+		this.pos = pos;
+	}
 public boolean equals(Tokens token) {
 	    
 		boolean wordFlag,tokenTypeFlag;

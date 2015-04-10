@@ -44,7 +44,7 @@ public class DatesAndDuration {
 		Matcher dayMatcher = DAY_PATTERN.matcher(token.getWord());
 		if (Utilities.MONTHS.contains(token.getWord().toLowerCase())) {
 			token.setTokenType("MONTH");
-			populateDateList(token, tempDateList, prevToken, utilities);
+			mergeDates(token, tempDateList, prevToken, utilities);
 		} 
 		else if (Utilities.DAYS.contains(token.getWord().toLowerCase())) {
 			String tokenRoot = utilities.getRootWord(token.getId());
@@ -55,13 +55,13 @@ public class DatesAndDuration {
 			tempDate.setWeekDay(token.getWord());
 			tempDate.addWordIndex(token.getId());
 			tempDate.setTimeCount(utilities.timeCount);
-			utilities.allDatesList.add(tempDate);
+			utilities.datesList.add(tempDate);
 			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+token.getWord()+")");	
 			utilities.timeCount++;
 		} 
 		else if (digitalPatternMatcher.find()) {
 			token.setTokenType("YEAR");
-			populateDateList(token, tempDateList, prevToken, utilities);
+			mergeDates(token, tempDateList, prevToken, utilities);
 		} 
 		else if (westernYearMatcher.find()) {
 			String tokenRoot = utilities.getRootWord(token.getId());
@@ -75,14 +75,13 @@ public class DatesAndDuration {
 			tempDate.addWordIndex(token.getId());
 			tempDate.setTimeCount(utilities.timeCount);
 			utilities.datesList.add(tempDate);
-			utilities.allDatesList.add(tempDate);
 		} 
 		else if (dayMatcher.find()) {
 			if(token.getWord().contains("th")) {
 				token.setWord(token.getWord().replace("th", ""));
 			}
 			token.setTokenType("DAYS");
-			populateDateList(token, tempDateList, prevToken, utilities);
+			mergeDates(token, tempDateList, prevToken, utilities);
 		}
 	}
 	 
@@ -103,7 +102,6 @@ public class DatesAndDuration {
 		 }
 		 if(!tempDateInfo.isEmpty()) {
 			 utilities.datesList.add(tempDateInfo);
-			 utilities.allDatesList.add(tempDateInfo);
 		 }
 		 
 	 }
@@ -129,7 +127,7 @@ public class DatesAndDuration {
 	 
 	 /** ***************************************************************
 		 */
-	 public void populateDateList(Tokens token, List<Tokens> tempDateList, Tokens prevToken, Utilities utilities) {
+	 public void mergeDates(Tokens token, List<Tokens> tempDateList, Tokens prevToken, Utilities utilities) {
 		 
 		 if(prevToken == null) {
 			 tempDateList.add(token);
@@ -260,13 +258,13 @@ public class DatesAndDuration {
 		 */
 	 public void handleDurations(Utilities utilities) {
 
-		for (int i = 0; i < utilities.allDatesList.size() - 1; i++) {
-			if ((utilities.allDatesList.get(i).getEndIndex() + 2) == (utilities.allDatesList.get(i + 1).getWordIndex())) {
-				utilities.allDatesList.get(i).setDurationFlag(true);
-				utilities.allDatesList.get(i+1).setDurationFlag(true);
-				IndexedWord tempParent = utilities.StanfordDependencies.getNodeByIndex(utilities.allDatesList.get(i).getWordIndex());	
+		for (int i = 0; i < utilities.datesList.size() - 1; i++) {
+			if ((utilities.datesList.get(i).getEndIndex() + 2) == (utilities.datesList.get(i + 1).getWordIndex())) {
+				utilities.datesList.get(i).setDurationFlag(true);
+				utilities.datesList.get(i+1).setDurationFlag(true);
+				IndexedWord tempParent = utilities.StanfordDependencies.getNodeByIndex(utilities.datesList.get(i).getWordIndex());	
 				tempParent = getAssociatedWord(utilities, tempParent);
-				generateDurationSumoTerms(tempParent, utilities, utilities.allDatesList.get(i), utilities.allDatesList.get(i+1));
+				generateDurationSumoTerms(tempParent, utilities, utilities.datesList.get(i), utilities.datesList.get(i+1));
 			}
 		}
 	}
