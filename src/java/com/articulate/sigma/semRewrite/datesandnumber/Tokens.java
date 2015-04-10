@@ -22,6 +22,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+/** ***************************************************************
+ * This class holds the various data populated by the Stanford parser for Dates and Numbers.
+ * @param input: The natural language string.
+ */
 public class Tokens {
 	
 	Integer id;

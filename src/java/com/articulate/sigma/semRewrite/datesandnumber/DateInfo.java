@@ -26,6 +26,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+/** ***************************************************************
+ * This class holds the necessary information for Date group namely year, month,day, start index and end index 
+ * of the word, whether it is a week day. It also stores the information whether the object is of type date or 
+ * duration.
+ */
 public class DateInfo {
 	
 	private String year = null;

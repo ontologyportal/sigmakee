@@ -22,6 +22,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
  */
 
+/** ***************************************************************
+ * This class holds the necessary information for Time group namely hour, minute, second and the word number.
+ */
 public class TimeInfo {
 
 	private String hour = null;
@@ -55,6 +58,7 @@ public class TimeInfo {
 	}
 
 	/** ***************************************************************
+	 * Overridden equals method.
      */
 	public boolean equals(TimeInfo timeInfo) {
 	    

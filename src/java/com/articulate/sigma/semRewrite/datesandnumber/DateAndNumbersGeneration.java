@@ -54,6 +54,8 @@ public class DateAndNumbersGeneration {
 	}
 	
 	/** ***************************************************************
+	 * * Adds the time terms to SumoTerms list.
+	 * @param input: 
 	 */
 	private void generateSumoTimeTerms(List<TimeInfo> timesList, Utilities utilities) {
 
@@ -90,6 +92,9 @@ public class DateAndNumbersGeneration {
 	}
 
 	/** ***************************************************************
+	 * * Generates a set of sumo terms corresponding to measure functions. Identifies the unit of measurement,
+	 *  value of measurement and entity of the measurement by performing a graph search. 
+	 * @param input: The tokens, count of measure, utility value.
 	 */
 	private void measureFn(Tokens token, int count, Utilities utilities) {
 
@@ -199,6 +204,8 @@ public class DateAndNumbersGeneration {
 	}
 	
 	/** ***************************************************************
+	 * * Returns the measure terms added in the sumo list
+	 * @param input: utility value
 	 */
 	public List<String> getMeasureTerms(Utilities utilities) {
 		
@@ -206,6 +213,8 @@ public class DateAndNumbersGeneration {
 	}
 	
 	/** ***************************************************************
+	 * * Sets the measure terms
+	 * @param input: List of measure terms
 	 */
 	public void setMeasureTerms(List<String> measureTerms) {
 		
@@ -213,6 +222,8 @@ public class DateAndNumbersGeneration {
 	}
 	
 	/** ***************************************************************
+	 * * If a duplicate token is present in the tokens of datelist returns true
+	 * @param input: Token value to compare and the list of tokens.
 	 */
 	private boolean checkTokenInList(Tokens token, List<Tokens> tempDateList) {
 		
@@ -225,6 +236,11 @@ public class DateAndNumbersGeneration {
 	}
 	
 	/** ***************************************************************
+	 * * Generates a set of sumo terms corresponding to time functions.  Uses the class TimeInfo to hold 
+	 * the required time data present in the tokens. Also does the job of grouping time set together from 
+	 * the tokens. Foer eg. In sentence 3 hr, 30 min. the tokens 3 and 30 would be separate. This function 
+	 * analyzes that 3 hour and 30 min would belong to same type object and groups them together.
+	 * @param input: normalizedTokenIdMap, utility value, List of date tokens,date andDurationHandler,presentTimeToken and PreviousTimeToken
 	 */
 	private List<TimeInfo> processTime(List<String> tokenIdNormalizedTimeMap, Utilities utilities, List<Tokens> tempDateList, DatesAndDuration datesandDurationHandler, Tokens presentTimeToken, Tokens prevTimeToken) {
 
@@ -310,6 +326,8 @@ public class DateAndNumbersGeneration {
 	}
 	
 	/** ***************************************************************
+	 * * Returns true if a timeInfo object is present in the list of timeInfo.
+	 * @param input: List of timeInfo and timeInfo Object to be compared.
 	 */
 	public boolean containsTimeInfo(List<TimeInfo> timeList, TimeInfo timeObject) {
 		
@@ -323,6 +341,9 @@ public class DateAndNumbersGeneration {
 	
 		
 	/** ***************************************************************
+	 * * Categorizes the input into Date, Number, Duration and Time. 
+	 * Adds the necessary sumo terms from the respective functions and filter any duplicates if present.
+	 * @param input: List of tokens, StanfordDateTimeExtractor object and a ClauseSubstitutor.
 	 */
 	public List<String> generateSumoTerms(List<Tokens> tokensList, StanfordDateTimeExtractor stanfordParser, ClauseSubstitutor substitutor) {
 
