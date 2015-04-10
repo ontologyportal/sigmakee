@@ -540,4 +540,191 @@ public class SemRewriteTest extends UnitTestBase {
         assertEquals(expected, actual);
     }
 
+    /** *************************************************************
+     * Mary will walk from the house.
+     * prep_from(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (origin(?X,?Y)).
+     */
+    @Test
+    public void testMaryWillWalkFromHouse() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,will-2), det(house-6,the-5), prep_from(walk-3,house-6), sumo(House,house-6), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-3), number(SINGULAR,Mary-1), tense(FUTURE,walk-3), number(SINGULAR,house-6)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-3 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(origin walk-3 house-6)",
+                "(earlier Now (WhenFn walk-3))",
+                "(instance house-6 House)",
+                "(instance Mary-1 Human)",
+                "(instance walk-3 Walking)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+
+        assertEquals(expected, cleanedActual);
+    }
+
+    /** *************************************************************
+     * Mary was walking from noon.
+     * prep_from(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (BeginFn(?X,?Y)).
+     * This rule is triggered by this test's input, though the BeginFn does not at this time appear in the output.
+     */
+    @Test
+    public void testMaryWasWalkingFromNoon() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,be-2), prep_from(walk-3,noon-5), names(Mary-1,\"Mary\"), sumo(Walking,walk-3), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(TimePosition,noon-5), number(SINGULAR,Mary-1), tense(PAST,walk-3), aspect(PROGRESSIVE,walk-3), number(SINGULAR,noon-5), time(walking-3,time-1), hour(time-1,12-5), minute(time-1,00-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-3 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(time walking-3 time-1)",
+                "(instance walk-3 Walking)",
+                "(instance Mary-1 Human)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+
+        assertEquals(expected, cleanedActual);
+    }
+
+    /** *************************************************************
+     * Mary was walking until midnight.
+     * prep_until(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (EndFn(?X,?Y)).
+     * This rule is triggered by this test's input, though the EndFn does not at this time appear in the output.
+     */
+    @Test
+    public void testMaryWasWalkingUntilMidnight() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,be-2), prep_until(walk-3,midnight-5), names(Mary-1,\"Mary\"), sumo(Walking,walk-3), sumo(TimePoint,midnight-5), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,walk-3), aspect(PROGRESSIVE,walk-3), number(SINGULAR,midnight-5), time(walking-3,time-1), hour(time-1,00-5), minute(time-1,00-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-3 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(time walking-3 time-1)",
+                "(instance walk-3 Walking)",
+                "(instance Mary-1 Human)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+
+        assertEquals(expected, cleanedActual);
+    }
+
+    /** *************************************************************
+     * Mary was walking from noon until midnight.
+     * prep_from(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (BeginFn(?X,?Y)).
+     * prep_until(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (EndFn(?X,?Y)).
+     * These two rules are triggered by this test's input, though the BeginFn and the EndFn do not at this time appear in the output.
+     */
+    @Test
+    public void testMaryWasWalkingFromNoonUntilMidnight() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,be-2), prep_from(walk-3,noon-5), prep_until(walk-3,midnight-7), sumo(TimePoint,midnight-7), names(Mary-1,\"Mary\"), sumo(Walking,walk-3), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(TimePosition,noon-5), number(SINGULAR,Mary-1), tense(PAST,walk-3), aspect(PROGRESSIVE,walk-3), number(SINGULAR,noon-5), number(SINGULAR,midnight-7), time(walking-3,time-1), hour(time-1,12-5), minute(time-2,00-7), hour(time-2,00-7), time(walking-3,time-2), minute(time-1,00-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-3 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(time walking-3 time-1)",
+                "(time walking-3 time-2)",
+                "(instance walk-3 Walking)",
+                "(instance Mary-1 Human)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+
+        assertEquals(expected, cleanedActual);
+    }
+
+    /** *************************************************************
+     * Mary went after midnight.
+     * prep_after(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (greaterThan(?X,?Y)).
+     */
+    @Test
+    public void testMaryWentAfterMidnight() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_after(go-2,midnight-4), names(Mary-1,\"Mary\"), sumo(TimePoint,midnight-4), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,midnight-4), hour(time-1,00-4), time(wentAfter-2,time-1), minute(time-1,00-4)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(attribute Mary-1 Female)",
+                "(greaterThan go-2 midnight-4)",
+                "(names Mary-1 \"Mary\")",
+                "(time wentAfter-2 time-1)",
+                "(instance Mary-1 Human)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+
+        assertEquals(expected, cleanedActual);
+    }
+
+    /** *************************************************************
+     * Mary went before midnight.
+     * prep_before(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (lessThan(?X,?Y)).
+     */
+    @Test
+    public void testMaryWentBeforeMidnight() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_before(go-2,midnight-4), sumo(Transportation,go-2), names(Mary-1,\"Mary\"), sumo(TimePoint,midnight-4), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,midnight-4), hour(time-1,00-4), time(went-2,time-1), minute(time-1,00-4)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent go-2 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(lessThan go-2 midnight-4)",
+                "(time went-2 time-1)",
+                "(instance go-2 Transportation)",
+                "(instance Mary-1 Human)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+
+        assertEquals(expected, cleanedActual);
+    }
+
 }
