@@ -80,8 +80,12 @@ public class StanfordDateTimeExtractor {
 		this.dependencies = dependencies;
 	}
 	
-	/** ***************************************************************
-	 */
+	 /** ***************************************************************
+		 * Calls the stanford parser and extracts the necessary information about the words in the string 
+		 * and stores them in Token object for further usage. 
+		 * @param input: The natural language string.
+	     * @return List of Tokens.
+		 */
 	public List<Tokens> populateParserInfo(String inputSentence) {
 		
 		Properties props = new Properties();
