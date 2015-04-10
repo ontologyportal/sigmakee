@@ -1528,7 +1528,7 @@ public class KB {
                     boolean allAdded = eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover,
                             parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                     // 6. Add the new tptp file into EBatching.txt
-                    eprover.addBatchConfig(tptpfile.getCanonicalPath());
+                    eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60);
                     // 7. Reload eprover
                     eprover = new EProver(mgr.getPref("inferenceEngine"));
                     result += (allAdded ? " and inference" : " but not for local inference");
@@ -1575,6 +1575,7 @@ public class KB {
             ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
 
             if (!processedStmts.isEmpty() && this.eprover != null) {
+                eprover.addBatchConfig(null, timeout);
                 String strQuery = processedStmts.get(0).theFormula;
                 result = this.eprover.submitQuery(strQuery,this);
                 if (result==null || result.isEmpty())
@@ -1609,6 +1610,7 @@ public class KB {
             ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
 
             if (!processedStmts.isEmpty() && this.eprover != null) {
+                eprover.addBatchConfig(null, timeout);
                 String strQuery = processedStmts.get(0).theFormula;
                 String EResult = this.eprover.submitQuery(strQuery,this);
                 if (EResult==null || EResult.isEmpty())
