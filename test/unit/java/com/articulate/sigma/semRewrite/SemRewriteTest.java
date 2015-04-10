@@ -455,4 +455,89 @@ public class SemRewriteTest extends UnitTestBase {
         assertEquals(expected, actual);
     }
 
+    /** *************************************************************
+     * Mary went across the room.
+     * prep_across(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (traverses(?X,?Y)).
+     */
+    @Test
+    public void testMaryGoAcrossRoom() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "det(room-5,the-4), root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_across(go-2,room-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Room,room-5), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,room-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(traverses go-2 room-5)",
+                "(instance Mary-1 Human)",
+                "(instance room-5 Room)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
+    /** *************************************************************
+     * Mary walked within the room.
+     * prep_within(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (properlyFills(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkWithinRoom() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(room-5,the-4), prep_within(walk-2,room-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), sumo(Room,room-5), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,room-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-2 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(properlyFills walk-2 room-5)",
+                "(instance Mary-1 Human)",
+                "(instance walk-2 Walking)",
+                "(instance room-5 Room)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
+    /** *************************************************************
+     * Mary walked into the room.
+     * prep_into(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (properlyFills(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkIntoRoom() {
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.initialize();
+
+        String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(room-5,the-4), prep_into(walk-2,room-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), sumo(Room,room-5), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,room-5)";
+
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "(agent walk-2 Mary-1)",
+                "(attribute Mary-1 Female)",
+                "(names Mary-1 \"Mary\")",
+                "(properlyFills walk-2 room-5)",
+                "(instance Mary-1 Human)",
+                "(instance walk-2 Walking)",
+                "(instance room-5 Room)"
+        );
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        assertEquals(expected, actual);
+    }
+
 }
