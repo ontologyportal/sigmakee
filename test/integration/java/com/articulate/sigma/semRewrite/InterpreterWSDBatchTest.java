@@ -38,8 +38,8 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
-import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 @RunWith(Parameterized.class)

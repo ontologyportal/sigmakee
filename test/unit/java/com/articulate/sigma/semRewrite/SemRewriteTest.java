@@ -1,7 +1,9 @@
 package com.articulate.sigma.semRewrite;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.UnitTestBase;
 import com.google.common.collect.Sets;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the SemRewrite of a given parse.
@@ -17,30 +20,41 @@ import static org.junit.Assert.assertEquals;
  */
 public class SemRewriteTest extends UnitTestBase {
 
-    /** *************************************************************
+    private static Interpreter interpreter;
+
+    @Before
+    public void setUpInterpreter()  {
+        interpreter = new Interpreter();
+        interpreter.inference = false;
+        interpreter.initialize();
+    }
+
+    /***************************************************************
      * Mary is at the house.
      * prep_at(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (located(?X,?Y))
      */
     @Test
     public void testMaryAtHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0, be-2), nsubj(be-2, Mary-1), det(house-5, the-4), prep_at(be-2, house-5), sumo(House, house-5), names(Mary-1, \"Mary\"), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, be-2), number(SINGULAR, house-5)";
+
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
-        Set<String> expected = Sets.newHashSet(
-                "(attribute Mary-1 Female)",
-                "(located be-2 house-5)",
-                "(names Mary-1 \"Mary\")",
-                "(instance house-5 House)",
-                "(instance Mary-1 Human)"
-        );
-
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        assertEquals(expected, actual);
+        String actual = interpreter.fromKIFClauses(kifClauses);
+
+        Formula actualFormula = new Formula(actual);
+
+        String expected =
+                "(exists (?be-2 ?Mary-1 ?house-5) \n" +
+                "(and \n" +
+                "  (attribute ?Mary-1 Female)\n" +
+                "  (located ?be-2 ?house-5)\n" +
+                "  (names ?Mary-1 \"Mary\")\n" +
+                "  (instance ?house-5 House)\n" +
+                "  (instance ?Mary-1 Human))\n" +
+                ")";
+
+        assertEquals(expected.replaceAll("\\s", " ").trim(), actual.replaceAll("\\s", " ").trim());
+        assertTrue(actualFormula.logicallyEquals(expected));
     }
 
     /** *************************************************************
@@ -49,10 +63,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryInHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0, be-2), nsubj(be-2, Mary-1), det(house-5, the-4), prep_in(be-2, house-5), sumo(House, house-5), names(Mary-1, \"Mary\"), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, be-2), number(SINGULAR, house-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -75,10 +85,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryInsideHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0, be-2), nsubj(be-2, Mary-1), det(house-5, the-4), prep_inside(be-2, house-5), sumo(House, house-5), names(Mary-1, \"Mary\"), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, be-2), number(SINGULAR, house-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -101,10 +107,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryOutsideHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0, be-2), nsubj(be-2, Mary-1), det(house-5, the-4), prep_outside(be-2, house-5), sumo(House, house-5), names(Mary-1, \"Mary\"), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, be-2), number(SINGULAR, house-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -127,10 +129,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryOnHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "det(house-5, the-4), root(ROOT-0, be-2), nsubj(be-2, Mary-1), prep_on(be-2, house-5), sumo(House, house-5), names(Mary-1, \"Mary\"), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, be-2), number(SINGULAR, house-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -153,10 +151,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryGoToHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "det(house-5, the-4), root(ROOT-0, go-2), nsubj(go-2, Mary-1), prep_to(go-2, house-5), sumo(House, house-5), names(Mary-1, \"Mary\"), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, go-2), number(SINGULAR, house-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -179,10 +173,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryGoTowardsHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0, go-2), nsubj(go-2, Mary-1), det(house-5, the-4), prep_toward(go-2, house-5), sumo(House, house-5), names(Mary-1, \"Mary\"), sumo(Transportation, go-2), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, go-2), number(SINGULAR, house-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -208,10 +198,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryGoInHour() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "det(hour-5, a-4), root(ROOT-0, go-2), nsubj(go-2, Mary-1), prep_in(go-2, hour-5), names(Mary-1, \"Mary\"), sumo(Hour, hour-5), attribute(Mary-1, Female), sumo(Human, Mary-1), number(SINGULAR, Mary-1), tense(PRESENT, go-2), number(SINGULAR, hour-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -233,10 +219,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryGoOnTuesday() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_on(go-2,Tuesday-4), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PRESENT,go-2), number(SINGULAR,Tuesday-4), day(time-1,Tuesday), time(goesOn-2,time-1)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -260,10 +242,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkForTwoHours() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), num(hour-5,two-4), prep_for(walk-2,hour-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Hour,hour-5), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(PLURAL,hour-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -290,10 +268,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkSinceTuesday() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,have-2), prep_since(walk-3,Tuesday-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-3), number(SINGULAR,Mary-1), tense(PRESENT,walk-3), aspect(PERFECT,walk-3), number(SINGULAR,Tuesday-5), day(time-1,Tuesday), time(walked-3,time-1)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
@@ -319,10 +293,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkThroughWinter() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "det(day-5,the-4), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_through(walk-2,day-5), names(Mary-1,\"Mary\"), sumo(Day,day-5), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,day-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -345,10 +315,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkThroughHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "det(house-5,the-4), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_through(walk-2,house-5), sumo(House,house-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,house-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -372,10 +338,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkWithJohn() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_with(walk-2,John-4), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), attribute(John-4,Male), sumo(Human,Mary-1), sumo(Human,John-4), names(John-4,\"John\"), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(SINGULAR,John-4)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -403,10 +365,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkWithMan() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(man-5,the-4), prep_with(walk-2,man-5), sumo(Man,man-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(SINGULAR,man-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -432,10 +390,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkWithArtifact() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(artifact-5,the-4), prep_with(walk-2,artifact-5), sumo(Artifact,artifact-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(SINGULAR,artifact-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -461,10 +415,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryGoAcrossRoom() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "det(room-5,the-4), root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_across(go-2,room-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Room,room-5), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,room-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -488,10 +438,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkWithinRoom() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(room-5,the-4), prep_within(walk-2,room-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), sumo(Room,room-5), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,room-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -517,10 +463,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWalkIntoRoom() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(room-5,the-4), prep_into(walk-2,room-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), sumo(Room,room-5), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,room-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -546,10 +488,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWillWalkFromHouse() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,will-2), det(house-6,the-5), prep_from(walk-3,house-6), sumo(House,house-6), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-3), number(SINGULAR,Mary-1), tense(FUTURE,walk-3), number(SINGULAR,house-6)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -579,10 +517,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWasWalkingFromNoon() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,be-2), prep_from(walk-3,noon-5), names(Mary-1,\"Mary\"), sumo(Walking,walk-3), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(TimePosition,noon-5), number(SINGULAR,Mary-1), tense(PAST,walk-3), aspect(PROGRESSIVE,walk-3), number(SINGULAR,noon-5), time(walking-3,time-1), hour(time-1,12-5), minute(time-1,00-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -610,10 +544,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWasWalkingUntilMidnight() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,be-2), prep_until(walk-3,midnight-5), names(Mary-1,\"Mary\"), sumo(Walking,walk-3), sumo(TimePoint,midnight-5), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,walk-3), aspect(PROGRESSIVE,walk-3), number(SINGULAR,midnight-5), time(walking-3,time-1), hour(time-1,00-5), minute(time-1,00-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -642,10 +572,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWasWalkingFromNoonUntilMidnight() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,be-2), prep_from(walk-3,noon-5), prep_until(walk-3,midnight-7), sumo(TimePoint,midnight-7), names(Mary-1,\"Mary\"), sumo(Walking,walk-3), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(TimePosition,noon-5), number(SINGULAR,Mary-1), tense(PAST,walk-3), aspect(PROGRESSIVE,walk-3), number(SINGULAR,noon-5), number(SINGULAR,midnight-7), time(walking-3,time-1), hour(time-1,12-5), minute(time-2,00-7), hour(time-2,00-7), time(walking-3,time-2), minute(time-1,00-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -673,10 +599,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWentAfterMidnight() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_after(go-2,midnight-4), names(Mary-1,\"Mary\"), sumo(TimePoint,midnight-4), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,midnight-4), hour(time-1,00-4), time(wentAfter-2,time-1), minute(time-1,00-4)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -702,10 +624,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWentBeforeMidnight() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_before(go-2,midnight-4), sumo(Transportation,go-2), names(Mary-1,\"Mary\"), sumo(TimePoint,midnight-4), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,midnight-4), hour(time-1,00-4), time(went-2,time-1), minute(time-1,00-4)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -733,10 +651,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWentAlongWithJohn() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_along_with(go-2,John-5), attribute(John-5,Male), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Human,John-5), names(John-5,\"John\"), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,John-5)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -762,10 +676,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryWentAlongWithMan() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "det(man-6,the-5), root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_along_with(go-2,man-6), sumo(Man,man-6), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,man-6)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
@@ -789,10 +699,6 @@ public class SemRewriteTest extends UnitTestBase {
      */
     @Test
     public void testMaryHasWalkedCloseBy() {
-
-        Interpreter interpreter = new Interpreter();
-        interpreter.initialize();
-
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,have-2), det(house-7,the-6), prep_close_by(walk-3,house-7), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-3), sumo(House,house-7), number(SINGULAR,Mary-1), tense(PRESENT,walk-3), aspect(PERFECT,walk-3), number(SINGULAR,house-7)";
 
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);

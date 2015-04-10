@@ -65,13 +65,13 @@ public class Interpreter {
     public String fname = "";
 
     // execution options
-    public static boolean inference = true;
+    public boolean inference = true;
     public static boolean question = false;
     public static boolean addUnprocessed = false;
     //if true, show POS tags during parse
     public static boolean verboseParse = true;
     //tfidf flags
-    public static boolean autoir = true;
+    public boolean autoir = true;
     public static boolean ir = false;
     //log response from prover before sending to answer generator
     public static boolean verboseAnswer = false;

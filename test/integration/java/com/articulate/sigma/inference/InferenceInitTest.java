@@ -19,7 +19,7 @@ public class InferenceInitTest extends IntegrationTestBase {
 
     private static void initInterpreter() throws IOException {
         interpreter = new Interpreter();
-        Interpreter.inference = true;
+        interpreter.inference = true;
         interpreter.initialize();
     }
 

@@ -42,8 +42,8 @@ public class InferenceWikiTest {
 
         KBmanager.getMgr().initializeOnce();
         interpreter = new Interpreter();
-        Interpreter.inference = true;
-        Interpreter.autoir = false;
+        interpreter.inference = true;
+        interpreter.autoir = false;
         interpreter.initialize();
     }
 

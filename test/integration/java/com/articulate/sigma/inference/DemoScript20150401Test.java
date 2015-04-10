@@ -17,7 +17,7 @@ public class DemoScript20150401Test extends IntegrationTestBase {
     @BeforeClass
     public static void initInterpreter() throws IOException {
         interpreter = new Interpreter();
-        Interpreter.inference = true;
+        interpreter.inference = true;
         interpreter.initialize();
 
         IntegrationTestBase.resetAllForInference();

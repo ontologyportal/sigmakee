@@ -20,7 +20,7 @@ public class QAInferenceTest extends IntegrationTestBase {
     @Before
     public void init() throws IOException {
         interpreter = new Interpreter();
-        Interpreter.inference = true;
+        interpreter.inference = true;
         interpreter.initialize();
 
         IntegrationTestBase.resetAllForInference();
