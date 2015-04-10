@@ -143,6 +143,9 @@ public class EProver {
      */
     public EProver (String executable, String kbFile) throws IOException {
 
+        if (this._eprover != null)
+            this.terminate();
+
         writeBatchConfig(kbFile, 60);
         System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
@@ -167,6 +170,9 @@ public class EProver {
      * @throws IOException
      */
     public EProver (String executable) throws IOException {
+
+        if (this._eprover != null)
+            this.terminate();
 
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
@@ -288,6 +294,9 @@ public class EProver {
      */
     public void terminate() throws IOException {
 
+        if (this._eprover == null)
+            return;
+
         System.out.println();
         System.out.println("TERMINATING " + this);
         try {
@@ -365,12 +374,10 @@ public class EProver {
         */
         try {
             System.out.println("INFO in EProver.main()");
-            //KBmanager.getMgr().initializeOnce();
-            //KB kb = KBmanager.getMgr().getKB("SUMO");
-            KB kb = null;
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
             System.out.println("------------- INFO in EProver.main() completed initialization--------");
-            EProver eprover = new EProver("/home/apease/Programs/E/PROVER/e_ltb_runner",
-                    "/home/apease/Sigma/KBs/SUMO.tptp");
+            EProver eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
 
             System.out.println(eprover.submitQuery("(subclass ?X Object)",kb));
             eprover.terminate();
