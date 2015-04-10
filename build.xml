@@ -100,16 +100,20 @@
 </target>
 
 <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
-    <delete dir="${build.javadoc}"/>
+	<delete dir="${build.javadoc}"/>
 	<mkdir dir="${build.javadoc}"/>
-    <javadoc sourcepath="src/java" destdir="${build.javadoc}" author="true" version="true" use="true" windowtitle="Sigma API Specification" splitindex="true">
-        <package name="com.articulate.sigma"/>
-        <classpath refid="javadoc.classpath"/>
-        <classpath refid="compile.classpath"/>
-        <doctitle>Sigma API Specification</doctitle>
-        <header><![CDATA[<b>Sigma API Specification</b>]]></header>
-        <group title="Sigma" packages="com.articulate.sigma.*"/>
-    </javadoc>
+	<javadoc sourcepath="src/java" destdir="${build.javadoc}" author="true" version="true" use="true" windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
+		<classpath refid="javadoc.classpath"/>
+		<classpath refid="compile.classpath"/>
+		<doctitle>Sigma API Specification</doctitle>
+		<header><![CDATA[<b>Sigma API Specification</b>]]></header>
+		<group title="Sigma" packages="com.articulate.sigma.*"/>
+		<group title="Sigma NLP" packages="com.articulate.sigma.nlp.*"/>
+		<group title="Sigma Semantic Rewriting" packages="com.articulate.sigma.semRewrite.*"/>
+		<group title="Sigma Date Number Units processing" packages="com.articulate.sigma.semRewrite.datesandnumber.*"/>
+		<group title="Sigma TPTPWorld" packages="TPTPWorld.*"/>
+		<group title="Sigma TPTP Parser" packages="tptp_parser.*"/>
+	</javadoc>
 </target>
 
 <!-- target name="all" depends="dist, api_doc" -->
