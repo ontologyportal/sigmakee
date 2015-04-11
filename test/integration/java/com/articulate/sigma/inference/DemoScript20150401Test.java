@@ -89,6 +89,11 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("SouthPacificOcean.", actualAnswer);
+
+        input = "When did she disappear?";
+        interpreter.interpret(input).get(0);
+        actualAnswer = interpreter.interpret(input).get(0);
+        assertEquals("MonthFn(s__July,s__YearFn(1937)).", actualAnswer);
     }
 
     @Ignore
@@ -108,17 +113,6 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         interpreter.interpret(input).get(0);
         String actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("UnitedStates.", actualAnswer);
-
-        input = "Where did she disappear?";
-        interpreter.interpret(input).get(0);
-        actualAnswer = interpreter.interpret(input).get(0);
-        assertEquals("SouthPacificOcean.", actualAnswer);
-
-        // Wait Rashmi to fix the vanished-4 (stemming) issue
-        input = "When did she disappear?";
-        interpreter.interpret(input).get(0);
-        actualAnswer = interpreter.interpret(input).get(0);
-        assertEquals("I don't know", actualAnswer);
 
         input = "Who was declared dead?";
         interpreter.interpret(input).get(0);
