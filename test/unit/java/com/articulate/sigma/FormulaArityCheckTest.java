@@ -73,7 +73,6 @@ public class FormulaArityCheckTest {
         Formula f=new Formula();
         f.read(input);
         String output=PredVarInst.hasCorrectArity(f,kb);
-        System.out.println("------"+kb.kbCache.transInstOf("instance","VariableArityRelation")+output);
         Assert.assertNotNull(output);
     }
 

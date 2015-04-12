@@ -91,11 +91,6 @@ public final class RewriteRuleUtil extends RuleSet {
         RuleSet rs;
         KBmanager kb = KBmanager.getMgr();
         kb.initializeOnce();
-        System.out.println("check ");
-        System.out.println(kb.getKB("SUMO").getValence("equal"));
-
-
-
         String f = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "SemRewrite.txt";
         String pref = KBmanager.getMgr().getPref("SemRewrite");
         if (!Strings.isNullOrEmpty(pref))
@@ -125,9 +120,7 @@ public final class RewriteRuleUtil extends RuleSet {
         RuleSet rs = loadRuleSet();
         String input = "";
         System.out.println("SemRewrite.txt loaded. There are " + rs.rules.size() + " rules.");
-
-
-        //SemRewriteRuleCheck.checkRuleSet(rs);
+        SemRewriteRuleCheck.checkRuleSet(rs);
         System.out.println("Will check rules entered. Please enter rule.\n");
         Scanner scanner = new Scanner(System.in);
         do {
