@@ -188,7 +188,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     if (tstpFormat == null) 
         tstpFormat = "";
 
-    ArrayList<String> resultEProver = null;        
+    String resultEProver = null;
     String resultSoTPTP = null;           
     String resultLeo = null;    
 
@@ -207,7 +207,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("EProver")) {
                 if (stmt.indexOf('@') != -1)
                     throw(new IOException("Row variables not allowed in query: " + stmt));
-		        resultEProver = kb.ask(stmt,timeout,maxAnswers);
+		        resultEProver = kb.askEProver(stmt, timeout, maxAnswers);
 		        System.out.println("INFO in AskTell.jsp------------------------------------");
 		        System.out.println(resultEProver);
             }
@@ -367,7 +367,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
         else if (resultEProver != null){
         	System.out.println("in AskTell.jsp: trying EProver--------------");
         	TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(resultEProver, kb);
-        	System.out.println(tpp.toString());
         	System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
