@@ -335,7 +335,7 @@ public class Formula implements Comparable {
 
         String fname = sourceFile;
         if (!StringUtil.emptyString(fname) && fname.lastIndexOf(File.separator) > -1)
-            fname = fname.substring(fname.lastIndexOf(File.separator)+1);
+            fname = fname.substring(fname.lastIndexOf(File.separator) + 1);
         int hc = theFormula.hashCode();
         String result = null;
         if (hc < 0)
@@ -1080,11 +1080,28 @@ public class Formula implements Comparable {
     }
 
     /** ***************************************************************
-     * Test if this is logically equal with the parameter formula
+     * Tests if this is logically equal with the parameter formula. It employs three equality tests starting with the
+     * fastest and finishing with the slowest:
+     *
+     *  - string comparisons: if the strings of the two formulae are equal return true as the formulae are also equal,
+     *  otherwise try comparing them by more complex means
+     *
+     *  - compare the predicate structure of the formulae (deepEquals(...)): this comparison only checks if the two formulae
+     *  have an equal structure of predicates disregarding variable equivalence. Example:
+     *              (and (instance ?A Human) (instance ?A Mushroom)) according to deepEquals(...) would be equal to
+     *              (and (instance ?A Human) (instance ?B Mushroom)) even though the first formula refers only one variable
+     *  but the second one refers two, and as such they are not logically equal. This method generates false positives, but
+     *  only true negatives. If the result of the comparison is false, we return false, otherwise keep trying.
+     *
+     *  - try to logically unify the formulae by matching the predicates and the variables
+     *
+     * @param f
+     * @return
      */
     public boolean logicallyEquals(Formula f) {
+
         boolean equalStrings = this.equals(f);
-        if(equalStrings) {
+        if (equalStrings) {
             return true;
         } else if (!this.deepEquals(f)) {
             return false;
@@ -1093,7 +1110,16 @@ public class Formula implements Comparable {
         }
     }
 
+    /** *****************************************************************
+     *  Compares this formula with the parameter by trying to compare the predicate structure of th two and logically
+     *  unify their variables. The helper method mapFormulaVariables(....) returns a logical mapping between the variables
+     *  of two formulae of one exists.
+     *
+     * @param f
+     * @return
+     */
     public boolean unifyWith(Formula f) {
+
         Formula f1 = Clausifier.clausify(this);
         Formula f2 = Clausifier.clausify(f);
 
@@ -1106,13 +1132,29 @@ public class Formula implements Comparable {
     }
 
     /**
-     * Compares recursively to formulas and returns possible variable maps between the variables of the two formulas
-     * Returns:
-     * null - if the formulas cannot be equals (due to having different predicates for example)
-     * empty list- formulas are equal, but there are no variables to map
-     * list 0f variable mapping sets the list of possible variable mapping sets which will make formulas equal
+     * Compares two formulae by recursively traversing its predicate structure and by building possible variable maps
+     * between the variables of the two formulae. If a complete mapping is possible, it is returned.
+     *   Each recursive call returns a list of sets of variable pairs. Each pair is a variable from the first formula and
+     * its potential corresponding variable in the second formula. Each set is a potential complete mapping between all
+     * the variables in the first formula and the ones in the second. The returned list contains all possible sets, so
+     * in essence all possible valid mappings of variables between the two formulas. The method will reconcile the list
+     * returned by all one level deeper recursive calls and return the list of sets which offer no contradictions.
+     *
+     * Note: for clauses with commutative
+     *
+     * @param f1
+     * @param f2
+     * @param kb
+     * @param memoMap a memo-ization mechanism designed to reduce the number of recursive calls in "dynamic programming"
+     *                fashion
+     * @return
+     *  null - if the formulas cannot be equals (due to having different predicates for example)
+     *  empty list- formulas are equal, but there are no variables to map
+     *  list 0f variable mapping sets the list of possible variable mapping sets which will make formulas equal
+     *
      */
-    public static List<Set<VariableMapping>> mapFormulaVariables(Formula f1, Formula f2, KB kb, HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap) {
+    public static List<Set<VariableMapping>> mapFormulaVariables(Formula f1, Formula f2, KB kb,
+                                     HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap) {
 
         //reading the memo map first
         FormulaUtil.FormulaMatchMemoMapKey key = FormulaUtil.createFormulaMatchMemoMapKey(f1.theFormula, f2.theFormula);
@@ -1131,8 +1173,8 @@ public class Formula implements Comparable {
         }
 
         //checking formulas are simple tokens
-        if(f1.atom() && f2.atom()) {
-            if((f1.isVariable() && f2.isVariable()) || (Formula.isSkolemTerm(f1.theFormula) && Formula.isSkolemTerm(f2.theFormula))) {
+        if (f1.atom() && f2.atom()) {
+            if ((f1.isVariable() && f2.isVariable()) || (Formula.isSkolemTerm(f1.theFormula) && Formula.isSkolemTerm(f2.theFormula))) {
                 ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
                 Set<VariableMapping> set = new HashSet<VariableMapping>();
                 set.add(new VariableMapping(f1.theFormula, f2.theFormula));
@@ -1157,7 +1199,7 @@ public class Formula implements Comparable {
         head1.read(f1.car());
         Formula head2 = new Formula();
         head2.read(f2.car());
-        List<Set<VariableMapping>> headMaps = mapFormulaVariables(head1, head2, kb,memoMap);
+        List<Set<VariableMapping>> headMaps = mapFormulaVariables(head1, head2, kb, memoMap);
         memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(head1.theFormula, head2.theFormula), headMaps);
         if(headMaps == null) {
             //heads don't match; no point of going further
@@ -1167,14 +1209,14 @@ public class Formula implements Comparable {
         //comparing arguments
         ArrayList<String> args1 = f1.complexArgumentsToArrayList(1);
         ArrayList<String> args2 = f2.complexArgumentsToArrayList(1);
-        if(args1.size() != args2.size()) {
+        if (args1.size() != args2.size()) {
             return null;
         }
 
-        if(!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
+        if (!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
             //non commutative relation; comparing parameters in order
             List<Set<VariableMapping>> runningMaps = headMaps;
-            for(int i = 0; i < args1.size(); i++) {
+            for (int i = 0; i < args1.size(); i++) {
                 Formula parameter1 = new Formula();
                 parameter1.read(args1.get(i));
                 Formula parameter2 = new Formula();
@@ -1190,11 +1232,12 @@ public class Formula implements Comparable {
         } else {
             //commutative relation; going through all possible parameter permutations and comparing
             List<Set<VariableMapping>> unionMaps = new ArrayList<Set<VariableMapping>>();
-            List<int[]> permutations = FormulaUtil.getPermutations(args1.size(), (a,b)-> mapFormulaVariables(new Formula(args1.get(a)), new Formula(args2.get(b)), kb, memoMap) != null);
-            for(int[] perm:permutations) {
+            List<int[]> permutations = FormulaUtil.getPermutations(args1.size(),
+                    (a,b)-> mapFormulaVariables(new Formula(args1.get(a)), new Formula(args2.get(b)), kb, memoMap) != null);
+            for (int[] perm:permutations) {
                 List<Set<VariableMapping>> currentMaps = headMaps;
                 boolean currentPairingValid = true;
-                for(int i = 0; i < args1.size(); i++) {
+                for (int i = 0; i < args1.size(); i++) {
                     Formula parameter1 = new Formula();
                     parameter1.read(args1.get(i));
                     Formula parameter2 = new Formula();
@@ -1211,7 +1254,7 @@ public class Formula implements Comparable {
                     unionMaps = VariableMapping.union(unionMaps, currentMaps);
                 }
             }
-            if(unionMaps.isEmpty()) {
+            if (unionMaps.isEmpty()) {
                 //keeping the convention of null list when matching is impossible
                 unionMaps = null;
             }
@@ -1248,12 +1291,12 @@ public class Formula implements Comparable {
     private static String normalizeParameterOrder(String formula,KB kb, boolean varPlaceholders) {
 
         //null test first
-        if(formula == null) {
+        if (formula == null) {
             return null;
         }
 
         //checking formula is a simple tokens
-        if(!Formula.listP(formula)) {
+        if (!Formula.listP(formula)) {
             if(varPlaceholders && isVariable(formula)) {
                 return "?XYZ";
             } else {
@@ -1267,28 +1310,28 @@ public class Formula implements Comparable {
 
         //normalizing parameters
         ArrayList<String> args = f.complexArgumentsToArrayList(1);
-        if(args == null || args.size() == 0) {
+        if (args == null || args.size() == 0) {
             return formula;
         }
         List<String> orderedArgs = new ArrayList<String>();
-        for(String arg:args) {
+        for (String arg:args) {
             orderedArgs.add(Formula.normalizeParameterOrder(arg, kb, varPlaceholders));
         }
 
         //sorting arguments if the predicate permits
         String head = f.car();
-        if(Formula.isCommutative(head) || (kb != null && kb.isInstanceOf(head, "SymmetricRelation"))) {
+        if (Formula.isCommutative(head) || (kb != null && kb.isInstanceOf(head, "SymmetricRelation"))) {
             Collections.sort(orderedArgs);
         }
 
         //building result
         StringBuilder result = new StringBuilder(LP);
-        if(varPlaceholders && isSkolemTerm(head)) {
+        if (varPlaceholders && isSkolemTerm(head)) {
             head = "?SknFn";
         }
         result.append(head);
         result.append(SPACE);
-        for(String arg:orderedArgs) {
+        for (String arg:orderedArgs) {
             result.append(arg);
             result.append(SPACE);
         }
@@ -2713,7 +2756,7 @@ public class Formula implements Comparable {
             	      
         Formula f1 = new Formula();
         f1.read("(<=> (instance ?REL TransitiveRelation) (forall (?INST1 ?INST2 ?INST3) " +
-    	    " (=> (and (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))");
+                " (=> (and (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))");
         System.out.println("Input: " + f1);
         System.out.println(f1.replaceVar("?REL", "part"));
     }
@@ -2748,6 +2791,10 @@ public class Formula implements Comparable {
         // testIsSimpleClause();
         //testReplaceVar();
         testBigArgs();
+    }
+
+    public Formula negate() {
+        return new Formula("(not " + theFormula + ")");
     }
 
     private static class VariableMapping {

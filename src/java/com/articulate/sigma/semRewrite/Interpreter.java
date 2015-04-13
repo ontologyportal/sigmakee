@@ -951,8 +951,7 @@ public class Interpreter {
                 ArrayList<String> inferenceAnswers = Lists.newArrayList();
                 if (verboseProof) {
                     inferenceAnswers = kb.ask(s3, 30, 1);
-                }
-                else {
+                } else {
                     inferenceAnswers = kb.askNoProof(s3, 30, 1);
                 }
                 if (verboseAnswer) {
@@ -970,7 +969,8 @@ public class Interpreter {
         return s3;
     }
 
-    /** *************************************************************
+    /** ***********************************************************************************
+     * generates the answer to a query by replacing the variables with the results from the inference call
      */
     public static String formatAnswer(Formula query, List<String> inferenceAnswers, KB kb) {
 

@@ -14,6 +14,11 @@
     "query": "Does Amelia fly a plane?",
     "answer": "Yes."
   },
+  {
+    "file": "QuickTest.txt",
+    "query": "Was Amelia a pilot?",
+    "answer": "Yes."
+  },
 
 
   {
