@@ -376,8 +376,10 @@ public class EProver {
             System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
+            __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
             System.out.println("------------- INFO in EProver.main() completed initialization--------");
-            EProver eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+            EProver eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"),
+                    KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
 
             System.out.println(eprover.submitQuery("(subclass ?X Object)",kb));
             eprover.terminate();
