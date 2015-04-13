@@ -106,55 +106,69 @@ public class PredVarInst {
      *
      */
     private static String hasCorrectArityRecurse(Formula f, KB kb) {
-        
+
         if (f == null || StringUtil.emptyString(f.theFormula) || f.empty() ||
-            Formula.atom(f.theFormula) || f.isVariable())
+                Formula.atom(f.theFormula) || f.isVariable())
             return null;
-        if (f.isSimpleClause()) {
-            //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() simple clause f: " + f);
-            String rel = f.getArgument(0);
-            if (kb.kbCache.transInstOf(rel,"VariableArityRelation")) {
-                //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() variable arity: " + f);
-                return null;
-            }
-            ArrayList<String> l = f.complexArgumentsToArrayList(1);
-            if (l == null) {
-                System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() not checked: not a simple clause : " + f);
-                return null;
-            }
-            for (int i = 0; i < l.size(); i++) {
-                String arg = l.get(i);
-                if (Formula.isFunction(arg)) {
-                    String result = hasCorrectArityRecurse(new Formula(arg),kb);
-                    if (!StringUtil.emptyString(result))
-                        return result;
-                }
-            }
-            int val = 0;
-            Integer intval = kb.kbCache.valences.get(rel);
-            if (kb.kbCache.valences.get(rel) != null)
-                val = intval.intValue();
-            //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): " + f);
-            //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): " + l);
-            //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() rel, val,actual: " + rel + "," + val + ": " + l.size());
-            //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() l: " + l);
-            
-            if (val > 0 && val != l.size()) {
-                System.out.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
-                                   val + " but found " + l.size() + " for relation " + rel);
-                return rel;
-            }
+        String rel = f.getArgument(0);
+        ArrayList<String> l = f.complexArgumentsToArrayList(1);
+        int val = 0;
+        //if the relation position is also a list, this condition is due to Formula.cdr()
+        if (Formula.listP(rel)) {
+            Formula p = new Formula();
+            p.read(rel);
+            String res = hasCorrectArityRecurse(p, kb);
+            if (!StringUtil.emptyString(res))
+                return res;
         }
         else {
-            if (Formula.isQuantifier(f.car()))
-                return hasCorrectArityRecurse(f.cddrAsFormula(),kb);
+            // (term) like wors, just return null, this condition is due to
+            if (l == null) {
+                return null;
+            }
+            Integer intval = kb.kbCache.valences.get(rel);
+            if (intval != null)
+                val = intval.intValue();
             else {
-                String result = hasCorrectArityRecurse(f.carAsFormula(),kb);
-                if (!StringUtil.emptyString(result))
-                    return result;
-                result = hasCorrectArityRecurse(f.cdrAsFormula(),kb);
-                if (!StringUtil.emptyString(result))
-                    return result;
+                if (l.size() != 0 && !logicalTerms.contains(rel) && !rel.startsWith("?")) {
+                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s do not have a arity defined in KB, can't get the arity number!\n%s", rel, f);
+                    return null;
+                }
+            }
+            //check the arity number of current level predict
+            if (!kb.kbCache.transInstOf(rel, "VariableArityRelation")) {
+                //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() variable arity: " + f);
+                if (val > 0 && val != l.size()) {
+                    System.out.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
+                            val + " but found " + l.size() + " for relation " + rel);
+                    return rel;
+                }
+            }
+            if (f.isSimpleClause()) {
+                //check if the clasue has function clause and check arity of function clause
+                for (String arg : l) {
+                    if (Formula.isFunction(arg)) {
+                        String result = hasCorrectArityRecurse(new Formula(arg), kb);
+                        if (!StringUtil.emptyString(result))
+                            return result;
+                    }
+                }
+            }
+            else {
+                //if quantifiered, just check the third arguemnt
+                if (Formula.isQuantifier(f.car()))
+                    return hasCorrectArityRecurse(f.cddrAsFormula(), kb);
+            }
+        }
+        if (l != null && l.size() != 0) {
+            for (String k : l) {
+                if (Formula.atom(k))
+                    continue;
+                Formula ff = new Formula();
+                ff.read(k);
+                String res = hasCorrectArityRecurse(ff, kb);
+                if (!StringUtil.emptyString(res))
+                    return res;
             }
         }
         return null;
