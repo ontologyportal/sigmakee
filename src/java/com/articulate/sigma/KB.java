@@ -1558,7 +1558,7 @@ public class KB {
      * @param maxAnswers The maximum number of answers (binding sets)
      * the inference engine should return.
      *
-     * @return A String indicating the status of the ask operation.
+     * @return A list of answers.
      */
     public ArrayList<String> ask(String suoKifFormula, int timeout, int maxAnswers) {
 
@@ -1595,6 +1595,55 @@ public class KB {
         }
         return null;
     }
+
+    /** *************************************************************
+     * Submits a query to the inference engine.  Returns an XML
+     * formatted String that contains the response of the inference
+     * engine.  It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF
+     * query.
+     *
+     * @param timeout The number of seconds after which the inference
+     * engine should give up.
+     *
+     * @param maxAnswers The maximum number of answers (binding sets)
+     * the inference engine should return.
+     *
+     * @return A String indicating the status of the ask operation.
+     */
+    public String askEProver(String suoKifFormula, int timeout, int maxAnswers) {
+        String result = "";
+        // Start by assuming that the ask is futile.
+        result = ("<queryResponse>" + System.getProperty("line.separator")
+               + "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
+                + "  <summary proofs=\"0\"/>" + System.getProperty("line.separator")
+                + "</queryResponse>" + System.getProperty("line.separator"));
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            ArrayList<Formula> processedStmts = fp.preProcess(query,true, this);
+            if (!processedStmts.isEmpty() && this.eprover != null) {
+                String strQuery = processedStmts.get(0).theFormula;
+                result = this.eprover.submitQuery(strQuery,this);
+            }
+
+            if (!processedStmts.isEmpty() && this.eprover != null) {
+                // set timeout in EBatchConfig file and reload eprover
+                try {
+                    eprover.addBatchConfig(null, timeout);
+                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                String strQuery = processedStmts.get(0).theFormula;
+                result = this.eprover.submitQuery(strQuery,this);
+            }
+        }
+        return result;
+     }
 
     /** *************************************************************
      * Submits a query to the inference engine.  Returns a list of
