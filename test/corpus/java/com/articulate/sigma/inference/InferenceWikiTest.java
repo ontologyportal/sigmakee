@@ -37,6 +37,9 @@ public class InferenceWikiTest {
     @Parameterized.Parameter(value= 2)
     public String answer;
 
+    /**************************************************************************************************
+     *
+     */
     @BeforeClass
     public static void initialize() {
 
@@ -47,6 +50,9 @@ public class InferenceWikiTest {
         interpreter.initialize();
     }
 
+    /***********************************************************************************************
+     *
+     */
     @Test
     public void test() {
 
@@ -81,6 +87,10 @@ public class InferenceWikiTest {
 
     }
 
+    /******************************************************************************************************
+     *
+     * @return
+     */
     @Parameterized.Parameters(name="{0}:{1}")
     public static Collection<Object[]> prepare(){
 
