@@ -91,6 +91,7 @@ public final class RewriteRuleUtil extends RuleSet {
         RuleSet rs;
         KBmanager kb = KBmanager.getMgr();
         kb.initializeOnce();
+
         String f = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "SemRewrite.txt";
         String pref = KBmanager.getMgr().getPref("SemRewrite");
         if (!Strings.isNullOrEmpty(pref))
