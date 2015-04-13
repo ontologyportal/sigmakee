@@ -33,7 +33,6 @@ import java.util.regex.Pattern;
 
 import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
 
-import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 
@@ -87,12 +86,6 @@ public class Utilities {
 	
 	/** ***************************************************************
 	 */
-	public String getRootWord(int dateId) {
-
-		//System.out.println("Id is ::" + dateId);
-		return populateRootWord(dateId);
-	}
-	
 	public void lemmatize(Tokens token) {
 		if(!token.getPos().equals("NNP") || !token.getPos().equals("NNPS")) {
 			token.setWord(token.getLemma());

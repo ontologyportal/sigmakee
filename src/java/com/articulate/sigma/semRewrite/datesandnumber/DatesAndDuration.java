@@ -30,60 +30,80 @@ import edu.stanford.nlp.ling.IndexedWord;
 
 public class DatesAndDuration {
 	
-	static final Pattern DIGITAL_YEAR_PATTERN = Pattern.compile("^[0-9]{4}$");
-	static final Pattern WESTERN_YEAR_PATTERN = Pattern.compile("^([0-9]{1,2})(\\/|\\-|\\.)([0-9]{1,2})(\\/|\\-|\\.)([0-9]{4})$");
-	static final Pattern DAY_PATTERN = Pattern.compile("^[0-9]{1,2}(th)?$");
+	static final Pattern YEAR_PATTERN = Pattern.compile("^[0-9]{4}$");
+	static final Pattern MMDDYYYY_PATTERN = Pattern.compile("^([0-9]{1,2})(\\/|\\-|\\.)([0-9]{1,2})(\\/|\\-|\\.)([0-9]{4})$");
+	static final Pattern DATE_PATTERN = Pattern.compile("^[0-9]{1,2}(th)?$");
 	static final Pattern DURATION_PATTERN = Pattern.compile("^P([0-9])+[A-Z]");
 	
 	/** ***************************************************************
 	 */
-	 public void processDate(Tokens token, Utilities utilities, List<Tokens> tempDateList, Tokens prevToken) {
+	 public void processDateToken(Tokens presentDateToken, Utilities utilities, List<Tokens> tempDateList, Tokens prevDateToken) {
 
-		Matcher digitalPatternMatcher = DIGITAL_YEAR_PATTERN.matcher(token.getWord());
-		Matcher westernYearMatcher = WESTERN_YEAR_PATTERN.matcher(token.getWord());
-		Matcher dayMatcher = DAY_PATTERN.matcher(token.getWord());
-		if (Utilities.MONTHS.contains(token.getWord().toLowerCase())) {
-			token.setTokenType("MONTH");
-			mergeDates(token, tempDateList, prevToken, utilities);
+		Matcher yearPatternMatcher = YEAR_PATTERN.matcher(presentDateToken.getWord());
+		Matcher mmddyyyyPatternMatcher = MMDDYYYY_PATTERN.matcher(presentDateToken.getWord());
+		Matcher datePatternMatcher = DATE_PATTERN.matcher(presentDateToken.getWord());
+		
+		if (Utilities.MONTHS.contains(presentDateToken.getWord().toLowerCase())) {
+			presentDateToken.setTokenType("MONTH");
+			mergeDates(presentDateToken, tempDateList, prevDateToken, utilities);
 		} 
-		else if (Utilities.DAYS.contains(token.getWord().toLowerCase())) {
-			String tokenRoot = utilities.getRootWord(token.getId());
+		else if (Utilities.DAYS.contains(presentDateToken.getWord().toLowerCase())) {
+			String tokenRoot = utilities.populateRootWord(presentDateToken.getId());
 			if (tokenRoot != null) {
 				utilities.sumoTerms.add("time("+tokenRoot+","+"time-"+utilities.timeCount+")");
 			}
-			DateInfo tempDate = new DateInfo();
-			tempDate.setWeekDay(token.getWord());
-			tempDate.addWordIndex(token.getId());
-			tempDate.setTimeCount(utilities.timeCount);
-			utilities.datesList.add(tempDate);
-			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+token.getWord()+")");	
+			addDateToList(null, null, null, presentDateToken.getWord(), presentDateToken.getId(), utilities);
+			utilities.sumoTerms.add("day(time-"+utilities.timeCount+","+presentDateToken.getWord()+")");	
 			utilities.timeCount++;
 		} 
-		else if (digitalPatternMatcher.find()) {
-			token.setTokenType("YEAR");
-			mergeDates(token, tempDateList, prevToken, utilities);
+		else if (yearPatternMatcher.find()) {
+			presentDateToken.setTokenType("YEAR");
+			mergeDates(presentDateToken, tempDateList, prevDateToken, utilities);
 		} 
-		else if (westernYearMatcher.find()) {
-			String tokenRoot = utilities.getRootWord(token.getId());
+		else if (mmddyyyyPatternMatcher.find()) {
+			String tokenRoot = utilities.populateRootWord(presentDateToken.getId());
 			if (tokenRoot != null) {
 				utilities.sumoTerms.add("time("+tokenRoot+","+"time-"+utilities.timeCount+")");
 			}
-			DateInfo tempDate = new DateInfo();
-			tempDate.setDay(westernYearMatcher.group(3));
-			tempDate.setMonth(Utilities.MONTHS.get(Integer.valueOf(westernYearMatcher.group(1))-1));
-			tempDate.setYear(westernYearMatcher.group(5));
-			tempDate.addWordIndex(token.getId());
-			tempDate.setTimeCount(utilities.timeCount);
-			utilities.datesList.add(tempDate);
+			addDateToList(mmddyyyyPatternMatcher.group(3), Utilities.MONTHS.get(Integer.valueOf(mmddyyyyPatternMatcher.group(1))-1),
+					mmddyyyyPatternMatcher.group(5), null, presentDateToken.getId(), utilities);
 		} 
-		else if (dayMatcher.find()) {
-			if(token.getWord().contains("th")) {
-				token.setWord(token.getWord().replace("th", ""));
+		else if (datePatternMatcher.find()) {
+			if(presentDateToken.getWord().contains("th")) {
+				presentDateToken.setWord(presentDateToken.getWord().replace("th", ""));
 			}
-			token.setTokenType("DAYS");
-			mergeDates(token, tempDateList, prevToken, utilities);
+			presentDateToken.setTokenType("DAYS");
+			mergeDates(presentDateToken, tempDateList, prevDateToken, utilities);
 		}
 	}
+	 
+	 /** ***************************************************************
+		 */
+	 private void populateDateInfo(DateInfo tempDate, String year, String month, String day, String weekDay) {
+		 if(day != null) {
+			 tempDate.setDay(day); 
+		 }
+		 if(month != null) {
+			 tempDate.setMonth(month);
+		 }
+		 if(year != null) {
+			 tempDate.setYear(year);
+		 }
+		 if(weekDay != null) {
+			 tempDate.setWeekDay(weekDay);
+		 }
+	 }
+	 
+	 /** ***************************************************************
+		 */
+	 private void addDateToList(String day, String month, String year, String weekDay, int index, Utilities utilities) {
+		 
+		 DateInfo tempDate = new DateInfo();
+		 populateDateInfo(tempDate, year, month, day, weekDay);
+			tempDate.addWordIndex(index);
+			tempDate.setTimeCount(utilities.timeCount);
+			utilities.datesList.add(tempDate);
+	 }
 	 
 	 /** ***************************************************************
 		 */
@@ -108,7 +128,7 @@ public class DatesAndDuration {
 	 
 	 /** ***************************************************************
 		 */
-	 private boolean checkTokenInList(List<Tokens> tempDateList, Tokens token) {
+	 private boolean containsDateToken(List<Tokens> tempDateList, Tokens token) {
 		 for(Tokens tempToken : tempDateList) {
 			 if(tempToken.getTokenType().equals(token.getTokenType())) {
 				 return false;
@@ -127,21 +147,21 @@ public class DatesAndDuration {
 	 
 	 /** ***************************************************************
 		 */
-	 public void mergeDates(Tokens token, List<Tokens> tempDateList, Tokens prevToken, Utilities utilities) {
+	 public void mergeDates(Tokens presentDateToken, List<Tokens> tempDateList, Tokens prevDateToken, Utilities utilities) {
 		 
-		 if(prevToken == null) {
-			 tempDateList.add(token);
+		 if(prevDateToken == null) {
+			 tempDateList.add(presentDateToken);
 			 return;
 		 }
-		 if((token.getId() - prevToken.getId()) <= 2 && !token.getTokenType().equals(prevToken.getTokenType())) {
-			 if(checkTokenInList(tempDateList,token)) {
-				 tempDateList.add(token);
+		 if((presentDateToken.getId() - prevDateToken.getId()) <= 2 && !presentDateToken.getTokenType().equals(prevDateToken.getTokenType())) {
+			 if(containsDateToken(tempDateList,presentDateToken)) {
+				 tempDateList.add(presentDateToken);
 			 } else {
-				 clearTempDateList(tempDateList, utilities, token);
+				 clearTempDateList(tempDateList, utilities, presentDateToken);
 			 }
 			 
 		 } else {
-			 clearTempDateList(tempDateList, utilities, token);
+			 clearTempDateList(tempDateList, utilities, presentDateToken);
 		 }
 	 }
 	 
@@ -165,7 +185,7 @@ public class DatesAndDuration {
 				if (date.getYear() != null) {
 					utilities.sumoTerms.add("year(time-"+utilities.timeCount+","+date.getYear()+")");
 				}
-				String tokenRoot = utilities.getRootWord(date.getWordIndex());
+				String tokenRoot = utilities.populateRootWord(date.getWordIndex());
 				date.setTimeCount(utilities.timeCount);
 				if (tokenRoot != null) {				
 					utilities.sumoTerms.add("time("+tokenRoot+","+"time-"+utilities.timeCount+")");
@@ -256,7 +276,7 @@ public class DatesAndDuration {
 	 
 	 /** ***************************************************************
 		 */
-	 public void handleDurations(Utilities utilities) {
+	 public void processUnhandledDuration(Utilities utilities) {
 
 		for (int i = 0; i < utilities.datesList.size() - 1; i++) {
 			if ((utilities.datesList.get(i).getEndIndex() + 2) == (utilities.datesList.get(i + 1).getWordIndex())) {

@@ -71,7 +71,7 @@ public class DateAndNumbersGeneration {
 				if (times.getHour() != null) {
 					utilities.sumoTerms.add("hour("+"time-"+utilities.timeCount+","+times.getHour()+"-"+times.getWordIndex()+")");
 				}
-				String tokenRoot = utilities.getRootWord(times.getWordIndex());
+				String tokenRoot = utilities.populateRootWord(times.getWordIndex());
 				if (tokenRoot != null) {
 					utilities.sumoTerms.add("time("+tokenRoot+","+"time-"+utilities.timeCount+")");
 				}
@@ -365,7 +365,7 @@ public class DateAndNumbersGeneration {
 			presentDateToken = token;
 			presentDurationToken = token;
 			switch(token.getNer()) {
-				case "DATE"  : datesandDurationHandler.processDate(token, utilities, tempDateList, prevDateToken);
+				case "DATE"  : datesandDurationHandler.processDateToken(token, utilities, tempDateList, prevDateToken);
 					           prevDateToken = presentDateToken;
 							   break;
 				case "NUMBER":
@@ -375,6 +375,7 @@ public class DateAndNumbersGeneration {
 				case "DURATION" :numberToken = datesandDurationHandler.processDuration(token,utilities, prevDurationToken); 
 				                 if(numberToken != null) {
 				                	 measureFn(numberToken, numberCount, utilities);
+				                	 ++numberCount;
 				                 }
 				                 prevDurationToken = presentDurationToken;
 				                 break;
@@ -383,7 +384,7 @@ public class DateAndNumbersGeneration {
 		}
 		List<TimeInfo> timesList = processTime(tokenIdNormalizedTimeMap,utilities, tempDateList, datesandDurationHandler, presentTimeToken, prevTimeToken);
 		datesandDurationHandler.generateSumoDateTerms(utilities, tempDateList);
-		datesandDurationHandler.handleDurations(utilities);
+		datesandDurationHandler.processUnhandledDuration(utilities);
 		generateSumoTimeTerms(timesList,utilities);
 		utilities.filterSumoTerms(substitutor);
 		return utilities.sumoTerms;

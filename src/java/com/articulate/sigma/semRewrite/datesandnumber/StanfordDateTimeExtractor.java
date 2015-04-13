@@ -46,8 +46,7 @@ import edu.stanford.nlp.util.StringUtils;
 
 public class StanfordDateTimeExtractor {
 
-	public static List<String> DATE_ENTITIES = new ArrayList<String>(Arrays.asList("DATE",
-			"DURATION", "TIME"));
+	public static List<String> DATE_ENTITIES = new ArrayList<String>(Arrays.asList("DATE", "TIME"));
 	public static List<String> MEASURE_ENTITIES = new ArrayList<String>(Arrays.asList(
 			"NUMBER", "PERCENT", "ORDINAL"));
 	
@@ -102,7 +101,8 @@ public class StanfordDateTimeExtractor {
 			tokenCount = 1;
 			for (CoreLabel token: sentence.get(TokensAnnotation.class)) {
 				String namedEntity = token.get(NamedEntityTagAnnotation.class);       
-				if ((DATE_ENTITIES.contains(namedEntity)) || ((MEASURE_ENTITIES.contains(namedEntity))&& (token.get(PartOfSpeechAnnotation.class).equals("CD") || token.get(PartOfSpeechAnnotation.class).equals("JJ")))) {
+				if ((DATE_ENTITIES.contains(namedEntity)) || ((MEASURE_ENTITIES.contains(namedEntity))&& (token.get(PartOfSpeechAnnotation.class).equals("CD") || token.get(PartOfSpeechAnnotation.class).equals("JJ")))
+						|| (namedEntity.equals("DURATION") && token.get(PartOfSpeechAnnotation.class).equals("CD"))) {
 					Tokens tokens = new Tokens();
 					tokens.setId(tokenCount);
 					tokens.setWord(token.get(TextAnnotation.class));
