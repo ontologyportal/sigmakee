@@ -529,21 +529,11 @@ public class Interpreter {
         return results;
     }
 
+
     /** *************************************************************
-     * Take in a single sentence and output an English answer.
+     * Take in a single sentence and output CNF for further process.
      */
-    public String interpretSingle(String input) {
-
-        if (input.trim().endsWith("?")) {
-            question = true;
-        } else {
-            question = false;
-        }
-
-        if (!question) {
-            tfidf.addInput(input);
-        }
-
+    public ArrayList<CNF> interpretGenCNF(String input){
         Pipeline pipeline = new Pipeline();
         Annotation document = pipeline.annotate(input);
 
@@ -588,7 +578,26 @@ public class Interpreter {
             cnf.merge(cnfnew);
         }
         inputs.add(cnf);
+        return inputs;
+    }
 
+
+    /** *************************************************************
+     * Take in a single sentence and output an English answer.
+     */
+    public String interpretSingle(String input) {
+
+        if (input.trim().endsWith("?")) {
+            question = true;
+        } else {
+            question = false;
+        }
+
+        if (!question) {
+            tfidf.addInput(input);
+        }
+
+        ArrayList<CNF> inputs=interpretGenCNF(input);
         ArrayList<String> kifClauses = interpretCNF(inputs);
         String result = fromKIFClauses(kifClauses);
         System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
