@@ -21,7 +21,7 @@ public class EProver {
     private Process _eprover;
     private BufferedReader _reader; 
     private BufferedWriter _writer;
-    private static String __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+    private static String __dummyKBdir;
     private static int axiomIndex = 0;
 
     /** *************************************************************
@@ -150,6 +150,7 @@ public class EProver {
         System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
 
+        __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
@@ -174,6 +175,7 @@ public class EProver {
         if (this._eprover != null)
             this.terminate();
 
+        __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
@@ -349,6 +351,7 @@ public class EProver {
         }
         catch (Exception ex) {
             System.out.println("Error in EProver.submitQuery(): " + ex.getMessage());
+            System.out.println("Error might be from EProver constructor, please check your EBatchConfig.txt and TPTP files ...");
             ex.printStackTrace();
         }
         return result;
@@ -376,11 +379,9 @@ public class EProver {
             System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
-            __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
             System.out.println("------------- INFO in EProver.main() completed initialization--------");
             EProver eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"),
                     KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
-
             System.out.println(eprover.submitQuery("(subclass ?X Object)",kb));
             eprover.terminate();
         } 
