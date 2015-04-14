@@ -92,6 +92,6 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
     public void testInitializationTime()   {
         assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime < 350000);
         // Just in case something whacky is going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 50000);
+        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 45000);
     }
 }
