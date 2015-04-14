@@ -251,36 +251,6 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
     }
 
     /** *************************************************************
-     * Mary goes on Tuesday.
-     * prep_on(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (time(?X,?Y)).
-     */
-    @Test
-    public void testMaryGoOnTuesday() {
-        String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_on(go-2,Tuesday-4), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PRESENT,go-2), number(SINGULAR,Tuesday-4), day(time-1,Tuesday), time(goesOn-2,time-1)";
-
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        String actual = interpreter.fromKIFClauses(kifClauses);
-
-        Formula actualFormula = new Formula(actual);
-
-        String expected =
-                "(exists (?go-2 ?Mary-1 ?Y ?M) \n" +
-                        "(and \n" +
-                        "  (time ?go-2\n" +
-                        "  (DayFn Tuesday\n" +
-                        "    (MonthFn ?M\n" +
-                        "      (YearFn ?Y))))\n" +
-                        "  (attribute ?Mary-1 Female)\n" +
-                        "  (names ?Mary-1 \"Mary\")\n" +
-                        "  (instance ?Mary-1 Human))\n" +
-                        ")";
-
-        //assertEquals(expected.replaceAll("\\s+", " ").trim(), actual.replaceAll("\\s+", " ").trim());
-        assertTrue(actualFormula.logicallyEquals(expected));
-    }
-
-    /** *************************************************************
      * Mary walks for two hours.
      * prep_for(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Person) ==> (destination(?X,?Y)).
      */
@@ -306,38 +276,6 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (names ?Mary-1 \"Mary\")\n" +
                         "  (instance ?Mary-1 Human)\n" +
                         "  (instance ?walk-2 Walking))\n" +
-                        ")";
-
-        //assertEquals(expected.replaceAll("\\s+", " ").trim(), actual.replaceAll("\\s+", " ").trim());
-        assertTrue(actualFormula.logicallyEquals(expected));
-    }
-
-    /** *************************************************************
-     * Mary has walked since Tuesday.
-     * prep_since(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (starts(?Y,?X)).
-     */
-    @Test
-    public void testMaryWalkSinceTuesday() {
-        String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,have-2), prep_since(walk-3,Tuesday-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-3), number(SINGULAR,Mary-1), tense(PRESENT,walk-3), aspect(PERFECT,walk-3), number(SINGULAR,Tuesday-5), time(walk-3,time-1), day(time-1,Tuesday)";
-
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        String actual = interpreter.fromKIFClauses(kifClauses);
-
-        Formula actualFormula = new Formula(actual);
-
-        String expected =
-                "(exists (?Mary-1 ?Y ?walk-3 ?M) \n" +
-                        "(and \n" +
-                        "  (time ?walk-3\n" +
-                        "  (DayFn Tuesday\n" +
-                        "    (MonthFn ?M\n" +
-                        "      (YearFn ?Y))))\n" +
-                        "  (agent ?walk-3 ?Mary-1)\n" +
-                        "  (attribute ?Mary-1 Female)\n" +
-                        "  (names ?Mary-1 \"Mary\")\n" +
-                        "  (instance ?Mary-1 Human)\n" +
-                        "  (instance ?walk-3 Walking))\n" +
                         ")";
 
         //assertEquals(expected.replaceAll("\\s+", " ").trim(), actual.replaceAll("\\s+", " ").trim());
