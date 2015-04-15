@@ -283,18 +283,29 @@ public class TPTP3ProofProcessor {
 				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, tpp.proof);
 				HashSet<String> types = new HashSet<>();
 				for (String skolemStmt : skolemStmts) {
-					Pattern p = Pattern.compile("\\(instance ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-_]+)");
+
+					Pattern p = Pattern.compile("\\(names ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
 					Matcher m = p.matcher(skolemStmt);
 					while (m.find()) {
 						String cl = m.group(2);
 						types.add(cl);
 					}
 
-					p = Pattern.compile("\\(subclass ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
-					m = p.matcher(skolemStmt);
-					while (m.find()) {
-						String cl = m.group(2);
-						types.add(cl);
+					// only find instance/subclass expression if no specific name is found
+					if (types.isEmpty()) {
+						p = Pattern.compile("\\(instance ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-_]+)");
+						m = p.matcher(skolemStmt);
+						while (m.find()) {
+							String cl = m.group(2);
+							types.add(cl);
+						}
+
+						p = Pattern.compile("\\(subclass ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
+						m = p.matcher(skolemStmt);
+						while (m.find()) {
+							String cl = m.group(2);
+							types.add(cl);
+						}
 					}
 				}
 				if (kb.kbCache.checkDisjoint(kb, types) == true) {
