@@ -144,17 +144,27 @@ public class Interpreter {
             int paren = clause.indexOf('(');
             int comma = clause.indexOf(',');
 
-            if (paren < 2 || comma < 4 || comma < paren)
+            if (paren < 2 || comma < 4 || comma < paren) {
                 System.out.println("Error in Interpreter.extractWords(): bad clause format: " + clause);
+                continue;
+            }
             String arg1 = clause.substring(paren + 1,comma).trim();
             int wordend1 = arg1.indexOf('-');
-            String purearg1 = arg1.substring(0,wordend1);
+            if (wordend1 < 0) {
+                System.out.println("Error in Interpreter.extractWords(): bad token, missing token number suffix: " + clause);
+                continue;
+            }
+            String purearg1 = arg1.substring(0, wordend1);
             if (!purearg1.equals("ROOT"))
                 purewords.put(arg1,purearg1);
 
             String arg2 = clause.substring(comma + 1, clause.length()-1).trim();
             int wordend2 = arg2.indexOf('-');
-            String purearg2 = arg2.substring(0,wordend2);
+            if (wordend2 < 0) {
+                System.out.println("Error in Interpreter.extractWords(): bad token, missing token number suffix: " + clause);
+                continue;
+            }
+            String purearg2 = arg2.substring(0, wordend2);
             if (!purearg2.equals("ROOT"))
                 purewords.put(arg2,purearg2);
         }
