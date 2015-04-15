@@ -175,8 +175,8 @@ public class Lexer {
         tokenDefs.put(Var,          Pattern.compile("\\?[a-zA-Z][_a-z0-9_A-Z]*\\*?"));
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
+        tokenDefs.put(Ident,        Pattern.compile("\\\"?\\'?[0-9a-zA-Z][_\\-a-z0-9_A-Z ]+\\*?\\\"?"));
         tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+\\:?E?-?[0-9]*-?[0-9]*"));
-        tokenDefs.put(Ident,        Pattern.compile("\\\"?\\'?[0-9a-zA-Z ][_\\-a-z0-9_A-Z ]*\\*?\\\"?"));
         tokenDefs.put(Zero,         Pattern.compile("\\!"));
         tokenDefs.put(Stop,         Pattern.compile("stop"));
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
@@ -313,7 +313,7 @@ public class Lexer {
     }
     
     /** ***************************************************************
-     * @param litval a list of expected literal strings
+     * @param litvals a list of expected literal strings
      * @return True if the next token's string value is among the input
      * string and false otherwise. 
      */
@@ -660,7 +660,29 @@ public class Lexer {
             e.printStackTrace();
         }
     }
-    
+
+    /** ***************************************************************
+     * Check the positive case of AcceptLit().
+     */
+    private static void testAcceptClause3() {
+
+        System.out.println("-------------------------------------------------");
+        System.out.println("INFO in Lexer.testAcceptClause3()");
+        Lexer lex = new Lexer(example4);
+        try {
+
+            Pattern value = tokenDefs.get(Ident);
+            Matcher m = value.matcher("5th-6");
+            if (m.lookingAt()) {
+                System.out.println("parse ok");
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     /** ***************************************************************
      * Check the positive case of AcceptLit(). 
      */
@@ -714,7 +736,7 @@ public class Lexer {
             //testTerm();
             //testAcceptLit();
             //testErrors();
-            testAcceptClause2();
+            testAcceptClause3();
         }
     }
 }
