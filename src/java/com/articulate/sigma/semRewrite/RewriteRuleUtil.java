@@ -20,17 +20,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
 
-import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.google.common.base.Strings;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-import javax.json.JsonObject;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
 
 import static com.articulate.sigma.semRewrite.Interpreter.canon;
 
