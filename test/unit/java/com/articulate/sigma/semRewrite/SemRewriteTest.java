@@ -28,6 +28,16 @@ public class SemRewriteTest extends UnitTestBase {
         interpreter.initialize();
     }
 
+    private void doTest(String input, String[] expectedOutput) {
+        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
+
+        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
+        Set<String> actual = Sets.newHashSet(kifClauses);
+        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
+
+        assertThat(cleanedActual, hasItems(expectedOutput));
+    }
+
     /****************************************************************
      * Mary has walked close to the house.
      * prep_close_to(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> {(orientation ?X ?Y Near)}.
@@ -36,17 +46,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryHasWalkedCloseTo() {
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,have-2), det(house-7,the-6), prep_close_to(walk-3,house-7), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-3), sumo(House,house-7), number(SINGULAR,Mary-1), tense(PRESENT,walk-3), aspect(PERFECT,walk-3), number(SINGULAR,house-7)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(orientation walk-3 house-7 Near)"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /****************************************************************
@@ -57,17 +61,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryWalkedNextTo() {
         String input = "root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), det(house-6,the-5), prep_next_to(walk-2,house-6), sumo(House,house-6), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Walking,walk-2), number(SINGULAR,Mary-1), tense(PAST,walk-2), number(SINGULAR,house-6)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(orientation walk-2 house-6 Near)"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /****************************************************************
@@ -78,17 +76,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryIsOverHouse() {
         String input = "root(ROOT-0,be-2), nsubj(be-2,Mary-1), det(house-5,the-4), prep_over(be-2,house-5), sumo(House,house-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PRESENT,be-2), number(SINGULAR,house-5)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(orientation ?LOC house-5 Above) (located be-2 ?LOC)"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /****************************************************************
@@ -99,17 +91,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryGoPriorToEating() {
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_prior_to(go-2,eating-5), sumo(Transportation,go-2), names(Mary-1,\"Mary\"), sumo(Eating,eating-5), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,eating-5)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(earlier go-2 (WhenFn eating-5))"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /****************************************************************
@@ -120,17 +106,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryGoPriorToChristmas() {
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_prior_to(go-2,ChristmasDay-5), sumo(Transportation,go-2), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Day,ChristmasDay-5), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,Christmas-5), number(SINGULAR,Day-6)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(earlier go-2 ChristmasDay-5)"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /****************************************************************
@@ -141,17 +121,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryWalksInFrontOf() {
         String input = "det(house-7,the-6), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_in_front_of(walk-2,house-7), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(House,house-7), number(SINGULAR,Mary-1), tense(PRESENT,walk-2), number(SINGULAR,front-4), number(SINGULAR,house-7)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(and (equal ?F (FrontFn house-7)) (orientation Mary-1 ?F Near))"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /****************************************************************
@@ -162,17 +136,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryIsOnTopOf() {
         String input = "det(house-7,the-6), root(ROOT-0,be-2), nsubj(be-2,Mary-1), prep_on_top_of(be-2,house-7), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(House,house-7), number(SINGULAR,Mary-1), tense(PRESENT,be-2), number(SINGULAR,top-4), number(SINGULAR,house-7)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(orientation be-2 house-7 On)"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /** *************************************************************
@@ -183,17 +151,11 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryWalkSinceChristmasDay() {
         String input = "root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), aux(walk-3,have-2), prep_since(walk-3,ChristmasDay-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Day,ChristmasDay-5), sumo(Walking,walk-3), number(SINGULAR,Mary-1), tense(PRESENT,walk-3), aspect(PERFECT,walk-3), number(SINGULAR,Christmas-5), number(SINGULAR,Day-6)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(starts ChristmasDay-5 walk-3)"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
     /** *************************************************************
@@ -204,18 +166,43 @@ public class SemRewriteTest extends UnitTestBase {
     public void testMaryGoOnChristmasDay() {
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_on(go-2,ChristmasDay-4), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Day,ChristmasDay-4), number(SINGULAR,Mary-1), tense(PRESENT,go-2), number(SINGULAR,Christmas-4), number(SINGULAR,Day-5)";
 
-        ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
-
         String[] expected = {
                 "(time go-2 ChristmasDay-4)"
         };
 
-        ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
-        Set<String> actual = Sets.newHashSet(kifClauses);
-        Set<String> cleanedActual = actual.stream().map(str -> str.replaceAll("\\s+", " ")).collect(Collectors.toSet());
-
-        assertThat(cleanedActual, hasItems(expected));
+        doTest(input, expected);
     }
 
+    /** *************************************************************
+     * Mary is indoors.
+     * advmod(?V,?Y), nsubj(?V,?P), +sumo(Indoors,?Y) ==>
+     *         {(located ?P ?INDOORS) (instance ?INDOORS Indoors) (exists (?BUILDING) (and (instance ?BUILDING Building) (orientation ?INDOORS ?BUILDING Inside)))}.
+     */
+    @Test
+    public void testMaryIsIndoors() {
+        String input = "root(ROOT-0,be-2), nsubj(be-2,Mary-1), advmod(be-2,indoors-3), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Indoors,indoors-3), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PRESENT,be-2)";
+
+        String[] expected = {
+                "(located Mary-1 ?INDOORS) (instance ?INDOORS Indoors) (exists (?BUILDING) (and (instance ?BUILDING Building) (orientation ?INDOORS ?BUILDING Inside)))"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary is outdoors.
+     * advmod(?V,?Y), nsubj(?V,?P), +sumo(Outdoors,?Y) ==>
+     *       {(located ?P ?OUTDOORS) (instance ?OUTDOORS Outdoors) (not (exists (?BUILDING) (and (instance ?BUILDING Building) (orientation ?OUTDOORS ?BUILDING Inside))))}.
+     */
+    @Test
+    public void testMaryIsOutdoors() {
+        String input = "root(ROOT-0,be-2), nsubj(be-2,Mary-1), advmod(be-2,outdoors-3), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Outdoors,outdoors-3), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PRESENT,be-2)";
+
+        String[] expected = {
+                "(located Mary-1 ?OUTDOORS) (instance ?OUTDOORS Outdoors) (not (exists (?BUILDING) (and (instance ?BUILDING Building) (orientation ?OUTDOORS ?BUILDING Inside))))"
+        };
+
+        doTest(input, expected);
+    }
 
 }
