@@ -351,7 +351,7 @@ public class CNF {
      * A test method
      */
     public static void testUnify() {
-        
+
         System.out.println("INFO in CNF.testUnify(): -------------------------------------");
         String rule = "sense(212345678,?E) ==> " +
                 "(sumo(Foo,?E)).";
@@ -425,6 +425,19 @@ public class CNF {
         System.out.println("INFO in CNF.testUnify(): cnf " + cnf2);
         System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf12);
         System.out.println("INFO in CNF.testUnify(): bindings (should be null): " + cnf12.unify(cnf2));
+
+        System.out.println("INFO in CNF.testUnify(): -------------------------------------");
+        String rule4 = "StartTime(?V,?T), day(?T,?D), month(?T,?M), year(?T,?Y).";
+        Lexer lex4 = new Lexer(rule4);
+        CNF cnf4 = CNF.parseSimple(lex4);
+        //String cnfstr5 = "root(ROOT-0,be-3), det(celebration-2,the-1), nsubj(be-3,celebration-2), prep_from(be-3,July-5), num(July-5,5-6), num(July-5,1980-8), prep_to(be-3,August-10), num(August-10,4-11), num(August-10,1980-13), sumo(SocialParty,celebration-2), number(SINGULAR,celebration-2), tense(PAST,be-3), number(SINGULAR,July-5), number(SINGULAR,August-10), day(time-2,4), StartTime(was-3,time-1), month(time-1,July), year(time-1,1980), month(time-2,August), EndTime(was-3,time-2), day(time-1,5), year(time-2,1980)";
+        String cnfstr5 = "day(time-2,4), StartTime(was-3,time-1), month(time-1,July), year(time-1,1980), month(time-2,August), EndTime(was-3,time-2), day(time-1,5), year(time-2,1980)";
+        //String cnfstr5 = "StartTime(was-3,time-1), month(time-1,July), year(time-1,1980), day(time-1,5)";
+        Lexer lex5 = new Lexer(cnfstr5);
+        CNF cnf5 = CNF.parseSimple(lex5);
+        System.out.println("INFO in CNF.testUnify(): cnf " + cnf4);
+        System.out.println("INFO in CNF.testUnify(): cnf1 " + cnf5);
+        System.out.println("INFO in CNF.testUnify(): bindings: " + cnf4.unify(cnf5));
     }
     
     /** *************************************************************

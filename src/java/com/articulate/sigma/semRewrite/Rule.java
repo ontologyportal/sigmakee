@@ -163,8 +163,14 @@ public class Rule {
         
         String s = "+num(?O,?N), +sumo(?C,?O) ==> (instance(?O,Collection), membersType(?O,?C), membersCount(?O,?N)).";
         //System.out.println("INFO in Rule.testParse(): " + parseString(s));
-        s = "+nsubj(?C2,?X), +amod(?C2,?C), cop(?C2,be*), det(?C2,?D), sumo(?Y,?C), sumo(Human,?X), isInstanceOf(?Y,Nation) ==> (citizen(?X,?Y)).";
+        //s = "+nsubj(?C2,?X), +amod(?C2,?C), cop(?C2,be*), det(?C2,?D), sumo(?Y,?C), sumo(Human,?X), isInstanceOf(?Y,Nation) ==> (citizen(?X,?Y)).";
+        //System.out.println("INFO in Rule.testParse(): " + parseString(s));
+        s = "day(?T,?D), month(?T,?M), year(?T,?Y), StartTime(?V,?T) ==> {(equal (BeginFn (WhenFn ?V)) (DayFn ?D (MonthFn ?M (YearFn ?Y))))}.";
         System.out.println("INFO in Rule.testParse(): " + parseString(s));
+        s = "day(?T,?D), month(?T,?M), year(?T,?Y), StartTime(?V,?T).";
+        Lexer lex4 = new Lexer(s);
+        CNF cnf5 = CNF.parseSimple(lex4);
+        System.out.println("INFO in Rule.testParse(): " + cnf5);
     }
     
     /** *************************************************************
