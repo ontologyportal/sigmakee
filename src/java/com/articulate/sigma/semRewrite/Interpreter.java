@@ -77,7 +77,9 @@ public class Interpreter {
     public static boolean verboseAnswer = false;
     //show the proof in console
     public static boolean verboseProof = false;
-
+    
+    //timeout value
+    public static int timeOut_value = 30;
 
     // debug options
     public static boolean showrhs = false;
@@ -959,9 +961,9 @@ public class Interpreter {
                 Formula query = new Formula(s3);
                 ArrayList<String> inferenceAnswers = Lists.newArrayList();
                 if (verboseProof) {
-                    inferenceAnswers = kb.ask(s3, 30, 1);
+                    inferenceAnswers = kb.ask(s3, timeOut_value, 1);
                 } else {
-                    inferenceAnswers = kb.askNoProof(s3, 30, 1);
+                    inferenceAnswers = kb.askNoProof(s3, timeOut_value, 1);
                 }
                 if (verboseAnswer) {
                     System.out.println("Inference Answers: " + inferenceAnswers);
@@ -1128,6 +1130,9 @@ public class Interpreter {
                     }
 
                 } 
+                else if (input.startsWith("timeout")) {
+                	timeOut_value = Integer.valueOf(input.split(" ")[1]);
+                }
                 else {
                     System.out.println("INFO in Interpreter.interpretIter(): " + input); 
                     List<String> results = interpret(input);
