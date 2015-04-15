@@ -3,6 +3,7 @@ package com.articulate.sigma.inference;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.semRewrite.Interpreter;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import static org.junit.Assert.assertNotEquals;
 /**
  * Created by qingqingcai on 3/26/15.
  */
+@Ignore
 public class QAInferenceTest extends IntegrationTestBase {
 
     private static Interpreter interpreter;

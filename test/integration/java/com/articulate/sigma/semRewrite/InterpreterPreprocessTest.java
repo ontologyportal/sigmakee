@@ -20,22 +20,31 @@ MA  02111-1307 USA
 */
 package com.articulate.sigma.semRewrite;
 
+import com.articulate.sigma.IntegrationTestBase;
+import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
-public class InterpreterPreprocessTest {
+public class InterpreterPreprocessTest extends IntegrationTestBase {
 
+    Interpreter i;
+
+    @Before
+    public void init() {
+        i = new Interpreter();
+        i.initialize();
+    }
 
     /** *************************************************************
      */
     @Test
     public void testNoNullPointerException() {
 
-        Interpreter i = new Interpreter();
-        i.processInput("I have a car. It is green.");
-        i.processInput("I have another car.");
+        i.interpret("I have a car. It is green.");
+        i.interpret("I have another car.");
     }
 
     /** *************************************************************
@@ -43,18 +52,15 @@ public class InterpreterPreprocessTest {
     @Test
     public void testDocumentBuilder() {
 
-        Interpreter i = new Interpreter();
-        i.processInput("I have a car. It is green.");
-        i.processInput("I have another car.");
+        i.interpret("I have a car. Who has a car? It is green.");
+        i.interpret("I have another car.");
+        i.interpret("What is the color of the car?");
 
         assertEquals(3, i.getUserInputs().size());
 
-        String expected = "I have a car.";
-        assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
-        expected = "a car is green.";
-        assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
-        expected = "I have another car.";
-        assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
+        assertThat(i.getUserInputs(), hasItem("I have a car."));
+        assertThat(i.getUserInputs(), hasItem("It is green."));
+        assertThat(i.getUserInputs(), hasItem("I have another car."));
     }
 
     /** *************************************************************
@@ -62,16 +68,15 @@ public class InterpreterPreprocessTest {
     @Test
     public void testAmelia() {
 
-        Interpreter i = new Interpreter();
-        i.processInput("Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator. She was the first woman to fly a plane by herself across the Atlantic Ocean.");
-
-        String expected = "Amelia Mary Earhart ( July 24, 1897 – July 2, 1937) was an American aviator.";
+        i.interpret("Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator. She was the first woman to fly a plane by herself across the Atlantic Ocean.");
 
         assertEquals(2, i.getUserInputs().size());
-        assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
 
-        expected = "Amelia Mary Earhart was the first woman to fly a plane by herself across the Atlantic Ocean.";
-        assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
+        String expected = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator.";
+        assertThat(i.getUserInputs(), hasItem(expected));
+
+        expected = "She was the first woman to fly a plane by herself across the Atlantic Ocean.";
+        assertThat(i.getUserInputs(), hasItem(expected));
     }
 
     /** *************************************************************
@@ -79,11 +84,9 @@ public class InterpreterPreprocessTest {
     @Test
     public void testReflexive() {
 
-        Interpreter i = new Interpreter();
-        i.processInput("Aimee went to the store. She laughed to herself.");
+        i.interpret("Aimee went to the store. She laughed to herself.");
 
-        String expected = "Aimee laughed to herself.";
-
-        assertTrue("Should contain: " + expected + ", but was: " + i.getUserInputs(), i.getUserInputs().contains(expected));
+        String expected = "She laughed to herself.";
+        assertThat(i.getUserInputs(), hasItem(expected));
     }
 }

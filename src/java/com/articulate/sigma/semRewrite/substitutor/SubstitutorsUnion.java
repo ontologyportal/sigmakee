@@ -21,8 +21,12 @@
 package com.articulate.sigma.semRewrite.substitutor;
 
 import com.google.common.collect.Lists;
+import edu.stanford.nlp.ling.CoreLabel;
 
 import java.util.List;
+import java.util.Optional;
+
+import static com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence.EMPTY_SEQUENCE;
 
 public class SubstitutorsUnion implements ClauseSubstitutor {
 
@@ -40,19 +44,46 @@ public class SubstitutorsUnion implements ClauseSubstitutor {
     }
 
     @Override
-    public boolean containsGroup(String key) {
+    public boolean containsKey(CoreLabel key) {
 
         return substitutors.stream()
-                .anyMatch(substitutor -> substitutor.containsGroup(key));
+                .anyMatch(substitutor -> substitutor.containsKey(key));
     }
 
     @Override
-    public String getGrouped(String key) {
+    public boolean containsKey(String keyLabel) {
 
         return substitutors.stream()
-                .filter(substitutor -> substitutor.containsGroup(key))
+                .anyMatch(substitutor -> substitutor.containsKey(keyLabel));
+    }
+
+    @Override
+    public Optional<CoreLabelSequence> getGroupedByFirstLabel(CoreLabel label) {
+
+        return substitutors.stream()
+                .map(substitutor -> substitutor.getGroupedByFirstLabel(label))
+                .filter(seq -> seq.isPresent())
+                .findFirst()
+                .orElse(Optional.empty());
+    }
+
+    @Override
+    public CoreLabelSequence getGrouped(CoreLabel key) {
+
+        return substitutors.stream()
+                .filter(substitutor -> substitutor.containsKey(key))
                 .map(substitutor -> substitutor.getGrouped(key))
                 .findFirst()
-                .orElse(key);
+                .orElse(EMPTY_SEQUENCE);
+    }
+
+    @Override
+    public CoreLabelSequence getGrouped(String keyLabel) {
+
+        return substitutors.stream()
+                .filter(substitutor -> substitutor.containsKey(keyLabel))
+                .map(substitutor -> substitutor.getGrouped(keyLabel))
+                .findFirst()
+                .orElse(EMPTY_SEQUENCE);
     }
 }

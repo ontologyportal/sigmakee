@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,28 +51,18 @@ public class SubstitutionUtil {
             if (m.matches()) {
                 String attr1 = m.group(2);
                 String attr2 = m.group(3);
-                if (substitutor.containsGroup(attr1) || substitutor.containsGroup(attr2)) {
-                    String attr1Grouped = substitutor.getGrouped(attr1);
-                    String attr2Grouped = substitutor.getGrouped(attr2);
+                if (substitutor.containsKey(attr1) || substitutor.containsKey(attr2)) {
+                    CoreLabelSequence attr1Grouped = substitutor.getGrouped(attr1);
+                    CoreLabelSequence attr2Grouped = substitutor.getGrouped(attr2);
                     clauseIterator.remove();
-                    if (!attr1Grouped.equals(attr2Grouped)) {
+                    if (!Objects.equals(attr1Grouped, attr2Grouped)) {
                         String label = m.group(1);
-                        modifiedClauses.add(label + "(" + attr1Grouped + "," + attr2Grouped + ")");
+                        modifiedClauses.add(label + "(" + attr1Grouped.toLabelString().orElse(attr1) + "," + attr2Grouped.toLabelString().orElse(attr2) + ")");
                     }
                 }
             }
         }
 
         clauses.addAll(modifiedClauses);
-    }
-
-    /** *************************************************************
-     */
-    public static NounSubstitutor groupNouns(List<String> clauses) {
-
-        NounSubstitutor cg = new NounSubstitutor(clauses);
-        groupClauses(cg, clauses);
-
-        return cg;
     }
 }

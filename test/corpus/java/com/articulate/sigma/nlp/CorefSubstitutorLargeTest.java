@@ -21,7 +21,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
 
+import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.nlp.pipeline.SentenceBuilder;
+import com.articulate.sigma.semRewrite.substitutor.CorefSubstitutor;
 import com.articulate.sigma.test.JsonReader;
+import edu.stanford.nlp.pipeline.Annotation;
 import junit.framework.TestCase;
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -31,7 +35,7 @@ import org.junit.runners.Parameterized;
 import java.util.Collection;
 
 @RunWith(Parameterized.class)
-public class CorefSubstitutorLarge extends TestCase {
+public class CorefSubstitutorLargeTest extends TestCase {
 
     @Parameterized.Parameter(value= 0)
     public String input;
@@ -39,7 +43,6 @@ public class CorefSubstitutorLarge extends TestCase {
     public String expected;
     @Parameterized.Parameter(value= 2)
     public String titlePrefix;
-
 
     @Parameterized.Parameters(name="{2}{0}")
     public static Collection<Object[]> prepare() {
@@ -57,10 +60,14 @@ public class CorefSubstitutorLarge extends TestCase {
         });
     }
 
-
     @Test
     public void test() {
-        String actual = CorefSubstitutor.substitute(input);
+        Annotation document = Pipeline.toAnnotation(input);
+
+        CorefSubstitutor ps = new CorefSubstitutor(document);
+
+        SentenceBuilder sb = new SentenceBuilder(document);
+        String actual = String.join(" ", sb.asStrings(ps));
         assertEquals(expected, actual);
     }
 }

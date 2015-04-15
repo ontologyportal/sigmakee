@@ -18,42 +18,91 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA  02111-1307 USA
  */
-
 package com.articulate.sigma.semRewrite.substitutor;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import edu.stanford.nlp.ling.CoreLabel;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
 
-/**
- * Created by aholub on 4/2/15.
- */
+import static com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence.EMPTY_SEQUENCE;
+import static com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence.IGNORE_SENTENCE;
+import static com.articulate.sigma.semRewrite.substitutor.SubstitutionUtil.CLAUSE_PARAM;
+
 public class SimpleSubstitutorStorage implements ClauseSubstitutor {
 
-    Map<String, String> groups;
+    Map<CoreLabelSequence, CoreLabelSequence> groups = Maps.newHashMap();
 
-    public void setGroups(Map<String, String> groups) {
+    public void addGroups(Map<CoreLabelSequence, CoreLabelSequence> groups) {
 
-        this.groups = groups;
+        this.groups.putAll(groups);
     }
 
     /** ***************************************************************
      */
     @Override
-    public boolean containsGroup(String key) {
+    public boolean containsKey(CoreLabel keyLabel) {
 
         Preconditions.checkNotNull(groups);
-        return groups.containsKey(key);
+        return groups.keySet().stream().anyMatch(key -> key.containsLabel(keyLabel));
+    }
+
+    @Override
+    public boolean containsKey(String keyLabel) {
+
+        Preconditions.checkNotNull(groups);
+        Matcher m = CLAUSE_PARAM.matcher(keyLabel);
+        if(m.find()) {
+            String text = m.group(1);
+            Integer index = Integer.valueOf(m.group(2));
+            return groups.keySet().stream()
+                    .anyMatch(key -> key.containsLabel(IGNORE_SENTENCE, text, index));
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public Optional<CoreLabelSequence> getGroupedByFirstLabel(CoreLabel label) {
+
+        Preconditions.checkNotNull(groups);
+        return groups.entrySet().stream()
+                .filter(entry -> {
+                    List<CoreLabel> labels = entry.getKey().getLabels();
+                    return !labels.isEmpty() && labels.get(0).equals(label);
+                })
+                .map(entry -> entry.getValue())
+                .findFirst();
     }
 
     /** ***************************************************************
      */
     @Override
-    public String getGrouped(String key) {
+    public CoreLabelSequence getGrouped(CoreLabel key) {
 
-        Preconditions.checkNotNull(groups);
-        String value = groups.get(key);
-        return value == null ? key : value;
+        return groups.entrySet().stream()
+                .filter(e -> e.getKey().containsLabel(key))
+                .map(e -> e.getValue())
+                .findFirst().orElse(EMPTY_SEQUENCE);
+    }
+
+    @Override
+    public CoreLabelSequence getGrouped(String keyLabel) {
+        Matcher m = CLAUSE_PARAM.matcher(keyLabel);
+        if(m.find()) {
+            String text = m.group(1);
+            Integer index = Integer.valueOf(m.group(2));
+            return groups.entrySet().stream()
+                    .filter(e -> e.getKey().containsLabel(IGNORE_SENTENCE, text, index))
+                    .map(e -> e.getValue())
+                    .findFirst().orElse(EMPTY_SEQUENCE);
+        } else {
+            return EMPTY_SEQUENCE;
+        }
     }
 
 }

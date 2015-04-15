@@ -31,10 +31,9 @@ public class PipelineTest extends TestCase {
 
     @Test
     public void testOutput() {
-        Pipeline pipeline = new Pipeline();
 
         String text = "John kicked the cart to East New Britain. He went there too.";
-        Annotation document = pipeline.annotate(text);
+        Annotation document = Pipeline.toAnnotation(text);
 
         SentenceUtil.printSentences(document);
         SentenceUtil.printCorefChain(document);

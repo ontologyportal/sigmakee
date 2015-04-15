@@ -39,7 +39,7 @@ public class DocumentTest {
         List<String> coreffedSentences = document.addUtterance("He chopped down a tree.");
 
         assertEquals(1, coreffedSentences.size());
-        assertEquals("George Washington chopped down a tree.", coreffedSentences.get(0));
+        assertEquals("George_Washington chopped down a tree.", coreffedSentences.get(0));
     }
 
     /** *************************************************************
@@ -52,7 +52,7 @@ public class DocumentTest {
         List<String> coreffedSentences = document.addUtterance("He chopped down a tree. He bought a house.");
 
         assertEquals(2, coreffedSentences.size());
-        assertEquals(ImmutableList.of("George Washington chopped down a tree.", "George Washington bought a house."), coreffedSentences);
+        assertEquals(ImmutableList.of("George_Washington chopped down a tree.", "George_Washington bought a house."), coreffedSentences);
     }
 
     /** *************************************************************
@@ -69,10 +69,10 @@ public class DocumentTest {
         assertEquals(ImmutableList.of("George Washington was a president."), coreffedSentences1);
 
         assertEquals(1, coreffedSentences2.size());
-        assertEquals(ImmutableList.of("George Washington chopped down a tree."), coreffedSentences2);
+        assertEquals(ImmutableList.of("George_Washington chopped down a tree."), coreffedSentences2);
 
         assertEquals(1, coreffedSentences3.size());
-        assertEquals(ImmutableList.of("a tree was large."), coreffedSentences3);
+        assertEquals(ImmutableList.of("a_tree was large."), coreffedSentences3);
     }
 
 

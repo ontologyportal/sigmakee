@@ -23,7 +23,6 @@ package com.articulate.sigma.nlp.pipeline;
 import com.articulate.sigma.test.CVSExporter;
 import com.articulate.sigma.test.JsonReader;
 import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -46,7 +45,8 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.runners.Parameterized.*;
+import static org.junit.runners.Parameterized.Parameter;
+import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class CorefTest extends TestCase {
@@ -57,8 +57,7 @@ public class CorefTest extends TestCase {
                 public Annotation load(String fileName) throws Exception {
 
                     URL url = Resources.getResource("resources/textfiles/" + fileName);
-                    Pipeline pipeline = new Pipeline();
-                    Annotation document = pipeline.annotate(Resources.toString(url, Charsets.UTF_8));
+                    Annotation document = Pipeline.toAnnotation(Resources.toString(url, Charsets.UTF_8));
                     return document;
                 }
             });

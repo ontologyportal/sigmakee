@@ -20,53 +20,43 @@ MA  02111-1307 USA
 */
 package com.articulate.sigma;
 
-import com.articulate.sigma.nlp.CorefSubstitutor;
+import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.nlp.pipeline.SentenceBuilder;
+import com.articulate.sigma.semRewrite.substitutor.CorefSubstitutor;
 import com.google.common.collect.Lists;
-import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.pipeline.Annotation;
 
+import java.util.ArrayList;
 import java.util.List;
 
+public class Document extends ArrayList<String> {
 
-public class Document {
+    public Annotation annotateDocument(String extraSentence) {
+        List sentences = new ArrayList<>(this);
+        sentences.add(extraSentence);
 
-    //utterances from the user
-    List<String> documentContent = Lists.newArrayList();
+        Annotation document = Pipeline.toAnnotation(sentences);
+        return document;
+    }
 
     /** *************************************************************
      * Inserts a new utterance or utterances into the document updating coreferencing of the document.
      * @param utterance input from the user (can be multiple sentences)
      * @return returns a coreference replaced version of the utterances
      */
+    @Deprecated
     public List<String> addUtterance(String utterance) {
 
-        List<String> toCoreference = Lists.newArrayList(documentContent);
+        List<String> toCoreference = Lists.newArrayList(this);
         toCoreference.add(utterance);
-        List<String> substitutedInputs = CorefSubstitutor.substitute(toCoreference);
-        List<String> newSentences = substitutedInputs.subList(documentContent.size(), substitutedInputs.size());
-        documentContent.addAll(newSentences);
+
+        Annotation document = Pipeline.toAnnotation(toCoreference);
+        CorefSubstitutor ps = new CorefSubstitutor(document);
+
+        List<String> substitutedInputs = new SentenceBuilder(document).asStrings(ps);
+        List<String> newSentences = substitutedInputs.subList(this.size(), substitutedInputs.size());
+        addAll(newSentences);
+
         return newSentences;
-    }
-
-    /** *************************************************************
-     * @return the number of lines of dialog in the Document
-     */
-    public int size() {
-
-        return documentContent.size();
-    }
-
-    /** *************************************************************
-     */
-    public boolean contains(String s) {
-
-        return documentContent.contains(s);
-    }
-
-    /** *************************************************************
-     */
-    @Override
-    public String toString() {
-
-        return documentContent.toString();
     }
 }

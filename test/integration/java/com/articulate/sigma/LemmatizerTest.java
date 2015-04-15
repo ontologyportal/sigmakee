@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.semRewrite.Interpreter;
+import com.articulate.sigma.semRewrite.substitutor.SubstitutorsUnion;
 import com.google.common.collect.ImmutableList;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -29,12 +30,12 @@ public class LemmatizerTest {
 
         List<String> results = ImmutableList.of("test(had-2,anything-0)", "testing(PAST,had-2)", "testing2(had-2,ANYTHING)");
 
-        List<String> actual = Interpreter.lemmatizeResults(results, labels);
+        List<String> actual = Interpreter.lemmatizeResults(results, labels, SubstitutorsUnion.of());
 
         String[] expected = {
-                "test(have-2, anything-0)",
-                "testing(PAST, have-2)",
-                "testing2(have-2, ANYTHING)"
+                "test(have-2,anything-0)",
+                "testing(PAST,have-2)",
+                "testing2(have-2,ANYTHING)"
         };
 
         assertThat(actual, hasItems(expected));

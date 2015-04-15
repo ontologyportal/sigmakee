@@ -22,56 +22,25 @@ package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
 import com.articulate.sigma.semRewrite.substitutor.SubstitutionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.pipeline.Annotation;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
+import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.hasItems;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class InterpreterWSDTest extends IntegrationTestBase {
-
-    ArrayList<String> clauses = Lists.newArrayList("root(ROOT-0, aviator-18)"
-            , "nn(Earhart-3, Amelia-1)", "nn(Earhart-3, Mary-2)"
-            , "nsubj(aviator-18, Earhart-3)"
-            , "dep(Earhart-3, July-5)"
-            , "num(July-5, 24-6)", "num(July-5, 1897-8)"
-            , "dep(July-5, July-10)"
-            , "num(July-10, 2-11)", "num(July-10, 1937-13)"
-            , "cop(aviator-18, was-15)"
-            , "det(aviator-18, an-16)"
-            , "amod(aviator-18, American-17)");
-    
-    public static Map<Integer, String> posMap = Maps.newHashMap();
-
-    static {
-        posMap.put(1, "NNP");
-        posMap.put(2, "NNP");
-        posMap.put(3,"NNP");
-        posMap.put(4, "-LRB-");
-        posMap.put(5, "NNP");
-        posMap.put(6, "CD");
-        posMap.put(7, ",");
-        posMap.put(8, "CD");
-        posMap.put(9, ":");
-        posMap.put(10, "NNP");
-        posMap.put(11, "CD");
-        posMap.put(12, ",");
-        posMap.put(13, "CD");
-        posMap.put(14, "-RBR-");
-        posMap.put(15, "VBD");
-        posMap.put(16, "DT");
-        posMap.put(17, "JJ");
-        posMap.put(18, "NN");
-        posMap.put(19, ".");
-    }
 
     @BeforeClass
     public static void initClauses() {
@@ -80,6 +49,17 @@ public class InterpreterWSDTest extends IntegrationTestBase {
 
     @Test
     public void findWSD_NoGroups() {
+        ArrayList<String> clauses = Lists.newArrayList("root(ROOT-0, aviator-18)"
+                , "nn(Earhart-3, Amelia-1)", "nn(Earhart-3, Mary-2)"
+                , "nsubj(aviator-18, Earhart-3)"
+                , "dep(Earhart-3, July-5)"
+                , "num(July-5, 24-6)", "num(July-5, 1897-8)"
+                , "dep(July-5, July-10)"
+                , "num(July-10, 2-11)", "num(July-10, 1937-13)"
+                , "cop(aviator-18, was-15)"
+                , "det(aviator-18, an-16)"
+                , "amod(aviator-18, American-17)");
+
         List<String> wsds = Interpreter.findWSD(clauses, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
         String[] expected = {
                 //"names(Amelia-1,\"Amelia\")", // missed without real EntityParser information
@@ -91,19 +71,25 @@ public class InterpreterWSDTest extends IntegrationTestBase {
                 "sumo(Pilot,aviator-18)"
         };
         assertThat(wsds, hasItems(expected));
-        assertEquals(wsds.size(), expected.length);
+        assertEquals(expected.length, wsds.size());
     }
 
     @Test
     public void findWSD_WithGroups() {
-        SubstitutionUtil.groupNouns(clauses);
-        List<String> wsds = Interpreter.findWSD(clauses, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
+        String input = "Amelia Mary Earhart (July 24, 1897 - July 2, 1937) was an American aviator.";
+        Annotation document = Pipeline.toAnnotation(input);
+        List<String> results = toDependenciesList(document);
+
+        NounSubstitutor substitutor = new NounSubstitutor(document.get(CoreAnnotations.TokensAnnotation.class));
+        SubstitutionUtil.groupClauses(substitutor, results);
+
+        List<String> wsds = Interpreter.findWSD(results, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
         String[] expected = {
                 //"names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")", // missed without real EntityParser information
                 "sumo(UnitedStates,American-17)",
                 "sumo(Pilot,aviator-18)"
         };
         assertThat(wsds, hasItems(expected));
-        assertEquals(wsds.size(), expected.length);
+        assertEquals(expected.length, wsds.size());
     }
 }

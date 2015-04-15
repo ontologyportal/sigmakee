@@ -54,7 +54,7 @@ public class EntityTypeParser {
             for (CoreMap coreMap : coreMaps) {
                 Optional<EntityType> type = Enums.getIfPresent(EntityType.class, coreMap.get(CoreAnnotations.EntityTypeAnnotation.class));
                 if (type.isPresent()) {
-                    String entity = coreMap.get(CoreAnnotations.TextAnnotation.class).replace(" ", "");
+                    String entity = coreMap.get(CoreAnnotations.TextAnnotation.class).replace(" ", "_");
                     int idx = 1 + coreMap.get(CoreAnnotations.TokenBeginAnnotation.class).intValue();
                     parsedEntities.put(entity + "-" + idx, type.get());
                 }

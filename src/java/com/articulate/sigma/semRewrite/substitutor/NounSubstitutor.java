@@ -20,96 +20,59 @@ MA  02111-1307 USA
 */
 package com.articulate.sigma.semRewrite.substitutor;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import edu.stanford.nlp.ling.CoreLabel;
 
-import java.util.*;
-import java.util.regex.Matcher;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class NounSubstitutor extends SimpleSubstitutorStorage {
 
 
-    /** ***************************************************************
+    /** **************************************************************
      */
-    public NounSubstitutor(List<String> clauses) {
-        initialize(clauses);
+    public NounSubstitutor(List<CoreLabel> labels) {
+
+        initialize(labels);
     }
 
-    /** ***************************************************************
+    /** **************************************************************
      */
-    private void initialize(List<String> clauses) {
+    private void initialize(List<CoreLabel> labels) {
 
-        Multimap<String, String> groupsFull = parseGroupsAndCollectRoots(clauses);
-        initGroupForAttributes(groupsFull);
-        setGroups(
-                mergeAttributes(groupsFull)
-        );
+        Map<CoreLabelSequence, CoreLabelSequence> groupsFull = parseGroupsAndCollectRoots(labels);
+        addGroups(groupsFull);
     }
 
-    /** ***************************************************************
+    /** **************************************************************
      */
-    private Multimap<String, String> parseGroupsAndCollectRoots(List<String> clauses) {
-        
-        Multimap<String, String> groupsFull = HashMultimap.create();
-        for (String clause : clauses) {
-            Matcher m = SubstitutionUtil.CLAUSE_SPLITTER.matcher(clause);
-            if (m.matches()) {
-                String label = m.group(1);
-                if ("nn".equals(label)) {
-                    String attr1 = m.group(2);
-                    String attr2 = m.group(3);
-                    groupsFull.put(attr1, attr1);
-                    groupsFull.put(attr1, attr2);
-                }
-            } 
+    private Map<CoreLabelSequence, CoreLabelSequence> parseGroupsAndCollectRoots(List<CoreLabel> labels) {
+
+        Map<CoreLabelSequence, CoreLabelSequence> sequences = Maps.newHashMap();
+        CoreLabel firstLabel = null;
+        List<CoreLabel> sequence = Lists.newArrayList();
+        for (CoreLabel label : labels) {
+            if (firstLabel != null
+                    && ("NNP".equals(label.tag()) && Objects.equals(label.tag(), firstLabel.tag()))) {
+                sequence.add(label);
+            }
             else {
-                System.out.println("ERROR: wrong clause " + clause);
-            }
-        }
-
-        return groupsFull;
-    }
-
-    /** ***************************************************************
-     */
-    private void initGroupForAttributes(Multimap<String, String> groups) {
-        
-        Multimap<String, String> crossGroups = HashMultimap.create();
-        for (String root: groups.keySet()) {
-            Collection<String> rootGroup = groups.get(root);
-            rootGroup.stream()
-                    .filter(attr -> !attr.equals(root))
-                    .forEach(attr -> crossGroups.putAll(attr, rootGroup));
-        }
-        groups.putAll(crossGroups);
-    }
-
-    /** ***************************************************************
-     */
-    private Map<String, String> mergeAttributes(Multimap<String, String> groupsFull) {
-        
-        Map<String, String> groupsWithMergedAttributes = Maps.newTreeMap();
-        for (Map.Entry<String, Collection<String>> entry : groupsFull.asMap().entrySet()) {
-            SortedMap<Integer, String> attributesMerged = Maps.newTreeMap();
-            Integer firstIndex = null;
-            for (String attr : entry.getValue()) {
-                Matcher m = SubstitutionUtil.CLAUSE_PARAM.matcher(attr);
-                if (m.matches()) {
-                    String value = m.group(1);
-                    Integer idx = Integer.valueOf(m.group(2));
-                    if (firstIndex == null || idx.compareTo(firstIndex) < 0) {
-                        firstIndex = idx;
-                    }
-                    attributesMerged.put(idx, value);
-                } 
-                else {
-                    System.out.println("ERROR: wrong clause parameter " + m);
+                if (sequence.size() > 1) {
+                    CoreLabelSequence s = new CoreLabelSequence(sequence);
+                    sequences.put(s, s);
                 }
+                firstLabel = label;
+                sequence = Lists.newArrayList(firstLabel);
             }
-            groupsWithMergedAttributes.put(entry.getKey(), Joiner.on("").join(attributesMerged.values()) + "-" + firstIndex);
+        }
+        if(sequence.size() > 1) {
+            CoreLabelSequence s = new CoreLabelSequence(sequence);
+            sequences.put(s, s);
         }
 
-        return groupsWithMergedAttributes;
+        return sequences;
     }
 
 }

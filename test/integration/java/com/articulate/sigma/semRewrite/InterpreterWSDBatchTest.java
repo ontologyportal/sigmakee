@@ -23,9 +23,11 @@ package com.articulate.sigma.semRewrite;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
 import com.articulate.sigma.semRewrite.substitutor.SubstitutionUtil;
 import com.articulate.sigma.test.JsonReader;
 import com.google.common.collect.Maps;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -72,11 +74,11 @@ public class InterpreterWSDBatchTest extends IntegrationTestBase {
     }
 
     private List<String> doFullWSD(String input) {
-        Pipeline pipeline = new Pipeline();
-        Annotation document = pipeline.annotate(input);
+        Annotation document = Pipeline.toAnnotation(input);
         List<String> results = toDependenciesList(document);
 
-        SubstitutionUtil.groupNouns(results);
+        NounSubstitutor substitutor = new NounSubstitutor(document.get(CoreAnnotations.TokensAnnotation.class));
+        SubstitutionUtil.groupClauses(substitutor, results);
 
         EntityTypeParser etp = new EntityTypeParser(document);
         List<String> wsds = Interpreter.findWSD(results, Maps.newHashMap(), etp);

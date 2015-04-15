@@ -22,6 +22,7 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.nlp.constants.LangLib;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
@@ -30,7 +31,6 @@ import edu.stanford.nlp.ling.CoreAnnotations.*;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.KBestTreesAnnotation;
 import edu.stanford.nlp.util.CoreMap;
@@ -155,19 +155,6 @@ public class SentenceUtil {
         }
     }
 
-    /** ***************************************************************
-     */
-    public static ArrayList<String> toDependenciesList(Annotation document) {
-        
-        ArrayList<String> results = Lists.newArrayList();
-        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-        for (CoreMap sentence : sentences) {
-            SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
-            results = Lists.newArrayList(dependencies.toList().split("\n"));
-        }
-        return results;
-    }
-
     //TODO: I'm a monster! Refactor me
     /** *************************************************************
      * returns a list of strings that add tense, number, etc. information about words in input
@@ -263,12 +250,39 @@ public class SentenceUtil {
         return sb.toString();
     }
 
+    public static CoreMap getLastSentence(Annotation document) {
+        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+        if(!sentences.isEmpty()) {
+            return Iterables.getLast(sentences);
+        } else {
+            return null;
+        }
+    }
+
+    /** ***************************************************************
+     */
+    public static ArrayList<String> toDependenciesList(Annotation document) {
+
+        return toDependenciesList(document.get(SentencesAnnotation.class));
+    }
+
+    /** ***************************************************************
+     */
+    public static ArrayList<String> toDependenciesList(List<CoreMap> sentences) {
+
+        ArrayList<String> results = Lists.newArrayList();
+        for (CoreMap sentence : sentences) {
+            SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
+            results = Lists.newArrayList(dependencies.toList().split("\n"));
+        }
+        return results;
+    }
+
     /** ***************************************************************
      */
     public static void main(String[] args) {
-        
-        Pipeline p = new Pipeline();
-        Annotation a = p.annotate("I went to New York and had cookies and cream in the Empire State Building in January with Mary.");
+
+        Annotation a = Pipeline.toAnnotation("I went to New York and had cookies and cream in the Empire State Building in January with Mary.");
         printCorefChain(a);
         printSentences(a);
     }

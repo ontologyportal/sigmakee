@@ -1,22 +1,20 @@
 package com.articulate.sigma.semRewrite;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
+import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.test.JsonReader;
-
+import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.json.simple.*;
 
-import com.articulate.sigma.KBmanager;
+import java.util.Collection;
+import java.util.Objects;
 
-import java.util.*;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class InterpreterTest extends IntegrationTestBase {

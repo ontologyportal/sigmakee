@@ -1,17 +1,17 @@
 [{
   "input": "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator",
   "test": [
-    "names(AmeliaMaryEarhart-1,\"Amelia Mary Earhart\")",
-    "sumo(Human,AmeliaMaryEarhart-1)",
-    "attribute(AmeliaMaryEarhart-1,Female)",
+    "names(Amelia_Mary_Earhart-1,\"Amelia Mary Earhart\")",
+    "sumo(Human,Amelia_Mary_Earhart-1)",
+    "attribute(Amelia_Mary_Earhart-1,Female)",
     "sumo(UnitedStates,American-17)",
     "sumo(Pilot,aviator-18)"
   ]
 },{
   "input": "Amelia Earhart (July 24, 1897 – July 2, 1937) was an American aviator",
   "test": [
-    "names(AmeliaEarhart-1,\"Amelia Earhart\")",
-    "sumo(Woman,AmeliaEarhart-1)",
+    "names(Amelia_Earhart-1,\"Amelia Earhart\")",
+    "sumo(Woman,Amelia_Earhart-1)",
     "sumo(UnitedStates,American-16)",
     "sumo(Pilot,aviator-17)"
   ]
@@ -27,8 +27,8 @@
 },{
   "input": "Amelia Earhart flies the plane.",
   "test": [
-    "names(AmeliaEarhart-1,\"Amelia Earhart\")",
-    "sumo(Woman,AmeliaEarhart-1)",
+    "names(Amelia_Earhart-1,\"Amelia Earhart\")",
+    "sumo(Woman,Amelia_Earhart-1)",
     "sumo(Flying,flies-3)",
     "sumo(Airplane,plane-5)"
   ]
@@ -39,21 +39,21 @@
     "names(Noonan-3,\"Noonan\")",
     "sumo(Human,Earhart-1)",
     "sumo(Human,Noonan-3)",
-    "sumo(Island,GardnerIsland-5)"
+    "sumo(Island,Gardner_Island-5)"
   ]
 },{
   "input": "John Smith flies the plane",
   "test": [
-    "names(JohnSmith-1,\"John Smith\")",
-    "sumo(Man,JohnSmith-1)",
+    "names(John_Smith-1,\"John Smith\")",
+    "sumo(Man,John_Smith-1)",
     "sumo(Flying,flies-3)",
     "sumo(Airplane,plane-5)"
   ]
 },{
   "input": "George Washington Carver flies the plane.",
   "test": [
-    "names(GeorgeWashingtonCarver-1,\"George Washington Carver\")",
-    "sumo(Man,GeorgeWashingtonCarver-1)",
+    "names(George_Washington_Carver-1,\"George Washington Carver\")",
+    "sumo(Man,George_Washington_Carver-1)",
     "sumo(Flying,flies-4)",
     "sumo(Airplane,plane-6)"
   ]

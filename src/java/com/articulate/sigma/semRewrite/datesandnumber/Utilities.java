@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
 
+import com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 
@@ -118,12 +119,18 @@ public class Utilities {
 				Matcher sumoMatcher = sumoTermPattern.matcher(sumoTerms.get(i));
 				if(sumoMatcher.find()) {
 					String group2 = sumoMatcher.group(2);
+					if(substitutor.containsKey(group2)) {
+						CoreLabelSequence ls = substitutor.getGrouped(group2);
+						if(ls.getLabels().size() > 1) {
+							sumoTerms.set(i, sumoTerms.get(i).replace(group2, ls.toLabelString().get()));
+						}
+					}
 					String group5 = sumoMatcher.group(5);
-					if(!substitutor.getGrouped(group2).equals(group2)) {
-						sumoTerms.set(i, sumoTerms.get(i).replace(group2, substitutor.getGrouped(group2)));
-					} 
-					else if (!substitutor.getGrouped(group5).equals(group5)) {
-						sumoTerms.set(i, sumoTerms.get(i).replace(group5, substitutor.getGrouped(group5)));
+					if(substitutor.containsKey(group5)) {
+						CoreLabelSequence ls = substitutor.getGrouped(group5);
+						if(ls.getLabels().size() > 1) {
+							sumoTerms.set(i, sumoTerms.get(i).replace(group5, ls.toLabelString().get()));
+						}
 					}
 				}
 			}

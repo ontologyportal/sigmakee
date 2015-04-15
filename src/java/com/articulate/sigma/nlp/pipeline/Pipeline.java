@@ -68,12 +68,20 @@ public class Pipeline {
         return document;
     }
 
+    public static Annotation toAnnotation(String input) {
+        Pipeline pipeline = new Pipeline();
+        return pipeline.annotate(input);
+    }
+
+    public static Annotation toAnnotation(List<String> inputs) {
+        return toAnnotation(String.join(" ", inputs));
+    }
+
     /** ***************************************************************
      */
     public static void main(String[] args) {
-        
-        Pipeline p = new Pipeline();
-        Annotation a = p.annotate("Amelia also wrote books, most of them were about her flights.");
+
+        Annotation a = Pipeline.toAnnotation("Amelia also wrote books, most of them were about her flights.");
         SentenceUtil.printSentences(a);
     }
 

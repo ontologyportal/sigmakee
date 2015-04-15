@@ -20,8 +20,15 @@
  */
 package com.articulate.sigma.semRewrite.substitutor;
 
+import edu.stanford.nlp.ling.CoreLabel;
+
+import java.util.Optional;
+
 public interface ClauseSubstitutor {
 
-    boolean containsGroup(String key);
-    String getGrouped(String key);
+    boolean containsKey(CoreLabel key);
+    boolean containsKey(String keyLabel);
+    Optional<CoreLabelSequence> getGroupedByFirstLabel(CoreLabel label);
+    CoreLabelSequence getGrouped(CoreLabel key);
+    CoreLabelSequence getGrouped(String keyLabel);
 }

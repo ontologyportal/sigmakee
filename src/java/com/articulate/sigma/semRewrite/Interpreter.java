@@ -20,29 +20,26 @@ MA  02111-1307 USA
  */
 package com.articulate.sigma.semRewrite;
 
-import java.util.*;
-import java.util.regex.*;
-import java.io.*;
-
 import com.articulate.sigma.*;
-import com.articulate.sigma.nlp.*;
+import com.articulate.sigma.nlp.TFIDF;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
-import com.articulate.sigma.semRewrite.datesandnumber.*;
+import com.articulate.sigma.semRewrite.datesandnumber.InterpretNumerics;
 import com.articulate.sigma.semRewrite.substitutor.*;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Maps;
-
+import com.google.common.collect.*;
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.util.StringUtils;
-import static com.articulate.sigma.StringUtil.splitCamelCase;
-import static com.articulate.sigma.nlp.pipeline.SentenceUtil.makeBinaryRelationship;
-import static com.articulate.sigma.nlp.pipeline.SentenceUtil.toDependenciesList;
+import edu.stanford.nlp.util.CoreMap;
+
+import java.io.File;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.articulate.sigma.semRewrite.EntityType.PERSON;
 
 public class Interpreter {
@@ -200,14 +197,14 @@ public class Interpreter {
             if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
                 continue;
             if (etp.equalsToEntityType(clauseKey, PERSON)) {
-                String humanReadable = splitCamelCase(pureWord);
+                String[] split = pureWord.split("_");
+                String humanReadable = String.join(" ", split);
 
                 results.add("names(" + clauseKey + ",\"" + humanReadable + "\")");
 
-                String[] split = humanReadable.split(" ");
                 Set<String> wordNetResults = ImmutableSet.of();
                 if (split.length > 1) {
-                    wordNetResults = findWordNetResults(humanReadable , clauseKey);
+                    wordNetResults = findWordNetResults(pureWord , clauseKey);
                     results.addAll(wordNetResults);
                 }
 
@@ -248,15 +245,14 @@ public class Interpreter {
                     }
                 }
                 else {
-                    String humanReadable = splitCamelCase(pureWord);
-                    Set<String> wordNetResults = findWordNetResults(humanReadable, clauseKey);
+                    Set<String> wordNetResults = findWordNetResults(pureWord, clauseKey);
                     if (!wordNetResults.isEmpty()) {
                         results.addAll(wordNetResults);
                     }
                     else {
                         Collection<EntityType> knownTypes = etp.getEntityTypes(clauseKey);
                         if (!knownTypes.isEmpty()) {
-                            String[] split = humanReadable.split(" ");
+                            String[] split = pureWord.split("_");
                             for (String word : split) {
                                 String synset = WSD.getBestDefaultSense(word.replace(" ", "_"));
                                 if (!Strings.isNullOrEmpty(synset)) {
@@ -506,74 +502,58 @@ public class Interpreter {
     }
 
     /** *************************************************************
-     * Processes the user's input by adding coreferencing information
-     * Save processed input into Document
-     */
-    public List<String> processInput(String input) {
-        
-        if (!ENDING_IN_PUNC_PATTERN.matcher(input).find()) {
-            input = input + ".";
-        }
-        System.out.println("INFO in Interpreter.processInput(): " + input);
-        List<String> substitutedInputs = userInputs.addUtterance(input);
-        if (!input.equals(StringUtils.join(substitutedInputs, " "))) {
-            System.out.println("INFO input substituted to: " + substitutedInputs);
-        }
-
-        return substitutedInputs;
-    }
-
-    /** *************************************************************
      * Take in a any number of sentences and return kif strings of declaratives
      * or answer to questions.
      */
-
     public List<String> interpret(String input) {
 
         List<String> results = Lists.newArrayList();
+        if (!ENDING_IN_PUNC_PATTERN.matcher(input).find()) {
+            input = input + ".";
+        }
 
-        List<String> substitutedInputs = processInput(input);
-        System.out.println("Interpreting " + substitutedInputs.size() + " inputs.");
-        for (String subInput : substitutedInputs) {
-            results.add(interpretSingle(subInput));
+        Annotation document = Pipeline.toAnnotation(input);
+        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+        System.out.println("Interpreting " + sentences.size() + " inputs.");
+        for(CoreMap sentence : sentences) {
+            String interpreted = interpretSingle(sentence.get(CoreAnnotations.TextAnnotation.class));
+            results.add(interpreted);
         }
 
         return results;
     }
 
-
     /** *************************************************************
      * Take in a single sentence and output CNF for further process.
      */
     public ArrayList<CNF> interpretGenCNF(String input){
-        Pipeline pipeline = new Pipeline();
-        Annotation document = pipeline.annotate(input);
 
-        List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
+        Annotation wholeDocument = userInputs.annotateDocument(input);
+        CoreMap lastSentence = SentenceUtil.getLastSentence(wholeDocument);
+        List<CoreLabel> lastSentenceTokens = lastSentence.get(CoreAnnotations.TokensAnnotation.class);
 
         if (verboseParse) {
-            for (CoreLabel label : tokens) {
-                printLabel(label);
-            }
+            lastSentenceTokens.forEach(this::printLabel);
         }
 
         List<String> results = Lists.newArrayList();
-        List<String> dependenciesList = toDependenciesList(document);
+        List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
         results.addAll(dependenciesList);
 
         ClauseSubstitutor substitutor = SubstitutorsUnion.of(
-                new IdiomSubstitutor(document.get(CoreAnnotations.TokensAnnotation.class)),
-                new NounSubstitutor(results)
+                new CorefSubstitutor(wholeDocument),
+                new IdiomSubstitutor(lastSentenceTokens),
+                new NounSubstitutor(lastSentenceTokens)
         );
         SubstitutionUtil.groupClauses(substitutor, results);
 
-        EntityTypeParser etp = new EntityTypeParser(document);
-        List<String> wsd = findWSD(results, getPartOfSpeechList(document.get(CoreAnnotations.TokensAnnotation.class)), etp);
+        EntityTypeParser etp = new EntityTypeParser(wholeDocument);
+        List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens), etp);
         results.addAll(wsd);
 
-        List<String> posInformation = SentenceUtil.findPOSInformation(document, dependenciesList);
+        List<String> posInformation = SentenceUtil.findPOSInformation(wholeDocument, dependenciesList);
         results.addAll(posInformation);
-        results = lemmatizeResults(results, tokens);
+        results = lemmatizeResults(results, lastSentenceTokens, substitutor);
 
 //        results = processPhrasalVerbs(results);
 
@@ -592,7 +572,6 @@ public class Interpreter {
         inputs.add(cnf);
         return inputs;
     }
-
 
     /** *************************************************************
      * Take in a single sentence and output an English answer.
@@ -614,11 +593,16 @@ public class Interpreter {
         String result = fromKIFClauses(kifClauses);
         System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
 
-        if (question && ((ANSWER_UNDEFINED.equals(result) && autoir) || ir)) {
-            if (autoir) {
-                System.out.println("Interpreter had no response so trying TFIDF");
+        if (question) {
+            if ((ANSWER_UNDEFINED.equals(result) && autoir) || ir) {
+                if (autoir) {
+                    System.out.println("Interpreter had no response so trying TFIDF");
+                }
+                result = tfidf.matchInput(input).toString();
             }
-            result = tfidf.matchInput(input).toString();
+        } else {
+            // Store processed sentence
+            userInputs.add(input);
         }
 
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
@@ -744,46 +728,28 @@ public class Interpreter {
     /** *************************************************************
      * Lemmatize the results of the dependency parser, WSD, etc.
      */
-    public static List<String> lemmatizeResults(List<String> results, List<CoreLabel> tokens) {
+    public static List<String> lemmatizeResults(List<String> results, List<CoreLabel> tokens, ClauseSubstitutor substitutor) {
 
-        List<String> lemmatizeResults = Lists.newArrayList();
+        List<String> lemmatizeResults = Lists.newArrayList(results);
 
-        for (String r : results) {
-            Matcher m = SubstitutionUtil.GENERIC_CLAUSE_SPLITTER.matcher(r);
-            if (m.matches()) {
-                String predicate = m.group(1);
-                String arg1 = m.group(2);
-                String arg2 = m.group(3);
+        for(CoreLabel label : tokens) {
+            if(!"NNP".equals(label.tag()) && !"NNPS".equals(label.tag())) {
+                CoreLabelSequence grouped = substitutor.getGroupedByFirstLabel(label).orElse(new CoreLabelSequence(label));
+                String replace = grouped.toLabelString().get();
+                String replaceTo = Joiner.on("_").join(
+                        grouped.getLabels().stream()
+                                .map(l -> l.lemma()).toArray())
+                        + "-" + grouped.getLabels().get(0).index();
 
-                Matcher arg1Matcher = SubstitutionUtil.CLAUSE_PARAM.matcher(arg1);
-                Matcher arg2Matcher = SubstitutionUtil.CLAUSE_PARAM.matcher(arg2);
-
-                if (arg1Matcher.matches()) {
-                    Integer id = Integer.parseInt(arg1Matcher.group(2));
-                    //ROOT is ID 0 so ignore
-                    if (id != 0) {
-                        if (!tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNP") || tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNPS")) {
-                            arg1 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
-                        }
+                for (String singleResult : results) {
+                    if (singleResult.contains(replace)) {
+                        lemmatizeResults.remove(singleResult);
+                        lemmatizeResults.add(singleResult.replaceAll(replace, replaceTo));
                     }
                 }
-
-                if (arg2Matcher.matches()) {
-                    Integer id = Integer.parseInt(arg2Matcher.group(2));
-                    //ROOT is ID 0 so ignore
-                    if (id != 0) {
-                        if (!tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNP") || tokens.get(id-1).get(CoreAnnotations.PartOfSpeechAnnotation.class).equals("NNPS")) {
-                            arg2 = tokens.get(id - 1).get(CoreAnnotations.LemmaAnnotation.class) + "-" + id.toString();
-                        }
-                    }
-                }
-
-                lemmatizeResults.add(makeBinaryRelationship(predicate, arg1, arg2));
-
-            } else {
-                lemmatizeResults.add(r);
             }
         }
+
         return lemmatizeResults;
     }
 

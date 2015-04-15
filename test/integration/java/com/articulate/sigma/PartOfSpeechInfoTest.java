@@ -2,10 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
-import com.articulate.sigma.semRewrite.Interpreter;
 import com.google.common.collect.Sets;
-import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import org.junit.Test;
 

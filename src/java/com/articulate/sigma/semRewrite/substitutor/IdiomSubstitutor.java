@@ -30,46 +30,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static edu.stanford.nlp.util.StringUtils.capitalize;
-
 public class IdiomSubstitutor extends SimpleSubstitutorStorage {
 
     public IdiomSubstitutor(List<CoreLabel> labels) {
 
-         ArrayList<String> clauses = Lists.newArrayList(
-                 labels.stream()
-                         .map(label -> label.originalText()).toArray(String[]::new)
-         );
-        initialize(clauses);
+        initialize(labels);
     }
 
-    private void initialize(ArrayList<String> labels) {
+    private void initialize(List<CoreLabel> labels) {
         int from = 0;
-        Map<String, String> collectedIdioms = Maps.newHashMap();
+        Map<CoreLabelSequence, CoreLabelSequence> collectedIdioms = Maps.newHashMap();
+        ArrayList<String> labelsText = Lists.newArrayList(labels.stream()
+                        .map(label -> label.originalText()).toArray(String[]::new)
+        );
         ArrayList<String> synset = Lists.newArrayList();
         while (from < labels.size()) {
-            int to = WordNet.wn.collectMultiWord(labels, from, synset);
+            int to = WordNet.wn.collectMultiWord(labelsText, from, synset);
             if (to > from) {
-                String idiomValue = buildIdiom(labels, from, to);
-                for(int i = from; i < to; i++) {
-                    String key = labels.get(i) + "-" + (i+1);
-                    collectedIdioms.put(key, idiomValue);
-                }
+                CoreLabelSequence idiom = new CoreLabelSequence(labels.subList(from, to));
+                collectedIdioms.put(idiom, idiom);
             }
             from = to + 1;
         }
 
-        setGroups(collectedIdioms);
-    }
-
-    private String buildIdiom(List<String> labels, int startIndex, int endIndex) {
-        StringBuilder idiom = new StringBuilder(labels.get(startIndex));
-        for(int i = startIndex + 1; i < endIndex; i++) {
-            String label = capitalize(labels.get(i));
-            idiom.append(label);
-        }
-        idiom.append('-').append(startIndex+1);
-
-        return idiom.toString();
+        addGroups(collectedIdioms);
     }
 }
