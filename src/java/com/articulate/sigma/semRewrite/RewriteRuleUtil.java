@@ -23,7 +23,6 @@ MA  02111-1307 USA
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.google.common.base.Strings;
-import javafx.beans.binding.ObjectExpression;
 
 import java.io.File;
 import java.util.*;
@@ -36,7 +35,7 @@ public final class RewriteRuleUtil extends RuleSet {
     static KBmanager kbm;
     static KB kb;
 
-    static List<String> ignorePreds = Arrays.asList(new String[]{"number", "tense", "root", "names"});
+    static List<String> ignorePreds = Arrays.asList(new String[]{"number", "tense"/**, "root", "names"**/});
 
     static {
         kbm = KBmanager.getMgr();
@@ -164,7 +163,8 @@ public final class RewriteRuleUtil extends RuleSet {
                         m.disjuncts.get(0).arg2 = sumoTerm;
                     }
                 }
-                iterator.remove();
+                // remove sumo() clauses
+                 iterator.remove();
             }
         }
         return cnf;
@@ -194,7 +194,7 @@ public final class RewriteRuleUtil extends RuleSet {
     /**
      * **********************************************************
      */
-    private static class Pair<F, S> {
+    public static class Pair<F, S> {
 
         F first;
         S second;
