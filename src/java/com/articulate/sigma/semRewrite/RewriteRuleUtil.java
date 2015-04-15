@@ -129,7 +129,7 @@ public final class RewriteRuleUtil extends RuleSet {
         RuleSet rs = loadRuleSet();
         String input = "";
         System.out.println("SemRewrite.txt loaded. There are " + rs.rules.size() + " rules.");
-        SemRewriteRuleCheck.checkRuleSet(rs);
+ //       SemRewriteRuleCheck.checkRuleSet(rs);
         System.out.println("1.Will check rules entered by default. Please enter rule.\nThere are other functions:\nreload  will reload the Semrewrite.txt and check the ruleset\n!filePath   no spaces will load the file with sentences and find one common CNF.\nexit/quit to quit");
         Scanner scanner = new Scanner(System.in);
         do {

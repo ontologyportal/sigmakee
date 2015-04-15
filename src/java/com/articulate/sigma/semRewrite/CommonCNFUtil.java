@@ -180,8 +180,8 @@ public class CommonCNFUtil {
         for (int i = 0; i < input.length; ++i) {
             System.out.println(input[i]);
             CNF cnf = inter.interpretGenCNF(input[i]).get(0);
-            System.out.println(cnf);
             cnf = preProcessCNF(cnf);
+            System.out.println(cnf);
             res.put(i, cnf);
         }
         return res;
@@ -289,28 +289,21 @@ public class CommonCNFUtil {
 
         if (!m.disjuncts.get(0).pred.equals(n.disjuncts.get(0).pred))
             return false;
-        String ca = findCommonAncesstor(m.disjuncts.get(0).arg1, n.disjuncts.get(0).arg1);
         String marg1=m.disjuncts.get(0).arg1;
         String narg1=n.disjuncts.get(0).arg1;
         String marg2=m.disjuncts.get(0).arg2;
         String narg2=n.disjuncts.get(0).arg2;
+        String ca = findCommonAncesstor(marg1, narg1);
         if (ca != null) {
             marg1= ca;
             narg1= ca;
         }
-        String ca1 = findCommonAncesstor(m.disjuncts.get(0).arg2, n.disjuncts.get(0).arg2);
+        String ca1 = findCommonAncesstor(marg2, narg2);
         if (ca1 != null) {
             marg2 = ca1;
             narg2 = ca1;
         }
-        if (ca != null){
-            if(ca1!=null)
-                return true;
-            if((marg2.matches("\".*\"")|| marg2.matches(".*-.*"))&&(narg2.matches("\".*\"")|| narg2.matches(".*-.*")))
-                return true;
-        }
-        else if(ca1!=null){
-            if((marg1.matches("\".*\"")|| marg1.matches(".*-.*"))&&(narg1.matches("\".*\"")|| narg1.matches(".*-.*")))
+        if (ca != null&&ca1!=null){
                 return true;
         }
         return false;
@@ -355,8 +348,9 @@ public class CommonCNFUtil {
      * **********************************************************
      */
     public static String findCommonAncesstor(String s1, String s2) {
-
-        HashSet<String> p1 = kb.kbCache.parents.get("subclass").get(s1);
+        if((s1.contains("\"")|| s1.contains("-"))||(s2.contains("-")|| s2.contains("\""))||(s1.startsWith("?")||(s2.startsWith("?"))))
+        return "?X";
+            HashSet<String> p1 = kb.kbCache.parents.get("subclass").get(s1);
         if (p1 == null) p1 = new HashSet<String>();
         HashSet<String> m = kb.kbCache.parents.get("subrelation").get(s1);
         if (m != null)
