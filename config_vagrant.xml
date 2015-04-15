@@ -29,9 +29,8 @@
   <preference name="holdsPrefix" value="no" />
   <preference name="logDir" value="/home/vagrant/.sigmakee/logs" />
   <kb name="SUMO" >
-    <constituent filename="/home/vagrant/.sigmakee/KBs/Merge.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/english_format.kif" />
-    <constituent filename="/home/vagrant/.sigmakee/KBs/Mid-level-ontology.kif" />
+    <constituent filename="/home/vagrant/.sigmakee/KBs/domainEnglishFormat.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/ArabicCulture.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/Biography.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/Cars.kif" />
@@ -49,6 +48,8 @@
     <constituent filename="/home/vagrant/.sigmakee/KBs/Justice.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/Languages.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/Media.kif" />
+    <constituent filename="/home/vagrant/.sigmakee/KBs/Merge.kif" />
+    <constituent filename="/home/vagrant/.sigmakee/KBs/Mid-level-ontology.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/MilitaryDevices.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/Military.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/MilitaryPersons.kif" />
@@ -61,6 +62,7 @@
     <constituent filename="/home/vagrant/.sigmakee/KBs/TransnationalIssues.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/Transportation.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/TransportDetail.kif" />
+    <constituent filename="/home/vagrant/.sigmakee/KBs/UXExperimentalTerms.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/VirusProteinAndCellPart.kif" />
     <constituent filename="/home/vagrant/.sigmakee/KBs/WMD.kif" />
   </kb>
