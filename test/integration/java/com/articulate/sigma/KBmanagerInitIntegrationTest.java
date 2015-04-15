@@ -50,6 +50,7 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
         kifSet.add("TransnationalIssues.kif");
         kifSet.add("Transportation.kif");
         kifSet.add("TransportDetail.kif");
+        kifSet.add("UXExperimentalTerms.kif");
         kifSet.add("VirusProteinAndCellPart.kif");
         kifSet.add("WMD.kif");
      }
@@ -60,12 +61,11 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
     @Test
     public void testNbrKifFilesLoaded()   {
 
-        int expected = 37;
         Set<String> expectedKifFiles = Sets.newHashSet(kifSet);
         List<String> actualKifFiles = SigmaTestBase.kb.constituents;
         filterExpectedKifs(actualKifFiles, expectedKifFiles);
         assertEquals(actualKifFiles.toString(), 0, actualKifFiles.size());
-        assertEquals(expectedKifFiles.toString(), 00, expectedKifFiles.size());
+        assertEquals(expectedKifFiles.toString(), 0, expectedKifFiles.size());
     }
 
     private void filterExpectedKifs(List<String> actualKifFiles, Set<String> expectedKifFiles) {
