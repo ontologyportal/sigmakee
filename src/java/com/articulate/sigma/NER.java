@@ -94,14 +94,26 @@ public class NER {
     /** *************************************************************
      */
     public static void main(String[] args) {
-        
-        try {
-            ArrayList<String> entities = extractEntities(args[0]);
-            System.out.println(processExtraction(entities));
+
+        if (args != null && args.length > 1 && args[0].equals("-f")) {
+            try {
+                ArrayList<String> entities = extractEntities(args[1]);
+                System.out.println(processExtraction(entities));
+            }
+            catch (Exception ex) {
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+            }
         }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            System.out.println("Named Entity Recognition");
+            System.out.println("  options:");
+            System.out.println("  -h - show this help screen");
+            System.out.println("  -f fname - run on one file");
         }
+        else {
+
+        }
+
     }
 }
