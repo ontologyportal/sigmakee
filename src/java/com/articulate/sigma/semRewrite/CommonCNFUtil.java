@@ -44,7 +44,7 @@ public class CommonCNFUtil {
     private CommonCNFUtil(){}
 
 
-    public static String saveCNFMaptoFile(Map<Integer,CNF> map, String[] input, String path){
+    public static String saveCNFMaptoFile(Map<Integer,CNF> querymap,Map<Integer,CNF> answermap,String[] filenames, String[] query,String[] answer, String path){
         File f=new File(path);
         if(!f.exists())
             try {
@@ -56,11 +56,14 @@ public class CommonCNFUtil {
         System.out.println(f.getAbsolutePath());
         try(PrintWriter pw=new PrintWriter(f)){
             JSONArray arr=new JSONArray();
-            for(Integer k:map.keySet()){
+            for(Integer k:querymap.keySet()){
                 JSONObject obj=new JSONObject();
+                obj.put("file",filenames[k]);
                 obj.put("index",k.toString());
-                obj.put("sentence",input[k]);
-                obj.put("CNF",""+map.get(k)+"");
+                obj.put("query",query[k]);
+                obj.put("queryCNF",""+querymap.get(k)+"");
+                obj.put("answer",answer[k]);
+                obj.put("answerCNF",""+answermap.get(k)+"");
                 arr.add(obj);
             }
             System.out.println(arr.toJSONString());
@@ -72,17 +75,23 @@ public class CommonCNFUtil {
         }
         return f.getAbsolutePath();
     }
-    public static void loadCNFMapfromFile(String path,Map<Integer,CNF> map,ArrayList<String> strs){
+    public static void loadCNFMapfromFile(Map<Integer,CNF> querymap,Map<Integer,CNF> answermap,ArrayList<String> filenames, ArrayList<String> query,ArrayList<String> answer, String path){
         JSONParser jp=new JSONParser();
         try {
             JSONArray arr= (JSONArray) jp.parse(new FileReader(path));
             Iterator<JSONObject> iterator=arr.iterator();
             while(iterator.hasNext()){
                 JSONObject obj=iterator.next();
-                String k=(String)obj.get("CNF");
+                String k=(String)obj.get("queryCNF");
                 CNF cnf=CNF.parseSimple(new Lexer(k));
-                map.put(Integer.parseInt((String)obj.get("index")),cnf);
-                strs.add((String)obj.get("sentence"));
+                 k=(String)obj.get("answerCNF");
+                CNF cnf2=CNF.parseSimple(new Lexer(k));
+                Integer index=Integer.parseInt((String) obj.get("index"));
+                querymap.put(index,cnf);
+                answermap.put(index,cnf2);
+                query.add((String) obj.get("query"));
+                answer.add((String) obj.get("answer"));
+                filenames.add((String) obj.get("file"));
             }
         }
         catch (IOException e) {
@@ -119,6 +128,8 @@ public class CommonCNFUtil {
             Iterator<JSONObject> iterator=arr.iterator();
             while(iterator.hasNext()){
                 JSONObject obj=iterator.next();
+                String filename=(String)obj.get("file");
+                res.add(filename);
                 String sen=(String)obj.get("query");
                 res.add(sen);
                 sen= (String) obj.get("answer");
@@ -153,10 +164,10 @@ public class CommonCNFUtil {
                 String sumoTerm = c.disjuncts.get(0).arg1;
                 String word = c.disjuncts.get(0).arg2;
                 for (Clause m : cnf.clauses) {
-                    if (m.disjuncts.get(0).arg1.equals(word)) {
+                    if (m!=null &&m.disjuncts!=null &&m.disjuncts.get(0)!=null&&m.disjuncts.get(0).arg1!=null&&m.disjuncts.get(0).arg1.equals(word)) {
                         m.disjuncts.get(0).arg1 = sumoTerm;
                     }
-                    if (m.disjuncts.get(0).arg2.equals(word)) {
+                    if (m!=null &&m.disjuncts!=null &&m.disjuncts.get(0)!=null&&m.disjuncts.get(0).arg2!=null&&m.disjuncts.get(0).arg2.equals(word)) {
                         m.disjuncts.get(0).arg2 = sumoTerm;
                     }
                 }
