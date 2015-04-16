@@ -558,7 +558,7 @@ public class Interpreter {
 //        results = processPhrasalVerbs(results);
 
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-        System.out.println("INFO in Interpreter.interpretSingle(): " + in);
+        System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
 
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
@@ -848,25 +848,25 @@ public class Interpreter {
             CNF newInput = null;
             for (int j = 0; j < inputs.size(); j++) {          
                 newInput = inputs.get(j).deepCopy();
-                //System.out.println("INFO in Interpreter.interpret(): new input 0: " + newInput);
+                //System.out.println("INFO in Interpreter.interpretCNF(): new input 0: " + newInput);
                 for (int i = 0; i < rs.rules.size(); i++) {
                     Rule r = rs.rules.get(i).deepCopy();      
-                    //System.out.println("INFO in Interpreter.interpret(): new input 0.5: " + newInput);
-                    //System.out.println("INFO in Interpreter.interpret(): r: " + r);
+                    //System.out.println("INFO in Interpreter.interpretCNF(): new input 0.5: " + newInput);
+                    //System.out.println("INFO in Interpreter.interpretCNF(): r: " + r);
                     HashMap<String,String> bindings = r.cnf.unify(newInput);
                     if (bindings == null) {
                         newInput.clearBound();
                     }
                     else {
                         bindingFound = true;
-                        //System.out.println("INFO in Interpreter.interpret(): new input 1: " + newInput);
-                        //System.out.println("INFO in Interpreter.interpret(): bindings: " + bindings);
+                        //System.out.println("INFO in Interpreter.interpretCNF(): new input 1: " + newInput);
+                        //System.out.println("INFO in Interpreter.interpretCNF(): bindings: " + bindings);
                         if (showr)
-                            System.out.println("INFO in Interpreter.interpret(): r: " + r);
+                            System.out.println("INFO in Interpreter.interpretCNF(): r: " + r);
                         RHS rhs = r.rhs.applyBindings(bindings);   
                         if (r.operator == Rule.RuleOp.IMP) {
                             CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
-                            //System.out.println("INFO in Interpreter.interpret(): input with bindings removed: " + bindingsRemoved);
+                            //System.out.println("INFO in Interpreter.interpretCNF(): input with bindings removed: " + bindingsRemoved);
                             if (!bindingsRemoved.empty()) {  // assert the input after removing bindings
                                 if (rhs.cnf != null) {
                                     if (showrhs)
@@ -878,13 +878,13 @@ public class Interpreter {
                             else
                                 if (rhs.cnf != null) {
                                     if (showrhs)
-                                        System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
+                                        System.out.println("INFO in Interpreter.interpretCNF(): add rhs " + rhs.cnf);
                                     newInput = rhs.cnf;
                                 }
                             if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) { // assert a KIF RHS
                                 kifoutput.add(rhs.form.toString());
                             }
-                            //System.out.println("INFO in Interpreter.interpret(): new input 2: " + newInput + "\n");
+                            //System.out.println("INFO in Interpreter.interpretCNF(): new input 2: " + newInput + "\n");
                         }
                         else if (r.operator == Rule.RuleOp.OPT) {
                             CNF bindingsRemoved = newInput.removeBound(); // delete the bound clauses
@@ -911,11 +911,11 @@ public class Interpreter {
                     addUnprocessed(kifoutput,newInput); // a hack to add unprocessed SDP clauses as if they were KIF
             inputs = new ArrayList<CNF>();
             inputs.addAll(newinputs);
-            System.out.println("INFO in Interpreter.interpret(): KB: " + printKB(inputs));
-            //System.out.println("INFO in Interpreter.interpret(): bindingFound: " + bindingFound);
-            //System.out.println("INFO in Interpreter.interpret(): counter: " + counter);
-            //System.out.println("INFO in Interpreter.interpret(): newinputs: " + newinputs);
-            //System.out.println("INFO in Interpreter.interpret(): inputs: " + inputs);
+            System.out.println("INFO in Interpreter.interpretCNF(): KB: " + printKB(inputs));
+            //System.out.println("INFO in Interpreter.interpretCNF(): bindingFound: " + bindingFound);
+            //System.out.println("INFO in Interpreter.interpretCNF(): counter: " + counter);
+            //System.out.println("INFO in Interpreter.interpretCNF(): newinputs: " + newinputs);
+            //System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs);
         }
         return kifoutput;
     }
@@ -930,7 +930,7 @@ public class Interpreter {
         String s1 = toFOL(kifcs);
         String s2 = postProcess(s1);
         String s3 = addQuantification(s2);
-        System.out.println("INFO in Interpreter.interpret(): KIF: " + (new Formula(s3)));
+        System.out.println("INFO in Interpreter.fromKIFClauses(): KIF: " + (new Formula(s3)));
         if (inference) {
             KB kb = KBmanager.getMgr().getKB("SUMO");
             if (question) {
@@ -1200,8 +1200,8 @@ public class Interpreter {
         Rule r = new Rule();
         r = Rule.parseString(rule);
         CNF cnf = Clausifier.clausify(r.lhs);
-        System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
-        System.out.println("INFO in Interpreter.testUnify(): CNF rule antecedent: " + cnf);
+        System.out.println("INFO in Interpreter.testUnify2(): Input: " + cnfInput);
+        System.out.println("INFO in Interpreter.testUnify2(): CNF rule antecedent: " + cnf);
         HashMap<String,String> bindings = cnf.unify(cnfInput);
         System.out.println("bindings: " + bindings);  
         if (bindings != null)
@@ -1219,8 +1219,8 @@ public class Interpreter {
         Rule r = new Rule();
         r = Rule.parseString(rule);
         CNF cnf = Clausifier.clausify(r.lhs);
-        System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
-        System.out.println("INFO in Interpreter.testUnify(): CNF rule antecedent: " + cnf);
+        System.out.println("INFO in Interpreter.testUnify3(): Input: " + cnfInput);
+        System.out.println("INFO in Interpreter.testUnify3(): CNF rule antecedent: " + cnf);
         HashMap<String,String> bindings = cnf.unify(cnfInput);
         System.out.println("bindings: " + bindings);  
         if (bindings != null)
@@ -1238,8 +1238,8 @@ public class Interpreter {
         Rule r = new Rule();
         r = Rule.parseString(rule);
         CNF cnf = Clausifier.clausify(r.lhs);
-        System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
-        System.out.println("INFO in Interpreter.testUnify(): CNF rule antecedent: " + cnf);
+        System.out.println("INFO in Interpreter.testUnify4(): Input: " + cnfInput);
+        System.out.println("INFO in Interpreter.testUnify4(): CNF rule antecedent: " + cnf);
         HashMap<String,String> bindings = cnf.unify(cnfInput);
         System.out.println("bindings: " + bindings);  
         if (bindings != null)
@@ -1348,7 +1348,7 @@ public class Interpreter {
         CNF cnfInput = CNF.parseSimple(lex);
         Rule r = new Rule();
         preProcessQuestionWords(cnfInput);
-        System.out.println("INFO in Interpreter.testUnify(): Input: " + cnfInput);
+        System.out.println("INFO in Interpreter.testQuestionPreprocess(): Input: " + cnfInput);
     }
 
     /** ***************************************************************
@@ -1357,7 +1357,7 @@ public class Interpreter {
 
         String input = "(and (agent kicks-2 John-1) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
                 "(instance John-1 Human) (instance cart-4 Wagon))";
-        System.out.println("INFO in Interpreter.testUnify(): Input: " + postProcess(input));
+        System.out.println("INFO in Interpreter.testPostProcess(): Input: " + postProcess(input));
     }
 
 
@@ -1377,7 +1377,7 @@ public class Interpreter {
         }
 
         List<String> wsd = findWSD(results, Maps.newHashMap(), EntityTypeParser.NULL_PARSER);
-        System.out.println("INFO in Interpreter.testUnify(): Input: " + wsd);
+        System.out.println("INFO in Interpreter.testWSD(): Input: " + wsd);
     }
 
     /** ***************************************************************
