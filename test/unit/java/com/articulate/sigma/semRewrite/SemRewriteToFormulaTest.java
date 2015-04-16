@@ -4,6 +4,7 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.UnitTestBase;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.util.ArrayList;
 import static org.junit.Assert.assertEquals;
@@ -617,6 +618,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
      * Mary has make up the story.
      * nsubj(make*,?S), aux(make*,have*), dobj(make*,?V), sumo(?C,?V), isSubclass(?C,Process) ==> (nsubj(?V,?S), past(?V,?DUMMY), sumo(?C,?V)).
      */
+    @Ignore
     @Test
     public void testMaryHasMadeUpStory() {
         String input = "det(story-6,the-5), root(ROOT-0,make-3), nsubj(make-3,Mary-1), aux(make-3,have-2), dobj(make-3,story-6), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Stating,story-6), number(SINGULAR,Mary-1), tense(PRESENT,make-3), aspect(PERFECT,make-3), number(SINGULAR,story-6)";
