@@ -468,7 +468,7 @@ public class Lexer {
     /** ***************************************************************
      * Return a list of all tokens in the source. 
      */
-    ArrayList<String> lexTypes() throws ParseException {
+    public ArrayList<String> lexTypes() throws ParseException {
 
         ArrayList<String> res = new ArrayList<String>();
         while (!testTok(EOFToken)) {
