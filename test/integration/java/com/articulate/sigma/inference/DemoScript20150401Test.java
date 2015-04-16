@@ -24,7 +24,6 @@ public class DemoScript20150401Test extends IntegrationTestBase {
     }
 
     @Test
-    @Ignore
     public void test1() {
         String input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator, one of the first women to fly a plane long distances.";
         interpreter.interpret(input).get(0);
@@ -36,63 +35,51 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         interpreter.interpret(input).get(0);
 
         input = "What language did Amelia speak?";
-        interpreter.interpret(input).get(0);
         String actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("EnglishLanguage.", actualAnswer);
 
         input = "Where did she live?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("UnitedStates.", actualAnswer);
 
         input = "Where did Amelia live?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("UnitedStates.", actualAnswer);
 
         input = "When was she born?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("DayFn(24,s__MonthFn(s__July,s__YearFn(1897))).", actualAnswer);
 
         input = "When did she die?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("DayFn(2,s__MonthFn(s__July,s__YearFn(1937))).", actualAnswer);
 
         input = "What was she interested in?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("An instance of Airplane.", actualAnswer);
 
         input = "Was she interested in airplanes?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("Yes.", actualAnswer);
 
         input = "Where did she fly?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("AtlanticOcean.", actualAnswer);
 
         input = "What did she fly?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("An instance of Airplane.", actualAnswer);
 
         // We cannot answer "Was Amelia female?" because Amelia is an instance of DiseaseOrSyndrome
         input = "Was Amelia Mary Earhart female?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("Yes.", actualAnswer);
 
         input = "Where did she disappear?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("SouthPacificOcean.", actualAnswer);
 
         input = "When did she disappear?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("MonthFn(s__July,s__YearFn(1937)).", actualAnswer);
     }

@@ -14,7 +14,6 @@ import static org.junit.Assert.assertNotEquals;
 /**
  * Created by qingqingcai on 3/26/15.
  */
-@Ignore
 public class QAInferenceTest extends IntegrationTestBase {
 
     private static Interpreter interpreter;
