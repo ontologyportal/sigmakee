@@ -24,16 +24,16 @@ import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 import org.junit.Test;
 
-public class FormulaArityCheckTest extends UnitTestBase{
+public class FormulaArityCheckTest extends UnitTestBase {
 
-    KB kb;
+//    KB kb;
 
-    public FormulaArityCheckTest() {
-
-        KBmanager kbm = KBmanager.getMgr();
-        kbm.initializeOnce();
-        kb = kbm.getKB("SUMO");
-    }
+//    public FormulaArityCheckTest() {
+//
+//        KBmanager kbm = KBmanager.getMgr();
+//        kbm.initializeOnce();
+//        kb = kbm.getKB("SUMO");
+//    }
 
     @Test
     public void testArityCheck1() {

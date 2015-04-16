@@ -21,6 +21,7 @@ MA  02111-1307 USA
 package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.UnitTestBase;
 import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,14 +35,14 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertThat;
 
-public class RulePrepAboutRefersToUnitTest {
+public class RulePrepAboutRefersToUnitTest extends UnitTestBase {
 
     public static Interpreter interpreter;
 
-    @BeforeClass
-    public static void initializeKbManager() {
-        KBmanager.getMgr().initializeOnce();
-    }
+//    @BeforeClass
+//    public static void initializeKbManager() {
+//        KBmanager.getMgr().initializeOnce();
+//    }
 
     @BeforeClass
     public static void initializeInterpreter() {
@@ -622,7 +623,7 @@ public class RulePrepAboutRefersToUnitTest {
     @Test
     public void testOpinionAbout() {
         // People have different opinions about religion.
-        String input = "root(ROOT-0,have-2), nsubj(have-2,people-1), amod(opinion-4,different-3), dobj(have-2,opinion-4), prep_about(opinion-4,religion-6), sumo(equal,different-3), sumo(GroupOfPeople,people-1), sumo(Proposition,religion-6), sumo(Proposition,opinion-4), number(PLURAL,people-1), tense(PRESENT,have-2), number(PLURAL,opinion-4), number(SINGULAR,religion-6)]";
+        String input = "root(ROOT-0,have-2), nsubj(have-2,people-1), amod(opinion-4,different-3), dobj(have-2,opinion-4), prep_about(opinion-4,religion-6), sumo(equal,different-3), sumo(GroupOfPeople,people-1), sumo(Proposition,religion-6), sumo(Proposition,opinion-4), number(PLURAL,people-1), tense(PRESENT,have-2), number(PLURAL,opinion-4), number(SINGULAR,religion-6)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         String[] expected = {

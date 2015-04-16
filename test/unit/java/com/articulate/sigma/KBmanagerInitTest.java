@@ -16,7 +16,7 @@ public class KBmanagerInitTest extends UnitTestBase {
     @Test
     public void testNbrKifFilesLoaded()   {
 
-        int expected = 3;
+        int expected = UnitTestBase.NUM_KIF_FILES;
         int actual = SigmaTestBase.kb.constituents.size();
         assertEquals(expected, actual);
     }
