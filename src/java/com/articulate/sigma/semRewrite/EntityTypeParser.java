@@ -20,6 +20,7 @@ MA  02111-1307 USA
 */
 package com.articulate.sigma.semRewrite;
 
+import com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence;
 import com.google.common.base.Enums;
 import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
@@ -54,9 +55,8 @@ public class EntityTypeParser {
             for (CoreMap coreMap : coreMaps) {
                 Optional<EntityType> type = Enums.getIfPresent(EntityType.class, coreMap.get(CoreAnnotations.EntityTypeAnnotation.class));
                 if (type.isPresent()) {
-                    String entity = coreMap.get(CoreAnnotations.TextAnnotation.class).replace(" ", "_");
-                    int idx = 1 + coreMap.get(CoreAnnotations.TokenBeginAnnotation.class).intValue();
-                    parsedEntities.put(entity + "-" + idx, type.get());
+                    CoreLabelSequence seq = new CoreLabelSequence(coreMap.get(CoreAnnotations.TokensAnnotation.class));
+                    parsedEntities.put(seq.toLabelString().get(), type.get());
                 }
             }
         }

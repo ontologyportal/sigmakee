@@ -3,6 +3,7 @@ package com.articulate.sigma;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.google.common.collect.Sets;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import org.junit.Test;
 
@@ -27,7 +28,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PRESENT, works-2) but was: " + posInformation, posInformation.contains("tense(PRESENT, works-2)"));
 
@@ -42,7 +43,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PRESENT, working-3) but was: " + posInformation, posInformation.contains("tense(PRESENT, working-3)"));
         assertTrue("posInformation should include aspect(PROGRESSIVE, working-3) but was: " + posInformation, posInformation.contains("aspect(PROGRESSIVE, working-3)"));
@@ -58,7 +59,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PAST, lived-2) but was: " + posInformation, posInformation.contains("tense(PAST, lived-2)"));
 
@@ -73,7 +74,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PAST, working-3) but was: " + posInformation, posInformation.contains("tense(PAST, working-3)"));
         assertTrue("posInformation should include aspect(PROGRESSIVE, working-3) but was: " + posInformation, posInformation.contains("aspect(PROGRESSIVE, working-3)"));
@@ -90,7 +91,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PRESENT, finished-3) but was: " + posInformation, posInformation.contains("tense(PRESENT, finished-3)"));
         assertTrue("posInformation should include aspect(PERFECT, finished-3) but was: " + posInformation, posInformation.contains("aspect(PERFECT, finished-3)"));
@@ -106,7 +107,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PRESENT, learning-4) but was: " + posInformation, posInformation.contains("tense(PRESENT, learning-4)"));
         assertTrue("posInformation should include aspect(PROGRESSIVE/PERFECT, learning-4) but was: " + posInformation, posInformation.contains("aspect(PROGRESSIVE/PERFECT, learning-4)"));
@@ -122,7 +123,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PAST, met-4) but was: " + posInformation, posInformation.contains("tense(PAST, met-4)"));
         assertTrue("posInformation should include aspect(PERFECT, met-4) but was: " + posInformation, posInformation.contains("aspect(PERFECT, met-4)"));
@@ -138,7 +139,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(PAST, living-4) but was: " + posInformation, posInformation.contains("tense(PAST, living-4)"));
         assertTrue("posInformation should include aspect(PROGRESSIVE/PERFECT, living-4) but was: " + posInformation, posInformation.contains("aspect(PROGRESSIVE/PERFECT, living-4)"));
@@ -154,7 +155,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(FUTURE, see-3) but was: " + posInformation, posInformation.contains("tense(FUTURE, see-3)"));
 
@@ -169,7 +170,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(FUTURE, dancing-4) but was: " + posInformation, posInformation.contains("tense(FUTURE, dancing-4)"));
         assertTrue("posInformation should include aspect(PROGRESSIVE, dancing-4) but was: " + posInformation, posInformation.contains("aspect(PROGRESSIVE, dancing-4)"));
@@ -185,7 +186,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(FUTURE, met-4) but was: " + posInformation, posInformation.contains("tense(FUTURE, met-4)"));
         assertTrue("posInformation should include aspect(PERFECT, met-4) but was: " + posInformation, posInformation.contains("aspect(PERFECT, met-4)"));
@@ -201,7 +202,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(FUTURE, working-5) but was: " + posInformation, posInformation.contains("tense(FUTURE, working-5)"));
         assertTrue("posInformation should include aspect(PROGRESSIVE/PERFECT, working-5) but was: " + posInformation, posInformation.contains("aspect(PROGRESSIVE/PERFECT, working-5)"));
@@ -217,7 +218,7 @@ public class PartOfSpeechInfoTest {
         Annotation document = pipeline.annotate(input);
         List<String> dependencyList = SentenceUtil.toDependenciesList(document);
 
-        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document, dependencyList));
+        Set<String> posInformation = Sets.newHashSet(SentenceUtil.findPOSInformation(document.get(TokensAnnotation.class), dependencyList));
 
         assertTrue("posInformation should include tense(FUTURE, working-6) but was: " + posInformation, posInformation.contains("tense(FUTURE, working-6)"));
         assertTrue("posInformation should include aspect(PROGRESSIVE/PERFECT, working-6) but was: " + posInformation, posInformation.contains("aspect(PROGRESSIVE/PERFECT, working-6)"));

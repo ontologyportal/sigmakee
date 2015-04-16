@@ -57,4 +57,13 @@
     "sumo(Flying,flies-4)",
     "sumo(Airplane,plane-6)"
   ]
+},{
+  "input": "Mary smells sweet. John runs fast.",
+  "test": [
+    "names(John-1,\"John\")",
+    "sumo(SubjectiveWeakNegativeAttribute,fast-3)",
+    "attribute(John-1,Male)",
+    "sumo(Human,John-1)",
+    "sumo(Running,runs-2)"
+  ]
 }]

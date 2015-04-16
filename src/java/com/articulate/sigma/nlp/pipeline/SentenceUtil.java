@@ -161,10 +161,9 @@ public class SentenceUtil {
      * ex.  tense(PAST, Verb)
      *      number(SINGULAR, Noun)
      */
-    public static List<String> findPOSInformation(Annotation document, List<String> dependenciesList) {
+    public static List<String> findPOSInformation(List<CoreLabel> tokens, List<String> dependenciesList) {
 
         List<String> posInformation = Lists.newArrayList();
-        List<CoreLabel> tokens = document.get(CoreAnnotations.TokensAnnotation.class);
         for (CoreLabel label : tokens) {
             Pattern auxPattern = Pattern.compile("aux\\(.*, " + label.toString() + "\\)");
             boolean isAux = false;

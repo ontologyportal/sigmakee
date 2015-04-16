@@ -551,7 +551,7 @@ public class Interpreter {
         List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens), etp);
         results.addAll(wsd);
 
-        List<String> posInformation = SentenceUtil.findPOSInformation(wholeDocument, dependenciesList);
+        List<String> posInformation = SentenceUtil.findPOSInformation(lastSentenceTokens, dependenciesList);
         results.addAll(posInformation);
         results = lemmatizeResults(results, lastSentenceTokens, substitutor);
 
