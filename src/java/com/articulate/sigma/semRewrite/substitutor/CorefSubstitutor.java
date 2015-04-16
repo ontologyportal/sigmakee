@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -54,14 +55,13 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
         Map<CoreLabelSequence, CoreLabelSequence> collectedIdioms = Maps.newHashMap();
 
         for(CoreLabel label : labels) {
-            List<CorefChain.CorefMention> mentions = getMentions(label, corefChains);
+            List<CorefMention> mentions = getMentions(label, corefChains);
             if (mentions.size() > 1) {
                 if (!ignorablePronouns.contains(label.originalText())) {
                     int index = label.index();
                     int sentenceIdx = 1 + label.sentIndex();
 
-                    // Assuming first mention is the replacement
-                    CorefChain.CorefMention firstMention = mentions.get(0);
+                    CorefMention firstMention = findRootMention(mentions);
                     if (sentenceIdx != firstMention.sentNum || index < firstMention.startIndex || index >= firstMention.endIndex) {
                         String masterTag = label.tag();
                         if (isSubstitutablePronoun(label)) {
@@ -79,15 +79,22 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
         addGroups(collectedIdioms);
     }
 
+    private CorefMention findRootMention(List<CorefMention> mentions) {
+        // Assuming first mention is the replacement
+        CorefMention rootMention = mentions.get(0);
+
+        return rootMention;
+    }
+
     /** *************************************************************
      */
-    private List<CorefChain.CorefMention> getMentions(final CoreLabel label, Map<Integer, CorefChain> corefs) {
+    private List<CorefMention> getMentions(final CoreLabel label, Map<Integer, CorefChain> corefs) {
 
-        List<CorefChain.CorefMention> mentions = ImmutableList.of();
+        List<CorefMention> mentions = ImmutableList.of();
         Integer corefClusterId = label.get(CorefClusterIdAnnotation.class);
         while(mentions.size() <= 1 && corefClusterId != null && corefClusterId.compareTo(0) > 0) {
             if(corefs.containsKey(corefClusterId)) {
-                List<CorefChain.CorefMention> candidateMentions = corefs.get(corefClusterId).getMentionsInTextualOrder();
+                List<CorefMention> candidateMentions = corefs.get(corefClusterId).getMentionsInTextualOrder();
                 boolean areMentionsContainLabel = candidateMentions.stream().anyMatch(mention ->
                                 mention.sentNum == label.sentIndex() + 1
                                         && mention.startIndex == label.index()
@@ -120,7 +127,7 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
 
     /** *************************************************************
      */
-    private CoreLabelSequence extractTextWithSameTag(List<CoreLabel> tokens, CorefChain.CorefMention mention, /* @Nullable */String masterTag) {
+    private CoreLabelSequence extractTextWithSameTag(List<CoreLabel> tokens, CorefMention mention, /* @Nullable */String masterTag) {
 
         List<CoreLabel> out = Lists.newArrayListWithCapacity(mention.endIndex - mention.startIndex);
         String tag = Strings.nullToEmpty(masterTag);

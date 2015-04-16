@@ -741,7 +741,7 @@ public class Interpreter {
                                 .map(l -> l.lemma()).toArray())
                         + "-" + grouped.getLabels().get(0).index();
 
-                for (String singleResult : results) {
+                for (String singleResult : ImmutableList.copyOf(lemmatizeResults)) {
                     if (singleResult.contains(replace)) {
                         lemmatizeResults.remove(singleResult);
                         lemmatizeResults.add(singleResult.replaceAll(replace, replaceTo));
