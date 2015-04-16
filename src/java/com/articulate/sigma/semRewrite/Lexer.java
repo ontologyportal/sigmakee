@@ -78,7 +78,7 @@ public class Lexer {
 
     /** This array contains all of the compiled Pattern objects that
      * will be used by methods in this file. */
-    private static LinkedHashMap<String,Pattern> tokenDefs = new LinkedHashMap<String,Pattern>();
+    public static LinkedHashMap<String,Pattern> tokenDefs = new LinkedHashMap<String,Pattern>();
     
     public static ArrayList<String> andOr = new ArrayList<String>();
     public static ArrayList<String> binaryRel = new ArrayList<String>();
@@ -454,7 +454,7 @@ public class Lexer {
     /** ***************************************************************
      * Return a list of all tokens in the source. 
      */
-    private ArrayList<String> lex() throws ParseException {
+    public ArrayList<String> lex() throws ParseException {
 
         ArrayList<String> res = new ArrayList<String>();
         while (!testTok(EOFToken)) {
