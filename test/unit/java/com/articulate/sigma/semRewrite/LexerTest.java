@@ -96,12 +96,13 @@ public class LexerTest extends UnitTestBase {
     /** ***************************************************************
      * Test accepTok()
      */
-    private static void testString() {
+    @Test
+    public void testString() {
 
         String example3 = "at*";
         Lexer lex1 = new Lexer(example3);
         try {
-            assertEquals(Lexer.Ident, lex1.acceptTok(Lexer.Ident));
+            assertEquals("at*", lex1.acceptTok(Lexer.Ident));
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -112,20 +113,21 @@ public class LexerTest extends UnitTestBase {
     /** ***************************************************************
      * Test that self.example 1 is split into the expected tokens.
      */
-    private static void testTerm() {
+    @Test
+    public void testTerm() {
 
         String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
         Lexer lex1 = new Lexer(example1);
         try {
-            assertEquals(Lexer.Ident, lex1.acceptTok(Lexer.Ident)); // sense
-            assertEquals(Lexer.OpenPar,lex1.acceptTok(Lexer.OpenPar));    // (
-            assertEquals(Lexer.Number,lex1.acceptTok(Lexer.Number)); // 212345678
-            assertEquals(Lexer.Comma,lex1.acceptTok(Lexer.Comma));      // ,
-            assertEquals(Lexer.Var,lex1.acceptTok(Lexer.Var)); // ?E
-            assertEquals(Lexer.ClosePar,lex1.acceptTok(Lexer.ClosePar));    // )
-            assertEquals(Lexer.Comma,lex1.acceptTok(Lexer.Comma));      // ,
-            assertEquals(Lexer.Ident,lex1.acceptTok(Lexer.Ident)); // nsubj
-            assertEquals(Lexer.OpenPar,lex1.acceptTok(Lexer.OpenPar));   // (
+            assertEquals("sense", lex1.acceptTok(Lexer.Ident)); // sense
+            assertEquals("(",lex1.acceptTok(Lexer.OpenPar));    // (
+            assertEquals("212345678",lex1.acceptTok(Lexer.Number)); // 212345678
+            assertEquals(",",lex1.acceptTok(Lexer.Comma));      // ,
+            assertEquals("?E", lex1.acceptTok(Lexer.Var)); // ?E
+            assertEquals(")", lex1.acceptTok(Lexer.ClosePar));    // )
+            assertEquals(",", lex1.acceptTok(Lexer.Comma));      // ,
+            assertEquals("nsubj", lex1.acceptTok(Lexer.Ident)); // nsubj
+            assertEquals("(", lex1.acceptTok(Lexer.OpenPar));   // (
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -136,7 +138,8 @@ public class LexerTest extends UnitTestBase {
     /** ***************************************************************
      * Check the positive case of AcceptLit().
      */
-    private static void testAcceptLit() {
+    @Test
+    public void testAcceptLit() {
 
         String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
         Lexer lex = new Lexer(example1);
@@ -160,7 +163,8 @@ public class LexerTest extends UnitTestBase {
     /** ***************************************************************
      * Check the positive case of AcceptLit().
      */
-    private static void testAcceptClause() {
+    @Test
+    public void testAcceptClause() {
 
         String example4 = "num(PM-6, 8:30-5)";
         Lexer lex = new Lexer(example4);
@@ -180,4 +184,46 @@ public class LexerTest extends UnitTestBase {
             e.printStackTrace();
         }
     }
+
+    /** ***************************************************************
+     * Check the positive case of AcceptLit().
+     */
+    @Test
+    public void testAcceptClause3() {
+
+        String example4 = "num(PM-6, 8:30-5)";
+        Lexer lex = new Lexer(example4);
+        try {
+            Pattern value = Lexer.tokenDefs.get(Lexer.Ident);
+            Matcher m = value.matcher("5th-6");
+            assertTrue(m.lookingAt());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
+     * Check the positive case of AcceptLit().
+     */
+    @Test
+    public void testAcceptClause2() {
+
+        String example5 = "name(John-6, \"John\")";
+        Lexer lex = new Lexer(example5);
+        try {
+            assertEquals("name",lex.next());
+            assertEquals("(", lex.next());
+            assertEquals("John-6", lex.next());
+            assertEquals(",", lex.next());
+            assertEquals("\"John\"", lex.next());
+            assertEquals(")", lex.next());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }
