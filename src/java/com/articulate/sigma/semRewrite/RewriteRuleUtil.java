@@ -116,7 +116,9 @@ public final class RewriteRuleUtil extends RuleSet {
         String input = "";
         System.out.println("SemRewrite.txt loaded. There are " + rs.rules.size() + " rules.");
         //       SemRewriteRuleCheck.checkRuleSet(rs);
-        System.out.println("1.Will check rules entered by default. Please enter rule.\nThere are other functions:\nreload  will reload the Semrewrite.txt and check the ruleset\n!filePath   no spaces will load the file with sentences and find one common CNF.\nexit/quit to quit");
+        System.out.println("Will check rules entered by default. Please enter rule.\nThere are other functions:\nreload     " +
+                "will reload the Semrewrite.txt and check the ruleset\n!filePath   no spaces will load the file with sentences " +
+                "and find one common CNF.\n@@inputfilepath,outputfilepath    generate CNF kif and E result in output json file\nexit/quit     to quit");
         Scanner scanner = new Scanner(System.in);
         do {
             try {
@@ -134,7 +136,12 @@ public final class RewriteRuleUtil extends RuleSet {
                         System.out.println("\nThe common CNF is :" + cnf);
                         continue;
                     }
-                    Rule r = Rule.parseString(input);
+                    if (input.startsWith("@@")) {
+                        String path = input.substring(2);
+                        String[] paths=path.split(",");
+                        QAOutputGenerator.generate(paths[0],paths[1]);
+                        continue;
+                    }Rule r = Rule.parseString(input);
                     System.out.println("The rule entered is :: " + r + "\n");
                     SemRewriteRuleCheck.isRuleSubsumedByRuleSet(r, rs, getSubsumed, subsumer);
 
