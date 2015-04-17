@@ -54,10 +54,6 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("DayFn(2,s__MonthFn(s__July,s__YearFn(1937))).", actualAnswer);
 
-       // input = "What was she interested in?";
-       // actualAnswer = interpreter.interpret(input).get(0);
-       // assertEquals("An instance of Airplane.", actualAnswer);
-
         input = "Was she interested in airplanes?";
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("Yes.", actualAnswer);
@@ -96,14 +92,29 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         input = "She was declared dead on January 5, 1939.";
         interpreter.interpret(input).get(0);
 
+        input = "What was Amelia interested in?";
+        String actualAnswer = interpreter.interpret(input).get(0);
+        assertEquals("An instance of Airplane.", actualAnswer);
+    }
+
+    @Ignore
+    @Test
+    public void test3() {
+        String input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator, one of the first women to fly a plane long distances.";
+        interpreter.interpret(input).get(0);
+        input = "She was the first woman to fly a plane by herself across the Atlantic Ocean.";
+        interpreter.interpret(input).get(0);
+        input = "Earhart vanished over the South Pacific Ocean in July 1937 while trying to fly around the world.";
+        interpreter.interpret(input).get(0);
+        input = "She was declared dead on January 5, 1939.";
+        interpreter.interpret(input).get(0);
+
         // Incorrect, but this is the current output.
         input = "What was her nationality?";
-        interpreter.interpret(input).get(0);
         String actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("UnitedStates.", actualAnswer);
 
         input = "Who was declared dead?";
-        interpreter.interpret(input).get(0);
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("I don't know", actualAnswer);
     }
