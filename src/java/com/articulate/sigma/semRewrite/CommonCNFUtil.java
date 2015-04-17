@@ -239,11 +239,11 @@ public class CommonCNFUtil {
         KBmanager.getMgr().initializeOnce();
         inter.initialize();
         for (QAPair q : list) {
-            CNF cnf = inter.interpretGenCNF(q.query).get(0);
+            CNF cnf = inter.interpretGenCNF(q.query);
             cnf = preProcessCNF(cnf);
             System.out.println(cnf);
             q.queryCNF = cnf;
-            cnf = inter.interpretGenCNF(q.answer).get(0);
+            cnf = inter.interpretGenCNF(q.answer);
             cnf = preProcessCNF(cnf);
             System.out.println(cnf);
             q.answerCNF = cnf;
@@ -261,7 +261,7 @@ public class CommonCNFUtil {
         for (Integer index : sentences.keySet()) {
             String q = sentences.get(index);
             try {
-                CNF cnf = inter.interpretGenCNF(q).get(0);
+                CNF cnf = inter.interpretGenCNF(q);
                 cnf = preProcessCNF(cnf);
                 System.out.println(cnf);
                 res.put(index, cnf);

@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+import com.google.common.collect.Lists;
+
 import java.util.*;
 
 /**
@@ -29,11 +31,11 @@ import java.util.*;
 public class CNF {
 
     public ArrayList<Clause> clauses = new ArrayList<Clause>();
-    
+
     /** ***************************************************************
      */
     public String toString() {
-        
+
         StringBuffer sb = new StringBuffer();
         //sb.append("[");
         for (int i = 0; i < clauses.size(); i++) {
@@ -45,7 +47,19 @@ public class CNF {
         //sb.append("]");
         return sb.toString();
     }
-  
+
+    /** ***************************************************************
+     */
+    public List<String> toListString() {
+
+        List<String> retString = Lists.newArrayList();
+        for (Clause clause : clauses)   {
+            retString.add(clause.toString());
+        }
+
+        return retString;
+    }
+
     /** ***************************************************************
      */
     @Override

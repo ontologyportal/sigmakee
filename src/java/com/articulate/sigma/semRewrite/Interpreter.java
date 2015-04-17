@@ -526,7 +526,7 @@ public class Interpreter {
     /** *************************************************************
      * Take in a single sentence and output CNF for further process.
      */
-    public ArrayList<CNF> interpretGenCNF(String input){
+    public CNF interpretGenCNF(String input)    {
 
         Annotation wholeDocument = userInputs.annotateDocument(input);
         CoreMap lastSentence = SentenceUtil.getLastSentence(wholeDocument);
@@ -558,7 +558,9 @@ public class Interpreter {
 //        results = processPhrasalVerbs(results);
 
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-        //System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
+
+        // Next line used for input to some unit tests.
+        System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
 
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
@@ -569,8 +571,7 @@ public class Interpreter {
             CNF cnfnew = CNF.parseSimple(lex);
             cnf.merge(cnfnew);
         }
-        inputs.add(cnf);
-        return inputs;
+        return cnf;
     }
 
     /** *************************************************************
@@ -588,7 +589,7 @@ public class Interpreter {
             tfidf.addInput(input);
         }
 
-        ArrayList<CNF> inputs=interpretGenCNF(input);
+        ArrayList<CNF> inputs = Lists.newArrayList(interpretGenCNF(input));
         ArrayList<String> kifClauses = interpretCNF(inputs);
         String result = fromKIFClauses(kifClauses);
         System.out.println("INFO in Interpreter.interpretSingle(): Theorem proving result: '" + result + "'");
@@ -1112,7 +1113,7 @@ public class Interpreter {
 
                 } 
                 else if (input.startsWith("timeout")) {
-                	timeOut_value = Integer.valueOf(input.split(" ")[1]);
+                    timeOut_value = Integer.valueOf(input.split(" ")[1]);
                 }
                 else {
                     System.out.println("INFO in Interpreter.interpretIter(): " + input); 
