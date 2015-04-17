@@ -105,7 +105,7 @@ public class PredVarInst {
     /** ***************************************************************
      *
      */
-    private static String hasCorrectArityRecurse(Formula f, KB kb) {
+    private static String hasCorrectArityRecurse(Formula f, KB kb) throws IllegalArgumentException{
 
         if (f == null || StringUtil.emptyString(f.theFormula) || f.empty() ||
                 Formula.atom(f.theFormula) || f.isVariable())
@@ -131,8 +131,8 @@ public class PredVarInst {
                 val = intval.intValue();
             else {
                 if (l.size() != 0 && !logicalTerms.contains(rel) && !rel.startsWith("?")) {
-                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s do not have a arity defined in KB, can't get the arity number!\n%s", rel, f);
-                    return null;
+                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s do not have a arity defined in KB, can't get the arity number!\n%s\n", rel, f,f.getSourceFile(),f.startLine);
+                    throw new IllegalArgumentException();
                 }
             }
             //check the arity number of current level predict
@@ -179,8 +179,15 @@ public class PredVarInst {
      * that has its arity violated in the given formula.
      */
     public static String hasCorrectArity(Formula f, KB kb) {
-        
-        return hasCorrectArityRecurse(f,kb);
+        String res=null;
+        try{
+            res=hasCorrectArityRecurse(f,kb);
+        }
+        catch(IllegalArgumentException e){
+            System.out.printf("FileName:%s\nLine number:%d\n",f.getSourceFile(),f.startLine);
+            return null;
+        }
+        return res;
     }
     
     /** ***************************************************************
@@ -421,7 +428,7 @@ public class PredVarInst {
         
         HashSet<String> predVars = gatherPredVars(f);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f,kb);
+        HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f, kb);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         Iterator<String> it = predVars.iterator();
         while (it.hasNext()) {
