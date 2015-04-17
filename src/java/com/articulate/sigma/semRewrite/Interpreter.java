@@ -507,6 +507,7 @@ public class Interpreter {
      */
     public List<String> interpret(String input) {
 
+        input = input.replaceAll("[^#\\.\\,a-zA-Z0-9\\?\\'_\\-\\–\\(\\)\\: ]","");
         List<String> results = Lists.newArrayList();
         if (!ENDING_IN_PUNC_PATTERN.matcher(input).find()) {
             input = input + ".";
@@ -547,6 +548,7 @@ public class Interpreter {
         );
         SubstitutionUtil.groupClauses(substitutor, results);
 
+        System.out.println("Interpreter.interpretGenCNF(): corefed: " + results);
         EntityTypeParser etp = new EntityTypeParser(wholeDocument);
         List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens), etp);
         results.addAll(wsd);
