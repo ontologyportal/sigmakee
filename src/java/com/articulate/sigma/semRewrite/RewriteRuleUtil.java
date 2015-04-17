@@ -24,9 +24,12 @@ import com.articulate.sigma.KBmanager;
 import com.google.common.base.Strings;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 import static com.articulate.sigma.semRewrite.Interpreter.canon;
 
@@ -114,6 +117,34 @@ public final class RewriteRuleUtil extends RuleSet {
     }
 
 
+//    public static void main(String[] args) {
+//
+//        try {
+//            ArrayList<Path> paths=getAllFilenamesInDir();
+//            StringBuilder sb=new StringBuilder();
+//            for(Path p:paths){
+//                ArrayList<ArrayList<String>> qa=extractFile(p);
+//                for(int i=0;i<qa.get(0).size();++i ){
+//                    sb.append("{\n");
+//                    sb.append("  \"file\":\""+p.getFileName()+"\",\n");
+//                    sb.append("  \"query\":\"" + qa.get(0).get(i) + "\",\n");
+//                    sb.append("  \"answer\":\""+qa.get(1).get(i)+"\"\n");
+//                    sb.append("},\n");
+//                }
+//            }
+//            try(PrintWriter out=new PrintWriter("/Users/peigenyou/Downloads/qa.json")){
+//                out.print(sb.toString());
+//            }
+//
+//        }
+//        catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
+
+
+
 
     /**
      * **********************************************************
@@ -140,8 +171,7 @@ public final class RewriteRuleUtil extends RuleSet {
                     }
                     if(input.startsWith("!")){
                         String path=input.substring(1);
-                        String[] strs=CommonCNFUtil.loadSentencesFromTxt(path);
-                        CNF cnf=CommonCNFUtil.findOneCommonCNF(CommonCNFUtil.generateCNFForStringSet(strs).values());
+                        CNF cnf=CommonCNFUtil.loadFileAndFindCommonCNF(path);
                         System.out.println("\nThe common CNF is :"+cnf);
                         continue;
                     }
@@ -167,27 +197,6 @@ public final class RewriteRuleUtil extends RuleSet {
 
         } while (!input.equals("exit") && !input.equals("quit"));
     }
-//    public static void main(String[] args) {
 
-//        String[] strings = new String[]{"Amelia flies.", "John walks."};
-//        String [] strings=loadSentencesFormJsonFile("test/corpus/java/resources/IRtests.json");
-//        Map<Integer, CNF> res = generateCNFForStringSet(strings);
-//        String path=saveCNFMaptoFile(res, strings, "test.json");
-//        ArrayList<String> strs=new ArrayList<String>();
-//        Map<Integer, CNF> res=new HashMap<Integer,CNF>();
-//        loadCNFMapfromFile("test.json", res,strs);
-//        String []strings=strs.toArray(new String[strs.size()]);
-//        for (Map.Entry e : res.entrySet()) {
-//            System.out.println(e);
-//        }
-//        Map<Integer, Map<Integer, CNF>> rr = getCommonCNF(res);
-//        for (Map.Entry e : rr.entrySet()) {
-//            System.out.println(e);
-//        }
-//        Map<CNF, Set<Pair<Integer, Integer>>> re = reverseMap(rr);
-//        for(CNF cnf:re.keySet()){
-//            System.out.println(cnf.toString()+re.get(cnf));
-//        }
-//    }
 
 }
