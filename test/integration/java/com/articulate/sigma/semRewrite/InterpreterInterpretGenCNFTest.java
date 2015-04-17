@@ -186,4 +186,208 @@ public class InterpreterInterpretGenCNFTest extends IntegrationTestBase {
         assertEquals(expected, cnfSets);
     }
 
+    @Test
+    public void testMaryWentAfterMidnight()   {
+        String input = "Mary went after midnight.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "root(ROOT-0,go_after-2)", "names(Mary-1,\"Mary\")", "hour(time-1,00-4)", "attribute(Mary-1,Female)",
+                "sumo(Human,Mary-1)", "tense(PAST,went-2)", "time(go-2,time-1)", "minute(time-1,00-4)", "number(SINGULAR,midnight-4)",
+                "nsubj(go_after-2,Mary-1)", "sumo(TimePoint,midnight-4)", "number(SINGULAR,Mary-1)", "prep_after(go_after-2,midnight-4)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWalksWithTheMan()   {
+        String input = "Mary walks with the man.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "det(man-5,the-4)", "sumo(Man,man-5)", "names(Mary-1,\"Mary\")", "root(ROOT-0,walk-2)",
+                "nsubj(walk-2,Mary-1)", "tense(PRESENT,walk-2)", "attribute(Mary-1,Female)", "sumo(Human,Mary-1)",
+                "sumo(Walking,walk-2)", "prep_with(walk-2,man-5)", "number(SINGULAR,man-5)", "number(SINGULAR,Mary-1)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWalksForTwoHours()   {
+        String input = "Mary walks for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-1,\"Mary\")", "sumo(Hour,hour-5)", "root(ROOT-0,walk-2)", "nsubj(walk-2,Mary-1)",
+                "tense(PRESENT,walk-2)", "attribute(Mary-1,Female)", "sumo(Human,Mary-1)", "sumo(Walking,walk-2)",
+                "prep_for(walk-2,hour-5)", "num(hour-5,two-4)", "number(SINGULAR,Mary-1)", "number(PLURAL,hour-5)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWalkedForTwoHours()   {
+        String input = "Mary walked for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-1,\"Mary\")", "sumo(Hour,hour-5)", "root(ROOT-0,walk-2)", "nsubj(walk-2,Mary-1)",
+                "attribute(Mary-1,Female)", "tense(PAST,walk-2)", "sumo(Human,Mary-1)", "sumo(Walking,walk-2)",
+                "prep_for(walk-2,hour-5)", "num(hour-5,two-4)", "number(SINGULAR,Mary-1)", "number(PLURAL,hour-5)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryHasWalkedForTwoHours()   {
+        String input = "Mary has walked for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "nsubj(walk-3,Mary-1)", "names(Mary-1,\"Mary\")", "sumo(Hour,hour-6)", "root(ROOT-0,walk-3)", 
+                "aspect(PERFECT,walk-3)", "attribute(Mary-1,Female)", "tense(PRESENT,walk-3)", "sumo(Human,Mary-1)", 
+                "sumo(Walking,walk-3)", "num(hour-6,two-5)", "aux(walk-3,have-2)", "prep_for(walk-3,hour-6)", 
+                "number(SINGULAR,Mary-1)", "number(PLURAL,hour-6)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryHasBeenWalkingForTwoHours()   {
+        String input = "Mary has been walking for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-1,\"Mary\")", "attribute(Mary-1,Female)", "root(ROOT-0,walk-4)", "aux(walk-4,be-3)",
+                "sumo(Human,Mary-1)", "sumo(Hour,hour-7)", "sumo(Walking,walk-4)", "aux(walk-4,have-2)", "num(hour-7,two-6)",
+                "prep_for(walk-4,hour-7)", "tense(PRESENT,walk-4)", "number(PLURAL,hour-7)", "number(SINGULAR,Mary-1)",
+                "nsubj(walk-4,Mary-1)", "aspect(PROGRESSIVEPERFECT,walk-4)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWasWalkingForTwoHours()   {
+        String input = "Mary was walking for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "aux(walk-3,be-2)", "nsubj(walk-3,Mary-1)", "names(Mary-1,\"Mary\")", "sumo(Hour,hour-6)",
+                "root(ROOT-0,walk-3)", "attribute(Mary-1,Female)", "aspect(PROGRESSIVE,walk-3)", "sumo(Human,Mary-1)",
+                "sumo(Walking,walk-3)", "tense(PAST,walk-3)", "num(hour-6,two-5)", "prep_for(walk-3,hour-6)",
+                "number(SINGULAR,Mary-1)", "number(PLURAL,hour-6)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryHadWalkedForTwoHours()   {
+        String input = "Mary had walked for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "nsubj(walk-3,Mary-1)", "names(Mary-1,\"Mary\")", "sumo(Hour,hour-6)", "root(ROOT-0,walk-3)",
+                "aspect(PERFECT,walk-3)", "attribute(Mary-1,Female)", "sumo(Human,Mary-1)", "sumo(Walking,walk-3)",
+                "tense(PAST,walk-3)", "num(hour-6,two-5)", "aux(walk-3,have-2)", "prep_for(walk-3,hour-6)",
+                "number(SINGULAR,Mary-1)", "number(PLURAL,hour-6)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryHadBeenWalkingForTwoHours()   {
+        String input = "Mary had been walking for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-1,\"Mary\")", "attribute(Mary-1,Female)", "root(ROOT-0,walk-4)", "aux(walk-4,be-3)", 
+                "sumo(Human,Mary-1)", "tense(PAST,walk-4)", "sumo(Hour,hour-7)", "sumo(Walking,walk-4)", "aux(walk-4,have-2)", 
+                "num(hour-7,two-6)", "prep_for(walk-4,hour-7)", "number(PLURAL,hour-7)", "number(SINGULAR,Mary-1)", 
+                "nsubj(walk-4,Mary-1)", "aspect(PROGRESSIVEPERFECT,walk-4)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWillWalkForTwoHours()   {
+        String input = "Mary will walk for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "nsubj(walk-3,Mary-1)", "names(Mary-1,\"Mary\")", "sumo(Hour,hour-6)", "root(ROOT-0,walk-3)",
+                "attribute(Mary-1,Female)", "sumo(Human,Mary-1)", "sumo(Walking,walk-3)", "num(hour-6,two-5)",
+                "tense(FUTURE,walk-3)", "prep_for(walk-3,hour-6)", "aux(walk-3,will-2)", "number(SINGULAR,Mary-1)",
+                "number(PLURAL,hour-6)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWillBeWalkingForTwoHours()   {
+        String input = "Mary will be walking for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-1,\"Mary\")", "aspect(PROGRESSIVE,walk-4)", "attribute(Mary-1,Female)",
+                "root(ROOT-0,walk-4)", "aux(walk-4,be-3)", "sumo(Human,Mary-1)", "sumo(Hour,hour-7)", "sumo(Walking,walk-4)",
+                "aux(walk-4,will-2)", "tense(FUTURE,walk-4)", "num(hour-7,two-6)", "prep_for(walk-4,hour-7)", "number(PLURAL,hour-7)",
+                "number(SINGULAR,Mary-1)", "nsubj(walk-4,Mary-1)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWillHaveWalkedForTwoHours()   {
+        String input = "Mary will have walked for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-1,\"Mary\")", "attribute(Mary-1,Female)", "root(ROOT-0,walk-4)", "aspect(PERFECT,walk-4)",
+                "sumo(Human,Mary-1)", "sumo(Hour,hour-7)", "sumo(Walking,walk-4)", "aux(walk-4,will-2)", "tense(FUTURE,walk-4)",
+                "num(hour-7,two-6)", "aux(walk-4,have-3)", "prep_for(walk-4,hour-7)", "number(PLURAL,hour-7)",
+                "number(SINGULAR,Mary-1)", "nsubj(walk-4,Mary-1)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testMaryWillHaveBeenWalkingForTwoHours()   {
+        String input = "Mary will have been walking for two hours.";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-1,\"Mary\")", "attribute(Mary-1,Female)", "root(ROOT-0,walk-5)", "sumo(Walking,walk-5)",
+                "sumo(Human,Mary-1)", "num(hour-8,two-7)", "sumo(Hour,hour-8)", "aux(walk-5,will-2)", "tense(FUTURE,walk-5)",
+                "nsubj(walk-5,Mary-1)", "number(SINGULAR,Mary-1)", "number(PLURAL,hour-8)", "prep_for(walk-5,hour-8)",
+                "aux(walk-5,be-4)", "aspect(PROGRESSIVEPERFECT,walk-5)", "aux(walk-5,have-3)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
 }
