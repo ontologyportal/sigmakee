@@ -190,10 +190,15 @@ public class CommonCNFUtil {
         inter.initialize();
         for (int i = 0; i < input.length; ++i) {
             System.out.println(input[i]);
-            CNF cnf = inter.interpretGenCNF(input[i]).get(0);
-            cnf = preProcessCNF(cnf);
-            System.out.println(cnf);
-            res.put(i, cnf);
+            try {
+                CNF cnf = inter.interpretGenCNF(input[i]).get(0);
+                cnf = preProcessCNF(cnf);
+                System.out.println(cnf);
+                res.put(i, cnf);
+            } catch (Exception e) {
+                System.out.println("Exception occurs in " + input);
+                e.printStackTrace();
+            }
         }
         return res;
     }
