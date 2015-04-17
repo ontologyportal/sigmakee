@@ -22,6 +22,7 @@ MA  02111-1307 USA
 import com.articulate.sigma.Document;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KBmanager;
+import com.google.common.collect.Lists;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -129,7 +130,7 @@ public class QAOutputGenerator {
                 }
                 ArrayList<String> kifClauses;
                 try {
-                    ArrayList<CNF> inputs = inter.interpretGenCNF(s);
+                    ArrayList<CNF> inputs = Lists.newArrayList(inter.interpretGenCNF(s));
                     r.CNF = inputs.get(0);
                     kifClauses = inter.interpretCNF(inputs);
                 }
