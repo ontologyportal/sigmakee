@@ -116,11 +116,15 @@ public final class RewriteRuleUtil extends RuleSet {
         String input = "";
         System.out.println("SemRewrite.txt loaded. There are " + rs.rules.size() + " rules.");
         //       SemRewriteRuleCheck.checkRuleSet(rs);
-        System.out.println("Will check rules entered by default. Please enter rule.\nThere are other functions:\nreload     " +
-                "will reload the Semrewrite.txt and check the ruleset\n!filePath   no spaces will load the file with sentences " +
-                "and find one common CNF.\n@@inputfilepath,outputfilepath    generate CNF kif and E result in output json file\nexit/quit     to quit");
         Scanner scanner = new Scanner(System.in);
         do {
+            System.out.println("Semantic Rewriting Rule Uitl");
+            System.out.println("  options:");
+            System.out.println("  rewriterule                     check rule subsumption");
+            System.out.println("  !filepath                       get the sentences in file and find a common CNF, the file should be one sentence one line");
+            System.out.println("  'reload'                        reload the SemrewriteRule.txt and check the whole RuleSet");
+            System.out.println("  @@inputfilepath,outputfilepath  load the sentences from inputfile, do whole interpreter thing on sentences and generate output json file");
+            System.out.println("  'exit'/'quit'                   quit this program");
             try {
                 System.out.print("\nEnter :");
                 input = scanner.nextLine().trim();
@@ -133,7 +137,6 @@ public final class RewriteRuleUtil extends RuleSet {
                     if (input.startsWith("!")) {
                         String path = input.substring(1);
                         CNF cnf = CommonCNFUtil.loadFileAndFindCommonCNF(path);
-                        System.out.println("\nThe common CNF is :" + cnf);
                         continue;
                     }
                     if (input.startsWith("@@")) {

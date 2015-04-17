@@ -21,6 +21,7 @@ MA  02111-1307 USA
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.google.common.collect.Lists;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -306,8 +307,9 @@ public class CommonCNFUtil {
             for (Clause n : unified.clauses) {
                 Clause h = m.deepCopy();
                 n = n.deepCopy();
-                if (isRelated(h, n)) {
-                    rescnf.clauses.add(h);
+                Clause c=isRelated(h, n);
+                if (c!=null) {
+                    rescnf.clauses.add(c);
                     break;
                 }
             }
@@ -317,10 +319,10 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static boolean isRelated(Clause m, Clause n) {
+    public static Clause isRelated(Clause m, Clause n) {
 
         if (!m.disjuncts.get(0).pred.equals(n.disjuncts.get(0).pred))
-            return false;
+            return null;
         String marg1 = m.disjuncts.get(0).arg1;
         String narg1 = n.disjuncts.get(0).arg1;
         String marg2 = m.disjuncts.get(0).arg2;
@@ -336,9 +338,15 @@ public class CommonCNFUtil {
             narg2 = ca1;
         }
         if (ca != null && ca1 != null) {
-            return true;
+            Literal l=new Literal();
+            l.pred=m.disjuncts.get(0).pred;
+            l.arg1=ca;
+            l.arg2=ca1;
+            Clause res=new Clause();
+            res.disjuncts= Lists.newArrayList(l);
+            return res;
         }
-        return false;
+        return null;
     }
 
     /***********************************************************
