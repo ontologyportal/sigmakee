@@ -870,7 +870,7 @@ public class Interpreter {
                             if (!bindingsRemoved.empty()) {  // assert the input after removing bindings
                                 if (rhs.cnf != null) {
                                     if (showrhs)
-                                        System.out.println("INFO in Interpreter.interpret(): add rhs " + rhs.cnf);
+                                        System.out.println("   " + rhs.cnf);
                                     bindingsRemoved.merge(rhs.cnf);
                                 }
                                 newInput = bindingsRemoved;
@@ -878,10 +878,12 @@ public class Interpreter {
                             else
                                 if (rhs.cnf != null) {
                                     if (showrhs)
-                                        System.out.println("INFO in Interpreter.interpretCNF(): add rhs " + rhs.cnf);
+                                        System.out.println("   " + rhs.cnf);
                                     newInput = rhs.cnf;
                                 }
                             if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) { // assert a KIF RHS
+                                if (showrhs)
+                                    System.out.println("   " + rhs.form);
                                 kifoutput.add(rhs.form.toString());
                             }
                             //System.out.println("INFO in Interpreter.interpretCNF(): new input 2: " + newInput + "\n");
@@ -894,6 +896,8 @@ public class Interpreter {
                                 newinputs.add(bindingsRemoved);
                             }
                             if (rhs.form != null && !kifoutput.contains(rhs.form.toString())) { // assert a KIF RHS
+                                if (showrhs)
+                                    System.out.println("   " + rhs.form);
                                 kifoutput.add(rhs.form.toString());
                             }
                         }
@@ -1083,6 +1087,7 @@ public class Interpreter {
                     }
                     else {
                         verboseProof = true;
+                        verboseAnswer = true;
                     }
                 }
                 else if (input.equals("inferenceanswer")) {
