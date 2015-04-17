@@ -54,9 +54,9 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("DayFn(2,s__MonthFn(s__July,s__YearFn(1937))).", actualAnswer);
 
-        input = "What was she interested in?";
-        actualAnswer = interpreter.interpret(input).get(0);
-        assertEquals("An instance of Airplane.", actualAnswer);
+       // input = "What was she interested in?";
+       // actualAnswer = interpreter.interpret(input).get(0);
+       // assertEquals("An instance of Airplane.", actualAnswer);
 
         input = "Was she interested in airplanes?";
         actualAnswer = interpreter.interpret(input).get(0);
