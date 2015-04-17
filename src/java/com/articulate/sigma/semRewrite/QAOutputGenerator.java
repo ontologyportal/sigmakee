@@ -260,43 +260,43 @@ public class QAOutputGenerator {
 
     /************************************************************
      */
-    public static void testOnOnePassage() {
-
-        String path = "/Users/peigenyou/workspace/input.txt";
-        String outputPath = "/Users/peigenyou/workspace/output.json";
-        generate(path, outputPath);
-    }
-
-    /************************************************************
-     */
-    public static void testExtractFile() {
-
-        try {
-            ArrayList<Path> paths = getAllFilenamesInDir();
-            StringBuilder sb = new StringBuilder();
-            for (Path p : paths) {
-                ArrayList<ArrayList<String>> qa = extractFile(p);
-                for (int i = 0; i < qa.get(0).size(); ++i) {
-                    sb.append("{\n");
-                    sb.append("  \"file\":\"" + p.getFileName() + "\",\n");
-                    sb.append("  \"query\":\"" + qa.get(0).get(i) + "\",\n");
-                    sb.append("  \"answer\":\"" + qa.get(1).get(i) + "\"\n");
-                    sb.append("},\n");
-                }
-            }
-            try (PrintWriter out = new PrintWriter("/Users/peigenyou/Downloads/qa.json")) {
-                out.print(sb.toString());
-            }
-
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void testOnOnePassage() {
+//
+//        String path = "/Users/peigenyou/workspace/input.txt";
+//        String outputPath = "/Users/peigenyou/workspace/output.json";
+//        generate(path, outputPath);
+//    }
+//
+//    /************************************************************
+//     */
+//    public static void testExtractFile() {
+//
+//        try {
+//            ArrayList<Path> paths = getAllFilenamesInDir();
+//            StringBuilder sb = new StringBuilder();
+//            for (Path p : paths) {
+//                ArrayList<ArrayList<String>> qa = extractFile(p);
+//                for (int i = 0; i < qa.get(0).size(); ++i) {
+//                    sb.append("{\n");
+//                    sb.append("  \"file\":\"" + p.getFileName() + "\",\n");
+//                    sb.append("  \"query\":\"" + qa.get(0).get(i) + "\",\n");
+//                    sb.append("  \"answer\":\"" + qa.get(1).get(i) + "\"\n");
+//                    sb.append("},\n");
+//                }
+//            }
+//            try (PrintWriter out = new PrintWriter("/Users/peigenyou/Downloads/qa.json")) {
+//                out.print(sb.toString());
+//            }
+//
+//        }
+//        catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public static void main(String[] args) {
 
-        testOnOnePassage();
+//        testOnOnePassage();
 
     }
 

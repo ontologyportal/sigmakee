@@ -38,7 +38,6 @@ public class CommonCNFUtil {
 
     static {
         kbm = KBmanager.getMgr();
-        kbm.initializeOnce();
         kb = kbm.getKB("SUMO");
     }
 
@@ -560,32 +559,32 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static void testJSONQAPair() {
+//    public static void testJSONQAPair() {
+//
+//        List<QAPair> list = loadSentencesFormJsonFile("test/corpus/java/resources/IRtests.json");
+//        generateCNFForQAPairs(list);
+//        String path = saveCNFMaptoFile(list, "cache.json");
+//        list = loadCNFMapfromFile("cache.json");
+//        for (QAPair e : list)
+//            System.out.println(e);
+//        Map<Integer, CNF> cnfs = new HashMap<Integer, CNF>();
+//        Map<Integer, String> sentences = new HashMap<Integer, String>();
+//        transformQAPairListtoCNFSet(list, sentences, cnfs);
+//        Map<Integer, Map<Integer, CNF>> rr = getCommonCNF(cnfs);
+//        for (Map.Entry e : rr.entrySet()) {
+//            System.out.println(e);
+//        }
+//        Map<CNF, Set<Pair<Integer, Integer>>> re = reverseMap(rr);
+//        for (CNF cnf : re.keySet()) {
+//            System.out.println(cnf.toString() + re.get(cnf));
+//        }
+//    }
 
-        List<QAPair> list = loadSentencesFormJsonFile("test/corpus/java/resources/IRtests.json");
-        generateCNFForQAPairs(list);
-        String path = saveCNFMaptoFile(list, "cache.json");
-        list = loadCNFMapfromFile("cache.json");
-        for (QAPair e : list)
-            System.out.println(e);
-        Map<Integer, CNF> cnfs = new HashMap<Integer, CNF>();
-        Map<Integer, String> sentences = new HashMap<Integer, String>();
-        transformQAPairListtoCNFSet(list, sentences, cnfs);
-        Map<Integer, Map<Integer, CNF>> rr = getCommonCNF(cnfs);
-        for (Map.Entry e : rr.entrySet()) {
-            System.out.println(e);
-        }
-        Map<CNF, Set<Pair<Integer, Integer>>> re = reverseMap(rr);
-        for (CNF cnf : re.keySet()) {
-            System.out.println(cnf.toString() + re.get(cnf));
-        }
-    }
-
-    public static void testFile() {
-
-        String path = "/Users/peigenyou/workspace/test.txt";
-        CNF cnf = loadFileAndFindCommonCNF(path);
-    }
+//    public static void testFile() {
+//
+//        String path = "/Users/peigenyou/workspace/test.txt";
+//        CNF cnf = loadFileAndFindCommonCNF(path);
+//    }
 
     /***********************************************************
      */
@@ -593,6 +592,6 @@ public class CommonCNFUtil {
 
 //        String[] strings = new String[]{"Amelia flies.", "John walks."};
 //        testJSONQAPair();
-        testFile();
+//        testFile();
     }
 }
