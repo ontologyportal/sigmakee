@@ -20,9 +20,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class FormulaArityCheckTest extends UnitTestBase {
 
@@ -48,7 +50,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
         Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
-        Assert.assertNull(output);
+        assertNull(output);
     }
 
     @Test
@@ -62,7 +64,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
         Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
-        Assert.assertNotNull(output);
+        assertNotNull(output);
     }
 
 }
