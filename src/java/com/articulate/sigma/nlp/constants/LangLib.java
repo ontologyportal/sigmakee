@@ -151,6 +151,6 @@ public class LangLib {
     public static final String NUMBER_PLURAL = "PLURAL";
     public static final String ASPECT_PROGRESSIVE = "PROGRESSIVE";
     public static final String ASPECT_PERFECT = "PERFECT";
-    public static final String ASPECT_PROGRESSIVE_PERFECT = "PROGRESSIVE/PERFECT";
+    public static final String ASPECT_PROGRESSIVE_PERFECT = "PROGRESSIVEPERFECT";
 
 }
