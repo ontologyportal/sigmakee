@@ -24,25 +24,17 @@ import com.articulate.sigma.KBmanager;
 import com.google.common.base.Strings;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static com.articulate.sigma.semRewrite.Interpreter.canon;
 
 public final class RewriteRuleUtil extends RuleSet {
 
-    static String fileLocation = "/Users/peigenyou/workspace/sigma/KBs/WordNetMappings/SemRewrite.txt";
-
     private RewriteRuleUtil() {
 
     }
 
-    /**
-     * **********************************************************
+    /************************************************************
      * update a Ruleset's indexed rule's CNF
      */
     public static void updateCNF(int index, CNF f, RuleSet rs) {
@@ -55,8 +47,7 @@ public final class RewriteRuleUtil extends RuleSet {
         rs.rules.set(index, newr);
     }
 
-    /**
-     * **********************************************************
+    /************************************************************
      */
     private static void updateCNFTest(RuleSet rs) {
 
@@ -87,8 +78,7 @@ public final class RewriteRuleUtil extends RuleSet {
 
     }
 
-    /**
-     * **********************************************************
+    /************************************************************
      * load RuleSet from "SemRewrite.txt"
      */
     public static RuleSet loadRuleSet() {
@@ -116,38 +106,7 @@ public final class RewriteRuleUtil extends RuleSet {
         return rs;
     }
 
-
-//    public static void main(String[] args) {
-//
-//        try {
-//            ArrayList<Path> paths=getAllFilenamesInDir();
-//            StringBuilder sb=new StringBuilder();
-//            for(Path p:paths){
-//                ArrayList<ArrayList<String>> qa=extractFile(p);
-//                for(int i=0;i<qa.get(0).size();++i ){
-//                    sb.append("{\n");
-//                    sb.append("  \"file\":\""+p.getFileName()+"\",\n");
-//                    sb.append("  \"query\":\"" + qa.get(0).get(i) + "\",\n");
-//                    sb.append("  \"answer\":\""+qa.get(1).get(i)+"\"\n");
-//                    sb.append("},\n");
-//                }
-//            }
-//            try(PrintWriter out=new PrintWriter("/Users/peigenyou/Downloads/qa.json")){
-//                out.print(sb.toString());
-//            }
-//
-//        }
-//        catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-
-
-
-
-    /**
-     * **********************************************************
+    /************************************************************
      */
     public static void main(String[] args) {
 
@@ -156,23 +115,23 @@ public final class RewriteRuleUtil extends RuleSet {
         RuleSet rs = loadRuleSet();
         String input = "";
         System.out.println("SemRewrite.txt loaded. There are " + rs.rules.size() + " rules.");
- //       SemRewriteRuleCheck.checkRuleSet(rs);
+        //       SemRewriteRuleCheck.checkRuleSet(rs);
         System.out.println("1.Will check rules entered by default. Please enter rule.\nThere are other functions:\nreload  will reload the Semrewrite.txt and check the ruleset\n!filePath   no spaces will load the file with sentences and find one common CNF.\nexit/quit to quit");
         Scanner scanner = new Scanner(System.in);
         do {
             try {
                 System.out.print("\nEnter :");
                 input = scanner.nextLine().trim();
-                if (!Strings.isNullOrEmpty(input) &&  !input.equals("exit") && !input.equals("quit")) {
-                    if(input.equals("reload")){
-                        rs=loadRuleSet();
+                if (!Strings.isNullOrEmpty(input) && !input.equals("exit") && !input.equals("quit")) {
+                    if (input.equals("reload")) {
+                        rs = loadRuleSet();
                         SemRewriteRuleCheck.checkRuleSet(rs);
                         continue;
                     }
-                    if(input.startsWith("!")){
-                        String path=input.substring(1);
-                        CNF cnf=CommonCNFUtil.loadFileAndFindCommonCNF(path);
-                        System.out.println("\nThe common CNF is :"+cnf);
+                    if (input.startsWith("!")) {
+                        String path = input.substring(1);
+                        CNF cnf = CommonCNFUtil.loadFileAndFindCommonCNF(path);
+                        System.out.println("\nThe common CNF is :" + cnf);
                         continue;
                     }
                     Rule r = Rule.parseString(input);
@@ -197,6 +156,5 @@ public final class RewriteRuleUtil extends RuleSet {
 
         } while (!input.equals("exit") && !input.equals("quit"));
     }
-
 
 }

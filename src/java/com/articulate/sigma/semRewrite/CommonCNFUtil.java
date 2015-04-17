@@ -60,7 +60,7 @@ public class CommonCNFUtil {
     /***********************************************************
      * save the intermediate parsing result to JSON file
      */
-    public static String saveCNFMaptoFile(List<QAPair> list,String path) {
+    public static String saveCNFMaptoFile(List<QAPair> list, String path) {
 
         File f = new File(path);
         if (!f.exists())
@@ -76,7 +76,7 @@ public class CommonCNFUtil {
             for (QAPair k : list) {
                 JSONObject obj = new JSONObject();
                 obj.put("file", k.file);
-                obj.put("index",""+ k.index);
+                obj.put("index", "" + k.index);
                 obj.put("query", k.query);
                 obj.put("queryCNF", k.queryCNF.toString());
                 obj.put("answer", k.answer);
@@ -99,23 +99,23 @@ public class CommonCNFUtil {
     public static List<QAPair> loadCNFMapfromFile(String path) {
 
         JSONParser jp = new JSONParser();
-        List<QAPair> res=new ArrayList<QAPair>();
+        List<QAPair> res = new ArrayList<QAPair>();
         try {
             JSONArray arr = (JSONArray) jp.parse(new FileReader(path));
             Iterator<JSONObject> iterator = arr.iterator();
             while (iterator.hasNext()) {
                 JSONObject obj = iterator.next();
                 Integer index = Integer.parseInt((String) obj.get("index"));
-                String query=(String) obj.get("query");
-                String answer=(String) obj.get("answer");
-                String file=(String) obj.get("file");
-                QAPair item=new QAPair(index,file,query,answer);
+                String query = (String) obj.get("query");
+                String answer = (String) obj.get("answer");
+                String file = (String) obj.get("file");
+                QAPair item = new QAPair(index, file, query, answer);
                 String k = (String) obj.get("queryCNF");
                 CNF cnf = CNF.parseSimple(new Lexer(k));
                 k = (String) obj.get("answerCNF");
                 CNF cnf2 = CNF.parseSimple(new Lexer(k));
-                item.queryCNF=cnf;
-                item.answerCNF=cnf2;
+                item.queryCNF = cnf;
+                item.answerCNF = cnf2;
                 res.add(item);
             }
         }
@@ -150,11 +150,11 @@ public class CommonCNFUtil {
      * load sentences from file, one line one sentence
      * return map
      */
-    public static Map<Integer,String> loadSentencesMap(String path) {
+    public static Map<Integer, String> loadSentencesMap(String path) {
 
-        Map<Integer,String> res = new HashMap<Integer,String>();
+        Map<Integer, String> res = new HashMap<Integer, String>();
         try (Scanner in = new Scanner(new FileReader(path))) {
-            int index=0;
+            int index = 0;
             while (in.hasNextLine()) {
                 String line = in.nextLine();
                 res.put(index++, line);
@@ -166,24 +166,23 @@ public class CommonCNFUtil {
         return res;
     }
 
-
     /***********************************************************
      * load sentences from "IRtest.json" like QA pair file
      */
     public static List<QAPair> loadSentencesFormJsonFile(String path) {
 
         JSONParser jp = new JSONParser();
-        List<QAPair> res=new ArrayList<QAPair>();
+        List<QAPair> res = new ArrayList<QAPair>();
         try {
             JSONArray arr = (JSONArray) jp.parse(new FileReader(path));
             Iterator<JSONObject> iterator = arr.iterator();
-            int i=0;
+            int i = 0;
             while (iterator.hasNext()) {
                 JSONObject obj = iterator.next();
                 String filename = (String) obj.get("file");
                 String query = (String) obj.get("query");
                 String answer = (String) obj.get("answer");
-                QAPair item=new QAPair(i++,filename,query,answer);
+                QAPair item = new QAPair(i++, filename, query, answer);
                 res.add(item);
             }
         }
@@ -239,35 +238,35 @@ public class CommonCNFUtil {
         Interpreter inter = new Interpreter();
         KBmanager.getMgr().initializeOnce();
         inter.initialize();
-        for (QAPair q:list) {
+        for (QAPair q : list) {
             CNF cnf = inter.interpretGenCNF(q.query).get(0);
             cnf = preProcessCNF(cnf);
             System.out.println(cnf);
-            q.queryCNF=cnf;
+            q.queryCNF = cnf;
             cnf = inter.interpretGenCNF(q.answer).get(0);
             cnf = preProcessCNF(cnf);
             System.out.println(cnf);
-            q.answerCNF=cnf;
+            q.answerCNF = cnf;
         }
     }
 
     /***********************************************************
      */
-    public static Map<Integer,CNF> generateCNFForStringSet(Map<Integer,String> sentences) {
+    public static Map<Integer, CNF> generateCNFForStringSet(Map<Integer, String> sentences) {
 
         Map<Integer, CNF> res = new HashMap<Integer, CNF>();
         Interpreter inter = new Interpreter();
         KBmanager.getMgr().initializeOnce();
         inter.initialize();
-        for (Integer index:sentences.keySet()) {
-            String q=sentences.get(index);
-            try{
+        for (Integer index : sentences.keySet()) {
+            String q = sentences.get(index);
+            try {
                 CNF cnf = inter.interpretGenCNF(q).get(0);
                 cnf = preProcessCNF(cnf);
                 System.out.println(cnf);
-                res.put(index,cnf);
+                res.put(index, cnf);
             }
-            catch (Exception e){
+            catch (Exception e) {
                 System.out.println("Exception occurs in " + q);
                 e.printStackTrace();
             }
@@ -292,7 +291,7 @@ public class CommonCNFUtil {
                 isFirst = false;
             }
         }
-        System.out.println("\n The common CNF is "+res);
+        System.out.println("\n The common CNF is " + res);
         return res;
     }
 
@@ -342,21 +341,20 @@ public class CommonCNFUtil {
         return false;
     }
 
-
     /***********************************************************
      */
-    public static void transformQAPairListtoCNFSet(List<QAPair> list,Map<Integer,String> sentences,Map<Integer,CNF> cnfs){
-        int index=0;
-        for(QAPair q:list){
-            sentences.put(index,q.query);
-            cnfs.put(index,q.queryCNF);
+    public static void transformQAPairListtoCNFSet(List<QAPair> list, Map<Integer, String> sentences, Map<Integer, CNF> cnfs) {
+
+        int index = 0;
+        for (QAPair q : list) {
+            sentences.put(index, q.query);
+            cnfs.put(index, q.queryCNF);
             index++;
-            sentences.put(index,q.answer);
-            cnfs.put(index,q.answerCNF);
+            sentences.put(index, q.answer);
+            cnfs.put(index, q.answerCNF);
             index++;
         }
     }
-
 
     /***********************************************************
      */
@@ -503,20 +501,25 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static class QAPair{
+    public static class QAPair {
+
         Integer index;
         String file;
         String query;
         String answer;
         CNF queryCNF;
         CNF answerCNF;
-        public QAPair(Integer index,String file,String query,String answer){
-            this.index=index;
-            this.file=file;
-            this.query=query;
-            this.answer=answer;
+
+        public QAPair(Integer index, String file, String query, String answer) {
+
+            this.index = index;
+            this.file = file;
+            this.query = query;
+            this.answer = answer;
         }
-        public String toString(){
+
+        public String toString() {
+
             StringBuilder sb = new StringBuilder();
             sb.append("{\n");
             sb.append("  \"index\":\"" + index + "\",\n");
@@ -534,43 +537,46 @@ public class CommonCNFUtil {
      * function to load text file and generate one common CNF for all sentences,
      * one sentence one line.
      */
-    public static CNF loadFileAndFindCommonCNF(String path){
-        Map<Integer,String> strs=loadSentencesMap(path);
-        Map<Integer,CNF> cnfMap=CommonCNFUtil.generateCNFForStringSet(strs);
+    public static CNF loadFileAndFindCommonCNF(String path) {
+
+        Map<Integer, String> strs = loadSentencesMap(path);
+        Map<Integer, CNF> cnfMap = CommonCNFUtil.generateCNFForStringSet(strs);
         System.out.println("\nSentences are:\n");
-        for(Integer i:strs.keySet()){
+        for (Integer i : strs.keySet()) {
             System.out.println(strs.get(i));
             System.out.println(cnfMap.get(i));
         }
-        CNF cnf=CommonCNFUtil.findOneCommonCNF(cnfMap.values());
+        CNF cnf = CommonCNFUtil.findOneCommonCNF(cnfMap.values());
         return cnf;
     }
 
     /***********************************************************
      */
-    public static void testJSONQAPair(){
-        List<QAPair> list=loadSentencesFormJsonFile("test/corpus/java/resources/IRtests.json");
+    public static void testJSONQAPair() {
+
+        List<QAPair> list = loadSentencesFormJsonFile("test/corpus/java/resources/IRtests.json");
         generateCNFForQAPairs(list);
-        String path=saveCNFMaptoFile(list,"cache.json");
-        list=loadCNFMapfromFile("cache.json");
+        String path = saveCNFMaptoFile(list, "cache.json");
+        list = loadCNFMapfromFile("cache.json");
         for (QAPair e : list)
             System.out.println(e);
-        Map<Integer,CNF> cnfs=new HashMap<Integer, CNF>();
-        Map<Integer,String> sentences=new HashMap<Integer,String>();
+        Map<Integer, CNF> cnfs = new HashMap<Integer, CNF>();
+        Map<Integer, String> sentences = new HashMap<Integer, String>();
         transformQAPairListtoCNFSet(list, sentences, cnfs);
         Map<Integer, Map<Integer, CNF>> rr = getCommonCNF(cnfs);
         for (Map.Entry e : rr.entrySet()) {
             System.out.println(e);
         }
         Map<CNF, Set<Pair<Integer, Integer>>> re = reverseMap(rr);
-        for(CNF cnf:re.keySet()){
-            System.out.println(cnf.toString()+re.get(cnf));
+        for (CNF cnf : re.keySet()) {
+            System.out.println(cnf.toString() + re.get(cnf));
         }
     }
 
-    public static void testFile(){
-        String path="/Users/peigenyou/workspace/test.txt";
-        CNF cnf=loadFileAndFindCommonCNF(path);
+    public static void testFile() {
+
+        String path = "/Users/peigenyou/workspace/test.txt";
+        CNF cnf = loadFileAndFindCommonCNF(path);
     }
 
     /***********************************************************

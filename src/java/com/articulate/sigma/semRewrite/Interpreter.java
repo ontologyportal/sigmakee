@@ -440,7 +440,7 @@ public class Interpreter {
 
     /** *************************************************************
      */
-    private static String addQuantification(String form) {
+    public static String addQuantification(String form) {
 
         ArrayList<String> vars = findQuantification(form);
         if (!question)
@@ -558,7 +558,7 @@ public class Interpreter {
 //        results = processPhrasalVerbs(results);
 
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
-        System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
+        //System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
 
         ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
