@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import java.security.InvalidParameterException;
 import java.util.*;
 
 public class PredVarInst {
@@ -105,7 +106,7 @@ public class PredVarInst {
     /** ***************************************************************
      *
      */
-    private static String hasCorrectArityRecurse(Formula f, KB kb) throws IllegalArgumentException{
+    private static String hasCorrectArityRecurse(Formula f, KB kb) throws IllegalArgumentException, TypeNotPresentException {
 
         if (f == null || StringUtil.emptyString(f.theFormula) || f.empty() ||
                 Formula.atom(f.theFormula) || f.isVariable())
@@ -131,7 +132,7 @@ public class PredVarInst {
                 val = intval.intValue();
             else {
                 if (l.size() != 0 && !logicalTerms.contains(rel) && !rel.startsWith("?")) {
-                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s do not have a arity defined in KB, can't get the arity number!\n%s\n", rel, f,f.getSourceFile(),f.startLine);
+                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s do not have a arity defined in KB, can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
                     throw new IllegalArgumentException();
                 }
             }
@@ -141,7 +142,7 @@ public class PredVarInst {
                 if (val > 0 && val != l.size()) {
                     System.out.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
                             val + " but found " + l.size() + " for relation " + rel);
-                    return rel;
+                    throw new IllegalArgumentException(rel);
                 }
             }
             if (f.isSimpleClause()) {
@@ -185,7 +186,7 @@ public class PredVarInst {
         }
         catch(IllegalArgumentException e){
             System.out.printf("FileName:%s\nLine number:%d\n",f.getSourceFile(),f.startLine);
-            return null;
+            return e.getMessage();
         }
         return res;
     }
