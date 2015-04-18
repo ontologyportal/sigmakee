@@ -45,12 +45,13 @@ public class IdiomSubstitutor extends SimpleSubstitutorStorage {
         );
         ArrayList<String> synset = Lists.newArrayList();
         while (from < labels.size()) {
-            int to = WordNet.wn.collectMultiWord(labelsText, from, synset);
-            if (to > from) {
-                CoreLabelSequence idiom = new CoreLabelSequence(labels.subList(from, to));
+            List<String> tail = labelsText.subList(from + 1, labelsText.size());
+            int to = WordNet.wn.getMultiWords().findMultiWord(labels.get(from).lemma(), tail, synset);
+            if (to > 0) {
+                CoreLabelSequence idiom = new CoreLabelSequence(labels.subList(from, from + to));
                 collectedIdioms.put(idiom, idiom);
             }
-            from = to + 1;
+            from++;
         }
 
         addGroups(collectedIdioms);

@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import static com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence.EMPTY_SEQUENCE;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class IdiomSubstitutorTest extends IntegrationTestBase {
 
@@ -47,13 +46,12 @@ public class IdiomSubstitutorTest extends IntegrationTestBase {
 
     @Test
     public void testFoundingFathers() {
-        String input = "Who are the founding fathers?";
+        String input = "Who is the founding father?";
         Annotation document = Pipeline.toAnnotation(input);
 
         IdiomSubstitutor substitutor = new IdiomSubstitutor(document.get(TokensAnnotation.class));
 
-        // FIXME assertEquals("founding_fathers-4", substitutor.getGrouped("founding-4").toLabelString().get());
-        assertFalse(substitutor.getGrouped("founding-4").toLabelString().isPresent());
+        assertEquals("founding_father-4", substitutor.getGrouped("founding-4").toLabelString().get());
     }
 
 }

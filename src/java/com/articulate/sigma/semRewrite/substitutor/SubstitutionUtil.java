@@ -32,11 +32,10 @@ import java.util.regex.Pattern;
 public class SubstitutionUtil {
 
     // predicate(word-1, word-2)
-    public static final Pattern CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+-\\d+),\\s*(.+-\\d+)\\)");
     // predicate(word, word-1)
     // predicate(word, word)
     // predicate(word-1, word)
-    public static final Pattern GENERIC_CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+),\\s*(.+)\\)");
+    public static final Pattern CLAUSE_SPLITTER = Pattern.compile("([^\\(]+)\\((.+?(-\\d+)?),\\s*(.+?(-\\d+)?)\\)");
     public static final Pattern CLAUSE_PARAM = Pattern.compile("(.+)-(\\d+)");
 
     /** **************************************************************
@@ -49,15 +48,19 @@ public class SubstitutionUtil {
             String clause = clauseIterator.next();
             Matcher m = CLAUSE_SPLITTER.matcher(clause);
             if (m.matches()) {
+                // FIXME LOW: Still waiting for optimization
                 String attr1 = m.group(2);
-                String attr2 = m.group(3);
-                if (substitutor.containsKey(attr1) || substitutor.containsKey(attr2)) {
+                String attr2 = m.group(4);
+                if ((m.group(3) != null && substitutor.containsKey(attr1))
+                        || (m.group(5) != null && substitutor.containsKey(attr2))) {
                     CoreLabelSequence attr1Grouped = substitutor.getGrouped(attr1);
                     CoreLabelSequence attr2Grouped = substitutor.getGrouped(attr2);
                     clauseIterator.remove();
                     if (!Objects.equals(attr1Grouped, attr2Grouped)) {
                         String label = m.group(1);
-                        modifiedClauses.add(label + "(" + attr1Grouped.toLabelString().orElse(attr1) + "," + attr2Grouped.toLabelString().orElse(attr2) + ")");
+                        String arg1 = attr1Grouped.toLabelString().orElse(attr1);
+                        String arg2 = attr2Grouped.toLabelString().orElse(attr2);
+                        modifiedClauses.add(label + "(" + arg1  + "," + arg2 + ")");
                     }
                 }
             }

@@ -20,7 +20,7 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.SigmaTestBase;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;

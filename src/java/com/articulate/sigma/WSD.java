@@ -1,10 +1,5 @@
 package com.articulate.sigma;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
 
 import com.google.common.collect.Lists;
@@ -47,7 +42,7 @@ public class WSD {
         for (int i = 0; i < al.size(); i++) {
             String word = (String) al.get(i);
             ArrayList<String> multiWordResult = new ArrayList<String>();
-            int wordIndex = WordNet.wn.collectMultiWord(al, i, multiWordResult);   
+            int wordIndex = WordNet.wn.getMultiWords().findMultiWord(al, i, multiWordResult);
             if (wordIndex != i) {
                 //String theMultiWord = WordNet.wn.synsetsToWords.get(multiWordResult.get(0)).get(0);
                 result.add(multiWordResult.get(0));

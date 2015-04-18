@@ -52,7 +52,7 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
         List<CoreLabel> labels = document.get(TokensAnnotation.class);
         Map<Integer, CorefChain> corefChains = document.get(CorefChainAnnotation.class);
 
-        Map<CoreLabelSequence, CoreLabelSequence> collectedIdioms = Maps.newHashMap();
+        Map<CoreLabelSequence, CoreLabelSequence> collectedGroups = Maps.newHashMap();
 
         for(CoreLabel label : labels) {
             List<CorefMention> mentions = getMentions(label, corefChains);
@@ -69,14 +69,14 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
                         }
                         List<CoreLabel> singleSentence =  getSentenceTokens(document, firstMention.sentNum - 1);
                         CoreLabelSequence key = extractTextWithSameTag(singleSentence, firstMention, masterTag);
-                        collectedIdioms.put(new CoreLabelSequence(label), key);
+                        collectedGroups.put(new CoreLabelSequence(label), key);
                     }
                 }
 
             }
         }
 
-        addGroups(collectedIdioms);
+        addGroups(collectedGroups);
     }
 
     private CorefMention findRootMention(List<CorefMention> mentions) {

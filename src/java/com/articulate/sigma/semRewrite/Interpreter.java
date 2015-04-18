@@ -554,7 +554,10 @@ public class Interpreter {
         results.addAll(wsd);
 
         List<String> posInformation = SentenceUtil.findPOSInformation(lastSentenceTokens, dependenciesList);
+        // TODO: This is not the best way to substitute POS information
+        SubstitutionUtil.groupClauses(substitutor, posInformation);
         results.addAll(posInformation);
+
         results = lemmatizeResults(results, lastSentenceTokens, substitutor);
 
 //        results = processPhrasalVerbs(results);
@@ -564,7 +567,6 @@ public class Interpreter {
         // Next line used for input to some unit tests.
         System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
 
-        ArrayList<CNF> inputs = new ArrayList<CNF>();
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
         List<String> measures = InterpretNumerics.getSumoTerms(input, substitutor);
@@ -747,7 +749,7 @@ public class Interpreter {
                 for (String singleResult : ImmutableList.copyOf(lemmatizeResults)) {
                     if (singleResult.contains(replace)) {
                         lemmatizeResults.remove(singleResult);
-                        lemmatizeResults.add(singleResult.replaceAll(replace, replaceTo));
+                        lemmatizeResults.add(singleResult.replace(replace, replaceTo));
                     }
                 }
             }
