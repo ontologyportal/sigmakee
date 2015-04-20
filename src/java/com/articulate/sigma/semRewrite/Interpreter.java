@@ -81,6 +81,7 @@ public class Interpreter {
     // debug options
     public static boolean showrhs = false;
     public static boolean showr = true;
+    public static boolean coref = true;
 
     public static List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
     public static List<String> months = Lists.newArrayList("January","February","March","April","May","June",
@@ -507,7 +508,8 @@ public class Interpreter {
 
         Annotation document = Pipeline.toAnnotation(input);
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-        System.out.println("Interpreting " + sentences.size() + " inputs.");
+        System.out.println("Interpreter.interpret(): Interpreting " + sentences.size() + " inputs.");
+
         for(CoreMap sentence : sentences) {
             String interpreted = interpretSingle(sentence.get(CoreAnnotations.TextAnnotation.class));
             results.add(interpreted);
@@ -522,6 +524,9 @@ public class Interpreter {
     public CNF interpretGenCNF(String input)    {
 
         Annotation wholeDocument = userInputs.annotateDocument(input);
+        System.out.println("Interpreter.interpretGenCNF(): Interpreting " + wholeDocument.size() + " inputs.");
+        System.out.println("Interpreter.interpretGenCNF(): coref chains");
+        SentenceUtil.printCorefChain(wholeDocument);
         CoreMap lastSentence = SentenceUtil.getLastSentence(wholeDocument);
         List<CoreLabel> lastSentenceTokens = lastSentence.get(CoreAnnotations.TokensAnnotation.class);
 
@@ -533,12 +538,22 @@ public class Interpreter {
         List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
         results.addAll(dependenciesList);
 
-        ClauseSubstitutor substitutor = SubstitutorsUnion.of(
-                new CorefSubstitutor(wholeDocument),
-                new IdiomSubstitutor(lastSentenceTokens),
-                new NounSubstitutor(lastSentenceTokens)
-        );
+        ClauseSubstitutor substitutor = null;
+        if (coref) {
+            substitutor = SubstitutorsUnion.of(
+                    new CorefSubstitutor(wholeDocument),
+                    new IdiomSubstitutor(lastSentenceTokens),
+                    new NounSubstitutor(lastSentenceTokens)
+            );
+        }
+        else {
+            substitutor = SubstitutorsUnion.of(
+                    new IdiomSubstitutor(lastSentenceTokens),
+                    new NounSubstitutor(lastSentenceTokens)
+            );
+        }
         SubstitutionUtil.groupClauses(substitutor, results);
+
 
         System.out.println("Interpreter.interpretGenCNF(): corefed: " + results);
         EntityTypeParser etp = new EntityTypeParser(wholeDocument);
