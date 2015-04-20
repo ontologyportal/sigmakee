@@ -111,12 +111,26 @@ public class QAInferenceTest extends IntegrationTestBase {
     }
 
     @Test
-    public void testWhoFoundedMissionariesOfCharity() throws IOException {
+    public void testWhoFoundedtheMissionariesOfCharity() throws IOException {
         String assertion = "Mother Teresa founded the Missionaries of Charity, a Roman Catholic religious congregation, which in 2012 consisted of over 4500 sisters and is active in 133 countries.";
 
         interpreter.interpret(assertion);
 
         String query = "Who founded the Missionaries of Charity?";
+        String actualAnswer = interpreter.interpret(query).get(0);
+
+        System.out.println("actualAnswer = " + actualAnswer);
+
+        assertEquals("'Mother Teresa'.", actualAnswer);
+    }
+
+    @Test
+    public void testWhoReceivedTheNobelPeacePrizeIn1979() throws IOException {
+        String assertion = "Mother Teresa was the recipient of numerous honours including the 1979 Nobel Peace Prize.";
+
+        interpreter.interpret(assertion);
+
+        String query = "Who received the Nobel Peace Prize in 1979?";
         String actualAnswer = interpreter.interpret(query).get(0);
 
         System.out.println("actualAnswer = " + actualAnswer);
