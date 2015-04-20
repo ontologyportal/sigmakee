@@ -87,4 +87,12 @@ public class QAInferenceTest extends IntegrationTestBase {
         String actualAnswer = interpreter.interpret("When did the Liberty Bell change the world?").get(0);
         assertEquals("DayFn(8,s__MonthFn(s__July,s__YearFn(1776))).", actualAnswer);
     }
+
+    @Test
+    public void test5() throws IOException {
+        interpreter.interpret("The Prince of Wales, the eldest son of The Queen and Prince Philip, Duke of Edinburgh, was born at Buckingham Palace at 9.14pm on November 14, 1948.");
+
+        String actualAnswer = interpreter.interpret("When was the Prince of Wales born?").get(0);
+        assertEquals("DayFn(14,s__MonthFn(s__November,s__YearFn(1948))).", actualAnswer);
+    }
 }
