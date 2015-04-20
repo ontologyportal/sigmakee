@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.Ignore;
 
 import java.util.ArrayList;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -26,8 +27,9 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
         interpreter.initialize();
     }
 
-    private void doTest(String input, String expectedOutput) {
+    private void doTest(String input, String expectedOutput, boolean isQuestion) {
 
+        interpreter.question = isQuestion;
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
         String actual = interpreter.fromKIFClauses(kifClauses);
@@ -55,7 +57,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                 "  (instance ?Mary-1 Human))\n" +
                 ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -75,7 +77,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -95,7 +97,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -115,7 +117,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -135,7 +137,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -155,7 +157,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -177,7 +179,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
 
@@ -197,7 +199,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -221,7 +223,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?walk-2 Walking))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -240,7 +242,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -260,7 +262,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -284,7 +286,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?walk-2 Walking))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -306,7 +308,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?walk-2 Walking))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -328,7 +330,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?walk-2 Walking))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -348,7 +350,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?room-5 Room))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -370,7 +372,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?room-5 Room))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -392,7 +394,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?room-5 Room))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -416,7 +418,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?walk-3 Walking))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -438,7 +440,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -460,7 +462,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -484,7 +486,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -494,6 +496,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
     @Test
     public void testMaryWentAfterMidnight() {
         String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_after(go-2,midnight-4), names(Mary-1,\"Mary\"), sumo(TimePoint,midnight-4), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,midnight-4), hour(time-1,00-4), time(go-2,time-1), minute(time-1,00-4)";
+        // FIXME: new parse String input = "names(Mary-3,\"Mary\"), attribute(Mary-3,Female), sumo(Human,Mary-3), number(SINGULAR,Mary-1), tense(PAST,went-2), root(ROOT-0,go_after-2), nsubj(go_after-2,Mary-3), sumo(TimePoint,midnight-4), number(SINGULAR,midnight-4), prep_after(go_after-2,midnight-4), hour(time-1,00-4), time(go-2,time-1), minute(time-1,00-4)";
         String expected =
                 "(exists (?Mary-1 ?go-2 ?time-1 ?midnight-4) \n" +
                         "(and \n" +
@@ -504,7 +507,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -526,7 +529,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -548,7 +551,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?John-5 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -568,7 +571,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?Mary-1 Human))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -590,7 +593,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         "  (instance ?house-7 House))\n" +
                         ")";
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
      /** *************************************************************
@@ -610,18 +613,20 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         ")"
         ;
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
 
     /** *************************************************************
-     * Mary has make up the story.
+     * Mary has made up the story.
      * nsubj(make*,?S), aux(make*,have*), dobj(make*,?V), sumo(?C,?V), isSubclass(?C,Process) ==> (nsubj(?V,?S), past(?V,?DUMMY), sumo(?C,?V)).
      */
+    //FIXME: don't ignore
     @Ignore
     @Test
     public void testMaryHasMadeUpStory() {
         String input = "det(story-6,the-5), root(ROOT-0,make-3), nsubj(make-3,Mary-1), aux(make-3,have-2), dobj(make-3,story-6), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Stating,story-6), number(SINGULAR,Mary-1), tense(PRESENT,make-3), aspect(PERFECT,make-3), number(SINGULAR,story-6)";
+        // FIXME: new string input: String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PRESENT,made-3), aspect(PERFECT,made-3), root(ROOT-0,make_up-3), nsubj(make_up-3,Mary-1), aux(make_up-3,have-2), sumo(Stating,story-6), number(SINGULAR,story-6), dobj(make_up-3,story-6), det(story-6,the-5)";
 
         String expected =
                 "(exists (?Mary-1 ?story-6) \n" +
@@ -636,7 +641,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         ")"
                 ;
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -660,7 +665,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         ")"
                 ;
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -682,7 +687,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         ")"
                 ;
 
-        doTest(input, expected);
+        doTest(input, expected, false);
     }
 
     /** *************************************************************
@@ -692,6 +697,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
     @Test
     public void testMaryMadeUpStory() {
         String input = "det(story-5,the-4), root(ROOT-0,make-2), nsubj(make-2,Mary-1), dobj(make-2,story-5), names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Stating,story-5), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,make-2), number(SINGULAR,story-5)";
+        // FIXME: New string input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,made-2), root(ROOT-0,make_up-2), nsubj(make_up-2,Mary-1), sumo(Stating,story-5), number(SINGULAR,story-5), dobj(make_up-2,story-5), det(story-5,the-4)";
 
         String expected =
                 "(exists (?story-5 ?Mary-1) \n" +
@@ -706,7 +712,33 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
                         ")"
                 ;
 
-        doTest(input, expected);
+        doTest(input, expected, false);
+    }
+
+    /** *************************************************************
+     * Could Mary walk?
+     * aux(?V,could*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testCouldMaryWalk() {
+        String input = "names(Mary-2,\"Mary\"), attribute(Mary-2,Female), sumo(Human,Mary-2), number(SINGULAR,Mary-2), root(ROOT-0,walk-3), nsubj(walk-3,Mary-2), sumo(Walking,walk-3), aux(walk-3,could-1)";
+
+        String expected =
+                "(exists (?Y) \n" +
+                        "(forall (?DUMMY) \n" +
+                        "(exists (?Mary-2 ?walk-3) \n" +
+                        "(and \n" +
+                        "  (agent ?walk-3 ?Mary-2)\n" +
+                        "  (attribute ?Mary-2 Female)\n" +
+                        "  (names ?Mary-2 \"Mary\")\n" +
+                        "  (possible ?walk-3 ?Y)\n" +
+                        "  (instance ?Mary-2 Human)\n" +
+                        "  (instance ?walk-3 Walking))\n" +
+                        ") \n" +
+                        "))"
+                ;
+
+        doTest(input, expected, true);
     }
 
 }

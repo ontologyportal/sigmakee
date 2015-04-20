@@ -69,7 +69,7 @@ public class InferenceWikiTest {
             }
 
             //loading the assertions
-            Interpreter.question = false;
+            interpreter.question = false;
             for (String line:lines) {
                 System.out.println("\nAsserting: " + line);
                 String response = interpreter.interpretSingle(line);
@@ -79,7 +79,7 @@ public class InferenceWikiTest {
         }
 
         //asking the questions
-        Interpreter.question = true;
+        interpreter.question = true;
         System.out.println("\nQuestion: " + query);
         String actual = interpreter.interpretSingle(query);
         System.out.println("Answer: " + answer);

@@ -39,15 +39,6 @@ public class AddQueryObjectQuantifierTest {
 
         interpreter = new Interpreter();
         interpreter.question = true;
-        Class[] argTypes = new Class[]{String.class};
-        try {
-            findQueryObjects = Interpreter.class.getDeclaredMethod("addQuantification", String.class);
-        }
-        catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        assert findQueryObjects != null;
-        findQueryObjects.setAccessible(true);
     }
 
     /***********************************************************
@@ -193,15 +184,7 @@ public class AddQueryObjectQuantifierTest {
     private boolean compareInputResultAndExpectedResult(String input, String output) {
 
         Formula f1 = new Formula();
-        try {
-            input = String.valueOf(findQueryObjects.invoke(null, input));
-        }
-        catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        input = String.valueOf(interpreter.addQuantification(input));
         f1.read(input);
         Formula f2 = new Formula();
         f2.read(output);

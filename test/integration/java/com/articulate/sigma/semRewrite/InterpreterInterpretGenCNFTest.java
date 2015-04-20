@@ -95,6 +95,19 @@ public class InterpreterInterpretGenCNFTest extends IntegrationTestBase {
     }
 
     @Test
+    public void testDidAmeliaWalk()   {
+        String input = "Did Amelia walk?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "sumo(Human,Amelia-2)", "attribute(Amelia-2,Female)", "names(Amelia-2,\"Amelia\")", "number(SINGULAR,Amelia-2)", "sumo(IntentionalProcess,do-1)", "root(ROOT-0,walk-3)", "nsubj(walk-3,Amelia-2)", "sumo(Walking,walk-3)", "aux(walk-3,do-1)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
     public void testAmeliaFliesAirplanes()   {
         String input = "Amelia flies airplanes.";
         CNF cnf = interpreter.interpretGenCNF(input);

@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
 
+import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.SigmaTestBase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,7 +27,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CommonCNFtest extends SigmaTestBase {
+public class CommonCNFtest extends IntegrationTestBase {
 
     @Test
     public void testCase1() {

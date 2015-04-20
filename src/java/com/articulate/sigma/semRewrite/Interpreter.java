@@ -63,7 +63,7 @@ public class Interpreter {
 
     // execution options
     public boolean inference = true;
-    public static boolean question = false;
+    public boolean question = false;
     public static boolean addUnprocessed = false;
     //if true, show POS tags during parse
     public static boolean verboseParse = true;
@@ -440,7 +440,7 @@ public class Interpreter {
 
     /** *************************************************************
      */
-    public static String addQuantification(String form) {
+    public String addQuantification(String form) {
 
         ArrayList<String> vars = findQuantification(form);
         if (!question)
@@ -580,6 +580,9 @@ public class Interpreter {
 
     /** *************************************************************
      * Take in a single sentence and output an English answer.
+     * Sets question instance field based on input.
+     * Updates tfidf static field with input if input is not question.
+     * If first attempt using CNF clauses fails, tries tfidf for questions.
      */
     public String interpretSingle(String input) {
 
@@ -1432,7 +1435,7 @@ public class Interpreter {
 
     /** ***************************************************************
      */
-    public static void testAddQuantification() {
+    public void testAddQuantification() {
 
         String input = "(and (agent kicks-2 John-1) (instance kicks-2 Kicking) (patient kicks-2 cart-4)" +
                 "(instance John-1 Human) (instance cart-4 Wagon))";
