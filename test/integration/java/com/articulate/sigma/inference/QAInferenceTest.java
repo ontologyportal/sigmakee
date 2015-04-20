@@ -110,4 +110,18 @@ public class QAInferenceTest extends IntegrationTestBase {
         assertEquals("An instance of Macedonia.", actualAnswer);
     }
 
+    @Test
+    public void testWhoFoundedMissionariesOfCharity() throws IOException {
+        String assertion = "Mother Teresa founded the Missionaries of Charity, a Roman Catholic religious congregation, which in 2012 consisted of over 4500 sisters and is active in 133 countries.";
+
+        interpreter.interpret(assertion);
+
+        String query = "Who founded the Missionaries of Charity?";
+        String actualAnswer = interpreter.interpret(query).get(0);
+
+        System.out.println("actualAnswer = " + actualAnswer);
+
+        assertEquals("An instance of Woman.", actualAnswer);
+    }
+
 }
