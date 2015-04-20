@@ -21,6 +21,7 @@ MA  02111-1307 USA
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.StringUtil;
 import com.google.common.collect.Lists;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -137,6 +138,8 @@ public class CommonCNFUtil {
         try (Scanner in = new Scanner(new FileReader(path))) {
             while (in.hasNextLine()) {
                 String line = in.nextLine();
+                if(StringUtil.emptyString(line))
+                    continue;
                 res.add(line);
             }
         }

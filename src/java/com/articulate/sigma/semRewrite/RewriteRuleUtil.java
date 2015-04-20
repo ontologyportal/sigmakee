@@ -142,7 +142,7 @@ public final class RewriteRuleUtil extends RuleSet {
                     if (input.startsWith("@@")) {
                         String path = input.substring(2);
                         String[] paths=path.split(",");
-                        QAOutputGenerator.generate(paths[0],paths[1]);
+                        QAOutputGenerator.generate(paths[0],paths[1],null);
                         continue;
                     }Rule r = Rule.parseString(input);
                     System.out.println("The rule entered is :: " + r + "\n");
