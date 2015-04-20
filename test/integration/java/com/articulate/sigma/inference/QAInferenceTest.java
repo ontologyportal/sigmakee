@@ -3,7 +3,6 @@ package com.articulate.sigma.inference;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.semRewrite.Interpreter;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -71,5 +70,13 @@ public class QAInferenceTest extends IntegrationTestBase {
 
         String actualAnswer = interpreter.interpret("Who hits the cart?").get(0);
         assertEquals("'John'.", actualAnswer);
+    }
+
+    @Test
+    public void test3() throws IOException {
+        interpreter.interpret("The Liberty Bell, located in Pennsylvania, changed the world on July 8, 1776.");
+
+        String actualAnswer = interpreter.interpret("Where is Liberty Bell located?").get(0);
+        assertEquals("An instance of Pennsylvania.", actualAnswer);
     }
 }
