@@ -66,4 +66,12 @@
     "sumo(Human,John-1)",
     "sumo(Running,runs-2)"
   ]
+},{
+  "input": "Earhart vanished over the South Pacific Ocean.",
+  "test": [
+    "sumo(Human,Earhart-1)",
+    "sumo(SouthPacificOcean,South_Pacific_Ocean-5)",
+    "names(Earhart-1,\"Earhart\")",
+    "sumo(Disappearing,vanished-2)"
+  ]
 }]

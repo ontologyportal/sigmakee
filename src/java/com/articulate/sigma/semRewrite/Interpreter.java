@@ -542,14 +542,14 @@ public class Interpreter {
         if (coref) {
             substitutor = SubstitutorsUnion.of(
                     new CorefSubstitutor(wholeDocument),
-                    new IdiomSubstitutor(lastSentenceTokens),
-                    new NounSubstitutor(lastSentenceTokens)
+                    new NounSubstitutor(lastSentenceTokens),
+                    new IdiomSubstitutor(lastSentenceTokens)
             );
         }
         else {
             substitutor = SubstitutorsUnion.of(
-                    new IdiomSubstitutor(lastSentenceTokens),
-                    new NounSubstitutor(lastSentenceTokens)
+                    new NounSubstitutor(lastSentenceTokens),
+                    new IdiomSubstitutor(lastSentenceTokens)
             );
         }
         SubstitutionUtil.groupClauses(substitutor, results);
