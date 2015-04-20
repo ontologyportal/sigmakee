@@ -121,7 +121,7 @@ public class QAInferenceTest extends IntegrationTestBase {
 
         System.out.println("actualAnswer = " + actualAnswer);
 
-        assertEquals("An instance of Woman.", actualAnswer);
+        assertEquals("'Mother Teresa'.", actualAnswer);
     }
 
 }
