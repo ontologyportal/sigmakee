@@ -21,7 +21,7 @@ MA  02111-1307 USA
 package com.articulate.sigma.semRewrite;
 
 public enum EntityType {
-    PERSON("Human"), LOCATION("GeographicArea");
+    PERSON("Human"), LOCATION("GeographicArea"), ORGANIZATION("Organization");
 
     final String sumoClass;
 
