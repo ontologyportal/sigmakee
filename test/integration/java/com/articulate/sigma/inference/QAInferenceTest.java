@@ -95,4 +95,19 @@ public class QAInferenceTest extends IntegrationTestBase {
         String actualAnswer = interpreter.interpret("When was the Prince of Wales born?").get(0);
         assertEquals("DayFn(14,s__MonthFn(s__November,s__YearFn(1948))).", actualAnswer);
     }
+
+    @Test
+    public void testWhereWasMotherTeresaBorn() throws IOException {
+        String assertion = "Mother Teresa was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo.";
+
+        interpreter.interpret(assertion);
+
+        String query = "Where was Mother Teresa born?";
+        String actualAnswer = interpreter.interpret(query).get(0);
+
+        System.out.println("actualAnswer = " + actualAnswer);
+
+        assertEquals("An instance of Macedonia.", actualAnswer);
+    }
+
 }
