@@ -179,7 +179,7 @@ public class Interpreter {
      * @return a list of strings in the format sumo(Class,word-num) 
      * that specify the SUMO class of each word that isn't a stopword.
      */
-    public static List<String> findWSD(List<String> clauses, Map<Integer, String> posMap, EntityTypeParser etp) {
+    public static List<String> findWSD(List<String> clauses, Map<String, String> posMap, EntityTypeParser etp) {
 
         //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
         KB kb = KBmanager.getMgr().getKB("SUMO");
@@ -217,20 +217,12 @@ public class Interpreter {
                 }
             }
             else {
-                String id = null;
-                if (posMap.isEmpty()) {
-                    id = WSD.findWordSenseInContext(pureWord, pure);
-                } else {
-                    String pos = "";
-                    Matcher m = SubstitutionUtil.CLAUSE_PARAM.matcher(clauseKey);
-                    if (m.matches()) {
-                        Integer idx = Integer.valueOf(m.group(2));
-                        pos = posMap.get(idx);
-                    }
-                    id = WSD.findWordSendInContextWithPos(pureWord, pure, WordNetUtilities.sensePOS(pos));
-
-                }
+                String pos = posMap.get(clauseKey);
+                String id = Strings.isNullOrEmpty(pos)
+                        ? WSD.findWordSenseInContext(pureWord, pure)
+                        : WSD.findWordSendInContextWithPos(pureWord, pure, WordNetUtilities.sensePOS(pos));
                 //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
+
                 if (!Strings.isNullOrEmpty(id)) {
                     String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
                     //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
@@ -550,7 +542,7 @@ public class Interpreter {
 
         System.out.println("Interpreter.interpretGenCNF(): corefed: " + results);
         EntityTypeParser etp = new EntityTypeParser(wholeDocument);
-        List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens), etp);
+        List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens, substitutor), etp);
         results.addAll(wsd);
 
         List<String> posInformation = SentenceUtil.findPOSInformation(lastSentenceTokens, dependenciesList);
@@ -764,15 +756,21 @@ public class Interpreter {
     /** *************************************************************
      * @param tokens - List of CoreLabel tokens representing a sentence/input
      * @return Map of token position -> POS
-     * ex.  1 -> NN
-     *      2 -> VBG
-     *      3 -> NN
+     * ex.  Mary-1 -> NNP
+     *      drives-2 -> VBZ
+     *      the-3 -> DT
+     *      car-4 -> NN
      */
-    private Map<Integer, String> getPartOfSpeechList(List<CoreLabel> tokens) {
-        Map<Integer, String> posMap = Maps.newHashMap();
+    private static Map<String, String> getPartOfSpeechList(List<CoreLabel> tokens, ClauseSubstitutor substitutor) {
+        Map<String, String> posMap = Maps.newHashMap();
 
         for (CoreLabel token : tokens) {
-            posMap.put(token.index(), token.get(CoreAnnotations.PartOfSpeechAnnotation.class));
+            CoreLabelSequence seq = substitutor.containsKey(token)
+                    ? substitutor.getGrouped(token)
+                    : CoreLabelSequence.from(token);
+            for(CoreLabel label : seq.getLabels()) {
+                posMap.put(label.originalText() + "-" + label.index(), label.tag());
+            }
         }
 
         return posMap;
