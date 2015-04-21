@@ -69,7 +69,9 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
                         }
                         List<CoreLabel> singleSentence =  getSentenceTokens(document, firstMention.sentNum - 1);
                         CoreLabelSequence key = extractTextWithSameTag(singleSentence, firstMention, masterTag);
-                        collectedGroups.put(new CoreLabelSequence(label), key);
+                        if(!key.isEmpty()) {
+                            collectedGroups.put(new CoreLabelSequence(label), key);
+                        }
                     }
                 }
 

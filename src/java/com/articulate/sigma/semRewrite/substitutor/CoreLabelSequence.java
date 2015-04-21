@@ -60,6 +60,11 @@ public class CoreLabelSequence {
         return labels.contains(label);
     }
 
+    public boolean isEmpty() {
+
+        return labels.isEmpty();
+    }
+
     public boolean containsLabel(int sentIndex, String text, int index) {
 
         return labels.stream().anyMatch(label ->

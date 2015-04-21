@@ -51,4 +51,7 @@
 }, {
   "in":"She sings by herself.",
   "out":"She sings by herself."
+}, {
+  "in":"He was chancellor of Germany from 1933 to 1945 and Fuhrer (leader) of Nazi Germany from 1934 to 1945.",
+  "out":"He was chancellor of Germany from 1933 to 1945 and Fuhrer ( leader) of Nazi Germany from 1934 to 1945."
 }]
