@@ -138,4 +138,33 @@ public class QAInferenceTest extends IntegrationTestBase {
         assertEquals("'Mother Teresa'.", actualAnswer);
     }
 
+    @Test
+    public void testWhenDidMotherTeresaReceiveTheNobelPeacePrize() throws IOException {
+        String assertion = "Mother Teresa was the recipient of numerous honours including the 1979 Nobel Peace Prize.";
+
+        interpreter.interpret(assertion);
+
+        String query = "When did Mother Teresa receive the Nobel Peace Prize?";
+        String actualAnswer = interpreter.interpret(query).get(0);
+
+        System.out.println("actualAnswer = " + actualAnswer);
+
+        assertEquals("1979.", actualAnswer);
+    }
+
+    @Test
+    public void testWhatDoesBiomassConversionResultIn() throws IOException {
+        String assertion = "This biomass conversion can result in fuel in solid, liquid, or gas form.";
+
+        interpreter.interpret(assertion);
+
+        String query = "What does biomass conversion result in?";
+        String actualAnswer = interpreter.interpret(query).get(0);
+
+        System.out.println("actualAnswer = " + actualAnswer);
+
+        assertEquals("An instance of Fuel.", actualAnswer);
+    }
+
 }
+
