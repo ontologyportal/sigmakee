@@ -1153,7 +1153,7 @@ public class Interpreter {
     public void loadRules(String f) {
 
         if (f.indexOf(File.separator.toString(),2) < 0)
-            f = "/home/apease/SourceForge/KBs/WordNetMappings" + f;
+            f = "/home/apease/SourceForge/KBs/WordNetMappings" + File.separator + f;
         try {
             fname = f;
             RuleSet rsin = RuleSet.readFile(f);
