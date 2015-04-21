@@ -528,6 +528,30 @@ public class CommonCNFUtil {
             this.answer = answer;
         }
 
+        public String getQuery() {
+            return query;
+        }
+
+        public String getAnswer() {
+            return answer;
+        }
+
+        public Integer getIndex() {
+            return index;
+        }
+
+        public String getFile() {
+            return file;
+        }
+
+        public CNF getQueryCNF() {
+            return queryCNF;
+        }
+
+        public CNF getAnswerCNF() {
+            return answerCNF;
+        }
+
         public String toString() {
 
             StringBuilder sb = new StringBuilder();
