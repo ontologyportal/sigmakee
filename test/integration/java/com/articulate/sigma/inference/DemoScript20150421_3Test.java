@@ -42,10 +42,12 @@ public class DemoScript20150421_3Test extends IntegrationTestBase {
         input = "Benzylpenicillin, procaine penicillin and benzathine penicillin are given by injection (parenterally), but phenoxymethylpenicillin is given orally.";
         interpreter.interpret(input).get(0);
 
-        input = "Which antibiotic is derived from Penicillium Fungi?";
+        input = "Which antibiotic is given parenterally?";
         String actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("Penicillin.", actualAnswer);
 
-
+        input = "Which antibiotic is given orally?";
+        actualAnswer = interpreter.interpret(input).get(0);
+        assertEquals("Phenoxymethylpenicillin.", actualAnswer);
     }
 }
