@@ -44,5 +44,8 @@ public class DemoScript20150421_4Test extends IntegrationTestBase {
         String actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("'Adolf Hitler'.", actualAnswer);
 
+        input = "Who was the effective dictator of Nazi Germany?";
+        actualAnswer = interpreter.interpret(input).get(0);
+        assertEquals("'Adolf Hitler'.", actualAnswer);
     }
 }
