@@ -561,6 +561,83 @@ public class CommonCNFUtil {
     }
 
     /***********************************************************
+     * function to find all path between two literals in CNF.
+     */
+    public static ArrayList<CNF> findAllPathBetweenLiterals(CNF cnf, String s1, String s2) {
+
+        ArrayList<CNF> res = new ArrayList<CNF>();
+        findPathBFS(cnf.clauses, s1, s2, new ArrayList<Clause>(), 10, res);
+        return res;
+    }
+
+    private static void findPathBFS(ArrayList<Clause> clauses, String s1, String s2, ArrayList<Clause> path, int max, ArrayList<CNF> res) {
+
+        if (max < 0) return;
+        if (isContained(path, s2)) {
+            CNF cnf = new CNF();
+            cnf.clauses = Lists.newArrayList(path);
+            res.add(cnf);
+            return;
+        }
+        for (Clause c : clauses) {
+            if (isContained(c, s1)) {
+                if (isIgnore(c) || path.contains(c))
+                    continue;
+                path.add(c);
+                findPathBFS(clauses, getOtherArgument(c, s1), s2, path, max - 1, res);
+                path.remove(c);
+            }
+        }
+    }
+
+    private static boolean isIgnore(Clause c){
+        List<String> ignoreList=Arrays.asList(new String[]{"number","sumo","tense"});
+        if(ignoreList.contains(c.disjuncts.get(0).pred))
+            return  true;
+        return false;
+    }
+    private static boolean isContained(Clause c, String s) {
+
+        for (Literal l : c.disjuncts) {
+            if (s.equals(l.arg1) || s.equals(l.arg2))
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean isContained(ArrayList<Clause> arr, String s) {
+
+        for (Clause c : arr) {
+            if (isContained(c, s))
+                return true;
+        }
+        return false;
+    }
+
+    private static String getOtherArgument(Clause c, String arg) {
+
+        if (c.disjuncts.get(0).arg1.equals(arg))
+            return c.disjuncts.get(0).arg2;
+        else
+            return c.disjuncts.get(0).arg1;
+    }
+
+    public static void findPath(String cnfStr,String s1,String s2) {
+
+        if(cnfStr==null)
+            cnfStr = "sumo(Nation,country-2), number(SINGULAR,country-2), det(country-2,which-1), root(ROOT-0,be-3), tense(PRESENT,be-3), dep(be-3,country-2), sumo(Object,world-5), number(SINGULAR,world-5), det(world-5,the-4), number(SINGULAR,biodiesel-8), sumo(Position,producer-9), number(SINGULAR,producer-9), nsubj(be-3,producer-9), poss(producer-9,world-5), amod(producer-9,largest-7), nn(producer-9,biodiesel-8)";
+        if(s1==null)
+            s1="biodiesel-8";
+        if(s2==null)
+            s2="country-2";
+        CNF cnf = CNF.parseSimple(new Lexer(cnfStr));
+        ArrayList<CNF> res = findAllPathBetweenLiterals(cnf, s1, s2);
+        for (CNF c : res) {
+            System.out.println(c);
+        }
+    }
+
+    /***********************************************************
      */
 //    public static void testJSONQAPair() {
 //
@@ -596,5 +673,6 @@ public class CommonCNFUtil {
 //        String[] strings = new String[]{"Amelia flies.", "John walks."};
 //        testJSONQAPair();
 //        testFile();
+        findPath(null,null,null);
     }
 }
