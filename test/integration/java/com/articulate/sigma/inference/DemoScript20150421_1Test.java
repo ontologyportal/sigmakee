@@ -50,6 +50,10 @@ public class DemoScript20150421_1Test extends IntegrationTestBase {
         actualAnswer = interpreter.interpret(input).get(0);
         assertEquals("YearFn(1842).", actualAnswer);
 
+        input = "When was the Liberty Bell last rung?";
+        actualAnswer = interpreter.interpret(input).get(0);
+        assertEquals("YearFn(1842).", actualAnswer);
+
 //        input = "Where is Liberty Bell located?";
 //        actualAnswer = interpreter.interpret(input).get(0);
 //        assertEquals("An instance of Pennsylvania.", actualAnswer);
