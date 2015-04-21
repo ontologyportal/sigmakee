@@ -77,7 +77,7 @@ public class QAInferenceTest extends IntegrationTestBase {
         interpreter.interpret("The Liberty Bell, located in Pennsylvania, changed the world on July 8, 1776.");
 
         String actualAnswer = interpreter.interpret("Where is Liberty Bell located?").get(0);
-        assertEquals("An instance of Pennsylvania.", actualAnswer);
+        assertEquals("Pennsylvania.", actualAnswer);
     }
 
     @Test
