@@ -53,7 +53,7 @@ public class CorefSubstitutorLargeTest extends TestCase {
             String expected = (String) jo.get("out");
             String prefix = "";
             if (Boolean.TRUE.equals(jo.get("failed"))) {
-                prefix = "TODO: ";
+                prefix = "✗ ";
             }
 
             return new Object[]{input, expected, prefix};
