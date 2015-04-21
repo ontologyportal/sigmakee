@@ -27,16 +27,14 @@ public class DemoScript20150421_4Test extends IntegrationTestBase {
 
         String input = "Adolf Hitler was an Austrian-born German politician who was the leader of the Nazi Party (German: National sozialistische Deutsche Arbeiter partei (NSDAP); National Socialist German Workers Party).";
         interpreter.interpret(input).get(0);
-        // "No value present" error
-        // input = "He was chancellor of Germany from 1933 to 1945 and Führer (leader) of Nazi Germany from 1934 to 1945.";
-        // interpreter.interpret(input).get(0);
+        input = "He was chancellor of Germany from 1933 to 1945 and Führer (leader) of Nazi Germany from 1934 to 1945.";
+        interpreter.interpret(input).get(0);
         input = "As effective dictator of Nazi Germany, Hitler was at the centre of World War II in Europe, and the Holocaust.";
         interpreter.interpret(input).get(0);
         input = "Hitler was a decorated veteran of World War I.";
         interpreter.interpret(input).get(0);
-        // "No value present" error
-        // input = "He joined the German Workers' Party (precursor of the NSDAP) in 1919, and became leader of the NSDAP in 1921.";
-        // interpreter.interpret(input).get(0);
+        input = "He joined the German Workers' Party (precursor of the NSDAP) in 1919, and became leader of the NSDAP in 1921.";
+        interpreter.interpret(input).get(0);
         input = "In 1923, he attempted a coup in Munich to seize power.";
         interpreter.interpret(input).get(0);
         input = "The failed coup resulted in Hitler's imprisonment, during which time he wrote his autobiography and political manifesto Mein Kampf (\"My Struggle\").";
