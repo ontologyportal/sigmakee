@@ -187,14 +187,6 @@ public class InterpreterInterpretGenCNFTest extends IntegrationTestBase {
         String input = "Mary has made up a story.";
         CNF cnf = interpreter.interpretGenCNF(input);
 
-//        String[] expected = {
-//                "attribute(Mary-1,Female)", "sumo(Human,Mary-1)", "names(Mary-1,\"Mary\")", "number(SINGULAR,Mary-1)", "tense(PRESENT,made-3)",
-//                "aspect(PERFECT,made-3)", "root(ROOT-0,make_up-3)", "nsubj(make_up-3,Mary-1)", "aux(make_up-3,have-2)", "sumo(Stating,story-6)",
-//                "number(SINGULAR,story-6)", "dobj(make_up-3,story-6)", "det(story-6,a-5)"
-//        };
-//
-//        assertThat(cnf.toListString(), containsInAnyOrder(expected));
-
         String[] expected = {
                 "names(Mary-1,\"Mary\")", "attribute(Mary-1,Female)", "sumo(Human,Mary-1)", "number(SINGULAR,Mary-1)", "tense(PRESENT,make_up-3)",
                 "aspect(PERFECT,make_up-3)", "root(ROOT-0,make_up-3)", "nsubj(make_up-3,Mary-1)", "aux(make_up-3,have-2)", "sumo(Stating,story-6)",

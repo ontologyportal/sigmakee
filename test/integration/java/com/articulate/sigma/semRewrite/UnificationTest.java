@@ -41,25 +41,25 @@ public class UnificationTest extends IntegrationTestBase {
     }
 
     /** *************************************************************
-     * Mary kicks a cart.
+     * What did Mary kick?
+     * dobj(?V,what-1), aux(?V,do*), sumo(?C,do*), nsubj(?V,?A) ==> (agent(?V,?A), patient(?V,?WH)).
      */
     @Test
-    public void testUnifyWhatDoesMaryKick() {
+    public void testUnifyWhatDidMaryKick() {
 
         Interpreter interpreter = new Interpreter();
         interpreter.initialize();
 
-        String input = "root(ROOT-0,kick-2), nsubj(kick-2,Mary-1), det(cart-4,the-3), dobj(kick-2,cart-4), names(Mary-1,\"Mary\"), sumo(Wagon,cart-4), sumo(Kicking,kick-2), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,kick-2), number(SINGULAR,cart-4)";
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), sumo(IntentionalProcess,do-2), root(ROOT-0,kick-4), nsubj(kick-4,Mary-1), sumo(Kicking,kick-4), dobj(kick-4,what-1), aux(kick-4,do-2)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         Set<String> expected = Sets.newHashSet(
                 "(attribute Mary-1 Female)",
-                "(instance cart-4 Wagon)",
                 "(names Mary-1 \"Mary\")",
-                "(patient kick-2 cart-4)",
-                "(instance kick-2 Kicking)",
+                "(instance kick-4 Kicking)",
                 "(instance Mary-1 Human)",
-                "(agent kick-2 Mary-1)"
+                "(patient kick-4 ?Y)",
+                "(agent kick-4 Mary-1)"
         );
 
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
@@ -78,13 +78,14 @@ public class UnificationTest extends IntegrationTestBase {
         Interpreter interpreter = new Interpreter();
         interpreter.initialize();
 
-        String input = "root(ROOT-0,female-6), cop(female-6,be-1), det(female-6,a-5), nsubj(female-6,AmeliaMaryEarhart-2), attribute(AmeliaMaryEarhart-2,Female), sumo(Female,female-6), sumo(Entity,be-1), names(AmeliaMaryEarhart-2,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-2), tense(PAST,be-1), number(SINGULAR,Amelia-2), number(SINGULAR,Mary-3), number(SINGULAR,Earhart-4), number(SINGULAR,female-6)";
+        String input = "attribute(Amelia_Mary_Earhart-2,Female), sumo(Human,Amelia_Mary_Earhart-2), names(Amelia_Mary_Earhart-2,\"Amelia Mary Earhart\"), number(SINGULAR,Amelia_Mary_Earhart-2), number(SINGULAR,Amelia_Mary_Earhart-2), number(SINGULAR,Amelia_Mary_Earhart-2), sumo(Entity,be-1), tense(PAST,be-1), root(ROOT-0,female-6), nsubj(female-6,Amelia_Mary_Earhart-2), sumo(Female,female-6), number(SINGULAR,female-6), cop(female-6,be-1), det(female-6,a-5)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         Set<String> expected = Sets.newHashSet(
-                "(attribute AmeliaMaryEarhart-2 Female)",
-                "(names AmeliaMaryEarhart-2 \"Amelia Mary Earhart\")",
-                "(instance AmeliaMaryEarhart-2 Human)"
+                "(attribute Amelia_Mary_Earhart-2 Female)",
+                "(earlier (WhenFn be-1) Now)",
+                "(names Amelia_Mary_Earhart-2 \"Amelia Mary Earhart\")",
+                "(instance Amelia_Mary_Earhart-2 Human)"
         );
 
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
@@ -127,14 +128,15 @@ public class UnificationTest extends IntegrationTestBase {
         Interpreter interpreter = new Interpreter();
         interpreter.initialize();
 
-        String input = "root(ROOT-0,bear-6), advmod(bear-6,when-1), auxpass(bear-6,be-2), nsubjpass(bear-6,AmeliaMaryEarhart-3), attribute(AmeliaMaryEarhart-3,Female), names(AmeliaMaryEarhart-3,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-3), sumo(Attribute,bear-6), tense(PAST,be-2), number(SINGULAR,Amelia-3), number(SINGULAR,Mary-4), number(SINGULAR,Earhart-5)";
+        String input = "attribute(Amelia_Mary_Earhart-3,Female), sumo(Human,Amelia_Mary_Earhart-3), names(Amelia_Mary_Earhart-3,\"Amelia Mary Earhart\"), number(SINGULAR,Amelia_Mary_Earhart-3), number(SINGULAR,Amelia_Mary_Earhart-3), number(SINGULAR,Amelia_Mary_Earhart-3), tense(PAST,be-2), root(ROOT-0,bear-6), nsubjpass(bear-6,Amelia_Mary_Earhart-3), sumo(Attribute,bear-6), advmod(bear-6,when-1), auxpass(bear-6,be-2)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         Set<String> expected = Sets.newHashSet(
-                "(birthdate AmeliaMaryEarhart-3 ?WH)",
-                "(attribute AmeliaMaryEarhart-3 Female)",
-                "(names AmeliaMaryEarhart-3 \"Amelia Mary Earhart\")",
-                "(instance AmeliaMaryEarhart-3 Human)"
+                "(earlier (WhenFn be-2) Now)",
+                "(birthdate Amelia_Mary_Earhart-3 ?WH)",
+                "(attribute Amelia_Mary_Earhart-3 Female)",
+                "(names Amelia_Mary_Earhart-3 \"Amelia Mary Earhart\")",
+                "(instance Amelia_Mary_Earhart-3 Human)"
         );
 
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
@@ -179,14 +181,15 @@ public class UnificationTest extends IntegrationTestBase {
         Interpreter interpreter = new Interpreter();
         interpreter.initialize();
 
-        String input = "root(ROOT-0,interested-6), pobj(interested-6,what-1), cop(interested-6,be-2), prep(interested-6,in-7), nsubj(interested-6,AmeliaMaryEarhart-3), attribute(AmeliaMaryEarhart-3,Female), sumo(inScopeOfInterest,interested-6), names(AmeliaMaryEarhart-3,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-3), tense(PAST,be-2), number(SINGULAR,Amelia-3), number(SINGULAR,Mary-4), number(SINGULAR,Earhart-5)";
+        String input = "attribute(Amelia_Mary_Earhart-3,Female), sumo(Human,Amelia_Mary_Earhart-3), names(Amelia_Mary_Earhart-3,\"Amelia Mary Earhart\"), number(SINGULAR,Amelia_Mary_Earhart-3), number(SINGULAR,Amelia_Mary_Earhart-3), number(SINGULAR,Amelia_Mary_Earhart-3), tense(PAST,be-2), root(ROOT-0,interested-6), nsubj(interested-6,Amelia_Mary_Earhart-3), sumo(inScopeOfInterest,interested-6), pobj(interested-6,what-1), cop(interested-6,be-2), prep(interested-6,in-7)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         Set<String> expected = Sets.newHashSet(
-                "(inScopeOfInterest AmeliaMaryEarhart-3 ?O)",
-                "(attribute AmeliaMaryEarhart-3 Female)",
-                "(names AmeliaMaryEarhart-3 \"Amelia Mary Earhart\")",
-                "(instance AmeliaMaryEarhart-3 Human)"
+                "(earlier (WhenFn be-2) Now)",
+                "(inScopeOfInterest Amelia_Mary_Earhart-3 ?O)",
+                "(attribute Amelia_Mary_Earhart-3 Female)",
+                "(names Amelia_Mary_Earhart-3 \"Amelia Mary Earhart\")",
+                "(instance Amelia_Mary_Earhart-3 Human)"
         );
 
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);
@@ -205,15 +208,16 @@ public class UnificationTest extends IntegrationTestBase {
         Interpreter interpreter = new Interpreter();
         interpreter.initialize();
 
-        String input = "root(ROOT-0,interested-5), cop(interested-5,be-1), prep_in(interested-5,airplane-7), nsubj(interested-5,AmeliaMaryEarhart-2), sumo(Airplane,airplane-7), attribute(AmeliaMaryEarhart-2,Female), sumo(inScopeOfInterest,interested-5), sumo(Entity,be-1), names(AmeliaMaryEarhart-2,\"Amelia Mary Earhart\"), sumo(Human,AmeliaMaryEarhart-2), tense(PAST,be-1), number(SINGULAR,Amelia-2), number(SINGULAR,Mary-3), number(SINGULAR,Earhart-4), number(PLURAL,airplane-7)";
+        String input = "attribute(Amelia_Mary_Earhart-2,Female), sumo(Human,Amelia_Mary_Earhart-2), names(Amelia_Mary_Earhart-2,\"Amelia Mary Earhart\"), number(SINGULAR,Amelia_Mary_Earhart-2), number(SINGULAR,Amelia_Mary_Earhart-2), number(SINGULAR,Amelia_Mary_Earhart-2), sumo(Entity,be-1), tense(PAST,be-1), root(ROOT-0,interested-5), nsubj(interested-5,Amelia_Mary_Earhart-2), sumo(inScopeOfInterest,interested-5), cop(interested-5,be-1), sumo(Airplane,airplane-7), number(PLURAL,airplane-7), prep_in(interested-5,airplane-7)";
         ArrayList<CNF> cnfInput = interpreter.getCNFInput(input);
 
         Set<String> expected = Sets.newHashSet(
-                "(inScopeOfInterest AmeliaMaryEarhart-2 airplane-7)",
-                "(attribute AmeliaMaryEarhart-2 Female)",
-                "(names AmeliaMaryEarhart-2 \"Amelia Mary Earhart\")",
+                "(earlier (WhenFn be-1) Now)",
+                "(inScopeOfInterest Amelia_Mary_Earhart-2 airplane-7)",
+                "(attribute Amelia_Mary_Earhart-2 Female)",
+                "(names Amelia_Mary_Earhart-2 \"Amelia Mary Earhart\")",
                 "(instance airplane-7 Airplane)",
-                "(instance AmeliaMaryEarhart-2 Human)"
+                "(instance Amelia_Mary_Earhart-2 Human)"
         );
 
         ArrayList<String> kifClauses = interpreter.interpretCNF(cnfInput);

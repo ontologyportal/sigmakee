@@ -205,4 +205,155 @@ public class SemRewriteTest extends UnitTestBase {
         doTest(input, expected);
     }
 
+    /** *************************************************************
+     * Mary has made a house.
+     * aux(?V,have*), tense(PRESENT,?V), aspect(PERFECT,?V) ==> (past(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryHasMadeAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-3), nsubj(make-3,Mary-1), tense(PRESENT,make-3), aspect(PERFECT,make-3), aux(make-3,have-2), sumo(House,house-5), number(SINGULAR,house-5), dobj(make-3,house-5), det(house-5,a-4)";
+
+        String[] expected = {
+                "(patient make-3 house-5)",
+                "(earlier (WhenFn make-3) Now)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary has been making a house.
+     * aux(?V,have*), aux(?V,be*), tense(PRESENT,?V), aspect(PROGRESSIVEPERFECT,?V) ==> (past(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryHasBeenMakingAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-4), nsubj(make-4,Mary-1), sumo(IntentionalProcess,make-4), tense(PRESENT,make-4), aspect(PROGRESSIVEPERFECT,make-4), aux(make-4,have-2), aux(make-4,be-3), sumo(House,house-6), number(SINGULAR,house-6), dobj(make-4,house-6), det(house-6,a-5)";
+
+        String[] expected = {
+                "(patient make-4 house-6)",
+                "(earlier (WhenFn make-4) Now)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary made a house.
+     * tense(PAST,?V) ==> (past(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryMadeAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-2), nsubj(make-2,Mary-1), tense(PAST,make-2), sumo(House,house-4), number(SINGULAR,house-4), dobj(make-2,house-4), det(house-4,a-3)";
+
+        String[] expected = {
+                "(patient make-2 house-4)",
+                "(earlier (WhenFn make-2) Now)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary makes a house.
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryMakesAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-2), nsubj(make-2,Mary-1), sumo(IntentionalProcess,make-2), tense(PRESENT,make-2), sumo(House,house-4), number(SINGULAR,house-4), dobj(make-2,house-4), det(house-4,a-3)";
+
+        String[] expected = {
+                "(patient make-2 house-4)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary will make a house.
+     * aux(?V,will*), tense(FUTURE,?V) ==> (future(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryWillMakeAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-3), nsubj(make-3,Mary-1), sumo(IntentionalProcess,make-3), tense(FUTURE,make-3), aux(make-3,will-2), sumo(House,house-5), number(SINGULAR,house-5), dobj(make-3,house-5), det(house-5,a-4)";
+
+        String[] expected = {
+                "(patient make-3 house-5)",
+                "(earlier Now (WhenFn make-3))"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary will have made a house.
+     * aux(?V,will*), aux(?V,have-3), tense(FUTURE,?V), aspect(PERFECT,?V) ==> (future(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryWillHaveMadeAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-4), nsubj(make-4,Mary-1), tense(FUTURE,make-4), aspect(PERFECT,make-4), aux(make-4,will-2), aux(make-4,have-3), sumo(House,house-6), number(SINGULAR,house-6), dobj(make-4,house-6), det(house-6,a-5)";
+
+        String[] expected = {
+                "(patient make-4 house-6)",
+                "(earlier Now (WhenFn make-4))"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary will have been making a house.
+     * aux(?V,will*), aux(?V,have-3), aux(?V,be*), tense(FUTURE,?V), aspect(PROGRESSIVEPERFECT,?V) ==> (future(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryWillHaveBeenMakingAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-5), nsubj(make-5,Mary-1), sumo(IntentionalProcess,make-5), tense(FUTURE,make-5), aspect(PROGRESSIVEPERFECT,make-5), aux(make-5,will-2), aux(make-5,have-3), aux(make-5,be-4), sumo(House,house-7), number(SINGULAR,house-7), dobj(make-5,house-7), det(house-7,a-6)";
+
+        String[] expected = {
+                "(patient make-5 house-7)",
+                "(earlier Now (WhenFn make-5))"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary had made a house.
+     * aux(?V,have*), tense(PAST,?V), aspect(PERFECT,?V) ==> (past(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryHadMadeAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-3), nsubj(make-3,Mary-1), tense(PAST,make-3), aspect(PERFECT,make-3), aux(make-3,have-2), sumo(House,house-5), number(SINGULAR,house-5), dobj(make-3,house-5), det(house-5,a-4)";
+
+        String[] expected = {
+                "(patient make-3 house-5)",
+                "(earlier (WhenFn make-3) Now)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary had been making a house.
+     * aux(?V,have*), aux(?V,be*), tense(PAST,?V), aspect(PROGRESSIVEPERFECT,?V) ==> (past(?V,?DUMMY)).
+     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     */
+    @Test
+    public void testMaryHadBeenMakingAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-4), nsubj(make-4,Mary-1), sumo(IntentionalProcess,make-4), tense(PAST,make-4), aspect(PROGRESSIVEPERFECT,make-4), aux(make-4,have-2), aux(make-4,be-3), sumo(House,house-6), number(SINGULAR,house-6), dobj(make-4,house-6), det(house-6,a-5)";
+
+        String[] expected = {
+                "(patient make-4 house-6)",
+                "(earlier (WhenFn make-4) Now)"
+        };
+
+        doTest(input, expected);
+    }
+
 }
