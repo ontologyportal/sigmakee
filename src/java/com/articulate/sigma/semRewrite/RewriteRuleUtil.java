@@ -28,8 +28,19 @@ import java.util.*;
 
 import static com.articulate.sigma.semRewrite.Interpreter.canon;
 
+/************************************************************
+ *  A class for intergration of RewriteRule check tools
+ *
+ *
+ *  To use:
+ *
+ *  run in bash and follow the instruction
+ */
 public final class RewriteRuleUtil extends RuleSet {
 
+    /************************************************************
+     *  prevent instantiation
+     */
     private RewriteRuleUtil() {
 
     }
@@ -37,7 +48,7 @@ public final class RewriteRuleUtil extends RuleSet {
     /************************************************************
      * update a Ruleset's indexed rule's CNF
      */
-    public static void updateCNF(int index, CNF f, RuleSet rs) {
+    private static void updateCNF(int index, CNF f, RuleSet rs) {
 
         Rule r = rs.rules.get(index);
         r.cnf = f;
@@ -70,8 +81,6 @@ public final class RewriteRuleUtil extends RuleSet {
                 System.out.println("Before unification---------" + unified + "   " + unifier + "\n------------");
                 unified = unified.applyBindings(map);
                 System.out.println("After unification---------" + unified + "   " + unifier + "\n-----------");
-                boolean m = SemRewriteRuleCheck.isCNFSubsumed(unified, unifier);
-                System.out.println("After update---------" + m + "\n-----------");
 
             }
         }
@@ -141,10 +150,11 @@ public final class RewriteRuleUtil extends RuleSet {
                     }
                     if (input.startsWith("@@")) {
                         String path = input.substring(2);
-                        String[] paths=path.split(",");
-                        QAOutputGenerator.generate(paths[0],paths[1],null);
+                        String[] paths = path.split(",");
+                        QAOutputGenerator.generate(paths[0], paths[1], null);
                         continue;
-                    }Rule r = Rule.parseString(input);
+                    }
+                    Rule r = Rule.parseString(input);
                     System.out.println("The rule entered is :: " + r + "\n");
                     SemRewriteRuleCheck.isRuleSubsumedByRuleSet(r, rs, getSubsumed, subsumer);
 

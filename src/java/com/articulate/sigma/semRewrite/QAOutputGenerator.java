@@ -37,6 +37,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+/************************************************************
+ * A class for testing the performance of sigma-based system
+ * It will generate CNF and KIF for given sentences and sent them to inference
+ * and can also save the output to json file.
+ *
+ * To use:
+ * run class's main under stanford parser directory with argument -h to see detailed guidence
+ *
+ *
+ */
 public class QAOutputGenerator {
 
     /************************************************************
@@ -239,10 +249,10 @@ public class QAOutputGenerator {
      * generate output with filename and output to jasonfilename
      * both should with path
      */
-    public static void generate(String inputPath, String outputPath,Interpreter inter) {
+    public static void generate(String inputPath, String outputPath, Interpreter inter) {
 
         KBmanager.getMgr().initializeOnce();
-        if(inter==null){
+        if (inter == null) {
             inter = new Interpreter();
             inter.initialize();
         }
@@ -265,27 +275,27 @@ public class QAOutputGenerator {
      * generate output with filename and output to jasonfilename
      * both should with path
      */
-    public static void generateForDir(String dir,Interpreter inter) {
+    public static void generateForDir(String dir, Interpreter inter) {
 
-        if(!dir.endsWith("/"))
-            dir=dir+"/";
+        if (!dir.endsWith("/"))
+            dir = dir + "/";
         KBmanager.getMgr().initializeOnce();
-        if(inter==null){
+        if (inter == null) {
             inter = new Interpreter();
             inter.initialize();
         }
         ArrayList<String> files;
         try {
-            files=getAllFilenamesInDir(dir);
+            files = getAllFilenamesInDir(dir);
         }
         catch (IOException e) {
             System.out.println("The directory input is not correct.");
             return;
         }
-        for(String file:files){
-            if(file.startsWith(".") || !file.endsWith("txt"))
+        for (String file : files) {
+            if (file.startsWith(".") || !file.endsWith("txt"))
                 continue;
-            generateForFile(dir+file,inter);
+            generateForFile(dir + file, inter);
         }
 
     }
@@ -294,18 +304,18 @@ public class QAOutputGenerator {
      * generate output with filename and output to jasonfilename
      * both should with path
      */
-    public static void generateForFile(String file,Interpreter inter) {
+    public static void generateForFile(String file, Interpreter inter) {
 
         KBmanager.getMgr().initializeOnce();
-        if(inter==null){
+        if (inter == null) {
             inter = new Interpreter();
             inter.initialize();
         }
-        String inputPath=file;
-        String outputPath=file.substring(0,file.lastIndexOf('/')+1)+"Output-"+file.substring(file.lastIndexOf('/')+1,file.lastIndexOf('.')+1)+"json";
-        System.out.println("Input file is :" +inputPath);
-        System.out.println("Output file is :"+outputPath);
-        generate(inputPath,outputPath,inter);
+        String inputPath = file;
+        String outputPath = file.substring(0, file.lastIndexOf('/') + 1) + "Output-" + file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.') + 1) + "json";
+        System.out.println("Input file is :" + inputPath);
+        System.out.println("Output file is :" + outputPath);
+        generate(inputPath, outputPath, inter);
     }
 
     /************************************************************
@@ -343,7 +353,6 @@ public class QAOutputGenerator {
 //            e.printStackTrace();
 //        }
 //    }
-
     public static void main(String[] args) {
 
         System.out.println("INFO in QAOutputGenerator.main()");
@@ -351,10 +360,10 @@ public class QAOutputGenerator {
         Interpreter inter = new Interpreter();
         inter.initialize();
         if (args != null && args.length > 1 && (args[0].equals("-f"))) {
-            generateForFile(args[1],inter);
+            generateForFile(args[1], inter);
         }
         if (args != null && args.length > 1 && args[0].equals("-d")) {
-            generateForDir(args[1],inter);
+            generateForDir(args[1], inter);
         }
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             System.out.println("Batch test tool of sigma.");
@@ -363,22 +372,23 @@ public class QAOutputGenerator {
             System.out.println("  -d directory  - runs on all the .txt file under directory");
             System.out.println("  -f filepath   - runs on one file");
             System.out.println("       All input file should be in a format of one sentence one line.");
-        }else{
-            try(Scanner in=new Scanner(System.in)){
-                String input="";
-                while(!input.equals("quit")){
+        }
+        else {
+            try (Scanner in = new Scanner(System.in)) {
+                String input = "";
+                while (!input.equals("quit")) {
                     System.out.println("Please enter the file you want to test on:  'quit' to exit");
-                    input=in.nextLine();
-                    try{
-                        generateForFile(input,inter);
+                    input = in.nextLine();
+                    try {
+                        generateForFile(input, inter);
                     }
-                    catch(Exception e){
+                    catch (Exception e) {
                         System.out.println("The file input is invalid,please enter the fullpath with filename: eg. /Users/Obama/workspace/test.txt");
                         continue;
                     }
                 }
             }
-            catch (Exception e){
+            catch (Exception e) {
                 e.printStackTrace();
             }
         }

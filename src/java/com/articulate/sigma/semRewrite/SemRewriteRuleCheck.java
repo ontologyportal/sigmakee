@@ -23,6 +23,13 @@ MA  02111-1307 USA
 
 import java.util.*;
 
+/************************************************************
+ * A class for check Rewrite Rule subsume condition
+ *
+ * Functions:
+ * checkRuleSet     will check the rule set subsume condition
+ * isRuleSubsumedByRuleSet   will check the rule subsume condition with the exsiting ruleset
+ */
 public class SemRewriteRuleCheck {
 
     private static boolean isIgnoreCNFOnRight = true;
@@ -33,7 +40,7 @@ public class SemRewriteRuleCheck {
     /***********************************************************
      * //TODO
      */
-    public static void printRuleSetTree(ArrayList<Rule> rset,Map<Integer,HashSet<Integer>> links){
+    private static void printRuleSetTree(ArrayList<Rule> rset,Map<Integer,HashSet<Integer>> links){
 
         class RuleNode{
             RuleNode p=null;
@@ -179,7 +186,7 @@ public class SemRewriteRuleCheck {
     /***********************************************************
      * check if CNF subsumed, naive implementation
      */
-    public static boolean isCNFSubsumedNaive(CNF subsumer, CNF subsumed) {
+    private static boolean isCNFSubsumedNaive(CNF subsumer, CNF subsumed) {
 
         HashMap<String, String> binding = subsumer.unify(subsumed);
         if (binding != null) {
@@ -197,7 +204,7 @@ public class SemRewriteRuleCheck {
     /***********************************************************
      * //TODO
      */
-    public static boolean isCNFSubsumed(CNF subsumer, CNF subsumed) {
+    private static boolean isCNFSubsumed(CNF subsumer, CNF subsumed) {
 
         return false;
     }

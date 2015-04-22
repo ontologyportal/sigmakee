@@ -31,11 +31,18 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.util.*;
 
+/***********************************************************
+ * A set of static functions that heal dealing with CNF
+ *
+ * findPath     will find all paths between two literals in the CNF string
+ * findOneCommonCNF    will try to find the intersection CNF among a list of CNFs
+ * getCommonCNF    will try to find common CNF pair between sentences
+ */
 public class CommonCNFUtil {
 
-    static List<String> ignorePreds = Arrays.asList(new String[]{"number", "tense"/**, "root", "names"**/});
-    static KBmanager kbm;
-    static KB kb;
+    private static List<String> ignorePreds = Arrays.asList(new String[]{"number", "tense"/**, "root", "names"**/});
+    private static KBmanager kbm;
+    private static KB kb;
 
     static {
         kbm = KBmanager.getMgr();
@@ -138,7 +145,7 @@ public class CommonCNFUtil {
         try (Scanner in = new Scanner(new FileReader(path))) {
             while (in.hasNextLine()) {
                 String line = in.nextLine();
-                if(StringUtil.emptyString(line))
+                if (StringUtil.emptyString(line))
                     continue;
                 res.add(line);
             }
@@ -204,7 +211,7 @@ public class CommonCNFUtil {
     /***********************************************************
      * get rid of "sumo(X,Y)" and other terms defined in ignorePreds
      */
-    public static CNF preProcessCNF(CNF cnf) {
+    private static CNF preProcessCNF(CNF cnf) {
 
         Iterator<Clause> iterator = cnf.clauses.iterator();
         while (iterator.hasNext()) {
@@ -235,7 +242,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static void generateCNFForQAPairs(List<QAPair> list) {
+    private static void generateCNFForQAPairs(List<QAPair> list) {
 
         Map<Integer, CNF> res = new HashMap<Integer, CNF>();
         Interpreter inter = new Interpreter();
@@ -255,7 +262,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static Map<Integer, CNF> generateCNFForStringSet(Map<Integer, String> sentences) {
+    private static Map<Integer, CNF> generateCNFForStringSet(Map<Integer, String> sentences) {
 
         Map<Integer, CNF> res = new HashMap<Integer, CNF>();
         Interpreter inter = new Interpreter();
@@ -300,7 +307,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static CNF unification(CNF unifier, CNF unified) {
+    private static CNF unification(CNF unifier, CNF unified) {
 
         CNF rescnf = new CNF();
         unifier.clauses.sort(clauseComparator);
@@ -309,8 +316,8 @@ public class CommonCNFUtil {
             for (Clause n : unified.clauses) {
                 Clause h = m.deepCopy();
                 n = n.deepCopy();
-                Clause c=isRelated(h, n);
-                if (c!=null) {
+                Clause c = isRelated(h, n);
+                if (c != null) {
                     rescnf.clauses.add(c);
                     break;
                 }
@@ -321,7 +328,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static Clause isRelated(Clause m, Clause n) {
+    private static Clause isRelated(Clause m, Clause n) {
 
         if (!m.disjuncts.get(0).pred.equals(n.disjuncts.get(0).pred))
             return null;
@@ -340,12 +347,12 @@ public class CommonCNFUtil {
             narg2 = ca1;
         }
         if (ca != null && ca1 != null) {
-            Literal l=new Literal();
-            l.pred=m.disjuncts.get(0).pred;
-            l.arg1=ca;
-            l.arg2=ca1;
-            Clause res=new Clause();
-            res.disjuncts= Lists.newArrayList(l);
+            Literal l = new Literal();
+            l.pred = m.disjuncts.get(0).pred;
+            l.arg1 = ca;
+            l.arg2 = ca1;
+            Clause res = new Clause();
+            res.disjuncts = Lists.newArrayList(l);
             return res;
         }
         return null;
@@ -353,7 +360,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static void transformQAPairListtoCNFSet(List<QAPair> list, Map<Integer, String> sentences, Map<Integer, CNF> cnfs) {
+    private static void transformQAPairListtoCNFSet(List<QAPair> list, Map<Integer, String> sentences, Map<Integer, CNF> cnfs) {
 
         int index = 0;
         for (QAPair q : list) {
@@ -368,7 +375,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static Map<Integer, Map<Integer, CNF>> getCommonCNF(Map<Integer, CNF> map) {
+    private static Map<Integer, Map<Integer, CNF>> getCommonCNF(Map<Integer, CNF> map) {
 
         Map<Integer, Map<Integer, CNF>> res = new HashMap<Integer, Map<Integer, CNF>>();
         HashMap<String, String> bindmap;
@@ -393,8 +400,10 @@ public class CommonCNFUtil {
     }
 
     /***********************************************************
+     * find common ancesstor of two sumo terms in the sumo term family tree
+     *
      */
-    public static String findCommonAncesstor(String s1, String s2) {
+    private static String findCommonAncesstor(String s1, String s2) {
 
         if ((s1.contains("\"") || s1.contains("-")) || (s2.contains("-") || s2.contains("\"")) || (s1.startsWith("?") || (s2.startsWith("?"))))
             return "?X";
@@ -443,7 +452,7 @@ public class CommonCNFUtil {
     /***********************************************************
      * get Common objects between two collections
      */
-    public static Collection getCommon(Collection c1, Collection c2) {
+    private static Collection getCommon(Collection c1, Collection c2) {
 
         Iterator iterator = c1.iterator();
         while (iterator.hasNext()) {
@@ -455,8 +464,9 @@ public class CommonCNFUtil {
     }
 
     /***********************************************************
+     * reverse the map to get the reversed result for further analysis
      */
-    public static Map<CNF, Set<Pair<Integer, Integer>>> reverseMap(Map<Integer, Map<Integer, CNF>> input) {
+    private static Map<CNF, Set<Pair<Integer, Integer>>> reverseMap(Map<Integer, Map<Integer, CNF>> input) {
 
         Map<CNF, Set<Pair<Integer, Integer>>> res = new HashMap<CNF, Set<Pair<Integer, Integer>>>();
         for (Integer i : input.keySet()) {
@@ -510,6 +520,7 @@ public class CommonCNFUtil {
     }
 
     /***********************************************************
+     * DTO class for json input and output
      */
     public static class QAPair {
 
@@ -529,26 +540,32 @@ public class CommonCNFUtil {
         }
 
         public String getQuery() {
+
             return query;
         }
 
         public String getAnswer() {
+
             return answer;
         }
 
         public Integer getIndex() {
+
             return index;
         }
 
         public String getFile() {
+
             return file;
         }
 
         public CNF getQueryCNF() {
+
             return queryCNF;
         }
 
         public CNF getAnswerCNF() {
+
             return answerCNF;
         }
 
@@ -587,7 +604,7 @@ public class CommonCNFUtil {
     /***********************************************************
      * function to find all path between two literals in CNF.
      */
-    public static ArrayList<CNF> findAllPathBetweenLiterals(CNF cnf, String s1, String s2) {
+    private static ArrayList<CNF> findAllPathBetweenLiterals(CNF cnf, String s1, String s2) {
 
         ArrayList<CNF> res = new ArrayList<CNF>();
         findPathBFS(cnf.clauses, s1, s2, new ArrayList<Clause>(), 10, res);
@@ -614,12 +631,20 @@ public class CommonCNFUtil {
         }
     }
 
-    private static boolean isIgnore(Clause c){
-        List<String> ignoreList=Arrays.asList(new String[]{"number","sumo","tense"});
-        if(ignoreList.contains(c.disjuncts.get(0).pred))
-            return  true;
+    /***********************************************************
+     * the ignore list for finding path between literals
+     */
+    private static boolean isIgnore(Clause c) {
+
+        List<String> ignoreList = Arrays.asList(new String[]{"number", "sumo", "tense"});
+        if (ignoreList.contains(c.disjuncts.get(0).pred))
+            return true;
         return false;
     }
+
+    /***********************************************************
+     * find if a literal is already in the clause
+     */
     private static boolean isContained(Clause c, String s) {
 
         for (Literal l : c.disjuncts) {
@@ -629,6 +654,9 @@ public class CommonCNFUtil {
         return false;
     }
 
+    /***********************************************************
+     * find if a literal is already in a list of clause
+     */
     private static boolean isContained(ArrayList<Clause> arr, String s) {
 
         for (Clause c : arr) {
@@ -638,6 +666,9 @@ public class CommonCNFUtil {
         return false;
     }
 
+    /***********************************************************
+     * get the other argument in the clause
+     */
     private static String getOtherArgument(Clause c, String arg) {
 
         if (c.disjuncts.get(0).arg1.equals(arg))
@@ -646,14 +677,17 @@ public class CommonCNFUtil {
             return c.disjuncts.get(0).arg1;
     }
 
-    public static void findPath(String cnfStr,String s1,String s2) {
+    /***********************************************************
+     * find all the paths between two literals
+     */
+    public static void findPath(String cnfStr, String s1, String s2) {
 
-        if(cnfStr==null)
+        if (cnfStr == null)
             cnfStr = "sumo(Nation,country-2), number(SINGULAR,country-2), det(country-2,which-1), root(ROOT-0,be-3), tense(PRESENT,be-3), dep(be-3,country-2), sumo(Object,world-5), number(SINGULAR,world-5), det(world-5,the-4), number(SINGULAR,biodiesel-8), sumo(Position,producer-9), number(SINGULAR,producer-9), nsubj(be-3,producer-9), poss(producer-9,world-5), amod(producer-9,largest-7), nn(producer-9,biodiesel-8)";
-        if(s1==null)
-            s1="biodiesel-8";
-        if(s2==null)
-            s2="country-2";
+        if (s1 == null)
+            s1 = "biodiesel-8";
+        if (s2 == null)
+            s2 = "country-2";
         CNF cnf = CNF.parseSimple(new Lexer(cnfStr));
         ArrayList<CNF> res = findAllPathBetweenLiterals(cnf, s1, s2);
         for (CNF c : res) {
@@ -697,6 +731,6 @@ public class CommonCNFUtil {
 //        String[] strings = new String[]{"Amelia flies.", "John walks."};
 //        testJSONQAPair();
 //        testFile();
-        findPath(null,null,null);
+        findPath(null, null, null);
     }
 }
