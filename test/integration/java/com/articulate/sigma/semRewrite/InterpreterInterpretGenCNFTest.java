@@ -403,4 +403,139 @@ public class InterpreterInterpretGenCNFTest extends IntegrationTestBase {
         assertEquals(expected, cnfSets);
     }
 
+    /**
+     * TODO: not getting past tense
+     */
+    @Test
+    public void testDidMaryMakeAHouse()   {
+        String input = "Did Mary make a house?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-2,\"Mary\")", "attribute(Mary-2,Female)", "root(ROOT-0,make-3)", "number(SINGULAR,house-5)",
+                "nsubj(make-3,Mary-2)", "sumo(Human,Mary-2)", "sumo(IntentionalProcess,do-1)", "sumo(IntentionalProcess,make-3)",
+                "sumo(House,house-5)", "aux(make-3,do-1)", "dobj(make-3,house-5)", "det(house-5,a-4)", "number(SINGULAR,Mary-2)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    /**
+     * TODO: not getting past tense
+     */
+    @Test
+    public void testWhatDidMaryKick()   {
+        String input = "What did Mary kick?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "aux(kick-4,do-2)", "names(Mary-3,\"Mary\")", "root(ROOT-0,kick-4)", "sumo(Kicking,kick-4)", "attribute(Mary-3,Female)",
+                "sumo(Human,Mary-3)", "sumo(IntentionalProcess,do-2)", "dobj(kick-4,what-1)", "nsubj(kick-4,Mary-3)", "number(SINGULAR,Mary-3)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testWasAmeliaEarhartAFemale()   {
+        String input = "Was Amelia Earhart a female?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "root(ROOT-0,female-5)", "number(SINGULAR,Amelia_Earhart-2)", "cop(female-5,be-1)", "sumo(Woman,Amelia_Earhart-2)",
+                "tense(PAST,be-1)", "names(Amelia_Earhart-2,\"Amelia Earhart\")", "det(female-5,a-4)", "sumo(Entity,be-1)",
+                "number(SINGULAR,female-5)", "sumo(Female,female-5)", "nsubj(female-5,Amelia_Earhart-2)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    @Test
+    public void testWhatWasAmeliaInterestedIn()   {
+        String input = "What was Amelia interested in?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "root(ROOT-0,interest-4)", "sumo(inScopeOfInterest,interest-4)", "number(SINGULAR,Amelia-3)",
+                "nsubjpass(interest-4,Amelia-3)", "auxpass(interest-4,be-2)", "sumo(DiseaseOrSyndrome,Amelia-3)",
+                "tense(PAST,be-2)", "prep_in(interest-4,what-1)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    /**
+     * TODO: bad month(time-1,May)
+     */
+    @Test
+    public void testMayMaryWalk()   {
+        String input = "May Mary walk?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "time(walk-3,time-1)", "month(time-1,May)", "nsubj(walk-3,May_Mary-1)", "root(ROOT-0,walk-3)", 
+                "sumo(Walking,walk-3)", "number(SINGULAR,May_Mary-1)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    /**
+     * TODO: bad sumo(Cooking,can-1)
+     */
+    @Test
+    public void testCanMaryWalk()   {
+        String input = "Can Mary walk?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-2,\"Mary\")", "attribute(Mary-2,Female)", "nsubj(walk-3,Mary-2)", "aux(walk-3,can-1)",
+                "root(ROOT-0,walk-3)", "sumo(Human,Mary-2)", "sumo(Walking,walk-3)", "sumo(Cooking,can-1)", "number(SINGULAR,Mary-2)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    /**
+     * TODO: getting tense(PAST), but should be tense(PRESENT) && aspect(PERFECT)
+     */
+    @Test
+    public void testHasMaryMadeAHouse()   {
+        String input = "Has Mary made a house?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-2,\"Mary\")", "attribute(Mary-2,Female)", "root(ROOT-0,make-3)", "number(SINGULAR,house-5)",
+                "nsubj(make-3,Mary-2)", "sumo(Human,Mary-2)", "sumo(Obligation,have-1)", "sumo(House,house-5)", "aux(make-3,have-1)",
+                "dobj(make-3,house-5)", "tense(PAST,make-3)", "det(house-5,a-4)", "number(SINGULAR,Mary-2)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
+    /**
+     * TODO: not getting aspect(PERFECT)
+     */
+    @Test
+    public void testHadMaryMadeAHouse()   {
+        String input = "Had Mary made a house?";
+        CNF cnf = interpreter.interpretGenCNF(input);
+
+        Set<String> expected = Sets.newHashSet(
+                "names(Mary-2,\"Mary\")", "attribute(Mary-2,Female)", "root(ROOT-0,make-3)", "number(SINGULAR,house-5)",
+                "nsubj(make-3,Mary-2)", "sumo(Human,Mary-2)", "sumo(Obligation,have-1)", "sumo(House,house-5)", "aux(make-3,have-1)",
+                "dobj(make-3,house-5)", "tense(PAST,make-3)", "det(house-5,a-4)", "number(SINGULAR,Mary-2)"
+        );
+
+        Set<String> cnfSets = Sets.newHashSet(cnf.toListString());
+        assertEquals(expected, cnfSets);
+    }
+
 }

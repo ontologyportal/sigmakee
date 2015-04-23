@@ -14,6 +14,8 @@ import static org.junit.Assert.assertTrue;
  * Tests the SemRewrite of a given parse, plus its manipulation into a formula string.
  * In: Dependency parse as string.
  * Out: a formula string.
+ * FIXME: Generally we prefer testing SemRewrite rules without relying on the formula string. (See SemRewriteTest.java.) We should use the
+ * approach in this test class only when the target rule is being triggered, but the RHS does not appear in the interpretCNF result.
  */
 public class SemRewriteToFormulaTest extends UnitTestBase {
 
@@ -519,29 +521,6 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
     }
 
     /** *************************************************************
-     * Mary went before midnight.
-     * prep_before(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (lessThan(?X,?Y)).
-     */
-    @Test
-    public void testMaryWentBeforeMidnight() {
-        String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_before(go-2,midnight-4), sumo(Transportation,go-2), names(Mary-1,\"Mary\"), sumo(TimePoint,midnight-4), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,midnight-4), hour(time-1,00-4), time(go-2,time-1), minute(time-1,00-4)";
-        String expected =
-                "(exists (?go-2 ?Mary-1 ?time-1 ?midnight-4) \n" +
-                        "(and \n" +
-                        "  (agent ?go-2 ?Mary-1)\n" +
-                        "  (attribute ?Mary-1 Female)\n" +
-                        "  (names ?Mary-1 \"Mary\")\n" +
-                        "  (lessThan ?go-2 ?midnight-4)\n" +
-                        "  (time ?go-2 ?time-1)\n" +
-                        "  (earlier (WhenFn ?go-2) Now)\n" +
-                        "  (instance ?go-2 Transportation)\n" +
-                        "  (instance ?Mary-1 Human))\n" +
-                        ")";
-
-        doTest(input, expected, false);
-    }
-
-    /** *************************************************************
      * Mary went along with John.
      * prep_along_with(?X,?Y), +sumo(Human,?Y) ==> (agent(?X,?Y)).
      */
@@ -728,6 +707,131 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
     }
 
     /** *************************************************************
+     * May Mary walk?
+     * FIXME: Output is faulty because we detect "May" as a month.
+     * We would like to trigger: aux(?V,may*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMayMaryWalk() {
+        String input = "number(SINGULAR,May_Mary-1), number(SINGULAR,May_Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,May_Mary-1), sumo(Walking,walk-3), time(walk-3,time-1), month(time-1,May)";
+
+        String expected =
+                "(exists (?time-1 ?walk-3) \n" +
+                        "(and \n" +
+                        "  (time ?walk-3 ?time-1)\n" +
+                        "  (instance ?walk-3 Walking))\n" +
+                        ")"
+                ;
+
+        doTest(input, expected, true);
+    }
+
+    /** *************************************************************
+     * Mary may walk.
+     * aux(?V,may*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryMayWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,may-2)";
+
+        String expected =
+                "(exists (?Mary-1 ?Y ?walk-3) \n" +
+                        "(and \n" +
+                        "  (agent ?walk-3 ?Mary-1)\n" +
+                        "  (attribute ?Mary-1 Female)\n" +
+                        "  (names ?Mary-1 \"Mary\")\n" +
+                        "  (possible ?walk-3 ?Y)\n" +
+                        "  (instance ?Mary-1 Human)\n" +
+                        "  (instance ?walk-3 Walking))\n" +
+                        ")"
+                ;
+
+        doTest(input, expected, false);
+    }
+
+    /** *************************************************************
+     * Might Mary walk?
+     * FIXME: Output is faulty because we detect "Might Mary" as a single entity.
+     * We would like to trigger: aux(?V,might*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMightMaryWalk() {
+        String input = "number(SINGULAR,Might_Mary-1), number(SINGULAR,Might_Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Might_Mary-1), sumo(Walking,walk-3)";
+
+        String expected =
+                "(exists (?walk-3) \n" +
+                        "  (instance ?walk-3 Walking))"
+                ;
+
+        doTest(input, expected, true);
+    }
+
+    /** *************************************************************
+     * Mary might walk.
+     * aux(?V,may*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryMightWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,might-2)";
+
+        String expected =
+                "(exists (?Mary-1 ?Y ?walk-3) \n" +
+                        "(and \n" +
+                        "  (agent ?walk-3 ?Mary-1)\n" +
+                        "  (attribute ?Mary-1 Female)\n" +
+                        "  (names ?Mary-1 \"Mary\")\n" +
+                        "  (possible ?walk-3 ?Y)\n" +
+                        "  (instance ?Mary-1 Human)\n" +
+                        "  (instance ?walk-3 Walking))\n" +
+                        ")"
+                ;
+
+        doTest(input, expected, false);
+    }
+
+    /** *************************************************************
+     * Can Mary walk?
+     * JERRY: Output is faulty because we detect "Can" as a Cooking process.
+     * nsubj(?V,?S), aux(?V,can*), sumo(?C,?V), isSubclass(?C,Process) ==> {(capability ?C agent ?S)}.
+     */
+    @Test
+    public void testCanMaryWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), sumo(Cooking,can-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,can-1)";
+
+        String expected =
+                "(exists (?Mary-1 ?can-1)\n" +
+                        "  (and\n" +
+                        "    (capability Walking agent ?Mary-1)\n" +
+                        "    (attribute ?Mary-1 Female)\n" +
+                        "    (names ?Mary-1 \"Mary\")\n" +
+                        "    (instance ?Mary-1 Human)\n" +
+                        "    (instance ?can-1 Cooking)) )"
+                ;
+
+        doTest(input, expected, true);
+    }
+
+    /** *************************************************************
+     * Mary can walk.
+     * nsubj(?V,?S), aux(?V,can*), sumo(?C,?V), isSubclass(?C,Process) ==> {(capability ?C agent ?S)}.
+     */
+    @Test
+    public void testMaryCanWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,can-2)";
+
+        String expected =
+                "(exists (?Mary-1)\n" +
+                        "  (and\n" +
+                        "    (capability Walking agent ?Mary-1)\n" +
+                        "    (attribute ?Mary-1 Female)\n" +
+                        "    (names ?Mary-1 \"Mary\")\n" +
+                        "    (instance ?Mary-1 Human)) )"
+                ;
+
+        doTest(input, expected, false);
+    }
+
+    /** *************************************************************
      * Could Mary walk?
      * aux(?V,could*) ==> (possible(?V,?DUMMY)).
      */
@@ -752,5 +856,147 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
 
         doTest(input, expected, true);
     }
+
+    /** *************************************************************
+     * Mary could walk.
+     * aux(?V,could*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryCouldWalk() {
+        String input = "names(Mary-2,\"Mary\"), attribute(Mary-2,Female), sumo(Human,Mary-2), number(SINGULAR,Mary-2), root(ROOT-0,walk-3), nsubj(walk-3,Mary-2), sumo(Walking,walk-3), aux(walk-3,could-1)";
+
+        String expected =
+                "(exists (?Mary-2 ?Y ?walk-3) \n" +
+                        "(and \n" +
+                        "  (agent ?walk-3 ?Mary-2)\n" +
+                        "  (attribute ?Mary-2 Female)\n" +
+                        "  (names ?Mary-2 \"Mary\")\n" +
+                        "  (possible ?walk-3 ?Y)\n" +
+                        "  (instance ?Mary-2 Human)\n" +
+                        "  (instance ?walk-3 Walking))\n" +
+                        ")"
+                ;
+
+        doTest(input, expected, false);
+    }
+
+    /** *************************************************************
+     * Must Mary walk?
+     * Currently we detect "Must" as a subjective assessment. But that doesn't seem to affect the final output.
+     * aux(?V,must*) ==> (necessary(?V,?DUMMY)).
+     */
+    @Test
+    public void testMustMaryWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), sumo(SubjectiveAssessmentAttribute,must-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,must-1)";
+
+        String expected =
+                "(exists (?Y) \n" +
+                        "(forall (?DUMMY) \n" +
+                        "(exists (?Mary-1 ?walk-3) \n" +
+                        "(and \n" +
+                        "  (agent ?walk-3 ?Mary-1)\n" +
+                        "  (attribute ?Mary-1 Female)\n" +
+                        "  (names ?Mary-1 \"Mary\")\n" +
+                        "  (necessary ?walk-3 ?Y)\n" +
+                        "  (instance ?Mary-1 Human)\n" +
+                        "  (instance ?walk-3 Walking))\n" +
+                        ") \n" +
+                        "))"
+                ;
+
+        doTest(input, expected, true);
+    }
+
+    /** *************************************************************
+     * Mary must walk.
+     * aux(?V,must*) ==> (necessary(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryMustWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,must-2)";
+
+        String expected =
+                "(exists (?Mary-1 ?Y ?walk-3)\n" +
+                        "  (and\n" +
+                        "    (agent ?walk-3 ?Mary-1)\n" +
+                        "    (attribute ?Mary-1 Female)\n" +
+                        "    (names ?Mary-1 \"Mary\")\n" +
+                        "    (necessary ?walk-3 ?Y)\n" +
+                        "    (instance ?Mary-1 Human)\n" +
+                        "    (instance ?walk-3 Walking)) )"
+                ;
+
+        doTest(input, expected, false);
+    }
+
+
+    /** *************************************************************
+     * TODO: We trigger neg(?V,?Y) ==> (not(?V,?DUMMY))., but the negative doesn't currently appear in the output.
+     */
+    @Test
+    public void testMaryDoesntBuildHouses() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), sumo(IntentionalProcess,do-2), root(ROOT-0,build-4), nsubj(build-4,Mary-1), sumo(Making,build-4), aux(build-4,do-2), neg(build-4,not-3), sumo(House,house-5), number(PLURAL,house-5), dobj(build-4,house-5)";
+
+        String expected =
+                "(exists (?Mary-1 ?build-4 ?house-5)\n" +
+                        "  (and\n" +
+                        "    (agent ?build-4 ?Mary-1)\n" +
+                        "    (attribute ?Mary-1 Female)\n" +
+                        "    (names ?Mary-1 \"Mary\")\n" +
+                        "    (patient ?build-4 ?house-5)\n" +
+                        "    (instance ?Mary-1 Human)\n" +
+                        "    (instance ?build-4 Making)\n" +
+                        "    (instance ?house-5 House)) )"
+                ;
+
+        doTest(input, expected, false);
+    }
+
+    /** *************************************************************
+     * predet(?X,?Y) ==> (det(?X,?Y)).
+     */
+    @Test
+    public void testMaryMadeAllTheHouses() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-2), nsubj(make-2,Mary-1), tense(PAST,make-2), sumo(House,house-5), number(PLURAL,house-5), dobj(make-2,house-5), predet(house-5,all-3), det(house-5,the-4)";
+
+        String expected =
+                "(exists (?make-2 ?Mary-1 ?house-5)\n" +
+                        "  (and\n" +
+                        "    (attribute ?Mary-1 Female)\n" +
+                        "    (names ?Mary-1 \"Mary\")\n" +
+                        "    (patient ?make-2 ?house-5)\n" +
+                        "    (earlier\n" +
+                        "      (WhenFn ?make-2) Now)\n" +
+                        "    (instance ?Mary-1 Human)\n" +
+                        "    (instance ?house-5 House)) )"
+                ;
+
+        doTest(input, expected, false);
+    }
+
+    /** *************************************************************
+     * TODO: JERRY: We trigger prepc_without(?X,?Y) ==> (not(?Y,?DUMMY))., but the negative doesn't currently appear in the output.
+     */
+    @Test
+    public void testMaryMadeTheHousesWithoutWalking() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,make-2), nsubj(make-2,Mary-1), tense(PAST,make-2), sumo(House,house-4), number(SINGULAR,house-4), dobj(make-2,house-4), det(house-4,the-3), sumo(Walking,walk-6), prepc_without(make-2,walk-6)";
+
+        String expected =
+                "(exists (?make-2 ?walk-6 ?Mary-1 ?house-4) \n" +
+                        "(and \n" +
+                        "  (attribute ?Mary-1 Female)\n" +
+                        "  (names ?Mary-1 \"Mary\")\n" +
+                        "  (patient ?make-2 ?house-4)\n" +
+                        "  (earlier\n" +
+                        "  (WhenFn ?make-2) Now)\n" +
+                        "  (instance ?Mary-1 Human)\n" +
+                        "  (instance ?house-4 House)\n" +
+                        "  (instance ?walk-6 Walking))\n" +
+                        ")"
+                ;
+
+        doTest(input, expected, false);
+    }
+
 
 }

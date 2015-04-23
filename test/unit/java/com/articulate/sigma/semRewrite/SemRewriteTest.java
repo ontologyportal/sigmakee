@@ -208,7 +208,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary has made a house.
      * aux(?V,have*), tense(PRESENT,?V), aspect(PERFECT,?V) ==> (past(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryHasMadeAHouse() {
@@ -225,7 +225,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary has been making a house.
      * aux(?V,have*), aux(?V,be*), tense(PRESENT,?V), aspect(PROGRESSIVEPERFECT,?V) ==> (past(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryHasBeenMakingAHouse() {
@@ -242,7 +242,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary made a house.
      * tense(PAST,?V) ==> (past(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryMadeAHouse() {
@@ -258,7 +258,7 @@ public class SemRewriteTest extends UnitTestBase {
 
     /** *************************************************************
      * Mary makes a house.
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryMakesAHouse() {
@@ -274,7 +274,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary will make a house.
      * aux(?V,will*), tense(FUTURE,?V) ==> (future(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryWillMakeAHouse() {
@@ -291,7 +291,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary will have made a house.
      * aux(?V,will*), aux(?V,have-3), tense(FUTURE,?V), aspect(PERFECT,?V) ==> (future(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryWillHaveMadeAHouse() {
@@ -308,7 +308,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary will have been making a house.
      * aux(?V,will*), aux(?V,have-3), aux(?V,be*), tense(FUTURE,?V), aspect(PROGRESSIVEPERFECT,?V) ==> (future(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryWillHaveBeenMakingAHouse() {
@@ -325,7 +325,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary had made a house.
      * aux(?V,have*), tense(PAST,?V), aspect(PERFECT,?V) ==> (past(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryHadMadeAHouse() {
@@ -342,7 +342,7 @@ public class SemRewriteTest extends UnitTestBase {
     /** *************************************************************
      * Mary had been making a house.
      * aux(?V,have*), aux(?V,be*), tense(PAST,?V), aspect(PROGRESSIVEPERFECT,?V) ==> (past(?V,?DUMMY)).
-     * patient(?X,?Y) ==> {(patient ?X ?Y)}.
+     * dobj(?E,?Y) ==> (patient(?E,?Y)).
      */
     @Test
     public void testMaryHadBeenMakingAHouse() {
@@ -355,5 +355,82 @@ public class SemRewriteTest extends UnitTestBase {
 
         doTest(input, expected);
     }
+
+    /** *************************************************************
+     * Mary went before midnight.
+     * prep_before(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Time) ==> (lessThan(?X,?Y)).
+     */
+    @Test
+    public void testMaryWentBeforeMidnight() {
+        String input = "root(ROOT-0,go-2), nsubj(go-2,Mary-1), prep_before(go-2,midnight-4), sumo(Transportation,go-2), names(Mary-1,\"Mary\"), sumo(TimePoint,midnight-4), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), tense(PAST,go-2), number(SINGULAR,midnight-4), hour(time-1,00-4), time(go-2,time-1), minute(time-1,00-4)";
+
+        String[] expected = {
+                "(lessThan go-2 midnight-4)",
+                "(earlier (WhenFn go-2) Now)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary can be happy.
+     * aux(?V,can*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryCanBeHappy() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,happy-4), nsubj(happy-4,Mary-1), sumo(Happiness,happy-4), aux(happy-4,can-2), cop(happy-4,be-3)";
+
+        String[] expected = {
+                "(possible happy-4 ?Y)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * TODO: Because of incomplete dependency parse, currently triggering tense(PAST,?V) ==> (past(?V,?DUMMY)).
+     * But should be aux(?V,have*), tense(PAST,?V), aspect(PERFECT,?V) ==> (past(?V,?DUMMY)).
+     */
+    @Test
+    public void testHadMaryMadeAHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), sumo(Obligation,have-1), root(ROOT-0,make-3), nsubj(make-3,Mary-1), tense(PAST,make-3), aux(make-3,have-1), sumo(House,house-5), number(SINGULAR,house-5), dobj(make-3,house-5), det(house-5,a-4)";
+
+        String[] expected = {
+                "(earlier (WhenFn make-3) Now)"
+        };
+
+        doTest(input, expected);
+    }
+
+
+    /** *************************************************************
+     * tmod(?V,?T) ==> (during(?V,?T)).
+     */
+    @Test
+    public void testMaryWalkedLastNight() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), sumo(Walking,walk-2), tense(PAST,walk-2), sumo(NightTime,night-4), number(SINGULAR,night-4), tmod(walk-2,night-4), amod(night-4,last-3)";
+
+        String[] expected = {
+                "(during walk-2 night-4)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * iobj(?X,?Y) ==> (patient(?E,?Y)).
+     */
+    @Test
+    public void testMaryGaveJohnAHouse() {
+        String input = "names(Mary-1,\"Mary\"), names(John-3,\"John\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Human,John-3), attribute(John-3,Male), number(SINGULAR,Mary-1), number(SINGULAR,John-3), root(ROOT-0,give-2), nsubj(give-2,Mary-1), iobj(give-2,John-3), sumo(Process,give-2), tense(PAST,give-2), sumo(House,house-5), number(SINGULAR,house-5), dobj(give-2,house-5), det(house-5,a-4)";
+
+        String[] expected = {
+                "(patient ?X John-3)"
+        };
+
+        doTest(input, expected);
+    }
+
+
 
 }
