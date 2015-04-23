@@ -262,7 +262,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    private static Map<Integer, CNF> generateCNFForStringSet(Map<Integer, String> sentences) {
+    public static Map<Integer, CNF> generateCNFForStringSet(Map<Integer, String> sentences) {
 
         Map<Integer, CNF> res = new HashMap<Integer, CNF>();
         Interpreter inter = new Interpreter();
