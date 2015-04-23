@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry including="**/*.java" kind="src" output="target/classes" path="src">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry including="**/*.java" kind="src" path="resources"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sigma"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/antlr-2.7.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/commons-codec-1.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/cos-multipart.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/cos.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/ejml-0.16.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/guava-15.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/hamcrest-core-1.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/IDV.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/java-json.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/json-simple-1.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/junit-4.12.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/junit.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/mail.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/stanford-corenlp-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/peigenyou/workspace/sigma/sigma/lib/TptpParser.jar"/>
+	<classpathentry kind="lib" path="/Users/peigenyou/Downloads/sigma.jar"/>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

@@ -1,0 +1,65 @@
+{
+  parserClass="com.ipsoft.amelia.sigma.parser.RewriteRuleParser"
+  parserUtilClass="com.ipsoft.amelia.sigma.parser.RewriteRuleParserUtil"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="RewriteRule"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.ipsoft.amelia.sigma.psi"
+  psiImplPackage="com.ipsoft.amelia.sigma.psi.impl"
+
+  elementTypeHolderClass="com.ipsoft.amelia.sigma.psi.RewriteRuleTypes"
+  elementTypeClass="com.ipsoft.amelia.sigma.psi.RewriteRuleElementType"
+  tokenTypeClass="com.ipsoft.amelia.sigma.psi.RewriteRuleTokenType"
+
+  psiImplUtilClass="com.ipsoft.amelia.sigma.psi.impl.RewriteRulePsiImplUtil"
+tokens=[
+word='regexp:[a-zA-Z0-9\*\-\_]+'
+variable='regexp:[?@][A-Za-z0-9\-]*'
+ws='regexp:[\s\t]*'
+string='regexp:"[^"]*"'
+leftparn='('
+rightparn=')'
+add='+'
+comment='regexp:;[^\r\n]*'
+crlf='regexp:\n\r'
+seperator='regexp:(==>)|(\?=>)'
+permanentseperator='/-'
+midleftparn='{'
+midrightparn='}'
+comma=','
+dot='.'
+neg='-'
+tan='!'
+stop='stop'
+not='not'
+and='and'
+forall='forall'
+exists='exists'
+implies='=>'
+equalsto='<=>'
+]
+}
+
+rewriteRuleFile ::= item_*
+private item_ ::= (rule|comment|crlf)
+
+
+rule ::= ((lhs (ws)? seperator (ws)? rhs dot)|(permanentseperator (ws)? clause (ws)? dot))
+
+lhs::=((clausePattern)|(leftparn (ws)? clausePattern (ws)?'|'(ws)? clausePattern (ws)? rightparn)|(neg(ws)? lhs))
+rhs::=((leftparn(ws)? clausePattern (ws)?rightparn)|(midleftparn kif midrightparn)|tan|stop)
+
+clausePattern::=((add)?clause((ws)?comma(ws)?)?)+
+clause ::= (!(leftparn) key (ws)? leftparn (ws)? value (ws)? comma (ws)? value  (ws)?rightparn) {methods=[getKey getValue]}
+kif::=(leftparn kifkey (ws)? (kifvalue (ws)?)* rightparn)|relsent|logsent|quantsent
+
+kifkey::=word
+kifvalue::=(kif|value)
+relsent ::= leftparn kifkey value+rightparn
+logsent ::= leftparn not kif rightparn | leftparn and kif+ rightparn | leftparn or kif+ rightparn | leftparn implies kif kif rightparn | leftparn equalsto kif kif rightparn
+quantsent ::= leftparn forall leftparn variable+ rightparn kif+ rightparn  | leftparn exists leftparn variable+rightparn kif+rightparn
+key::=word
+value::=(variable|word|string)
+

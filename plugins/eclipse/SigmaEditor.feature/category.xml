@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/com.ipsoft.amelia.sigma.editor_1.0.0.qualifier.jar" id="com.ipsoft.amelia.sigma.editor" version="1.0.0.qualifier">
+      <category name="SigmaEditor"/>
+   </feature>
+   <category-def name="SigmaEditor" label="SigmaEditor"/>
+</site>
