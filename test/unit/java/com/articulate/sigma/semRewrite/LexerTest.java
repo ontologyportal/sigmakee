@@ -1,27 +1,29 @@
 package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.UnitTestBase;
-import com.google.common.collect.Sets;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 
 /**
  * Created by apease on 4/15/15.
  */
 public class LexerTest extends UnitTestBase {
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     /****************************************************************
      * Test that comments and whitespace are normally ignored.
@@ -114,25 +116,114 @@ public class LexerTest extends UnitTestBase {
      * Test that self.example 1 is split into the expected tokens.
      */
     @Test
-    public void testTerm() {
+    public void testTerm() throws ParseException {
 
         String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
         Lexer lex1 = new Lexer(example1);
-        try {
-            assertEquals("sense", lex1.acceptTok(Lexer.Ident)); // sense
-            assertEquals("(",lex1.acceptTok(Lexer.OpenPar));    // (
-            assertEquals("212345678",lex1.acceptTok(Lexer.Number)); // 212345678
-            assertEquals(",",lex1.acceptTok(Lexer.Comma));      // ,
-            assertEquals("?E", lex1.acceptTok(Lexer.Var)); // ?E
-            assertEquals(")", lex1.acceptTok(Lexer.ClosePar));    // )
-            assertEquals(",", lex1.acceptTok(Lexer.Comma));      // ,
-            assertEquals("nsubj", lex1.acceptTok(Lexer.Ident)); // nsubj
-            assertEquals("(", lex1.acceptTok(Lexer.OpenPar));   // (
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
+        assertEquals("sense", lex1.acceptTok(Lexer.Ident)); // sense
+        assertEquals("(",lex1.acceptTok(Lexer.OpenPar));    // (
+        assertEquals("212345678",lex1.acceptLit("212345678")); // 212345678
+        assertEquals(",",lex1.acceptTok(Lexer.Comma));      // ,
+        assertEquals("?E", lex1.acceptTok(Lexer.Var)); // ?E
+        assertEquals(")", lex1.acceptTok(Lexer.ClosePar));    // )
+        assertEquals(",", lex1.acceptTok(Lexer.Comma));      // ,
+        assertEquals("nsubj", lex1.acceptTok(Lexer.Ident)); // nsubj
+        assertEquals("(", lex1.acceptTok(Lexer.OpenPar));   // (
+    }
+
+    /** ***************************************************************
+     * Verify that you can't start a parse with OpenPar.
+     */
+    @Test(expected=ParseException.class)
+    public void testInvalidInputOpenParStart() throws ParseException {
+
+        String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
+        Lexer lex1 = new Lexer(example1);
+        assertEquals("(", lex1.acceptTok(Lexer.OpenPar));
+    }
+
+    /** ***************************************************************
+     * Verify that you can't start a parse with Comma.
+     */
+    @Test(expected=ParseException.class)
+    public void testInvalidInputIdentStart() throws ParseException {
+
+        String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
+        Lexer lex1 = new Lexer(example1);
+        lex1.acceptTok(Lexer.Comma);
+    }
+
+    /** ***************************************************************
+     * Verify that you can't start a parse with Var.
+     */
+    @Test(expected=ParseException.class)
+    public void testInvalidInputVarStart() throws ParseException {
+
+        String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
+        Lexer lex1 = new Lexer(example1);
+        lex1.acceptTok(Lexer.Var);
+    }
+
+    /** ***************************************************************
+     * Verify that you can't start a parse with ClosePar.
+     */
+    @Test(expected=ParseException.class)
+    public void testInvalidInputCloseParStart() throws ParseException {
+
+        String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
+        Lexer lex1 = new Lexer(example1);
+        lex1.acceptTok(Lexer.ClosePar);
+    }
+
+    /** ***************************************************************
+     * Verify that a literal isn't a Number.
+     */
+    @Test
+    public void testInvalidInputNumber() throws ParseException {
+
+        String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
+        Lexer lex1 = new Lexer(example1);
+        lex1.acceptTok(Lexer.Ident);
+        assertEquals("(",lex1.acceptTok(Lexer.OpenPar));
+
+        expectedException.expect(ParseException.class);
+        expectedException.expectMessage("Error in Lexer.checkTok(): Unexpected token 'Identifier'");
+        lex1.acceptTok(Lexer.Number);
+    }
+
+    /** ***************************************************************
+     * Verify a misplaced ClosePar.
+     */
+    @Test
+     public void testInvalidInputClosePar1() throws ParseException {
+
+        String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
+        Lexer lex1 = new Lexer(example1);
+        lex1.acceptTok(Lexer.Ident);
+        lex1.acceptTok(Lexer.OpenPar);
+        lex1.acceptLit("212345678");
+
+        expectedException.expect(ParseException.class);
+        expectedException.expectMessage("Error in Lexer.checkTok(): Unexpected token ','");
+        lex1.acceptTok(Lexer.ClosePar);
+    }
+
+    /** ***************************************************************
+     * Verify a misplaced ClosePar.
+     */
+    @Test
+    public void testInvalidInputClosePar2() throws ParseException {
+
+        String example1 = "sense(212345678,?E), nsubj(?E,#?X), dobj(?E,?Y)";
+        Lexer lex1 = new Lexer(example1);
+        lex1.acceptTok(Lexer.Ident);
+        lex1.acceptTok(Lexer.OpenPar);
+        lex1.acceptLit("212345678");
+        lex1.acceptTok(Lexer.Comma);
+
+        expectedException.expect(ParseException.class);
+        expectedException.expectMessage("Error in Lexer.checkTok(): Unexpected token 'Variable'");
+        lex1.acceptTok(Lexer.ClosePar);
     }
 
     /** ***************************************************************

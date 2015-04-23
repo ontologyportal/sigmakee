@@ -431,6 +431,230 @@ public class SemRewriteTest extends UnitTestBase {
         doTest(input, expected);
     }
 
+    /** *************************************************************
+     * Mary must walk.
+     * aux(?V,must*) ==> (necessary(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryMustWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,must-2)";
+
+        String[] expected = {
+                "(necessary walk-3 ?Y)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary could walk.
+     * aux(?V,could*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryCouldWalk() {
+        String input = "names(Mary-2,\"Mary\"), attribute(Mary-2,Female), sumo(Human,Mary-2), number(SINGULAR,Mary-2), root(ROOT-0,walk-3), nsubj(walk-3,Mary-2), sumo(Walking,walk-3), aux(walk-3,could-1)";
+
+        String[] expected = {
+                "(possible walk-3 ?Y)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Could Mary walk?
+     * aux(?V,could*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testCouldMaryWalk() {
+        String input = "names(Mary-2,\"Mary\"), attribute(Mary-2,Female), sumo(Human,Mary-2), number(SINGULAR,Mary-2), root(ROOT-0,walk-3), nsubj(walk-3,Mary-2), sumo(Walking,walk-3), aux(walk-3,could-1)";
+
+        String[] expected = {
+                "(possible walk-3 ?Y)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary can walk.
+     * nsubj(?V,?S), aux(?V,can*), sumo(?C,?V), isSubclass(?C,Process) ==> {(capability ?C agent ?S)}.
+     */
+    @Test
+    public void testMaryCanWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,can-2)";
+
+        String[] expected = {
+                "(capability Walking agent Mary-1)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Can Mary walk?
+     * nsubj(?V,?S), aux(?V,can*), sumo(?C,?V), isSubclass(?C,Process) ==> {(capability ?C agent ?S)}.
+     */
+    @Test
+    public void testCanMaryWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), sumo(Cooking,can-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,can-1)";
+
+        String[] expected = {
+                "(capability Walking agent Mary-1)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary might walk.
+     * aux(?V,may*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryMightWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,might-2)";
+
+        String[] expected = {
+                "(possible walk-3 ?Y)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary may walk.
+     * aux(?V,may*) ==> (possible(?V,?DUMMY)).
+     */
+    @Test
+    public void testMaryMayWalk() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), aux(walk-3,may-2)";
+
+        String[] expected = {
+                "(possible walk-3 ?Y)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary has walked close by the house.
+     * prep_close_by(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> {(orientation ?X ?Y Near)}.
+     */
+    @Test
+    public void testMaryHasWalkedCloseByTheHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), tense(PRESENT,walk-3), aspect(PERFECT,walk-3), aux(walk-3,have-2), sumo(House,house-7), number(SINGULAR,house-7), prep_close_by(walk-3,house-7), det(house-7,the-6)";
+
+        String[] expected = {
+                "(orientation walk-3 house-7 Near)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary went along with the man.
+     * prep_along_with(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Person) ==> (agent(?X,?Y)).
+     */
+    @Test
+    public void testMaryWentAlongWithMan() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,go_along-2), nsubj(go_along-2,Mary-1), tense(PAST,go_along-2), sumo(Man,man-6), number(SINGULAR,man-6), prep_along_with(go_along-2,man-6), det(man-6,the-5)";
+
+        String[] expected = {
+                "(agent go_along-2 man-6)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary walks with John.
+     * prep_with(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Person) ==> (agent(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkWithJohn() {
+        String input = "names(Mary-1,\"Mary\"), names(John-3,\"John\"), attribute(Mary-1,Female), sumo(Human,Mary-1), sumo(Human,John-3), attribute(John-3,Male), number(SINGULAR,Mary-1), number(SINGULAR,John-3), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), prep_with(walk-2,John-3), sumo(Walking,walk-2), tense(PRESENT,walk-2)";
+
+        String[] expected = {
+                "(agent walk-2 John-3)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary will walk from the house.
+     * prep_from(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (origin(?X,?Y)).
+     */
+    @Test
+    public void testMaryWillWalkFromHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-3), nsubj(walk-3,Mary-1), sumo(Walking,walk-3), tense(FUTURE,walk-3), aux(walk-3,will-2), sumo(House,house-6), number(SINGULAR,house-6), prep_from(walk-3,house-6), det(house-6,the-5)";
+
+        String[] expected = {
+                "(origin walk-3 house-6)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary walked into the room.
+     * prep_into(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (properlyFills(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkedIntoRoom() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), sumo(Walking,walk-2), tense(PAST,walk-2), sumo(Room,room-5), number(SINGULAR,room-5), prep_into(walk-2,room-5), det(room-5,the-4)";
+
+        String[] expected = {
+                "(properlyFills walk-2 room-5)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary walked within the room.
+     * prep_within(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (properlyFills(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkedWithinRoom() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk-2), nsubj(walk-2,Mary-1), sumo(Walking,walk-2), tense(PAST,walk-2), sumo(Room,room-5), number(SINGULAR,room-5), prep_within(walk-2,room-5), det(room-5,the-4)";
+
+        String[] expected = {
+                "(properlyFills walk-2 room-5)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary went across the room.
+     * prep_across(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (traverses(?X,?Y)).
+     */
+    @Test
+    public void testMaryWentAcrossRoom() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,go_across-2), nsubj(go_across-2,Mary-1), tense(PAST,go_across-2), sumo(Room,room-5), number(SINGULAR,room-5), prep_across(go_across-2,room-5), det(room-5,the-4)";
+
+        String[] expected = {
+                "(traverses go_across-2 room-5)"
+        };
+
+        doTest(input, expected);
+    }
+
+    /** *************************************************************
+     * Mary walked through the house.
+     * prep_through(?X,?Y), +sumo(?C,?Y), isCELTclass(?C,Object) ==> (traverses(?X,?Y)).
+     */
+    @Test
+    public void testMaryWalkedThroughHouse() {
+        String input = "names(Mary-1,\"Mary\"), attribute(Mary-1,Female), sumo(Human,Mary-1), number(SINGULAR,Mary-1), root(ROOT-0,walk_through-2), nsubj(walk_through-2,Mary-1), tense(PAST,walk_through-2), sumo(House,house-5), number(SINGULAR,house-5), prep_through(walk_through-2,house-5), det(house-5,the-4)";
+
+        String[] expected = {
+                "(traverses walk_through-2 house-5)"
+        };
+
+        doTest(input, expected);
+    }
 
 
 }
