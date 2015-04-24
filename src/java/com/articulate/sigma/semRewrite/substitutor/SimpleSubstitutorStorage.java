@@ -33,6 +33,10 @@ import static com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence.EMPT
 import static com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence.IGNORE_SENTENCE;
 import static com.articulate.sigma.semRewrite.substitutor.SubstitutionUtil.CLAUSE_PARAM;
 
+/** **************************************************************
+ * Basic implementation of ClauseSubstitutor storage. This implementation store
+ * the data as a map of CoreLabelSequences.
+ */
 public class SimpleSubstitutorStorage implements ClauseSubstitutor {
 
     Map<CoreLabelSequence, CoreLabelSequence> groups = Maps.newHashMap();

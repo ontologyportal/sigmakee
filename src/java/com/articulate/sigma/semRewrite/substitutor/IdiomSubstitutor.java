@@ -37,6 +37,10 @@ public class IdiomSubstitutor extends SimpleSubstitutorStorage {
         initialize(labels);
     }
 
+    /** ***************************************************************
+     * Looking for idioms in the labels sequence
+     * E.g. "raining cats and dogs"
+     */
     private void initialize(List<CoreLabel> labels) {
         int from = 0;
         Map<CoreLabelSequence, CoreLabelSequence> collectedIdioms = Maps.newHashMap();

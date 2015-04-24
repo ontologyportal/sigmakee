@@ -39,6 +39,7 @@ public class NounSubstitutor extends SimpleSubstitutorStorage {
     }
 
     /** **************************************************************
+     * Collects information about continuous noun sequences like "Garry Bloom", "Tim Buk Tu"
      */
     private void initialize(List<CoreLabel> labels) {
 

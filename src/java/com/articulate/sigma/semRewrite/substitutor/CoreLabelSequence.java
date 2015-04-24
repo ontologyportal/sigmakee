@@ -65,6 +65,10 @@ public class CoreLabelSequence {
         return labels.isEmpty();
     }
 
+    /** *************************************************************
+     * Checks if label is part of current sequence
+     * @param sentIndex can be CoreLabelSequence.IGNORE_SENTENCE
+     */
     public boolean containsLabel(int sentIndex, String text, int index) {
 
         return labels.stream().anyMatch(label ->
@@ -74,10 +78,17 @@ public class CoreLabelSequence {
         );
     }
 
+
+    /** *************************************************************
+     * Converts the sequence to text representation using "_" as a separator
+     */
     public String toText() {
         return Joiner.on("_").join(labels.stream().map(label -> label.originalText()).toArray());
     }
 
+    /** *************************************************************
+     * Returns the sequence in the String format like "United_States-3"
+     */
     public Optional<String> toLabelString() {
 
         if (!labels.isEmpty()) {

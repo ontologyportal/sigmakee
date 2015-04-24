@@ -28,6 +28,10 @@ import java.util.Optional;
 
 import static com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence.EMPTY_SEQUENCE;
 
+/** **************************************************************
+ * This substitutor helps to group set of other substitutors together.
+ * All the search/contains calls will return success results if any of united substitutor can do that.
+  */
 public class SubstitutorsUnion implements ClauseSubstitutor {
 
     final List<ClauseSubstitutor> substitutors;

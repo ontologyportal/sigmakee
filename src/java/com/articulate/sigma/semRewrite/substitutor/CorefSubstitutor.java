@@ -81,8 +81,11 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
         addGroups(collectedGroups);
     }
 
+    /** ***************************************************************
+     * Search for root coreference.
+     * Current implementation assumes that first mention is the root.
+     */
     private CorefMention findRootMention(List<CorefMention> mentions) {
-        // Assuming first mention is the replacement
         CorefMention rootMention = mentions.get(0);
 
         return rootMention;
@@ -128,6 +131,8 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
     }
 
     /** *************************************************************
+     * Takes only monotonic tagged part of sequence.
+     * E.g. it only takes "Jon Bov Joni" from sequence "Jon Bov Joni the leader"
      */
     private CoreLabelSequence extractTextWithSameTag(List<CoreLabel> tokens, CorefMention mention, /* @Nullable */String masterTag) {
 

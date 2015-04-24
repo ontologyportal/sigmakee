@@ -75,6 +75,10 @@ public class SentenceBuilder {
         return asStrings(NO_MUTATION);
     }
 
+
+    /** **************************************************************
+     * Builds String representation of current sentence mutating labels with provided substitutor.
+     */
     public List<String> asStrings(ClauseSubstitutor substitutor) {
         return asStrings(label -> {
             if(substitutor.containsKey(label)) {
@@ -86,6 +90,10 @@ public class SentenceBuilder {
         });
     }
 
+
+    /** **************************************************************
+     * Transform the labels to String allowing make additional manual mutation on each label.
+     */
     public List<String> asStrings(Function<CoreLabel, String> onLabel) {
 
         List<String> sentences = Lists.newArrayList();

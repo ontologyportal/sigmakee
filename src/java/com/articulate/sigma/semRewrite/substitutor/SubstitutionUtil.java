@@ -39,6 +39,9 @@ public class SubstitutionUtil {
     public static final Pattern CLAUSE_PARAM = Pattern.compile("(.+)-(\\d+)");
 
     /** **************************************************************
+     * Takes the list of clauses and substitutes them using provided substitutor.
+     * If both arguments are substituted to the same group, this entry will be
+     * removed from the original input.
      */
     public static void groupClauses(ClauseSubstitutor substitutor, List<String> clauses) {
 

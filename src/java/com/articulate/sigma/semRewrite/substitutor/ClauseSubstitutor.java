@@ -26,9 +26,30 @@ import java.util.Optional;
 
 public interface ClauseSubstitutor {
 
+    /** ***************************************************************
+     * Returns true if substitutor contains key with given label
+     */
     boolean containsKey(CoreLabel key);
+
+    /** ***************************************************************
+     * Returns true if substitutor contains key with given label
+     * E.g. "was-3"
+     */
     boolean containsKey(String keyLabel);
+
+    /** ***************************************************************
+     * Searches for referenced group by only first label in the key
+     */
     Optional<CoreLabelSequence> getGroupedByFirstLabel(CoreLabel label);
+
+    /** ***************************************************************
+     * Searches for referenced group by any label included into the key
+     */
     CoreLabelSequence getGrouped(CoreLabel key);
+
+    /** ***************************************************************
+     * Searches for referenced group by any label included into the key
+     * E.g. "training-7"
+     */
     CoreLabelSequence getGrouped(String keyLabel);
 }
