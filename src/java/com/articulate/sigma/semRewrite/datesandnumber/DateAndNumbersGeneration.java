@@ -109,8 +109,13 @@ public class DateAndNumbersGeneration {
 		String measuredEntityStr = null;
 		boolean flag = false;
 		//int x = 0;
+		// fix to remove comma in numbers
+		if (token.getWord().contains(",")) {
+			token.setWord(token.getWord().replaceAll(",", ""));
+		}
 		if (unitOfMeasurementNode != null) {
-			unitOfMeasurementStr = lemmatizeWord(unitOfMeasurementNode);
+			//unitOfMeasurementStr = lemmatizeWord(unitOfMeasurementNode);
+			unitOfMeasurementStr = unitOfMeasurementNode.word();
 			measuredEntity = utilities.StanfordDependencies.getParent(unitOfMeasurementNode);
 			visitedNodes.add(unitOfMeasurementNode.toString()+"-"+unitOfMeasurementNode.index());
 		}
@@ -143,8 +148,8 @@ public class DateAndNumbersGeneration {
 					//which means it is unitOfMeasurementNode. Hence remove infinite looping condition
 					if ((childrenSet.size()==1)) {
 						measuredEntity = unitOfMeasurementNode;
-						String lemmatizedWord = lemmatizeWord(measuredEntity);
-						utilities.sumoTerms.add("measure(" + lemmatizedWord + "-" + measuredEntity.index() + ", measure" + count + ")");
+						//String lemmatizedWord = lemmatizeWord(measuredEntity);
+						utilities.sumoTerms.add("measure(" + measuredEntity.word() + "-" + measuredEntity.index() + ", measure" + count + ")");
 						utilities.sumoTerms.add("unit(measure" + count + ", "+ "memberCount" + ")");
 						utilities.sumoTerms.add("value(measure" + count + ", " + token.getWord()+ ")");
 						utilities.sumoTerms.add("valueToken("+token.getWord()+","+token.getWord()+"-"+token.getId()+")");
@@ -345,7 +350,7 @@ public class DateAndNumbersGeneration {
 	 * Adds the necessary sumo terms from the respective functions and filter any duplicates if present.
 	 * @param input: List of tokens, StanfordDateTimeExtractor object and a ClauseSubstitutor.
 	 */
-	public List<String> generateSumoTerms(List<Tokens> tokensList, StanfordDateTimeExtractor stanfordParser, ClauseSubstitutor substitutor) {
+	public List<String> generateSumoTerms(List<Tokens> tokensList, StanfordDateTimeExtractor stanfordParser) {
 
 		DatesAndDuration datesandDurationHandler = new DatesAndDuration();
 		Utilities utilities = new Utilities();
@@ -361,13 +366,12 @@ public class DateAndNumbersGeneration {
 		Tokens presentDurationToken = new Tokens();
 		Tokens prevDurationToken = null;
 		for(Tokens token : tokensList) {
-			utilities.lemmatize(token);
 			presentDateToken = token;
 			presentDurationToken = token;
 			switch(token.getNer()) {
 				case "DATE"  : datesandDurationHandler.processDateToken(token, utilities, tempDateList, prevDateToken);
-					           prevDateToken = presentDateToken;
-							   break;
+					            prevDateToken = presentDateToken;
+							    break;
 				case "NUMBER":
 				case "ORDINAL":
 				case "PERCENT" : measureFn(token,numberCount, utilities); ++numberCount;  //processNumber(token,stanfordParser.getDependencyList());
@@ -386,7 +390,7 @@ public class DateAndNumbersGeneration {
 		datesandDurationHandler.generateSumoDateTerms(utilities, tempDateList);
 		datesandDurationHandler.processUnhandledDuration(utilities);
 		generateSumoTimeTerms(timesList,utilities);
-		utilities.filterSumoTerms(substitutor);
+		utilities.filterSumoTerms();
 		return utilities.sumoTerms;
 	}
 }

@@ -1,12 +1,8 @@
 package com.articulate.sigma.semRewrite;
 
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.semRewrite.datesandnumber.InterpretNumerics;
-import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
 import com.articulate.sigma.test.JsonReader;
-import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.pipeline.Annotation;
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -52,17 +48,10 @@ public class MeasureFunctionTest {
 	@Test
 	public void test() {
 		System.out.println("Running date number tests for sentence : "+fInput);
-		String fout = InterpretNumerics.getSumoTerms(fInput, getNERGroupedClauses (fInput)).toString();
+		String fout = InterpretNumerics.getSumoTerms(fInput).toString();
 		System.out.println(fout);
 		System.out.println(fExpected);
 		assertEquals(fExpected, fout);
-	}
-	 /** ***************************************************************
-     */
-	private NounSubstitutor getNERGroupedClauses (String fInputString) {
-
-		Annotation document = Pipeline.toAnnotation(fInputString);
-		return  new NounSubstitutor(document.get(CoreAnnotations.TokensAnnotation.class));
 	}
 
 }

@@ -24,6 +24,7 @@ MA  02111-1307 USA
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,9 +32,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
 
-import com.articulate.sigma.semRewrite.substitutor.CoreLabelSequence;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 
@@ -51,13 +50,19 @@ public class Utilities {
 	public static final List<String> nounTags = new ArrayList<String>(Arrays.asList("NN","NNS","NNP","NNPS","/NN","/NNS","/NNP", "/NNPS"));
 	
 	public static final Pattern sumoTermPattern = Pattern.compile("^([a-zA-Z]+)\\(([a-zA-Z\\-0-9]+)(\\s)?,(\\s)?([a-zA-Z(\\-)?0-9]+)\\)");
+	public static final Pattern cnfPattern = Pattern.compile("^([a-zA-Z]+)\\((.*(\\-)?[0-9]*)(\\s)?,(\\s)?(.*(\\-)?[0-9]*)\\)");
+	
+	public static final List<String> datesAndNumbersPredicates = new ArrayList<String>(Arrays.asList("time","day","month"));
 	
 	public static final List<String> stopWords = new ArrayList<String>(Arrays.asList("of",",","-"));
 	
 	List<String> sumoTerms = new LinkedList<String>();
 	List<DateInfo> datesList = new LinkedList<DateInfo>();
 	SemanticGraph StanfordDependencies;
+	List<String> lemmatizedResults = new ArrayList<>();
+	HashMap<Integer, String> lemmaWordMap = new HashMap<>();
 	int timeCount = 1;
+	
 	
 	/** ***************************************************************
      */
@@ -79,23 +84,15 @@ public class Utilities {
 		while (!tempParent.equals(StanfordDependencies.getFirstRoot())) {
 			tempParent = StanfordDependencies.getParent(tempParent);
 			if (containsIndexWord(tempParent.tag())) {
-				return tempParent.lemma()+"-"+tempParent.index();
+				return tempParent.word()+"-"+tempParent.index();
 			}
 		}
 		return null;
 	}
-	
-	/** ***************************************************************
-	 */
-	public void lemmatize(Tokens token) {
-		if(!token.getPos().equals("NNP") || !token.getPos().equals("NNPS")) {
-			token.setWord(token.getLemma());
-		}
-	}
-	
+		
 	/** ***************************************************************
      */
-	public void filterSumoTerms(ClauseSubstitutor substitutor) {
+	public void filterSumoTerms() {
 		
 		Set<String> hashsetList = new HashSet<String>(sumoTerms);
 		sumoTerms.clear();
@@ -112,28 +109,6 @@ public class Utilities {
 				}
 			}
 		}
-		sumoTerms.removeAll(removableSumoTerms);
-		if (substitutor != null) {
-			for(int i = 0; i < sumoTerms.size(); ++i) {
-				//System.out.println();
-				Matcher sumoMatcher = sumoTermPattern.matcher(sumoTerms.get(i));
-				if(sumoMatcher.find()) {
-					String group2 = sumoMatcher.group(2);
-					if(substitutor.containsKey(group2)) {
-						CoreLabelSequence ls = substitutor.getGrouped(group2);
-						if(ls.getLabels().size() > 1) {
-							sumoTerms.set(i, sumoTerms.get(i).replace(group2, ls.toLabelString().get()));
-						}
-					}
-					String group5 = sumoMatcher.group(5);
-					if(substitutor.containsKey(group5)) {
-						CoreLabelSequence ls = substitutor.getGrouped(group5);
-						if(ls.getLabels().size() > 1) {
-							sumoTerms.set(i, sumoTerms.get(i).replace(group5, ls.toLabelString().get()));
-						}
-					}
-				}
-			}
-		}
+	    sumoTerms.removeAll(removableSumoTerms);
 	}
 }

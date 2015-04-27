@@ -32,7 +32,7 @@ public class DatesAndDuration {
 	
 	static final Pattern YEAR_PATTERN = Pattern.compile("^[0-9]{4}$");
 	static final Pattern MMDDYYYY_PATTERN = Pattern.compile("^([0-9]{1,2})(\\/|\\-|\\.)([0-9]{1,2})(\\/|\\-|\\.)([0-9]{4})$");
-	static final Pattern DATE_PATTERN = Pattern.compile("^[0-9]{1,2}(th)?$");
+	static final Pattern DATE_PATTERN = Pattern.compile("^(0?[1-9]|[12][0-9]|3[01])(th)?$");
 	static final Pattern DURATION_PATTERN = Pattern.compile("^P([0-9])+[A-Z]");
 	
 	/** ***************************************************************
@@ -74,7 +74,7 @@ public class DatesAndDuration {
 			}
 			presentDateToken.setTokenType("DAYS");
 			mergeDates(presentDateToken, tempDateList, prevDateToken, utilities);
-		}
+		} 
 	}
 	 
 	 /** ***************************************************************

@@ -22,12 +22,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
+
 import java.util.List;
-
-
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.semRewrite.substitutor.ClauseSubstitutor;
-import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
+
 
 public class InterpretNumerics {
 
@@ -38,13 +36,14 @@ public class InterpretNumerics {
      * @param substitutor
      * @return List of SU-KIF statements, each date/time/measures are obtained from parser.
 	 */
-	public static List<String> getSumoTerms(String input, ClauseSubstitutor substitutor) {
+	public static List<String> getSumoTerms(String input) {
 		
 		StanfordDateTimeExtractor sde = new StanfordDateTimeExtractor();
 		List<Tokens> tokensList = sde.populateParserInfo(input);
 		DateAndNumbersGeneration generator = new DateAndNumbersGeneration();
-		return generator.generateSumoTerms(tokensList, sde, substitutor);
+		return generator.generateSumoTerms(tokensList, sde);
 	}
+	
 	
 	/** ***************************************************************
 	 */
@@ -52,21 +51,21 @@ public class InterpretNumerics {
 		KBmanager.getMgr().initializeOnce();
         String input = "John was killed on 8/15/2014 at 3:45 PM.";
         System.out.println(input);
-        System.out.println(getSumoTerms(input,null));
+        System.out.println(getSumoTerms(input));
         input = "As of 2012, sweet oranges accounted for approximately 70 percent of citrus production.";
         System.out.println(input);
-        System.out.println(getSumoTerms(input,null));
+        System.out.println(getSumoTerms(input));
         input = "The standard goal of sigma is to achieve precision to 4.5 standard deviations above or below the mean.";
         System.out.println(input);
-        System.out.println(getSumoTerms(input,null));
+        System.out.println(getSumoTerms(input));
         input = "Taj Mahal attracts some 3000000 people a year for visit.";
         System.out.println(input);
-        System.out.println(getSumoTerms(input,null));
+        System.out.println(getSumoTerms(input));
         input = "In 2014, Fiat owned 90% of Ferrari.";
         System.out.println(input);
-        System.out.println(getSumoTerms(input,null));
+        System.out.println(getSumoTerms(input));
         input = "John killed Mary on 31 March and also in July 1995 by travelling back in time.";
         System.out.println(input);
-        System.out.println(getSumoTerms(input,null));
+        System.out.println(getSumoTerms(input));
     }
 }

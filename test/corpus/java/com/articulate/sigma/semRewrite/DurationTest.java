@@ -6,10 +6,8 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
 import com.articulate.sigma.test.JsonReader;
 
-import edu.stanford.nlp.ling.CoreAnnotations;
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,10 +15,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.semRewrite.datesandnumber.InterpretNumerics;
 
-import edu.stanford.nlp.pipeline.Annotation;
 
 @RunWith(Parameterized.class)
 public class DurationTest {
@@ -55,15 +51,9 @@ public class DurationTest {
 	@Test
 	public void test() {
 		System.out.println("Running date number tests for sentence : "+fInput);
-		String fout = InterpretNumerics.getSumoTerms(fInput,getNERGroupedClauses (fInput)).toString();
+		String fout = InterpretNumerics.getSumoTerms(fInput).toString();
+		System.out.println(fout);
+		System.out.println(fExpected);
 		assertEquals(fExpected, fout);
 	}
-	 /** ***************************************************************
-     */
-	private NounSubstitutor getNERGroupedClauses (String fInputString) {
-
-		Annotation document = Pipeline.toAnnotation(fInputString);
-		return  new NounSubstitutor(document.get(CoreAnnotations.TokensAnnotation.class));
-	}
-
 }

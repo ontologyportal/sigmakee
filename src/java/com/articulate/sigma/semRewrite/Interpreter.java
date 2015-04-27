@@ -537,7 +537,8 @@ public class Interpreter {
         List<String> results = Lists.newArrayList();
         List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
         results.addAll(dependenciesList);
-
+        List<String> measures = InterpretNumerics.getSumoTerms(input);
+        results.addAll(measures);
         ClauseSubstitutor substitutor = null;
         if (coref) {
             substitutor = SubstitutorsUnion.of(
@@ -576,12 +577,12 @@ public class Interpreter {
 
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
-        List<String> measures = InterpretNumerics.getSumoTerms(input, substitutor);
-        for (String m : measures) {
+        
+        /*for (String m : measures) {
             lex = new Lexer(m);
             CNF cnfnew = CNF.parseSimple(lex);
             cnf.merge(cnfnew);
-        }
+        }*/
         return cnf;
     }
 
