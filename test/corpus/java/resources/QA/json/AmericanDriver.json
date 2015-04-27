@@ -1,0 +1,97 @@
+[
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "On an average how far does a North American driver travel?",
+    "answer" : "The average North American driver travels 12,000 miles per year."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How can you get the maximum life out of an automobile?",
+    "answer" : "You must provide it with proper maintenance."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How does proper maintenance help?",
+    "answer" : "Proper maintenance can reduce air pollution, extend the value of the vehicle, save on fuel bills, prevent breakdowns, and lead to better performance."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What does proper maintenance do?",
+    "answer" : "null"
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How often should we change the oil in the vehicles?",
+    "answer" : "Should change the oil in all of my vehicles every 3,000 miles."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What should you do when you change the oil?",
+    "answer" : "Whenever I change the oil I can also change the oil filter."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What does the oil filter do ?",
+    "answer" : "Change the oil in all of your vehicles every 3,000 miles."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What happens to the oil filter as the car runs?",
+    "answer" : "As the car runs the oil filter will become clogged with excess debris from the oil."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How do you stop the engine from getting damaged?",
+    "answer" : "Air must be filtered to stop dirt from damaging the engine. Every time you change the vehicle's oil you should inspect the car for any unexpected wear and tear."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What should you do when you change the vehicle’s oil ?",
+    "answer" : "Every time I change the vehicle's oil I should inspect the car for any unexpected wear and tear."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How does the car engine become very hot?",
+    "answer" : "Due to the performance and sheer heat of combustion car engines performance becomes very hot."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What is used as a coolant for your vehicle system?",
+    "answer" : "Antifreeze."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How often should the coolant be replaced ?",
+    "answer" : "This coolant should be replaced every two years."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How can you extend the life of the radiator?",
+    "answer" : "Replace every two years."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "How do you determine the life expectancy of a tire ?",
+    "answer" : "Dictated by the manufacturer."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What is the first line of safety ?",
+    "answer" : "The tire that holds the car to the road is my first line of safety."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What is the prime cause of premature life of belts, gaskets, hoses, and seals?",
+    "answer" : "Overheating."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What is the prime cause of premature life of different components of the car?",
+    "answer" : "Overheating."
+  },
+  {
+    "file": "AmericanDriver.txt",
+    "question" : "What should we do when any of the parts become a problem?",
+    "answer" : "It is a much better idea to replace the part than to repair it."
+  }
+]

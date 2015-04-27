@@ -1,0 +1,37 @@
+[
+  {
+    "file": "Galaxy.txt",
+    "question" : "What is a Galaxy?",
+    "answer" : "A gravitationally bound system consisting of stars, stellar remnants, interstellar gas and dust, and dark matter."
+  },
+  {
+    "file": "Galaxy.txt",
+    "question" : "What do the Galaxy consists of?",
+    "answer" : "From what I understand, the answer should be a galaxy is a gravitationally bound system consisting of stars, stellar remnants, interstellar gas and dust, and dark matter."
+  },
+  {
+    "file": "Galaxy.txt",
+    "question" : "Where from the word galaxy was derived?",
+    "answer" : "Likely, the word galaxy is derived from the Greek galaxias, literally \" milky \", a reference to the Milky Way."
+  },
+  {
+    "file": "Galaxy.txt",
+    "question" : "How does galaxy word derived?",
+    "answer" : "Probably, the word galaxy is derived from the Greek galaxias, literally \" milky \", a reference to the Milky Way."
+  },
+  {
+    "file": "Galaxy.txt",
+    "question" : "What can be categorized according to the visual morphology?",
+    "answer" : "Galaxies can be categorized according to their visual morphology, including elliptical, spiral, and irregular."
+  },
+  {
+    "file": "Galaxy.txt",
+    "question" : "How galaxies can be categorized?",
+    "answer" : "Galaxies can be categorized according to their visual morphology, including elliptical, spiral, and irregular."
+  },
+  {
+    "file": "Galaxy.txt",
+    "question" : "What can we find at the active center of the galaxies?",
+    "answer" : "Most likely the answer is many galaxies are believed to have black holes at their active center."
+  }
+]

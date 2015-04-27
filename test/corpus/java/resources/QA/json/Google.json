@@ -1,0 +1,87 @@
+[
+  {
+    "file": "Google.txt",
+    "question" : "What is Google?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "What is the specialization of Google?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "What is AdWords?",
+    "answer" : "AdWords is an online, advertising service."
+  },
+  {
+    "file": "Google.txt",
+    "question" : "Who founded Google?",
+    "answer" : "I'm pretty sure the answer is by Larry Page and Sergey Brin."
+  },
+  {
+    "file": "Google.txt",
+    "question" : "What was founded by Larry Page and Sergey Brin?",
+    "answer" : "Google."
+  },
+  {
+    "file": "Google.txt",
+    "question" : "Who was Larry Page?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "Who was Sergey Brin?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "Who were the Ph.D students at Stanford University?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "Who owned 14 % of Google shares?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "Who incorporated Google as a privately held company?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "When was  Google incorporated as a privately held company?",
+    "answer" : "From what I understand, the answer should be September 4, 1998."
+  },
+  {
+    "file": "Google.txt",
+    "question" : "What was the mission statement of Google?",
+    "answer" : "To organize the world's information and make it universally accessible and useful."
+  },
+  {
+    "file": "Google.txt",
+    "question" : "What was the unofficial slogan of Google?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "When did Google moved to its new headquarters?",
+    "answer" : "Likely, 2004."
+  },
+  {
+    "file": "Google.txt",
+    "question" : "Where was Google's new headquarter?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google.txt",
+    "question" : "What are the desktop products of Google?",
+    "answer" : "Possibly, desktop products include applications for web browsing, organizing and editing photos, and instant messaging."
+  },
+  {
+    "file": "Google.txt",
+    "question" : "What are the online products offered by Google?",
+    "answer" : "null"
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "file": "Penicillin.txt",
+    "question" : "What is Penicillin?",
+    "answer" : "A group of antibiotics derived from Penicillium fungi, including penicillin G (intravenous use), penicillin V (oral use), procaine penicillin, and benzathine penicillin (intramuscular use) and β-lactam antibiotics."
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which antibiotic is derived from Penicillium Fungi?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "How Penicillin is derived?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "What is the use of penicillin G?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "What is the use of penicillin V?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "What is the use of benzathine penicillin ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "What are the bacterial infections?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which drug is used against bacterial infections?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which drug is used against staphylococci?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which drug is used against streptococci?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which drug is widely used?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which antibiotics are used in the treatment of bacterial infections?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which two antibiotics has the same antibacterial activity as benzylpenicillin ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which antibiotic is less active against gram-negative bacteria?",
+    "answer" : "Phenoxymethylpenicillin."
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which antibiotic is less active against benzylpenicillin?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which antibiotics are given by injection?",
+    "answer" : "Benzylpenicillin, procaine penicillin and benzathine penicillin."
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which antibiotics are given parenterally?",
+    "answer" : "Benzylpenicillin, procaine penicillin and benzathine penicillin."
+  },
+  {
+    "file": "Penicillin.txt",
+    "question" : "Which antibiotic is given orally?",
+    "answer" : "Phenoxymethylpenicillin."
+  }
+]
