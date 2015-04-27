@@ -61,7 +61,7 @@ public class InferenceWikiTest {
             //reading the lines
             List<String> lines = null;
             try {
-                lines = TextFileUtil.readLines("resources/textfiles/" + filename, true);
+                lines = TextFileUtil.readLines("QA/textfiles/" + filename, true);
                 files.add(filename);
             } catch (IOException e) {
                 System.out.println("Couldn't read document: " + filename + ". Exiting");

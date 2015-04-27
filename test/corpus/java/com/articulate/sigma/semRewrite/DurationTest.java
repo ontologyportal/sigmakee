@@ -37,7 +37,7 @@ public class DurationTest {
 	@Parameters(name="{0}")
 	public static Collection<String[]> prepare() {
   
-		return JsonReader.transform("resources/Duration_test.json", new Function<JSONObject, String[]>() {
+		return JsonReader.transform("QA/json/Duration_test.json", new Function<JSONObject, String[]>() {
 			@Override
 			public String[] apply(JSONObject jo) {
 			String text = (String) jo.get("text");

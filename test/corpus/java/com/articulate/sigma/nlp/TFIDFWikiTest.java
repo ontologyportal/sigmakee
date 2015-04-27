@@ -41,12 +41,12 @@ public class TFIDFWikiTest {
         else {
             List<String> documents = null;
             try {
-                documents = TextFileUtil.readLines("resources/textfiles/cmuWiki/" + filename, true);
+                documents = TextFileUtil.readLines("cmuWiki/" + filename, true);
             } catch (IOException e) {
                 System.out.println("Couldn't read document: " + filename + ". Exiting");
                 return;
             }
-            cb = new TFIDF(documents, "resources/textfiles/stopwords.txt");
+            cb = new TFIDF(documents, "QA/textfiles/stopwords.txt");
             files.put(filename, cb);
         }
         String actual = cb.matchInput(query);

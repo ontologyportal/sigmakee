@@ -56,7 +56,7 @@ public class CorefTest extends TestCase {
                 @Override
                 public Annotation load(String fileName) throws Exception {
 
-                    URL url = Resources.getResource("resources/textfiles/" + fileName);
+                    URL url = Resources.getResource("QA/textfiles/" + fileName);
                     Annotation document = Pipeline.toAnnotation(Resources.toString(url, Charsets.UTF_8));
                     return document;
                 }
@@ -82,7 +82,7 @@ public class CorefTest extends TestCase {
     @Parameters(name = "<{0}> {1} ↔ {2}")
     public static Collection<Object[]> prepare() {
 
-        return JsonReader.transform("resources/corefTests.json", (JSONObject jo) -> {
+        return JsonReader.transform("QA/json/corefTests.json", (JSONObject jo) -> {
             String fileName = (String) jo.get("file");
             Long sentence = (Long) jo.get("sentence");
             Long sentenceA = sentence != null ? sentence : (Long) jo.get("sentenceA");

@@ -32,7 +32,6 @@ import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,7 +54,7 @@ public class TFIDFTest extends TestCase {
 
     @Parameterized.Parameters(name="<{0}> {1}")
     public static Collection<Object[]> prepare() {
-        return JsonReader.transform("resources/IRtests.json", (JSONObject jo) -> {
+        return JsonReader.transform("QA/json/IRtests.json", (JSONObject jo) -> {
             String fname = (String) jo.get("file");
             String query = (String) jo.get("query");
             String answer = (String) jo.get("answer");
@@ -66,7 +65,7 @@ public class TFIDFTest extends TestCase {
     private TFIDF getCachedTFIDF(String fileName) {
         TFIDF cb = parsedFiles.get(fileName);
         if(cb == null) {
-            cb = new TFIDF("resources" + File.separator + "textfiles" + File.separator + fileName, "testfiles/stopwords.txt");
+            cb = new TFIDF("resources" + File.separator + "QA/textfiles" + File.separator + fileName, "testfiles/stopwords.txt");
             parsedFiles.put(fileName, cb);
         }
         return cb;

@@ -48,7 +48,7 @@ public class AmeliaTFIDFTest extends TestCase {
     private TFIDF getCachedTFIDF(String fileName) {
         TFIDF cb = parsedFiles.get(fileName);
         if(cb == null) {
-            cb = new TFIDF("resources" + File.separator + "textfiles" + File.separator + fileName, "testfiles/stopwords.txt");
+            cb = new TFIDF("resources" + File.separator + "QA/textfiles" + File.separator + fileName, "testfiles/stopwords.txt");
             parsedFiles.put(fileName, cb);
         }
         return cb;

@@ -6,10 +6,8 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.semRewrite.substitutor.NounSubstitutor;
 import com.articulate.sigma.test.JsonReader;
 
-import edu.stanford.nlp.ling.CoreAnnotations;
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,10 +15,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.semRewrite.datesandnumber.InterpretNumerics;
-
-import edu.stanford.nlp.pipeline.Annotation;
 
 @RunWith(Parameterized.class)
 public class DateAndNumberGenerationTest {
@@ -41,7 +36,7 @@ public class DateAndNumberGenerationTest {
 	@Parameters(name="{0}")
 	public static Collection<String[]> prepare() {
   
-		return JsonReader.transform("resources/Date_and_number_test.json", new Function<JSONObject, String[]>() {
+		return JsonReader.transform("QA/json/Date_and_number_test.json", new Function<JSONObject, String[]>() {
 			@Override
 			public String[] apply(JSONObject jo) {
 			String text = (String) jo.get("text");

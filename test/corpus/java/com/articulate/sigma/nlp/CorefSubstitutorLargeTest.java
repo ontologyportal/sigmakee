@@ -47,7 +47,7 @@ public class CorefSubstitutorLargeTest extends TestCase {
     @Parameterized.Parameters(name="{2}{0}")
     public static Collection<Object[]> prepare() {
 
-        return JsonReader.transform("resources/corefsSubstitution.json", (JSONObject jo) -> {
+        return JsonReader.transform("QA/json/corefsSubstitution.json", (JSONObject jo) -> {
 
             String input = (String) jo.get("in");
             String expected = (String) jo.get("out");
