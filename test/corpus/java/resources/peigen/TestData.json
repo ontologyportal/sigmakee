@@ -1,0 +1,4544 @@
+[
+  {
+    "file": "AmericanDriver",
+    "query" : "On an average how far does a North American driver travel?",
+    "answer" : "The average North American driver travels 12,000 miles per year."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How can you get the maximum life out of an automobile?",
+    "answer" : "You must provide it with proper maintenance."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How does proper maintenance help?",
+    "answer" : "Proper maintenance can reduce air pollution, extend the value of the vehicle, save on fuel bills, prevent breakdowns, and lead to better performance."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What does proper maintenance do?",
+    "answer" : "null"
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How often should we change the oil in the vehicles?",
+    "answer" : "Should change the oil in all of my vehicles every 3,000 miles."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What should you do when you change the oil?",
+    "answer" : "Whenever I change the oil I can also change the oil filter."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What does the oil filter do ?",
+    "answer" : "Change the oil in all of your vehicles every 3,000 miles."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What happens to the oil filter as the car runs?",
+    "answer" : "As the car runs the oil filter will become clogged with excess debris from the oil."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How do you stop the engine from getting damaged?",
+    "answer" : "Air must be filtered to stop dirt from damaging the engine. Every time you change the vehicle's oil you should inspect the car for any unexpected wear and tear."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What should you do when you change the vehicle’s oil ?",
+    "answer" : "Every time I change the vehicle's oil I should inspect the car for any unexpected wear and tear."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How does the car engine become very hot?",
+    "answer" : "Due to the performance and sheer heat of combustion car engines performance becomes very hot."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What is used as a coolant for your vehicle system?",
+    "answer" : "Antifreeze."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How often should the coolant be replaced ?",
+    "answer" : "This coolant should be replaced every two years."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How can you extend the life of the radiator?",
+    "answer" : "Replace every two years."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "How do you determine the life expectancy of a tire ?",
+    "answer" : "Dictated by the manufacturer."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What is the first line of safety ?",
+    "answer" : "The tire that holds the car to the road is my first line of safety."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What is the prime cause of premature life of belts, gaskets, hoses, and seals?",
+    "answer" : "Overheating."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What is the prime cause of premature life of different components of the car?",
+    "answer" : "Overheating."
+  },
+  {
+    "file": "AmericanDriver",
+    "query" : "What should we do when any of the parts become a problem?",
+    "answer" : "It is a much better idea to replace the part than to repair it."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who is Barack Hussein Obama II ?",
+    "answer" : "President of the United States."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who is the current President of the United States?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who is the 44th President of India?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who is the first African American to hold the office?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Where was Barack Obama born?",
+    "answer" : "Honolulu, Hawaii."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "From which University Obama completed his graduation?",
+    "answer" : "Columbia University and Harvard Law School."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who served as a president of the Harvard Law Review?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who was a community organizer in Chicago ?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who worked as a civil rights attorney at the University of Chicago Law School?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who taught constitutional law at the University of Chicago Law School?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "When did Obama worked as a civil rights attorney at the University of Chicago Law School?",
+    "answer" : "From 1992 to 2004."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "What did he served in the Illinois Senate?",
+    "answer" : "Three terms representing the 13th District in the Illinois Senate from 1997 to 2004."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "When did Obama received national attention during his campaign to represent Illinois in the United States Senate ?",
+    "answer" : "2004, during his campaign to represent Illinois in the United States Senate with his victory in the March Democratic Party primary, his keynote address at the Democratic National Convention in July, November."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "What did Obama received during his campaign the United States Senate?",
+    "answer" : "National attention."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Where did Obama received national attention in 2004?",
+    "answer" : "In 2004, Obama received national attention during his campaign to represent Illinois in the United States Senate with his victory in the March Democratic Party primary, his keynote address at the Democratic National Convention in July, and his election to the Senate in November."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "When did Obama began his presidential campaign?",
+    "answer" : "2007, after a close primary campaign against Hillary Rodham Clinton in 2008."
+  },
+  {
+    "file": "BarackObama",
+    "query" : "Who was named the 2009 Nobel Peace Prize laureate?",
+    "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "Bee",
+    "query" : "What are bees ?",
+    "answer" : "Insects."
+  },
+  {
+    "file": "Bee",
+    "query" : "Why are bees special insects?",
+    "answer" : "Because Bees can fly."
+  },
+  {
+    "file": "Bee",
+    "query" : "Why bees are referred as special insects?",
+    "answer" : "Because Bees can fly."
+  },
+  {
+    "file": "Bee",
+    "query" : "How do the bees move through the air?",
+    "answer" : "Bees can move through the air like an airplane!"
+  },
+  {
+    "file": "Bee",
+    "query" : "Why do the bees fly?",
+    "answer" : "To get to the flowers."
+  },
+  {
+    "file": "Bee",
+    "query" : "How many colors do bees have?",
+    "answer" : "Three."
+  },
+  {
+    "file": "Bee",
+    "query" : "How many parts do bees have ?",
+    "answer" : "Three."
+  },
+  {
+    "file": "Bee",
+    "query" : "What is the stinger used for ?",
+    "answer" : "To defend against enemies."
+  },
+  {
+    "file": "Bee",
+    "query" : "What is the use of stinger?",
+    "answer" : "To defend against enemies."
+  },
+  {
+    "file": "Bee",
+    "query" : "What is the use of stinger in bees?",
+    "answer" : "To defend against enemies."
+  },
+  {
+    "file": "Bee",
+    "query" : "How many legs do the bees have?",
+    "answer" : "Six."
+  },
+  {
+    "file": "Bee",
+    "query" : "How do the bees use their legs?",
+    "answer" : "Stand and climb."
+  },
+  {
+    "file": "Bee",
+    "query" : "Where do the bees live?",
+    "answer" : "In many places and Africa, Australia, Asia, Europe, North America, South America."
+  },
+  {
+    "file": "Bee",
+    "query" : "In which continent bees do not live?",
+    "answer" : "Antarctica."
+  },
+  {
+    "file": "Bee",
+    "query" : "Why they don’t live in Antarctica?",
+    "answer" : "Too cold."
+  },
+  {
+    "file": "Bee",
+    "query" : "Who are nice to humans?",
+    "answer" : "Bees."
+  },
+  {
+    "file": "Bee",
+    "query" : "For what purpose bees are adapted?",
+    "answer" : "Bees are adapted for feeding on nectar and pollen the former primarily as an energy source and the latter primarily for protein and other nutrients,."
+  },
+  {
+    "file": "Bee",
+    "query" : "What is the use of Nectar?",
+    "answer" : "Energy source."
+  },
+  {
+    "file": "Bee",
+    "query" : "What is the use of Pollen?",
+    "answer" : "Protein and other nutrients and food for larvae."
+  },
+  {
+    "file": "Bee",
+    "query" : "Which all places do the bees live in?",
+    "answer" : "Africa, Australia, Asia, Europe, North America, South America."
+  },
+  {
+    "file": "Bee",
+    "query" : "Do the bees bother humans?",
+    "answer" : "If I don't bother all Bees, all Bees will not bother me."
+  },
+  {
+    "file": "Bee",
+    "query" : "Are the bees nice to humans?",
+    "answer" : "Without a doubt."
+  },
+  {
+    "file": "Bee",
+    "query" : "Why do the bees not live in Antarctica?",
+    "answer" : "Too cold."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "Who was Benjamin Franklin?",
+    "answer" : "One of the Founding Fathers of the United States and in many ways was \"The First American\"."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "When was Benjamin Franklin born?",
+    "answer" : "In 1706."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "How many brothers and sisters did Benjamin Franklin have?",
+    "answer" : "16 brothers and sisters."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "How old was Benjamin Franklin when his brother started the first Boston newspaper?",
+    "answer" : "When Benjamin was 15, his brother started the first Boston newspaper."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "Who started the first Boston newspaper?",
+    "answer" : "His brother."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What was the name of the first Boston newspaper?",
+    "answer" : "The New England Courant."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "Was Benjamin Franklin happy working with the newspaper?",
+    "answer" : "No."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What did Benjamin Franklin do in Philadelphia?",
+    "answer" : "Work as printer."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What was the name of the newspaper that Benjamin Franklin bought in 1729?",
+    "answer" : "Pennsylvania Gazette."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What did Benjamin Franklin do in 1729?",
+    "answer" : "Bought a newspaper business."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What did Benjamin Franklin do in 1733?",
+    "answer" : "He started publishing Poor Richard’s Almanac."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What did Benjamin Franklin start publishing in 1733?",
+    "answer" : "Poor Richard’s Almanac."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What was Benjamin Franklin’s pen name?",
+    "answer" : "Richard Saunders."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What did Almanacs contain ?",
+    "answer" : "Information about weather and crops and wise sayings."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "When did Benjamin Franklin retire from newspaper business?",
+    "answer" : "1749."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "Who wrote the Declaration of Independence?",
+    "answer" : "Thomas Jefferson."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "Was Benjamin Franklin an inventor?",
+    "answer" : "Yes."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "What did Benjamin Franklin invent?",
+    "answer" : "A very good stove called the Franklin stove, swim fins, bifocal glasses and the first odometer."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "Who helped Thomas Jefferson write the Declaration of Independence?",
+    "answer" : "Benjamin Franklin."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "When was the Declaration of Independence signed?",
+    "answer" : "In 1776."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "When did Benjamin Franklin die?",
+    "answer" : "April 17, 1790."
+  },
+  {
+    "file": "BenjaminFrankin",
+    "query" : "How old was Benjamin Franklin when he died?",
+    "answer" : "84 years."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What is Biochemistry?",
+    "answer" : "The study of chemical processes within and relating to living organisms."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What give rise to the complexity of life?",
+    "answer" : "Biochemical processes."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "Which branch of science is the study of chemical processes within and related to living organisms?",
+    "answer" : "Biochemical."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What has become so successful at explaining living processes?",
+    "answer" : "Biochemical."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What is the main focus of pure biochemistry?",
+    "answer" : "Understanding how biological molecules give rise to the processes that occur within living cells, which in turn relates greatly to the study and understanding of whole organisms."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "Which branch of science is closely related to molecular biology?",
+    "answer" : "Biochemistry."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "Which branch of science is the study of molecular mechanisms?",
+    "answer" : "Biochemistry."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What is the exact definition of molecular biology?",
+    "answer" : "The study of the molecular mechanisms by which genetic information encoded in DNA is able to result in the processes of life."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "Which branch of science is used to study and investigate molecular biology?",
+    "answer" : "Biochemistry."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What do biochemistry deals with?",
+    "answer" : "The structures, functions and interactions of biological macromolecules, such as proteins, nucleic acids, carbohydrates and lipids."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What deals with the structures, functions and interactions of biological macromolecules?",
+    "answer" : "Biochemistry."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What depends on the reactions of smaller molecules and ions?",
+    "answer" : "The chemistry of the cell."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What is metabolism?",
+    "answer" : "Chemical reactions."
+  },
+  {
+    "file": "Biochemistry",
+    "query" : "What do biochemists investigate?",
+    "answer" : "The causes and cures of disease."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What is Bioinformatics ?",
+    "answer" : "An interdisciplinary field that develops methods and software tools for understanding biological data and both an umbrella term for the body of biological studies that use computer programming as part of their methodology, as well as a reference to specific analysis " pipelines " that are repeatedly used, particularly in the fields of genetics and genomics."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "Which field develops methods and software tools for understanding biological data?",
+    "answer" : "Bioinformatics is an interdisciplinary field that develops methods and software tools for understanding biological data."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "How does bioinformatics evolve as an interdisciplinary field of science to study and process biological data?",
+    "answer" : "As an interdisciplinary field of science, bioinformatics combines computer science, statistics, mathematics, and engineering to study and process biological data."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "How does bioinformatics become an umbrella term for the body of biological studies and specific analysis pipelines?",
+    "answer" : "Bioinformatics is both an umbrella term for the body of biological studies that use computer programming as part of their methodology, as well as a reference to specific analysis " pipelines " that are repeatedly used, particularly in the fields of genetics and genomics."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "Which field of science is referred as an umbrella for the body of biological studies that uses computer programming?",
+    "answer" : "Bioinformatics is both an umbrella term for the body of biological studies that use computer programming as part of their methodology, as well as a reference to specific analysis " pipelines " that are repeatedly used, particularly in the fields of genetics and genomics."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What are the common uses of bioinformatics ?",
+    "answer" : "Common uses of bioinformatics include the identification of candidate genes and nucleotides-LRB-SNPs-RRB-."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What is the purpose of the identification of candidate genes and nucleotides?",
+    "answer" : "Better understanding the genetic basis of disease."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What identification is made with the aim of better understanding the genetic basis of disease?",
+    "answer" : "Identification of candidate genes and nucleotides (SNPs)."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "Which field tries to understand the organisational principles within nucleic acid and protein sequences?",
+    "answer" : "Bioinformatics."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What has become an important part of many areas of biology?",
+    "answer" : "Bioinformatics."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What are the Bioinformatics techniques in experimental molecular biology?",
+    "answer" : "Perhaps, Smaranika, in experimental molecular biology, bioinformatics techniques such as image and signal processing allow extraction of useful results from large amounts of raw data."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What are the bioinformatics techniques that allow extraction of useful results from large amounts of raw data?",
+    "answer" : "Possibly, in experimental molecular biology, bioinformatics techniques such as image and signal processing allow extraction of useful results from large amounts of raw data."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What do the bioinformatics techniques allow?",
+    "answer" : "Extraction of useful results from large amounts of raw data."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What does bioinformatics do in the field of genetics and genomics?",
+    "answer" : "Bioinformatics is both an umbrella term for the body of biological studies that use computer programming as part of their methodology, as well as a reference to specific analysis \"pipelines\" that are repeatedly used, particularly in the fields of genetics and genomics."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What aids in sequencing and annotating genomes and their observed mutations?",
+    "answer" : "Bioinformatics techniques."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What plays a role in the text mining of biological literature?",
+    "answer" : "Bioinformatics techniques."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What plays a role in the development of biological and gene ontologies?",
+    "answer" : "Bioinformatics techniques."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What plays a role in the analysis of gene and protein expression and regulation?",
+    "answer" : "Bioinformatics techniques."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What does bioinformatics tools do?",
+    "answer" : "Bioinformatics tools aid in the comparison of genetic and genomic data and more generally in the understanding of evolutionary aspects of molecular biology, at a more integrative level, tools helps analyze and catalogue the biological pathways and networks that are an important part of systems biology and in structural biology, tools aids in the simulation and modeling of DNA, RNA, and protein structures as well as molecular interactions."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "Which field of science is helpful to analyze and catalogue the biological pathways and networks that are an important part of systems biology?",
+    "answer" : "Bioinformatics techniques."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What aids in the simulation and modeling of DNA, RNA, and protein structures?",
+    "answer" : "Bioinformatics techniques."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "Who coined the term bioinformatics ?",
+    "answer" : "Paulien Hogeweg and Ben Hesper."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "When was the term bioinformatics coined ?",
+    "answer" : "From what I understand, Smaranika, the answer should be 1970."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What does the important sub-disciplines within bioinformatics and computational biology include?",
+    "answer" : "Development and implementation of computer programs that enable efficient access to use and management of various types of information, development of new algorithms-LRB-mathematical formulas-RRB-and statistical measures that assess relationships among members of large data sets."
+  },
+  {
+    "file": "Bioinformatics",
+    "query" : "What is the primary goal of bioinformatics?",
+    "answer" : "To increase the understanding of biological processes."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What is biophysics?",
+    "answer" : "Biophysics is an interdisciplinary science using methods of, and theories from, physics to study biological systems."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What does the biophysical research share?",
+    "answer" : "Biophysical research shares significant overlap with biochemistry, nanotechnology, bioengineering, computational biology and (complex) systems biology."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "Which branch of science is suggested as a bridge between biology and physics?",
+    "answer" : "Biophysics."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "Who originally introduced the term “biophysics”?",
+    "answer" : "Karl Pearson."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "When was the term “biophysics” introduced?",
+    "answer" : "1892."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "Who conducted research for the interactions between the various systems of a cell?",
+    "answer" : "Scientists in biophysics."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What are the techniques used to visualize structures of biological significance?",
+    "answer" : "Atomic force microscopy (AFM) and small-angle scattering (SAS) both with X-rays and neutrons (SAXS / SANS) are often used Fluorescent imaging techniques, as well as electron microscopy, x-ray crystallography, NMR spectroscopy, to visualize structures of biological significance."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What can be observed by neutron spin echo spectroscopy?",
+    "answer" : "Protein dynamics can be observed by neutron spin echo spectroscopy."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "How Protein dynamics can be observed?",
+    "answer" : "Protein dynamics can be observed by neutron spin echo spectroscopy."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "Which techniques are used to measure conformational changes in structure?",
+    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What changes in structure can be measured by dual polarisation interferometry, circular dichroism, SAXS and SANS?",
+    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What changes in structure can be measured by dual polarisation interferometry?",
+    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What changes in structure can be measured by circular dichroism?",
+    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What changes in structure can be measured by SAXS?",
+    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What changes in structure can be measured by SANS?",
+    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What is AFM?",
+    "answer" : "Atomic force microscopy."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What is SAS?",
+    "answer" : "Small-angle scattering."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "How biological events can be monitored where forces and distances are at the nanoscale?",
+    "answer" : "Direct manipulation of molecules using optical tweezers or AFM, can also be used to monitor biological events where forces and distances are at the nanoscale."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "Who considers complex biological events as systems of interacting entities?",
+    "answer" : "Molecular biophysicists."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What does the Molecular biophysicists consider?",
+    "answer" : "Complex biological events as systems of interacting entities which can be understood."
+  },
+  {
+    "file": "Biophysics",
+    "query" : "What did the biophysicists observe?",
+    "answer" : "Model or even manipulate the structures and interactions of individual molecules or complexes of molecules."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who was Sindhuka?",
+    "answer" : "A bird."
+  },
+  {
+    "file": "Bird",
+    "query" : "What was the name of the bird?",
+    "answer" : "Sindhuka."
+  },
+  {
+    "file": "Bird",
+    "query" : "Why was Sindhuka referred to as a special bird?",
+    "answer" : "Its droppings turned into gold as soon as they hit the ground."
+  },
+  {
+    "file": "Bird",
+    "query" : "Whose droppings turned into gold as soon as it hit the ground?",
+    "answer" : "Sindhuka."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who came to the tree in search of the prey?",
+    "answer" : "A hunter."
+  },
+  {
+    "file": "Bird",
+    "query" : "What did the hunter see ?",
+    "answer" : "Sindhuka."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who was struck with wonder?",
+    "answer" : "The hunter."
+  },
+  {
+    "file": "Bird",
+    "query" : "How long has the hunter been hunting for birds and small animals?",
+    "answer" : "80 years."
+  },
+  {
+    "file": "Bird",
+    "query" : "What did the hunter decide?",
+    "answer" : "He had to catch the bird somehow."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who set a trap for the bird?",
+    "answer" : "He climbed the tree and skillfully set a trap for the bird."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who was caught in the hunter’s trap?",
+    "answer" : "A bird."
+  },
+  {
+    "file": "Bird",
+    "query" : "What did the hunter do after the bird was trapped?",
+    "answer" : "null"
+  },
+  {
+    "file": "Bird",
+    "query" : "Who did the hunter seize and shove into the cage?",
+    "answer" : "The hunter immediately seized a bird."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who took the bird to the king?",
+    "answer" : "Perhaps, Smaranika, the hunter."
+  },
+  {
+    "file": "Bird",
+    "query" : "What did the hunter present to the king?",
+    "answer" : "The hunter immediately seized it and shoved it into a cage."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who was reluctant to accept the bird?",
+    "answer" : "The king’s prime minister."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who said to release the bird from the cage?",
+    "answer" : "The king."
+  },
+  {
+    "file": "Bird",
+    "query" : "Who ordered the bird to be released?",
+    "answer" : "The king."
+  },
+  {
+    "file": "Bird",
+    "query" : "What happened when the door of the cage was opened?",
+    "answer" : "As soon as the door of the cage was thrown open, the bird flew out, perched itself on a nearby doorway and defecated."
+  },
+  {
+    "file": "Canada",
+    "query" : "Which country in North America consists of ten provinces and three territories?",
+    "answer" : "Canada."
+  },
+  {
+    "file": "Canada",
+    "query" : "Which country is located in the northern part of the continent?",
+    "answer" : "Canada."
+  },
+  {
+    "file": "Canada",
+    "query" : "Where is Canada located?",
+    "answer" : "In North America."
+  },
+  {
+    "file": "Canada",
+    "query" : "Which country extends from the Atlantic to the Pacific and northward into the Arctic Ocean?",
+    "answer" : "Canada."
+  },
+  {
+    "file": "Canada",
+    "query" : "What is the world's second-largest country by total area?",
+    "answer" : "Canada."
+  },
+  {
+    "file": "Canada",
+    "query" : "What is the World's fourth-largest country by land area?",
+    "answer" : "Canada."
+  },
+  {
+    "file": "Canada",
+    "query" : "Who joined to form the autonomous federal Dominion of Canada?",
+    "answer" : "Three colonies."
+  },
+  {
+    "file": "Canada",
+    "query" : "Which country is a federal parliamentary democracy and a constitutional monarchy?",
+    "answer" : "Canada."
+  },
+  {
+    "file": "Canada",
+    "query" : "Who is the current head of state?",
+    "answer" : "Queen Elizabeth II."
+  },
+  {
+    "file": "Canada",
+    "query" : "Which country is officially bilingual at the federal level?",
+    "answer" : "Canada."
+  },
+  {
+    "file": "Canada",
+    "query" : "What is the approximate population of Canada?",
+    "answer" : "Approximately 35 million."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was Chanakya?",
+    "answer" : "An Indian teacher, philosopher, and royal advisor."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was the first Maurya emperor ?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who is widely credited for having played an important role in the establishment of the Maurya Empire?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Whose role was important in the establishment of the Maurya Empire?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who played an important role in the establishment of the Maurya Empire?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Which was the first empire in archaeologically recorded history to rule most of the Indian subcontinent?",
+    "answer" : "Maurya Empire."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who served as the chief advisor to both Chandragupta and his son Bindusara?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was Chandragupta?",
+    "answer" : "The person Chanakya advised to."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was Bindusara?",
+    "answer" : "Chandragupta's son."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who is identified as Kautilya ?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who is identified as Vishnu Gupta?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who authored the ancient Indian political treatise Arthasastra?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What is Arthasastra?",
+    "answer" : "The ancient Indian political treatise."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who is considered as the pioneer of the field of political science and economics in India?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Where was Chanakya born?",
+    "answer" : "In the Canaka village of the Golla region."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Whose birthplace was Taxila?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who mentioned him as a “Dramila”?",
+    "answer" : "The Jain scriptures, such as Adbidhana Chintamani."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What is Adbidhana Chintamani?",
+    "answer" : "The Jain scripture."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What is Mahavamsa Tika?",
+    "answer" : "Buddhist text."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "According to Hemachandra's Parishishtaparva where was Chanakya born?",
+    "answer" : "The Canaka village of the Golla region."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Where was Chanakya born according to Hemachandra's Parishishtaparva?",
+    "answer" : "The Canaka village of the Golla region."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who is Hemachandra's Parishishtaparva?",
+    "answer" : "The Jain writer."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was born in Canaka village of the Golla region?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was Canin and Canesvari?",
+    "answer" : "Brahmin, Chanakya's parents."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What was Chanakya father’s name?",
+    "answer" : "Chanak."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "From where Chanakya name was derived?",
+    "answer" : "His father's name."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was a devotee of Lord Vishnu?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "When did Chanakya become Jain?",
+    "answer" : "In old age."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What happened to Chanakya in the jungle?",
+    "answer" : "He starved himself to death."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What happened in the jungle to Chanakya?",
+    "answer" : "He starved himself to death."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "How Chanakya died according to Hemachandra?",
+    "answer" : "Chanakya died as a result of a conspiracy by Subandhu, one of Bindusara's ministers."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was Subandhu?",
+    "answer" : "One of Bindusara's ministers."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who didn’t like Chanakya?",
+    "answer" : "Subandhu."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What did Subandhu tell to Bindusara?",
+    "answer" : "Chanakya was responsible for the murder of his mother."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who was responsible for the murder of Bindusara’s mother?",
+    "answer" : "Chanakya."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who confirmed the story of Bindusara’s birth?",
+    "answer" : "Nurses."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Why Chanakya decided to end his life?",
+    "answer" : "He learned that the King was angry with him."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who asked Subandhu to convince Chanakya to give up his plan to kill himself?",
+    "answer" : "The king."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "Who pretended to conduct a ceremony for Chanakya?",
+    "answer" : "Subandhu."
+  },
+  {
+    "file": "Chanakya",
+    "query" : "What is Chanakya Niti ?",
+    "answer" : "Chanakya Neeti-shastra."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which is the fastest legged robot in the World?",
+    "answer" : "The Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is the Cheetah Robot?",
+    "answer" : "The fastest legged robot in the World, surpassing 29 mph, a new land speed record for legged robots."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is a Cheetah?",
+    "answer" : "The fastest legged robot in the World, surpassing 29 mph, a new land speed record for legged robots."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What was the previous record which was set in 1989 at MIT?",
+    "answer" : "13.1 mph."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What was set in 1989 at MIT?",
+    "answer" : "13.1, mph."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot has an articulated back?",
+    "answer" : "The Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What does the Cheetah Robot do on each step?",
+    "answer" : "An articulated back that flexes back and forth on each step, increasing its stride and running speed, much like the animal does."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot runs on the treadmill?",
+    "answer" : "The current version of the Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "How does the current version of the Cheetah robot run on a treadmill?",
+    "answer" : "In the laboratory where version is powered by an off-board hydraulic pump and uses a boom-like device to keep device running in the center of the treadmill."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What type of device is used for Cheetah to keep running in the center of the treadmill?",
+    "answer" : "A boom-like device."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is the next generation of Cheetah robot?",
+    "answer" : "WildCat."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Why is the WildCat designed?",
+    "answer" : "To operate untethered."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot recently entered initial testing?",
+    "answer" : "WildCat."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot is scheduled for outdoor field testing later in 2013?",
+    "answer" : "WildCat."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Who funded the development of the Cheetah Robot?",
+    "answer" : "DARPA's Maximum Mobility and Manipulation program."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is DARPA?",
+    "answer" : "The U.S. military's Defense Advanced Research Projects Agency."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Who has the unique mission of protecting national security by maintaining technological superiority?",
+    "answer" : "The U.S. military's Defense Advanced Research Projects Agency-LRB-DARPA-RRB."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is the mission of U.S. military's Defense Advanced Research Projects Agency?",
+    "answer" : "Protecting national security by maintaining technological superiority."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is the mission of U.S. military DARPA?",
+    "answer" : "Protecting national security by maintaining technological superiority."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot's movements are patterned after fast-running animals in nature?",
+    "answer" : "Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Who has set the record for the fastest legged robot in the world?",
+    "answer" : "Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What did DARPA claim about the Robot?",
+    "answer" : "The use of robots in military operations has \" already saves many lives and prevents thousands of other casualties. \"."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot is used in military operations?",
+    "answer" : "Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot saved lives and prevented thousands of other casualties?",
+    "answer" : "Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "Which robot saved lives and prevented thousands of other casualties?",
+    "answer" : "Cheetah robot."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is DARPA M3 program?",
+    "answer" : "Maximum Mobility and Manipulation program."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is M3 program?",
+    "answer" : "Maximum Mobility and Manipulation program."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is M3?",
+    "answer" : "Maximum Mobility and Manipulation."
+  },
+  {
+    "file": "Cheetah",
+    "query" : "What is DARPA’s Maximum Mobility and Manipulation program?",
+    "answer" : "Developing machines with many different potential military applications."
+  },
+  {
+    "file": "Civilization",
+    "query" : "What are the good parts of our civilization ?",
+    "answer" : "Order and safety."
+  },
+  {
+    "file": "Civilization",
+    "query" : "What is the great achievement of our civilization ?",
+    "answer" : "That today civilized men are largely free from the fear of pain."
+  },
+  {
+    "file": "Civilization",
+    "query" : "How does disputes between man and man get settled?",
+    "answer" : "Take the place of might."
+  },
+  {
+    "file": "Civilization",
+    "query" : "Who protects from robbery and violence?",
+    "answer" : "The law."
+  },
+  {
+    "file": "Civilization",
+    "query" : "What does the law do when it catches burglars?",
+    "answer" : "The law punishes burglars whenever the law catches burglars."
+  },
+  {
+    "file": "Civilization",
+    "query" : "What is the greatest achievement of today’s civilization?",
+    "answer" : "Order and safety."
+  },
+  {
+    "file": "Civilization",
+    "query" : "What is the third greatest achievement of today’s civilization?",
+    "answer" : "Our civilization is more secure than any that have gone before it."
+  },
+  {
+    "file": "Civilization",
+    "query" : "Why is our civilization more secure?",
+    "answer" : "it is much more widely spread."
+  },
+  {
+    "file": "Civilization",
+    "query" : "Why were previous civilizations like oases in a desert?",
+    "answer" : "They are specialized and limited."
+  },
+  {
+    "file": "Civilization",
+    "query" : "Which civilization is like oases in a desert?",
+    "answer" : "Previous civilizations."
+  },
+  {
+    "file": "Civilization",
+    "query" : "How are men free from the fear of pain?",
+    "answer" : "Civilization."
+  },
+  {
+    "file": "Civilization",
+    "query" : "Why is safety important?",
+    "answer" : "Without safety these higher activities of mankind which make up civilization could not go on. The inventor could not invent, the scientist find out or the artist make beautiful things."
+  },
+  {
+    "file": "Civilization",
+    "query" : "Why is order and safety important?",
+    "answer" : "Without them civilization would be impossible."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What is corruption?",
+    "answer" : "The abuse of bestowed power or position to acquire a personal benefit, the illegitimate use of public power to benefit a private interest, primarily due to the weaknesses of an organization or process and what."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What are the activities involved in corruption?",
+    "answer" : "Corruption may include many activities including bribery and embezzlement."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What does the word corrupt mean when used as an adjective?",
+    "answer" : "Utterly broken."
+  },
+  {
+    "file": "Corruption",
+    "query" : "Which word was first used by Aristotle ?",
+    "answer" : "The terms bribe and abandonment of good habits."
+  },
+  {
+    "file": "Corruption",
+    "query" : "Who added the terms bribe and abandonment for good habits?",
+    "answer" : "Aristotle and later Cicero."
+  },
+  {
+    "file": "Corruption",
+    "query" : "Who was Morris?",
+    "answer" : "A professor of politics."
+  },
+  {
+    "file": "Corruption",
+    "query" : "Who has written “corruption is the illegitimate use of public power to benefit a private interest”?",
+    "answer" : "Morris."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What did Economist I. Senior define about corruption?",
+    "answer" : "An action to (a) secretly provide (b) a good or a service to a third party (c) so that he or she can influence certain actions which (d) benefit the corrupt, a third party, or both (e) in which the corrupt agent has authority."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What is Petty corruption?",
+    "answer" : "Corruption occurs at a smaller scale and within established social frameworks and governing norms."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What is Grand corruption?",
+    "answer" : "Corruption occurring at the highest levels of government in a way that requires significant subversion of the political, legal and economic systems."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What is Systemic corruption ?",
+    "answer" : "Corruption as one of the symptoms of organized crime."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What is the main reason of corruption in elections today?",
+    "answer" : "Corruption which is primarily due to the weaknesses of an organization or process."
+  },
+  {
+    "file": "Corruption",
+    "query" : "Which example of the U.S.A. testifies to the fact that even the top level people can stoop very low in order to maintain themselves in power ?",
+    "answer" : "The Watergate Scandal in the U.S.A. is an eloquent example to testify to the fact how even the top level politicians can stoop to the lowest level in order to maintain themselves in power."
+  },
+  {
+    "file": "Corruption",
+    "query" : "Why according to the writer do the voters fall an easy prey to the machinations of the politicians ?",
+    "answer" : "The voters are swayed by the tall promises of the candidates."
+  },
+  {
+    "file": "Corruption",
+    "query" : "Why according to the writer, do the corrupt practices indulged in elections go unnoticed ?",
+    "answer" : "In the representative democracies today and particularly in big countries the constituencies are quite extensive obviating the possibility of corrupt practices being discovered."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What happens to the anti-corrpution laws ?",
+    "answer" : "Anti-corruption laws are honored more in their breach than in their observance."
+  },
+  {
+    "file": "Corruption",
+    "query" : "What happens to the code of conduct?",
+    "answer" : "Becomes a dead letter."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "Who found a new weapon for Alzheimer’s disease?",
+    "answer" : "Scientists."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "What did the Scientists believe?",
+    "answer" : "Scientists believe Scientists may have found a new weapon in the fight against Alzheimer's disease-- not in the form of a drug but in focused beams of ultrasound."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "Which approach has been tested in mice?",
+    "answer" : "The approach is in focused beams of ultrasound."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "Which animal is used for the testing purpose for Alzheimer's disease?",
+    "answer" : "Mice."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "What did the researchers say on Wednesday?",
+    "answer" : "It proved surprisingly good at clearing tangles of plaques linked to Alzheimer's in the animals' brains and improving their memory, as measured by tests such as navigating a maze."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "How does it help to improve the memory in animals’ brain?",
+    "answer" : "By clearing tangles of plaques linked to Alzheimer's in the animals' brains."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "What happened when high-energy ultrasound has been combined with injected microbubbles?",
+    "answer" : "Possibly, in the past, high-energy ultrasound has been combined with injected microbubbles, which vibrate in response to sound waves, to get drugs across the so-called blood brain barrier."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "What was published in the journal Science Translational Medicine?",
+    "answer" : "The new research."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "Who was Juergen Goetz?",
+    "answer" : "One of University of Queensland in Brisbane."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "What new research demonstrates?",
+    "answer" : "Ultrasound alone might have a beneficial effect in the memory-robbing condition."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "On what percentage of the animals ultrasound almost completely cleared the Plaques?",
+    "answer" : "75."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "Which ultrasound machine Goetz used for research?",
+    "answer" : "An ultrasound machine from Philips."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "What is Alzheimer's Disease International?",
+    "answer" : "A non-profit campaign group."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "Which form of Alzheimer has affected close to 50 million people?",
+    "answer" : "Dementia."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "Which new weapon passage is referring to in the fight against Alzheimer's disease?",
+    "answer" : "Scientists believe Scientists may have found a new weapon in the fight against Alzheimer's disease-- not in the form of a drug but in focused beams of ultrasound."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "What was combined with high energy ultrasound?",
+    "answer" : "Injected microbubbles, which vibrate in response to sound waves."
+  },
+  {
+    "file": "DiseaseWeapon",
+    "query" : "In which journal new research was published?",
+    "answer" : "Science Translational Medicine."
+  },
+  {
+    "file": "Education",
+    "query" : "How did Miss Sullivan speak to me from the beginning of my education?",
+    "answer" : "null"
+  },
+  {
+    "file": "Education",
+    "query" : "What was the only difference when Miss Sullivan would speak to me as opposed to a child with hearing ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Education",
+    "query" : "What did Miss Sullivan do when I didn’t know the words and idioms necessary to express my thoughts?",
+    "answer" : "null"
+  },
+  {
+    "file": "Education",
+    "query" : "How long did the learning process continue with Miss Sullivan?",
+    "answer" : "Perhaps, Smaranika, this process was continued for several years; for the deaf child the numberless idioms and expressions used in the simplest daily intercourse doesn't learn in a month, or even in two or three years,."
+  },
+  {
+    "file": "Education",
+    "query" : "How can the little hearing child learn?",
+    "answer" : "Smaranika, I'm pretty sure the answer is the little hearing child learns these from constant repetition and imitation."
+  },
+  {
+    "file": "Education",
+    "query" : "How did Miss Sullivan supply the stimulus I lacked as a deaf child?",
+    "answer" : "Probably, the conversation the child hears in his home stimulates his mind and suggests topics and calls forth the spontaneous expression of his own thoughts."
+  },
+  {
+    "file": "Education",
+    "query" : "Who finds it very difficult to acquire the amenities of conversation?",
+    "answer" : "Most likely, the deaf and the blind."
+  },
+  {
+    "file": "Education",
+    "query" : "How long did it take for me to venture to take the initiative?",
+    "answer" : "Most likely, but part was a long time before you ventured to take the initiative and, still longer before you could find something appropriate to say at the right time."
+  },
+  {
+    "file": "Education",
+    "query" : "Is it very difficult for a deaf and blind to acquire the amenities of conversation?",
+    "answer" : "null"
+  },
+  {
+    "file": "Education",
+    "query" : "Why is it very difficult for a deaf and blind to acquire the amenities of conversation?",
+    "answer" : "null"
+  },
+  {
+    "file": "Food",
+    "query" : "What fuels us through out the day?",
+    "answer" : "Probably, the food we eat not only tastes good, but helps fuel us through our day."
+  },
+  {
+    "file": "Food",
+    "query" : "What are three main nutrients food contains?",
+    "answer" : "From what I understand, the answer should be three main nutrients: carbohydrates, fat, and protein."
+  },
+  {
+    "file": "Food",
+    "query" : "What nutrients do foods contain?",
+    "answer" : "null"
+  },
+  {
+    "file": "Food",
+    "query" : "Apart from the three nutrients what other remaining parts do foods contain?",
+    "answer" : "null"
+  },
+  {
+    "file": "Food",
+    "query" : "What accounts for the majority of nutrients in the North American diet?",
+    "answer" : "Carbohydrates."
+  },
+  {
+    "file": "Food",
+    "query" : "What are made of sugar molecules?",
+    "answer" : "I'm pretty sure the answer is nutrients."
+  },
+  {
+    "file": "Food",
+    "query" : "What do sugar molecules do?",
+    "answer" : "The sugar molecules act as an efficient form of energy for the body."
+  },
+  {
+    "file": "Food",
+    "query" : "Where do we normally find carbohydrates?",
+    "answer" : "Most likely, carbohydrates are commonly found in breads, grains, vegetables, and various sugary foods."
+  },
+  {
+    "file": "Food",
+    "query" : "What is the recommended amount of carbohydrates for your daily calorie count?",
+    "answer" : "null"
+  },
+  {
+    "file": "Food",
+    "query" : "What provides just over twice the energy of carbohydrates per gram?",
+    "answer" : "Fat."
+  },
+  {
+    "file": "Food",
+    "query" : "Where can fat be found?",
+    "answer" : "Fat can be found in animal meat, butter, nuts, and oils."
+  },
+  {
+    "file": "Food",
+    "query" : "What is the recommended amount of fat for your daily calorie count?",
+    "answer" : "Smaranika, I'm pretty sure the answer is 20 percent of my daily calories."
+  },
+  {
+    "file": "Food",
+    "query" : "How many types of fats are there?",
+    "answer" : "Two types of fats saturated and unsaturated."
+  },
+  {
+    "file": "Food",
+    "query" : "What are unsaturated fats?",
+    "answer" : "Mostly liquid at room temperature, an essential nutrient for cell growth and development and the densest energy source of the main nutrients."
+  },
+  {
+    "file": "Food",
+    "query" : "Which fats are normally found in plant products?",
+    "answer" : "Possibly, unsaturated fats are mostly liquid at room temperature and are mostly found in plant products."
+  },
+  {
+    "file": "Food",
+    "query" : "Which fats have been linked to heart disease and other health problems?",
+    "answer" : "Probably, saturated fats have been linked to heart disease and other health problems."
+  },
+  {
+    "file": "Food",
+    "query" : "Where saturated fats are normally found?",
+    "answer" : "I'm pretty sure the answer is saturated fats are mostly found in animal products and are solid at room temperature."
+  },
+  {
+    "file": "Food",
+    "query" : "What is protein required for?",
+    "answer" : "Perhaps, Smaranika, protein is required by the body's cells for growth and repair."
+  },
+  {
+    "file": "Food",
+    "query" : "Why is protein required for our body?",
+    "answer" : "I'm pretty sure the answer is protein is required by the body's cells for growth and repair."
+  },
+  {
+    "file": "Food",
+    "query" : "What accounts for a substantial portion of the body's bones, muscle, and structural tissue?",
+    "answer" : "Protein."
+  },
+  {
+    "file": "Food",
+    "query" : "How protein can be used by our body?",
+    "answer" : "Likely, protein also can be used by the body as an energy source."
+  },
+  {
+    "file": "Food",
+    "query" : "What contains as much energy as carbohydrates?",
+    "answer" : "I'm fairly sure the answer is protein."
+  },
+  {
+    "file": "Food",
+    "query" : "What is protein made up of?",
+    "answer" : "Amino acids."
+  },
+  {
+    "file": "Food",
+    "query" : "What are amino acids made up of?",
+    "answer" : "From what I understand, the answer should be protein is made up of amino acids."
+  },
+  {
+    "file": "Food",
+    "query" : "What are amino acids used for?",
+    "answer" : "To maintain the bodies, bones, muscles, and various organs."
+  },
+  {
+    "file": "Food",
+    "query" : "What is the use of amino acids in our body?",
+    "answer" : "null"
+  },
+  {
+    "file": "Food",
+    "query" : "What is the use of amino acid?",
+    "answer" : "null"
+  },
+  {
+    "file": "Food",
+    "query" : "What are the uses of amino acids?",
+    "answer" : "null"
+  },
+  {
+    "file": "Food",
+    "query" : "What is used to maintain the bodies, bones, muscles, & other various organs?",
+    "answer" : "Likely, Amino acids are used to maintain the bodies, bones, muscles, and various organs."
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "Who are the founding fathers?",
+    "answer" : "null"
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "Who founded our nation and designed the democratic form of government?",
+    "answer" : "From what I understand, Smaranika, the answer should be our Founding Fathers."
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "What did the founding fathers write?",
+    "answer" : "From what I understand, the answer should be two very important documents from our history."
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "What were the 2 documents written by the founding fathers?",
+    "answer" : "null"
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "Who are some of the well-known Founding Fathers?",
+    "answer" : "null"
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "How was the United States of America founded?",
+    "answer" : "null"
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "Who were the statesmen who worked to secure our independence from Great Britain in 1776?",
+    "answer" : "Our Founding Fathers."
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "Who founded our nation?",
+    "answer" : "null"
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "Who designed our democratic form of government that still exists today?",
+    "answer" : "Our Founding Fathers."
+  },
+  {
+    "file": "FoundingFathers",
+    "query" : "What does the Declaration of Independence states?",
+    "answer" : "null"
+  },
+  {
+    "file": "Galaxy",
+    "query" : "What is a Galaxy?",
+    "answer" : "A gravitationally bound system consisting of stars, stellar remnants, interstellar gas and dust, and dark matter."
+  },
+  {
+    "file": "Galaxy",
+    "query" : "What do the Galaxy consists of?",
+    "answer" : "From what I understand, the answer should be a galaxy is a gravitationally bound system consisting of stars, stellar remnants, interstellar gas and dust, and dark matter."
+  },
+  {
+    "file": "Galaxy",
+    "query" : "Where from the word galaxy was derived?",
+    "answer" : "Likely, the word galaxy is derived from the Greek galaxias, literally " milky ", a reference to the Milky Way."
+  },
+  {
+    "file": "Galaxy",
+    "query" : "How does galaxy word derived?",
+    "answer" : "Probably, the word galaxy is derived from the Greek galaxias, literally " milky ", a reference to the Milky Way."
+  },
+  {
+    "file": "Galaxy",
+    "query" : "What can be categorized according to the visual morphology?",
+    "answer" : "Galaxies can be categorized according to their visual morphology, including elliptical, spiral, and irregular."
+  },
+  {
+    "file": "Galaxy",
+    "query" : "How galaxies can be categorized?",
+    "answer" : "Galaxies can be categorized according to their visual morphology, including elliptical, spiral, and irregular."
+  },
+  {
+    "file": "Galaxy",
+    "query" : "What can we find at the active center of the galaxies?",
+    "answer" : "Most likely the answer is many galaxies are believed to have black holes at their active center."
+  },
+  {
+    "file": "Genetics",
+    "query" : "What is Genetics?",
+    "answer" : "The study of genes, heredity, and genetic variation in living organisms."
+  },
+  {
+    "file": "Genetics",
+    "query" : "Which branch of science is the study of genes?",
+    "answer" : "null"
+  },
+  {
+    "file": "Genetics",
+    "query" : "Which branch of science is considered as a field of biology?",
+    "answer" : "From what I understand, the answer should be genetics is generally considered a field of biology, but Genetics intersects frequently with many of the life sciences and is strongly linked with the study of information systems."
+  },
+  {
+    "file": "Genetics",
+    "query" : "What is strongly linked with the study of information systems?",
+    "answer" : "From what I understand, the answer should be genetics is generally considered a field of biology, but Genetics intersects frequently with many of the life sciences and is strongly linked with the study of information systems."
+  },
+  {
+    "file": "Genetics",
+    "query" : "What intersects frequently with many of the life sciences ?",
+    "answer" : "Genetics."
+  },
+  {
+    "file": "Genetics",
+    "query" : "Who is the father of genetics?",
+    "answer" : "Gregor Mendel, a late 19th-century scientist and Augustinian friar."
+  },
+  {
+    "file": "Genetics",
+    "query" : "Who was Gregor Mendel?",
+    "answer" : "The father of genetics is Gregor Mendel, a late 19th-century scientist and Augustinian friar, Mendel studied 'trait inheritance', patterns in the way traits were handed down from parents to offspring, this term, still used today, is a somewhat ambiguous definition of what is referred to as a gene and still used this, term today."
+  },
+  {
+    "file": "Genetics",
+    "query" : "What did Mendel studied ?",
+    "answer" : "Perhaps, Smaranika, trait inheritance, patterns in the way traits were handed down from parents to offspring."
+  },
+  {
+    "file": "Genetics",
+    "query" : "Who studied about the 'trait inheritance'?",
+    "answer" : "Perhaps, Mendel."
+  },
+  {
+    "file": "Genetics",
+    "query" : "What is trait inheritance?",
+    "answer" : "null"
+  },
+  {
+    "file": "Genetics",
+    "query" : "Who observed organisms inherit traits by way of discrete ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Genetics",
+    "query" : "What did Mendel observed?",
+    "answer" : "null"
+  },
+  {
+    "file": "Genetics",
+    "query" : "What is units of inheritance?",
+    "answer" : "null"
+  },
+  {
+    "file": "Genetics",
+    "query" : "What are the primary principles of genetics?",
+    "answer" : "Trait inheritance and molecular inheritance mechanisms of genes."
+  },
+  {
+    "file": "Google",
+    "query" : "What is Google?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "What is the specialization of Google?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "What is AdWords?",
+    "answer" : "AdWords is an online, advertising service."
+  },
+  {
+    "file": "Google",
+    "query" : "Who founded Google?",
+    "answer" : "I'm pretty sure the answer is by Larry Page and Sergey Brin."
+  },
+  {
+    "file": "Google",
+    "query" : "What was founded by Larry Page and Sergey Brin?",
+    "answer" : "Google."
+  },
+  {
+    "file": "Google",
+    "query" : "Who was Larry Page?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "Who was Sergey Brin?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "Who were the Ph.D students at Stanford University?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "Who owned 14 % of Google shares?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "Who incorporated Google as a privately held company?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "When was  Google incorporated as a privately held company?",
+    "answer" : "From what I understand, the answer should be September 4, 1998."
+  },
+  {
+    "file": "Google",
+    "query" : "What was the mission statement of Google?",
+    "answer" : "To organize the world's information and make it universally accessible and useful."
+  },
+  {
+    "file": "Google",
+    "query" : "What was the unofficial slogan of Google?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "When did Google moved to its new headquarters?",
+    "answer" : "Likely, 2004."
+  },
+  {
+    "file": "Google",
+    "query" : "Where was Google's new headquarter?",
+    "answer" : "null"
+  },
+  {
+    "file": "Google",
+    "query" : "What are the desktop products of Google?",
+    "answer" : "Possibly, desktop products include applications for web browsing, organizing and editing photos, and instant messaging."
+  },
+  {
+    "file": "Google",
+    "query" : "What are the online products offered by Google?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What was Graham's research?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "How did Graham’s research on diffusion of gases get triggered?",
+    "answer" : "Most likely, Graham's research on the diffusion of gases was triggered by his reading about the observation of German chemist Johann Döbereiner that hydrogen gas diffused out of a small crack in a glass bottle faster than the surrounding air diffused in to replace hydrogen gas."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "How were the diffusion of gases triggered ?",
+    "answer" : "Most likely the answer is Graham's research on the diffusion of gases was triggered by his reading about the observation of German chemist Johann Döbereiner that hydrogen gas diffused out of a small crack in a glass bottle faster than the surrounding air diffused in to replace hydrogen gas."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Who measured the rate of diffusion of gases?",
+    "answer" : "Graham."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "How did Graham measure the rate of diffusion of gases?",
+    "answer" : "Perhaps, Graham measured the rate of diffusion of gases through plaster plugs, through very fine tubes, and through small orifices."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Who was Johann Döbereiner?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "When did Graham state the law?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What are Colloids?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Who measured the rate of diffusion of gases ?",
+    "answer" : "Graham."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Which gas got diffused out of a small crack in a glass bottle faster than the surrounding air ?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Who was Amedeo Avogadro?",
+    "answer" : "Italian physicist Amedeo Avogadro had suggested in 1811 that equal volumes of different gases contain equal numbers of molecules."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What were the suggestions of Amedo Avogadro ?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What is the Kinetic theory of gases ?",
+    "answer" : "I'm pretty sure the answer is perhaps the greatest success of the kinetic theory of gases, as insight came to be called, was the discovery that for gases, the temperature as measured on the Kelvin-LRB-absolute-RRB-temperature scale is directly proportional to the average kinetic energy of the gas molecules."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Who was James Clerk Maxwell?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Who explained the properties of gases as collections of small particles moving through largely empty space?",
+    "answer" : "I'm pretty sure the answer is Avogadro's insight together with other studies of gas behaviour provided a basis for later theoretical work by Scottish physicist James Clerk Maxwell to explain the properties of gases as collections of small particles moving through largely empty space."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What did James Clerk Maxwell explained about the properties of gases?",
+    "answer" : "Smaranika, I'm pretty sure the answer is as collections of small particles moving through largely empty space."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What was the greatest success of the kinetic theory of gases?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What is the kinetic energy of any object?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "How does molecules have equal kinetic energies?",
+    "answer" : "Probably, thus, to have equal kinetic energies, the velocities of two different molecules would have to be in inverse proportion to the square roots of their masses."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "How is the rate of effusion determined?",
+    "answer" : "Likely, the rate of effusion is determined by the number of molecules entering an aperture per unit time, and hence by the average molecular velocity."
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "Can we say that the kinetic energy of any object is equal to one-half its mass times the square of its velocity ?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What is the Graham’s law for diffusion ?",
+    "answer" : "null"
+  },
+  {
+    "file": "GrahamResearch",
+    "query" : "What is the law which can be understood as consequence of the molecular kinetic energies being equal at the same temperature ?",
+    "answer" : "Smaranika, I'm pretty sure the answer is Graham's law for diffusion could thus be understood as a consequence of the molecular kinetic energies being equal at the same temperature."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What is Greenhouse effect?",
+    "answer" : "null"
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What leads to the greenhouse effect?",
+    "answer" : "Likely, human activity since the Industrial Revolution has increased the amount of greenhouse gases in the atmosphere, leading to increased radiative forcing from CO2, methane, tropospheric ozone, CFCs and nitrous oxide."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "Who proposed the greenhouse effect?",
+    "answer" : "Joseph Fourier."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What did Joseph Fourier proposed?",
+    "answer" : "The greenhouse effect."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "When was greenhouse effect proposed?",
+    "answer" : "In 1824."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "Who discovered greenhouse effect?",
+    "answer" : "null"
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What did John Tyndall discovered?",
+    "answer" : "Most likely the answer is the greenhouse effect was proposed by Joseph Fourier in 1824, discovered in 1860 by John Tyndall, was first investigated quantitatively by Svante Arrhenius in 1896, and was developed in the 1930 s through 1960 s by Guy Stewart Callendar."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "When was greenhouse effect discovered?",
+    "answer" : "null"
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "Who first investigated greenhouse effect quantitatively?",
+    "answer" : "Svante Arrhenius."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "When was greenhouse effect investigated quantitatively?",
+    "answer" : "First in 1896."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "Who developed the greenhouse effect?",
+    "answer" : "Probably, the greenhouse effect was proposed by Joseph Fourier in 1824, discovered in 1860 by John Tyndall, was first investigated quantitatively by Svante Arrhenius in 1896, and was developed in the 1930 s through 1960 s by Guy Stewart Callendar."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What did Svante Arrhenius investigated?",
+    "answer" : "The greenhouse effect was proposed by Joseph Fourier in 1824, discovered in 1860 by John Tyndall, was first investigated quantitatively by Svante Arrhenius in 1896, and was developed in the 1930 s through 1960 s by Guy Stewart Callendar."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What did Guy Stewart Callendar developed?",
+    "answer" : "Most likely the answer is the greenhouse effect was proposed by Joseph Fourier in 1824, discovered in 1860 by John Tyndall, was first investigated quantitatively by Svante Arrhenius in 1896, and was developed in the 1930 s through 1960 s by Guy Stewart Callendar."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What is the mean warming effect of the greenhouse gases?",
+    "answer" : "Perhaps, on Earth, naturally occurring amounts of greenhouse gases have a mean warming effect of about 33 ° C."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What is the Earth’s average temperature?",
+    "answer" : "null"
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What are the major greenhouse gases?",
+    "answer" : "null"
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What leads to the increase in the amount of greenhouse gases in the atmosphere?",
+    "answer" : "Likely, human activity since the Industrial Revolution has increased the amount of greenhouse gases in the atmosphere, leading to increased radiative forcing from CO2, methane, tropospheric ozone, CFCs and nitrous oxide."
+  },
+  {
+    "file": "GreenHouse",
+    "query" : "What is the increased percentage of CO2 and methane?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who wrote Hamlet?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "When was Hamlet written?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What does the play dramatize?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who murdered his own brother?",
+    "answer" : "Perhaps, Claudius."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was Gertrude?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was Hamlet¹s mother?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who got married to Hamlet¹s mother?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was Hamlet?",
+    "answer" : "The Tragedy of Hamlet, Prince of Denmark, often shortened to Hamlet,, Hamlet is Shakespeare's longest play, Hamlet has inspired writers from Goethe and Dickens to Joyce and Murdoch,, Hamlet has has been described as " the world's most filmed story after Cinderella ", known an earlier-LRB-hypothetical-RRB-Elizabethan play today as the Ur-Hamlet, later revising the Ur-Hamlet to create the version of Hamlet we now have, the protagonist of Hamlet is Prince Hamlet of Denmark, son of the recently deceased King Hamlet, and nephew of King Claudius, his father's brother and successor, a ghost looks like the late King Hamlet, when a ghost declines to talk to sentry Bernardo and Marcellus and the Hamlet a ghost and the Hamlet and sentry Bernardo and Marcellus attack a ghost with daggers,, to tell Prince Hamlet that his father's ghost has been seen, the King and Queen then turn to Hamlet, when Claudius and the Prince leave, Hamlet complains in his first soliloquy-LRB-" O that this too too solid flesh would melt "- RRB- that his mother has jumped into " incestuous sheets " with Hamletbrother-in-law too quickly after the death of Hamlet's father, the three tell Hamlet about the ghost Hamlet and RRB and mother have seen at the castle and the prince resolves to see the apparition himself, Hamlet and RRB and mother have seen the ghost at the castle and, Hamlet greets his friends warmly,, Hamlet quickly discerns that friends are spies, that night, the Ghost appears to Hamlet and that Claudius murdered Hamlet by pouring " juice of cursed hebenon " in his ear, which caused his blood to " curd " and his skin to be covered with a " vile and loathsome crust | # | " The Ghost demands that Hamlet avenge Hamlet."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was the Prince of Denmark?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which tragedy was written by William Shakespeare ?",
+    "answer" : "Perhaps, the Tragedy of Hamlet, Prince of Denmark, often shortened to Hamlet, is a tragedy written by William Shakespeare at an uncertain date between 1599 and 1602."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "When was the tragedy written?",
+    "answer" : "Smaranika, I'm pretty sure the answer is 1599 and 1602."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was Claudius?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who murdered King Hamlet?",
+    "answer" : "Claudius."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who seized the throne of King Hamlet?",
+    "answer" : "Probably, Claudius had murdered his own brother, Hamlet's father King Hamlet, and subsequently seized the throne, marrying his deceased brother's widow, Hamlet's mother Gertrude."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which is Shakespeare¹s longest play?",
+    "answer" : "Hamlet."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which play was the most powerful and influential tragedies in English literature?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which was the most popular play of Shakespeare during his lifetime ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which play of Shakespeare ranks among his most-performed, topping the performance list of the Royal Shakespeare Company and its predecessors in Stratford-upon-Avon since 1879?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who were Goethe and Dickens ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which was the world's most filmed story after Cinderella?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which play has been described as \"the world's most filmed story after Cinderella\"?",
+    "answer" : "Hamlet."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "From which legend was the story of Hamlet derived?",
+    "answer" : "Smaranika, I'm pretty sure the answer is the story of Hamlet ultimately derives from the legend of Amleth, preserved by 13th-century chronicler Saxo Grammaticus in his Gesta Danorum as subsequently retold by 16th-century scholar François de Belleforest."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What was Ur-Hamlet ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which play is known today as the Ur-Hamlet?",
+    "answer" : "An earlier-LRB-hypothetical-RRB-Elizabethan play."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did some scholars believe about Ur-Hamlet?",
+    "answer" : "I'm fairly sure the answer is Shakespeare may also have drawn on an earlier-LRB-hypothetical-RRB-Elizabethan play known today as the Ur-Hamlet, though some scholars believe William Shakespeare himself wrote the Ur-Hamlet, later revising the Ur-Hamlet to create the version of Hamlet we now have."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was the leading tragedian of Shakespeare's time?",
+    "answer" : "Richard Burbage is the leading tragedian."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was Richard Burbage?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What are the three different early versions of the play?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Which two characters were re-evaluated and rehabilitated by the feminist critics?",
+    "answer" : "From what I understand, the answer should be more recently, psychoanalytic critics have examined Hamlet's unconscious desires, and feminist critics have re-evaluated and rehabilitated the often maligned characters of Ophelia and Gertrude."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was the protagonist of Hamlet ?",
+    "answer" : "Probably, Prince Hamlet of Denmark, son of the recently deceased King Hamlet, and nephew of King Claudius, his father's brother and successor."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was the son of the deceased King Hamlet?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was the son of the deceased King Hamlet?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was the nephew of King Claudius?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was Hamlet¹s father¹s brother and successor?",
+    "answer" : "Perhaps, King Claudius, his father's brother and successor."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who married King Hamlet's widow?",
+    "answer" : "Claudius."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who has a long-standing feud with Norway?",
+    "answer" : "Smaranika, I'm pretty sure the answer is Denmark."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who has a long-standing feud with Denmark?",
+    "answer" : "Most likely, Denmark has a long-standing feud with neighbouring Norway, and an invasion led by the Norwegian prince, Fortinbras, is expected."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Where did the play open?",
+    "answer" : "Most likely, the play opens on a cold winter midnight on " a platform before the castle " of Elsinore, the Danish royal castle."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "When did the play open?",
+    "answer" : "Perhaps, Smaranika, a cold winter midnight on " a platform before the castle " of Elsinore, the danish royal castle."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who encountered the ghost?",
+    "answer" : "From what I understand, the answer should be the sentries Bernardo and Marcellus and Hamlet's friend Horatio."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who does the ghost look like ?",
+    "answer" : "Like the late King Hamlet."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was attacked with daggers?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did Marcellus admit?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did Bernardo and Marcellus and Horatio vow?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did Bernando and Marcellus and Horatio vow to tell the Prince?",
+    "answer" : "I'm fairly sure the answer is the sentries Bernardo and Marcellus and Hamlet's friend Horatio encounter a ghost that looks like the late King Hamlet."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Where did the scene shift?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who was Laertes's father?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did Polonius admit?",
+    "answer" : "Probably, laertes's father Polonius admits that father has agreed to his son's trip."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did Laertes's father admit?",
+    "answer" : "I'm fairly sure the answer is laertes's father Polonius admits that father has agreed to his son's trip."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who persuaded Hamlet to be more cheerful?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did Hamlet complain?",
+    "answer" : "Most likely the answer is when Claudius and the Prince leave, Hamlet complains in his first soliloquy-LRB-" O that this too too solid flesh would melt "- RRB- that his mother has jumped into " incestuous sheets " with Hamletbrother-in-law too quickly after the death of Hamlet's father."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who recently returned to court from the university at Wittenberg?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Who were Rosencrantz and Guildenstern?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "Why were Rosencrantz and Guildenstern sent?",
+    "answer" : "Smaranika, I'm pretty sure the answer is to discover the cause of Hamlet's mood and behavior."
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did the Ghost say to Hamlet?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hamlet",
+    "query" : "What did the Ghost demand?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What is Hooke’s law ?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "In what kind of situations does the Hooke’s equation hold?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "For what kind of material or body is the Hooke’s equation assumed ?",
+    "answer" : "From what I understand, Smaranika, the answer should be an elastic body or material for which this equation can be assumed is said to be linear-elastic or Hookean."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What is the material for which the Hooke’s law can be assumed?",
+    "answer" : "From what I understand, the answer should be an elastic body or material for which this equation can be assumed is said to be linear-elastic or Hookean."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What are linear-elastic or Hookean materials?",
+    "answer" : "Perhaps, an elastic body or material for which this equation can be assumed is said to be linear-elastic or Hookean."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What is a first order linear approximation to the real response of springs and other elastic bodies to applied forces?",
+    "answer" : "Hooke's law."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "Which law is a first order linear approximation to the real response of springs and other elastic bodies to applied forces?",
+    "answer" : "Smaranika, I'm pretty sure the answer is Hooke's law is only a first order linear approximation to the real response of springs and other elastic bodies to applied forces."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What are the situations where Hooke’s equation holds?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "How is the Hooke’s law a first order linear approximation?",
+    "answer" : "From what I understand, Smaranika, the answer should be Hooke's law is only a first order linear approximation to the real response of springs and other elastic bodies to applied forces."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "When does the Hooke’s law fail?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "Who was Robert Hooke?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "How was Hooke’s law named?",
+    "answer" : "Most likely the answer is Hooke's law is named after the 17th century British physicist Robert Hooke."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "Is the Hooke’s law an accurate approximation for solid bodies ?",
+    "answer" : "It certainly seems so."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "Which law is extensively used in the field of science and engineering ?",
+    "answer" : "Most likely the answer is for this reason, Hooke's law is extensively used in all branches of science and engineering, and is the foundation of many disciplines such as seismology, molecular mechanics and acoustics."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What is the fundamental principle behind the spring scale, the manometer, and the balance wheel of the mechanical clock?",
+    "answer" : "Hooke's law."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What is the fundamental principle behind the spring scale?",
+    "answer" : "Hooke's law."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What is the fundamental principle behind the manometer?",
+    "answer" : "Hooke's law."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What is the fundamental principle behind the balance wheel of the mechanical clock?",
+    "answer" : "Hooke's law."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "How does the modern theory of elasticity generalize Hooke's law?",
+    "answer" : "I'm pretty sure the answer is the modern theory of elasticity generalizes Hooke's law to say that the strain-LRB-deformation-RRB- of an elastic object or material is proportional to the stress applied to strain-LRB-deformation-RRB."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "What are the laws which can deduce the relationship between strain and stress for complex objects in terms of intrinsic properties of the materials ?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "Who was the British physicist from 17th century after whom the Hooke’s law was named?",
+    "answer" : "Perhaps, Smaranika, Hooke's law is named after the 17th century British physicist Robert Hooke."
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "When was Hooke’s law stated?",
+    "answer" : "null"
+  },
+  {
+    "file": "HookeLaw",
+    "query" : "When did Robert Hooke publish the solution for the Hooke’s law?",
+    "answer" : "null"
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "What is Hubble’s law ?",
+    "answer" : "Hubble's law is the name for the observation in physical cosmology that: objects observed in deep space (extragalactic space, ~ 10 megaparsecs or more) are found to have a Doppler shift interpretable as relative velocity away from the Earth;."
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "What is Hubble's flow?",
+    "answer" : "Most likely the answer is the motion of astronomical objects due solely to this expansion is known as the Hubble flow."
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "Who derived the Hubble’s law ?",
+    "answer" : "Most likely the answer is by Georges Lemaître."
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "Which law is considered the first observational basis for the expanding space paradigm?",
+    "answer" : "From what I understand, the answer should be Hubble's law is considered the first observational basis for the expanding space paradigm and today serves as one of the pieces of evidence most often cited in support of the Big Bang model."
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "Which law serves as one of the pieces of evidence cited in support of the Big Bang model?",
+    "answer" : "null"
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "What is known as the Hubble’s Constant ?",
+    "answer" : "null"
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "What is Hubble’s constant?",
+    "answer" : "null"
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "When was the existence of Hubble’s law confirmed ?",
+    "answer" : "Two years later."
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "Who measured the recession Velocity ?",
+    "answer" : "null"
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "Who confirmed the existence of the Hubble’s law?",
+    "answer" : "Edwin Hubble."
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "Who proposed that the Universe is expanding and suggested an estimated value of the rate of expansion?",
+    "answer" : "Georges Lemaître."
+  },
+  {
+    "file": "HubbleLaw",
+    "query" : "Who suggested an estimated value of the rate of expansion?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is Hydrogen?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element has a chemical symbol H?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the chemical symbol of Hydrogen?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the atomic number of hydrogen?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element has an atomic number 1?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the atomic weight of H?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the atomic weight of hydrogen?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which is the lightest element on the periodic table?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which element is known as the lightest element?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which is the most abundant chemical substance in the universe?",
+    "answer" : "Its monatomic form (H)."
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the composition of Non-remnant stars?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the most common isotope of hydrogen?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element is colorless?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element is odorless?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element is tasteless, non-toxic and nonmetallic?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element is highly combustible diatomic gas?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the molecular formula of hydrogen?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is the molecular formula of H?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element has a molecular formula of H2?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which chemical element readily forms covalent compounds?",
+    "answer" : "Hydrogen."
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What plays an important role in acid-base reactions?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What takes the form of negative charge in ionic compounds?",
+    "answer" : "In ionic compounds, hydrogen can take the form of a negative charge (i.e., anion) known as a hydride, or as a positively charged (i.e., cation) species denoted by the symbol H +."
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is hydride?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is anion?",
+    "answer" : "A negative charge is anion."
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "What is cation?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which atom plays a key role in the development of quantum mechanics?",
+    "answer" : "null"
+  },
+  {
+    "file": "Hydrogen",
+    "query" : "Which equation can be solved analytically by the neutral atom?",
+    "answer" : "null"
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who was Jacob?",
+    "answer" : "null"
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who was an excellent athlete?",
+    "answer" : "Jacob."
+  },
+  {
+    "file": "Jacob",
+    "query" : "What has he excelled at?",
+    "answer" : "From what I understand, the answer should be ever since Jacob could remember, Jacob excelled at any sport that Jacob put his mind to."
+  },
+  {
+    "file": "Jacob",
+    "query" : "What has Jacob excelled at?",
+    "answer" : "From what I understand, Smaranika, the answer should be ever since Jacob could remember, Jacob excelled at any sport that Jacob put his mind to."
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who was in awe of the Javelin throwers at the High School?",
+    "answer" : "null"
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who was the Javelin State record holder last year and the Captain of the High School team ?",
+    "answer" : "Matt."
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who was the Captain of the High School team ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who was the coach of the field event?",
+    "answer" : "null"
+  },
+  {
+    "file": "Jacob",
+    "query" : "Whose duty was it to assign the field event?",
+    "answer" : "Perhaps, Coach Hilbert was assigning field events."
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who tapped the coach on the shoulder?",
+    "answer" : "null"
+  },
+  {
+    "file": "Jacob",
+    "query" : "Why did Jacob tap the coach on the shoulder?",
+    "answer" : "null"
+  },
+  {
+    "file": "Jacob",
+    "query" : "Who had their hand up when the coach asked for volunteers for the javelin throw?",
+    "answer" : "Most likely, everyone."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which is the northwestern region of South Asia?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "What happened until the mid-19th century?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "What does Kashmir include today?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which region became an important centre of Hinduism in the first half of the 1st millennium?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "When did the Muslim monarchs rule Kashmir?",
+    "answer" : "For the next five centuries."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "When did the Sikhs annex Kashmir?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who was defeated in the First Anglo-Sikh War in 1846?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "How was the Kashmir region purchased from the British?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Under which treaty was the purchase of Kashmir from the British done?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "When did the former princely state of British India become a disputed territory?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which countries administered the former princely state of British India in 1947?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Where is Kashmir located?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which state is archaically spelt as Cashmere?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which state is located in the northwestern region of South Asia?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which state consist of Jammu, the Kashmir Valley and Ladakh?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "When did the Kashmir region became an important centre of Hinduism ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "When did Kashmir Shaivism arise?",
+    "answer" : "Later of Buddhism later still in the ninth century."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who became the first Muslim ruler of Kashmir?",
+    "answer" : "Shah Mir."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who was Shah Mir?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who inaugurated the Salatin-i-Kashmir ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who inaugurated the Swati dynasty?",
+    "answer" : "Shah Mir."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who ruled Kashmir from 1526 to 1751?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who ruled Kashmir from 1747 to 1820?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who annexed Kashmir in 1820?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who was the Raja of Jammu?",
+    "answer" : "In 1846, after the Sikh defeat in the First Anglo-Sikh War, and upon the purchase of the region from the British under the Treaty of Amritsar, the Raja of Jammu, Gulab Singh, became the new ruler of Kashmir."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who became the new ruler of Kashmir in 1846?",
+    "answer" : "The Raja of Jammu, Gulab Singh."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "When did the former princely state of British India become a disputed territory?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "What are the three disputed countries?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who was Ashoka?",
+    "answer" : "Ashoka is often credited the Buddhist Mauryan emperor with having founded the old capital of Kashmir, Shrinagari."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who was the Buddhist Mauryan emperor ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "What was the old capital of Kashmir?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who is credited with the foundation of the old capital of Kashmir?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which school strongly influenced Kashmir?",
+    "answer" : "The Sarvāstivādan school."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Which monk was born to an Indian noble family?",
+    "answer" : "The famous Kuchanese Kumārajīva, monk."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "What did Kumārajīva study in Kashmir under Bandhudatta.?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "What is Dīrghāgama and Madhyāgama?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who became a prolific translator who took Buddhism to China?",
+    "answer" : "Kumārajīva."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who thought to have retired to Kashmir?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Whose mother is Jiva?",
+    "answer" : "null"
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who travelled from Kashmir to Kucha?",
+    "answer" : "Vimalākṣa, a Sarvāstivādan Buddhist monk."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who instructed Kumārajīva in the Vinayapiṭaka?",
+    "answer" : "Vimalākṣa, a Sarvāstivādan Buddhist monk."
+  },
+  {
+    "file": "Kashmir",
+    "query" : "Who visited the pre-existing Sarvajñapīṭha in Kashmir?",
+    "answer" : "null"
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "What is the Liberty Bell?",
+    "answer" : "null"
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "Where is Liberty Bell located?",
+    "answer" : "Possibly, the Liberty Bell, located in Pennsylvania, changed the world on July 8, 1776."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "When did the Liberty Bell change the world ?",
+    "answer" : "On July 8, 1776."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "Where did the Liberty Bell ring out of ?",
+    "answer" : "null"
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "What was the Liberty Bell used for ?",
+    "answer" : "null"
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "What is the use of the Liberty Bell?",
+    "answer" : "null"
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "What did the Liberty Bell depict in the 1800’s?",
+    "answer" : "From what I understand, Smaranika, the answer should be in the 1800 s, the Liberty Bell became a symbol for ending slavery in America."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "What is the Liberty Bell famous for ?",
+    "answer" : "Most likely the answer is the Liberty Bell is famous for its large crack."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "Why Liberty Bell is famous?",
+    "answer" : "Most likely the answer is the Liberty Bell is famous for its large crack."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "Do people know when the crack first appeared?",
+    "answer" : "That is not so."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "When was Washington’s birthday?",
+    "answer" : "Perhaps, Washington's birthday in 1842."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "What happened with the crack over time?",
+    "answer" : "From what I understand, Smaranika, the answer should be the crack got worse over time and people didn't want the bell to break apart."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "Why did they decide that the Liberty Bell should never again be used?",
+    "answer" : "Most likely, in order to preserve the crack, it was decided that the Liberty Bell should never again be used."
+  },
+  {
+    "file": "LibertyBell",
+    "query" : "When was the Liberty Bell last rung?",
+    "answer" : "null"
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "What is a Magnetic circuit ?",
+    "answer" : "null"
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "How is the magnetic flux generated ?",
+    "answer" : "null"
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "What is a magnetic circuit made up of?",
+    "answer" : "Of one or more closed loop paths containing a magnetic flux."
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "What is generated by permanent magnets or electromagnets?",
+    "answer" : "The flux."
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "Why are magnetic circuits employed?",
+    "answer" : "null"
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "What does the concept of magnetic circuit exploit?",
+    "answer" : "Smaranika, I'm pretty sure the answer is a one-to-one correspondence between the equations of the magnetic field in an unsaturated ferromagnetic material to that of an electrical circuit."
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "What kind of circuits are employed to channel magnetic fields ?",
+    "answer" : "Most likely, magnetic circuits are employed to efficiently channel magnetic fields in many devices such as electric motors, generators, transformers, relays, lifting electromagnets, SQUIDs, galvanometers, and magnetic recording heads."
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "What are the devices in which magnetic fields can be channeled ?",
+    "answer" : "Perhaps, magnetic circuits are employed to efficiently channel magnetic fields in many devices such as electric motors, generators, transformers, relays, lifting electromagnets, SQUIDs, galvanometers, and magnetic recording heads."
+  },
+  {
+    "file": "MagneticCircuit",
+    "query" : "How can we solve the magnetic field of complex devices ?",
+    "answer" : "Perhaps, using this concept the magnetic fields of complex devices such as transformers can be quickly solved using the methods and techniques developed for electrical circuits."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What is malnutrition?",
+    "answer" : "A condition that results from eating a diet in which nutrients are either not enough or are too much such that the diet causes health problems."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What is malnourishment ?",
+    "answer" : "A condition that results from eating a diet in which nutrients are either not enough or are too much such that the diet causes health problems."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "In which condition nutrients are either not enough or are too much such that the diet causes health problems?",
+    "answer" : "Perhaps, Smaranika, malnutrition or malnourishment is a condition that results from eating a diet in which nutrients are either not enough or are too much such that the diet causes health problems."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What is undernutrition?",
+    "answer" : "null"
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What is overnutrition?",
+    "answer" : "I'm pretty sure the answer is not enough nutrients is called under nutrition while too much is called overnutrition ."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "Which nutrition is often referred as undernutrition?",
+    "answer" : "Perhaps, malnutrition is often used specifically to refer to undernutrition where there is not enough calories, protein or micronutrients."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What results in Malnutrition?",
+    "answer" : "From eating a diet in which nutrients are either not enough or are too much such that the diet causes health problems."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What results in undernutrition?",
+    "answer" : "null"
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What happens if undernutrition occurs during pregnancy?",
+    "answer" : "If undernutrition occurs during either pregnancy or before the age of two years of age undernutrition may result in permanent problems with physical and mental development."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What happens if undernutrition occurs before the age of two years of age?",
+    "answer" : "If undernutrition occurs during either pregnancy or before the age of two years of age undernutrition may result in permanent problems with physical and mental development."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What results in permanent problems with physical and mental development?",
+    "answer" : "From what I understand, the answer should be if undernutrition occurs during either pregnancy or before the age of two years of age undernutrition may result in permanent problems with physical and mental development."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What do you mean by extreme undernourishment?",
+    "answer" : "null"
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What are the symptoms included in extreme undernourishment?",
+    "answer" : "null"
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What are the two main types of undernutrition?",
+    "answer" : "null"
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What is marasmus?",
+    "answer" : "null"
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What is kwashiorkor?",
+    "answer" : "null"
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What are the two forms of protein-energy malnutrition?",
+    "answer" : "Perhaps, two main types of undernutrition: protein-energy malnutrition and dietary deficiencies. protein-energy malnutrition has two severe forms: marasmus (a lack of protein and calories) and kwashiorkor (a lack of just protein)."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What leads to common micronutrient deficiencies?",
+    "answer" : "Probably, Common micronutrient deficiencies include: a lack of iron, iodine and vitamin A. During pregnancy, due to increased demand, deficiencies become more common."
+  },
+  {
+    "file": "Malnutrition",
+    "query" : "What are the other causes of malnutrition?",
+    "answer" : "Possibly, other causes of malnutrition include anorexia nervosa and bariatric surgery."
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What is Mangalyaan?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Which spacecraft is orbiting mars since 24th september 2014?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Which spacecraft is orbiting mars since 24th september 2014?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "When was the MOM launched?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What was launched on 5th November 2013?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What is ISRO?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Which nation reached Mars orbit in the first attempt?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What happened on 5th November 2013?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Where did MOM spent about a month?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What was the mission?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "I'm sorry, I don't understand, Smaranika. Would you like to speak to a different agent?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Who is the primary foreign intelligence agency of India?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "After which war RAW was created?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What convinced the Government of India that a specialized, independent agency was required for foreign intelligence gathering?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Who was the first Director of Raw?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What is the primary function of RAW?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Who is involved in the security of India's nuclear programme?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "What is R&AW ?",
+    "answer" : "null"
+  },
+  {
+    "file": "MarsOrbiterMission",
+    "query" : "Who is regarded as the primary instruments of India's national power?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "Which is the largest city in the United States?",
+    "answer" : "New York."
+  },
+  {
+    "file": "NewYork",
+    "query" : "How many people live in the Big Apple?",
+    "answer" : "From what I understand, the answer should be more than eight million people."
+  },
+  {
+    "file": "NewYork",
+    "query" : "How many museums are there in New York city?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "How many art galleries are there in New York city?",
+    "answer" : "Most likely, four hundred art galleries, and the world famous Broadway for entertainment."
+  },
+  {
+    "file": "NewYork",
+    "query" : "What is the name of the world famous theatre located in New York city?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "In which city are major national & international corporations headquarter?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "Which city is considered to be the business capital of the world?",
+    "answer" : "From what I understand, the answer should be New York City is the business capital of the world and many national and international corporations have their headquarters in New York City."
+  },
+  {
+    "file": "NewYork",
+    "query" : "Which city is considered to be the financial capital of the world?",
+    "answer" : "Smaranika, I'm pretty sure the answer is New York City is the business capital of the world and many national and international corporations have their headquarters in New York City."
+  },
+  {
+    "file": "NewYork",
+    "query" : "Where is the NYSE & American Stock Exchange located?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "Where is the world's leading center of finance?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "What are the professional sports located in the New York City?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "Where is NYSE located ?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "Where is American Stock Exchange located?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "Where is ASE located?",
+    "answer" : "null"
+  },
+  {
+    "file": "NewYork",
+    "query" : "Where is New York Stock Exchange located?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is known as laughing gas?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What is the chemical formula of nitrous ?",
+    "answer" : "Likely, nitrous oxide, commonly known as laughing gas, nitrous, nitro, or NOS is a chemical compound with the formula N2O."
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What is the chemical formula of nitro?",
+    "answer" : "Smaranika, I'm pretty sure the answer is nitrous oxide, commonly known as laughing gas, nitrous, nitro, or NOS is a chemical compound with the formula N2O."
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What is the chemical formula of laughing gas?",
+    "answer" : "Probably, nitrous oxide, commonly known as laughing gas, nitrous, nitro, or NOS is a chemical compound with the formula N2O."
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What is the chemical formula of nitrous oxide?",
+    "answer" : "Perhaps, Smaranika, nitrous oxide, commonly known as laughing gas, nitrous, nitro, or NOS is a chemical compound with the formula N2O."
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is colorless at room temperature?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is non- flammable gas at room temperature?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound has a slight sweet odour and taste at room temperature?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What are the uses of nitrous oxide?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is used in surgery?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is used in the dentistry?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "For what purpose nitrous oxide is used in surgery and dentistry?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Why nitrous oxide is known as laughing gas?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is used as an oxidizer?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is used in launching of rockets and in motor racing?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Why nitrous oxide is used in launching of rockets and in motor racing?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is a powerful oxidizer at elevated temperatures?",
+    "answer" : "Likely, at elevated temperatures, nitrous oxide is a powerful oxidizer similar to molecular oxygen."
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What happens when nitrous oxide reacts with oxygen atoms?",
+    "answer" : "I'm fairly sure the answer is nitrous oxide gives rise to nitric oxide (NO) on reaction with oxygen atoms, and this NO in turn reacts with ozone."
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound reacts with ozone?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What happens when NO reacts with ozone?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "What happens when nitric oxide reacts with ozone?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is a major greenhouse gas and air pollutant?",
+    "answer" : "null"
+  },
+  {
+    "file": "NitrousOxide",
+    "query" : "Which chemical compound is on the WHO Model List of Essential Medicines?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What is Ozone layer?",
+    "answer" : "Possibly, the ozone layer or ozone shield refers to a region of Earth's stratosphere that absorbs most of the Sun's ultraviolet (UV) radiation."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What is Ozone Shield?",
+    "answer" : "Likely, the ozone layer or ozone shield refers to a region of Earth's stratosphere that absorbs most of the Sun's ultraviolet (UV) radiation."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Which region of Earth's stratosphere absorbs most of the Sun's ultraviolet radiation?",
+    "answer" : "Probably, the ozone layer or ozone shield refers to a region of Earth's stratosphere that absorbs most of the Sun's ultraviolet (UV) radiation."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Which region contains high concentrations of ozone?",
+    "answer" : "The ozone layer."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What is O3?",
+    "answer" : "Perhaps, Smaranika, the ozone layer contains high concentrations of ozone (O3) relative to other parts of the atmosphere, although still very small relative to other gases in the stratosphere."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What is the average concentration of ozone in Earth’s atmosphere?",
+    "answer" : "Only about 0.3 parts per million."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Where can we find ozone layer?",
+    "answer" : "Possibly, the ozone layer is mainly found in the lower portion of the stratosphere, from approximately 20 to 30 kilometres (12 to 19mi) above Earth, though the thickness varies seasonally and geographically."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "In which portion ozone layer is found?",
+    "answer" : "Most likely, the ozone layer is mainly found in the lower portion of the stratosphere, from approximately 20 to 30 kilometres (12 to 19mi) above Earth, though the thickness varies seasonally and geographically."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "In which portion of stratosphere ozone layer is found?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "When was ozone layer discovered?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Who discovered ozone layer?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Who discovered ozone layer?",
+    "answer" : "The French physicists Charles Fabry and Henri Buisson."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What did Charles Fabry discovered?",
+    "answer" : "Most likely, the ozone layer."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What did Henri Buisson discovered?",
+    "answer" : "Perhaps, Smaranika, the ozone layer."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What did Charles Fabry and Henri Buisson discovered?",
+    "answer" : "Most likely, the ozone layer."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What was discovered in 1913?",
+    "answer" : "The ozone layer."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What was discovered in 1913 by Charles Fabry and Henri Buisson?",
+    "answer" : "Most likely, the ozone layer."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Whose properties were explored in detail by the British meteorologist G. M. B. Dobson?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What did G. M. B. Dobson discovered?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Who discovered the detailed properties of ozone layer ?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Who developed spectrophotometer ?",
+    "answer" : "Smaranika, I'm pretty sure the answer is its properties were explored in detail by the British meteorologist G. M. B. Dobson, who developed a simple spectrophotometer (the Dobsonmeter) that could be used to measure stratospheric ozone from the ground."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Which instrument is used to measure stratospheric ozone from the ground?",
+    "answer" : "Its properties were explored in detail by the British meteorologist G. M. B. Dobson, who developed a simple spectrophotometer (the Dobsonmeter) that could be used to measure stratospheric ozone from the ground."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Who established a worldwide network of ozone monitoring stations?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Who established a worldwide network of ozone monitoring stations?",
+    "answer" : "Dobson."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What did Dobson established?",
+    "answer" : "A worldwide network of ozone monitoring stations, which continue to operate to this day."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "What is “Dobson unit”?",
+    "answer" : "I'm pretty sure the answer is the " Dobson unit ", a convenient measure of the amount of ozone overhead, is named in his honor."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Which day is designated as the International Day for the Preservation of the Ozone Layer?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Which day is designated as the International Day for the Preservation of the Ozone Layer?",
+    "answer" : "September 16."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Who designated International Day for the Preservation of the Ozone Layer?",
+    "answer" : "The United Nations General Assembly."
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Which day is known as the International Day for Preservation of the Ozone Layer?",
+    "answer" : "null"
+  },
+  {
+    "file": "OzoneLayer",
+    "query" : "Which day is known as the International Day for Preservation of the Ozone Layer?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "What is Penicillin?",
+    "answer" : "A group of antibiotics derived from Penicillium fungi, including penicillin G (intravenous use), penicillin V (oral use), procaine penicillin, and benzathine penicillin (intramuscular use) and β-lactam antibiotics."
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which antibiotic is derived from Penicillium Fungi?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "How Penicillin is derived?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "What is the use of penicillin G?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "What is the use of penicillin V?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "What is the use of benzathine penicillin ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "What are the bacterial infections?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which drug is used against bacterial infections?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which drug is used against staphylococci?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which drug is used against streptococci?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which drug is widely used?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which antibiotics are used in the treatment of bacterial infections?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which two antibiotics has the same antibacterial activity as benzylpenicillin ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which antibiotic is less active against gram-negative bacteria?",
+    "answer" : "Phenoxymethylpenicillin."
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which antibiotic is less active against benzylpenicillin?",
+    "answer" : "null"
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which antibiotics are given by injection?",
+    "answer" : "Benzylpenicillin, procaine penicillin and benzathine penicillin."
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which antibiotics are given parenterally?",
+    "answer" : "Benzylpenicillin, procaine penicillin and benzathine penicillin."
+  },
+  {
+    "file": "Penicillin",
+    "query" : "Which antibiotic is given orally?",
+    "answer" : "Phenoxymethylpenicillin."
+  },
+  {
+    "file": "Pepper",
+    "query" : "Is Pepper available yet?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "What does Pepper do at Softbank shops?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "Who is referred to as a sparkling personality?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "Who is regarded as an artificial species?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "Who is an emotional roboot?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "Why is this robot created?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "Is Pepper male or a female?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "What is an emotional Robot?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "Why is Pepper delivered with a tablet?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "What kind of application do already exist?",
+    "answer" : "null"
+  },
+  {
+    "file": "Pepper",
+    "query" : "Who is regarded as an emotional robot?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "What is LPG?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "What is LP gas?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "Which gas is also referred to as simply propane or butane?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "What are the flammable mixtures of hydrocarbon gases?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "What is used as a fuel in heating appliances?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "What are the uses of LPG?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "What is used as an aerosol propellant and a refrigerant?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "Why chlorofluorocarbons is replaced?",
+    "answer" : "In an effort to reduce damage to the ozone layer."
+  },
+  {
+    "file": "Petroleum",
+    "query" : "How can we reduce the damage to the ozone layer?",
+    "answer" : "Perhaps, it is increasingly used as an aerosol propellant and a refrigerant, replacing chlorofluorocarbons in an effort to reduce damage to the ozone layer."
+  },
+  {
+    "file": "Petroleum",
+    "query" : "Which two grades of LPG are sold in United States?",
+    "answer" : "null"
+  },
+  {
+    "file": "Petroleum",
+    "query" : "How LPG is prepared?",
+    "answer" : "Probably, LPG is prepared by refining petroleum or " " wet " " natural gas, and is almost entirely derived from fossil fuel sources, being manufactured during the refining of petroleum (crude oil), or extracted from petroleum or natural gas streams as streams emerge from the ground."
+  },
+  {
+    "file": "Petroleum",
+    "query" : "What was the first commercial products that appeared in 1912?",
+    "answer" : "Perhaps, lPG was first produced in 1910 by Dr. Walter Snelling, and the first commercial products appeared in 1912."
+  },
+  {
+    "file": "Petroleum",
+    "query" : "Who first produced LPG in 1910?",
+    "answer" : "Possibly, by Dr. Walter Snelling."
+  },
+  {
+    "file": "Petroleum",
+    "query" : "When LPG was produced?",
+    "answer" : "First in 1910."
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "When was the Prince of Wales born?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "Who was the eldest son of the Queen and Prince Philip?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "Where was the Prince of Wales born ?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "At what time the Prince Of wales was born?",
+    "answer" : "Smaranika, I'm pretty sure the answer is 9.14 pm."
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "When was the Prince of Wales born?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "Who was proclaimed as the Queen Elizabeth II?",
+    "answer" : "Smaranika, I'm pretty sure the answer is the Prince's mother."
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "When was the Prince’s mother proclaimed as Queen Elizabeth?",
+    "answer" : "From what I understand, Smaranika, the answer should be the age of 25, when her father, King George VI, died aged 56 on February 6, 1952."
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "How old was the Prince at his mother’s coronation?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "Where did the coronation happen?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "How did the Prince have his education?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "Where did the Prince have his education?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "When was Charles proclaimed as the Prince of Wales ?",
+    "answer" : "Possibly, 1958."
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "Who is the heir to the British throne?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "Who did the Prince of Wales get married to ?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "How was the marriage ?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "How many children did the Prince and Princess of Wales have ?",
+    "answer" : "null"
+  },
+  {
+    "file": "PrinceOfWhales",
+    "query" : "What were the interests for the Prince ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "Who is Ray Charles ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "When did Ray Charles die?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "I'm sorry, I don't understand, Smaranika. Would you like to speak to a different agent?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "How long was Ray’s career?",
+    "answer" : "Smaranika, I'm pretty sure the answer is in a career spanning more than 50 years, the extraordinarily gifted blind artist earned 12 Grammy Awards and numerous other honors, both in the United States and abroad."
+  },
+  {
+    "file": "RayCharles",
+    "query" : "Which song was Ray Charles well-known for ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "Which song was Ray Charles best known for ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "Which song was selected as a state song for the southern state of Georgia?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "How was Ray known among fans ?",
+    "answer" : "From what I understand, Smaranika, the answer should be to his fans, Ray Charles was fondly known as 'Brother Ray,' also the title of his 1978 autobiography."
+  },
+  {
+    "file": "RayCharles",
+    "query" : "What was the title of his 1978 autobiography?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "When was Ray’s final public appearance?",
+    "answer" : "I'm fairly sure the answer is April 30 when the city of Los Angeles designated his 40-year-old studio an historic landmark."
+  },
+  {
+    "file": "RayCharles",
+    "query" : "Who was one of the first inductees into the Rock and Roll Hall of Fame in 1986?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "Where did Ray die?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "How did Ray die?",
+    "answer" : "null"
+  },
+  {
+    "file": "RayCharles",
+    "query" : "When did Ray die ?",
+    "answer" : "Possibly, June 10, age 73."
+  },
+  {
+    "file": "RiSE",
+    "query" : "What is the name of the robot which climbs vertical terrain ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "Which robot climbs vertical terrain such as walls, trees and fences?",
+    "answer" : "I'm pretty sure the answer is riSE is a robot that climbs vertical terrain such as walls, trees and fences."
+  },
+  {
+    "file": "RiSE",
+    "query" : "What is RiSE ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "What is RiSE robot?",
+    "answer" : "Perhaps, Smaranika, riSE is a robot that climbs vertical terrain such as walls, trees and fences."
+  },
+  {
+    "file": "RiSE",
+    "query" : "Who is RiSE?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "Who uses feet micro-claws to climb on textured surfaces?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "Where does RiSE robot climb?",
+    "answer" : "Most likely, riSE is a robot that climbs vertical terrain such as walls, trees and fences."
+  },
+  {
+    "file": "RiSE",
+    "query" : "Which robot uses feet with micro-claws to climb on textured surfaces?",
+    "answer" : "I'm fairly sure the answer is riSE uses feet with micro-claws to climb on textured surfaces."
+  },
+  {
+    "file": "RiSE",
+    "query" : "Which robot is referred as a climbing robot?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "Who changes the posture?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "What is the length of the RiSE?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "How long is RiSE?",
+    "answer" : "A robot that climbs vertical terrain such as walls, trees and fences and 0.25 m long."
+  },
+  {
+    "file": "RiSE",
+    "query" : "Who changes the posture to conform the curvature of the climbing surface?",
+    "answer" : "Most likely, riSE changes posture to conform to the curvature of the climbing surface and its tail helps RiSE balance on steep ascents."
+  },
+  {
+    "file": "RiSE",
+    "query" : "Whose tail is used to balance on steep ascents?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "What is the weight of RiSE ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "How many legs does RiSE have?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "Who developed RiSE ?",
+    "answer" : "Boston Dynamics."
+  },
+  {
+    "file": "RiSE",
+    "query" : "What did Boston Dynamics develop?",
+    "answer" : "RiSE."
+  },
+  {
+    "file": "RiSE",
+    "query" : "Which robot was funded by DARPA?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "Who funded RiSE?",
+    "answer" : "DARPA."
+  },
+  {
+    "file": "RiSE",
+    "query" : "Whose legs are powered by a pair of electric motors?",
+    "answer" : "Each of RiSE's six legs."
+  },
+  {
+    "file": "RiSE",
+    "query" : "What does the onboard computer controls?",
+    "answer" : "null"
+  },
+  {
+    "file": "RiSE",
+    "query" : "What controls leg motion, manages communications, and services a variety of sensors, including joint position sensors, leg strain sensors and foot contact sensors?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "What is the latest creation revealed by Boston Dynamics?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "What is the latest creation revealed by Google-owned robotics company?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "Which is the latest creation?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "What did Boston Dynamic do?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "What is the name of the latest creation revealed by Google-owned robotics company?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "Who revealed the Robo Dog Spot?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "    How many legged creation was announced ?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "     Whose sequel is the latest four legged creation?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "    What did the Boston Dynamic employee did to spot?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "Ashoka waged a bitterly destructive war against which state?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "What did Ashoka address in the Kalinga edicts for his people?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "Who embraced Buddhism?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "Who is remembered as a philanthropic administrator?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "Who conquered Kalinga?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "What happened in 263 BCE?",
+    "answer" : "null"
+  },
+  {
+    "file": "RoboDog",
+    "query" : "Who was the Indian emperor of the Maurya Dynasty?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "What is Romeo Robot?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "Which company created the Romeo Robot?",
+    "answer" : "Probably, Romeo is a research robot created from the collaboration of laboratories and companies like Aldebaran."
+  },
+  {
+    "file": "Romeo",
+    "query" : "What is the height of the Romeo Robot?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "How tall is the Romeo robot?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "Which Robot is intended to deepen research on assistance for the elderly and those who have lost autonomy?",
+    "answer" : "Smaranika, I'm pretty sure the answer is this 140-cm humanoid robot is intended to deepen research on assistance for the elderly and those who have lost autonomy."
+  },
+  {
+    "file": "Romeo",
+    "query" : "Who is intended to deepen research on assistance for the elderly and those who have lost autonomy?",
+    "answer" : "This 140-cm humanoid robot."
+  },
+  {
+    "file": "Romeo",
+    "query" : "What does Romeo do?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "What does Romeo robot do?",
+    "answer" : "Created a research robot from the collaboration of laboratories and companies like Aldebaran, this 140-cm humanoid robot is intended to deepen research on assistance for the elderly and those who have lost autonomy, its height allows this 140-cm humanoid robot to open doors, and in four years, Romeo has gone from an ambitious vision of robotic assistance to a robot of measuring 1.4 m, known around the world."
+  },
+  {
+    "file": "Romeo",
+    "query" : "What happened in January 2009?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "Who initiated the Romeo Project?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "When was the first project got completed?",
+    "answer" : "Perhaps, Smaranika, December 2012."
+  },
+  {
+    "file": "Romeo",
+    "query" : "What are the four main complementary goals of Romeo Project?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "Who funded the Romeo Project?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "Who has gone from an ambitious vision of robotic assistance to a robot of measuring 1.4 m?",
+    "answer" : "Romeo."
+  },
+  {
+    "file": "Romeo",
+    "query" : "Who funded for the Romeo Project?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "Who ordered the first units of Romeo?",
+    "answer" : "Smaranika, I'm pretty sure the answer is by french and european laboratories."
+  },
+  {
+    "file": "Romeo",
+    "query" : "Which laboratory ordered the first units?",
+    "answer" : "null"
+  },
+  {
+    "file": "Romeo",
+    "query" : "What is FUI project?",
+    "answer" : "null"
+  },
+  {
+    "file": "Scientist",
+    "query" : "Who were stunned at the result of scientific studies?",
+    "answer" : "Most likely the answer is scientists and meteorologists."
+  },
+  {
+    "file": "Scientist",
+    "query" : "Why Scientists and meteorologists were stunned at the result of scientific studies?",
+    "answer" : "null"
+  },
+  {
+    "file": "Scientist",
+    "query" : "Is the warming in the Artic same as in the rest of the globe?",
+    "answer" : "Smaranika, I'm pretty sure the answer is scientists and meteorologists are stunned at the result of scientific studies: warming and ice melting in the Arctic has been twice as fast as the rest of the globe over the last fifty years."
+  },
+  {
+    "file": "Scientist",
+    "query" : "How many times is warming faster in the Arctic than in the rest of the globe?",
+    "answer" : "null"
+  },
+  {
+    "file": "Scientist",
+    "query" : "What happens in the sea when the sea-level climbs?",
+    "answer" : "Perhaps, Smaranika, the sea-level could climb and flood low areas."
+  },
+  {
+    "file": "Scientist",
+    "query" : "What are the 2 species expected to be on the brink of extinction?",
+    "answer" : "Perhaps, on sea two main species are expected to be on the brink of extinction: seals and white polar bears."
+  },
+  {
+    "file": "Scientist",
+    "query" : "How much the snow on land has decreased?",
+    "answer" : "Perhaps, Smaranika, snow on land has decreased by about 10 and temperature during the winter has risen as much as 5 to 7 degrees in Alaska and eastern Canada."
+  },
+  {
+    "file": "Scientist",
+    "query" : "In which season the snow on land has decreased?",
+    "answer" : "From what I understand, the answer should be snow on land has decreased by about 10 and temperature during the winter has risen as much as 5 to 7 degrees in Alaska and eastern Canada."
+  },
+  {
+    "file": "Scientist",
+    "query" : "What is the temperature in Alaska and Eastern Canada during winter?",
+    "answer" : "Most likely, snow on land has decreased by about 10 and temperature during the winter has risen as much as 5 to 7 degrees in Alaska and eastern Canada."
+  },
+  {
+    "file": "Speech",
+    "query" : "What is a speech?",
+    "answer" : "Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
+  },
+  {
+    "file": "Speech",
+    "query" : "What is a great blessing but can also be a great curse?",
+    "answer" : "Most likely, Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
+  },
+  {
+    "file": "Speech",
+    "query" : "What is a great blessing as well as a curse?",
+    "answer" : "Probably, Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
+  },
+  {
+    "file": "Speech",
+    "query" : "What helps us to make our intentions and desires known to our fellows?",
+    "answer" : "null"
+  },
+  {
+    "file": "Speech",
+    "query" : "What happens if we use our speech carelessly?",
+    "answer" : "null"
+  },
+  {
+    "file": "Speech",
+    "query" : "What makes our attitude misunderstood?",
+    "answer" : "From what I understand, Smaranika, the answer should be Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
+  },
+  {
+    "file": "Speech",
+    "query" : "What demands to be carefully handled?",
+    "answer" : "Perhaps, Smaranika, thus speech is not a gift to use lightly without thought, but one which demands careful handling."
+  },
+  {
+    "file": "Speech",
+    "query" : "Who expresses himself alike to all kinds and conditions to men?",
+    "answer" : "From what I understand, Smaranika, the answer should be only a fool."
+  },
+  {
+    "file": "Speech",
+    "query" : "What should be used while talking to an uneducated person?",
+    "answer" : "null"
+  },
+  {
+    "file": "Speech",
+    "query" : "How we should speak while talking to an uneducated person?",
+    "answer" : "null"
+  },
+  {
+    "file": "Speech",
+    "query" : "What is the best way to win a friend?",
+    "answer" : "From what I understand, the answer should be a slip of the tongue, the use of unusual word, or of an ambiguous word, and so on, may create an enemy we had hoped where to win a friend."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is Swine influenza?",
+    "answer" : "A disease related to human flu during the 1918 flu pandemic, when pigs became ill at the same time as humans and most contagious."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which infection is caused by the swine influenza virus?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is swine flu?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What are the other names for Swine influenza?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which virus is endemic in pigs?",
+    "answer" : "Most likely the answer is swine influenza virus-LRB-SIV-RRB- or swine-origin influenza virus-LRB-S-OIV-RRB- is any strain of the influenza family of viruses that is endemic in pigs."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is Swine influenza virus?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is swine-origin influenza virus ?",
+    "answer" : "Most likely the answer is swine influenza virus-LRB-SIV-RRB- or swine-origin influenza virus-LRB-S-OIV-RRB- is any strain of the influenza family of viruses that is endemic in pigs."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is SIV?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is S-OIV?",
+    "answer" : "Smaranika, I'm pretty sure the answer is any strain of the influenza family of viruses that is endemic in pigs."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which type of influenza is included in SIV strains?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What are the types of influenza included in SIV strains?",
+    "answer" : "Likely, influenza c and the subtypes of influenza a known as H1N1, H1N2, H2N1, H3N1, H3N2, and H2N3."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What causes human flu?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is zoonotic swine flu?",
+    "answer" : "I'm fairly sure the answer is if transmission does cause human flu, transmission is called zoonotic swine flu."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What happened in the mid-20th century?",
+    "answer" : "Around the mid-20th century, identification of influenza subtypes became possible, allowing accurate diagnosis of transmission to humans."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "How many transmissions to humans have been confirmed?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Does the stain of swine flu pass from human to human?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What are the symptoms of zoonotic swine flu?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which organization declared the swine flu pandemic officially?",
+    "answer" : "Most likely, in August 2010, the World Health Organization declared the swine flu pandemic officially over."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "When was swine flu officially declared?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which virus is common in pigs?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which virus is common in pig populations worldwide?",
+    "answer" : "Perhaps, swine influenza virus is common throughout pig populations worldwide."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What are the symptoms of zoonotic swine flu in humans?",
+    "answer" : "I'm fairly sure the answer is symptoms of zoonotic swine flu in humans are similar to those of influenza and of influenza-like illness in general, namely chills, fever, sore throat, muscle pains, severe headache, coughing, weakness and general discomfort."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which animal is not infected by influenza virus?",
+    "answer" : "Birds."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What are the subtypes of influenza A?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What causes Swine Influenza?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which subtypes of influenza A virus are the most common strains ?",
+    "answer" : "Four influenza A virus subtypes-LRB-H1N1, H1N2, H3N2 and H7N9-RRB."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which subtype was exclusively prevalent among swine populations in United States?",
+    "answer" : "From what I understand, Smaranika, the answer should be in the United States, the H1N1 subtype was exclusively prevalent among swine populations before 1998; however, since late August 1998, H3N2 subtypes have been isolated from pigs."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which subtype has been isolated from pigs from late August 1998?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Who confirmed 145 human cases of H3N2v ?",
+    "answer" : "I'm fairly sure the answer is the Center for Disease Control and Prevention Illinois-RRB-of H3N2v."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Who was the first woman in the nation associated with a new swine flu strain?",
+    "answer" : "Likely, the death of, a 61-year-old Madison County Ohio woman is the first in the nation associated with a new swine flu strain."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is the main route of transmission of Swine Flu?",
+    "answer" : "Perhaps, Smaranika, the main route of transmission is through direct contact between infected and uninfected animals."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What are the symptoms of influenza infection in pigs?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What was reported in 2009 outbreak?",
+    "answer" : "Most likely the answer is diarrhea and vomiting."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What is the most common cause of death in Swine Flu?",
+    "answer" : "Most likely the answer is the most common cause of death is respiratory failure."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "How long is the swine flu contagious in humans?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What are the recommendations made to prevent spread of the virus among humans?",
+    "answer" : "Most likely, recommendations to prevent spread of the virus among humans include using standard infection control, which includes frequent washing of hands with soap and water or with alcohol-based hand sanitizers, especially after being out in public."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Who recommended the use of oseltamivir or zanamivir ?",
+    "answer" : "Perhaps, Smaranika, the U.S. Centers for Disease Control and Prevention."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What was Oseltamivir or zanamivir used for?",
+    "answer" : "null"
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "What was used for the treatment and prevention of infection with swine influenza viruses?",
+    "answer" : "I'm pretty sure the answer is the U.S. Centers for Disease Control and Prevention recommends the use of oseltamivir-LRB-Tamiflu-RRB- or zanamivir-LRB-Relenza-RRB- for the treatment and or / prevention of infection with swine influenza viruses; however, the majority of people infected with the virus make a full recovery without requiring medical attention or antiviral drugs."
+  },
+  {
+    "file": "SwineInfluenza",
+    "query" : "Which Bollywood actress tested positive for Swine Flu?",
+    "answer" : "null"
+  }
+]
+copy output
+Program exited with code #0 after 7.23 seconds.

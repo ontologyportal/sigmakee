@@ -1,0 +1,1 @@
+We were running through the test cases the past couple of days on the dev instance of Amelia. But if the app01 will give a much more accurate picture of the test results versus the development efforts we can do the same on the app01 with test results run on the dev/stg as and when the request comes in.
