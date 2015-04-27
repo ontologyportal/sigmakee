@@ -1,0 +1,77 @@
+[
+  {
+    "file": "Biofuel.mail",
+    "question" : "What is a Biofuel?",
+    "answer" : "A fuel that is derived from biological materials, such as plants and animals and Biodiesel."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "Which fuel is derived from biological materials?",
+    "answer" : "null"
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What are the biological materials which is used to derive biofuel?",
+    "answer" : "Possibly, a biofuel is a fuel that is derived from biological materials, such as plants and animals."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What is made by a biomass conversion ?",
+    "answer" : "null"
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What does biomass refers to?",
+    "answer" : "I'm pretty sure the answer is these fuels are made by a biomass conversion (biomass refers to recently living organisms, most often referring to plants or plant-derived materials)."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What are the ways in which biomass can be converted into convenient energy?",
+    "answer" : "Probably, three different ways: thermal conversion, chemical conversion, and biochemical conversion."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What results in biomass conversion?",
+    "answer" : "This biomass conversion can result in fuel in solid, liquid, or gas form."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What is Bioethanol?",
+    "answer" : "null"
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "Which alcohol is made by fermentation mostly from carbohydrates produced in sugar?",
+    "answer" : "Perhaps, Smaranika, Bioethanol is an alcohol made by fermentation, mostly from carbohydrates produced in sugar or starch crops such as corn, sugarcane, or sweet sorghum."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "How cellulosic biomass is derived?",
+    "answer" : "Most likely, cellulosic biomass, derived from non-food sources, such as trees and grasses, is also being developed as a feedstock for ethanol production."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What is the use of ethanol?",
+    "answer" : "From what I understand, Smaranika, the answer should be ethanol can be used as a fuel for vehicles in its pure form, but ethanol is usually used as a gasoline additive to increase octane and improve vehicle emissions."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "What is used as a fuel for vehicles in its pure form?",
+    "answer" : "Smaranika, I'm pretty sure the answer is ethanol."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "In which country bioethanol is widely used?",
+    "answer" : "I'm fairly sure the answer is Bioethanol is widely used in the USA and in Brazil."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "How biodiesel can be used ?",
+    "answer" : "Biodiesel can be used as a fuel for vehicles in its pure form."
+  },
+  {
+    "file": "Biofuel.mail",
+    "question" : "Which country is the world's largest biodiesel producer ?",
+    "answer" : "I'm pretty sure the answer is the world's largest biodiesel producer is the European Union, accounting for 53 percent of all biodiesel production in 2010."
+  }
+]
