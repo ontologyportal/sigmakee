@@ -97,16 +97,22 @@ public class TFIDF {
 
     /** ***************************************************************
      */
-    public TFIDF(String filename, String stopwordsFilename) {
-        
-        //System.out.println("Info in TFIDF(): Initializing");
+    public TFIDF(String filename, String stopwordsFilename, boolean resource) {
+
+        asResource = resource;
+        List<String> documents;
         try {
-            //List<String> documents = TextFileUtil.readFile(filename, false);
-            List<String> documents = TextFileUtil.readLines(filename, false);
-            prepare(documents, stopwordsFilename);
-        } 
+            documents = TextFileUtil.readLines(filename, false);
+        }
         catch (IOException e) {
             System.out.println("Unable to read: " + filename);
+            throw new RuntimeException("Unable to read: " + filename);
+        }
+        try {
+            prepare(documents, stopwordsFilename);
+        } catch (IOException e) {
+            System.out.println("Unable to read: " + stopwordsFilename);
+            throw new RuntimeException("Unable to read: " + stopwordsFilename);
         }
     }
 

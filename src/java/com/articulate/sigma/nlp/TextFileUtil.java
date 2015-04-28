@@ -3,10 +3,7 @@ package com.articulate.sigma.nlp;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.List;
 
@@ -30,11 +27,16 @@ public class TextFileUtil {
         URL fileURL = Resources.getResource(filename);
         File f = new File(filename);
         BufferedReader bf = new BufferedReader(new FileReader(fileURL.getPath()));
-        String line;
-        while ((line = bf.readLine()) != null) {
-            if (line == null || line.equals(""))
-                continue;
-            documents.add(line);
+        String line = null;
+        try {
+            while ((line = bf.readLine()) != null) {
+                if (line == null || line.equals(""))
+                    continue;
+                documents.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IOException("Unable to read line in file. Last line successfully read was: " + line);
         }
         return documents;
     }

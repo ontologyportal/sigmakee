@@ -65,7 +65,7 @@ public class TFIDFTest extends TestCase {
     private TFIDF getCachedTFIDF(String fileName) {
         TFIDF cb = parsedFiles.get(fileName);
         if(cb == null) {
-            cb = new TFIDF("resources" + File.separator + "QA/textfiles" + File.separator + fileName, "testfiles/stopwords.txt");
+            cb = new TFIDF("QA/textfiles" + File.separator + fileName, "resources/stopwords.txt", true);
             parsedFiles.put(fileName, cb);
         }
         return cb;
