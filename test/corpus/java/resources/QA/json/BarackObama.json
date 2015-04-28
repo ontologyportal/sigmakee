@@ -1,7 +1,12 @@
 [
   {
     "file": "BarackObama.txt",
-    "question" : "Who is Barack Hussein Obama II ?",
+    "question" : "Who is Barack Hussein Obama II?",
+    "answer" : "President of the United States."
+  },
+  {
+    "file": "BarackObama.txt",
+    "question" : "Who is Barack Obama?",
     "answer" : "President of the United States."
   },
   {
@@ -11,8 +16,8 @@
   },
   {
     "file": "BarackObama.txt",
-    "question" : "Who is the 44th President of India?",
-    "answer" : "Barack Hussein Obama II."
+    "question" : "Is Barack Hussein Obama II the President of India?",
+    "answer" : "No."
   },
   {
     "file": "BarackObama.txt",
@@ -26,17 +31,17 @@
   },
   {
     "file": "BarackObama.txt",
-    "question" : "From which University Obama completed his graduation?",
+    "question" : "From which universities did Obama graduate?",
     "answer" : "Columbia University and Harvard Law School."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "Who served as a president of the Harvard Law Review?",
+    "question" : "Who served as president of the Harvard Law Review?",
     "answer" : "Barack Hussein Obama II."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "Who was a community organizer in Chicago ?",
+    "question" : "Who was a community organizer in Chicago?",
     "answer" : "Barack Hussein Obama II."
   },
   {
@@ -51,37 +56,47 @@
   },
   {
     "file": "BarackObama.txt",
-    "question" : "When did Obama worked as a civil rights attorney at the University of Chicago Law School?",
+    "question" : "When did Obama work as a civil rights attorney at the University of Chicago Law School?",
     "answer" : "From 1992 to 2004."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "What did he served in the Illinois Senate?",
-    "answer" : "Three terms representing the 13th District in the Illinois Senate from 1997 to 2004."
+    "question" : "What did he serve in the Illinois Senate?",
+    "answer" : "From 1997 to 2004."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "When did Obama received national attention during his campaign to represent Illinois in the United States Senate ?",
-    "answer" : "2004, during his campaign to represent Illinois in the United States Senate with his victory in the March Democratic Party primary, his keynote address at the Democratic National Convention in July, November."
+    "question" : "When did Obama receive national attention?",
+    "answer" : "2004."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "What did Obama received during his campaign the United States Senate?",
-    "answer" : "National attention."
+    "question" : "When was Obama elected to the United States Senate?",
+    "answer" : "2004."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "Where did Obama received national attention in 2004?",
-    "answer" : "In 2004, Obama received national attention during his campaign to represent Illinois in the United States Senate with his victory in the March Democratic Party primary, his keynote address at the Democratic National Convention in July, and his election to the Senate in November."
+    "question" : "When did Obama begin his presidential campaign?",
+    "answer" : "2007."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "When did Obama began his presidential campaign?",
-    "answer" : "2007, after a close primary campaign against Hillary Rodham Clinton in 2008."
+    "question" : "Who campaigned against Obama in the primaries?",
+    "answer" : "Hillary Rodham Clinton."
   },
   {
     "file": "BarackObama.txt",
-    "question" : "Who was named the 2009 Nobel Peace Prize laureate?",
+    "question" : "Who did Obama defeat in the general election?",
+    "answer" : "John McCain."
+  },
+  {
+    "file": "BarackObama.txt",
+    "question" : "Who won the 2009 Nobel Peace Prize in 2009?",
     "answer" : "Barack Hussein Obama II."
+  },
+  {
+    "file": "BarackObama.txt",
+    "question" : "When did Obama win the Nobel Peace Prize?",
+    "answer" : "2009."
   }
 ]
