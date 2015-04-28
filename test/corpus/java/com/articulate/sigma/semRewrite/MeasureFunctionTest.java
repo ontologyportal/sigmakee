@@ -34,7 +34,7 @@ public class MeasureFunctionTest {
 	@Parameters(name="{0}")
 	public static Collection<String[]> prepare() {
   
-		return JsonReader.transform("QA/json/measure_test.json", new Function<JSONObject, String[]>() {
+		return JsonReader.transform("miscellaneous/measure_test.json", new Function<JSONObject, String[]>() {
 			@Override
 			public String[] apply(JSONObject jo) {
 			String text = (String) jo.get("text");
