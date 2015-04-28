@@ -2,22 +2,27 @@
   {
     "file": "BenjaminFrankin.txt",
     "question" : "Who was Benjamin Franklin?",
-    "answer" : "One of the Founding Fathers of the United States and in many ways was \"The First American\"."
+    "answer" : "One of the Founding Fathers of the United States."
+  },
+  {
+    "file": "BenjaminFrankin.txt",
+    "question" : "What is Benjamin Franklin known for as an inventor?",
+    "answer" : "The lightning rod, bifocals, and the Franklin stove."
   },
   {
     "file": "BenjaminFrankin.txt",
     "question" : "When was Benjamin Franklin born?",
-    "answer" : "In 1706."
+    "answer" : "1706."
   },
   {
     "file": "BenjaminFrankin.txt",
     "question" : "How many brothers and sisters did Benjamin Franklin have?",
-    "answer" : "16 brothers and sisters."
+    "answer" : "16."
   },
   {
     "file": "BenjaminFrankin.txt",
     "question" : "How old was Benjamin Franklin when his brother started the first Boston newspaper?",
-    "answer" : "When Benjamin was 15, his brother started the first Boston newspaper."
+    "answer" : "15."
   },
   {
     "file": "BenjaminFrankin.txt",
@@ -37,7 +42,7 @@
   {
     "file": "BenjaminFrankin.txt",
     "question" : "What did Benjamin Franklin do in Philadelphia?",
-    "answer" : "Work as printer."
+    "answer" : "Worked as printer."
   },
   {
     "file": "BenjaminFrankin.txt",
@@ -52,7 +57,7 @@
   {
     "file": "BenjaminFrankin.txt",
     "question" : "What did Benjamin Franklin do in 1733?",
-    "answer" : "He started publishing Poor Richard’s Almanac."
+    "answer" : "Started publishing Poor Richard’s Almanac."
   },
   {
     "file": "BenjaminFrankin.txt",
@@ -66,18 +71,23 @@
   },
   {
     "file": "BenjaminFrankin.txt",
-    "question" : "What did Almanacs contain ?",
+    "question" : "What do Almanacs contain?",
     "answer" : "Information about weather and crops and wise sayings."
   },
   {
     "file": "BenjaminFrankin.txt",
-    "question" : "When did Benjamin Franklin retire from newspaper business?",
+    "question" : "When did Benjamin Franklin retire from the newspaper business?",
     "answer" : "1749."
   },
   {
     "file": "BenjaminFrankin.txt",
     "question" : "Who wrote the Declaration of Independence?",
     "answer" : "Thomas Jefferson."
+  },
+  {
+    "file": "BenjaminFrankin.txt",
+    "question" : "What did Franklin help write?",
+    "answer" : "The Declaration of Independence."
   },
   {
     "file": "BenjaminFrankin.txt",
@@ -107,6 +117,6 @@
   {
     "file": "BenjaminFrankin.txt",
     "question" : "How old was Benjamin Franklin when he died?",
-    "answer" : "84 years."
+    "answer" : "84."
   }
 ]
