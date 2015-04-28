@@ -249,7 +249,7 @@ public class QAOutputGenerator {
      * generate output with filename and output to jasonfilename
      * both should with path
      */
-    public static void generate(String inputPath, String outputPath, Interpreter inter) {
+    public static void generate(String inputPath, String outputPath, Interpreter inter) throws IOException {
 
         KBmanager.getMgr().initializeOnce();
         if (inter == null) {
@@ -275,7 +275,7 @@ public class QAOutputGenerator {
      * generate output with filename and output to jasonfilename
      * both should with path
      */
-    public static void generateForDir(String dir, Interpreter inter) {
+    public static void generateForDir(String dir, Interpreter inter) throws IOException {
 
         if (!dir.endsWith("/"))
             dir = dir + "/";
@@ -304,7 +304,7 @@ public class QAOutputGenerator {
      * generate output with filename and output to jasonfilename
      * both should with path
      */
-    public static void generateForFile(String file, Interpreter inter) {
+    public static void generateForFile(String file, Interpreter inter) throws IOException {
 
         KBmanager.getMgr().initializeOnce();
         if (inter == null) {
@@ -353,7 +353,7 @@ public class QAOutputGenerator {
 //            e.printStackTrace();
 //        }
 //    }
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         System.out.println("INFO in QAOutputGenerator.main()");
         KBmanager.getMgr().initializeOnce();

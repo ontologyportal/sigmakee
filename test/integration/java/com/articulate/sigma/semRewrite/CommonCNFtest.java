@@ -24,13 +24,14 @@ import com.articulate.sigma.SigmaTestBase;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CommonCNFtest extends IntegrationTestBase {
 
     @Test
-    public void testCase1() {
+    public void testCase1() throws IOException {
 
         Map<Integer, String> map = new HashMap<Integer, String>();
         map.put(0, "Mary drives the car to the store.");

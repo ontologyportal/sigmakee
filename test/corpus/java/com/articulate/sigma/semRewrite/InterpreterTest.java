@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -29,7 +30,7 @@ public class InterpreterTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @BeforeClass
-    public static void initInterpreter() {
+    public static void initInterpreter() throws IOException {
         
         interp = new Interpreter();
         KBmanager.getMgr().initializeOnce();

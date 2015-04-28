@@ -24,6 +24,8 @@ import com.articulate.sigma.IntegrationTestBase;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -33,7 +35,7 @@ public class InterpreterPreprocessTest extends IntegrationTestBase {
     Interpreter i;
 
     @Before
-    public void init() {
+    public void init() throws IOException {
         i = new Interpreter();
         i.initialize();
     }

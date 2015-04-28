@@ -41,7 +41,7 @@ public class InferenceWikiTest {
      *
      */
     @BeforeClass
-    public static void initialize() {
+    public static void initialize() throws IOException {
 
         KBmanager.getMgr().initializeOnce();
         interpreter = new Interpreter();

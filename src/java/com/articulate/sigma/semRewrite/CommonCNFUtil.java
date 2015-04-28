@@ -242,7 +242,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    private static void generateCNFForQAPairs(List<QAPair> list) {
+    private static void generateCNFForQAPairs(List<QAPair> list) throws IOException {
 
         Map<Integer, CNF> res = new HashMap<Integer, CNF>();
         Interpreter inter = new Interpreter();
@@ -262,7 +262,7 @@ public class CommonCNFUtil {
 
     /***********************************************************
      */
-    public static Map<Integer, CNF> generateCNFForStringSet(Map<Integer, String> sentences) {
+    public static Map<Integer, CNF> generateCNFForStringSet(Map<Integer, String> sentences) throws IOException {
 
         Map<Integer, CNF> res = new HashMap<Integer, CNF>();
         Interpreter inter = new Interpreter();
@@ -588,7 +588,7 @@ public class CommonCNFUtil {
      * function to load text file and generate one common CNF for all sentences,
      * one sentence one line.
      */
-    public static CNF loadFileAndFindCommonCNF(String path) {
+    public static CNF loadFileAndFindCommonCNF(String path) throws IOException {
 
         Map<Integer, String> strs = loadSentencesMap(path);
         Map<Integer, CNF> cnfMap = CommonCNFUtil.generateCNFForStringSet(strs);

@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ public class SemRewriteTest extends UnitTestBase {
     private static Interpreter interpreter;
 
     @Before
-    public void setUpInterpreter()  {
+    public void setUpInterpreter() throws IOException {
         interpreter = new Interpreter();
         interpreter.inference = false;
         interpreter.initialize();

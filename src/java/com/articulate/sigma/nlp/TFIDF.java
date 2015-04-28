@@ -73,7 +73,7 @@ public class TFIDF {
 
     /** ***************************************************************
      */
-    public TFIDF(String stopwordsFilename) {
+    public TFIDF(String stopwordsFilename) throws IOException {
         
         //System.out.println("Info in TFIDF(): Initializing");
         readStopWords(stopwordsFilename);
@@ -81,7 +81,7 @@ public class TFIDF {
 
     /** ***************************************************************
      */
-    public TFIDF(String stopwordsFilename, boolean resource) {
+    public TFIDF(List<String> documents, String stopwordsFilename, boolean resource) throws IOException {
         asResource = resource;
         //System.out.println("Info in TFIDF(): Initializing");
         readStopWords(stopwordsFilename);
@@ -89,7 +89,7 @@ public class TFIDF {
 
     /** ***************************************************************
      */
-    public TFIDF(List<String> documents, String stopwordsFilename) {
+    public TFIDF(List<String> documents, String stopwordsFilename) throws IOException {
         
         //System.out.println("Info in TFIDF(): Initializing");
         prepare(documents, stopwordsFilename);
@@ -112,7 +112,7 @@ public class TFIDF {
 
     /** ***************************************************************
      */
-    public void prepare(List<String> documents, String stopwordsFilename) {
+    public void prepare(List<String> documents, String stopwordsFilename) throws IOException {
         
         rand.setSeed(18021918); // Makes test results consistent
         readStopWords(stopwordsFilename);
@@ -246,13 +246,13 @@ public class TFIDF {
      * Read a file of stopwords into the variable 
      * ArrayList<String> stopwords
      */
-    private void readStopWords(String stopwordsFilename) {
+    private void readStopWords(String stopwordsFilename) throws IOException {
 
        // System.out.println("INFO in readStopWords(): Reading stop words");
         String filename = "";
-        try {
+//        try {
             if (asResource) {
-                URL stopWordsFile = Resources.getResource("resources/textfiles/stopwords.txt");
+                URL stopWordsFile = Resources.getResource("resources/stopwords.txt");
                 filename = stopWordsFile.getPath();
             }
             else
@@ -262,11 +262,11 @@ public class TFIDF {
             String line;
             while ((line = lr.readLine()) != null)
                 stopwords.add(line.intern());
-        }
-        catch (Exception i) {
-            System.out.println("Error in readStopWords() reading file " + filename + ": " + i.getMessage());
-            i.printStackTrace();
-        }
+//        }
+//        catch (IOException i) {
+//            System.out.println("Error in readStopWords() reading file " + filename + ": " + i.getMessage());
+//            i.printStackTrace();
+//        }
         return;
     }
 
@@ -656,7 +656,7 @@ public class TFIDF {
      * Run a chatbot-style loop, asking for user input and finding
      * a response in the lines corpus via the TF/IDF algorithm.
      */
-    private static void run() {
+    private static void run() throws IOException {
 
         run("ShellDoc.txt");
     }
@@ -664,7 +664,7 @@ public class TFIDF {
     /** *************************************************************
      * Run with a given file
      */
-    private static void run(String fname) {
+    private static void run(String fname) throws IOException {
 
         List<String> documents = null;
         try {
@@ -703,7 +703,7 @@ public class TFIDF {
      * Run a series of tests containing a filename,
      * a query and an expected answer.
      */
-    private static void staticTest() {
+    private static void staticTest() throws IOException {
         
         System.out.println("Info in TFIDF.staticTest(): ");
         List<String> input = new ArrayList<String>();
@@ -728,7 +728,7 @@ public class TFIDF {
      * Run a series of tests containing a filename,
      * a query and an expected answer.
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         if (args != null && args.length > 0 && args[0].equals("-h")) {
             System.out.println("Usage: ");

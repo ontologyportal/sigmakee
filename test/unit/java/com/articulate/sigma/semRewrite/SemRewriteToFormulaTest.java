@@ -5,6 +5,7 @@ import com.articulate.sigma.UnitTestBase;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
@@ -22,7 +23,7 @@ public class SemRewriteToFormulaTest extends UnitTestBase {
     private static Interpreter interpreter;
 
     @Before
-    public void setUpInterpreter()  {
+    public void setUpInterpreter() throws IOException {
         interpreter = new Interpreter();
         interpreter.inference = false;
         interpreter.initialize();

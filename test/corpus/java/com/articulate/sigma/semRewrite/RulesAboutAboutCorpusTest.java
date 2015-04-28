@@ -5,6 +5,8 @@ import com.articulate.sigma.KBmanager;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.junit.Assert.assertEquals;
 
 public class RulesAboutAboutCorpusTest {
@@ -12,7 +14,7 @@ public class RulesAboutAboutCorpusTest {
     public static Interpreter interpreter;
 
     @BeforeClass
-    public static void initInterpreter() {
+    public static void initInterpreter() throws IOException {
         interpreter = new Interpreter();
         KBmanager.getMgr().initializeOnce();
         interpreter.initialize();

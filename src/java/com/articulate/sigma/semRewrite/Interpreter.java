@@ -36,6 +36,7 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.util.CoreMap;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1182,7 +1183,7 @@ public class Interpreter {
 
     /** ***************************************************************
      */
-    public void initialize() {
+    public void initialize() throws IOException {
         loadRules();
         tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "stopwords.txt");
     }
@@ -1409,7 +1410,7 @@ public class Interpreter {
 
     /** ***************************************************************
      */
-    public static void testTimeDateExtraction() {
+    public static void testTimeDateExtraction() throws IOException {
 
         System.out.println("INFO in Interpreter.testTimeDateExtraction()");
         Interpreter interp = new Interpreter();
@@ -1466,7 +1467,7 @@ public class Interpreter {
 
     /** ***************************************************************
      */
-    public static void main(String[] args) {  
+    public static void main(String[] args) throws IOException {
 
         System.out.println("INFO in Interpreter.main()");
         Interpreter interp = new Interpreter();

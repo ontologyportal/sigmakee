@@ -34,7 +34,7 @@ public class TFIDFWikiTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws IOException {
         TFIDF cb;
         if (files.containsKey(filename))
             cb = files.get(filename);
@@ -46,7 +46,7 @@ public class TFIDFWikiTest {
                 System.out.println("Couldn't read document: " + filename + ". Exiting");
                 return;
             }
-            cb = new TFIDF(documents, "QA/textfiles/stopwords.txt");
+            cb = new TFIDF(documents, "resources/stopwords.txt", true);
             files.put(filename, cb);
         }
         String actual = cb.matchInput(query);
@@ -74,7 +74,7 @@ public class TFIDFWikiTest {
     public static Collection<Object[]> prepare(){
 
         ArrayList<Object[]> result = new ArrayList<Object[]>();
-        File jsonTestFile = new File("test/corpus/java/resources/cmuWiki.json");
+        File jsonTestFile = new File("test/corpus/java/resources/cmuWiki/cmuWiki.json");
         String filename = jsonTestFile.getAbsolutePath();
         JSONParser parser = new JSONParser();
         try {

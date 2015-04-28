@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,7 +27,7 @@ public class RulePrepAboutRefersToUnitTest extends UnitTestBase {
 //    }
 
     @BeforeClass
-    public static void initializeInterpreter() {
+    public static void initializeInterpreter() throws IOException {
         interpreter = new Interpreter();
         interpreter.initialize();
     }
