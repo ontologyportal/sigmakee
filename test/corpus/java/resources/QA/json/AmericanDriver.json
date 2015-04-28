@@ -12,7 +12,7 @@
   {
     "file": "AmericanDriver.txt",
     "question" : "How does proper maintenance help?",
-    "answer" : "Proper maintenance can reduce air pollution, extend the value of the vehicle, save on fuel bills, prevent breakdowns, and lead to better performance."
+    "answer" : "Reduce air pollution, extend the value of the vehicle, save on fuel bills, prevent breakdowns, and lead to better performance."
   },
   {
     "file": "AmericanDriver.txt",
@@ -47,7 +47,7 @@
   {
     "file": "AmericanDriver.txt",
     "question" : "What should you do when you change the vehicle’s oil ?",
-    "answer" : "Every time I change the vehicle's oil I should inspect the car for any unexpected wear and tear."
+    "answer" : "Inspect the car for any unexpected wear and tear."
   },
   {
     "file": "AmericanDriver.txt",

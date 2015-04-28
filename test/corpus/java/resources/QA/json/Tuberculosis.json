@@ -1,0 +1,57 @@
+[
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What is TB?",
+    "answer" : "null"
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What is Tuberculosis?",
+    "answer" : "null"
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What is Tuberculosis called in the past?",
+    "answer" : "Probably, phthisis, phthisis pulmonalis, or consumption."
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "Which infectious disease is caused by various strains of mycobacteria?",
+    "answer" : "Probably, tuberculosis, MTB, or TB (short for tubercle bacillus), in the past also called phthisis, phthisis pulmonalis, or consumption, is a widespread, and in many cases fatal, infectious disease caused by various strains of mycobacteria, usually Mycobacterium tuberculosis.Tuberculosis typically attacks the lungs, but can also affect other parts of the body."
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "Which part of body Tuberculosis typically attacks ?",
+    "answer" : "The lungs."
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What is the mode of spread of TB?",
+    "answer" : "null"
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "How TB is spread through the air?",
+    "answer" : "null"
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What is latent tuberculosis?",
+    "answer" : "Most likely the answer is most infections don't have symptoms, known as latent tuberculosis."
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What are the classic symptoms of active TB infection?",
+    "answer" : "I'm pretty sure the answer is the classic symptoms of active TB infection are a chronic cough with blood-tinged sputum, fever, night sweats, and weight loss (the latter giving rise to the formerly common term for the disease,  " consumption ")."
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What relies on diagnosis of latent TB?",
+    "answer" : "Smaranika, I'm pretty sure the answer is diagnosis of latent TB relies on the tuberculin skin test (TST) and / or blood tests."
+  },
+  {
+    "file": "Tuberculosis.txt",
+    "question" : "What relies on diagnosis of active TB?",
+    "answer" : "I'm pretty sure the answer is diagnosis of active TB relies on radiology (commonly chestX-rays), as well as microscopic examination and microbiological culture of body fluids."
+  }
+]
