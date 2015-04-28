@@ -53,6 +53,7 @@ public class JsonReader {
             System.out.println("Parse exception reading: " + resourcePath);
             System.out.println(e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("Parse exception reading: " + resourcePath);
         }
         return result;
     }

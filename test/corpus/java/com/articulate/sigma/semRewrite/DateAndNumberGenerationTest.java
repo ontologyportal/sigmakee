@@ -36,7 +36,7 @@ public class DateAndNumberGenerationTest {
 	@Parameters(name="{0}")
 	public static Collection<String[]> prepare() {
   
-		return JsonReader.transform("QA/json/Date_and_number_test.json", new Function<JSONObject, String[]>() {
+		return JsonReader.transform("miscellaneous/Date_and_number_test.json", new Function<JSONObject, String[]>() {
 			@Override
 			public String[] apply(JSONObject jo) {
 			String text = (String) jo.get("text");

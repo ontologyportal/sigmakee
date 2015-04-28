@@ -47,7 +47,7 @@
 {
 "text":"John was killed on 22 August 1999 at 18:45 hrs.",
 "kif":
-"[day(time-1,22), year(time-1,1999), hour(time-2,18-5), time(kill-3,time-1), time(kill-3,time-2), month(time-1,August), minute(time-2,45-5)]
+"[day(time-1,22), year(time-1,1999), hour(time-2,18-5), time(kill-3,time-1), time(kill-3,time-2), month(time-1,August), minute(time-2,45-5)]"
 },
 {
 "text":"This man is 170 centimeters tall.",
