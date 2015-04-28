@@ -43,7 +43,7 @@ public class InterpreterTest extends IntegrationTestBase {
     public static Collection<Object[]> prepare() {
         
         //return JsonReader.transform("resources/translation_tiny.json", (JSONObject jo) -> {
-        return JsonReader.transform("QA/json/translation_tests.json", (JSONObject jo) -> {
+        return JsonReader.transform("miscellaneous/translation_tests.json", (JSONObject jo) -> {
             String text = (String) jo.get("text");
             //String tokens = (String) jo.get("tokens");
             //String type = (String) jo.get("type");
