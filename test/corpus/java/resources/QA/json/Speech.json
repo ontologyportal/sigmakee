@@ -1,57 +1,32 @@
 [
   {
     "file": "Speech.txt",
-    "question" : "What is a speech?",
-    "answer" : "Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
-  },
-  {
-    "file": "Speech.txt",
     "question" : "What is a great blessing but can also be a great curse?",
-    "answer" : "Most likely, Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
+    "answer" : "Speech."
   },
   {
     "file": "Speech.txt",
     "question" : "What is a great blessing as well as a curse?",
-    "answer" : "Probably, Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
+    "answer" : "Speech."
   },
   {
     "file": "Speech.txt",
     "question" : "What helps us to make our intentions and desires known to our fellows?",
-    "answer" : "null"
+    "answer" : "Speech."
   },
   {
     "file": "Speech.txt",
     "question" : "What happens if we use our speech carelessly?",
-    "answer" : "null"
+    "answer" : "Misunderstood"
   },
   {
     "file": "Speech.txt",
     "question" : "What makes our attitude misunderstood?",
-    "answer" : "From what I understand, Smaranika, the answer should be Speech is great blessings but Speech can also be great curse, for while Speech helps us to make our intentions and desires known to our fellows, Speech can also if we use Speech carelessly, make our attitude completely misunderstood."
+    "answer" : "Speech carelessly."
   },
   {
     "file": "Speech.txt",
     "question" : "What demands to be carefully handled?",
-    "answer" : "Perhaps, Smaranika, thus speech is not a gift to use lightly without thought, but one which demands careful handling."
-  },
-  {
-    "file": "Speech.txt",
-    "question" : "Who expresses himself alike to all kinds and conditions to men?",
-    "answer" : "From what I understand, Smaranika, the answer should be only a fool."
-  },
-  {
-    "file": "Speech.txt",
-    "question" : "What should be used while talking to an uneducated person?",
-    "answer" : "null"
-  },
-  {
-    "file": "Speech.txt",
-    "question" : "How we should speak while talking to an uneducated person?",
-    "answer" : "null"
-  },
-  {
-    "file": "Speech.txt",
-    "question" : "What is the best way to win a friend?",
-    "answer" : "From what I understand, the answer should be a slip of the tongue, the use of unusual word, or of an ambiguous word, and so on, may create an enemy we had hoped where to win a friend."
+    "answer" : "Speech."
   }
 ]

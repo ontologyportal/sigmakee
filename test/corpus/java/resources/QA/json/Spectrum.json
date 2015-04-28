@@ -2,61 +2,56 @@
   {
     "file": "Spectrum.txt",
     "question" : "What is the visible spectrum?",
-    "answer" : "The portion of the electromagnetic spectrum that is visible to (can be detected by) the human eye."
+    "answer" : "Portion, electromagnetic spectrum, visible, human eye."
   },
   {
     "file": "Spectrum.txt",
     "question" : "What is visible light?",
-    "answer" : "null"
+    "answer" : "Electromagnetic radiation."
   },
   {
     "file": "Spectrum.txt",
     "question" : "What wavelength a typical human eye will respond to?",
-    "answer" : "Likely, a typical human eye will respond to wavelengths from about 390 to 700 nm."
+    "answer" : "390 to 700 nm."
   },
   {
     "file": "Spectrum.txt",
     "question" : "What is the range of wavelength a typical human eye responds?",
-    "answer" : "I'm fairly sure the answer is a typical human eye will respond to wavelengths from about 390 to 700 nm."
+    "answer" : "390 to 700 nm."
   },
   {
     "file": "Spectrum.txt",
     "question" : "What is the range of frequency that a human eye responds?",
-    "answer" : "null"
+    "answer" : "390 to 700 nm."
   },
   {
     "file": "Spectrum.txt",
     "question" : "Does the spectrum contains all the colors that the human eyes and brain can distinguish?",
-    "answer" : "That is not likely."
-  },
-  {
-    "file": "Spectrum.txt",
-    "question" : "What are the unsaturated colors?",
-    "answer" : "null"
+    "answer" : "No."
   },
   {
     "file": "Spectrum.txt",
     "question" : "Why magenta is not present in the visible spectrum?",
-    "answer" : "null"
+    "answer" : "A mix of multiple wavelengths."
   },
   {
     "file": "Spectrum.txt",
     "question" : "Which color can be made only by a mix of multiple wavelengths?",
-    "answer" : "From what I understand, the answer should be unsaturated colors such as pink, or purple variations such as magenta, are absent, for example, because the colors can be made only by a mix of multiple wavelengths."
+    "answer" : "Unsaturated colors, purple variations."
   },
   {
     "file": "Spectrum.txt",
     "question" : "What are pure colors?",
-    "answer" : "Probably, colors containing only one wavelength are also called pure colors or spectral colors."
+    "answer" : "Only one wavelength."
   },
   {
     "file": "Spectrum.txt",
     "question" : "What are spectral colors?",
-    "answer" : "null"
+    "answer" : "Pure colors."
   },
   {
     "file": "Spectrum.txt",
-    "question" : "Why optical window is also referred as the "visible window"?",
-    "answer" : "From what I understand, the answer should be because it overlaps the human visible response spectrum."
+    "question" : "Why optical window is also referred as the \"visible window\"?",
+    "answer" : "Overlaps the human visible response spectrum."
   }
 ]
