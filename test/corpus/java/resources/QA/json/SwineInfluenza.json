@@ -2,112 +2,107 @@
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is Swine influenza?",
-    "answer" : "A disease related to human flu during the 1918 flu pandemic, when pigs became ill at the same time as humans and most contagious."
-  },
-  {
-    "file": "SwineInfluenza.txt",
-    "question" : "Which infection is caused by the swine influenza virus?",
-    "answer" : "null"
+    "answer" : "disease, flu, pig"
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is swine flu?",
-    "answer" : "null"
+    "answer" : "disease, flu, pig"
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What are the other names for Swine influenza?",
-    "answer" : "null"
+    "answer" : "Pig flu, pig Influenza."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which virus is endemic in pigs?",
-    "answer" : "Most likely the answer is swine influenza virus-LRB-SIV-RRB- or swine-origin influenza virus-LRB-S-OIV-RRB- is any strain of the influenza family of viruses that is endemic in pigs."
+    "answer" : "Swine influenza virus, swine-origin influenza virus."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is Swine influenza virus?",
-    "answer" : "null"
+    "answer" : "endemic, pig"
   },
   {
     "file": "SwineInfluenza.txt",
-    "question" : "What is swine-origin influenza virus ?",
-    "answer" : "Most likely the answer is swine influenza virus-LRB-SIV-RRB- or swine-origin influenza virus-LRB-S-OIV-RRB- is any strain of the influenza family of viruses that is endemic in pigs."
+    "question" : "What is swine-origin influenza virus?",
+    "answer" : "endemic, pig"
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is SIV?",
-    "answer" : "null"
+    "answer" : "Swine influenza virus."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is S-OIV?",
-    "answer" : "Smaranika, I'm pretty sure the answer is any strain of the influenza family of viruses that is endemic in pigs."
+    "answer" : "Swine-origin influenza virus."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which type of influenza is included in SIV strains?",
-    "answer" : "null"
+    "answer" : "Influenza C, subtypes of influenza A."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What are the types of influenza included in SIV strains?",
-    "answer" : "Likely, influenza c and the subtypes of influenza a known as H1N1, H1N2, H2N1, H3N1, H3N2, and H2N3."
+    "answer" : "Influenza C, subtypes of influenza A."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What causes human flu?",
-    "answer" : "null"
+    "answer" : "Virus."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is zoonotic swine flu?",
-    "answer" : "I'm fairly sure the answer is if transmission does cause human flu, transmission is called zoonotic swine flu."
+    "answer" : "Transmission, human flu."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What happened in the mid-20th century?",
-    "answer" : "Around the mid-20th century, identification of influenza subtypes became possible, allowing accurate diagnosis of transmission to humans."
+    "answer" : "Identification of influenza subtypes, accurate diagnosis of transmission to humans."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "How many transmissions to humans have been confirmed?",
-    "answer" : "null"
+    "answer" : "50."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Does the stain of swine flu pass from human to human?",
-    "answer" : "null"
+    "answer" : "Rarely."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What are the symptoms of zoonotic swine flu?",
-    "answer" : "null"
+    "answer" : "Chills, fever, sore throat, muscle pains, severe headache, coughing, weakness and general discomfort."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which organization declared the swine flu pandemic officially?",
-    "answer" : "Most likely, in August 2010, the World Health Organization declared the swine flu pandemic officially over."
+    "answer" : "The World Health Organization."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "When was swine flu officially declared?",
-    "answer" : "null"
+    "answer" : "August 2010."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which virus is common in pigs?",
-    "answer" : "null"
+    "answer" : "Influenza A virus subtypes, H1N1, H1N2,H3N2, H7N9."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which virus is common in pig populations worldwide?",
-    "answer" : "Perhaps, swine influenza virus is common throughout pig populations worldwide."
+    "answer" : "Swine influenza virus."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What are the symptoms of zoonotic swine flu in humans?",
-    "answer" : "I'm fairly sure the answer is symptoms of zoonotic swine flu in humans are similar to those of influenza and of influenza-like illness in general, namely chills, fever, sore throat, muscle pains, severe headache, coughing, weakness and general discomfort."
+    "answer" : "chills, fever, sore throat, muscle pains, severe headache, coughing, weakness, general discomfort."
   },
   {
     "file": "SwineInfluenza.txt",
@@ -117,86 +112,76 @@
   {
     "file": "SwineInfluenza.txt",
     "question" : "What are the subtypes of influenza A?",
-    "answer" : "null"
+    "answer" : "H1N1, H1N2,H3N2, H7N9."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What causes Swine Influenza?",
-    "answer" : "null"
+    "answer" : "Virus."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which subtypes of influenza A virus are the most common strains ?",
-    "answer" : "Four influenza A virus subtypes-LRB-H1N1, H1N2, H3N2 and H7N9-RRB."
+    "answer" : "Four influenza A virus subtypes, H1N1, H1N2, H3N2, H7N9-RRB."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which subtype was exclusively prevalent among swine populations in United States?",
-    "answer" : "From what I understand, Smaranika, the answer should be in the United States, the H1N1 subtype was exclusively prevalent among swine populations before 1998; however, since late August 1998, H3N2 subtypes have been isolated from pigs."
+    "answer" : "H1N1."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which subtype has been isolated from pigs from late August 1998?",
-    "answer" : "null"
+    "answer" : "H3N2."
   },
   {
     "file": "SwineInfluenza.txt",
-    "question" : "Who confirmed 145 human cases of H3N2v ?",
-    "answer" : "I'm fairly sure the answer is the Center for Disease Control and Prevention Illinois-RRB-of H3N2v."
+    "question" : "Who confirmed 145 human cases of H3N2v?",
+    "answer" : "The Center for Disease Control and Prevention Illinois."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Who was the first woman in the nation associated with a new swine flu strain?",
-    "answer" : "Likely, the death of, a 61-year-old Madison County Ohio woman is the first in the nation associated with a new swine flu strain."
+    "answer" : "61-year-old Madison County Ohio woman."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is the main route of transmission of Swine Flu?",
-    "answer" : "Perhaps, Smaranika, the main route of transmission is through direct contact between infected and uninfected animals."
+    "answer" : "Direct contact between infected and uninfected animals."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What are the symptoms of influenza infection in pigs?",
-    "answer" : "null"
+    "answer" : "Fever, lethargy, sneezing, coughing, difficulty breathing and decreased appetite."
   },
   {
     "file": "SwineInfluenza.txt",
-    "question" : "What was reported in 2009 outbreak?",
-    "answer" : "Most likely the answer is diarrhea and vomiting."
+    "question" : "What was reported outbreak in 2009?",
+    "answer" : "Diarrhea and vomiting."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What is the most common cause of death in Swine Flu?",
-    "answer" : "Most likely the answer is the most common cause of death is respiratory failure."
-  },
-  {
-    "file": "SwineInfluenza.txt",
-    "question" : "How long is the swine flu contagious in humans?",
-    "answer" : "null"
-  },
-  {
-    "file": "SwineInfluenza.txt",
-    "question" : "What are the recommendations made to prevent spread of the virus among humans?",
-    "answer" : "Most likely, recommendations to prevent spread of the virus among humans include using standard infection control, which includes frequent washing of hands with soap and water or with alcohol-based hand sanitizers, especially after being out in public."
+    "answer" : "Respiratory failure."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Who recommended the use of oseltamivir or zanamivir ?",
-    "answer" : "Perhaps, Smaranika, the U.S. Centers for Disease Control and Prevention."
+    "answer" : "The U.S. Centers for Disease Control and Prevention."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What was Oseltamivir or zanamivir used for?",
-    "answer" : "null"
+    "answer" : "The treatment, prevention of infection with swine influenza viruses."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "What was used for the treatment and prevention of infection with swine influenza viruses?",
-    "answer" : "I'm pretty sure the answer is the U.S. Centers for Disease Control and Prevention recommends the use of oseltamivir-LRB-Tamiflu-RRB- or zanamivir-LRB-Relenza-RRB- for the treatment and or / prevention of infection with swine influenza viruses; however, the majority of people infected with the virus make a full recovery without requiring medical attention or antiviral drugs."
+    "answer" : "Oseltamivir or zanamivir."
   },
   {
     "file": "SwineInfluenza.txt",
     "question" : "Which Bollywood actress tested positive for Swine Flu?",
-    "answer" : "null"
+    "answer" : "Sonam Kapoor."
   }
 ]
