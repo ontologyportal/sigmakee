@@ -61,7 +61,7 @@ public class InferenceWikiTest {
             //reading the lines
             List<String> lines = null;
             try {
-                lines = TextFileUtil.readLines("QA/textfiles/" + filename, true);
+                lines = TextFileUtil.readLines("miscellaneous/" + filename, true);
                 files.add(filename);
             } catch (IOException e) {
                 System.out.println("Couldn't read document: " + filename + ". Exiting");
@@ -95,7 +95,7 @@ public class InferenceWikiTest {
     public static Collection<Object[]> prepare(){
 
         ArrayList<Object[]> result = new ArrayList<Object[]>();
-        File jsonTestFile = new File("test/corpus/java/resources/inferenceWiki.json");
+        File jsonTestFile = new File("test/corpus/java/resources/miscellaneous/inferenceWiki.json");
         String filename = jsonTestFile.getAbsolutePath();
         JSONParser parser = new JSONParser();
         try {
@@ -114,21 +114,25 @@ public class InferenceWikiTest {
             System.out.println("Error in InferenceWikiTest.prepare(): File not found: " + filename);
             System.out.println(e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("FileNotFoundException");
         }
         catch (IOException e) {
             System.out.println("Error in InferenceWikiTest.prepare(): IO exception reading: " + filename);
             System.out.println(e.getMessage());
             e.printStackTrace();
+            e.printStackTrace();
+            throw new RuntimeException("IOException");
         }
         catch (ParseException e) {
             System.out.println("Error in InferenceWikiTest.prepare(): Parse exception reading: " + filename);
             System.out.println(e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("ParseException");
         }
         catch (Exception e) {
             System.out.println("Error in InferenceWikiTest.prepare(): Parse exception reading: " + filename);
             System.out.println(e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("Exception");
         }
         return result;
     }
