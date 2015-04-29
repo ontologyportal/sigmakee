@@ -1,87 +1,86 @@
 [
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "When was the Prince of Wales born?",
-    "answer" : "null"
+    "answer" : "9.14pm on November 14, 1948"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "Who was the eldest son of the Queen and Prince Philip?",
-    "answer" : "null"
+    "answer" : "The Prince of Wales"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "Where was the Prince of Wales born ?",
-    "answer" : "null"
+    "answer" : "Buckingham Palace"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "At what time the Prince Of wales was born?",
-    "answer" : "Smaranika, I'm pretty sure the answer is 9.14 pm."
+    "answer" : "9.14 pm"
   },
   {
-    "file": "PrinceOfWhales.txt",
-    "question" : "When was the Prince of Wales born?",
-    "answer" : "null"
-  },
-  {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "Who was proclaimed as the Queen Elizabeth II?",
-    "answer" : "Smaranika, I'm pretty sure the answer is the Prince's mother."
+    "answer" : "The Prince's mother"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "When was the Prince’s mother proclaimed as Queen Elizabeth?",
-    "answer" : "From what I understand, Smaranika, the answer should be the age of 25, when her father, King George VI, died aged 56 on February 6, 1952."
+    "answer" : "At the age of 25, when her father, King George VI, died aged 56 on February 6, 1952"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "How old was the Prince at his mother’s coronation?",
-    "answer" : "null"
+    "answer" : "four"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "Where did the coronation happen?",
-    "answer" : "null"
+    "answer" : "Westminster Abbey"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
-    "question" : "How did the Prince have his education?",
-    "answer" : "null"
+    "question" : "When was Charles proclaimed as the Prince of Wales?",
+    "answer" : "1958"
   },
   {
-    "file": "PrinceOfWhales.txt",
-    "question" : "Where did the Prince have his education?",
-    "answer" : "null"
-  },
-  {
-    "file": "PrinceOfWhales.txt",
-    "question" : "When was Charles proclaimed as the Prince of Wales ?",
-    "answer" : "Possibly, 1958."
-  },
-  {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "Who is the heir to the British throne?",
-    "answer" : "null"
+    "answer" : "Charles"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "Who did the Prince of Wales get married to ?",
-    "answer" : "null"
+    "answer" : "Lady Diana Spencer"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "How was the marriage ?",
-    "answer" : "null"
+    "answer" : "Bad"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
     "question" : "How many children did the Prince and Princess of Wales have ?",
-    "answer" : "null"
+    "answer" : "two sons"
   },
   {
+    "source":"",
     "file": "PrinceOfWhales.txt",
-    "question" : "What were the interests for the Prince ?",
-    "answer" : "null"
+    "question" : "What were the interests of the Prince ?",
+    "answer" : "social and community issues, young people, the arts and natural environment, national heritage, religion and medicine"
   }
 ]

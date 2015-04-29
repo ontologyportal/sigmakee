@@ -1,72 +1,74 @@
 [
   {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "What is LPG?",
-    "answer" : "null"
+    "answer" : "liquid petroleum gas"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "What is LP gas?",
-    "answer" : "null"
+    "answer" : "liquid petroleum gas"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "Which gas is also referred to as simply propane or butane?",
-    "answer" : "null"
+    "answer" : "liquid petroleum gas"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
-    "question" : "What are the flammable mixtures of hydrocarbon gases?",
-    "answer" : "null"
+    "question" : "What is the flammable mixtures of hydrocarbon gases?",
+    "answer" : "liquid petroleum gas"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "What is used as a fuel in heating appliances?",
-    "answer" : "null"
+    "answer" : "liquid petroleum gas"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
-    "question" : "What are the uses of LPG?",
-    "answer" : "null"
+    "question" : "What are the useages of LPG?",
+    "answer" : "as fuel in heating appliances, cooking equipment, and vehicles"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "What is used as an aerosol propellant and a refrigerant?",
-    "answer" : "null"
+    "answer" : "liquid petroleum gas"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "Why chlorofluorocarbons is replaced?",
     "answer" : "In an effort to reduce damage to the ozone layer."
   },
   {
-    "file": "Petroleum.txt",
-    "question" : "How can we reduce the damage to the ozone layer?",
-    "answer" : "Perhaps, it is increasingly used as an aerosol propellant and a refrigerant, replacing chlorofluorocarbons in an effort to reduce damage to the ozone layer."
-  },
-  {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "Which two grades of LPG are sold in United States?",
-    "answer" : "null"
+    "answer" : "commercial propane and HD-5"
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "How LPG is prepared?",
-    "answer" : "Probably, LPG is prepared by refining petroleum or " " wet " " natural gas, and is almost entirely derived from fossil fuel sources, being manufactured during the refining of petroleum (crude oil), or extracted from petroleum or natural gas streams as streams emerge from the ground."
+    "answer" : "by refining petroleum or \"wet\" natural gas, and is almost entirely derived from fossil fuel sources, being manufactured during the refining of petroleum (crude oil), or extracted from petroleum or natural gas streams as they emerge from the ground."
   },
   {
-    "file": "Petroleum.txt",
-    "question" : "What was the first commercial products that appeared in 1912?",
-    "answer" : "Perhaps, lPG was first produced in 1910 by Dr. Walter Snelling, and the first commercial products appeared in 1912."
-  },
-  {
+    "source":"",
     "file": "Petroleum.txt",
     "question" : "Who first produced LPG in 1910?",
-    "answer" : "Possibly, by Dr. Walter Snelling."
+    "answer" : "Dr. Walter Snelling."
   },
   {
+    "source":"",
     "file": "Petroleum.txt",
-    "question" : "When LPG was produced?",
+    "question" : "When was LPG produced?",
     "answer" : "First in 1910."
   }
 ]

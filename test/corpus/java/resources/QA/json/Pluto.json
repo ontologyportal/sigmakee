@@ -1,12 +1,14 @@
 [
   {
+    "source":"",
     "file": "Pluto.txt",
-    "question" : "Which is the largest object in the Kuiper belt?",
-    "answer" : "null"
+    "question" : "What is the largest object in the Kuiper belt?",
+    "answer" : "Pluto"
   },
   {
+    "source":"",
     "file": "Pluto.txt",
-    "question" : "Which is the tenth-most-massive known body directly orbiting the Sun?",
-    "answer" : "null"
+    "question" : "What is the tenth-most-massive known body directly orbiting the Sun?",
+    "answer" : "Pluto"
   }
 ]
