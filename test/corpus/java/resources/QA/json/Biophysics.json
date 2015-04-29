@@ -2,77 +2,77 @@
   {
     "file": "Biophysics.txt",
     "question" : "What is biophysics?",
-    "answer" : "Biophysics is an interdisciplinary science using methods of, and theories from, physics to study biological systems."
+    "answer" : "interdisciplinary science"
   },
   {
     "file": "Biophysics.txt",
-    "question" : "What does the biophysical research share?",
-    "answer" : "Biophysical research shares significant overlap with biochemistry, nanotechnology, bioengineering, computational biology and (complex) systems biology."
+    "question" : "What fields does biophysical research overlap with?",
+    "answer" : "biochemistry nanotechnology bioengineering computational biology and (complex) systems biology"
   },
   {
     "file": "Biophysics.txt",
     "question" : "Which branch of science is suggested as a bridge between biology and physics?",
-    "answer" : "Biophysics."
+    "answer" : "Biophysics"
   },
   {
     "file": "Biophysics.txt",
     "question" : "Who originally introduced the term “biophysics”?",
-    "answer" : "Karl Pearson."
+    "answer" : "Karl Pearson"
   },
   {
     "file": "Biophysics.txt",
     "question" : "When was the term “biophysics” introduced?",
-    "answer" : "1892."
+    "answer" : "1892"
   },
   {
     "file": "Biophysics.txt",
     "question" : "Who conducted research for the interactions between the various systems of a cell?",
-    "answer" : "Scientists in biophysics."
+    "answer" : "Scientists in molecular biophysics"
   },
   {
     "file": "Biophysics.txt",
-    "question" : "What are the techniques used to visualize structures of biological significance?",
-    "answer" : "Atomic force microscopy (AFM) and small-angle scattering (SAS) both with X-rays and neutrons (SAXS / SANS) are often used Fluorescent imaging techniques, as well as electron microscopy, x-ray crystallography, NMR spectroscopy, to visualize structures of biological significance."
+    "question" : "What are fluorescent imaging techniques used for?",
+    "answer" : "to visualize structures of biological significance"
   },
   {
     "file": "Biophysics.txt",
     "question" : "What can be observed by neutron spin echo spectroscopy?",
-    "answer" : "Protein dynamics can be observed by neutron spin echo spectroscopy."
+    "answer" : "Protein dynamics"
   },
   {
     "file": "Biophysics.txt",
-    "question" : "How Protein dynamics can be observed?",
-    "answer" : "Protein dynamics can be observed by neutron spin echo spectroscopy."
+    "question" : "How can protein dynamics be observed?",
+    "answer" : "by neutron spin echo spectroscopy"
   },
   {
     "file": "Biophysics.txt",
     "question" : "Which techniques are used to measure conformational changes in structure?",
-    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+    "answer" : "dual polarisation interferometry circular dichroism SAXS and SANS"
   },
   {
     "file": "Biophysics.txt",
     "question" : "What changes in structure can be measured by dual polarisation interferometry, circular dichroism, SAXS and SANS?",
-    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+    "answer" : "Conformational change"
   },
   {
     "file": "Biophysics.txt",
     "question" : "What changes in structure can be measured by dual polarisation interferometry?",
-    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+    "answer" : "Conformational change"
   },
   {
     "file": "Biophysics.txt",
     "question" : "What changes in structure can be measured by circular dichroism?",
-    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+    "answer" : "Conformational change"
   },
   {
     "file": "Biophysics.txt",
     "question" : "What changes in structure can be measured by SAXS?",
-    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+    "answer" : "Conformational change"
   },
   {
     "file": "Biophysics.txt",
     "question" : "What changes in structure can be measured by SANS?",
-    "answer" : "Conformational change in structure can be measured using techniques such as dual polarisation interferometry, circular dichroism, SAXS and SANS."
+    "answer" : "Conformational change"
   },
   {
     "file": "Biophysics.txt",
@@ -86,22 +86,17 @@
   },
   {
     "file": "Biophysics.txt",
-    "question" : "How biological events can be monitored where forces and distances are at the nanoscale?",
-    "answer" : "Direct manipulation of molecules using optical tweezers or AFM, can also be used to monitor biological events where forces and distances are at the nanoscale."
+    "question" : "How can biological events be monitored where forces and distances are at the nanoscale?",
+    "answer" : "Direct manipulation of molecules using optical tweezers or AFM"
   },
   {
     "file": "Biophysics.txt",
-    "question" : "Who considers complex biological events as systems of interacting entities?",
-    "answer" : "Molecular biophysicists."
+    "question" : "Who considers complex biological events as systems of interacting entities which can be understood e.g. through statistical mechanics, thermodynamics and chemical kinetics?",
+    "answer" : "Molecular biophysicists"
   },
   {
     "file": "Biophysics.txt",
-    "question" : "What does the Molecular biophysicists consider?",
-    "answer" : "Complex biological events as systems of interacting entities which can be understood."
-  },
-  {
-    "file": "Biophysics.txt",
-    "question" : "What did the biophysicists observe?",
-    "answer" : "Model or even manipulate the structures and interactions of individual molecules or complexes of molecules."
+    "question" : "What can statistical mechanics, thermodynamics and chemical kinetics help scientists understand?",
+    "answer" : "Complex biological events"
   }
 ]

@@ -1,97 +1,116 @@
 [
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who was Sindhuka?",
-    "answer" : "A bird."
+    "answer" : "A bird"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "What was the name of the bird?",
-    "answer" : "Sindhuka."
+    "answer" : "Sindhuka"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Why was Sindhuka referred to as a special bird?",
-    "answer" : "Its droppings turned into gold as soon as they hit the ground."
+    "answer" : "Its droppings turned into gold"
   },
   {
+    "source": "",
     "file": "Bird.txt",
-    "question" : "Whose droppings turned into gold as soon as it hit the ground?",
-    "answer" : "Sindhuka."
+    "question" : "Whose droppings turned into gold as soon as they hit the ground?",
+    "answer" : "Sindhuka"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who came to the tree in search of the prey?",
-    "answer" : "A hunter."
+    "answer" : "A hunter"
   },
   {
+    "source": "",
     "file": "Bird.txt",
-    "question" : "What did the hunter see ?",
-    "answer" : "Sindhuka."
+    "question" : "What did the hunter see?",
+    "answer" : "Sindhuka's droppings"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who was struck with wonder?",
     "answer" : "The hunter."
   },
   {
+    "source": "",
     "file": "Bird.txt",
-    "question" : "How long has the hunter been hunting for birds and small animals?",
-    "answer" : "80 years."
+    "question" : "How old was the hunter?",
+    "answer" : "80"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "What did the hunter decide?",
-    "answer" : "He had to catch the bird somehow."
+    "answer" : "to catch the bird"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who set a trap for the bird?",
-    "answer" : "He climbed the tree and skillfully set a trap for the bird."
+    "answer" : "the hunter"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who was caught in the hunter’s trap?",
-    "answer" : "A bird."
+    "answer" : "Sindhuka"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "What did the hunter do after the bird was trapped?",
-    "answer" : "null"
+    "answer" : "shoved it into a cage"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who did the hunter seize and shove into the cage?",
-    "answer" : "The hunter immediately seized a bird."
+    "answer" : "Sindhuka"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who took the bird to the king?",
-    "answer" : "Perhaps, Smaranika, the hunter."
+    "answer" : "the hunter"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "What did the hunter present to the king?",
-    "answer" : "The hunter immediately seized it and shoved it into a cage."
+    "answer" : "the bird"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who was reluctant to accept the bird?",
-    "answer" : "The king’s prime minister."
+    "answer" : "The king’s prime minister"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who said to release the bird from the cage?",
-    "answer" : "The king."
+    "answer" : "The king"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "Who ordered the bird to be released?",
-    "answer" : "The king."
+    "answer" : "The king"
   },
   {
+    "source": "",
     "file": "Bird.txt",
     "question" : "What happened when the door of the cage was opened?",
-    "answer" : "As soon as the door of the cage was thrown open, the bird flew out, perched itself on a nearby doorway and defecated."
+    "answer" : "the bird flew out perched itself on a nearby doorway and defecated"
   }
 ]
