@@ -2,7 +2,7 @@
   {
     "file": "RiSE.txt",
     "question" : "Which robot was funded by DARPA?",
-    "answer" : "null"
+    "answer" : "RiSE"
   },
   {
     "file": "RiSE.txt",
@@ -17,11 +17,11 @@
   {
     "file": "RiSE.txt",
     "question" : "What does the onboard computer controls?",
-    "answer" : "null"
+    "answer" : "leg motion, manages communications, and services a variety of sensors, including joint position sensors, leg strain sensors and foot contact sensors"
   },
   {
     "file": "RiSE.txt",
     "question" : "What controls leg motion, manages communications, and services a variety of sensors, including joint position sensors, leg strain sensors and foot contact sensors?",
-    "answer" : "null"
+    "answer" : "the onboard computer"
   }
 ]
