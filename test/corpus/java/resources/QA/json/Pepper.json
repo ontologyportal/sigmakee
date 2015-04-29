@@ -1,57 +1,62 @@
 [
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "Is Pepper available yet?",
-    "answer" : "null"
+    "answer" : "No"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "What does Pepper do at Softbank shops?",
-    "answer" : "null"
+    "answer" : "Pepper has entertainment functionalities and corresponding apps"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
-    "question" : "Who is referred to as a sparkling personality?",
-    "answer" : "null"
+    "question" : "What is referred to as a sparkling personality?",
+    "answer" : "Pepper"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "Who is regarded as an artificial species?",
-    "answer" : "null"
+    "answer" : "Robots"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "Who is an emotional roboot?",
-    "answer" : "null"
+    "answer" : "Pepper"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "Why is this robot created?",
-    "answer" : "null"
+    "answer" : "To help people grow, enhance their life, facilitate relationship, he will have fun with them, give some services and connect them with the outside world"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "Is Pepper male or a female?",
-    "answer" : "null"
+    "answer" : "Male"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "What is an emotional Robot?",
-    "answer" : "null"
+    "answer" : "Pepper"
   },
   {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "Why is Pepper delivered with a tablet?",
-    "answer" : "null"
+    "answer" : "to display images, content or to express Pepper¹s inner life"
   },
   {
-    "file": "Pepper.txt",
-    "question" : "What kind of application do already exist?",
-    "answer" : "null"
-  },
-  {
+    "source":"",
     "file": "Pepper.txt",
     "question" : "Who is regarded as an emotional robot?",
-    "answer" : "null"
+    "answer" : "Pepper"
   }
 ]
