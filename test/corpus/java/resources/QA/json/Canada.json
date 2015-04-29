@@ -1,57 +1,86 @@
 [
   {
+    "source": "",
     "file": "Canada.txt",
-    "question" : "Which country in North America consists of ten provinces and three territories?",
-    "answer" : "Canada."
+    "question" : "How many provinces does Canada consist of?",
+    "answer" : "ten"
   },
   {
+    "source": "",
     "file": "Canada.txt",
-    "question" : "Which country is located in the northern part of the continent?",
-    "answer" : "Canada."
+    "question" : "How many territories does Canada consist of?",
+    "answer" : "three"
   },
   {
+    "source": "",
+    "file": "Canada.txt",
+    "question" : "How many provinces and territories does Canada consist of?",
+    "answer" : "thirteen"
+  },
+  {
+    "source": "",
+    "file": "Canada.txt",
+    "question" : "Which country is located in the most northern part of North America?",
+    "answer" : "Canada"
+  },
+  {
+    "source": "",
     "file": "Canada.txt",
     "question" : "Where is Canada located?",
-    "answer" : "In North America."
+    "answer" : "North America"
   },
   {
+    "source": "",
     "file": "Canada.txt",
     "question" : "Which country extends from the Atlantic to the Pacific and northward into the Arctic Ocean?",
-    "answer" : "Canada."
+    "answer" : "Canada"
   },
   {
+    "source": "",
     "file": "Canada.txt",
     "question" : "What is the world's second-largest country by total area?",
-    "answer" : "Canada."
+    "answer" : "Canada"
   },
   {
+    "source": "",
     "file": "Canada.txt",
     "question" : "What is the World's fourth-largest country by land area?",
-    "answer" : "Canada."
+    "answer" : "Canada"
   },
   {
+    "source": "",
     "file": "Canada.txt",
-    "question" : "Who joined to form the autonomous federal Dominion of Canada?",
-    "answer" : "Three colonies."
+    "question" : "How many colonies joined to form the autonomous federal Dominion of Canada?",
+    "answer" : "Three"
   },
   {
+    "source": "",
+    "file": "Canada.txt",
+    "question" : "What joined to form the autonomous federal Dominion of Canada?",
+    "answer" : "Three colonies"
+  },
+  {
+    "source": "",
     "file": "Canada.txt",
     "question" : "Which country is a federal parliamentary democracy and a constitutional monarchy?",
-    "answer" : "Canada."
+    "answer" : "Canada"
   },
   {
+    "source": "",
     "file": "Canada.txt",
-    "question" : "Who is the current head of state?",
-    "answer" : "Queen Elizabeth II."
+    "question" : "Who is the current head of state of Canada?",
+    "answer" : "Queen Elizabeth II"
   },
   {
+    "source": "",
     "file": "Canada.txt",
     "question" : "Which country is officially bilingual at the federal level?",
-    "answer" : "Canada."
+    "answer" : "Canada"
   },
   {
+    "source": "",
     "file": "Canada.txt",
     "question" : "What is the approximate population of Canada?",
-    "answer" : "Approximately 35 million."
+    "answer" : "35 million"
   }
 ]
