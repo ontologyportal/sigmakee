@@ -1,50 +1,60 @@
 [
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What is TB?",
     "answer" : "Tubercle Bacillus"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What is Tuberculosis?",
     "answer" : "Widespread fatal infectious disease caused by various strains of mycobacteria"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What is Tuberculosis called in the past?",
     "answer" : "Phthisis phthisis pulmonalis or consumption"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "Which infectious disease is caused by various strains of mycobacteria?",
     "answer" : "Tuberculosis"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "Which part of body Tuberculosis typically attacks ?",
     "answer" : "The lungs"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What is the mode of spread of TB?",
     "answer" : "The air"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What is latent tuberculosis?",
     "answer" : "Infections that don't have symptoms"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What are the classic symptoms of active TB infection?",
     "answer" : "A chronic cough with blood-tinged sputum fever night sweats and weight loss"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What dose diagnosis of latent TB rely on?",
     "answer" : "The tuberculin skin test TST and or blood tests"
   },
   {
+    "source":"",
     "file": "Tuberculosis.txt",
     "question" : "What does diagnosis of active TB rely on?",
     "answer" : "radiology commonly chest X-rays as well as microscopic examination and microbiological culture of body fluids"

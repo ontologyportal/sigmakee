@@ -1,1 +1,92 @@
-[{"textfileName":"FinanceMinister.txt","question":"Who is the Finance Minister of India?","answer":"Arun Jaitley."},{"textfileName":"FinanceMinister.txt","question":"Who is the Finance Minister?","answer":"Arun Jaitley."},{"textfileName":"FinanceMinister.txt","question":"Who is Arun Jaitley?","answer":"Arun Jaitley is the finance minister of India."},{"textfileName":"FinanceMinister.txt","question":"What did Mr Jaitley say about the growth?","answer":"Mr Jaitley said growth will accelerate to between 8 and 8.5 percent in the fiscal year starting in April. A pace of 7.4 per cent is expected for the current year."},{"textfileName":"FinanceMinister.txt","question":"What percent is expected for the current year?","answer":"A pace of 7.4 per cent is expected for the current year."},{"textfileName":"FinanceMinister.txt","question":"Who forecasted inflation at 5 percent by the end of the fiscal year ending March 2016?","answer":"Arun Jaitley."},{"textfileName":"FinanceMinister.txt","question":"What percent of tax has the Reserve Bank of India targeted?","answer":"6 percent."},{"textfileName":"FinanceMinister.txt","question":"How much was the annual inflation in January?","answer":"5.1 %."},{"textfileName":"FinanceMinister.txt","question":"How much % of tax will India reduce on business?","answer":"25 per cent over four years from a current 30 per cent."},{"textfileName":"FinanceMinister.txt","question":"Which tax is abolished by the government ?","answer":"Government will abolish the wealth tax and replace wealth tax with an additional 2 per cent surcharge on the country's super rich."},{"textfileName":"FinanceMinister.txt","question":"What amount has the government added to boost the efficiency of MNREGA?","answer":"5000 crores."},{"textfileName":"FinanceMinister.txt","question":"What is MNREGA?","answer":"MNREGA is the rural, job creation scheme."},{"textfileName":"FinanceMinister.txt","question":"What is the rural job creation scheme?","answer":"MNREGA."},{"textfileName":"FinanceMinister.txt","question":"What is India's costliest welfare programme?","answer":"MNREGA."},{"textfileName":"FinanceMinister.txt","question":"To which scheme has the government added 5000 crores?","answer":"MNREGA."},{"textfileName":"FinanceMinister.txt","question":"What has the minister proposed regarding increasing the service tax ?","answer":"The Minister has proposed increasing the service tax rate and education cess to 14 per cent from the current 12.36 per cent."},{"textfileName":"FinanceMinister.txt","question":"What has the minister proposed regarding increasing the education cess?","answer":"The Minister has proposed increasing the service tax rate and education cess to 14 per cent from the current 12.36 per cent."},{"textfileName":"FinanceMinister.txt","question":"What did the local companies hope for ?","answer":"Some local companies had hoped that the budget would reduce their tax liabilities to help them kickstart investments badly hit by the Indian economic slowdown in the last couple of years."}]
+[
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "Who is the Finance Minister of India?",
+    "answer": "Arun Jaitley."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "Who is the Finance Minister?",
+    "answer": "Arun Jaitley."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "Who is Arun Jaitley?",
+    "answer": "Arun Jaitley is the finance minister of India."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What did Mr Jaitley say about the growth?",
+    "answer": "Mr Jaitley said growth will accelerate to between 8 and 8.5 percent in the fiscal year starting in April. A pace of 7.4 per cent is expected for the current year."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What percent is expected for the current year?",
+    "answer": "A pace of 7.4 per cent is expected for the current year."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "Who forecasted inflation at 5 percent by the end of the fiscal year ending March 2016?",
+    "answer": "Arun Jaitley."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What percent of tax has the Reserve Bank of India targeted?",
+    "answer": "6 percent."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "How much was the annual inflation in January?",
+    "answer": "5.1 %."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "How much % of tax will India reduce on business?",
+    "answer": "25 per cent over four years from a current 30 per cent."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "Which tax is abolished by the government ?",
+    "answer": "Government will abolish the wealth tax and replace wealth tax with an additional 2 per cent surcharge on the country's super rich."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What amount has the government added to boost the efficiency of MNREGA?",
+    "answer": "5000 crores."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What is MNREGA?",
+    "answer": "MNREGA is the rural, job creation scheme."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What is the rural job creation scheme?",
+    "answer": "MNREGA."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What is India's costliest welfare programme?",
+    "answer": "MNREGA."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "To which scheme has the government added 5000 crores?",
+    "answer": "MNREGA."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What has the minister proposed regarding increasing the service tax ?",
+    "answer": "The Minister has proposed increasing the service tax rate and education cess to 14 per cent from the current 12.36 per cent."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What has the minister proposed regarding increasing the education cess?",
+    "answer": "The Minister has proposed increasing the service tax rate and education cess to 14 per cent from the current 12.36 per cent."
+  },
+  {
+    "textfileName": "FinanceMinister.txt",
+    "question": "What did the local companies hope for ?",
+    "answer": "Some local companies had hoped that the budget would reduce their tax liabilities to help them kickstart investments badly hit by the Indian economic slowdown in the last couple of years."
+  }
+]
