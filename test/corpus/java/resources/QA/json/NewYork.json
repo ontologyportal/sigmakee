@@ -3,90 +3,84 @@
     "source":"",
     "file": "NewYork.txt",
     "question" : "Which is the largest city in the United States?",
-    "answer" : "New York."
+    "answer" : "New York"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "How many people live in the Big Apple?",
-    "answer" : "From what I understand, the answer should be more than eight million people."
+    "answer" : "more than eight million people"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "How many museums are there in New York city?",
-    "answer" : "null"
+    "answer" : "two hundred and fifty"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "How many art galleries are there in New York city?",
-    "answer" : "Most likely, four hundred art galleries, and the world famous Broadway for entertainment."
-  },
-  {
-    "source":"",
-    "file": "NewYork.txt",
-    "question" : "What is the name of the world famous theatre located in New York city?",
-    "answer" : "null"
+    "answer" : "four hundred"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "In which city are major national & international corporations headquarter?",
-    "answer" : "null"
+    "answer" : "New York"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Which city is considered to be the business capital of the world?",
-    "answer" : "From what I understand, the answer should be New York City is the business capital of the world and many national and international corporations have their headquarters in New York City."
+    "answer" : "New York City"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Which city is considered to be the financial capital of the world?",
-    "answer" : "Smaranika, I'm pretty sure the answer is New York City is the business capital of the world and many national and international corporations have their headquarters in New York City."
+    "answer" : "New York City"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Where is the NYSE & American Stock Exchange located?",
-    "answer" : "null"
+    "answer" : "New York"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Where is the world's leading center of finance?",
-    "answer" : "null"
+    "answer" : "New York"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "What are the professional sports located in the New York City?",
-    "answer" : "null"
+    "answer" : "Two professional baseball, basketball, hockey, and football teams"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Where is NYSE located ?",
-    "answer" : "null"
+    "answer" : "New York"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Where is American Stock Exchange located?",
-    "answer" : "null"
+    "answer" : "New York"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Where is ASE located?",
-    "answer" : "null"
+    "answer" : "New York"
   },
   {
     "source":"",
     "file": "NewYork.txt",
     "question" : "Where is New York Stock Exchange located?",
-    "answer" : "null"
+    "answer" : "New York"
   }
 ]

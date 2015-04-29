@@ -1,40 +1,48 @@
 [
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "What is Influenza commonly known as?",
     "answer" : "As the flu"
   },
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "Which infectious disease is caused by the influenza virus?",
     "answer" : "Perhaps, Smaranika, Influenza, commonly known as " the flu ", is an infectious disease caused by the influenza virus."
   },
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "What is the most common symptoms of influenza?",
     "answer" : "Likely, the most common symptoms include: a high fever, runny nose, sore throat, muscle pains, headache, coughing, and feeling tired."
   },
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "When does the symptoms of influenza typically begin?",
     "answer" : "Likely, two days, after exposure to the virus, most last less than a week."
   },
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "Which symptoms are not common in adults?",
     "answer" : "In children there may be nausea and vomiting."
   },
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "What is stomach flu?",
     "answer" : "From what I understand, Smaranika, the answer should be nausea and vomiting occur more commonly in the unrelated infection gastroenteritis, which is sometimes inaccurately referred to as " stomach flu " or " 24-hour flu "."
   },
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "What is 24-hour flu?",
     "answer" : "I'm pretty sure the answer is nausea and vomiting occur more commonly in the unrelated infection gastroenteritis, which is sometimes inaccurately referred to as " stomach flu " or " 24-hour flu "."
   },
   {
+    "source":"",
     "file": "Influenza.txt",
     "question" : "What are the complications in influenza?",
     "answer" : "Most likely the answer is complications of influenza may include viral pneumonia, secondary bacterial pneumonia, sinus infections, and worsening of previous health problems such as asthma or heart failure."
