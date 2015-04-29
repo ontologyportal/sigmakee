@@ -1,1 +1,97 @@
-[{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who was Sherlock Holmes ?","answer":"Sherlock Holmes is a fictional character created by Scottish author and physician Sir Arthur Conan Doyle, a graduate of the University of Edinburgh Medical School."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Which fictional character created by Scottish author and physician Sir Arthur Conan Doyle?","answer":"Sherlock Holmes."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who was Sir Arthur Conan Doyle?","answer":"Sir Arthur Conan Doyle is a physician who created a fictional character along with Scottish author, and also a graduate of the University of Edinburgh Medical School."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who created Sherlock Holmes?","answer":"Scottish author and physician Sir Arthur Conan Doyle, a graduate of the University of Edinburgh Medical School."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who was a graduate of the University of Edinburgh Medical School?","answer":"Physician Sir Arthur Conan Doyle is a graduate."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who graduated from the University of Edinburgh Medical School?","answer":"Physician Sir Arthur Conan Doyle graduated from the University of Edinburgh Medical School."},{"textfileName":"PassageOnSherlockHolmes.txt","question":" Who was a London-based \"consulting detective\"?","answer":"Sherlock Holmes a London-based \"consulting detective\" whose abilities border on the fantastic, Holmes is known for his astute logical reasoning, his ability to adopt almost any disguise and his use of forensic science to solve difficult cases."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who was known for his astute logical reasoning? ","answer":"Sherlock Holmes."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"When did Holmes first appeared in print?","answer":"In 1887."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who first appeared in print in 1887?","answer":"Sherlock Holmes."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"Who was featured in four novels and 56 short stories?","answer":"Sherlock Holmes."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"In how many novels Holmes was featured?","answer":"Four novels ."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"In how many short stories Holmes was featured?","answer":"56 short stories."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"What was the first novel which appeared in Beeton's Christmas Annual in 1887?","answer":"The first novel, A Study in Scarlet, appeared in Beeton's Christmas Annual in 1887 ."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"What was the second novel which appeared in Lippincott's Monthly Magazine in 1890?","answer":"The second novel is The Sign of the Four appeared in Lippincott's Monthly Magazine in 1890."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"In which year the first novel appeared in Beeton's Christmas Annual?","answer":"1887."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"In which year the second novel appeared in Lippincott's Monthly Magazine?","answer":"1890."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"When did the character's popularity grew ?","answer":"1891."},{"textfileName":"PassageOnSherlockHolmes.txt","question":"In which magazine the character's popularity grew with the first series of short stories?","answer":"Strand Magazine"}]
+[
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who was Sherlock Holmes ?",
+    "answer": "Sherlock Holmes is a fictional character created by Scottish author and physician Sir Arthur Conan Doyle, a graduate of the University of Edinburgh Medical School."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Which fictional character created by Scottish author and physician Sir Arthur Conan Doyle?",
+    "answer": "Sherlock Holmes."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who was Sir Arthur Conan Doyle?",
+    "answer": "Sir Arthur Conan Doyle is a physician who created a fictional character along with Scottish author, and also a graduate of the University of Edinburgh Medical School."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who created Sherlock Holmes?",
+    "answer": "Scottish author and physician Sir Arthur Conan Doyle, a graduate of the University of Edinburgh Medical School."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who was a graduate of the University of Edinburgh Medical School?",
+    "answer": "Physician Sir Arthur Conan Doyle is a graduate."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who graduated from the University of Edinburgh Medical School?",
+    "answer": "Physician Sir Arthur Conan Doyle graduated from the University of Edinburgh Medical School."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": " Who was a London-based \"consulting detective\"?",
+    "answer": "Sherlock Holmes a London-based \"consulting detective\" whose abilities border on the fantastic, Holmes is known for his astute logical reasoning, his ability to adopt almost any disguise and his use of forensic science to solve difficult cases."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who was known for his astute logical reasoning? ",
+    "answer": "Sherlock Holmes."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "When did Holmes first appeared in print?",
+    "answer": "In 1887."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who first appeared in print in 1887?",
+    "answer": "Sherlock Holmes."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "Who was featured in four novels and 56 short stories?",
+    "answer": "Sherlock Holmes."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "In how many novels Holmes was featured?",
+    "answer": "Four novels ."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "In how many short stories Holmes was featured?",
+    "answer": "56 short stories."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "What was the first novel which appeared in Beeton's Christmas Annual in 1887?",
+    "answer": "The first novel, A Study in Scarlet, appeared in Beeton's Christmas Annual in 1887 ."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "What was the second novel which appeared in Lippincott's Monthly Magazine in 1890?",
+    "answer": "The second novel is The Sign of the Four appeared in Lippincott's Monthly Magazine in 1890."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "In which year the first novel appeared in Beeton's Christmas Annual?",
+    "answer": "1887."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "In which year the second novel appeared in Lippincott's Monthly Magazine?",
+    "answer": "1890."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "When did the character's popularity grew ?",
+    "answer": "1891."
+  },
+  {
+    "textfileName": "PassageOnSherlockHolmes.txt",
+    "question": "In which magazine the character's popularity grew with the first series of short stories?",
+    "answer": "Strand Magazine"
+  }
+]

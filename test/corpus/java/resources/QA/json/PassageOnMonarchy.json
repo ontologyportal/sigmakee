@@ -1,1 +1,52 @@
-[{"textfileName":"PassageOnMonarchy.txt","question":"What is Monarchy?","answer":"A form of government in which sovereignty is actually or nominally embodied in one or several individual (s) reigning until death or abdication."},{"textfileName":"PassageOnMonarchy.txt","question":"What is Monarchy?","answer":"A form of government in which sovereignty is actually or nominally embodied in one or several individual (s) reigning until death or abdication."},{"textfileName":"PassageOnMonarchy.txt","question":"Which form of government in which sovereignty is actually or nominally embodied in one or several individuals reigning until death or abdication?","answer":"A monarchy is a form of government in which sovereignty is actually or nominally embodied in one or several individual(s) reigning until death or abdication."},{"textfileName":"PassageOnMonarchy.txt","question":"What is an absolute monarchy?","answer":"The answer is when the monarch has no or few legal restraints in state and political matters, restraints is called an absolute monarchy and is a form of autocracy."},{"textfileName":"PassageOnMonarchy.txt","question":" What are constitutional monarchies?","answer":"Cases in which the monarch's discretion is formally limited (most common today) are called constitutional monarchies."},{"textfileName":"PassageOnMonarchy.txt","question":"What is hereditary monarchy?","answer":"In hereditary monarchies, the office is passed through inheritance within a family group, whereas elective monarchies use some system of voting."},{"textfileName":"PassageOnMonarchy.txt","question":"What is elective monarchy?","answer":"Elective monarchies use some system of voting. Each of these has variations: in some elected monarchies only those of certain pedigrees are eligible."},{"textfileName":"PassageOnMonarchy.txt","question":"Which type of monarchy uses some system of voting?","answer":"Elective monarchies."},{"textfileName":"PassageOnMonarchy.txt","question":"In which monarchies pedigrees are eligible?","answer":"Possibly, each of these has variations: in some elected monarchies only those of certain pedigrees are eligible, whereas many hereditary monarchies impose requirements regarding the religion, age, gender, mental capacity, and other factors."},{"textfileName":"PassageOnMonarchy.txt","question":"What type of requirement is imposed by hereditary monarchy?","answer":"Requirements regarding the religion, age, gender, mental capacity, and other factors."}]
+[
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "What is Monarchy?",
+    "answer": "A form of government in which sovereignty is actually or nominally embodied in one or several individual (s) reigning until death or abdication."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "What is Monarchy?",
+    "answer": "A form of government in which sovereignty is actually or nominally embodied in one or several individual (s) reigning until death or abdication."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "Which form of government in which sovereignty is actually or nominally embodied in one or several individuals reigning until death or abdication?",
+    "answer": "A monarchy is a form of government in which sovereignty is actually or nominally embodied in one or several individual(s) reigning until death or abdication."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "What is an absolute monarchy?",
+    "answer": "The answer is when the monarch has no or few legal restraints in state and political matters, restraints is called an absolute monarchy and is a form of autocracy."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": " What are constitutional monarchies?",
+    "answer": "Cases in which the monarch's discretion is formally limited (most common today) are called constitutional monarchies."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "What is hereditary monarchy?",
+    "answer": "In hereditary monarchies, the office is passed through inheritance within a family group, whereas elective monarchies use some system of voting."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "What is elective monarchy?",
+    "answer": "Elective monarchies use some system of voting. Each of these has variations: in some elected monarchies only those of certain pedigrees are eligible."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "Which type of monarchy uses some system of voting?",
+    "answer": "Elective monarchies."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "In which monarchies pedigrees are eligible?",
+    "answer": "Possibly, each of these has variations: in some elected monarchies only those of certain pedigrees are eligible, whereas many hereditary monarchies impose requirements regarding the religion, age, gender, mental capacity, and other factors."
+  },
+  {
+    "textfileName": "PassageOnMonarchy.txt",
+    "question": "What type of requirement is imposed by hereditary monarchy?",
+    "answer": "Requirements regarding the religion, age, gender, mental capacity, and other factors."
+  }
+]

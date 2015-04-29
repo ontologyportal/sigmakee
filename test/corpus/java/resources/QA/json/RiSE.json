@@ -20,6 +20,7 @@
     "answer" : "leg motion, manages communications, and services a variety of sensors, including joint position sensors, leg strain sensors and foot contact sensors"
   },
   {
+    "source": "",
     "file": "RiSE.txt",
     "question" : "What controls leg motion, manages communications, and services a variety of sensors, including joint position sensors, leg strain sensors and foot contact sensors?",
     "answer" : "the onboard computer"
