@@ -2,71 +2,66 @@
   {
     "file": "RayCharles.txt",
     "question" : "Who is Ray Charles ?",
-    "answer" : "null"
+    "answer" : "a musician of exceptional talents - singer, songwriter, arranger and pianist"
   },
   {
     "file": "RayCharles.txt",
     "question" : "When did Ray Charles die?",
-    "answer" : "null"
-  },
-  {
-    "file": "RayCharles.txt",
-    "question" : "I'm sorry, I don't understand, Smaranika. Would you like to speak to a different agent?",
-    "answer" : "null"
+    "answer" : "June 10, age 73"
   },
   {
     "file": "RayCharles.txt",
     "question" : "How long was Ray’s career?",
-    "answer" : "Smaranika, I'm pretty sure the answer is in a career spanning more than 50 years, the extraordinarily gifted blind artist earned 12 Grammy Awards and numerous other honors, both in the United States and abroad."
+    "answer" : "more than 50 years"
   },
   {
     "file": "RayCharles.txt",
     "question" : "Which song was Ray Charles well-known for ?",
-    "answer" : "null"
+    "answer" : "Georgia On My Mind"
   },
   {
     "file": "RayCharles.txt",
     "question" : "Which song was Ray Charles best known for ?",
-    "answer" : "null"
+    "answer" : "Georgia On My Mind"
   },
   {
     "file": "RayCharles.txt",
     "question" : "Which song was selected as a state song for the southern state of Georgia?",
-    "answer" : "null"
+    "answer" : "Georgia On My Mind"
   },
   {
     "file": "RayCharles.txt",
-    "question" : "How was Ray known among fans ?",
-    "answer" : "From what I understand, Smaranika, the answer should be to his fans, Ray Charles was fondly known as 'Brother Ray,' also the title of his 1978 autobiography."
+    "question" : "How was Ray known among fans?",
+    "answer" : "Ray Charles was fondly known as 'Brother Ray'"
   },
   {
     "file": "RayCharles.txt",
     "question" : "What was the title of his 1978 autobiography?",
-    "answer" : "null"
+    "answer" : "Brother Ray"
   },
   {
     "file": "RayCharles.txt",
     "question" : "When was Ray’s final public appearance?",
-    "answer" : "I'm fairly sure the answer is April 30 when the city of Los Angeles designated his 40-year-old studio an historic landmark."
+    "answer" : "April 30"
   },
   {
     "file": "RayCharles.txt",
     "question" : "Who was one of the first inductees into the Rock and Roll Hall of Fame in 1986?",
-    "answer" : "null"
+    "answer" : "Ray Charles"
   },
   {
     "file": "RayCharles.txt",
     "question" : "Where did Ray die?",
-    "answer" : "null"
+    "answer" : "Beverly Hills, California"
   },
   {
     "file": "RayCharles.txt",
     "question" : "How did Ray die?",
-    "answer" : "null"
+    "answer" : "acute liver disease"
   },
   {
     "file": "RayCharles.txt",
     "question" : "When did Ray die ?",
-    "answer" : "Possibly, June 10, age 73."
+    "answer" : "June 10, age 73"
   }
 ]
