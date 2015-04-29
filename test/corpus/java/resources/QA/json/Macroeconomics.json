@@ -1,176 +1,164 @@
 [
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What sort of people are excluded from the labor force?",
-    "answer": "People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force."
+    "file":"Macroeconomics.txt",
+    "question":"What is macroeconomics?",
+    "answer":"(a branch of economics)|(a branch of economics dealing with the performance, structure, behavior, and decision-making of an economy as a whole, rather than individual markets)"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What are the different types of unemployments?",
-    "answer": "Unemployment can be generally broken down into several types that are related to different causes. Classical unemployment theory suggests that unemployment occurs when wages are too high for employers to be willing to hire more workers. Other more modern economic theories suggest that increased wages actually decrease unemployment by creating more consumer demand."
+    "file":"Macroeconomics.txt",
+    "question":"What constitutes macroeconomics?",
+    "answer":"(Macroeconomic theories usually relate the phenomena of output , unemployment , and inflation)|(Macroeconomics encompasses a variety of concepts and variables, but there are three central topics for macroeconomic research)|(A branch of economics dealing with the performance, structure, behavior, and decision-making of an economy as a whole, rather than individual markets)|(This includes national, regional, and global economies)"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is the classical unemployment theory?",
-    "answer": "Classical unemployment theory suggests that unemployment occurs when wages are too high for employers to be willing to hire more workers."
+    "file":"Macroeconomics.txt",
+    "question":"What are the 2 most general fields in economics?",
+    "answer":"With microeconomics, macroeconomics is one of the two most general fields in economics"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What are the modern economic theories regarding unemployment?",
-    "answer": "Modern economic theories suggest that increased wages actually decrease unemployment by creating more consumer demand."
+    "file":"Macroeconomics.txt",
+    "question":"What do Macroeconomists study?",
+    "answer":"aggregated indicators such as GDP, unemployment rates, and price indexes to understand how the whole economy functions"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "How does frictional unemployment occur?",
-    "answer": "Consistent with classical unemployment, frictional unemployment occurs when appropriate job vacancies exist for a worker, but the length of time needed to search for and find the job leads to a period of unemployment."
+    "file":"Macroeconomics.txt",
+    "question":"What do macroeconomists develop?",
+    "answer":"models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "How does cyclical unemployment occur?",
-    "answer": "Cyclical unemployment occurs when growth stagnates."
+    "file":"Macroeconomics.txt",
+    "question":"What sort of models do Macroeconomists develop?",
+    "answer":"models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is Okun's law?",
-    "answer": "Okun's law represents the empirical relationship between unemployment and economic growth."
+    "file":"Macroeconomics.txt",
+    "question":"What is microeconomics primarily focused on?",
+    "answer":"the actions of individual agents, such as firms and consumers, and how their behavior determines prices and quantities in specific markets"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What does Okun's law represent?",
-    "answer": "The empirical relationship."
+    "file":"Macroeconomics.txt",
+    "question":"What are Macroeconomic models and their forecasts used for?",
+    "answer":"to assist in the development and evaluation of economic policy"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is inflation?",
-    "answer": "A general price increase across the entire economy is called inflation."
+    "file":"Macroeconomics.txt",
+    "question":"What do Macroeconomic theories usually relate to?",
+    "answer":"the phenomena of output, unemployment, and inflation"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is deflation?",
-    "answer": "When prices decrease, there is deflation."
+    "file":"Macroeconomics.txt",
+    "question":"What is national output?",
+    "answer":"the lowest amount of everything a country produces in a given time period"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "How does inflation occur?",
-    "answer": "Inflation can occur when an economy becomes overheated and grows too quickly."
+    "file":"Macroeconomics.txt",
+    "question":"What generates income?",
+    "answer":"Everything that is produced and sold"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is macroeconomics?",
-    "answer": "A branch of economics dealing with the performance, structure, behavior, and decision-making of an economy as a whole rather than individual markets,, one of the two most general fields in economics, a broad field of study and three central topics for macroeconomic research."
+    "file":"Macroeconomics.txt",
+    "question":"How is the Macroeconomic output usually measured?",
+    "answer":"(total income)|(the total value of final goods)|(Gross Domestic Product)"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What constitutes macroeconomics?",
-    "answer": "It constitues  performance, structure, behavior, and decision-making of an economy as a whole."
+    "file":"Macroeconomics.txt",
+    "question":"What is GDP?",
+    "answer":"Macroeconomic output is usually measured by Gross Domestic Product \\(GDP\\) or one of the other national accounts"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What are the 2 most general fields in economics?",
-    "answer": "Microeconomics and macroeconomics."
+    "file":"Macroeconomics.txt",
+    "question":"What is Gross Domestic Product?",
+    "answer":"Macroeconomic output is usually measured by Gross Domestic Product \\(GDP\\) or one of the other national accounts"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What do Macroeconomists study?",
-    "answer": "Macroeconomists study aggregated indicators such as GDP, unemployment rates, and price indexes to understand how the whole economy functions."
+    "file":"Macroeconomics.txt",
+    "question":"What leads to increased economic output over time?",
+    "answer":"advances in technology, accumulation of machinery and other capital, and better education and human capital"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What do macroeconomists develop?",
-    "answer": "Macroeconomists develop models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance."
+    "file":"Macroeconomics.txt",
+    "question":"How is the amount of unemployment in an economy is measured?",
+    "answer":"the unemployment rate"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What sort of models do Macroeconomists develop?",
-    "answer": "Models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance."
+    "file":"Macroeconomics.txt",
+    "question":"How is the labor force calculated?",
+    "answer":"workers actively looking for jobs|People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What do macroeconomists develop?",
-    "answer": "Models that explain the relationship between such factors as national income, output, consumption, unemployment, inflation, savings, investment, international trade and international finance."
+    "file":"Macroeconomics.txt",
+    "question":"What constitutes of the labor force?",
+    "answer":"workers actively looking for jobs|People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is microeconomics primarily focused on ?",
-    "answer": "Microeconomics is primarily focused on the actions of individual agents, such as firms and consumers, and how their behavior determines prices and quantities in specific markets."
+    "file":"Macroeconomics.txt",
+    "question":"What is the classical unemployment theory?",
+    "answer":"unemployment occurs when wages are too high for employers to be willing to hire more workers"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What are Macroeconomic models and their forecasts used for ?",
-    "answer": "Macroeconomic models and their forecasts are used by governments to assist in the development and evaluation of economic policy."
+    "file":"Macroeconomics.txt",
+    "question":"What are the modern economic theories regarding unemployment?",
+    "answer":"that increased wages actually decrease unemployment by creating more consumer demand"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What do Macroeconomic theories usually relate to?",
-    "answer": "Macroeconomic theories usually relate the phenomena of output, unemployment, and inflation."
+    "file":"Macroeconomics.txt",
+    "question":"How does frictional unemployment occur?",
+    "answer":"when appropriate job vacancies exist for a worker, but the length of time needed to search for and find the job leads to a period of unemployment"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is national output?",
-    "answer": "National output is the lowest amount of everything a country produces in a given time period."
+    "file":"Macroeconomics.txt",
+    "question":"How does cyclical unemployment occur?",
+    "answer":"when growth stagnates"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What generates income?",
-    "answer": "Everything that is produced and sold."
+    "file":"Macroeconomics.txt",
+    "question":"What is Okun's law?",
+    "answer":"(the empirical relationship between unemployment and economic growth)|(a 3% increase in output would lead to a 1% decrease in unemployment)"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "How is the Macroeconomic output usually measured as?",
-    "answer": "Most likely the answer is output can be measured as total income, or, output can be viewed from the production side and measured as the total value of final goods and services or the sum of all value added in the economy.Macroeconomic output is usually measured by Gross Domestic Product(GDP) or one of the other national accounts."
+    "file":"Macroeconomics.txt",
+    "question":"What does Okun’s law represent?",
+    "answer":" the empirical relationship between unemployment and economic growth"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What is GDP?",
-    "answer": "Gross domestic product (GDP) is the measure for Macroeconomic output."
+    "file":"Macroeconomics.txt",
+    "question":"What is inflation?",
+    "answer":"A general price increase across the entire economy"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What leads to increased economic output over time?",
-    "answer": "Advances in technology, accumulation of machinery and other capital, and better education and human capital all lead to increased economic output over time."
+    "file":"Macroeconomics.txt",
+    "question":"What is deflation?",
+    "answer":"when prices decrease"
   },
   {
     "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "How is the amount of unemployment in an economy is measured?",
-    "answer": "The amount of unemployment in an economy is measured by the unemployment rate, the percentage of workers without jobs in the labor force."
-  },
-  {
-    "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "How is the labor force calculated?",
-    "answer": "The labor force only includes workers actively looking for jobs. People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force."
-  },
-  {
-    "source":"",
-    "file": "Macroeconomics.txt",
-    "question": "What constitutes of the labor force?",
-    "answer": "The labor force only includes workers actively looking for jobs. People who are retired, pursuing education, or discouraged from seeking work by a lack of job prospects are excluded from the labor force."
+    "file":"Macroeconomics.txt",
+    "question":"How does inflation occur?",
+    "answer":"when an economy becomes overheated and grows too quickly"
   }
 ]
