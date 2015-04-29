@@ -9,84 +9,78 @@
     "source": "",
     "file": "Biofuel.txt",
     "question" : "Which fuel is derived from biological materials?",
-    "answer" : "null"
+    "answer" : "biofuel"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "What are the biological materials which is used to derive biofuel?",
-    "answer" : "Possibly, a biofuel is a fuel that is derived from biological materials, such as plants and animals."
+    "question" : "What is made by a biomass conversion?",
+    "answer" : "biofuel"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "What is made by a biomass conversion ?",
-    "answer" : "null"
-  },
-  {
-    "source": "",
-    "file": "Biofuel.txt",
-    "question" : "What does biomass refers to?",
-    "answer" : "I'm pretty sure the answer is these fuels are made by a biomass conversion (biomass refers to recently living organisms, most often referring to plants or plant-derived materials)."
+    "question" : "What does biomass refer to?",
+    "answer" : "recently living organisms"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
     "question" : "What are the ways in which biomass can be converted into convenient energy?",
-    "answer" : "Probably, three different ways: thermal conversion, chemical conversion, and biochemical conversion."
+    "answer" : "thermal conversion chemical conversion and biochemical conversion"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "What results in biomass conversion?",
-    "answer" : "This biomass conversion can result in fuel in solid, liquid, or gas form."
+    "question" : "What can biomass conversion result in?",
+    "answer" : "fuel"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "What is Bioethanol?",
-    "answer" : "null"
+    "question" : "What is bioethanol?",
+    "answer" : "alcohol"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "Which alcohol is made by fermentation mostly from carbohydrates produced in sugar?",
-    "answer" : "Perhaps, Smaranika, Bioethanol is an alcohol made by fermentation, mostly from carbohydrates produced in sugar or starch crops such as corn, sugarcane, or sweet sorghum."
+    "question" : "What are some examples of starch crops?",
+    "answer" : "corn sugarcane or sweet sorghum"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "How cellulosic biomass is derived?",
-    "answer" : "Most likely, cellulosic biomass, derived from non-food sources, such as trees and grasses, is also being developed as a feedstock for ethanol production."
+    "question" : "What is cellulosic biomass derived from?",
+    "answer" : "non-food sources"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
     "question" : "What is the use of ethanol?",
-    "answer" : "From what I understand, Smaranika, the answer should be ethanol can be used as a fuel for vehicles in its pure form, but ethanol is usually used as a gasoline additive to increase octane and improve vehicle emissions."
+    "answer" : "a fuel for vehicles and a gasoline additive"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
     "question" : "What is used as a fuel for vehicles in its pure form?",
-    "answer" : "Smaranika, I'm pretty sure the answer is ethanol."
+    "answer" : "ethanol"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "In which country bioethanol is widely used?",
-    "answer" : "I'm fairly sure the answer is Bioethanol is widely used in the USA and in Brazil."
+    "question" : "In which countries is bioethanol is widely used?",
+    "answer" : "USA and Brazil"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "How biodiesel can be used ?",
-    "answer" : "Biodiesel can be used as a fuel for vehicles in its pure form."
+    "question" : "How can biodiesel be used?",
+    "answer" : "as a fuel"
   },
   {
     "source": "",
     "file": "Biofuel.txt",
-    "question" : "Which country is the world's largest biodiesel producer ?",
-    "answer" : "I'm pretty sure the answer is the world's largest biodiesel producer is the European Union, accounting for 53 percent of all biodiesel production in 2010."
+    "question" : "Which countries are the world's largest biodiesel producers?",
+    "answer" : "United States and Brazil"
   }
 ]
