@@ -1,126 +1,121 @@
 [
   {"textfileName":"TechnologyShocks.txt",
     "question":"What are technology shocks?",
-    "answer":"Events, macroeconomic model, change the production function."
+    "answer":"events in a macroeconomic model that change the production function"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What changes the production function?",
-    "answer":"Technology shocks."
+    "answer":"Technology shocks"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"How is the term shock defined?",
-    "answer":"A sudden change in economic terms."
+    "answer":"A sudden change in economic terms"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"How is shock modeled?",
-    "answer":"An aggregate production function that has a scaling factor."
+    "answer":"An aggregate production function that has a scaling factor"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is a technology shock?",
-    "answer":"A sudden change in technology to either benefit or worsen economic activity."
+    "answer":"A sudden change in technology to either benefit or worsen economic activity"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What happens when there is a sudden change in technology to either benefit or worsen economic activity?",
-    "answer":"A sudden shock."
+    "answer":"A sudden shock"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"Where does technology shock have a big effect?",
-    "answer":"Companies, solely dependent on technology."
+    "answer":"Companies solely dependent on technology"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is a positive technology shock?",
-    "answer":"Firm, increases."
+    "answer":"increasing the output for a given set of inputs"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"Are positive shocks more common than negative technology shocks?",
-    "answer":"Yes."
+    "answer":"Yes"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"Are negative shocks more common than positive technology shocks?",
-    "answer":"No."
+    "answer":"No"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is the example of a positive technology shock?",
-    "answer":"The Industrial Revolution."
+    "answer":"The Industrial Revolution"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"How did the Industrial revolution impact people?",
-    "answer":"Increased wages steadily, increased population."
-  },
-  {
-    "textfileName":"TechnologyShocks.txt",
-    "question":"What are technology shocks?",
-    "answer":"Events in a macroeconomic model, change the production function."
+    "answer":"It increased wages steadily over the period of time and it also increased population because people had the wages for standard living"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is a negative technology shock?",
-    "answer":"Firm, decreases."
+    "answer":"decreasing the output for a given set of inputs"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What happened with the oil shock?",
-    "answer":"The price, up."
+    "answer":"The price of the capital and the labor both went up"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is RBCT?",
-    "answer":"Real business cycle theory."
+    "answer":"Real business cycle theory"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is Real business cycle theory?",
-    "answer":"Real business cycle theory (RBCT) is the theory where any type of shock has a ripple effect into many other shocks."
+    "answer":"Real business cycle theory RBCT is the theory where any type of shock has a ripple effect into many other shocks"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What does a RBCT start with?",
-    "answer":"Negative, shock."
+    "answer":"a negative type of shock"
   },
   {
     "textfileName":"TechnologyShocks.txt",
-    "question":"What is a supply shock ?",
-    "answer":"Event, suddenly, changes the price, commodity, service."
+    "question":"What is a supply shock?",
+    "answer":"an event that suddenly changes the price of a commodity or service"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is a negative supply shock?",
-    "answer":"Sudden, supply, decrease."
+    "answer":"sudden supply decrease"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is a positive supply shock?",
-    "answer":"Increase, sudden, supply."
+    "answer":"an increase in supply"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What are the results of a negative supply shock?",
-    "answer":"Stagflation."
+    "answer":"Stagflation"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What are the results of a positive supply shock?",
-    "answer":"Lower the price."
+    "answer":"Lower the price"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"What is demand shock?",
-    "answer":"Sudden event, increase, decrease, demand for goods or services, temporarily."
+    "answer":"a sudden event that increases or decreases demand for goods or services temporarily"
   },
   {
     "textfileName":"TechnologyShocks.txt",
     "question":"How is demand shock defined in economics?",
-    "answer":"A sudden event that increases or decreases demand for goods or services temporarily."
+    "answer":"A sudden event that increases or decreases demand for goods or services temporarily"
   }
 ]

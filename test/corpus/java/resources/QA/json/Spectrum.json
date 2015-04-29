@@ -2,56 +2,56 @@
   {
     "file": "Spectrum.txt",
     "question" : "What is the visible spectrum?",
-    "answer" : "Portion, electromagnetic spectrum, visible, human eye."
+    "answer" : "the portion of the electromagnetic spectrum that is visible to can be detected by the human eye"
   },
   {
     "file": "Spectrum.txt",
     "question" : "What is visible light?",
-    "answer" : "Electromagnetic radiation."
+    "answer" : "Electromagnetic radiation"
   },
   {
     "file": "Spectrum.txt",
     "question" : "What wavelength a typical human eye will respond to?",
-    "answer" : "390 to 700 nm."
+    "answer" : "390 to 700 nm"
   },
   {
     "file": "Spectrum.txt",
     "question" : "What is the range of wavelength a typical human eye responds?",
-    "answer" : "390 to 700 nm."
+    "answer" : "390 to 700 nm"
   },
   {
     "file": "Spectrum.txt",
     "question" : "What is the range of frequency that a human eye responds?",
-    "answer" : "390 to 700 nm."
+    "answer" : "390 to 700 nm"
   },
   {
     "file": "Spectrum.txt",
     "question" : "Does the spectrum contains all the colors that the human eyes and brain can distinguish?",
-    "answer" : "No."
+    "answer" : "No"
   },
   {
     "file": "Spectrum.txt",
     "question" : "Why magenta is not present in the visible spectrum?",
-    "answer" : "A mix of multiple wavelengths."
+    "answer" : "A mix of multiple wavelengths"
   },
   {
     "file": "Spectrum.txt",
     "question" : "Which color can be made only by a mix of multiple wavelengths?",
-    "answer" : "Unsaturated colors, purple variations."
+    "answer" : "Unsaturated colors, purple variations"
   },
   {
     "file": "Spectrum.txt",
     "question" : "What are pure colors?",
-    "answer" : "Only one wavelength."
+    "answer" : "Only one wavelength"
   },
   {
     "file": "Spectrum.txt",
     "question" : "What are spectral colors?",
-    "answer" : "Pure colors."
+    "answer" : "Pure colors"
   },
   {
     "file": "Spectrum.txt",
     "question" : "Why optical window is also referred as the \"visible window\"?",
-    "answer" : "Overlaps the human visible response spectrum."
+    "answer" : "Overlaps the human visible response spectrum"
   }
 ]

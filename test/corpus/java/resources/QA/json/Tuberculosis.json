@@ -2,51 +2,51 @@
   {
     "file": "Tuberculosis.txt",
     "question" : "What is TB?",
-    "answer" : "Tubercle Bacillus."
+    "answer" : "Tubercle Bacillus"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "What is Tuberculosis?",
-    "answer" : "Widespread, fatal, infectious disease caused by various strains of mycobacteria."
+    "answer" : "Widespread fatal infectious disease caused by various strains of mycobacteria"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "What is Tuberculosis called in the past?",
-    "answer" : "Phthisis, phthisis pulmonalis, or consumption."
+    "answer" : "Phthisis phthisis pulmonalis or consumption"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "Which infectious disease is caused by various strains of mycobacteria?",
-    "answer" : "Tuberculosis."
+    "answer" : "Tuberculosis"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "Which part of body Tuberculosis typically attacks ?",
-    "answer" : "The lungs."
+    "answer" : "The lungs"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "What is the mode of spread of TB?",
-    "answer" : "The air."
+    "answer" : "The air"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "What is latent tuberculosis?",
-    "answer" : "Infections that don't have symptoms."
+    "answer" : "Infections that don't have symptoms"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "What are the classic symptoms of active TB infection?",
-    "answer" : "A chronic cough with blood-tinged sputum, fever, night sweats, and weight loss."
+    "answer" : "A chronic cough with blood-tinged sputum fever night sweats and weight loss"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "What dose diagnosis of latent TB rely on?",
-    "answer" : "The tuberculin skin test (TST) and / or blood tests."
+    "answer" : "The tuberculin skin test TST and or blood tests"
   },
   {
     "file": "Tuberculosis.txt",
     "question" : "What does diagnosis of active TB rely on?",
-    "answer" : "Radiology, microscopic examination, microbiological culture of body fluids."
+    "answer" : "radiology commonly chest X-rays as well as microscopic examination and microbiological culture of body fluids"
   }
 ]
