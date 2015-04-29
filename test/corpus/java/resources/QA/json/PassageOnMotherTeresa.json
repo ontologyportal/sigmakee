@@ -3,19 +3,13 @@
     "source":"",
     "file": "Passage on Mother Teresa.txt",
     "question": "Who is known as the Blessed Teresa of Calcutta, MC?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa."
-  },
-  {
-    "source":"",
-    "file": "Passage.txt",
-    "question": "Who is otherwise known as Blessed Teresa of Calcutta, MC?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa."
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "Passage.txt",
     "question": "What is a  Roman Catholic religious congregation?",
-    "answer": "Mother Teresa founded the Missionaries of Charity, a Roman Catholic religious congregation, which in 2012 consisted of over 4,500 sisters and is active in 133 countries. "
+    "answer": "the Missionaries of Charity"
   },
   {
     "source":"",
@@ -27,132 +21,96 @@
     "source":"",
     "file": "Passage.txt",
     "question": "Who was a Roman Catholic religious sister and missionary?",
-    "answer": "Mother Teresa was a Roman Catholic religious sister and missionary."
-  },
-  {
-    "source":"",
-    "file": "PassageOnMotherTeresa.txt",
-    "question": " Who was Mother Teresa?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910 - 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India. She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
-  },
-  {
-    "source":"",
-    "file": "PassageOnMotherTeresa.txt",
-    "question": "Could you please tell me who was Mother Teresa?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910 - 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India. She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
-  },
-  {
-    "source":"",
-    "file": "PassageOnMotherTeresa.txt",
-    "question": "Do you know who was Mother Teresa?",
-    "answer": "Yes, Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910 - 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India. She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
-  },
-  {
-    "source":"",
-    "file": "PassageOnMotherTeresa.txt",
-    "question": " Who is known as the Blessed Teresa of Calcutta, MC?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910-- 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India."
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Who was Mother Teresa?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910 - 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India. She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
+    "answer": "Blessed Teresa of Calcutta, MC"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Could you please tell me who was Mother Teresa?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910 - 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India. She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
+    "answer": "Blessed Teresa of Calcutta, MC"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": " Do you know who was Mother Teresa?",
-    "answer": "Yes, Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910 - 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India. She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
-  },
-  {
-    "source":"",
-    "file": "PassageOnMotherTeresa.txt",
-    "question": " Who is known as the Blessed Teresa of Calcutta, MC?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910-- 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India."
-  },
-  {
-    "source":"",
-    "file": "PassageOnMotherTeresa.txt",
-    "question": " Who is otherwise known as the Blessed Teresa of Calcutta, MC?",
-    "answer": "Blessed Teresa of Calcutta, MC, commonly known as Mother Teresa (26 August 1910-- 5 September 1997), was a Roman Catholic religious sister and missionary who lived most of her life in India."
+    "answer": "Blessed Teresa of Calcutta, MC"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": " Who was a Roman Catholic religious sister and missionary?",
-    "answer": "Mother Teresa was a Roman Catholic religious sister and missionary who lived most of her life in India."
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Do you know Who was a Roman Catholic religious sister and missionary?",
-    "answer": "Yes, Mother Teresa was a Roman Catholic religious sister and missionary who lived most of her life in India."
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": " Is Mother Teresa a Roman Catholic religious sister and missionary?",
-    "answer": "Yes."
+    "answer": "Yes"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Where was Mother Teresa born?",
-    "answer": "She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
+    "answer": "Macedonia"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Tell me something about Mother Teresa  family?",
-    "answer": "She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo."
+    "answer": "She was born in today's Macedonia, with her family being of Albanian descent originating in Kosovo"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Who founded the Missionaries of Charity?",
-    "answer": "Mother Teresa founded the Missionaries of Charity, a Roman Catholic religious congregation, which in 2012 consisted of over 4,500 sisters and is active in 133 countries."
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": " Do you know Who founded the Missionaries of Charity?",
-    "answer": "Yes, Mother Teresa founded the Missionaries of Charity."
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Who received the Nobel Peace Prize in 1979 ?",
-    "answer": "Mother Teresa was the recipient of numerous honours including the 1979 Nobel Peace Prize. "
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "What prize Mother Teresa received in 1979?",
-    "answer": "Mother Teresa was the recipient of numerous honours including the 1979 Nobel Peace Prize. "
+    "answer": "Nobel Peace Prize"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "When did Mother Teresa received Nobel Peace Prize?",
-    "answer": "In 1979 Mother Teresa received Nobel Peace Prize. "
+    "answer": "In 1979"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "Who was beatified as \"Blessed Teresa of Calcutta\"?",
-    "answer": "Mother Teresa was beatified as \"Blessed Teresa of Calcutta\"."
+    "answer": "Mother Teresa"
   },
   {
     "source":"",
     "file": "PassageOnMotherTeresa.txt",
     "question": "When was Mother Teresa beatified as \"Blessed Teresa of Calcutta\"?",
-    "answer": "In 2003, she was beatified as \"Blessed Teresa of Calcutta\"."
+    "answer": "2003"
   }
 ]
