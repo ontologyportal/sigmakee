@@ -1,80 +1,96 @@
 [
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "On average how far does a North American driver travel per year?",
     "answer" : "12,000 miles."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "How can you get the maximum life out of an automobile?",
     "answer" : "Provide it with proper maintenance."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "How does proper maintenance help?",
     "answer" : "It reduces air pollution, extends the value of the vehicle, saves on fuel bills, prevents breakdowns, and leads to better performance."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "How often should we change the oil in a vehicle?",
     "answer" : "Every 3,000 miles."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "What should you do when you change the oil?",
     "answer" : "Change the oil filter."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "What do oil filters do?",
     "answer" : "Remove dirt and debris from oil."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "What happens to the oil filter as the car runs?",
     "answer" : "It becomes clogged with excess debris from the oil."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "Why must the air be filtered?",
     "answer" : "To stop dirt from damaging the engine."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "Why do the car engines become very hot?",
     "answer" : "Combustion."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "What is used as a coolant for your vehicle system?",
     "answer" : "Antifreeze."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "How often should the coolant be replaced?",
     "answer" : "Every two years."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "How can you extend the life of the radiator?",
     "answer" : "Replace the coolant every two years."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "Who dictates the life expectancy of a tire?",
     "answer" : "The manufacturer."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "What is the first line of safety for a car?",
     "answer" : "The tire."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "What is the prime cause of premature life of belts, gaskets, hoses, and seals?",
     "answer" : "Overheating."
   },
   {
+    "source": "",
     "file": "AmericanDriver.txt",
     "question" : "Which is better, repairing a part or replacing it?",
     "answer" : "Replacing it."
