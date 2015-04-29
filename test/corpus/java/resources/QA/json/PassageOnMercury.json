@@ -1,56 +1,67 @@
 [
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "What is Mercury?",
     "answer": "A chemical element with symbol Hg and atomic number 80 and the only metallic element that is liquid at standard conditions for temperature and pressure."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "What is the symbol of Mercury?",
     "answer": "Mercury is a chemical element with symbol Hg."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "Which chemical element has a symbol Hg?",
     "answer": "Mercury."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "What is the atomic number of Mercury?",
     "answer": "Mercury is a chemical element with atomic number 80."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "Which chemical element is commonly known as quicksilver?",
     "answer": "Mercury is commonly known as quicksilver."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "What is Mercury commonly known as ?",
     "answer": "Quicksilver."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "Which chemical element was formerly named as hydrargyrum?",
     "answer": "Mercury."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "Which metallic element is liquid at standard conditions for temperature and pressure?",
     "answer": "Mercury is the only metallic element that is liquid at standard conditions for temperature and pressure."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "Which metals melts just above room temperature?",
     "answer": "Metals such as caesium, gallium, and rubidium melts just above room temperature."
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "What is the pure form of mercuric sulfide?",
     "answer": "The red pigment vermilion, a pure form of mercuric sulfide. "
   },
   {
-    "textfileName": "PassageOnMercury.txt",
+    "source":"",
+    "file": "PassageOnMercury.txt",
     "question": "What are the uses of Mercury?",
     "answer": "Mercury is used in thermometers, barometers, manometers, sphygmomanometers, float valves, mercury switches, mercury relays, fluorescent lamps and other devices, though concerns about the element's toxicity have led to mercury thermometers and sphygmomanometers being largely phased out in clinical environments in favour of alternatives such as alcohol- or galinstan-filled glass thermometers and thermistor- or infrared-based electronic instruments."
   }

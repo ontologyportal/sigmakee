@@ -1,66 +1,79 @@
 [
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "What is the position of Jupiter from the Sun?",
     "answer": "Jupiter is the fifth planet from the Sun."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "What is the location of Jupiter in the Solar System?",
     "answer": "Most likely, Jupiter is the fifth planet from the Sun and the largest planet in the Solar System."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Where is Jupiter located in the Solar System?",
     "answer": "Jupiter is the fifth planet from the Sun and the largest planet in the Solar System."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Which is the fifth planet from the Sun?",
     "answer": "Jupiter is the fifth planet from the Sun."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Which is the largest planet in the Solar System?",
     "answer": "Jupiter is the largest planet in the Solar System."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "What is the mass of the Jupiter?",
     "answer": "It is a giant planet with a mass one-thousandth of that of the Sun, but is two and a half times that of all the other planets in the Solar System combined."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Which planet is called as a giant planet?",
     "answer": "Jupiter is called as a giant planet."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Which planets are referred as gas giant?",
     "answer": "Jupiter is a gas giant, along with Saturn."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Which planets are referred as ice giants?",
     "answer": "Uranus and Neptune are ice giants."
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "What is the primary composition of Jupiter?",
     "answer": "Jupiter is primarily composed of hydrogen with a quarter of its mass being helium, although helium only comprises about a tenth of the number of molecules. "
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Why Jupiter lacks a well-defined solid surface?",
     "answer": "Jupiter lacks a well-defined solid surface. Because of its rapid rotation, the planet's shape is that of an oblate spheroid (it has a slight but noticeable bulge around the equator). "
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "What is the shape of Jupiter planet?",
     "answer": "The shape of Jupiter is that of an oblate spheroid. "
   },
   {
-    "textfileName": "PassageOnJupiter.txt",
+    "source":"",
+    "file": "PassageOnJupiter.txt",
     "question": "Which planet's shape is of an oblate spheroid?",
     "answer": "Jupiter."
   }

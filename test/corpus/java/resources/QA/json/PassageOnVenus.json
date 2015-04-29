@@ -1,62 +1,74 @@
 [
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which is the second planet from the Sun?",
-    "answer": "Venus."
+    "answer": "Venus"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which planet is second from the Sun?",
-    "answer": "Venus is the second planet from the Sun, orbiting planet every 224.7 Earth days."
+    "answer": "Venus"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Where is Venus located in the Solar System?",
-    "answer": "Venus is the second planet from the Sun. Venus is by far the hottest planet in the Solar System, even though Mercury is closer to the Sun."
+    "answer": "Venus is the second planet from the Sun. Venus is by far the hottest planet in the Solar System, even though Mercury is closer to the Sun"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "What is the position of Venus from the Sun?",
-    "answer": "The position of Venus is second from the Sun ."
+    "answer": "The position of Venus is second from the Sun "
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which planet has no natural satellite?",
-    "answer": "Venus has no natural satellite."
+    "answer": "Venus has no natural satellite"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which planet orbits every 224.7 Earth days?",
-    "answer": "Venus is the second planet from the Sun, orbiting planet every 224.7 Earth days."
+    "answer": "Venus is the second planet from the Sun, orbiting planet every 224.7 Earth days"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which planet is named after the Roman goddess of love and beauty?",
-    "answer": "Venus is named after the Roman goddess of love and beauty."
+    "answer": "Venus is named after the Roman goddess of love and beauty"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which planet is referred as a terrestrial planet ?",
-    "answer": "Venus is referred as a terrestrial planet ."
+    "answer": "Venus is referred as a terrestrial planet "
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which planet is called as the Earth's \"sister planet\"?",
-    "answer": "Venus is a terrestrial planet and is sometimes called Earth's \" sister planet."
+    "answer": "Venus is a terrestrial planet and is sometimes called Earth's \" sister planet"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Why Venus is sometimes called as Earth's \"sister planet\"?",
-    "answer": "Venus is sometimes called as Earth's \"sister planet\" because of their similar size, mass, proximity to the Sun and bulk composition."
+    "answer": "Venus is sometimes called as Earth's \"sister planet\" because of their similar size, mass, proximity to the Sun and bulk composition"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "What is the percent of Carbon Dioxide present in the Venus planet?",
-    "answer": "More than 96 percent."
+    "answer": "More than 96 percent"
   },
   {
-    "textfileName": "PassageOnVenus.txt",
+    "source":"",
+    "file": "PassageOnVenus.txt",
     "question": "Which planet is by far the hottest planet in the Solar System?",
-    "answer": "Venus is by far the hottest planet in the Solar System, even though Mercury is closer to the Sun."
+    "answer": "Venus is by far the hottest planet in the Solar System, even though Mercury is closer to the Sun"
   }
 ]

@@ -1,66 +1,79 @@
 [
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": " Which region of space is dominated by the Sun?",
     "answer": "The heliosphere is the region of space dominated by the Sun."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "What is Heliosphere?",
     "answer": "The region of space dominated by the Sun."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "Which region of space is dominated by the Sun?",
     "answer": "Heliosphere is the region of space dominated by the Sun."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": " Where is Heliosphere located?",
     "answer": "Heliosphere is located far beyond the orbit of Pluto."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "Which region of heliosphere is a magnetic bubble-like medium ?",
     "answer": "The edge of the heliosphere."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "What is located far beyond the orbit of Pluto?",
     "answer": "Heliosphere is located far beyond the orbit of Pluto."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "What is solar wind?",
     "answer": "Plasma \" blown \" out from the Sun, known as the solar wind, creates and maintains this bubble against the outside pressure of the interstellar medium, the hydrogen and helium gas that permeates Milky Way Galaxy. "
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "What creates and maintains the bubble against the outside pressure of the interstellar medium?",
     "answer": "Plasma \" blown \" out from the Sun, known as the solar wind, creates and maintains this bubble against the outside pressure of the interstellar medium, the hydrogen and helium gas that permeates Milky Way Galaxy."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "Which two gases permeates Milky Way Galaxy?",
     "answer": "Hydrogen and helium gas permeates Milky Way Galaxy."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": " Which spacecraft has actively explored the outer reaches of the heliosphere?",
     "answer": "Voyager spacecraft have actively explored the outer reaches of the heliosphere, passing through the shock and entering the heliosheath, a transitional region which is in turn bounded by the outermost edge of the heliosphere, called the heliopause."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "What is heliopause?",
     "answer": "The Voyager spacecraft have actively explored the outer reaches of the heliosphere, passing through the shock and entering the heliosheath, a transitional region which is in turn bounded by the outermost edge of the heliosphere, called the heliopause."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "What was announced on September 12, 2013?",
     "answer": "On September 12, 2013, NASA announced that Voyager 1 had exited the heliosphere on August 25, 2012, when the heliosphere measured a sudden increase in plasma density of about forty times."
   },
   {
-    "textfileName": "PassageOnTheHeliosphere.txt",
+    "source":"",
+    "file": "PassageOnTheHeliosphere.txt",
     "question": "Who announced that Voyager 1 had exited the heliosphere on August 25, 2012?",
     "answer": "NASA."
   }

@@ -1,61 +1,73 @@
 [
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which country in North America consists of ten provinces and three territories?",
     "answer": "Canada is a country in North America consisting of ten provinces and three territories. "
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which country is located in the northern part of the continent?",
     "answer": "Canada is located in the northern part of the continent."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Where is Canada located?",
     "answer": "Canada is located in the northern part of the continent, it extends from the Atlantic to the Pacific and northward into the Arctic Ocean. "
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which country extends from the Atlantic to the Pacific and northward into the Arctic Ocean?",
     "answer": "Canada."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which is the world's second-largest country by total area?",
     "answer": "Canada is the world's second-largest country by total."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which is the World's fourth-largest country by land area?",
     "answer": "Canada is the world's fourth-largest country by land area."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Who joined to form the autonomous federal Dominion of Canada?",
     "answer": "Pursuant to the British North America Act, on July 1, 1867, three colonies joined to form the autonomous federal Dominion of Canada. "
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which country is a federal parliamentary democracy and a constitutional monarchy?",
     "answer": "Canada."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Who is the current head of state?",
     "answer": "Queen Elizabeth II."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which country is officially bilingual at the federal level?",
     "answer": "Canada."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "Which country is considered as one of the world's most ethnically diverse and multicultural nations?",
     "answer": "Canada."
   },
   {
-    "textfileName": "PassageOnCanada.txt",
+    "source":"",
+    "file": "PassageOnCanada.txt",
     "question": "What is the approximate population of Canada?",
     "answer": "35 million."
   }

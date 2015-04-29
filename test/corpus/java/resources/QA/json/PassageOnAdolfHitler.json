@@ -1,91 +1,109 @@
 [
   {
-    "textfileName": "test.txt.txt",
+    "source":"",
+    "file": "test.txt.txt",
     "question": "What do I have",
     "answer": "car"
   },
   {
-    "textfileName": "PassageOnAdolfHitler .txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler .txt",
     "question": "Who was Adolf Hitler?",
     "answer": "Adolf Hitler was an Austrian-born German politician who was the leader of the Nazi Party (German: National sozialistische Deutsche Arbeiter partei (NSDAP); National Socialist German Workers Party). He was chancellor of Germany from 1933 to 1945 and leader of Nazi Germany from 1934 to 1945."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was an Austrian born German politician?",
     "answer": "Adolf Hitler."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was an Austrian-born German politician?",
     "answer": "Adolf Hitler."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was the leader of the Nazi Party?",
     "answer": "Adolf Hitler"
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was the chancellor of Germany from 1933 to 1945?",
     "answer": "Adolf Hitler."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was the leader of Nazi Germany from 1934 to 1945?",
     "answer": "Adolf Hitler."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was the leader of Nazi Germany from 1934 to 1945?",
     "answer": "Adolf Hitler."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was the effective dictator of Nazi Germany?",
     "answer": "Adolf Hitler."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was at the centre of World War II in Europe?",
     "answer": "Hitler was at the centre of World War II in Europe."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "When did Hitler became chancellor of Germany?",
     "answer": "Hitler became chancellor of Germany from 1933 to 1945."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "When did Hitler became leader of Nazi Germany?",
     "answer": "Hitler became leader of Nazi Germany from 1934 to 1945. "
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "When did Hitler became leader of Nazi Germany?",
     "answer": "Hitler became leader of Nazi Germany from 1934 to 1945."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who was a decorated veteran of World War I?",
     "answer": "Hitler."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who joined the German Workers' Party in 1919?",
     "answer": "Hitler joined the German Workers' Party (precursor of the NSDAP) in 1919."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who became leader of the NSDAP in 1921?",
     "answer": "Adolf Hitler became leader of the NSDAP in 1921."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "What resulted in Hitler's imprisonment?",
     "answer": "The failed coup."
   },
   {
-    "textfileName": "PassageOnAdolfHitler.txt",
+    "source":"",
+    "file": "PassageOnAdolfHitler.txt",
     "question": "Who wrote political manifesto Mein Kampf?",
     "answer": "Adolf Hitler."
   }
