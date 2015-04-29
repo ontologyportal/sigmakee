@@ -15,49 +15,49 @@
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Where is Venus located in the Solar System?",
-    "answer": "Venus is the second planet from the Sun. Venus is by far the hottest planet in the Solar System, even though Mercury is closer to the Sun"
+    "answer": "second planet from the Sun"
   },
   {
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "What is the position of Venus from the Sun?",
-    "answer": "The position of Venus is second from the Sun "
+    "answer": "second from the Sun "
   },
   {
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Which planet has no natural satellite?",
-    "answer": "Venus has no natural satellite"
+    "answer": "Venus"
   },
   {
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Which planet orbits every 224.7 Earth days?",
-    "answer": "Venus is the second planet from the Sun, orbiting planet every 224.7 Earth days"
+    "answer": "Venus"
   },
   {
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Which planet is named after the Roman goddess of love and beauty?",
-    "answer": "Venus is named after the Roman goddess of love and beauty"
+    "answer": "Venus"
   },
   {
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Which planet is referred as a terrestrial planet ?",
-    "answer": "Venus is referred as a terrestrial planet "
+    "answer": "Venus"
   },
   {
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Which planet is called as the Earth's \"sister planet\"?",
-    "answer": "Venus is a terrestrial planet and is sometimes called Earth's \" sister planet"
+    "answer": "Venus"
   },
   {
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Why Venus is sometimes called as Earth's \"sister planet\"?",
-    "answer": "Venus is sometimes called as Earth's \"sister planet\" because of their similar size, mass, proximity to the Sun and bulk composition"
+    "answer": "because of their similar size, mass, proximity to the Sun and bulk composition"
   },
   {
     "source":"",
@@ -69,6 +69,6 @@
     "source":"",
     "file": "PassageOnVenus.txt",
     "question": "Which planet is by far the hottest planet in the Solar System?",
-    "answer": "Venus is by far the hottest planet in the Solar System, even though Mercury is closer to the Sun"
+    "answer": "Venus"
   }
 ]
