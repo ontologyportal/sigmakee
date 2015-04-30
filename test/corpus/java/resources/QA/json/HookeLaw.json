@@ -2,116 +2,116 @@
   {
     "file": "HookeLaw.txt",
     "question" : "What is Hooke’s law ?",
-    "answer" : "null"
+    "answer" : "a principle of physics that states that the force F needed to extend or compress a spring by some distance X is proportional to that distance"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "In what kind of situations does the Hooke’s equation hold?",
-    "answer" : "null"
+    "answer" : "an elastic body is deformed"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "For what kind of material or body is the Hooke’s equation assumed ?",
-    "answer" : "From what I understand, Smaranika, the answer should be an elastic body or material for which this equation can be assumed is said to be linear-elastic or Hookean."
+    "answer" : "an elastic body or material"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What is the material for which the Hooke’s law can be assumed?",
-    "answer" : "From what I understand, the answer should be an elastic body or material for which this equation can be assumed is said to be linear-elastic or Hookean."
+    "answer" : "an elastic body or material"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What are linear-elastic or Hookean materials?",
-    "answer" : "Perhaps, an elastic body or material for which this equation can be assumed is said to be linear-elastic or Hookean."
+    "answer" : "an elastic body or material for which this equation can be assumed"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What is a first order linear approximation to the real response of springs and other elastic bodies to applied forces?",
-    "answer" : "Hooke's law."
+    "answer" : "Hooke's law"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "Which law is a first order linear approximation to the real response of springs and other elastic bodies to applied forces?",
-    "answer" : "Smaranika, I'm pretty sure the answer is Hooke's law is only a first order linear approximation to the real response of springs and other elastic bodies to applied forces."
+    "answer" : "Hooke's law"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What are the situations where Hooke’s equation holds?",
-    "answer" : "null"
+    "answer" : "an elastic body is deformed"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "How is the Hooke’s law a first order linear approximation?",
-    "answer" : "From what I understand, Smaranika, the answer should be Hooke's law is only a first order linear approximation to the real response of springs and other elastic bodies to applied forces."
+    "answer" : "Hooke's law is only a first order linear approximation to the real response of springs and other elastic bodies to applied forces"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "When does the Hooke’s law fail?",
-    "answer" : "null"
+    "answer" : "once the forces exceed some limit"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "Who was Robert Hooke?",
-    "answer" : "null"
+    "answer" : "the 17th century British physicist"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "How was Hooke’s law named?",
-    "answer" : "Most likely the answer is Hooke's law is named after the 17th century British physicist Robert Hooke."
+    "answer" : "Hooke's law is named after the 17th century British physicist Robert Hooke"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "Is the Hooke’s law an accurate approximation for solid bodies ?",
-    "answer" : "It certainly seems so."
+    "answer" : "Yes"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "Which law is extensively used in the field of science and engineering ?",
-    "answer" : "Most likely the answer is for this reason, Hooke's law is extensively used in all branches of science and engineering, and is the foundation of many disciplines such as seismology, molecular mechanics and acoustics."
+    "answer" : "Hooke's law"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What is the fundamental principle behind the spring scale, the manometer, and the balance wheel of the mechanical clock?",
-    "answer" : "Hooke's law."
+    "answer" : "Hooke's law"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What is the fundamental principle behind the spring scale?",
-    "answer" : "Hooke's law."
+    "answer" : "Hooke's law"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What is the fundamental principle behind the manometer?",
-    "answer" : "Hooke's law."
+    "answer" : "Hooke's law"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What is the fundamental principle behind the balance wheel of the mechanical clock?",
-    "answer" : "Hooke's law."
+    "answer" : "Hooke's law"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "How does the modern theory of elasticity generalize Hooke's law?",
-    "answer" : "I'm pretty sure the answer is the modern theory of elasticity generalizes Hooke's law to say that the strain-LRB-deformation-RRB- of an elastic object or material is proportional to the stress applied to strain-LRB-deformation-RRB."
+    "answer" : "the strain deformation of an elastic object or material is proportional to the stress applied to strain deformation"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "What are the laws which can deduce the relationship between strain and stress for complex objects in terms of intrinsic properties of the materials ?",
-    "answer" : "null"
+    "answer" : "Hooke's law and Newton's laws of static equilibrium"
   },
   {
     "file": "HookeLaw.txt",
-    "question" : "Who was the British physicist from 17th century after whom the Hooke’s law was named?",
-    "answer" : "Perhaps, Smaranika, Hooke's law is named after the 17th century British physicist Robert Hooke."
+    "question" : "Who was the British physicist from 17th century after whom the Hooke’s law was named after?",
+    "answer" : "Robert Hooke"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "When was Hooke’s law stated?",
-    "answer" : "null"
+    "answer" : "1660"
   },
   {
     "file": "HookeLaw.txt",
     "question" : "When did Robert Hooke publish the solution for the Hooke’s law?",
-    "answer" : "null"
+    "answer" : "1678"
   }
 ]
