@@ -1,137 +1,164 @@
 [
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is Hydrogen?",
-    "answer" : "null"
+    "answer" : "a chemical element with chemical symbol H and atomic number 1"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element has a chemical symbol H?",
-    "answer" : "null"
+    "answer" : "Hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the chemical symbol of Hydrogen?",
-    "answer" : "null"
+    "answer" : "H"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the atomic number of hydrogen?",
-    "answer" : "null"
+    "answer" : "1"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element has an atomic number 1?",
-    "answer" : "null"
+    "answer" : "Hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the atomic weight of H?",
-    "answer" : "null"
+    "answer" : "1.00794 u"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the atomic weight of hydrogen?",
-    "answer" : "null"
+    "answer" : "1.00794 u"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which is the lightest element on the periodic table?",
-    "answer" : "null"
+    "answer" : "Hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which element is known as the lightest element?",
-    "answer" : "null"
+    "answer" : "Hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which is the most abundant chemical substance in the universe?",
-    "answer" : "Its monatomic form (H)."
+    "answer" : "Its monatomic form (H)"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the composition of Non-remnant stars?",
-    "answer" : "null"
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the most common isotope of hydrogen?",
-    "answer" : "null"
+    "answer" : "termed protium (name rarely used, symbol 1H)"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element is colorless?",
-    "answer" : "null"
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element is odorless?",
-    "answer" : "null"
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element is tasteless, non-toxic and nonmetallic?",
-    "answer" : "null"
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element is highly combustible diatomic gas?",
-    "answer" : "null"
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the molecular formula of hydrogen?",
-    "answer" : "null"
+    "answer" : "H2"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is the molecular formula of H?",
-    "answer" : "null"
+    "answer" : "H2"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element has a molecular formula of H2?",
-    "answer" : "null"
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which chemical element readily forms covalent compounds?",
-    "answer" : "Hydrogen."
+    "answer" : "Hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What plays an important role in acid-base reactions?",
-    "answer" : "null"
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What takes the form of negative charge in ionic compounds?",
-    "answer" : "In ionic compounds, hydrogen can take the form of a negative charge (i.e., anion) known as a hydride, or as a positively charged (i.e., cation) species denoted by the symbol H +."
+    "answer" : "hydrogen"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is hydride?",
-    "answer" : "null"
+    "answer" : "hydrogen can take the form of a negative charge"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is anion?",
-    "answer" : "A negative charge is anion."
+    "answer" : "A negative charge"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "What is cation?",
-    "answer" : "null"
+    "answer" : "a positively charged"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which atom plays a key role in the development of quantum mechanics?",
-    "answer" : "null"
+    "answer" : "hydrogen atom"
   },
   {
+    "source":"",
     "file": "Hydrogen.txt",
     "question" : "Which equation can be solved analytically by the neutral atom?",
-    "answer" : "null"
+    "answer" : "Schrödinger"
   }
 ]
