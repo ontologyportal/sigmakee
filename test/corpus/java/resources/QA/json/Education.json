@@ -1,52 +1,62 @@
 [
   {
+    "source": "",
     "file": "Education.txt",
     "question" : "How did Miss Sullivan speak to me from the beginning of my education?",
-    "answer" : "null"
+    "answer" : "as she would speak to any hearing child"
   },
   {
+    "source": "",
     "file": "Education.txt",
-    "question" : "What was the only difference when Miss Sullivan would speak to me as opposed to a child with hearing ?",
-    "answer" : "null"
+    "question" : "What was the only difference when Miss Sullivan would speak to me as opposed to a child with hearing?",
+    "answer" : "she spelled the sentences into your hand instead of speaking them"
   },
   {
+    "source": "",
     "file": "Education.txt",
     "question" : "What did Miss Sullivan do when I didn’t know the words and idioms necessary to express my thoughts?",
-    "answer" : "null"
+    "answer" : "she supplied them"
   },
   {
+    "source": "",
     "file": "Education.txt",
     "question" : "How long did the learning process continue with Miss Sullivan?",
-    "answer" : "Perhaps, Smaranika, this process was continued for several years; for the deaf child the numberless idioms and expressions used in the simplest daily intercourse doesn't learn in a month, or even in two or three years,."
+    "answer" : "several years"
   },
   {
+    "source": "",
     "file": "Education.txt",
-    "question" : "How can the little hearing child learn?",
-    "answer" : "Smaranika, I'm pretty sure the answer is the little hearing child learns these from constant repetition and imitation."
+    "question" : "How does the little hearing child learn?",
+    "answer" : "constant repetition and imitation"
   },
   {
+    "source": "",
     "file": "Education.txt",
     "question" : "How did Miss Sullivan supply the stimulus I lacked as a deaf child?",
-    "answer" : "Probably, the conversation the child hears in his home stimulates his mind and suggests topics and calls forth the spontaneous expression of his own thoughts."
+    "answer" : "by repeating to you as far as possible verbatim what she heard and by showing you how you could take part in the conversation"
   },
   {
+    "source": "",
     "file": "Education.txt",
     "question" : "Who finds it very difficult to acquire the amenities of conversation?",
-    "answer" : "Most likely, the deaf and the blind."
+    "answer" : "the deaf and the blind"
   },
   {
+    "source": "",
     "file": "Education.txt",
     "question" : "How long did it take for me to venture to take the initiative?",
-    "answer" : "Most likely, but part was a long time before you ventured to take the initiative and, still longer before you could find something appropriate to say at the right time."
+    "answer" : "a long time"
   },
   {
+    "source": "",
     "file": "Education.txt",
     "question" : "Is it very difficult for a deaf and blind to acquire the amenities of conversation?",
-    "answer" : "null"
+    "answer" : "yes"
   },
   {
+    "source": "",
     "file": "Education.txt",
-    "question" : "Why is it very difficult for a deaf and blind to acquire the amenities of conversation?",
-    "answer" : "null"
+    "question" : "What can't a deaf and blind person do?",
+    "answer" : "distinguish the tone of the voice or without assistance go up and down the gamut of tones that give significance to words; nor can they watch the expression of the speaker’s face"
   }
 ]
