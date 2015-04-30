@@ -1,52 +1,56 @@
 [
   {
+    "source": "",
     "file": "FoundingFathers.txt",
-    "question" : "Who are the founding fathers?",
-    "answer" : "null"
+    "question" : "Who were the founding fathers?",
+    "answer" : "the statesmen who worked to secure our independence from Great Britain"
   },
   {
+    "source": "",
     "file": "FoundingFathers.txt",
     "question" : "Who founded our nation and designed the democratic form of government?",
-    "answer" : "From what I understand, Smaranika, the answer should be our Founding Fathers."
+    "answer" : "our Founding Fathers"
   },
   {
+    "source": "",
     "file": "FoundingFathers.txt",
     "question" : "What did the founding fathers write?",
-    "answer" : "From what I understand, the answer should be two very important documents from our history."
+    "answer" : "two very important documents"
   },
   {
+    "source": "",
     "file": "FoundingFathers.txt",
-    "question" : "What were the 2 documents written by the founding fathers?",
-    "answer" : "null"
+    "question" : "What were the two documents written by the founding fathers?",
+    "answer" : "Declaration of Independence and United States Constitution"
   },
   {
+    "source": "",
     "file": "FoundingFathers.txt",
     "question" : "Who are some of the well-known Founding Fathers?",
-    "answer" : "null"
+    "answer" : "George Washington Thomas Jefferson Benjamin Franklin and John Adams"
   },
   {
-    "file": "FoundingFathers.txt",
-    "question" : "How was the United States of America founded?",
-    "answer" : "null"
-  },
-  {
+    "source": "",
     "file": "FoundingFathers.txt",
     "question" : "Who were the statesmen who worked to secure our independence from Great Britain in 1776?",
-    "answer" : "Our Founding Fathers."
+    "answer" : "Our Founding Fathers"
   },
   {
+    "source": "",
     "file": "FoundingFathers.txt",
     "question" : "Who founded our nation?",
-    "answer" : "null"
+    "answer" : "Our Founding Fathers"
   },
   {
+    "source": "",
     "file": "FoundingFathers.txt",
     "question" : "Who designed our democratic form of government that still exists today?",
-    "answer" : "Our Founding Fathers."
+    "answer" : "Our Founding Fathers"
   },
   {
+    "source": "",
     "file": "FoundingFathers.txt",
-    "question" : "What does the Declaration of Independence states?",
-    "answer" : "null"
+    "question" : "What does the Declaration of Independence state?",
+    "answer" : "individuals had the right to \"Life, Liberty and the pursuit of Happiness\""
   }
 ]
