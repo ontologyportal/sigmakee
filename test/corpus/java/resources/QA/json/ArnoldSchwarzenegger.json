@@ -1,0 +1,62 @@
+[
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"Where was Arnold Schwarzenegger born?",
+    "answer":"Austria"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When did Arnold Schwarzenegger serve as Governor of California?",
+    "answer":"(Schwarzenegger was then re-elected on November 7 , 2006)|(from 2003 until 2011)"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When did Arnold win Mr. Universe?",
+    "answer":"age 20"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What was Arnold's breakthrough film?",
+    "answer":"(The Terminator)|(Conan the Barbarian)"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What did Arnold Schwarzenegger appear in that was a massive critical and box-office success?",
+    "answer":"The Terminator"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When did Schwarzenegger appear in The Terminator?",
+    "answer":"1984"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What successful films did Arnold Schwarzenegger appear in?",
+    "answer":"Commando|The Running Man|Predator|Twins|Total Recall|Kindergarten Cop|True Lies"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"What is Arnold's nicknames?",
+    "answer":"Austrian Oak|Styrian Oak|Arnie|The Governator"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When was Schwarzenegger elected as Govenor?",
+    "answer":"October 7, 2003"
+  },
+  {
+    "source":"",
+    "file":"ArnoldSchwarzenegger.txt",
+    "query":"When was Schwarzenegger re-elected?",
+    "answer":"(Schwarzenegger was then re-elected on November 7 , 2006)|(November 7, 2006)"
+  }
+]

@@ -1,0 +1,86 @@
+[
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"Where is Clearing located?",
+    "answer":"(Illinois)|(suburb of Chicago)"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"Where is Clearing?",
+    "answer":"(Illinois)|(suburb of Chicago)"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"Why were residents unhappy?",
+    "answer":"(armed teenagers on the streets, giving gang signals and shouting at passing cars)|(a series of burglaries and graffiti messages on storefronts)"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"Why were the residents alarmed?",
+    "answer":"(armed teenagers on the streets, giving gang signals and shouting at passing cars)|(a series of burglaries and graffiti messages on storefronts)"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"When were the 2 girls shot?",
+    "answer":"Last December"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"How old were the girls who were shot?",
+    "answer":"13-year-old"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"How many states passed laws which allow youths to be tried in courts?",
+    "answer":"Nearly all 50"
+  },
+  {
+    "source":"",
+    "file": "ClearingIL.txt",
+    "query": "How many states passed laws to punish parents for their children’s behavior?",
+    "answer": "In about 25 states"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"Who imposed curfews to reduce violence?",
+    "answer":"in 146 of the nation's largest cities"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"How have the murder rates trended in the past decade?",
+    "answer":"there has been a decline in adult murders in the US, while murder rates have surged for youths between 14-17"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"What is done with the young offenders?",
+    "answer":"some are ordered to perform community service, others are placed in job training programs, still others sent to youth prisons"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"What do the Republicans in Congress want to do?",
+    "answer":"reverse a basic principle of juvenile justice: the separation of young criminals from hardened adult criminals in prison"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"Why do the Replubicans want to reverse the principle of juvenile justice?",
+    "answer":"(the separation of young criminals from hardened adult criminals in prison)|(The reasons are partly financial - to reduce the cost of having separate prisons for young people - and partly psychological - to end what Republicans consider as society's overly protective attitude towards young criminals)"
+  },
+  {
+    "source":"",
+    "file":"ClearingIL.txt",
+    "query":"What is a principle of juvenile justice?",
+    "answer":"the separation of young criminals from hardened adult criminals in prison"
+  }
+]

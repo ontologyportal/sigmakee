@@ -1,0 +1,62 @@
+[
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"What is an electron?",
+    "answer":"The electron is a subatomic particle with a negative elementary electric charge"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"Where do electrons play an essential role?",
+    "answer":"Many physical phenomena involve electrons in an essential role, such as electricity, magnetism, and thermal conductivity, and electrons also participate in gravitational, electromagnetic and weak interactions"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"What kind of particles are electrons?",
+    "answer":"Electrons belong to the first generation of the lepton particle family, and are generally thought to be elementary particles because electrons have no known components or substructure"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"How big is an electron?",
+    "answer":"The electron has a mass that is approximately 1/1836 that of the proton"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"Are Electrons waves or particles?",
+    "answer":"Electrons also have properties of both particles and waves, and so can collide with other particles and can be diffracted like light"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"How are electrons made?",
+    "answer":"Electrons may be created through beta decay of radioactive isotopes"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"What is the opposite of an electron?",
+    "answer":"The antiparticle of the electron is called the positron; (a positron)|(it) is identical to the electron except that it carries electrical and other charges of the opposite sign"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"What happens when an electron and a positron collide?",
+    "answer":"If an electron collides with a positron, both particles may be totally annihilated, producing gamma ray photons"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"Can electrons absorb energy?",
+    "answer":"Electrons radiate or absorb energy in the form of photons when accelerated"
+  },
+  {
+    "source":"",
+    "file":"Electrons.txt",
+    "query":"Who gave electrons their name?",
+    "answer":"British natural philosopher Richard Laming first hypothesized the concept of an indivisible quantity of electric charge to explain the chemical properties of atoms in 1838; Irish physicist George Johnstone Stoney named this charge 'electron' in 1891, and J. J. Thomson and his team of British physicists identified it as a particle in 1897"
+  }
+]

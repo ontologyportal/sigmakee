@@ -1,0 +1,200 @@
+[
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"Why do people routinely research different online websites?",
+    "answer":"find the best place to buy goods or services ((Some)? people)|(they) want"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"Where do people search to find the best place to buy goods or services they want ?",
+    "answer":"different online websites"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How do television channels do research?",
+    "answer":"Television news channels supposedly conduct research in the form of viewer polls on topics of public interest such as forthcoming elections or government-funded projects"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"Why do undergraduate students research the Internet?",
+    "answer":"find the information [^ ]+ need to complete assigned projects or term papers"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How do businesses and consultants perform research?",
+    "answer":"businesses and consultants research different potential solutions to remedy organizational problems such as a supply chain bottleneck or to identify customer purchase patterns"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How do businesses and consultants remedy organizational problems?",
+    "answer":"businesses and consultants research different potential solutions to remedy organizational problems such as a supply chain bottleneck or to identify customer purchase patterns"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How is something categorized as scientific research?",
+    "answer":"none of the above can be considered scientific research unless the above contributes to a body of science , and the above follows the scientific method"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How is something considered as scientific research?",
+    "answer":"none of the above can be considered scientific research unless the above contributes to a body of science , and the above follows the scientific method"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is science?",
+    "answer":"a systematic and organized body of knowledge in any area of inquiry that is acquired using \"the scientific method\""
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What are the categories in science?",
+    "answer":"natural science and social science"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is science grouped into?",
+    "answer":"natural science and social science"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How is science grouped?",
+    "answer":"natural science and social science"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Natural science?",
+    "answer":"the science of naturally occurring objects or phenomena"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is social science?",
+    "answer":"the science of people or collections of people"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How is natural science classified?",
+    "answer":"(Natural science is the science of naturally occurring objects)|(Natural sciences can be further classified into physical sciences, earth sciences, life sciences, and others)"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What are physical sciences?",
+    "answer":"disciplines such as physics, chemistry, and astronomy"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What are earth sciences?",
+    "answer":"consist of disciplines such as geology"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What are life sciences?",
+    "answer":"include disciplines such as biology which is the science of human bodies and botany which is the science of plants"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How is social science classified?",
+    "answer":"can be classified into disciplines such as psychology, sociology, and economics"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Physics?",
+    "answer":"the science of physical objects"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Chemistry?",
+    "answer":"the science of matter"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Astronomy?",
+    "answer":"the science of celestial objects"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Geology?",
+    "answer":"the science of the earth"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Biology?",
+    "answer":"the science of human bodies"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Botany?",
+    "answer":"The science of plants"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Psychology?",
+    "answer":"The science of human behaviors"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Sociology?",
+    "answer":"science of social groups"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is Economics?",
+    "answer":"science of firms, markets, and economies"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"How are natural sciences different from the social sciences?",
+    "answer":"(The natural sciences are different from the social sciences in several respects)|(The natural sciences are very precise, accurate, deterministic, and independent of the person making the scientific observations)|(However, the same cannot be said for the social sciences, which tend to be less accurate, deterministic, or unambiguous)"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is the conclusion if two students conducting the same physics experiment obtain two different values of the physical properties?",
+    "answer":"one or both of those students must be in error"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"What is the conclusion if two students conducting social experiments obtain different values?",
+    "answer":"one or both of those students must be in error"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"Why do two students conducting the same physics experiment obtain two different values of the physical properties?",
+    "answer":"if two students conducting the same physics experiment obtain two different values of these physical properties, then it generally means that one or both of those students must be in error"
+  },
+  {
+    "source":"",
+    "file":"Research.txt",
+    "query":"Why do two students conducting the same social experiment obtain two different values?",
+    "answer":"one or both of those students must be in error"
+  }
+]

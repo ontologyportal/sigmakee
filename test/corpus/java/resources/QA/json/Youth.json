@@ -1,0 +1,26 @@
+[
+  {
+    "source":"",
+    "file":"Youth.txt",
+    "query":"Who was born in 1460 ?",
+    "answer":"Juan Ponce de Leon"
+  },
+  {
+    "source":"",
+    "file":"Youth.txt",
+    "query":"What happened in the early 1490's?",
+    "answer":"(de Leon)|(He) helped fight the Muslims in southern Spain"
+  },
+  {
+    "source":"",
+    "file":"Youth.txt",
+    "query":"Who was on board Christopher Columbus' second expedition to the Americas?",
+    "answer":"de Leon"
+  },
+  {
+    "source":"",
+    "file":"Youth.txt",
+    "query":"How were the spanish explorers?",
+    "answer":"blood thirsty for gold"
+  }
+]

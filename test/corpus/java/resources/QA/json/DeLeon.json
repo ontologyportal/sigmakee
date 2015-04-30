@@ -1,0 +1,38 @@
+[
+  {
+    "source":"",
+    "file":"DeLeon.txt",
+    "query":"What happened on April 2, 1513?",
+    "answer":"de Leon and his men reached the east coast of Florida"
+  },
+  {
+    "source":"",
+    "file":"DeLeon.txt",
+    "query":"Who reached the east coast of Florida?",
+    "answer":"de Leon and his men"
+  },
+  {
+    "source":"",
+    "file":"DeLeon.txt",
+    "query":"What is Pascua de Florida?",
+    "answer":"He named the land Pascua de Florida, or Feast of Flowers, because he discovered it on Palm Sunday"
+  },
+  {
+    "source":"",
+    "file":"DeLeon.txt",
+    "query":"Who discovered Pascua de Florida?",
+    "answer":"de Leon"
+  },
+  {
+    "source":"",
+    "file":"DeLeon.txt",
+    "query":"What was discovered on Palm Sunday?",
+    "answer":"(Pascua de Florida)|(Feast of Flowers)"
+  },
+  {
+    "source":"",
+    "file":"DeLeon.txt",
+    "query":"What happened On April 8, 1513?",
+    "answer":"de Leon and his men left northern Florida and sailed south along the Gulf Stream"
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"What does the incredibly simple microprocessor contain?",
+    "answer":"a fairly large set of instructions"
+  },
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"What contains a fairly large set of instructions that it can perform?",
+    "answer":"incredibly simple microprocessor"
+  },
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"How are the collection of instructions implemented?",
+    "answer":"as bit patterns, each one of which has a different meaning when loaded into the instruction register"
+  },
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"Are humans good at remembering bit patterns?",
+    "answer":"humans are not particularly good at remembering bit patterns"
+  },
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"What needs to be done as humans are not particularly good at remembering bit patterns?",
+    "answer":"a set of short words are defined to represent the different bit patterns"
+  },
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"What are the collection of words called?",
+    "answer":"the assembly language of the processor"
+  },
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"What does an assembler do?",
+    "answer":"An assembler can translate the words into their bit patterns"
+  },
+  {
+    "source":"",
+    "file":"Microprocessor.txt",
+    "query":"What is done with the assembler output?",
+    "answer":"the output of the assembler is placed in memory for the microprocessor to execute"
+  }
+]

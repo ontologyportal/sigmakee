@@ -1,0 +1,38 @@
+[
+  {
+    "source":"",
+    "file":"BattleIronclads.txt",
+    "query":"Which is the most important naval battle of the American Civil War?",
+    "answer":"(Battle of the Ironclads)|(Battle of Hampton Roads)"
+  },
+  {
+    "source":"",
+    "file":"BattleIronclads.txt",
+    "query":"Who believed in duplicating the idea?",
+    "answer":"Southern engineers"
+  },
+  {
+    "source":"",
+    "file":"BattleIronclads.txt",
+    "query":"What was set to sail in France in 1860?",
+    "answer":"(The world's first ironclad ship)|(The world 's first ironclad ship)"
+  },
+  {
+    "source":"",
+    "file":"BattleIronclads.txt",
+    "query":"What happened on February, 1862?",
+    "answer":"(It|ship) was equipped with ten guns and fourteen gun ports and was ready for action"
+  },
+  {
+    "source":"",
+    "file":"BattleIronclads.txt",
+    "query":"What was the plan?",
+    "answer":"to build an iron shell around the ship and to outfit (the iron shell)|(it) with an iron ram"
+  },
+  {
+    "source":"",
+    "file":"BattleIronclads.txt",
+    "query":"What was planned to build around the ship?",
+    "answer":"an iron shell"
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"Who is George Washington?",
+    "answer":"(Washington was America's first president)|(George Washington was born on February 22, 1732)|(America 's first president)|(an advocate of a federal government)"
+  },
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"What happened in 1752?",
+    "answer":"(George Washington died)|(he died in 1752)"
+  },
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"Who continued as an officer in Ohio country?",
+    "answer":"(George Washington)|(He continued as an officer in Ohio country)"
+  },
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"What happened in 1755?",
+    "answer":"their army was ambushed by the French"
+  },
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"What happened in 1758?",
+    "answer":"Washington helped take Fort Duquesne"
+  },
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"What happened in 1759?",
+    "answer":"Washington was married to Martha Custis"
+  },
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"Who was made commander of the Continental Army?",
+    "answer":"(George Washington)|(He was made commander of the Continental Army on June 15, 1775)"
+  },
+  {
+    "source":"",
+    "file":"GeorgeWashington.txt",
+    "query":"What happened on June 15, 1775?",
+    "answer":"(George Washington)|(He) was made commander of the Continental Army"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "source":"",
+    "file":"Jupiter.txt",
+    "query":"What has no surface?",
+    "answer":"gas giants"
+  },
+  {
+    "source":"",
+    "file":"Jupiter.txt",
+    "query":"What has a rocky core?",
+    "answer":"Jupiter"
+  },
+  {
+    "source":"",
+    "file":"Jupiter.txt",
+    "query":"What is 1/1000th as massive as the sun?",
+    "answer":"Jupiter"
+  },
+  {
+    "source":"",
+    "file":"Jupiter.txt",
+    "query":"What is Jupiter's atmosphere?",
+    "answer":"separated into different bands and gives the planet the appearance of having whitish and reddish layers with various spots, swirls and bubbles"
+  },
+  {
+    "source":"",
+    "file":"Jupiter.txt",
+    "query":"Why the spot looks red?",
+    "answer":"Scientists still don't have an explanation for why the spot looks red."
+  },
+  {
+    "source":"",
+    "file":"Jupiter.txt",
+    "query":"What may be weakening?",
+    "answer":"(the( red)? spot)|(the storm)"
+  }
+]

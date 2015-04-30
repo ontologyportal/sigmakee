@@ -1,0 +1,98 @@
+[
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is two centimeters in length?",
+    "answer":"The adult House Cricket"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is House cricket?",
+    "answer":"about two centimeters in length\\.?"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is usually light brown with black markings about the head and thorax?",
+    "answer":"The body"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is ovipositor?",
+    "answer":"a long extension attached to the end of the abdomen, used for depositing eggs in the soil"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is told from the male?",
+    "answer":"The female"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is attached to the end of the abdomen?",
+    "answer":"ovipositor"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is used for depositing eggs in the soil?",
+    "answer":"ovipositor"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What has conspicuous jumping legs?",
+    "answer":"House crickets"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What has pairs of wings?",
+    "answer":"House crickets"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What is used for flying?",
+    "answer":"House crickets have conspicuous jumping legs and have two pairs of wings, of which, only the back pair are used for flight"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"Where are house crickets found?",
+    "answer":"(in a variety of habitats including)|(woodlands, suburbs, urban areas, buildings, ducts, siding, restaurants and anywhere else there happens to be a food supply and warm air)"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What are the variety of habitats?",
+    "answer":"woodlands, suburbs, urban areas, buildings, ducts, siding, restaurants and anywhere else there happens to be a food supply and warm air"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What can stay alive year round?",
+    "answer":"((many )?crickets)|(those that manage to find their way indoors)"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"When do the crickets reach sexual maturity?",
+    "answer":"eight and twelve weeks after birth\\.?"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What happens between eight and twelve weeks after birth?",
+    "answer":"Crickets reach sexual maturity"
+  },
+  {
+    "source":"",
+    "file":"AdultHouseCricket.txt",
+    "query":"What attracts mates by rubbing their wings together?",
+    "answer":"Males"
+  }
+]

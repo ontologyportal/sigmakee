@@ -1,0 +1,332 @@
+[
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What was the French Revolution?",
+    "answer":"a period of radical social and political upheaval in France from 1789 to 1799"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What exacerbated an economic crisis?",
+    "answer":"the Seven Years War and the American Revolutionary War"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did The Seven Years War and the American Revolutionary War exacerbate?",
+    "answer":"economic crisis"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"Who did the ineptitude of King Louis XVI and the continued decadence of the aristocracy frustrate?",
+    "answer":"the common people of (France)|(france)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What increasingly frustrated the common people of France?",
+    "answer":"the ineptitude of (king louis xvi)|(King Louis XVI) and the continued decadence of the aristocracy"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What fueled radical sentiments and launched the Revolution in 1789",
+    "answer":"this resentment, coupled with burgeoning (enlightenment)|(Enlightenment) ideals"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What was this resentment coupled with?",
+    "answer":"with burgeoning (enlightenment)|(Enlightenment) ideals"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did this resentment fuel?",
+    "answer":"radical sentiments"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did this resentment launch?",
+    "answer":"the (revolution)|(Revolution)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did the first year of the Revolution see?",
+    "answer":"members of the Third Estate proclaiming the Tennis Court Oath in June, the assault on the Bastille in July, the passage of the Declaration of the Rights of Man and of the Citizen in August, and an epic march on Versailles that forced the royal court back to Paris in October"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim?",
+    "answer":"the (tennis court oath in june)|(Tennis Court Oath in June), the assault on the (bastille in july)|(Bastille in July), the passage of the (declaration of the rights of man)|(Declaration of the Rights of Man) and of the (citizen in august)|(Citizen in August)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did members of the Third Estate proclaim the Tennis Court Oath?",
+    "answer":"in (june)|(June)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did members of the Third Estate proclaim the assault on the Bastille?",
+    "answer":"in (j)|(J)uly"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did members of the Third Estate proclaim the passage of the Declaration of the Rights of Man and of the Citizen?",
+    "answer":"in (a)|(A)ugust"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim in June?",
+    "answer":"the (t)|(T)ennis (c)|(C)ourt (o)|(O)ath"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim in July?",
+    "answer":"the assault on the (b)|(B)astille"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did members of the Third Estate proclaim in August?",
+    "answer":"the passage of the (declaration of the rights of man)|(Declaration of the Rights of Man) and of the (c)|(C)itizen"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What dominated the new few years?",
+    "answer":"struggles between various liberal assemblies and right-wing supporters of the monarchy intent on thwarting major reforms"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When was a republic proclaimed?",
+    "answer":"(s)|(S)eptember 1792(?!.* the next year.*)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When was King Louis XVI executed?",
+    "answer":"(in 1793)|(the next year)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What shaped the course of the Revolution?",
+    "answer":"(e)|(E)xternal threats"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did the Revolutionary Wars begin?",
+    "answer":".*((in )?1792)(?!, the Rhine-achievements).*"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did the Revolutionary Wars ultimately feature?",
+    "answer":"spectacular (f)|(F)rench victories"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What radicalized the Revolution?",
+    "answer":"popular agitation"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"Who imposed the dictatorship?",
+    "answer":"the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did the Committee of Public Safety impose the dictatorship?",
+    "answer":"during the (r)|(R)eign of (t)|(T)error"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"From when was the Reign of Terror?",
+    "answer":"from 1793"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"Until when was the Reign of Terror?",
+    "answer":"until 1794"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What caused up to 40,000 deaths inside France?",
+    "answer":"the dictatorship imposed by the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What abolished slavery in the colonies?",
+    "answer":"the dictatorship imposed by the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What secured the borders of the new republic from its enemies?",
+    "answer":"the dictatorship imposed by the (c)|(C)ommittee of (p)|(P)ublic (s)|(S)afety"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What sparked an internal backlash?",
+    "answer":"the bloody rule of the (j)|(J)acobins"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What ultimately sent Robespierre to the guillotine?",
+    "answer":"the bloody rule of the (j)|(J)acobins"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What sparked an internal backlash and sent Robespierre to the guillotine?",
+    "answer":"the bloody rule of the (j)|(J)acobins"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"After the fall of the Jacobins, what assumed control of the French state?",
+    "answer":"the (d)|(D)irectory"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did the Directory assume control of the French state?",
+    "answer":"(after the fall of the jacobins)|(in 1795)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"Until when did the Directory hold power?",
+    "answer":"until 1799"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"Which year marks the traditional conclusion of the Revolution?",
+    "answer":"(that year)|(1799)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did Napoleon Bonaparte overthrow the Directory?",
+    "answer":"(that year)|(1799)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did Napoleon Bonaparte establish the Consulate?",
+    "answer":"(that year)|(1799)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What was the primary successor state of the Revolution?",
+    "answer":"the (first empire under napoleon)|(First Empire under Napoleon)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did the primary successor state of the Revolution emerge?",
+    "answer":"1804"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did the First Empire under Napoleon emerge?",
+    "answer":"1804"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What spread the new revolutionary principles all over Europe during the Napoleonic Wars?",
+    "answer":"the primary successor state of the (r)|(R)evolution, the First Empire under Napoleon"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did the primary successor state of the Revolution spread?",
+    "answer":"the new revolutionary principles"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did the First Empire under Napoleon spread?",
+    "answer":"the new revolutionary principles"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"When did the First Empire finally collapse?",
+    "answer":"1815"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What has unfolded in the shadow of the French Revolution?",
+    "answer":"modern era"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did French society itself undergo?",
+    "answer":"an epic transformation"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What underwent an epic transformation?",
+    "answer":"(f)|(F)rench society"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What evaporated under a sustained assault from various left-wing poligical groups, the masses on the streets, and peasants in the countryside?",
+    "answer":"feudal, aristocratic, and religious privileges"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What were abruptly overthrown under the mantra of \"Liberté, égalité, fraternité\"?",
+    "answer":"(o)|(O)ld ideas about tradition and hierarchy regarding monarchs, aristocrats, and the (c)|(C)atholic (c)|(C)hurch"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What did the Revolution accelerate?",
+    "answer":"the rise of republics and democracies, the spread of liberalism and secularism, the development of modern ideologies, and the adoption of total war."
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What expanded the arena of human rights?",
+    "answer":"some of its central documents, like the (declaration of the rights of man)|(Declaration of the Rights of Man)"
+  },
+  {
+    "source":"",
+    "file":"FrenchRevolution.txt",
+    "query":"What are just a few of the numerous events that ultimately depended upon the eruption of 1789?",
+    "answer":"the (latin american)|(Latin American) independence wars, the (louisiana purchase)|(Louisiana Purchase) by the (united states)|(United States), and the (r)|(R)evolutions of 1848"
+  }
+]

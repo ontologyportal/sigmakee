@@ -1,0 +1,44 @@
+[
+  {
+    "source":"",
+    "file":"IP.txt",
+    "query":"What is used to relay datagrams across networks?",
+    "answer":"Internet Protocol"
+  },
+  {
+    "source":"",
+    "file":"IP.txt",
+    "query":"What does IP define?",
+    "answer":"(packet structures that encapsulate the data to be delivered)|(addressing methods that are used to label the datagram with source and destination information)"
+  },
+  {
+    "source":"",
+    "file":"IP.txt",
+    "query":"What are packet structures defined by?",
+    "answer":"(IP)|(Internet Protocol)"
+  },
+  {
+    "source":"",
+    "file":"IP.txt",
+    "query":"What was IP historically?",
+    "answer":"(connectionless datagram service)|(primary protocol in the Internet)"
+  },
+  {
+    "source":"",
+    "file":"IP.txt",
+    "query":"What is the Internet protocol suite often referred to as?",
+    "answer":"TCP/IP"
+  },
+  {
+    "source":"",
+    "file":"IP.txt",
+    "query":"What was the first major version of IP?",
+    "answer":"(Internet Protocol Version 4)|(IPv4)"
+  },
+  {
+    "source":"",
+    "file":"IP.txt",
+    "query":"What is the successor of IPv4?",
+    "answer":"(Internet Protocol Version 6)|(IPv6)"
+  }
+]

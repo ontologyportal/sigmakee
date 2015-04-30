@@ -1,87 +1,104 @@
 [
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What is Google?",
-    "answer" : "null"
+    "answer" : "an American multinational corporation specializing in Internet-related services and products"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What is the specialization of Google?",
-    "answer" : "null"
+    "answer" : "Internet-related services and products"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What is AdWords?",
-    "answer" : "AdWords is an online, advertising service."
+    "answer" : "an online, advertising service"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "Who founded Google?",
-    "answer" : "I'm pretty sure the answer is by Larry Page and Sergey Brin."
+    "answer" : "Larry Page and Sergey Brin"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What was founded by Larry Page and Sergey Brin?",
-    "answer" : "Google."
+    "answer" : "Google"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "Who was Larry Page?",
-    "answer" : "null"
+    "answer" : "Founder of Google"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "Who was Sergey Brin?",
-    "answer" : "null"
+    "answer" : "Founder of google"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "Who were the Ph.D students at Stanford University?",
-    "answer" : "null"
+    "answer" : "Larry Page and Sergey Brin"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "Who owned 14 % of Google shares?",
-    "answer" : "null"
+    "answer" : "Larry Page and Sergey Brin"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "Who incorporated Google as a privately held company?",
-    "answer" : "null"
+    "answer" : "Larry Page and Sergey Brin"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "When was  Google incorporated as a privately held company?",
-    "answer" : "From what I understand, the answer should be September 4, 1998."
+    "answer" : "September 4, 1998"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What was the mission statement of Google?",
-    "answer" : "To organize the world's information and make it universally accessible and useful."
+    "answer" : "To organize the world's information and make it universally accessible and useful"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What was the unofficial slogan of Google?",
-    "answer" : "null"
+    "answer" : "Don't be evil"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "When did Google moved to its new headquarters?",
-    "answer" : "Likely, 2004."
+    "answer" : "2004"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "Where was Google's new headquarter?",
-    "answer" : "null"
+    "answer" : "Mountain View, California"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What are the desktop products of Google?",
-    "answer" : "Possibly, desktop products include applications for web browsing, organizing and editing photos, and instant messaging."
+    "answer" : "applications for web browsing, organizing and editing photos, and instant messaging"
   },
   {
+    "source":"",
     "file": "Google.txt",
     "question" : "What are the online products offered by Google?",
-    "answer" : "null"
+    "answer" : "email (Gmail), a cloud storage service (Google Drive), an office suite (Google Docs) and a social networking service (Google+)"
   }
 ]

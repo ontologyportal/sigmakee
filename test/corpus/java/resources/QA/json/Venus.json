@@ -1,0 +1,44 @@
+[
+  {
+    "source":"",
+    "file":"Venus.txt",
+    "query":"What is like the greenhouse effect?",
+    "answer":"The thick layers of cloud"
+  },
+  {
+    "source":"",
+    "file":"Venus.txt",
+    "query":"What occupies about 95% of Earth's diameter?",
+    "answer":"Venus"
+  },
+  {
+    "source":"",
+    "file":"Venus.txt",
+    "query":"What is the temperature on Venus's clouds?",
+    "answer":"55 degree F"
+  },
+  {
+    "source":"",
+    "file":"Venus.txt",
+    "query":"What can be easily observed with the naked eye?",
+    "answer":"(Venus)|(Earth 's sister planet)"
+  },
+  {
+    "source":"",
+    "file":"Venus.txt",
+    "query":"What is covered by thick, noxious clouds of sulfuric acid?",
+    "answer":"Venus"
+  },
+  {
+    "source":"",
+    "file":"Venus.txt",
+    "query":"What is Venus covered with?",
+    "answer":"thick, noxious clouds of sulfuric acid"
+  },
+  {
+    "source":"",
+    "file":"Venus.txt",
+    "query":"What is the temperature in the uppermost layer of Venus's clouds ?",
+    "answer":"55 degree F"
+  }
+]
