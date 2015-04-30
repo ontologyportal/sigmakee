@@ -2,61 +2,46 @@
   {
     "file": "HubbleLaw.txt",
     "question" : "What is Hubble’s law ?",
-    "answer" : "Hubble's law is the name for the observation in physical cosmology that: objects observed in deep space (extragalactic space, ~ 10 megaparsecs or more) are found to have a Doppler shift interpretable as relative velocity away from the Earth;."
+    "answer" : "the observation in physical cosmology that: objects observed in deep space (extragalactic space, ~ 10 megaparsecs or more) are found to have a Doppler shift interpretable as relative velocity away from the Earth"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "What is Hubble's flow?",
-    "answer" : "Most likely the answer is the motion of astronomical objects due solely to this expansion is known as the Hubble flow."
+    "answer" : "the motion of astronomical objects due solely to this expansion is known as the Hubble flow"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "Who derived the Hubble’s law ?",
-    "answer" : "Most likely the answer is by Georges Lemaître."
+    "answer" : "Georges Lemaître"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "Which law is considered the first observational basis for the expanding space paradigm?",
-    "answer" : "From what I understand, the answer should be Hubble's law is considered the first observational basis for the expanding space paradigm and today serves as one of the pieces of evidence most often cited in support of the Big Bang model."
+    "answer" : "Hubble's law"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "Which law serves as one of the pieces of evidence cited in support of the Big Bang model?",
-    "answer" : "null"
-  },
-  {
-    "file": "HubbleLaw.txt",
-    "question" : "What is known as the Hubble’s Constant ?",
-    "answer" : "null"
-  },
-  {
-    "file": "HubbleLaw.txt",
-    "question" : "What is Hubble’s constant?",
-    "answer" : "null"
+    "answer" : "Hubble's law"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "When was the existence of Hubble’s law confirmed ?",
-    "answer" : "Two years later."
+    "answer" : "Two years later"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "Who measured the recession Velocity ?",
-    "answer" : "null"
+    "answer" : "Vesto Slipher"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "Who confirmed the existence of the Hubble’s law?",
-    "answer" : "Edwin Hubble."
+    "answer" : "Edwin Hubble"
   },
   {
     "file": "HubbleLaw.txt",
     "question" : "Who proposed that the Universe is expanding and suggested an estimated value of the rate of expansion?",
-    "answer" : "Georges Lemaître."
-  },
-  {
-    "file": "HubbleLaw.txt",
-    "question" : "Who suggested an estimated value of the rate of expansion?",
-    "answer" : "null"
+    "answer" : "Georges Lemaître"
   }
 ]
