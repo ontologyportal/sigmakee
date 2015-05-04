@@ -10,11 +10,11 @@
   <preference name="systemsDir" value="/home/vagrant/workspace/sigma/sigma" />
   <preference name="userBrowserLimit" value="25" />
   <preference name="adminBrowserLimit" value="200" />
-  <preference name="SemRewrite" value="/home/vagrant/.sigmakee/WordNetMappings/SemRewrite.txt" />
+  <preference name="SemRewrite" value="/home/vagrant/.sigmakee/KBs/WordNetMappings/SemRewrite.txt" />
   <preference name="typePrefix" value="yes" />
   <preference name="graphDir" value="/home/vagrant/workspace/sigma/sigma/webapps/sigma/graph" />
   <preference name="TPTP" value="yes" />
-  <preference name="cache" value="no" />
+  <preference name="cache" value="yes" />
   <preference name="editorCommand" value="" />
   <preference name="graphVizDir" value="/usr/bin" />
   <preference name="kbDir" value="/home/vagrant/.sigmakee/KBs" />
