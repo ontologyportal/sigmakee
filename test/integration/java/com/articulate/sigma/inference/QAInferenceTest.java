@@ -3,6 +3,7 @@ package com.articulate.sigma.inference;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.semRewrite.Interpreter;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class QAInferenceTest extends IntegrationTestBase {
         assertNotEquals("No response.", actualAnswer);
     }
 
+    @Ignore
     @Test
     public void test1() throws IOException {
 
@@ -63,6 +65,7 @@ public class QAInferenceTest extends IntegrationTestBase {
         assertEquals("UnitedStates.", actualAnswer);
     }
 
+    @Ignore
     @Test
     public void test2() throws IOException {
 

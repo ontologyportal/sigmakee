@@ -23,6 +23,7 @@ public class DemoScript20150401Test extends IntegrationTestBase {
         IntegrationTestBase.resetAllForInference();
     }
 
+    @Ignore
     @Test
     public void test1() {
         String input = "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator, one of the first women to fly a plane long distances.";
