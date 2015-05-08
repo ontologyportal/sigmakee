@@ -1,0 +1,6 @@
+Even the incredibly simple microprocessor will have a fairly large set of instructions that it can perform.
+The collection of instructions is implemented as bit patterns, each one of which has a different meaning when loaded into the instruction register.
+Humans are not particularly good at remembering bit patterns, so a set of short words are defined to represent the different bit patterns.
+This collection of words is called the assembly language of the processor.
+An assembler can translate the words into their bit patterns very easily, and then the output of the assembler is placed in memory for the microprocessor to execute.
+The instruction decoder needs to turn each of the opcodes into a set of signals that drive the different components inside the microprocessor.

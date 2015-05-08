@@ -37,7 +37,7 @@ public class AmeliaTFIDFTest extends TestCase {
 
     @Parameterized.Parameters(name="<{0}> {1}")
     public static Collection<Object[]> prepare() {
-        return JsonReader.transform("resources/inferenceWikiTest.json", (JSONObject jo) -> {
+        return JsonReader.transform("miscellaneous/inferenceWiki.json", (JSONObject jo) -> {
             String fname = (String) jo.get("file");
             String query = (String) jo.get("query");
             String answer = (String) jo.get("answer");
@@ -48,7 +48,7 @@ public class AmeliaTFIDFTest extends TestCase {
     private TFIDF getCachedTFIDF(String fileName) {
         TFIDF cb = parsedFiles.get(fileName);
         if(cb == null) {
-            cb = new TFIDF("resources" + File.separator + "QA/textfiles" + File.separator + fileName, "testfiles/stopwords.txt", true);
+            cb = new TFIDF("miscellaneous" + File.separator + fileName, "testfiles/stopwords.txt", true);
             parsedFiles.put(fileName, cb);
         }
         return cb;
