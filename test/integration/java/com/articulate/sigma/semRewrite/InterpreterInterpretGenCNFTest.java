@@ -205,8 +205,8 @@ public class InterpreterInterpretGenCNFTest extends IntegrationTestBase {
 
         String[] expected = {
                 "root(ROOT-0,go_after-2)", "names(Mary-1,\"Mary\")", "hour(time-1,00-4)", "attribute(Mary-1,Female)",
-                "sumo(Human,Mary-1)", "tense(PAST,go_after-2)", "time(go-2,time-1)", "minute(time-1,00-4)", "number(SINGULAR,midnight-4)",
-                "nsubj(go_after-2,Mary-1)", "sumo(TimePoint,midnight-4)", "number(SINGULAR,Mary-1)", "prep_after(go_after-2,midnight-4)"
+                "sumo(Human,Mary-1)", "tense(PAST,go_after-2)", "time(go_after-2,time-1)", "minute(time-1,00-4)", "number(SINGULAR,midnight-4)",
+                "nsubj(go_after-2,Mary-1)", "sumo(TimePoint,midnight-4)", "number(SINGULAR,Mary-1)", "prep_after(go_after-2,midnight-4)", "sumo(time,time-1)"
         };
 
         List<String> actual = cnf.toListString();
@@ -477,7 +477,7 @@ public class InterpreterInterpretGenCNFTest extends IntegrationTestBase {
         CNF cnf = interpreter.interpretGenCNF(input);
 
         Set<String> expected = Sets.newHashSet(
-                "time(walk-3,time-1)", "month(time-1,May)", "nsubj(walk-3,May_Mary-1)", "root(ROOT-0,walk-3)", 
+                "time(walk-3,time-1)", "month(time-1,May)", "sumo(time,time-1)", "nsubj(walk-3,May_Mary-1)", "root(ROOT-0,walk-3)",
                 "sumo(Walking,walk-3)", "number(SINGULAR,May_Mary-1)"
         );
 
