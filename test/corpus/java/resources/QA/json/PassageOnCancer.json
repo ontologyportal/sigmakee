@@ -1,0 +1,108 @@
+[
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer .txt",
+        "question": "Which disease is also known as malignant tumor ?",
+        "answer": "Cancer."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "Which disease is also known as malignant neoplasm?",
+        "answer": "Cancer."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What is Cancer?",
+        "answer": "A group of diseases involving abnormal cell growth with the potential to invade or spread to other parts of the body."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What are the other names for Cancer?",
+        "answer": "malignant tumor or malignant neoplasm"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "Which disease is involved in abnormal cell growth with the potential to invade or spread to other parts of the body?",
+        "answer": "Cancer."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "Are all tumors cancerous?",
+        "answer": "No."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What are the causes of cancer deaths?",
+        "answer": "Tobacco use (22%), obesity(10%),, a poor diet, lack of physical activity, and consumption of ethanol (alcohol). "
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What are the causes of cancer?",
+        "answer": "Tobacco use (22%), obesity(10%), a poor diet, lack of physical activity,consumption of ethanol (alcohol),infections, exposure to ionizing radiation, and environmental pollutants. "
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What causes 22% of cancer deaths?",
+        "answer": "Tobacco use "
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What is the percentage of tobacco related cancer deaths?",
+        "answer": "22%"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "Which tumors do not spread to other parts of the body?",
+        "answer": "Benign Tumors"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What are the possible signs and symptoms of cancer?",
+        "answer": "A new lump, abnormal bleeding, a prolonged cough, unexplained weight loss, and a change in bowel movements."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "Which disease include symptoms like a new lump, abnormal bleeding, a prolonged cough, unexplained weight loss?",
+        "answer": "Cancer."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "How many different known cancers are there that affect humans?",
+        "answer": "over 100 "
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What are the factors which leads to cancer deaths?",
+        "answer": "Tobacco use, obesity, a poor diet, lack of physical activity, consumption of ethanol (alcohol), certain infections, exposure to ionizing radiation, and environmental pollutants."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "What percentage of cancers are due to infections such as hepatitis B, hepatitis C, and human papillomavirus?",
+        "answer": "20%"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt",
+        "question": "How Cancer can be detected?",
+        "answer": "Detected by certain signs and symptoms or screening tests.  It is then typically further investigated by medical imaging and confirmed by biopsy. "
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cancer",
+        "file": "PassageOnCancer.txt"
+    }
+]

@@ -1,0 +1,92 @@
+[
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What is Meteorology?",
+        "answer": "The interdisciplinary scientific study of the atmosphere and sub-disciplines of the atmospheric sciences."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What didn't occur until the 18th century?",
+        "answer": "studies in the field stretch back millennia, though significant progress in meteorology didn't occur until the 18th century."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What happened in the 19th century?",
+        "answer": "modest progress in the field after observing networks formed across several countries."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What was explained by the science of meteorology?",
+        "answer": "Meteorological phenomena are observable weather events which illuminate."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What is Meteorological phenomena?",
+        "answer": "Observable weather events which illuminate."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What are the variables that exist in Earthâs atmosphere?",
+        "answer": "temperature, air pressure, water vapor, and the gradients."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What impacts weather and climatology?",
+        "answer": "Systems on local, regional, and global levels."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What are the sub-disciplines of the atmospheric sciences?",
+        "answer": "Meteorology, climatology, atmospheric physics, and atmospheric chemistry."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What composes the interdisciplinary field of hydrometeorology?",
+        "answer": "Meteorology and hydrology."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What is interdisciplinary scientific study of the atmosphere known as?",
+        "answer": "Meteorology"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What is the science of meteorology?",
+        "answer": "Meteorological phenomena are observable weather events which illuminate."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What are studied to determine how global levels impact weather and climatology?",
+        "answer": "different spatial scales are studied to determine how systems on local, regional, and global levels impact weather and climatology."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What are studied to determine how systems on local, regional, and global levels impact weather and climatology?",
+        "answer": "different spatial scales "
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "What can be determined by studying different spatial scales?",
+        "answer": "how systems on local, regional, and global levels impact weather and climatology."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Meteorology",
+        "file": "PassageOnMeteorology.txt",
+        "question": "How do you determine the global levels that impact weather and climatology?",
+        "answer": "Different spatial scales are studied."
+    }
+]

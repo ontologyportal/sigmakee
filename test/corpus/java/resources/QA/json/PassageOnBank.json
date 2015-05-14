@@ -1,0 +1,62 @@
+[
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "What is a Bank?",
+        "answer": "Banks are places where people can keep their money."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "How do people use banks?",
+        "answer": "to save money in their savings accounts and to pay money from their checking accounts."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "Why do most people use banks?",
+        "answer": "to save money in their savings accounts and to pay money from their checking accounts."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "How is a person's paycheck deposited?",
+        "answer": "paycheck is often electronically deposited (put) into their savings or checking account."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "Where is a person's paycheck deposited?",
+        "answer": "is often electronically deposited (put) into their savings or checking account."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "How can a person pay their bills?",
+        "answer": "A person can pay their bills by writing checks from their checking accounts or pay online where their bills are electronically connected to their bank accounts."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "Do banks give loans to people?",
+        "answer": "yes."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "How does a bank make money?",
+        "answer": "the bank makes money from lending by charging interest."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "What happens today when a person earns money from their job?",
+        "answer": "their paycheck is often electronically deposited (put) into their savings or checking account."
+    },
+    {
+        "source": "http://mrnussbaum.com/readingcomp/banks/",
+        "file": "PassageOnBank.txt",
+        "question": "What gets deposited into the savings or checking account?",
+        "answer": "paycheck of the person who earns money from their job. "
+    }
+]

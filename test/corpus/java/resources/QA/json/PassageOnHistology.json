@@ -1,0 +1,104 @@
+[
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What is Histology?",
+        "answer": "The study of the microscopic anatomy of cells and tissues of plants and animals and an essential tool of biology and medicine."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "Which branch of science is the study of the microscopic anatomy of cells and tissues of plants and animals?",
+        "answer": "Histology"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "Which branch of science is the study of the microscopic anatomy of cells and tissues of plants?",
+        "answer": "Histology"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "Which branch of science is the study of the microscopic anatomy of cells and tissues of animals?",
+        "answer": "Histology"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "Which instrument is used to examine cells and tissues?",
+        "answer": "Light microscope or electron microscope"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "How is histology commonly performed?",
+        "answer": "By examining cells and tissues under a light microscope or electron microscope, which have been sectioned, stained and mounted on a microscope slide."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "How are histological studies conducted ?",
+        "answer": "conducted using tissue culture, where live human or animal cells are isolated and maintained in an artificial environment for various research projects."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What is maintained in an artificial environment for various research projects?",
+        "answer": "Live human or animal cells."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What is the essential tool of biology and medicine?",
+        "answer": "Histology."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What is the microscopic study of diseased tissue know as?",
+        "answer": "Histopathology"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What samples are required for an accurate diagnosis of cancer and other diseases?",
+        "answer": "histopathological examination of samples."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "Who performs histological specimens for examination?",
+        "answer": "the trained personnel who prepare histological specimens for examination are histotechnicians, histology technicians (HT), histology technologists (HTL), medical scientists, medical laboratory technicians, or biomedical scientists."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "Who prepares histological specimens for examination?",
+        "answer": "The trained personnel are histotechnicians, histology technicians (HT), histology technologists (HTL), medical scientists, medical laboratory technicians, or biomedical scientists."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What is Histopathology?",
+        "answer": "the microscopic study of diseased tissue, is an important tool in anatomical pathology, since accurate diagnosis of cancer and other diseases usually requires histopathological examination of samples."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What is an important tool in anatomical pathology?",
+        "answer": "Histopathology."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "Who are histotechnicians?",
+        "answer": "The trained personnel who prepare histological specimens for examination."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Histology",
+        "file": "PassageOnHistology.txt",
+        "question": "What is histotechnology?",
+        "answer": "The trained personnel are histotechnicians, histology technicians (HT), histology technologists (HTL), medical scientists, medical laboratory technicians, or biomedical scientists.  Their field of study is called histotechnology."
+    }
+]

@@ -1,0 +1,50 @@
+[
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "What is cell biology?",
+        "answer": "Cell biology (formerly cytology, from the Greek kytos, \"contain\") is a branch of biology that studies cells-their physiological properties, their structure, the organelles they contain, interactions with their environment, their life cycle, division, death and cell function."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "Which branch of biology studies cells?",
+        "answer": "Cell biology"
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "What is Biosynthesis?",
+        "answer": "Biosynthesis (also called biogenesis) is an enzyme-catalyzed process in cells of living organisms by which substrates are converted to more complex products (also simply known as protein translation). Some proteins, such as those to be incorporated in membranes (known as membrane proteins), are transported into the RER during synthesis. "
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "What is biogenesis?",
+        "answer": "Biosynthesis (also called biogenesis) is an enzyme-catalyzed process in cells of living organisms by which substrates are converted to more complex products (also simply known as protein translation)."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "What is an enzyme-catalyzed process in cells of living organisms by which substrates are converted to more complex products ?",
+        "answer": "Biosynthesis (also called biogenesis)."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "What is protein translation?",
+        "answer": "Biosynthesis (also called biogenesis) is an enzyme-catalyzed process in cells of living organisms by which substrates are converted to more complex products (also simply known as protein translation)."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "What is membrane proteins?",
+        "answer": "Some proteins, such as those to be incorporated in membranes (known as membrane proteins)."
+    },
+    {
+        "source": "http://en.wikipedia.org/wiki/Cell_biology",
+        "file": "CellBiology.txt",
+        "question": "What are transported into the RER during synthesis?",
+        "answer": "Some proteins, such as those to be incorporated in membranes (known as membrane proteins)."
+    }
+]
