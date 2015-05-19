@@ -732,11 +732,11 @@ public class Lexer {
         }
         else {
             //testString();
-            //testLex();
-            //testTerm();
+            testLex();
+            testTerm();
             //testAcceptLit();
             //testErrors();
-            testAcceptClause3();
+            //testAcceptClause3();
         }
     }
 }
