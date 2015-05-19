@@ -82,9 +82,11 @@ public class TFIDF {
     /** ***************************************************************
      */
     public TFIDF(List<String> documents, String stopwordsFilename, boolean resource) throws IOException {
+
         asResource = resource;
         //System.out.println("Info in TFIDF(): Initializing");
-        readStopWords(stopwordsFilename);
+        //readStopWords(stopwordsFilename);
+        prepare(documents, stopwordsFilename);
     }
 
     /** ***************************************************************
