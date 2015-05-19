@@ -51,7 +51,7 @@ public class TFIDFWikiTest {
         }
         String actual = cb.matchInput(query);
         String[] splitted = actual.split(":");
-        actual = StringUtils.join(Arrays.copyOfRange(splitted, 1, splitted.length), ":");
+        //actual = StringUtils.join(Arrays.copyOfRange(splitted, 1, splitted.length), ":");
 
         assertMatchesAny(answer, actual);
     }
@@ -74,7 +74,7 @@ public class TFIDFWikiTest {
     public static Collection<Object[]> prepare(){
 
         ArrayList<Object[]> result = new ArrayList<Object[]>();
-        File jsonTestFile = new File("test/corpus/java/resources/cmuWiki/cmuWiki.json");
+        File jsonTestFile = new File("cmuWiki/cmuWiki.json");
         String filename = jsonTestFile.getAbsolutePath();
         JSONParser parser = new JSONParser();
         try {
