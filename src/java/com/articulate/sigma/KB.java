@@ -558,7 +558,7 @@ public class KB {
         
         if (child.equals(parent))
             return true;
-        if (kbCache.transInstOf(parent,child))
+        if (kbCache.transInstOf(child,parent))
             return true;
         if (kbCache.childOfP("instance",parent,child) ||
             kbCache.childOfP("subclass",parent,child) || 
