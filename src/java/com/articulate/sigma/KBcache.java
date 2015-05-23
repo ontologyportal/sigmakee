@@ -97,28 +97,26 @@ public class KBcache {
     public HashMap<String, HashSet<String>> explicitDisjointRelations = new HashMap<>();
 
     /** ***************************************************************
-     * Constructor
      */
     public KBcache(KB kb) {
         
         this.kb = kb;
     }
 
+    /** ***************************************************************
+     */
     public KBcache(KBcache kbCacheIn, KB kbIn) {
-        this.kb = kbIn;
 
+        this.kb = kbIn;
         if (kbCacheIn.relations != null)   {
             this.relations = Sets.newHashSet(kbCacheIn.relations);
         }
-
         if (kbCacheIn.transRels != null)   {
             this.transRels = Sets.newHashSet(kbCacheIn.transRels);
         }
-
         if (kbCacheIn.instTransRels != null)   {
             this.instTransRels = Sets.newHashSet(kbCacheIn.instTransRels);
         }
-
         if (kbCacheIn.parents != null)   {
             for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.parents.entrySet())    {
                 String outerKey = outerEntry.getKey();
@@ -131,11 +129,9 @@ public class KBcache {
                     HashSet newInnerSet = Sets.newHashSet(innerEntry.getValue());
                     newInnerMap.put(innerKey, newInnerSet);
                 }
-
                 this.parents.put(outerKey, newInnerMap);
             }
         }
-
         if (kbCacheIn.instances != null)   {
             for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.instances.entrySet()) {
                 String key = entry.getKey();
@@ -143,11 +139,9 @@ public class KBcache {
                 this.instances.put(key, newSet);
             }
         }
-
         if (kbCacheIn.insts != null)   {
             this.insts = Sets.newHashSet(kbCacheIn.insts);
         }
-
         if (kbCacheIn.children != null)   {
             for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.children.entrySet())    {
                 String outerKey = outerEntry.getKey();
@@ -160,7 +154,6 @@ public class KBcache {
                     HashSet newInnerSet = Sets.newHashSet(innerEntry.getValue());
                     newInnerMap.put(innerKey, newInnerSet);
                 }
-
                 this.children.put(outerKey, newInnerMap);
             }
         }
@@ -172,11 +165,9 @@ public class KBcache {
                 this.signatures.put(key, newSet);
             }
         }
-
         if (kbCacheIn.valences != null)   {
             this.valences = Maps.newHashMap(kbCacheIn.valences);
         }
-
         if (kbCacheIn.explicitDisjointRelations != null)   {
             for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.explicitDisjointRelations.entrySet()) {
                 String key = entry.getKey();
@@ -184,7 +175,6 @@ public class KBcache {
                 this.explicitDisjointRelations.put(key, newSet);
             }
         }
-
     }
 
     /** ***************************************************************
@@ -210,7 +200,6 @@ public class KBcache {
         if (parent.equals(child)) {
             return false;
         }
-
         HashMap<String,HashSet<String>> childMap = children.get(rel);
         HashSet<String> childSet = (childMap != null) ? childMap.get(parent) : null;
 
@@ -219,12 +208,10 @@ public class KBcache {
                 + rel + " " + parent + " " + child);
         	return false;
         }
-        if (childSet.contains(child)) {
+        if (childSet.contains(child))
             return true;
-        }
-        else {
+        else
             return false;
-        }
     }
 
     /** *************************************************************
@@ -322,6 +309,7 @@ public class KBcache {
      * and "disjoint" expressions;
      */
     public void buildDisjointRelationsMap() {
+
         ArrayList<Formula> explicitDisjontFormulae = new ArrayList<Formula>();
         explicitDisjontFormulae.addAll(kb.ask("arg", 0, "partition"));
         explicitDisjontFormulae.addAll(kb.ask("arg", 0, "disjoint"));
@@ -347,7 +335,8 @@ public class KBcache {
                                 HashSet<String> vals = new HashSet<String>();
                                 vals.add(val);
                                 explicitDisjointRelations.put(key, vals);
-                            } else {
+                            }
+                            else {
                                 HashSet<String> vals = explicitDisjointRelations.get(key);
                                 vals.add(val);
                                 explicitDisjointRelations.put(key, vals);
@@ -393,7 +382,9 @@ public class KBcache {
         for (String s1 : ancestors_rel1) {
             for (String s2 : ancestors_rel2) {
                 if (kb.kbCache.isExplicitDisjoint(kb.kbCache.explicitDisjointRelations, s1, s2)) {
-                    if (debug) System.out.println(rel1 + " and " + rel2 + " are disjoint relations, because of " + s1 + " and " + s2);
+                    if (debug)
+                        System.out.println(rel1 + " and " + rel2 +
+                                " are disjoint relations, because of " + s1 + " and " + s2);
                     return true;
                 }
             }
@@ -410,11 +401,12 @@ public class KBcache {
 
         if (explicitDisjointRelations.containsKey(rel1)) {
             return explicitDisjointRelations.get(rel1).contains(rel2);
-        } else if (explicitDisjointRelations.containsKey(rel2)) {
-            return explicitDisjointRelations.get(rel2).contains(rel1);
-        } else {
-            return false;
         }
+        else if (explicitDisjointRelations.containsKey(rel2)) {
+            return explicitDisjointRelations.get(rel2).contains(rel1);
+        }
+        else
+            return false;
     }
 
     /** ***************************************************************
@@ -522,6 +514,7 @@ public class KBcache {
      * returns all instances, like "America", "Austria", "Albania", etc.
      */
     public HashSet<String> getInstancesForType(String cl) {
+
         HashSet<String> instancesForType = new HashSet<>();
         for (String inst : instances.keySet()) {
             HashSet<String> parents = instances.get(inst);
