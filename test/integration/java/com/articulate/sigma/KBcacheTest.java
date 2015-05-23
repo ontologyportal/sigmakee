@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class KBcacheTest extends IntegrationTestBase {
 
@@ -62,7 +63,7 @@ public class KBcacheTest extends IntegrationTestBase {
         HashSet<String> actual = cache.getParentClassesOfInstance(relation);
         assertEquals(expected, actual);
 
-        relation = "during";
+        relation = "during";  // TODO: since during is a subrelation of temporalPart it should be a superset here - bad test
         expected = new HashSet<>(Arrays.asList("Entity", "TransitiveRelation", "Abstract", "Relation", "InheritableRelation", "IrreflexiveRelation", "BinaryRelation"));
         actual = cache.getParentClassesOfInstance(relation);
         assertEquals(expected, actual);
@@ -73,5 +74,32 @@ public class KBcacheTest extends IntegrationTestBase {
                 "PartialOrderingRelation", "BinaryRelation", "BinaryPredicate", "Predicate"));
         actual = cache.getParentClassesOfInstance(relation);
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testIsChildOf1() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("parents of CitizenryFn: " + cache.getParentClassesOfInstance("CitizenryFn"));
+        System.out.println("parents of CitizenryFn: " + cache.parents.get("CitizenryFn"));
+        assertTrue(SigmaTestBase.kb.isChildOf("CitizenryFn", "Function"));
+    }
+
+    @Test
+    public void testIsChildOf2() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("parents of Attorney: " + cache.getParentClassesOfInstance("Attorney"));
+        System.out.println("parents of Attorney: " + cache.parents.get("Attorney"));
+        assertTrue(SigmaTestBase.kb.isChildOf("Attorney", "Attribute"));
+    }
+
+    @Test
+    public void testTransitiveRelations() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("transRels: " + cache.transRels);
+        assertTrue(cache.transRels.contains("subAttribute"));
+        assertTrue(cache.transRels.contains("subrelation"));
     }
 }
