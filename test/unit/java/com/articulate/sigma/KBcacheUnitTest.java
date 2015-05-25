@@ -1,0 +1,87 @@
+package com.articulate.sigma;
+
+/**
+ Note that this class, and therefore, Sigma, depends upon several terms
+ being present in the ontology in order to function as intended.  They are:
+
+ subclass
+ subAttribute
+ subrelation
+ instance
+
+ partition
+ disjoint
+ disjointDecomposition
+ exhaustiveDecomposition
+ exhaustiveAttribute
+
+ domain
+ domainSubclass
+ Entity
+ TransitiveRelation
+ Relation
+ */
+import com.google.common.collect.Sets;
+import org.junit.Test;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
+
+public class KBcacheUnitTest {
+
+    @Test
+    public void testBasic() {
+
+        KB kb = new KB("TestKB");
+        kb.kbCache = new KBcache(kb);
+        KIF kif = new KIF();
+        kif.parseStatement("(instance rel Relation)");
+        kif.parseStatement("(domain rel 1 Object)");
+        kif.parseStatement("(domain rel 2 Object)");
+        kif.parseStatement("(subclass Object Entity)");
+        kif.parseStatement("(subrelation relsub rel)");
+        kif.parseStatement("(subclass TransitiveRelation Relation)");
+        kif.parseStatement("(instance relsub TransitiveRelation)");
+        kif.parseStatement("(subclass Relation Entity)");
+        kb.merge(kif,"");
+        kb.kbCache.buildCaches();
+        String rel = "rel";
+        System.out.println("Test relations");
+        HashSet<String> expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        HashSet<String> actual = kb.kbCache.relations;
+        assertEquals(expected, actual);
+        //transRels
+        System.out.println("Test transRels");
+        expected = new HashSet<>(Arrays.asList("relsub"));
+        actual = kb.kbCache.transRels;
+        assertEquals(expected, actual);
+        // parents
+        //expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        //actual = kb.kbCache.parents.get(rel);
+        //assertEquals(expected, actual);
+        // children
+        //expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        //actual = kb.kbCache.children.get(rel);
+        //assertEquals(expected, actual);
+        // signatures
+        //expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        //actual = kb.kbCache.signatures.get(rel);
+        //assertEquals(expected, actual);
+        // valences
+        //expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        //actual = kb.kbCache.valences;
+        //assertEquals(expected, actual);
+
+        // insts
+        //System.out.println("Test insts");
+        //expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        //actual = kb.kbCache.insts;
+        //assertEquals(expected, actual);
+
+        //instances
+        //expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        //actual = kb.kbCache.instances;
+        //assertEquals(expected, actual);
+    }
+}
