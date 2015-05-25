@@ -36,7 +36,15 @@ public class KBcacheUnitTest {
         KB kb = new KB("TestKB");
         kb.kbCache = new KBcache(kb);
         KIF kif = new KIF();
+        kif.parseStatement("(subAttribute Attorney Lawyer)");
+        kif.parseStatement("(instance Attorney Profession)");
+        kif.parseStatement("(instance Lawyer Profession)");
+        kif.parseStatement("(subclass Profession Attribute)");
+        kif.parseStatement("(subclass Attribute Entity)");
         kif.parseStatement("(instance rel Relation)");
+        kif.parseStatement("(instance subclass TransitiveRelation)");
+        kif.parseStatement("(instance subAttribute TransitiveRelation)");
+        kif.parseStatement("(instance subrelation TransitiveRelation)");
         kif.parseStatement("(domain rel 1 Object)");
         kif.parseStatement("(domain rel 2 Object)");
         kif.parseStatement("(subclass Object Entity)");
@@ -44,16 +52,21 @@ public class KBcacheUnitTest {
         kif.parseStatement("(subclass TransitiveRelation Relation)");
         kif.parseStatement("(instance relsub TransitiveRelation)");
         kif.parseStatement("(subclass Relation Entity)");
+        kif.parseStatement("(subrelation CitizenryFn ResidentFn)");
+        kif.parseStatement("(instance ResidentFn Function)");
+        kif.parseStatement("(subclass Function Relation)");
         kb.merge(kif,"");
         kb.kbCache.buildCaches();
         String rel = "rel";
+        kb.kbCache.showState();
         System.out.println("Test relations");
-        HashSet<String> expected = new HashSet<>(Arrays.asList("rel", "relsub"));
+        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute","rel", "relsub", "subclass",
+                "subrelation","CitizenryFn","ResidentFn"));
         HashSet<String> actual = kb.kbCache.relations;
         assertEquals(expected, actual);
         //transRels
         System.out.println("Test transRels");
-        expected = new HashSet<>(Arrays.asList("relsub"));
+        expected = new HashSet<>(Arrays.asList("relsub","subclass","subAttribute","subrelation"));
         actual = kb.kbCache.transRels;
         assertEquals(expected, actual);
         // parents
@@ -83,5 +96,8 @@ public class KBcacheUnitTest {
         //expected = new HashSet<>(Arrays.asList("rel", "relsub"));
         //actual = kb.kbCache.instances;
         //assertEquals(expected, actual);
+
+        assertTrue(kb.kbCache.transInstOf("Attorney", "Attribute"));
+        //assertTrue(kb.isChildOf("CitizenryFn", "Function"));
     }
 }
