@@ -53,6 +53,7 @@ public class KBcacheUnitTest {
         kif.parseStatement("(instance relsub TransitiveRelation)");
         kif.parseStatement("(subclass Relation Entity)");
         kif.parseStatement("(subrelation CitizenryFn ResidentFn)");
+        kif.parseStatement("(instance CitizenryFn Function)");
         kif.parseStatement("(instance ResidentFn Function)");
         kif.parseStatement("(subclass Function Relation)");
         kb.merge(kif,"");
@@ -98,6 +99,6 @@ public class KBcacheUnitTest {
         //assertEquals(expected, actual);
 
         assertTrue(kb.kbCache.transInstOf("Attorney", "Attribute"));
-        //assertTrue(kb.isChildOf("CitizenryFn", "Function"));
+        assertTrue(kb.isChildOf("CitizenryFn", "Function"));
     }
 }
