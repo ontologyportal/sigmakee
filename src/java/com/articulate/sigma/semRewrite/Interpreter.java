@@ -520,7 +520,7 @@ public class Interpreter {
     }
 
     /** *************************************************************
-     * Take in a single sentence and output CNF for further process.
+     * Take in a single sentence and output CNF for further processing.
      */
     public CNF interpretGenCNF(String input)    {
 
@@ -595,15 +595,13 @@ public class Interpreter {
      */
     public String interpretSingle(String input) {
 
-        if (input.trim().endsWith("?")) {
+        if (input.trim().endsWith("?"))
             question = true;
-        } else {
+        else
             question = false;
-        }
 
-        if (!question) {
+        if (!question)
             tfidf.addInput(input);
-        }
 
         ArrayList<CNF> inputs = Lists.newArrayList(interpretGenCNF(input));
         ArrayList<String> kifClauses = interpretCNF(inputs);
@@ -617,11 +615,11 @@ public class Interpreter {
                 }
                 result = tfidf.matchInput(input).toString();
             }
-        } else {
+        }
+        else {
             // Store processed sentence
             userInputs.add(input);
         }
-
         //System.out.println("INFO in Interpreter.interpretSingle(): combined result: " + result);
         return result;
     }
@@ -632,6 +630,7 @@ public class Interpreter {
      * @return list of CNFs
      */
     protected ArrayList<CNF> getCNFInput(String input) {
+
         Lexer lex = new Lexer(input);
         CNF cnf = CNF.parseSimple(lex);
         ArrayList<CNF> cnfInput = new ArrayList<CNF>();
@@ -748,7 +747,6 @@ public class Interpreter {
     public static List<String> lemmatizeResults(List<String> results, List<CoreLabel> tokens, ClauseSubstitutor substitutor) {
 
         List<String> lemmatizeResults = Lists.newArrayList(results);
-
         for(CoreLabel label : tokens) {
             if(!"NNP".equals(label.tag()) && !"NNPS".equals(label.tag())) {
                 CoreLabelSequence grouped = substitutor.getGroupedByFirstLabel(label).orElse(new CoreLabelSequence(label));
@@ -766,7 +764,6 @@ public class Interpreter {
                 }
             }
         }
-
         return lemmatizeResults;
     }
 
@@ -789,9 +786,7 @@ public class Interpreter {
                 posMap.put(label.originalText() + "-" + label.index(), label.tag());
             }
         }
-
         return posMap;
-
     }
 
     /** *************************************************************
