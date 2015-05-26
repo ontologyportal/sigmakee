@@ -290,7 +290,8 @@ public class KBmanager {
         if (useCacheFile) {
             kb.kbCache = new KBcache(kb);
             kb.kbCache.buildCaches();
-        } else {
+        }
+        else {
             kb.kbCache = new KBcache(kb);
         }
         kb.checkArity();
