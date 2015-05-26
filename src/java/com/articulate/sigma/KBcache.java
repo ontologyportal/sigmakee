@@ -97,6 +97,12 @@ public class KBcache {
     public HashMap<String, HashSet<String>> explicitDisjointRelations = new HashMap<>();
 
     /** ***************************************************************
+     * empty constructor for testing only
+     */
+    public KBcache() {
+    }
+
+    /** ***************************************************************
      */
     public KBcache(KB kb) {
         
@@ -287,7 +293,7 @@ public class KBcache {
      */
     void buildDirectInstances() {
     	
-        ArrayList<Formula> forms = kb.ask("arg",0,"instance");
+        ArrayList<Formula> forms = kb.ask("arg", 0, "instance");
         for (int i = 0; i < forms.size(); i++) {
             Formula f = forms.get(i);
             String child = f.getArgument(1);
@@ -297,7 +303,7 @@ public class KBcache {
             if (instances.get(child) != null)
                 iset = instances.get(child);
             iset.add(parent);
-            if (superclasses.get(parent) != null)
+            if (superclasses != null && superclasses.get(parent) != null)
                 iset.addAll(superclasses.get(parent));
         	instances.put(child, iset);
         }
@@ -774,7 +780,7 @@ public class KBcache {
             Iterator<String> it1 = leaves.iterator();
             while (it1.hasNext()) {
                 String root = it1.next();
-                breadthFirstBuildChildren(root,rel);
+                breadthFirstBuildChildren(root, rel);
             }
         }
     }
@@ -1017,35 +1023,30 @@ public class KBcache {
         buildDisjointRelationsMap(); // find relations under partition definition
         System.out.println("INFO in KBcache.buildCaches(): size: " + instances.keySet().size());
     }
-    
+
+
     /** *************************************************************
      */
-    public static void main(String[] args) {
+    public void showState() {
 
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
-        System.out.println("**** Finished loading KB ***");
-        KBcache nkbc = kb.kbCache;
-        //nkbc.buildCaches();
-        //nkbc.buildRelationsSet();
         System.out.println("-------------- relations ----------------");
-        Iterator<String> it = nkbc.relations.iterator();
-        while (it.hasNext()) 
+        Iterator<String> it = this.relations.iterator();
+        while (it.hasNext())
             System.out.print(it.next() + " ");
         System.out.println();
         //nkbc.buildTransitiveRelationsSet();
         System.out.println("-------------- transitives ----------------");
-        it = nkbc.transRels.iterator();
-        while (it.hasNext()) 
+        it = this.transRels.iterator();
+        while (it.hasNext())
             System.out.print(it.next() + " ");
         System.out.println();
         System.out.println("-------------- parents ----------------");
         //nkbc.buildParents();
-        it = nkbc.parents.keySet().iterator();
+        it = this.parents.keySet().iterator();
         while (it.hasNext()) {
             String rel = it.next();
             System.out.println("Relation: " + rel);
-            HashMap<String,HashSet<String>> relmap = nkbc.parents.get(rel);
+            HashMap<String,HashSet<String>> relmap = this.parents.get(rel);
             Iterator<String> it2 = relmap.keySet().iterator();
             while (it2.hasNext()) {
                 String term = it2.next();
@@ -1056,11 +1057,11 @@ public class KBcache {
         System.out.println();
         System.out.println("-------------- children ----------------");
         //nkbc.buildChildren();
-        it = nkbc.children.keySet().iterator();
+        it = this.children.keySet().iterator();
         while (it.hasNext()) {
             String rel = it.next();
             System.out.println("Relation: " + rel);
-            HashMap<String,HashSet<String>> relmap = nkbc.children.get(rel);
+            HashMap<String,HashSet<String>> relmap = this.children.get(rel);
             Iterator<String> it2 = relmap.keySet().iterator();
             while (it2.hasNext()) {
                 String term = it2.next();
@@ -1071,23 +1072,23 @@ public class KBcache {
         System.out.println();
         System.out.println("-------------- domains ----------------");
         //nkbc.collectDomains();
-        Iterator<String> it3 = nkbc.relations.iterator();
+        Iterator<String> it3 = this.relations.iterator();
         while (it3.hasNext()) {
             String rel = it3.next();
-            ArrayList<String> domains = nkbc.signatures.get(rel);
+            ArrayList<String> domains = this.signatures.get(rel);
             System.out.println(rel + ": " + domains);
         }
         System.out.println();
         System.out.println("-------------- valences ----------------");
-        Iterator<String> it4 = nkbc.valences.keySet().iterator();
+        Iterator<String> it4 = this.valences.keySet().iterator();
         while (it4.hasNext()) {
             String rel = it4.next();
-            Integer arity = nkbc.valences.get(rel);
+            Integer arity = this.valences.get(rel);
             System.out.println(rel + ": " + arity);
         }
         System.out.println();
         System.out.println("-------------- insts ----------------");
-        Iterator<String> it5 = nkbc.insts.iterator();
+        Iterator<String> it5 = this.insts.iterator();
         while (it5.hasNext()) {
             String inst = it5.next();
             System.out.print(inst + ", ");
@@ -1095,10 +1096,23 @@ public class KBcache {
         System.out.println();
         System.out.println();
         System.out.println("-------------- instances ----------------");
-        Iterator<String> it6 = nkbc.instances.keySet().iterator();
+        Iterator<String> it6 = this.instances.keySet().iterator();
         while (it6.hasNext()) {
             String inst = it6.next();
-            System.out.println(inst + ": " + nkbc.instances.get(inst));
+            System.out.println(inst + ": " + this.instances.get(inst));
         }
+    }
+
+    /** *************************************************************
+     */
+    public static void main(String[] args) {
+
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        System.out.println("**** Finished loading KB ***");
+        KBcache nkbc = kb.kbCache;
+        //nkbc.buildCaches();
+        //nkbc.buildRelationsSet();
+        nkbc.showState();
     }
 }
