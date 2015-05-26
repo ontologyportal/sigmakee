@@ -667,7 +667,7 @@ public class KB {
     /** *************************************************************
      * Converts a literal (List object) to a Formula.
      *
-     * @param literal A List representing a SUO-KIF formula.
+     * @param lit A List representing a SUO-KIF formula.
      * @return A SUO-KIF Formula object, or null if no Formula can be
      * created.
      */
@@ -1321,7 +1321,7 @@ public class KB {
      * ArrayList containing the old (existing) formulas, else returns
      * an empty ArrayList.
      */
-    private ArrayList<Formula> merge(KIF kif, String pathname) {
+    public ArrayList<Formula> merge(KIF kif, String pathname) {
              
         ArrayList<Formula> formulasPresent = new ArrayList<Formula>();
         // Add all the terms from the new formula into the KB's current list
@@ -1358,7 +1358,6 @@ public class KB {
                 Iterator<String> it2 = newFormulas.iterator();
                 Formula f = null;
                 while (it2.hasNext()) {
-
                     String newformulaStr = it2.next();
                     Formula newFormula = kif.formulaMap.get(newformulaStr);
                     f = formulaMap.get(newformulaStr);
@@ -2288,14 +2287,11 @@ public class KB {
      * the formulas with the existing set of formulas.
      *
      * @param filename - The full path of the file being added
-     * @param buildCachesP - If true, forces the assertion caches to be rebuilt - deprecated
-     * @param performArity - Perform arity check - deprecated since this can't be dont until all relations are defined
-     * @param loadEProverP - If true, destroys the old EProver process and
-     * starts a new one     - deprecated
      */    
     public void addConstituent(String filename) {
     //, boolean buildCachesP, boolean loadEProverP, boolean performArity) {
 
+        System.out.println("INFO in KB.addConstituent(): " + filename);
         String canonicalPath = null;
         KIF file = new KIF();
         try {
@@ -2359,7 +2355,8 @@ public class KB {
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
-
+        System.out.println("INFO in KB.addConstituent(): added " + file.formulaMap.values().size() +
+                " formulas and " + file.terms.size() + " terms.");
         this.getTerms().addAll(file.terms);
         if (!constituents.contains(canonicalPath))
             constituents.add(canonicalPath);            
