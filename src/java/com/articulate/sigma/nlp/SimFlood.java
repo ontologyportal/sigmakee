@@ -2,6 +2,7 @@ package com.articulate.sigma.nlp;
 
 import java.util.*;
 import com.google.common.collect.*;
+import com.articulate.sigma.semRewrite.*;
 
 /*
 Copyright 2014-2015 IPsoft
@@ -30,88 +31,11 @@ MA  02111-1307 USA
  */
 public class SimFlood {
 
-    /*************************************************************
-     */
-    public class Node {
-        public String label = "";
-        public float value = (float) 0.0;
-        public Set<Arc> arcs = new HashSet<Arc>();  // n1 of the arc is always this node
-
-        public String toString() {
-            return label + ":" + Float.toString(value) + " [" + arcs + "]";
-        }
-    }
-
-    /*************************************************************
-     */
-    public class Arc {
-        public String label = "";
-        public float value = (float) 0.0;
-        public Node n1 = null;
-        public Node n2 = null;
-
-        public String toString() {
-            return n1.label + "-" + Float.toString(value) + "->" + n2.label;
-        }
-    }
-
-    /*************************************************************
-     */
-    public class Graph {
-
-        public String label = "";
-        public Map<String, Node> nodes = new HashMap<String, Node>();
-        public List<Arc> arcs = new ArrayList<Arc>();
-
-        /*************************************************************
-         */
-        public void fromLists(List<String> ns, List<List<String>> as) {
-
-            //System.out.println("INFO in Graph.fromLists(): nodes: " + ns);
-            //System.out.println("INFO in Graph.fromLists(): arcs: " + as);
-            nodes = new HashMap<String, Node>();
-            arcs = new ArrayList<Arc>();
-            for (String s : ns) {
-                Node n = new Node();
-                n.label = s;
-                nodes.put(s, n);
-            }
-            //System.out.println("INFO in Graph.fromLists(): Nodes: " + nodes);
-
-            arcs = new ArrayList<Arc>();
-            for (List<String> l : as) {
-                //System.out.println("INFO in Graph.fromLists(): arc: " + l);
-                Arc a = new Arc();
-                a.label = l.get(2);
-                a.n1 = nodes.get(l.get(0));
-                a.n2 = nodes.get(l.get(1));
-                a.n1.arcs.add(a);
-                arcs.add(a);
-            }
-            //System.out.println("INFO in Graph.fromLists(): result # nodes: " + nodes.size());
-            //System.out.println("INFO in Graph.fromLists(): result # arcs: " + arcs.size());
-        }
-
-        /*************************************************************
-         */
-        public String toString() {
-
-            StringBuffer sb = new StringBuffer();
-            Iterator<String> it = nodes.keySet().iterator();
-            while (it.hasNext()) {
-                String s = it.next();
-                Node n = nodes.get(s);
-                sb.append(s + ":" + n.value + " | ");
-                Iterator<Arc> it2 = n.arcs.iterator();
-                while (it2.hasNext()) {
-                    Arc a = it2.next();
-                    sb.append(a.toString() + "; ");
-                }
-                if (n.arcs.size() > 0) sb.append('\n');
-            }
-            return sb.toString();
-        }
-    }
+      // the initial similarity scores of pairs of nodes
+      // it corresponds to sigma_0 in Melnik's paper
+    private HashMap<ArrayList<String>,Float> initialMap = null;
+    private boolean exactNodes = true;  // exact match between node labels required
+    private boolean exactLinks = true;  // exact match between link labels required
 
     /*************************************************************
      * <p>Find the Levenshtein distance between two Strings.</p>
@@ -208,6 +132,7 @@ public class SimFlood {
      * Find the Levenshtein string distance for every pair of node
      * names.  Record the inverse of the distance, normalized by
      * the length of the longer string.  Bigger number = better match
+     * @return a HashMap of
      */
     private HashMap<ArrayList<String>,Float> stringMatch(Graph g1, Graph g2) {
 
@@ -217,8 +142,17 @@ public class SimFlood {
                 ArrayList<String> s = new ArrayList<String>();
                 s.add(n1.label);
                 s.add(n2.label);
-                float value = ((float) getLevenshteinDistance(n1.label,n2.label)) /
-                        ((float) Math.max(n1.label.length(),n2.label.length()));
+                float value = (float) 1.0;
+                if (exactNodes) {
+                    if (n1.label.equals(n2.label)) {
+                        value = (float) 0.0;
+                    }
+                }
+                else
+                    value = ((float) getLevenshteinDistance(n1.label,n2.label)) /
+                            ((float) Math.max(n1.label.length(),n2.label.length()));
+                //System.out.println("INFO in SimFlood.stringMatch(): " + exactNodes);
+                //System.out.println("INFO in SimFlood.stringMatch(): " + (1-value));
                 result.put(s,new Float(1 - value));
             }
         }
@@ -231,18 +165,20 @@ public class SimFlood {
      * undirected graph then the routine that builds the graph is
      * responsible for adding both a link from n1 to n2 and n2 to
      * n1, if the nodes are linked.
+     * @return the link label, if linked, or null if there is no
+     * link
      */
-    private boolean linked(Node n1, Node n2) {
+    private String linked(Node n1, Node n2) {
 
         //System.out.println("SimFlood.linked(): checking: " + n1.label + " and " + n2.label);
         Iterator<Arc> it = n1.arcs.iterator();
         while (it.hasNext()) {
             Arc a = it.next();
             if (a.n2 == n2)
-                return true;
+                return a.label;
         }
         //System.out.println("SimFlood.linked(): no link ");
-        return false;
+        return null;
     }
 
     /*************************************************************
@@ -261,11 +197,30 @@ public class SimFlood {
     }
 
     /*************************************************************
+     */
+    private static String getNodeNameFromList(ArrayList<String> l) {
+
+        return l.get(0) + "&" + l.get(1);
+    }
+
+    /*************************************************************
+     */
+    private static ArrayList<String> getListFromNodeName(String s) {
+
+        ArrayList<String> result = new ArrayList<String>();
+        result.add(s.substring(0, s.indexOf("&")));
+        result.add(s.substring(s.indexOf("&") + 1));
+        return result;
+    }
+
+    /*************************************************************
      * Build the propagation graph.  If g1={A1->A2, A1->A3} and
      * g2={B1->B2, B1->B3} then if A1-B1 and A2-B2 have non-zero
      * similarities then since A1->A2 and B1->B2, create a pair of
      * propagation graph links for these mapping pairs A1-B1->A2-B2
-     * and A2-B2->A1-B1
+     * and A2-B2->A1-B1.
+     * Note that the propagation node names are a conjunction of the
+     * two mapped nodes separated by a '&'
      */
     private Graph buildConnect(Graph g1, Graph g2, HashMap<ArrayList<String>,Float> initial) {
 
@@ -284,10 +239,12 @@ public class SimFlood {
                     Node g1n2 = g1.nodes.get(s2.get(0));
                     Node g2n1 = g2.nodes.get(s.get(1));
                     Node g2n2 = g2.nodes.get(s2.get(1));
-                    if (linked(g1n1,g1n2) && linked(g2n1,g2n2)) {
+                    String link1 = linked(g1n1, g1n2);
+                    String link2 = linked(g2n1,g2n2);
+                    if (link1 != null && link2 != null && (!exactLinks || link1.equals(link2))) { // could easily be made approximate
                         //System.out.println("INFO in SimFlood.buildConnect(): adding a link for " + s + " and " + s2);
-                        String key1 = s.get(0) + "&" + s.get(1);
-                        String key2 = s2.get(0) + "&" + s2.get(1);
+                        String key1 = getNodeNameFromList(s);
+                        String key2 = getNodeNameFromList(s2);
                         Node n1 = null;
                         Node n2 = null;
                         if (!g.nodes.containsKey(key1)) {
@@ -369,10 +326,10 @@ public class SimFlood {
     /*************************************************************
      * @param freemen The men who have not "proposed"
      * @param freewomen The women who are not "engaged"
-     * @param direction1 is a mapping for a "partner" to its preference
+     * @param men is a mapping for a "partner" to its preference
      *                   for a map to each partner and the degree of
      *                   preference
-     * @param direction2 is the reverse preference
+     * @param proposedTo is the set of women proposed to by a given man
      * @return a String array of a man (index 0) who is free and the highest
      *         ranked woman (index 1) for him to propose to, or null if no
      *         such pair exists
@@ -419,10 +376,10 @@ public class SimFlood {
      * Apologies for the sexist formulation that has men only choosing
      * partners.  Could easily reverse the genders.
      *
-     * @param direction1 is a mapping for a "partner" to its preference
+     * @param men is a mapping for a "partner" to its preference
      *                   for a map to each partner and the degree of
      *                   preference
-     * @param direction2 is the reverse preference
+     * @param women is the set of available women
      */
     private void stableMatch(HashMap<String,SortedMap<Float,String>> men,
                              HashSet<String> women) {
@@ -466,18 +423,21 @@ public class SimFlood {
             delta = (float) 0.0;
             for (Node n : g.nodes.values()) {
                 float increment = (float) 0.0;
-                float iter0 = n.value;
+                float iterPrev = n.value;
+                float niter0 = initialMap.get(getListFromNodeName(n.label));
                 for (Arc a : n.arcs) {
-                    float n2iter0 = a.n2.value;
+                    float n2iterPrev = a.n2.value;
+                    float n2iter0 = initialMap.get(getListFromNodeName(a.n2.label));
                     Node influencer = a.n2;
                     for (Arc a2 : influencer.arcs) {
                         if (a2.n2 == n) {
-                            float contrib = a2.value * n2iter0;
+                            //float contrib = a2.value * n2iterPrev; // table 3 "basic" in Melnik
+                            float contrib = a2.value * (n2iterPrev + n2iter0); // table 3 "C in Melnik"
                             increment += contrib;
                         }
                     }
                 }
-                float newValue = iter0 + increment;
+                float newValue = iterPrev + niter0 + increment; // table 3 "C in Melnik"
                 nextIter.put(n.label, newValue);
                 if (newValue > maxCoeff)
                     maxCoeff = newValue;
@@ -502,7 +462,7 @@ public class SimFlood {
 
         HashMap<ArrayList<String>,Float> result = new HashMap<ArrayList<String>,Float>();
         Graph g = buildConnect(g1,g2,initial);
-        //System.out.println("\nINFO in SimFlood.sfJoin(): connection graph:\n" + g.toString());
+        System.out.println("\nINFO in SimFlood.sfJoin(): connection graph:\n" + g.toString());
         flood(g);
         return g;
     }
@@ -515,8 +475,8 @@ public class SimFlood {
         HashSet<String> alreadyChosen = new HashSet<String>();
         //return result
         for (Node n : g.nodes.values()) {
-            String first = n.label.substring(0, n.label.indexOf("&"));
-            String second = n.label.substring(n.label.indexOf("&") + 1);
+            String first = getListFromNodeName(n.label).get(0);
+            String second = getListFromNodeName(n.label).get(1);
             float val = n.value;
             ArrayList<String> key = new ArrayList<String>();
             key.add(first);
@@ -543,10 +503,40 @@ public class SimFlood {
      */
     public float matchGraphs(Graph g1, Graph g2, HashMap<String,String> bestMatch) {
 
-        HashMap<ArrayList<String>,Float> initialMap = stringMatch(g1, g2);
-        //System.out.println("INFO in SimFlood.matchGraphs(): " + initialMap);
+        initialMap = stringMatch(g1, g2);
+        System.out.println("INFO in SimFlood.matchGraphs(): initial: " + initialMap);
         Graph g = sfJoin(g1, g2, initialMap);
+        System.out.println("INFO in SimFlood.matchGraphs(): fixpoint: " + g);
         return selectThreshold(g,bestMatch);
+    }
+
+    /*************************************************************
+     * Match two graphs using Similarity Flooding
+     * @return a map of node names in the first graph and their
+     * best match to a node in the second graph.
+     */
+    public Graph match(Graph g1, ArrayList<Graph> graphs) {
+
+        HashMap<String,String> bestMatch = new HashMap<String,String>();
+        Graph result = null;
+        float bestScore = (float) 0.0;
+        for (Graph one : graphs) {
+            HashMap<String,String> oneMatch = new HashMap<String,String>();
+            System.out.println("----------------------------------------");
+            System.out.println("SimFlood.match(): query: " + g1);
+            System.out.println("SimFlood.match(): candidate: " + one);
+            float score = matchGraphs(g1,one,oneMatch);
+            System.out.println("SimFlood.match(): result: " + score);
+            System.out.println("SimFlood.match(): match: " + oneMatch);
+            System.out.println("----------------------------------------");
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = oneMatch;
+                result = one;
+            }
+        }
+        System.out.println("SimFlood.match(): result: " + bestScore);
+        return result;
     }
 
     /*************************************************************
@@ -564,43 +554,46 @@ public class SimFlood {
      */
     public static void main (String[] args) {
 
-        testEuclid();
-        List<String> nodes1 = Lists.newArrayList("John","walked","home");
-        List<String> nodes2 = Lists.newArrayList("Mary-2","walked-2","home-2");
-        List<String> nodes3 = Lists.newArrayList("Mary-2","walked-2","to-2","the-2","store-2");
-        List<String> arc;
-        List<List<String>> arcs1 = new ArrayList<List<String>>();
-        arc = Lists.newArrayList("walked","John","nsubj");
-        arcs1.add(arc);
-        arc = Lists.newArrayList("walked","home","dobj");
-        arcs1.add(arc);
-
-        List<List<String>> arcs2 = new ArrayList<List<String>>();
-        arc = Lists.newArrayList("walked-2","Mary-2","nsubj");
-        arcs2.add(arc);
-        arc = Lists.newArrayList("walked-2","home-2","dobj");
-        arcs2.add(arc);
-
-        List<List<String>> arcs3 = new ArrayList<List<String>>();
-        arc = Lists.newArrayList("walked-2","Mary-2","nsubj");
-        arcs3.add(arc);
-        arc = Lists.newArrayList("walked-2","store-2","prep_to");
-        arcs3.add(arc);
-        arc = Lists.newArrayList("store-2","the-2","det");
-        arcs3.add(arc);
-
+        String cnfstr = "nsubj(walked-2,John-1), dobj(walked-2,home-3).";
+        Lexer lex = new Lexer(cnfstr);
+        CNF cnf = CNF.parseSimple(lex);
         SimFlood sf = new SimFlood();
-        Graph g1 = sf.new Graph();
-        g1.fromLists(nodes1, arcs1);
-        Graph g2 = sf.new Graph();
-        g2.fromLists(nodes3, arcs3);
+        Graph g1 = new Graph();
+        g1.fromCNF(cnf);
 
+        cnfstr = "nsubj(walked-2,Mary-1), dobj(walked-2,home-3).";
+        lex = new Lexer(cnfstr);
+        cnf = CNF.parseSimple(lex);
+        sf = new SimFlood();
+        Graph g2 = new Graph();
+        g2.fromCNF(cnf);
+
+        cnfstr = "nsubj(walked-2, Mary-1), det(store-5, the-4), prep_to(walked-2, store-5).";
+        lex = new Lexer(cnfstr);
+        cnf = CNF.parseSimple(lex);
+        sf = new SimFlood();
+        Graph g3 = new Graph();
+        g3.fromCNF(cnf);
+
+        System.out.println("INFO in SimFlood.main(): exactNodes: " + sf.exactNodes);
+        System.out.println("INFO in SimFlood.main(): exactLinks: " + sf.exactLinks);
         System.out.println("INFO in SimFlood.main(): g1: ");
         System.out.println(g1.toString());
         System.out.println("INFO in SimFlood.main(): g2: ");
         System.out.println(g2.toString());
+
         HashMap<String,String> bestMatch = new HashMap<String,String>();
         float score = sf.matchGraphs(g1,g2,bestMatch);
+        System.out.println("INFO in SimFlood.main(): matches: " + bestMatch);
+        System.out.println("INFO in SimFlood.main(): score: " + score);
+
+        System.out.println();
+        System.out.println("INFO in SimFlood.main(): g1: ");
+        System.out.println(g1.toString());
+        System.out.println("INFO in SimFlood.main(): g3: ");
+        System.out.println(g3.toString());
+        bestMatch = new HashMap<String,String>();
+        score = sf.matchGraphs(g1,g3,bestMatch);
         System.out.println("INFO in SimFlood.main(): matches: " + bestMatch);
         System.out.println("INFO in SimFlood.main(): score: " + score);
     }
