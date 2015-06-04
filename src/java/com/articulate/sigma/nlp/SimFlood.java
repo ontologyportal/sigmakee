@@ -35,7 +35,9 @@ public class SimFlood {
       // it corresponds to sigma_0 in Melnik's paper
     private HashMap<ArrayList<String>,Float> initialMap = null;
     private boolean exactNodes = true;  // exact match between node labels required
+    private boolean allNodes = true;    // no match between node labels required
     private boolean exactLinks = true;  // exact match between link labels required
+    private String equation = "basic";  // which equation from table 3
 
     /*************************************************************
      * <p>Find the Levenshtein distance between two Strings.</p>
@@ -129,7 +131,18 @@ public class SimFlood {
     }
 
     /*************************************************************
-     * Find the Levenshtein string distance for every pair of node
+     */
+    private String stripSuffix(String s) {
+
+        if (s.indexOf("-") < 0) {
+            return s;
+        }
+        return s.substring(0,s.lastIndexOf("-"));
+    }
+
+    /*************************************************************
+     * Find the Levenshtein string distance or binary exact match score
+     * for every pair of node
      * names.  Record the inverse of the distance, normalized by
      * the length of the longer string.  Bigger number = better match
      * @return a HashMap of
@@ -144,7 +157,7 @@ public class SimFlood {
                 s.add(n2.label);
                 float value = (float) 1.0;
                 if (exactNodes) {
-                    if (n1.label.equals(n2.label)) {
+                    if (stripSuffix(n1.label).equals(stripSuffix(n2.label)) || allNodes) {
                         value = (float) 0.0;
                     }
                 }
@@ -225,7 +238,7 @@ public class SimFlood {
     private Graph buildConnect(Graph g1, Graph g2, HashMap<ArrayList<String>,Float> initial) {
 
         //System.out.println("INFO in SimFlood.buildConnect(): ");
-        Graph g = new Graph();
+        Graph g = new Graph(g1.label + "|" + g2.label);
         Iterator<ArrayList<String>> it = initial.keySet().iterator();
         while (it.hasNext()) {
             ArrayList<String> s = it.next();  // first mapping pair
@@ -241,7 +254,10 @@ public class SimFlood {
                     Node g2n2 = g2.nodes.get(s2.get(1));
                     String link1 = linked(g1n1, g1n2);
                     String link2 = linked(g2n1,g2n2);
-                    if (link1 != null && link2 != null && (!exactLinks || link1.equals(link2))) { // could easily be made approximate
+                    if (link1 != null && link2 != null &&
+                            !g1n1.label.equals(g1n2.label) &&
+                            !g2n1.label.equals(g2n2.label) &&
+                            (!exactLinks || link1.equals(link2))) { // could easily be made approximate
                         //System.out.println("INFO in SimFlood.buildConnect(): adding a link for " + s + " and " + s2);
                         String key1 = getNodeNameFromList(s);
                         String key2 = getNodeNameFromList(s2);
@@ -414,7 +430,7 @@ public class SimFlood {
         //System.out.println("Info in SimFlood.flood(): ");
         HashMap<String,Float> prevIter = new HashMap<String,Float>();
         HashMap<String,Float> nextIter = new HashMap<String,Float>();
-        float convergeThreshold = (float) 0.1;
+        float convergeThreshold = (float) 0.01;
         float delta = (float) 1.0;
         int counter = 0;
         while (delta > convergeThreshold && counter++ < 15) {
@@ -431,13 +447,20 @@ public class SimFlood {
                     Node influencer = a.n2;
                     for (Arc a2 : influencer.arcs) {
                         if (a2.n2 == n) {
-                            //float contrib = a2.value * n2iterPrev; // table 3 "basic" in Melnik
-                            float contrib = a2.value * (n2iterPrev + n2iter0); // table 3 "C in Melnik"
+                            float contrib;
+                            if (equation.equals("basic"))
+                                contrib = a2.value * n2iterPrev; // table 3 "basic" in Melnik
+                            else // if (equation.equals("C"))
+                                contrib = a2.value * (n2iterPrev + n2iter0); // table 3 "C" in Melnik"
                             increment += contrib;
                         }
                     }
                 }
-                float newValue = iterPrev + niter0 + increment; // table 3 "C in Melnik"
+                float newValue;
+                if (equation.equals("basic"))
+                    newValue = iterPrev + increment; // table 3 "basic" in Melnik"
+                else // if (equation.equals("C"))
+                    newValue = iterPrev + niter0 + increment; // table 3 "C" in Melnik"
                 nextIter.put(n.label, newValue);
                 if (newValue > maxCoeff)
                     maxCoeff = newValue;
@@ -451,8 +474,8 @@ public class SimFlood {
                 Node n = g.nodes.get(s);
                 n.value = nextIter.get(s);
             }
-            //System.out.println("Info in SimFlood.flood(): " + g);
-            //System.out.println("Info in SimFlood.flood(): delta: " + delta);
+            System.out.println("Info in SimFlood.flood(): " + g);
+            System.out.println("Info in SimFlood.flood(): delta: " + delta);
         }
     }
 
@@ -552,49 +575,86 @@ public class SimFlood {
 
     /*************************************************************
      */
-    public static void main (String[] args) {
+    private static void testSentencePair(String s1, String l1, String s2, String l2) {
 
-        String cnfstr = "nsubj(walked-2,John-1), dobj(walked-2,home-3).";
-        Lexer lex = new Lexer(cnfstr);
+        Lexer lex = new Lexer(s1);
         CNF cnf = CNF.parseSimple(lex);
         SimFlood sf = new SimFlood();
-        Graph g1 = new Graph();
+        Graph g1 = new Graph(l1);
         g1.fromCNF(cnf);
 
-        cnfstr = "nsubj(walked-2,Mary-1), dobj(walked-2,home-3).";
-        lex = new Lexer(cnfstr);
+        lex = new Lexer(s2);
         cnf = CNF.parseSimple(lex);
         sf = new SimFlood();
-        Graph g2 = new Graph();
+        Graph g2 = new Graph(l2);
         g2.fromCNF(cnf);
 
-        cnfstr = "nsubj(walked-2, Mary-1), det(store-5, the-4), prep_to(walked-2, store-5).";
-        lex = new Lexer(cnfstr);
-        cnf = CNF.parseSimple(lex);
-        sf = new SimFlood();
-        Graph g3 = new Graph();
-        g3.fromCNF(cnf);
-
-        System.out.println("INFO in SimFlood.main(): exactNodes: " + sf.exactNodes);
-        System.out.println("INFO in SimFlood.main(): exactLinks: " + sf.exactLinks);
-        System.out.println("INFO in SimFlood.main(): g1: ");
-        System.out.println(g1.toString());
-        System.out.println("INFO in SimFlood.main(): g2: ");
-        System.out.println(g2.toString());
-
         HashMap<String,String> bestMatch = new HashMap<String,String>();
-        float score = sf.matchGraphs(g1,g2,bestMatch);
-        System.out.println("INFO in SimFlood.main(): matches: " + bestMatch);
-        System.out.println("INFO in SimFlood.main(): score: " + score);
 
         System.out.println();
         System.out.println("INFO in SimFlood.main(): g1: ");
         System.out.println(g1.toString());
-        System.out.println("INFO in SimFlood.main(): g3: ");
-        System.out.println(g3.toString());
+        System.out.println("INFO in SimFlood.main(): g2: ");
+        System.out.println(g2.toString());
         bestMatch = new HashMap<String,String>();
-        score = sf.matchGraphs(g1,g3,bestMatch);
+        float score = sf.matchGraphs(g1,g2,bestMatch);
         System.out.println("INFO in SimFlood.main(): matches: " + bestMatch);
         System.out.println("INFO in SimFlood.main(): score: " + score);
+    }
+
+    /*************************************************************
+     */
+    private static void testSentences() {
+
+        testSentencePair("nsubj(walked-2,John-1), dobj(walked-2,home-3).",
+                "John walked home.",
+                "nsubj(walked-2,Mary-1), dobj(walked-2,home-3).",
+                "Mary walked home.");
+
+        System.out.println("\n--------------------------------\n");
+
+        testSentencePair("nsubj(walked-2,John-1), dobj(walked-2,home-3).",
+                "John walked home.",
+                "nsubj(walked-2, Mary-1), det(store-5, the-4), prep_to(walked-2, store-5).",
+                "Mary walked to the store.");
+
+        System.out.println("\n--------------------------------\n");
+
+        testSentencePair("root(ROOT-0, laughed-2), nsubj(laughed-2, John-1).",
+                "John laughed.",
+                "root(ROOT-0, laughed-2), nsubj(laughed-2, John-1).",
+                "John laughed.");
+
+        System.out.println("\n--------------------------------\n");
+
+        testSentencePair("root(ROOT-0, kissed-2), det(baby-4, the-3), dobj(kissed-2, baby-4), nsubj(kissed-2,John-1).",
+                "John kissed the baby.",
+                "root(ROOT-0, kicked-2), nsubj(kicked-2, Mark-1), dobj(kicked-2, baby-4), poss(baby-4,Mark-1).",
+                "Mark kicked his baby.");
+
+        System.out.println("\n--------------------------------\n");
+
+        testSentencePair("root(ROOT-0, laughed-2), nsubj(laughed-2, John-1).",
+                "John laughed.",
+                "root(ROOT-0, cried-2), advmod(cried-2, aloud-3), nsubj(cried-2,Mark-1).",
+                "Mark cried aloud.");
+
+        System.out.println("\n--------------------------------\n");
+
+        testSentencePair("root(ROOT-0, built-2), nsubj(built-2, Jack-1), det(house-5, a-3), amod(house-5, crooked-4), dobj(built-2, house-5), prep_in(built-2,New_Jersey-7).",
+                "Jack built a crooked house in New Jersey.",
+                "root(ROOT-0, built-4), nsubj(built-4, Mary-1), conj_and(Mary-1, Susan-3), nsubj(built-4, Susan-3), amod(houses-6, crooked-5), dobj(built-4, houses-6), det(shore-11, the-8), prep_on(built-4, shore-11), nn(shore-11,New_Jersey-9), nn(shore-11,New_Jersey-9)",
+                "Mary and Susan built crooked houses on the New Jersey shore.");
+    }
+
+    /*************************************************************
+     */
+    public static void main (String[] args) {
+
+        testSentencePair("l1(aa, a1), l1(aa, a2), l2(a1, a2).",
+                "graph A",
+                "l1(bb, b1), l2(bb, b2), l2(b2, b1).",
+                "graph B");
+        //testSentences();
     }
 }
