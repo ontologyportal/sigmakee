@@ -33,6 +33,12 @@ public class Graph {
 
     /*************************************************************
      */
+    public Graph (String l) {
+        label = l;
+    }
+
+    /*************************************************************
+     */
     public void fromLists(List<String> ns, List<List<String>> as) {
 
         //System.out.println("INFO in Graph.fromLists(): nodes: " + ns);
@@ -106,6 +112,7 @@ public class Graph {
 
         StringBuffer sb = new StringBuffer();
         Iterator<String> it = nodes.keySet().iterator();
+        sb.append(label + "\n");
         while (it.hasNext()) {
             String s = it.next();
             Node n = nodes.get(s);
