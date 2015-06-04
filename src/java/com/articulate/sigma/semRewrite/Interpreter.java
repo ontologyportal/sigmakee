@@ -628,7 +628,7 @@ public class Interpreter {
         if (simFlood) {
             inputs = Lists.newArrayList(interpretGenCNFBasic(input));
             for (CNF cnf : inputs) {
-                g = new Graph();
+                g = new Graph(input);
                 g.fromCNF(cnf);
                 if (!question)
                     userGraphs.add(g);
@@ -1443,6 +1443,7 @@ public class Interpreter {
      */
     public static void testGraphMatch() {
 
+        System.out.println("INFO in Interpreter.testGraphMatch()");
         Interpreter interp = new Interpreter();
         KBmanager.getMgr().initializeOnce();
         try {
