@@ -518,7 +518,6 @@ public class Interpreter {
             String interpreted = interpretSingle(sentence.get(CoreAnnotations.TextAnnotation.class));
             results.add(interpreted);
         }
-
         return results;
     }
 
