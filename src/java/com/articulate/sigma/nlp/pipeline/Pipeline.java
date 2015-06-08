@@ -23,7 +23,9 @@ MA  02111-1307 USA
 
 import com.articulate.sigma.KBmanager;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import edu.stanford.nlp.pipeline.*;
+import edu.stanford.nlp.util.CoreMap;
 
 import java.util.*;
 
@@ -34,6 +36,7 @@ public class Pipeline {
     /** ***************************************************************
      */
     public Pipeline() {
+
         this(false);
     }
 
@@ -50,7 +53,6 @@ public class Pipeline {
             props.put("parser.model", KBmanager.getMgr().getPref("englishPCFG"));
             props.put("parse.flags", "");
         }
-
         // creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution
         pipeline = new StanfordCoreNLP(props);
     }
@@ -61,20 +63,33 @@ public class Pipeline {
         
         // create an empty Annotation just with the given text
         Annotation document = new Annotation(text);
-
         // run all Annotators on this text
         pipeline.annotate(document);
-
         return document;
     }
 
+    /** ***************************************************************
+     */
     public static Annotation toAnnotation(String input) {
+
         Pipeline pipeline = new Pipeline();
         return pipeline.annotate(input);
     }
 
+    /** ***************************************************************
+     */
     public static Annotation toAnnotation(List<String> inputs) {
+
         return toAnnotation(String.join(" ", inputs));
+    }
+
+    /** ***************************************************************
+     */
+    public List<String> toDependencies(String input) {
+
+        Annotation wholeDocument = annotate(input);
+        CoreMap lastSentence = SentenceUtil.getLastSentence(wholeDocument);
+        return SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
     }
 
     /** ***************************************************************
@@ -84,5 +99,4 @@ public class Pipeline {
         Annotation a = Pipeline.toAnnotation("Amelia also wrote books, most of them were about her flights.");
         SentenceUtil.printSentences(a);
     }
-
 }
