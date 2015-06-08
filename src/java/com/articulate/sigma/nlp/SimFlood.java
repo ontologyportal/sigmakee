@@ -1,8 +1,15 @@
 package com.articulate.sigma.nlp;
 
+import java.io.IOException;
 import java.util.*;
+
+import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.google.common.collect.*;
 import com.articulate.sigma.semRewrite.*;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.util.CoreMap;
 
 /*
 Copyright 2014-2015 IPsoft
@@ -38,6 +45,44 @@ public class SimFlood {
     private boolean allNodes = true;    // no match between node labels required
     private boolean exactLinks = true;  // exact match between link labels required
     private String equation = "basic";  // which equation from table 3
+
+    private boolean asResource = true;
+
+    /** ***************************************************************
+     * Converts a text file that has one sentence per line into a list
+     * of Graph structures that correspond to Stanford dependency graphs.
+     * @return the list of Graphs
+     */
+    public ArrayList<Graph> readGraphsFromFile(String filename, boolean resource, Pipeline p) {
+
+        ArrayList<Graph> result = new ArrayList<Graph>();
+        List<String> lines = null;
+        asResource = resource;
+        List<String> documents;
+        try {
+            lines = TextFileUtil.readLines(filename, false);
+            for (String l : lines) {
+                Annotation a = p.annotate(l);
+                CoreMap lastSentence = SentenceUtil.getLastSentence(a);
+                List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
+                String in = StringUtil.removeEnclosingCharPair(dependenciesList.toString(), Integer.MAX_VALUE, '[', ']');
+                Lexer lex = new Lexer(in);
+                CNF cnf = CNF.parseSimple(lex);
+                Graph g = new Graph(l);
+                g.fromCNF(cnf);
+                result.add(g);
+            }
+        }
+        catch (IOException e) {
+            System.out.println("Unable to read: " + filename);
+            throw new RuntimeException("Unable to read: " + filename);
+        }
+        catch (Exception e) {
+            System.out.println("Error in SimFlood.readGraphsFromFile()" + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
 
     /*************************************************************
      * <p>Find the Levenshtein distance between two Strings.</p>
@@ -157,6 +202,8 @@ public class SimFlood {
                 s.add(n2.label);
                 float value = (float) 1.0;
                 if (exactNodes) {
+                    //System.out.println("INFO in SimFlood.stringMatch(): " + n1.label);
+                    //System.out.println("INFO in SimFlood.stringMatch(): " + n2.label);
                     if (stripSuffix(n1.label).equals(stripSuffix(n2.label)) || allNodes) {
                         value = (float) 0.0;
                     }
@@ -474,8 +521,8 @@ public class SimFlood {
                 Node n = g.nodes.get(s);
                 n.value = nextIter.get(s);
             }
-            System.out.println("Info in SimFlood.flood(): " + g);
-            System.out.println("Info in SimFlood.flood(): delta: " + delta);
+            //System.out.println("Info in SimFlood.flood(): " + g);
+            //System.out.println("Info in SimFlood.flood(): delta: " + delta);
         }
     }
 
@@ -559,6 +606,7 @@ public class SimFlood {
             }
         }
         System.out.println("SimFlood.match(): result: " + bestScore);
+        System.out.println("SimFlood.match(): result: " + result);
         return result;
     }
 
@@ -645,16 +693,37 @@ public class SimFlood {
                 "Jack built a crooked house in New Jersey.",
                 "root(ROOT-0, built-4), nsubj(built-4, Mary-1), conj_and(Mary-1, Susan-3), nsubj(built-4, Susan-3), amod(houses-6, crooked-5), dobj(built-4, houses-6), det(shore-11, the-8), prep_on(built-4, shore-11), nn(shore-11,New_Jersey-9), nn(shore-11,New_Jersey-9)",
                 "Mary and Susan built crooked houses on the New Jersey shore.");
+
+        System.out.println("\n--------------------------------\n");
+
+        testSentencePair("root(ROOT-0, built-2), nsubj(built-2, Who-1), det(house-5, a-3), amod(house-5, crooked-4), dobj(built-2, house-5), prep_in(built-2,New_Jersey-7).",
+                "Who built a crooked house in New Jersey?",
+                "root(ROOT-0, built-4), nsubj(built-4, Mary-1), conj_and(Mary-1, Susan-3), nsubj(built-4, Susan-3), amod(houses-6, crooked-5), dobj(built-4, houses-6), det(shore-11, the-8), prep_on(built-4, shore-11), nn(shore-11,New_Jersey-9), nn(shore-11,New_Jersey-9)",
+                "Mary and Susan built crooked houses on the New Jersey shore.");
+
+        System.out.println("\n--------------------------------\n");
+
+        testSentencePair("root(ROOT-0, built-2), nsubj(built-2, John-1), det(house-5, a-3), amod(house-5, crooked-4), dobj(built-2, house-5), prep_in(built-2,New_Jersey-7).",
+                "John built a crooked house in New Jersey.",
+                "root(ROOT-0, build-4), advmod(build-4, Where-1), aux(build-4, did-2), nsubj(build-4, John-3), det(house-7, a-5), amod(house-7, crooked-6), dobj(build-4, house-7)",
+                "Where did John build a crooked house?");
+    }
+
+    /*************************************************************
+     */
+    private static void testSentences2() {
+
+
     }
 
     /*************************************************************
      */
     public static void main (String[] args) {
 
-        testSentencePair("l1(aa, a1), l1(aa, a2), l2(a1, a2).",
-                "graph A",
-                "l1(bb, b1), l2(bb, b2), l2(b2, b1).",
-                "graph B");
-        //testSentences();
+        //testSentencePair("l1(aa, a1), l1(aa, a2), l2(a1, a2).",
+        //        "graph A",
+        //        "l1(bb, b1), l2(bb, b2), l2(b2, b1).",
+        //        "graph B");
+        testSentences();
     }
 }
