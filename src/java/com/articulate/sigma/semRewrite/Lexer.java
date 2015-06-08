@@ -170,18 +170,21 @@ public class Lexer {
         tokenDefs.put(Implies,      Pattern.compile("==>"));  
         tokenDefs.put(OptImplies,   Pattern.compile("\\?=>"));
         tokenDefs.put(Clause,       Pattern.compile("/-"));
-        tokenDefs.put(Negation,     Pattern.compile("-"));    
+
         tokenDefs.put(Plus,         Pattern.compile("\\+"));
         tokenDefs.put(Var,          Pattern.compile("\\?[a-zA-Z][_a-z0-9_A-Z]*\\*?"));
         tokenDefs.put(Newline,      Pattern.compile("\\n"));
         tokenDefs.put(WhiteSpace,   Pattern.compile("\\s+"));
-        tokenDefs.put(Ident,        Pattern.compile("\\\"?\\'?[0-9a-zA-Z][_\\-a-z0-9_A-Z ]+\\*?\\\"?"));
-        tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+\\:?E?-?[0-9]*-?[0-9]*"));
+        //tokenDefs.put(Ident,        Pattern.compile("\\\"?\\'?[0-9a-zA-Z]\\'?[_\\-a-z0-9_A-Z ]+\\*?\\\"?"));
+        tokenDefs.put(Number,       Pattern.compile("-?[0-9]?[0-9\\.]+(,\\d\\d\\d)*/?\\:?E?-?[0-9]*-?[0-9]*(rd|st|th)?"));
+        tokenDefs.put(Negation,     Pattern.compile("-"));
         tokenDefs.put(Zero,         Pattern.compile("\\!"));
-        tokenDefs.put(Stop,         Pattern.compile("stop"));
+
         tokenDefs.put(SemiComment,  Pattern.compile(";[^\\n]*"));
         tokenDefs.put(Directive,    Pattern.compile("#[^\\n]*"));
         tokenDefs.put(QuotedString, Pattern.compile("'[^']*'"));
+        tokenDefs.put(Ident,        Pattern.compile("[^,()]+"));
+        tokenDefs.put(Stop,         Pattern.compile("stop"));
         
         andOr.add(Comma);
         andOr.add(Or);
