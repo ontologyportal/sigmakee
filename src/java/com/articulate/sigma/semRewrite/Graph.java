@@ -1,5 +1,12 @@
 package com.articulate.sigma.semRewrite;
 
+import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.nlp.pipeline.SentenceUtil;
+import com.google.common.collect.ImmutableList;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.util.CoreMap;
+
 import java.util.*;
 
 /*
@@ -104,6 +111,21 @@ public class Graph {
                 arcs.add(a);
             }
         }
+    }
+
+    /*************************************************************
+     * Convert from a sentence into the Graph structure
+     */
+    public void fromSentence(String s, Pipeline p) {
+
+        Annotation a = p.annotate(s);
+        CoreMap lastSentence = SentenceUtil.getLastSentence(a);
+        List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
+        String in = StringUtil.removeEnclosingCharPair(dependenciesList.toString(), Integer.MAX_VALUE, '[', ']');
+        Lexer lex = new Lexer(in);
+        CNF cnf = CNF.parseSimple(lex);
+        this.label = s;
+        this.fromCNF(cnf);
     }
 
     /*************************************************************
