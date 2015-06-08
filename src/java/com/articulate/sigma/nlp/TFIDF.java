@@ -112,7 +112,8 @@ public class TFIDF {
         }
         try {
             prepare(documents, stopwordsFilename);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             System.out.println("Unable to read: " + stopwordsFilename);
             throw new RuntimeException("Unable to read: " + stopwordsFilename);
         }
