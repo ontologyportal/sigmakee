@@ -31,10 +31,12 @@ import java.util.List;
 
 public class Document extends ArrayList<String> {
 
+    /** *************************************************************
+     */
     public Annotation annotateDocument(String extraSentence) {
+
         List sentences = new ArrayList<>(this);
         sentences.add(extraSentence);
-
         Annotation document = Pipeline.toAnnotation(sentences);
         return document;
     }
