@@ -10,6 +10,7 @@ Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 /*************************************************************************************************/
+
 package com.articulate.sigma;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -40,6 +41,7 @@ import com.articulate.sigma.nlg.NLGUtils;
 
 /** A class to generate simplified HTML-based documentation for SUO-KIF terms. */
 public class DocGen {
+
     /** *************************************************************
      * This String token denotes Sigma's "simple" HTML layout, and is
      * used as a flag in the HTML generation code to switch between
@@ -78,6 +80,7 @@ public class DocGen {
     protected int localCounter = 0;
     protected static final String DEFAULT_KEY = "docgen_default";
     protected static Hashtable DOC_GEN_INSTANCES = new Hashtable();
+
     public static DocGen getInstance() {
         DocGen inst = null;
         try {
@@ -93,6 +96,7 @@ public class DocGen {
         }
         return inst;
     }
+
     /** *************************************************************
      */
     public static DocGen getInstance(String compositeKey) {
@@ -241,6 +245,7 @@ public class DocGen {
         // System.out.println("  ans == " + ans);
         return ans;
     }
+
     /** *****************************************************************
      * Returns true if the bit values corresponding to token are among
      * the control bits represented for this DocGen instance.
@@ -253,6 +258,7 @@ public class DocGen {
         int bitVal = getControlBitValue(token);
         return testDocGenControlBits(bitVal);
     }
+
     /** **************************************************************
      * Returns a List of String tokens that determine how the output
      * should be formatted.  The List could be empty.
@@ -284,6 +290,7 @@ public class DocGen {
         }
         return tokens;
     }
+
     /** **************************************************************
      * Returns the first String token retrieved from ontology in kb
      * that denotes an HTML output format.  Such tokens may be the
@@ -299,8 +306,11 @@ public class DocGen {
     public static String getFirstHtmlFormatToken(KB kb, String ontology) {
         return F_SI;
     }
+
     /** The default namespace associated with this DocGen object */
+
     protected String defaultNamespace = "";
+
     /** *****************************************************************
      * Returns the String denoting the default namespace
      * associated with this DocGen object.
@@ -327,6 +337,7 @@ public class DocGen {
         }
         return this.defaultNamespace;
     }
+
     /** *****************************************************************
      * Sets the default namespace for this DocGen object.
      */
@@ -334,11 +345,13 @@ public class DocGen {
         this.defaultNamespace = namespace;
         return;
     }
+
     /** *****************************************************************
      * The default namespace for predicates in the ontology associated
      * with this DocGen object
      */
     protected String defaultPredicateNamespace = "";
+
     /** *****************************************************************
      * Returns the String denoting the default namespace for
      * predicates in the ontology associated with this DocGen
@@ -369,32 +382,39 @@ public class DocGen {
         }
         return this.defaultPredicateNamespace;
     }
+
     /** *****************************************************************
      * Sets the default namespace for predicates in the ontology
      * associated with this DB object.
      *
      */
     public void setDefaultPredicateNamespace(String namespace) {
+
         this.defaultPredicateNamespace = namespace;
         return;
     }
+
     /** *****************************************************************
      * The ontology associated with this DocGen object, and for
      * which the DocGen object is used to generate files.
      */
     protected String ontology = null;
+
     /** *****************************************************************
      */
     public void setOntology(String term) {
+
         this.ontology = term;
         return;
     }
+
     /** *****************************************************************
      * Returns a term denoting the default Ontology for this DocGen
      * object if an Ontology has been set, and tries very hard to find
      * a relevant Ontology if one has not been set.
      */
     public String getOntology() {
+
         try {
             String onto = this.ontology;
             if (StringUtil.emptyString(onto)) {
@@ -410,12 +430,14 @@ public class DocGen {
         }
         return this.ontology;
     }
+
     /** *****************************************************************
      * Returns a term denoting the default Ontology for this DocGen
      * object if an Ontology has been set, and tries very hard to find
      * a relevant Ontology if one has not been set.
      */
     public String getOntology(KB kb) {
+
         String onto = null;
         try {
             if (StringUtil.isNonEmptyString(this.ontology))
@@ -484,26 +506,32 @@ public class DocGen {
         }
         return onto;
     }
+
     /** *****************************************************************
      * The KB associated with this DocGen object.
      */
     protected KB kb = null;
+
     /** *****************************************************************
      */
     public void setKB(KB kb) {
+
         this.kb = kb;
         return;
     }
+
     /** *****************************************************************
      *
      */
     public KB getKB() {
         return this.kb;
     }
+
     /** *************************************************************
      * A Set of Strings.
      */
     protected Set codedIdentifiers = null;
+
     /** **************************************************************
      * Collects and returns the Set containing all known coded
      * identifiers in kb, including ISO code values stated to be such.
@@ -515,6 +543,7 @@ public class DocGen {
      *  other coded identifiers
      */
     protected Set getCodedIdentifiers(KB kb) {
+
         try {
             if (codedIdentifiers == null) {
                 codedIdentifiers = new TreeSet();
@@ -539,8 +568,10 @@ public class DocGen {
         }
         return codedIdentifiers;
     }
+
     /** The document title text to be used for HTML generation */
     protected String titleText = "";
+
     /** *************************************************************
      * Sets the title text to be used during HTML document generation.
      *
@@ -548,9 +579,11 @@ public class DocGen {
      * title
      */
     public void setTitleText(String titlestr) {
+
         titleText = titlestr;
         return;
     }
+
     /** *************************************************************
      * Returns the String that will be used as the title text for HTML
      * document generation, else returns an empty String if no title
@@ -560,8 +593,10 @@ public class DocGen {
         return titleText;
     }
     /** The document footer text to be used for HTML generation */
+
     protected String footerText = "";
     //"Produced by <a href=\"http://www.articulatesoftware.com\"> " + "Articulate Software</a> and its partners";
+
     /** *************************************************************
      * Sets the footer text String to be used during HTML document
      * generation.
@@ -570,9 +605,11 @@ public class DocGen {
      * footer text
      */
     public void setFooterText(String str) {
+
         footerText = str;
         return;
     }
+
     /** *************************************************************
      * Returns the String that will be used as the footer text for
      * HTML document generation, else returns an empty String if no
@@ -582,7 +619,9 @@ public class DocGen {
         return footerText;
     }
     /** The style sheet (CSS filename) to be referenced in HTML generation */
+
     protected String styleSheet = "simple.css";
+
     /** *************************************************************
      * Sets the base name plus suffix filename of the Cascading Style
      * Sheet file to be referenced during HTML document generation.
@@ -595,6 +634,7 @@ public class DocGen {
         styleSheet = filename;
         return;
     }
+
     /** *************************************************************
      * Returns the base filename plus filename suffix form of the
      * Cascading Style Sheet file to be referenced during HTML
@@ -607,7 +647,9 @@ public class DocGen {
     /** The default image file (such as an organization's logo) to be
      * used in HTML generation
      */
+
     protected String defaultImageFile = "articulate_logo.gif";
+
     /** *************************************************************
      * Sets the base name plus suffix filename of the logo image file
      * to be referenced during HTML document generation.
@@ -617,9 +659,11 @@ public class DocGen {
      * 
      */
     public void setDefaultImageFile(String filename) {
+
         defaultImageFile = filename;
         return;
     }
+
     /** *************************************************************
      * Returns the base filename plus filename suffix form of the logo
      * image file to be referenced during HTML document generation,
@@ -632,7 +676,9 @@ public class DocGen {
      * used in HTML generation, wrapped in any necessary additional
      * markup required for proper display.
      */
+
     protected String defaultImageFileMarkup = "articulate_logo.gif";
+
     /** *************************************************************
      * Sets the base name plus suffix filename of the logo image file
      * to be referenced during HTML document generation.
@@ -646,6 +692,7 @@ public class DocGen {
         defaultImageFileMarkup = markup;
         return;
     }
+
     /** *************************************************************
      * Returns the base filename plus filename suffix form of the logo
      * image file, wrapped in any additional markup required for the
@@ -657,7 +704,9 @@ public class DocGen {
     /** The canonical pathname of the current directory in which
      * output files will be (are being) saved.
      */
+
     protected String outputDirectoryPath = "";
+
     /** *************************************************************
      * Sets the canonical pathname String of the current directory in
      * which output files will be (are being) saved.
@@ -669,6 +718,7 @@ public class DocGen {
         outputDirectoryPath = pathname;
         return;
     }
+
     /** *************************************************************
      * Returns the canonical pathname String of the current directory
      * in which output files will be (are being) saved.
@@ -676,6 +726,7 @@ public class DocGen {
     public String getOutputDirectoryPath() {
         return this.outputDirectoryPath;
     }
+
     /** *************************************************************
      * A Map containing String replacement pairs.  This is to provide
      * adequate ASCII translations for HTML character entities, in
@@ -692,6 +743,7 @@ public class DocGen {
         this.stringReplacementMap = keyValPairs;
         return;
     }
+
     /** *************************************************************
      * Returns the Map to be used for HTML character entity to ASCII
      * replacements, attempting to build it from
@@ -730,6 +782,7 @@ public class DocGen {
         }
         return this.stringReplacementMap;
     }
+
     /** *************************************************************
      * Returns the String replacement for fromString, if one can be
      * located, else just returns fromString.
@@ -739,6 +792,7 @@ public class DocGen {
      * @return A replacement String
      */
     public String getStringReplacement(String fromString) {
+
         String toString = fromString;
         try {
             Map replacements = getStringReplacementMap();
@@ -754,8 +808,10 @@ public class DocGen {
         }
         return toString;
     }
+
     /** A set of the predicates that should not be displayed to the user. */
     protected Set inhibitDisplayRelations = null;
+
     /** *************************************************************
      * Sets the predicates for which diplay should be suppressed to
      * those contained in relations.
@@ -767,6 +823,7 @@ public class DocGen {
         this.inhibitDisplayRelations = relations;
         return;
     }
+
     /** *************************************************************
      * Returns a Set containing the names of those predicates for
      * which diplay should be suppressed, and tries to create the Set
@@ -776,6 +833,7 @@ public class DocGen {
      * @return a Set of predicate names
      */
     public Set getInhibitDisplayRelations() {
+
         try {
             if (inhibitDisplayRelations == null) {
                 KB kb = getKB();
@@ -800,11 +858,13 @@ public class DocGen {
         }
         return inhibitDisplayRelations;
     }
+
     /** *************************************************************
      * The header to be used for the the table of contents (or index
      * list) section during HTML generation.
      */
     protected String tocHeader = "";
+
     /** *************************************************************
      * Sets the String header to be used in generated HTML files to
      * header.
@@ -813,14 +873,17 @@ public class DocGen {
         this.tocHeader = header;
         return;
     }
+
     /** *************************************************************
      * Returns the String header to be used in generated HTML files.
      */
     public String getTocHeader() {
         return this.tocHeader;
     }
+
     /** A default key to identify this particular DocGen object **/
     protected String docGenKey = DEFAULT_KEY;
+
     /**
      * Returns the String key that is the index for this particular
      * DocGen object.
@@ -847,11 +910,13 @@ public class DocGen {
     public static String getSafeNamespaceDelimiter() {
         return StringUtil.getSafeNamespaceDelimiter();
     }
+
     /** *************************************************************
      * If true, a termFormat value obtained for term will be displayed
      * rather than the term name itself.
      */
     protected boolean simplified = false;
+
     /** *************************************************************
      * Returns true if a termFormat value obtained for term will be
      * displayed during HTML rendering rather than the term name
@@ -860,6 +925,7 @@ public class DocGen {
     public boolean getSimplified() {
         return this.simplified;
     }
+
     /** *************************************************************
      * Sets this.simplified to val.  If this.simplified is true, the
      * statements in Sigma's KB will be rendered in a simple
@@ -869,6 +935,7 @@ public class DocGen {
         this.simplified = val;
         return;
     }
+
     /** *************************************************************
      * A Map in which each key is a KB name and the corresponding
      * value is a List of the Predicates defined in the KB.
@@ -877,6 +944,7 @@ public class DocGen {
     public HashMap getRelationsByKB() {
         return relationsByKB;
     }
+
     /** *************************************************************
      * Returns a String consisting of str concatenated indent times.
      *
@@ -888,17 +956,20 @@ public class DocGen {
      * @return A String
      */
     public static String indentChars(String str, int indent) {
+
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < indent; i++) {
             result.append(str);
         }
         return result.toString();
     }
+
     /** *************************************************************
      * The parent directory for target subdirectories of HTML, XSD,
      * and other types of files generated by this DocGen object.
      */
     protected File outputParentDir = null;  // new File(KBmanager.getMgr().getPref("baseDir"));
+
     /** *************************************************************
      * Sets the parent directory in which subdirectories for different
      * types of output files will be created to the File obj, and
@@ -933,6 +1004,7 @@ public class DocGen {
         }
         return;
     }
+
     /** *************************************************************
      * Sets to pathname the parent directory in which subdirectories
      * for different types of output files will be created, and tries
@@ -941,6 +1013,7 @@ public class DocGen {
      * @param pathname A String representing a directory pathname
      */
     public void setOutputParentDir(String pathname) {
+
         try {
             if (StringUtil.isNonEmptyString(pathname)) {
                 setOutputParentDir(new File(pathname));
@@ -951,6 +1024,7 @@ public class DocGen {
         }
         return;
     }
+
     /** *************************************************************
      * Sets the parent directory in which subdirectories for different
      * types of output files will be created to the File obj, and
@@ -960,6 +1034,7 @@ public class DocGen {
      * @param pathname A String representing a directory pathname
      */
     public void setOutputParentDir(List pathnameComponents) {
+
         try {
             String fs = System.getProperty("file.separator");
             StringBuilder sb = new StringBuilder();
@@ -988,6 +1063,7 @@ public class DocGen {
         }
         return;
     }
+
     /** *************************************************************
      * Sets the parent directory in which subdirectories for different
      * types of output files will be created to the abstract pathname
@@ -1003,6 +1079,7 @@ public class DocGen {
      *
      */
     public void setOutputParentDir(KB kb, String ontology) {
+
         try {
             if (StringUtil.isNonEmptyString(ontology)) {
                 String flist = kb.getFirstTermViaAskWithRestriction(0,
@@ -1033,6 +1110,7 @@ public class DocGen {
         }
         return;
     }
+
     /** *************************************************************
      * Returns a File object representing the directory in which the
      * subdirectories for the various types of output files will be
@@ -1041,6 +1119,7 @@ public class DocGen {
     public File getOutputParentDir() {
         return this.outputParentDir;
     }
+
     public interface DisplayFilter {
         /** ***************************************************************
          * Returns true if suoKifTerm may be displayed or included in the
@@ -1059,12 +1138,14 @@ public class DocGen {
          */
         public boolean isLegalForDisplay (DocGen dg, String suoKifTerm);
     }
+
     /** *************************************************************
      * The DisplayFilter which, if present, determines if a given
      * SUO-KIF object may be displayed or output by this DocGen
      * object.
      */
     protected DisplayFilter displayFilter = null;
+
     /** *************************************************************
      * Sets the DisplayFilter associated with this DocGen object to
      * filterObj.
@@ -1075,6 +1156,7 @@ public class DocGen {
         this.displayFilter = filterObj;
         return;
     }
+
     /** *************************************************************
      * Returns the DisplayFilter object associated with this DocGen
      * object, or null if no DisplayFilter has been set.
@@ -1082,7 +1164,9 @@ public class DocGen {
     public DisplayFilter getDisplayFilter() {
         return this.displayFilter;
     }
+
     public class PresentationNameComparator implements Comparator {
+
         protected DocGen docGen = null;
         public DocGen getDocGen() {
             return docGen;
@@ -1099,6 +1183,7 @@ public class DocGen {
             kb = kbObj;
             return;
         }
+
         public int compare(Object o1, Object o2) {
             String str1 = ((o1 == null) ? "" : StringUtil.removeEnclosingQuotes(o1.toString()));
             String str2 = ((o2 == null) ? "" : StringUtil.removeEnclosingQuotes(o2.toString()));
@@ -1110,6 +1195,7 @@ public class DocGen {
             }
             return String.CASE_INSENSITIVE_ORDER.compare(str1, str2);
         }
+
         public boolean equals(Object obj) {
             boolean ans = true;
             if (ans) {
@@ -1135,12 +1221,14 @@ public class DocGen {
         }
         
     } // end of PresentationNameComparator
+
     /** *************************************************************
      *  Rebuilds the TreeSet containing all terms in kb, and forces
      *  the new TreeSet to sort according to each term's presentation
      *  name.
      */
     public SortedSet<String> resortKbTerms(KB kb) {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.resortKbTerms(" + kb.name + ")");
         try {
@@ -1164,6 +1252,7 @@ public class DocGen {
                            + " seconds");
         return kb.getTerms();
     }
+
     /** *************************************************************
      *  A TreeMap of TreeMaps of ArrayLists where the keys are
      *  uppercase single characters (of term formats or headwords) and
@@ -1179,6 +1268,7 @@ public class DocGen {
      *                  formattedTerm2->term21,term22...term2N
      */
     protected TreeMap alphaList = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+
     /** *************************************************************
      *  @param stringMap is a map of String keys and values
      *  @return a TreeMap of TreeMaps of ArrayLists where the keys
@@ -1195,6 +1285,7 @@ public class DocGen {
      *                  formattedTerm2->term21,term22...term2N
      */
     public TreeMap getAlphaList(KB kb) {
+
         try {
             if (alphaList.isEmpty()) {
                 synchronized (alphaList) {
@@ -1207,10 +1298,12 @@ public class DocGen {
         }
         return alphaList;
     }
+
     /** *************************************************************
      *  Clears the alphaList for this DocGen object.
      */
     public void clearAlphaList() {
+
         try {
             synchronized (alphaList) {
                 alphaList.clear();
@@ -1221,6 +1314,7 @@ public class DocGen {
         }
         return;
     }
+
     /** *************************************************************
      *  @param stringMap is a map of String keys and values
      *  @return a TreeMap of TreeMaps of ArrayLists where the keys
@@ -1307,6 +1401,7 @@ public class DocGen {
         */
         return alphaList;
     }
+
     /** **************************************************************
      * Returns true if term is an instance or subclass of
      * CompositeContentBearingObject in kb, else returns false.
@@ -1318,6 +1413,7 @@ public class DocGen {
      * @return true or false
      */
     public static boolean isComposite(KB kb, String term) {
+
         boolean ans = false;
         try {
             ans = (kb.isInstanceOf(term, "CompositeContentBearingObject")
@@ -1329,6 +1425,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** **************************************************************
      * Returns an ArrayList of Strings extracted from the range
      * argument (arg2) of the first retrieved statement formed with
@@ -1342,6 +1439,7 @@ public class DocGen {
      * @return An ArrayList of Strings, which could be empty.
      */
     public static ArrayList<String> getRangeValueList(KB kb, String predicate) {
+
         ArrayList<String> rangeList = new ArrayList<String>();
         try {
             List<String> range = kb.getTermsViaAsk(0,predicate,2);
@@ -1367,6 +1465,7 @@ public class DocGen {
         }
         return rangeList;
     }
+
     /** **************************************************************
      * Tries to use the values obtained from kb and ontology to set
      * some of the parameter values used for HTML generation.
@@ -1379,6 +1478,7 @@ public class DocGen {
      * @return void
      */
     public void setMetaDataFromKB(KB kb, String ontology) {
+
         if (StringUtil.isNonEmptyString(ontology)) {
             List<String> predicates = Arrays.asList("docGenDefaultNamespace",
                                                     "docGenDefaultPredicateNamespace",
@@ -1458,11 +1558,13 @@ public class DocGen {
         setDisplayFilter(df);
         return;
     }
+
     /** *************************************************************
      * Returns a List of the names of all client ontologies currently
      * represented in any loaded KB.
      */
     protected static List<String> getClientOntologyNames() {
+
         ArrayList<String> clientOntologyNames = new ArrayList<String>();
         try {
             Set<String> ontologies = new HashSet<String>();
@@ -1477,6 +1579,7 @@ public class DocGen {
         }
         return clientOntologyNames;
     }
+
     /** *************************************************************
      * Create an HTML page that lists information about a particular
      * composite term, which is a representation of an XML
@@ -1728,6 +1831,7 @@ public class DocGen {
         */
         return markup;
     }
+
     /** *************************************************************
      * Create an HTML page that lists information about a particular term,
      * with a limit on how many statements of each type should be
@@ -1935,6 +2039,7 @@ public class DocGen {
         */
         return output;
     }
+
     /** *************************************************************
      * Returns an ArrayList of namespace delimiter Strings gathered
      * from all loaded KBs, obtained by collecting statements formed
@@ -1944,6 +2049,7 @@ public class DocGen {
      * which could be empty
      */
     public ArrayList<String> getAllNamespaceDelimiters() {
+
         ArrayList<String> ans = new ArrayList<String>();
         try {
             Set<String> reduce = new HashSet<String>();
@@ -1964,6 +2070,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a String of HTML markup for the start of a document,
      * using title as the document title String.
@@ -1974,6 +2081,7 @@ public class DocGen {
      * document
      */
     public String generateHtmlDocStart(String title) {
+
         String result = "";
         try {
             String cssf = getStyleSheet();
@@ -2015,6 +2123,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Returns a String of HTML markup encoding the footer section of
      * an HTML document, and using footerText as the text to be
@@ -2026,6 +2135,7 @@ public class DocGen {
      * @return A String of HTML markup
      */
     protected String generateHtmlFooter(String footerText) {
+
         String result = "";
         try {
             String text = footerText;
@@ -2056,6 +2166,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** **************************************************************
      * Returns true if statements that include term and occur in the
      * kb and ontology associated with this DocGen object may be
@@ -2064,6 +2175,7 @@ public class DocGen {
      * @return true or false
      */
     protected boolean isLegalForDisplay(String term) {
+
         boolean ans = StringUtil.isNonEmptyString(term);
         try {
             DisplayFilter df = getDisplayFilter();
@@ -2076,6 +2188,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** **************************************************************
      * Returns a List of all SUO-KIF terms denoting those namespaces
      * containing terms that are defined in, or occur in, statements
@@ -2093,6 +2206,7 @@ public class DocGen {
      * ontologyNamespace
      */
     protected ArrayList<String> getOntologyNamespaces(KB kb, String ontology) {
+
         ArrayList<String> ans = new ArrayList<String>();
         try {
             if (StringUtil.isNonEmptyString(ontology)) {
@@ -2125,6 +2239,7 @@ public class DocGen {
      * prefix that qualifies the term
      */
     protected ArrayList<String> getNamespaceDelimiters(KB kb, String ontology) {
+
         ArrayList<String> ans = new ArrayList<String>();
         try {
             if (StringUtil.isNonEmptyString(ontology)) {
@@ -2141,10 +2256,12 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * A List of currently known namespace prefixes.
      */
     protected ArrayList<String> namespacePrefixes = new ArrayList<String>();
+
     /** **************************************************************
      * Returns an ArrayList of all known namespace prefixes sorted by
      * length, from longest to shortest.
@@ -2152,6 +2269,7 @@ public class DocGen {
      * @return A List of all known namespace prefixes
      */
     public ArrayList<String> getNamespacePrefixes() {
+
         try {
             if (namespacePrefixes.isEmpty()) {
                 synchronized (namespacePrefixes) {
@@ -2193,6 +2311,7 @@ public class DocGen {
         }
         return namespacePrefixes;
     }
+
     /** *************************************************************
      * A List of currently known namespaces.
      */
@@ -2208,6 +2327,7 @@ public class DocGen {
      * namespaces
      */
     public ArrayList<String> getNamespaces() {
+
         try {
             synchronized (namespaces) {
                 if (namespaces.isEmpty()) {
@@ -2234,6 +2354,7 @@ public class DocGen {
         // System.out.println("");
         return namespaces;
     }
+
     /** **************************************************************
      * Returns a List of all SUO-KIF terms denoting namespaces in kb
      * or in ontology, using the predicates inNamespace and
@@ -2251,6 +2372,7 @@ public class DocGen {
      * ontologyNamespace
      */
     protected ArrayList<String> getNamespaces(KB kb, String ontology, boolean force) {
+
         try {
             // if (StringUtil.isNonEmptyString(ontology)) {
             synchronized (namespaces) {
@@ -2313,12 +2435,14 @@ public class DocGen {
         }
         return namespaces;
     }
+
     /** **************************************************************
      * Returns the namespace prefix of term based on the namespaces
      * known in kb, else returns the empty String if term appears to
      * have no namespace prefix.
      */
     protected String getNamespacePrefix(KB kb, String term) {
+
         String ans = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2335,11 +2459,13 @@ public class DocGen {
         }
         return ans;
     }
+
     /** **************************************************************
      * Returns term without its namespace prefix if it appears to have
      * one in kb, else just returns term.
      */
     protected String stripNamespacePrefix(KB kb, String term) {
+
         String ans = term;
         try {
             String prefix = getNamespacePrefix(kb, term);
@@ -2352,6 +2478,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** **************************************************************
      * Returns a SUO-KIF term denoting a namespace.
      *
@@ -2364,6 +2491,7 @@ public class DocGen {
      * is warranted
      */
     protected String toKifNamespace(KB kb, String term) {
+
         String ans = term;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2391,6 +2519,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** **************************************************************
      * Removes namespace prefixes from all SUO-KIF terms to be
      * hyperlinked in text.
@@ -2404,6 +2533,7 @@ public class DocGen {
      * namespace prefixes removed
      */
     protected String removeLinkableNamespacePrefixes(KB kb, String text) {
+
         String ans = text;
         try {
             if (StringUtil.isNonEmptyString(text)) {
@@ -2422,6 +2552,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      *  Collects and returns a List of all Predicates in kb.
      *
@@ -2431,6 +2562,7 @@ public class DocGen {
      * @return A List of BinaryPredicates (Strings)
      */
     protected ArrayList getPredicates(KB kb, boolean requireNamespace) {
+
         ArrayList cached = null;
         try {
             cached = (ArrayList) getRelationsByKB().get(kb);
@@ -2547,6 +2679,7 @@ public class DocGen {
         }
         return cached;
     }
+
     /** *************************************************************
      * Returns true if term has syntactic subcomponents such as XML
      * elements or XML attributes in kb, else returns false.
@@ -2558,6 +2691,7 @@ public class DocGen {
      * @return true or false
      */
     protected boolean hasSubComponents(KB kb, String term) {
+
         boolean ans = false;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2569,6 +2703,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a List containing those terms that are immediate
      * syntactic subordinates of term in kb.
@@ -2581,6 +2716,7 @@ public class DocGen {
      * empty List
      */
     protected ArrayList getSubComponents(KB kb, String term) {
+
         ArrayList ans = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2596,6 +2732,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a List containing those terms that are immediate
      * syntactic superiors or "containers" of term in kb.
@@ -2608,6 +2745,7 @@ public class DocGen {
      * empty List
      */
     protected ArrayList getSuperComponents(KB kb, String term) {
+
         ArrayList ans = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2640,6 +2778,7 @@ public class DocGen {
      * empty List
      */
     protected String getFirstTermFormat(KB kb, String term, List contexts) {
+
         String ans = null;
         try {
             if (StringUtil.isNonEmptyString(term)
@@ -2677,6 +2816,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns the first documentation String obtained for term in kb,
      * using the List of namespaces or other contextualizing terms in
@@ -2741,6 +2881,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns the first containing Class that can be found for term
      * in kb.
@@ -2753,6 +2894,7 @@ public class DocGen {
      * can be found
      */
     protected String getNearestContainingClass(KB kb, String term) {
+
         String ans = null;
         try {
             List<String> predicates = new LinkedList<String>();
@@ -2810,6 +2952,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns the first purely "subsuming" entity that can be found
      * for term in kb, assuming that term denotes a Class or a
@@ -2823,6 +2966,7 @@ public class DocGen {
      * found
      */
     protected String getFirstSubsumingTerm(KB kb, String term) {
+
         String ans = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2846,6 +2990,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns the first containing, subsuming, or superordinate
      * entity that can be found for term in kb.
@@ -2858,6 +3003,7 @@ public class DocGen {
      * found
      */
     protected String getFirstGeneralTerm(KB kb, String term) {
+
         String ans = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2887,6 +3033,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a List of the first containing, subsuming, or
      * superordinate entities found for term in kb.
@@ -2899,6 +3046,7 @@ public class DocGen {
      * generalizations of term can be found
      */
     protected ArrayList<String> getFirstGeneralTerms(KB kb, String term) {
+
         ArrayList<String> ans = new ArrayList<String>();
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2925,6 +3073,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a List of the first instances or syntactic subordinate
      * entities that can be found for term in kb.
@@ -2937,6 +3086,7 @@ public class DocGen {
      * 
      */
     protected ArrayList<String> getFirstSpecificTerms(KB kb, String term) {
+
         ArrayList<String> ans = new ArrayList<String>();
         /*          */
         try {
@@ -2962,6 +3112,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a List of the entities that are immediate syntactic
      * subordinates of term in kb.
@@ -2974,15 +3125,16 @@ public class DocGen {
      * 
      */
     protected ArrayList<String> getSyntacticSubordinateTerms(KB kb, String term) {
+
         ArrayList<String> ans = new ArrayList<String>();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
-                List<String> preds = Arrays.asList("syntacticSubordinate", 
-                                                   // "subclass",
-                                                   "datatype",
-                                                   "syntacticExtension",
-                                                   "syntacticComposite");
+                List<String> preds = Arrays.asList("syntacticSubordinate",
+                        // "subclass",
+                        "datatype",
+                        "syntacticExtension",
+                        "syntacticComposite");
                 Set<String> terms = new HashSet<String>();
                 for (String p : preds) {
                     terms.addAll(kb.getTermsViaPredicateSubsumption(p,
@@ -3004,6 +3156,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a List of the entities that are immediate instances of
      * term in kb.
@@ -3016,15 +3169,16 @@ public class DocGen {
      * 
      */
     protected ArrayList getFirstInstances(KB kb, String term) {
+
         ArrayList ans = new ArrayList();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 List terms = kb.getTermsViaPredicateSubsumption("instance",
-                                                                2,
-                                                                term,
-                                                                1,
-                                                                true);
+                        2,
+                        term,
+                        1,
+                        true);
                 if (!terms.isEmpty()) {
                     ans.addAll(terms);
                 }
@@ -3035,6 +3189,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a SUO-KIF constant that denotes the first containing
      * Class of term obtained in kb.
@@ -3047,6 +3202,7 @@ public class DocGen {
      * 
      */
     protected String getFirstContainingClass(KB kb, String term) {
+
         return kb.getFirstTermViaPredicateSubsumption("instance",
                                                       1,
                                                       term,
@@ -3065,6 +3221,7 @@ public class DocGen {
      * 
      */
     protected ArrayList getFirstSubClasses(KB kb, String term) {
+
         ArrayList ans = new ArrayList();
         /*          */
         try {
@@ -3084,6 +3241,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a String consisting of HTML markup for a documentation
      * String for term obtained from kb and indexed by language.
@@ -3104,6 +3262,7 @@ public class DocGen {
      * 
      */
     protected String createDocs(KB kb, String kbHref, String term, String language) {
+
         String markup = "";
         try {
             if (isLegalForDisplay(term)) {
@@ -3131,6 +3290,7 @@ public class DocGen {
         }
         return markup;
     }
+
     /** *************************************************************
      * Returns a String containing the HTML markup for the Comment
      * field in a page displaying the definition of term in kb.
@@ -3151,6 +3311,7 @@ public class DocGen {
      * 
      */
     protected String createComments(KB kb, String kbHref, String term, String language) {
+
         StringBuilder result = new StringBuilder();
         if (isLegalForDisplay(term)) {
             List formulae = kb.askWithRestriction(0,"comment",1,term);
@@ -3190,6 +3351,7 @@ public class DocGen {
         }
         return result.toString();
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the synonym field
      * of an HTML page displaying the definition of term in kb.
@@ -3206,6 +3368,7 @@ public class DocGen {
      * 
      */
     protected String createSynonyms(KB kb, String kbHref, String term, String formatToken) {
+
         String result = "";
         try {
             if (isLegalForDisplay(term)) {
@@ -3299,6 +3462,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Display Labels
      * field of an HTML page displaying statements about term in kb.
@@ -3317,6 +3481,7 @@ public class DocGen {
      * term is supposed to be suppressed for display
      */
     protected String createDisplayNames(KB kb, String kbHref, String term, String formatToken) {
+
         String result = "";
         try {
             if (isLegalForDisplay(term) && !formatToken.equalsIgnoreCase(F_SI)) {
@@ -3395,6 +3560,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Has Same
      * Components As field of an HTML page displaying the definition
@@ -3419,6 +3585,7 @@ public class DocGen {
                                              String kbHref, 
                                              String term, 
                                              String language) {
+
         StringBuilder result = new StringBuilder();
         if (isLegalForDisplay(term)) {
             String suffix = (StringUtil.emptyString(kbHref)
@@ -3463,6 +3630,7 @@ public class DocGen {
         }
         return result.toString();
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Composites
      * Using Same Components field of an HTML page displaying the
@@ -3487,6 +3655,7 @@ public class DocGen {
                                                String kbHref, 
                                                String term, 
                                                String language) {
+
         StringBuilder result = new StringBuilder();
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -3548,6 +3717,7 @@ public class DocGen {
         }
         return result.toString();
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Parents field
      * of an HTML page displaying the definition of term in kb.
@@ -3575,6 +3745,7 @@ public class DocGen {
                                    String term, 
                                    String language, 
                                    Set parentsSet) {
+
         String result = "";
         try {
             String suffix = "";
@@ -3658,6 +3829,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Children field
      * of an HTML page displaying the definition of term in kb.
@@ -3678,6 +3850,7 @@ public class DocGen {
      * 
      */
     protected String createChildren(KB kb, String kbHref, String term, String language) {
+
         String suffix = "";
         if (StringUtil.emptyString(kbHref)) 
             suffix = ".html";
@@ -3735,6 +3908,7 @@ public class DocGen {
         }
         return result.toString();
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Instances
      * section of an HTML page displaying the definition of term in
@@ -3762,6 +3936,7 @@ public class DocGen {
                                      String term, 
                                      String language, 
                                      List excluded) {
+
         String markup = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -3866,6 +4041,7 @@ public class DocGen {
         }
         return markup;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for a SUO-KIF Formula.
      * 
@@ -3902,6 +4078,7 @@ public class DocGen {
                                    String previousTerm,
                                    String currentTerm, 
                                    String context) {
+
         String result = "";
         try {
             StringBuilder sb = new StringBuilder();
@@ -3974,6 +4151,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Relations
      * section of an HTML page displaying the definition of term in
@@ -4125,6 +4303,7 @@ public class DocGen {
         */
         return result;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Cardinality
      * field of an HTML page displaying the definition of term in kb.
@@ -4146,6 +4325,7 @@ public class DocGen {
      * 
      */
     protected String showCardinalityCell(KB kb, String kbHref, String term, String context) {
+
         /*
           System.out.println("ENTER DocGen.showCardinalityCell("
           + kb.name + ", "
@@ -4198,6 +4378,7 @@ public class DocGen {
         */
         return cardVal;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for a single table row
      * in the Composite Component section of an HTML page displaying
@@ -4226,6 +4407,7 @@ public class DocGen {
                                                   String term, 
                                                   int indent, 
                                                   String language) {
+
         String result = "";
         try {
             StringBuilder sb = new StringBuilder();
@@ -4315,6 +4497,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Returns the termFormat entry for term in kb and language,
      * otherwise returns the termFormat entry for term in English,
@@ -4338,6 +4521,7 @@ public class DocGen {
      * 
      */
     public String showTermName(KB kb, String term, String language) {
+
     	//, boolean withSpanTags) {    
         String ans = term;
         ans = StringUtil.removeEnclosingQuotes(ans);
@@ -4386,6 +4570,7 @@ public class DocGen {
         */        
         return ans;
     }
+
     /** *************************************************************
      * Returns the termFormat entry for term in kb and language,
      * otherwise returns the termFormat entry for term in English,
@@ -4431,6 +4616,7 @@ public class DocGen {
                                               String kbHref, 
                                               List hier, 
                                               String language) {
+
         String markup = "";
         try {
             StringBuilder result = new StringBuilder();
@@ -4451,6 +4637,7 @@ public class DocGen {
         }
         return markup;
     }
+
     /** *************************************************************
      * Recursively computes and then returns a List that constitutes
      * the graph containing those XML elements and attributes
@@ -4475,6 +4662,7 @@ public class DocGen {
                                                String term, 
                                                boolean isAttribute, 
                                                int indent) {
+
         ArrayList pair = new ArrayList();
         try {
             ArrayList attrs = new ArrayList();
@@ -4511,6 +4699,7 @@ public class DocGen {
         }
         return pair;
     }
+
     /** *************************************************************
      * Returns a List that constitutes the graph containing those XML
      * elements and attributes syntactically subordinate to term in
@@ -4531,6 +4720,7 @@ public class DocGen {
      * 
      */
     protected boolean isXmlAttribute(KB kb, String term) {
+
         boolean ans = false;
         try {
             String kif = term;
@@ -4557,6 +4747,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for a row displaying a
      * contained component in an HTML page displaying the partial
@@ -4656,6 +4847,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      *  Given the SUO-KIF statements:
      * 
@@ -4716,12 +4908,14 @@ public class DocGen {
         */
         return resultStr;
     }
+
     /** *************************************************************
      * Returns true if term should be skipped over during printing,
      * else returns false.
      *
      */
     protected static boolean isSkipNode(KB kb, String term) {
+
         boolean ans = false;
         try {
             ans = (isInstanceOf(kb, term, "XmlSequenceElement")
@@ -4732,6 +4926,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Travels up the HasXmlElement and HasXmlAttribute relation
      * hierarchies to collect all parents, and returns them in an
@@ -4740,6 +4935,7 @@ public class DocGen {
      * @return An ArrayList of terms, which could be empty
      */
     protected ArrayList getContainingComposites(KB kb, String term) {
+
         ArrayList result = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -4755,6 +4951,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Belongs to Class
      * section of an HTML page displaying the partial
@@ -4784,6 +4981,7 @@ public class DocGen {
                                           String term, 
                                           String language,
                                           Set<String> parents) {
+
         String markup = "";
         try {
             String suffix = "";
@@ -4826,6 +5024,7 @@ public class DocGen {
         }
         return markup;
     }
+
     /** *************************************************************
      * Returns a String containing HTML markup for the Belongs to Class
      * section of an HTML page displaying the partial
@@ -4850,8 +5049,10 @@ public class DocGen {
                                           String kbHref, 
                                           String term, 
                                           String language) {
+
         return createBelongsToClass(kb, kbHref, term, language, null);
     }
+
     /** *************************************************************
      * Returns an ArrayList holding the composite entities (Elements)
      * that contain term, or returns an empty ArrayList.
@@ -4865,6 +5066,7 @@ public class DocGen {
      * 
      */
     protected ArrayList findContainingComposites(KB kb, String term) {
+
         ArrayList ans = new ArrayList();
         /*          */
         try {
@@ -4901,6 +5103,7 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * Create an HTML page that lists information about a particular term,
      * with a limit on how many statements of each type should be
@@ -4910,6 +5113,7 @@ public class DocGen {
                                       String kbHref, 
                                       String term, 
                                       int limit) {
+
         StringBuilder result = new StringBuilder();
         if (StringUtil.isNonEmptyString(term)) {
             String language = "EnglishLanguage";
@@ -5052,12 +5256,14 @@ public class DocGen {
         }
         return result.toString();
     }
+
     /** *************************************************************
      *  Generate an alphabetic HTML list that points to the
      *  individual index pages (which collect all terms starting
      *  with a particular letter.
      */
     public String generateDynamicTOCHeader(String kbHref) {
+
         String markup = "";
         try {
             StringBuilder result = new StringBuilder();
@@ -5092,6 +5298,7 @@ public class DocGen {
         }
         return markup;
     }
+
     /** *************************************************************
      *  Generate an alphabetic HTML list that points to the
      *  individual index pages (which collect all terms or term
@@ -5101,6 +5308,7 @@ public class DocGen {
      *                   createAlphaList()
      */
     protected String generateTocHeader(KB kb, TreeMap alphaList, String allname) {
+
         if (StringUtil.emptyString(getTocHeader())) {
             StringBuilder result = new StringBuilder();
             try {
@@ -5188,6 +5396,7 @@ public class DocGen {
         }
         return getTocHeader();
     }
+
     /** *************************************************************
      *  Generate an HTML page that lists term name and its
      *  documentation
@@ -5281,6 +5490,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * Generate and save all the index pages that link to the
      * individual term pages.
@@ -5296,6 +5506,7 @@ public class DocGen {
                                   TreeMap alphaList, 
                                   String dir, 
                                   String language) {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.saveIndexPages("
                            + kb.name + ", "
@@ -5359,11 +5570,13 @@ public class DocGen {
                            + " seconds elapsed time");
         return;
     }
+
     /** *************************************************************
      *  Save pages below the KBs directory in a directory called
      *  HTML.  If that already exists, use HTML1, HTML2 etc.
      */
     protected void printHTMLPages(TreeMap pageList, String dirpath) {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.printHTMLPages("
                            + "[map with " + pageList.size() + " entries], "
@@ -5419,6 +5632,7 @@ public class DocGen {
                            + " seconds elapsed time");
         return;
     }
+
     /** **************************************************************
      * Creates a subdirectory of SIGMA_HOME/files/, in which output
      * files of the type specified by token are saved.  token is also
@@ -5431,6 +5645,7 @@ public class DocGen {
      * @return A File representing a directory
      */
     protected File makeOutputDir(String token) {
+
         File outdir = null;
         try {
             File parentDir = this.getOutputParentDir();
@@ -5503,6 +5718,7 @@ public class DocGen {
         }
         return outdir;
     }
+
     /** *************************************************************
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
@@ -5518,6 +5734,7 @@ public class DocGen {
                                         // HashMap inverseHeadwordMap, 
                                         String language,
                                         String formatToken) {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.generateHTMLPages("
                            + kb.name + ", "
@@ -5586,6 +5803,7 @@ public class DocGen {
                            + " seconds elapsed time");
         return pageList;
     }
+
     /** *************************************************************
      * Generate simplified HTML pages for all terms.  Output is a
      * set of HTML files sent to the directory specified in
@@ -5596,6 +5814,7 @@ public class DocGen {
      * than the term name itself
      */
     public void generateHTML(KB kb, String language, boolean simplified, String formatToken) {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.generateHTML("
                            + kb.name + ", "
@@ -5664,6 +5883,7 @@ public class DocGen {
                            + " seconds elapsed time");
         return;
     }
+
     /** *************************************************************
      * Generate a single HTML page showing all terms.
      *
@@ -5681,6 +5901,7 @@ public class DocGen {
                                    TreeMap alphaList,
                                    String language, 
                                    boolean simplified) {
+
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.generateSingleHTML("
                            + kb.name + ", "
@@ -5793,34 +6014,38 @@ public class DocGen {
                            + language + ", "
                            + simplified + ")");
         System.out.println("  "
-                           + ((System.currentTimeMillis() - t1) / 1000.0)
-                           + " seconds elapsed time");
+                + ((System.currentTimeMillis() - t1) / 1000.0)
+                + " seconds elapsed time");
         return;
     }
+
     /** *************************************************************
      */
     public void generateSingleHTML(KB kb, String language, boolean simplified) 
         throws IOException {
+
         // HashMap headwordMap = createHeadwordMap(kb); 
         String dirpath = getOutputDirectoryPath();
         TreeMap alphaList = getAlphaList(kb); // headwordMap
         generateSingleHTML(kb, dirpath, alphaList, language, simplified);
     }
+
     /** *************************************************************
      * Returns a List containing the subordinate XmlAttributes of
      * kifTerm, else return an empty List.
      */
     protected ArrayList getSubordinateAttributes(KB kb, String kifTerm) {
+
         ArrayList attrs = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(kifTerm)) {
                 // Get the direct subordinate attributes of kifTerm.
                 String pred = "subordinateXmlAttribute";
                 attrs.addAll(kb.getTermsViaPredicateSubsumption(pred,
-                                                                2,
-                                                                kifTerm,
-                                                                1,
-                                                                true));
+                        2,
+                        kifTerm,
+                        1,
+                        true));
                 if (attrs.isEmpty()) {
                     if (StringUtil.isLocalTermReference(kifTerm)) {
                         String gt = getFirstGeneralTerm(kb, kifTerm);
@@ -5841,11 +6066,13 @@ public class DocGen {
         }
         return attrs;
     }
+
     /** *************************************************************
      * Returns a List containing the subordinate XmlElements of
      * kifTerm, else return an empty List.
      */
     protected ArrayList getSubordinateElements(KB kb, String kifTerm) {
+
         ArrayList elems = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(kifTerm)) {
@@ -5885,6 +6112,7 @@ public class DocGen {
         }
         return elems;
     }
+
     /** *************************************************************
      * 
      */
@@ -5892,6 +6120,7 @@ public class DocGen {
                                                    String term, 
                                                    int targetArgnum,
                                                    boolean computeClosure) {
+
         ArrayList result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -5947,10 +6176,12 @@ public class DocGen {
         */
         return result;
     }
+
     /** *************************************************************
      * 
      */
     protected ArrayList getSyntacticUnionTerms(KB kb, String term, int targetArgnum) {
+
         ArrayList result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -5976,10 +6207,12 @@ public class DocGen {
         */
         return result;
     }
+
     /** *************************************************************
      * 
      */
     protected ArrayList getSyntacticCompositeTerms(KB kb, String term, int targetArgnum) {
+
         ArrayList result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -6005,10 +6238,12 @@ public class DocGen {
         */
         return result;
     }
+
     /** *************************************************************
      * 
      */
     protected String getClosestXmlDataType(KB kb, String term) {
+
         String xmlType = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -6024,10 +6259,12 @@ public class DocGen {
         }
         return xmlType;
     }
+
     /** *************************************************************
      * Supports memoization for isInstanceOf(kb, c1, c2).
      */
     protected static Map isInstanceOfCache = new HashMap();
+
     /** *************************************************************
      * Returns true if i is an instance of c, else returns false.
      *
@@ -6037,12 +6274,15 @@ public class DocGen {
      * @return true or false
      */
     protected static boolean isInstanceOf(KB kb, String i, String c) {
+
         return kb.kbCache.instances.get(i).contains(c);
     }
+
     /** *************************************************************
      * 
      */
     protected String getFirstDatatype(KB kb, String term) {
+
         String dtype = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -6057,10 +6297,12 @@ public class DocGen {
         }
         return dtype;
     }
+
     /** *************************************************************
      * 
      */
     protected ArrayList getDatatypeTerms(KB kb, String term, int targetArgnum) {
+
         ArrayList result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -6079,10 +6321,12 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * 
      */
     protected boolean isDataType(KB kb, String term) {
+
         boolean ans = false;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -6102,10 +6346,12 @@ public class DocGen {
         }
         return ans;
     }
+
     /** *************************************************************
      * 
      */
     public String getTermPresentationName(KB kb, String term) {
+
         String name = term;
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -6119,6 +6365,7 @@ public class DocGen {
         }
         return name;
     }
+
     /** *************************************************************
      * 
      */
@@ -6127,6 +6374,7 @@ public class DocGen {
                                           String term) {
         return getTermPresentationName(kb, namespace, term, false);
     }
+
     /** *************************************************************
      * 
      */
@@ -6134,6 +6382,7 @@ public class DocGen {
                                           String namespace, 
                                           String term,
                                           boolean withSpanTags) {
+
         String name = term;
         try {
             List context = new ArrayList();
@@ -6175,6 +6424,7 @@ public class DocGen {
         }
         return name;
     }
+
     /** *************************************************************
      * Sorts stringList in place by the presentation name of each its
      * terms, which could be very different from the raw term name.
@@ -6243,11 +6493,13 @@ public class DocGen {
         */
         return;
     }
+
     /** *************************************************************
      * Sorts the List terms by the length of the Strings it contains,
      * from longest to shortest.
      */
     protected void sortByTermLength(List terms) {
+
         try {
             if (!terms.isEmpty() && (terms.size() > 1)) {
                 Comparator comp = new Comparator() {
@@ -6272,10 +6524,12 @@ public class DocGen {
         }
         return;
     }
+
     /** *************************************************************
      * 
      */
     public String getTermNamespace(KB kb, String term) {
+
         String result = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -6300,6 +6554,7 @@ public class DocGen {
         }
         return result;
     }
+
     /** *************************************************************
      * 
      * 
@@ -6416,6 +6671,7 @@ public class DocGen {
         */
         return ans;
     }
+
     /** *************************************************************
      * Writes a List of Strings to an OutputStream.
      *
@@ -6426,6 +6682,7 @@ public class DocGen {
      * @return void
      */
     public static void writeToStream(List<String> data, OutputStream stream) {
+
         DataOutputStream dout = null;
         try {
             if (!data.isEmpty()) {
@@ -6449,16 +6706,28 @@ public class DocGen {
         }
         return;
     }
+
     /** *******************************************************************
      */
     public static boolean emptyString(String s) {
+
         return StringUtil.emptyString(s);
     }
+
     /** *******************************************************************
      */
     public static boolean isNonEmptyString(String s) {
+
         return StringUtil.isNonEmptyString(s);
     }
+
+    /** *******************************************************************
+     * */
+    public ArrayList<ArrayList<String>> readSpreadsheetFile(String inpath,
+                                                            char delimiter) {
+        return readSpreadsheetFile(inpath, delimiter, 0, null);
+    }
+
     /** *******************************************************************
      * Parses a file of delimited fields into an ArrayList of
      * ArrayLists.  If rowFlags contains any Strings, the method
@@ -6477,11 +6746,13 @@ public class DocGen {
      *
      * @return An ArrayList of ArrayLists
      */
-    public ArrayList readSpreadsheetFile(String inpath, 
+    public ArrayList<ArrayList<String>> readSpreadsheetFile(String inpath,
                                          char delimiter, 
                                          int delimitersPerRow,
                                          List<String> rowFlags) {
-        ArrayList rows = new ArrayList();
+
+        ArrayList<ArrayList<String>> result = null;
+        ArrayList<String> rows = new ArrayList<String>();
         LineNumberReader lr = null;
         try {
             File infile = new File(inpath);
@@ -6506,8 +6777,7 @@ public class DocGen {
                     rows.add(line);
                     continue;
                 }
-                // 1.a. Use explicit leading tokens to determine when
-                // a new row starts.
+                // 1.a. Use explicit leading tokens to determine when a new row starts.
                 if (useRowFlags) {
                     isRowStart = false;
                     for (String token : rowFlags) {
@@ -6516,9 +6786,8 @@ public class DocGen {
                             break;
                         }
                     }
-                    if (isRowStart) {
+                    if (isRowStart)
                         rows.add(line);
-                    }
                     else if (lastIdx >= 0) {
                         line = prevLine + line;
                         rows.set(lastIdx, line);
@@ -6546,10 +6815,8 @@ public class DocGen {
                     }
                     if (countDelimiters(line, delimiter) > delimitersPerRow) {
                         System.out.println("WARNING in DocGen.readSpreadsheetFile(" 
-                                           + inpath + ", " 
-                                           + delimiter + ", " 
-                                           + delimitersPerRow + ", " 
-                                           + rowFlags + ")");
+                                           + inpath + ", " + delimiter + ", "
+                                           + delimitersPerRow + ", " + rowFlags + ")");
                         System.out.println("  Too many delimiters read near line "
                                            + lr.getLineNumber());
                     }
@@ -6566,14 +6833,15 @@ public class DocGen {
                 // numbers (maybe) match those in the spreadsheet.
                 rows.add(0, "start");
                 // Convert all rows to Lists.
-                convertRowStringsToLists(rows, delimiter);
+                result = convertRowStringsToLists(rows, delimiter);
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         } 
-        return rows;
+        return result;
     }
+
     /** *******************************************************************
      * Converts a List of char-delimited Strings to a List of Lists
      * (i.e., an array) representing a spreadsheet.
@@ -6586,7 +6854,9 @@ public class DocGen {
      *
      * @return void
      */
-    protected void convertRowStringsToLists(List rows, char delimiter) {
+    protected ArrayList<ArrayList<String>> convertRowStringsToLists(List<String> rows, char delimiter) {
+
+        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
         try {
             String line = null;
             StringBuilder cell = null;
@@ -6599,7 +6869,7 @@ public class DocGen {
             System.out.println("  Converting " + rowCount + " Strings to Lists");
             for (int c = 0; c < rowCount; c++) {
                 line = (String) rows.remove(0);
-                ArrayList row = new ArrayList();
+                ArrayList<String> row = new ArrayList<String>();
                 if (StringUtil.isNonEmptyString(line)) {
                     inString = false;
                     cell = new StringBuilder();
@@ -6608,10 +6878,12 @@ public class DocGen {
                         if (ch == delimiter && !inString) {
                             row.add(cell.toString().trim());
                             cell = new StringBuilder();
-                        } else if (ch == '"' 
+                        }
+                        else if (ch == '"'
                                    && (j == 0 || line.charAt(j-1) != '\\')) {
                             inString = !inString;
-                        } else  {
+                        }
+                        else  {
                             cell.append(ch);
                         }
                     }
@@ -6619,15 +6891,16 @@ public class DocGen {
                 }
                 // row will be an empty ArrayList if line is an empty
                 // String.
-                rows.add(row);
+                result.add(row);
             }
             System.out.println(SP2 + rows.size() + " rows saved");
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        return;
+        return result;
     }
+
     /** *******************************************************************
      * Counts the number of field delimiters in line and returns the
      * count, ignoring delimiters that are inside Strings.
@@ -6640,6 +6913,7 @@ public class DocGen {
      * @return An int indicating the number of delimiters in line.
      */
     protected int countDelimiters(String line, char delimiter) {
+
         int count = 0;
         try {
             int len = line.length();
@@ -6660,10 +6934,12 @@ public class DocGen {
         }
         return count;
     }
+
     /** *************************************************************
      * 
      */
     public static void main (String[] args) {
+
         String status = "";
         String ls = StringUtil.getLineSeparator();
         try {
