@@ -190,7 +190,9 @@ public class SimFlood {
      * for every pair of node
      * names.  Record the inverse of the distance, normalized by
      * the length of the longer string.  Bigger number = better match
-     * @return a HashMap of
+     * @return a HashMap of mapping nodes and their similarity score.
+     * Each key in the HashMap is a list of length 2, with the names
+     * of the two nodes that are mapped.
      */
     private HashMap<ArrayList<String>,Float> stringMatch(Graph g1, Graph g2) {
 
@@ -264,6 +266,22 @@ public class SimFlood {
     }
 
     /*************************************************************
+     * if the nodes aren't ROOT nodes or if they are that ROOT nodes
+     * are only pairs with other ROOT nodes
+     */
+    private static boolean noMixedRoots(Node g1n1, Node g1n2, Node g2n1, Node g2n2) {
+
+        if (!g1n1.label.equals("ROOT-0") && !g1n2.label.equals("ROOT-0") &&
+            !g2n1.label.equals("ROOT-0") && !g2n2.label.equals("ROOT-0"))
+            return true;
+        if (g1n1.label.equals("ROOT-0") && g1n2.label.equals("ROOT-0"))
+            return true;
+        if (g2n1.label.equals("ROOT-0") && g2n2.label.equals("ROOT-0"))
+            return true;
+        return false;
+    }
+
+    /*************************************************************
      */
     private static ArrayList<String> getListFromNodeName(String s) {
 
@@ -300,8 +318,8 @@ public class SimFlood {
                     Node g2n1 = g2.nodes.get(s.get(1));
                     Node g2n2 = g2.nodes.get(s2.get(1));
                     String link1 = linked(g1n1, g1n2);
-                    String link2 = linked(g2n1,g2n2);
-                    if (link1 != null && link2 != null &&
+                    String link2 = linked(g2n1, g2n2);
+                    if (noMixedRoots(g1n1,g1n2,g2n1,g2n2) && link1 != null && link2 != null &&
                             !g1n1.label.equals(g1n2.label) &&
                             !g2n1.label.equals(g2n2.label) &&
                             (!exactLinks || link1.equals(link2))) { // could easily be made approximate
@@ -498,7 +516,7 @@ public class SimFlood {
                             if (equation.equals("basic"))
                                 contrib = a2.value * n2iterPrev; // table 3 "basic" in Melnik
                             else // if (equation.equals("C"))
-                                contrib = a2.value * (n2iterPrev + n2iter0); // table 3 "C" in Melnik"
+                                contrib = a2.value * (n2iterPrev + (3 * n2iter0)); // table 3 "C" in Melnik"
                             increment += contrib;
                         }
                     }
@@ -519,7 +537,8 @@ public class SimFlood {
                 delta = convergeThreshold + 1;
             for (String s : nextIter.keySet()) {
                 Node n = g.nodes.get(s);
-                n.value = nextIter.get(s);
+                if (n.value < nextIter.get(s))
+                    n.value = nextIter.get(s);
             }
             //System.out.println("Info in SimFlood.flood(): " + g);
             //System.out.println("Info in SimFlood.flood(): delta: " + delta);
@@ -640,14 +659,14 @@ public class SimFlood {
         HashMap<String,String> bestMatch = new HashMap<String,String>();
 
         System.out.println();
-        System.out.println("INFO in SimFlood.main(): g1: ");
+        System.out.println("INFO in SimFlood.testSentencePair(): g1: ");
         System.out.println(g1.toString());
-        System.out.println("INFO in SimFlood.main(): g2: ");
+        System.out.println("INFO in SimFlood.testSentencePair(): g2: ");
         System.out.println(g2.toString());
         bestMatch = new HashMap<String,String>();
         float score = sf.matchGraphs(g1,g2,bestMatch);
-        System.out.println("INFO in SimFlood.main(): matches: " + bestMatch);
-        System.out.println("INFO in SimFlood.main(): score: " + score);
+        System.out.println("INFO in SimFlood.testSentencePair(): matches: " + bestMatch);
+        System.out.println("INFO in SimFlood.testSentencePair(): score: " + score);
     }
 
     /*************************************************************
@@ -713,7 +732,10 @@ public class SimFlood {
      */
     private static void testSentences2() {
 
-
+        testSentencePair("root(ROOT-0, walks-2), nsubj(walks-2, John-1), det(store-5, the-4), prep_to(walks-2, store-5).",
+                "John walks to the store.",
+                "root(ROOT-0, walks-2), nsubj(walks-2, Who-1), det(store-5, the-4), prep_to(walks-2, store-5).",
+                "Who walks to the store?");
     }
 
     /*************************************************************
@@ -724,6 +746,6 @@ public class SimFlood {
         //        "graph A",
         //        "l1(bb, b1), l2(bb, b2), l2(b2, b1).",
         //        "graph B");
-        testSentences();
+        testSentences2();
     }
 }
