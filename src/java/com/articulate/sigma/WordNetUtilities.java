@@ -19,14 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,7 +63,7 @@ public class WordNetUtilities {
     public static String getPOSfromKey (String senseKey) {
 
         int lastUS = senseKey.lastIndexOf("_");
-        return senseKey.substring(lastUS-2,lastUS);
+        return senseKey.substring(lastUS - 2, lastUS);
     }
 
     /** ***************************************************************
@@ -79,7 +72,7 @@ public class WordNetUtilities {
     public static String getWordFromKey (String senseKey) {
 
         int lastUS = senseKey.lastIndexOf("_");
-        return senseKey.substring(0,lastUS-3);
+        return senseKey.substring(0, lastUS - 3);
     }
 
     /** ***************************************************************
@@ -1334,7 +1327,7 @@ public class WordNetUtilities {
         Iterator<String> it = WordNet.wn.wordsToSenses.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
-            writeTPTPOneWordToSenses(pw,word);
+            writeTPTPOneWordToSenses(pw, word);
         }
     }
 
@@ -1354,7 +1347,7 @@ public class WordNetUtilities {
             String pos = WordNetUtilities.getPOSfromKey(sense);
             String word = WordNetUtilities.getWordFromKey(sense);
             String posNum = WordNetUtilities.posLettersToNumber(pos);
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__synset(s__" + 
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__synset(s__" +
                     StringUtil.StringToPrologID(sense) + ",s__WN30_" + posNum + synset + "))).\n");
             if (posNum.equals("2")) {
                 ArrayList<String> frames = WordNet.wn.verbFrames.get(synset + "-" + word);
@@ -1374,9 +1367,9 @@ public class WordNetUtilities {
     private static void writeTPTPWordNetHeader(PrintWriter pw) {
 
         pw.println("# An expression of the Princeton WordNet " +
-                   "( http://wordnet.princeton.edu ) " +
-                   "in TPTP.  Use is subject to the Princeton WordNet license at " +
-                   "http://wordnet.princeton.edu/wordnet/license/");
+                "( http://wordnet.princeton.edu ) " +
+                "in TPTP.  Use is subject to the Princeton WordNet license at " +
+                "http://wordnet.princeton.edu/wordnet/license/");
         Date d = new Date();
         pw.println("#Produced on date: " + d.toString());
     }
@@ -1402,7 +1395,67 @@ public class WordNetUtilities {
         writeTPTPWordsToSenses(pw);
         writeTPTPSenseIndex(pw);
     }
-    
+
+    /** ***************************************************************
+     * Find all the leaf nodes for a particular relation in WordNet.
+     * Note that the leaf must have a link from another node to be a
+     * leaf.  No isolated nodes can be considered leaves.
+     * @return a list of POS-prefixed synsets
+     */
+    public static HashSet<String> findLeavesInTree(String rel)  {
+
+        // first find all valid nodes that are pointed to
+        HashSet<String> valid = new HashSet<>();
+        for (String s : WordNet.wn.relations.keySet()) {
+            ArrayList<AVPair> avpList = WordNet.wn.relations.get(s);
+            Iterator<AVPair> it = avpList.iterator();
+            while (it.hasNext()) {
+                AVPair avp = it.next();
+                if (avp.attribute.equals(rel))
+                    valid.add(avp.value);
+            }
+        }
+
+        HashSet<String> result = new HashSet<>();
+        for (String s : WordNet.wn.relations.keySet()) {
+            ArrayList<AVPair> avpList = WordNet.wn.relations.get(s);
+            boolean found = false;
+            Iterator<AVPair> it = avpList.iterator();
+            while (it.hasNext() && !found) {
+                AVPair avp = it.next();
+                if (avp.attribute.equals(rel))
+                    found = true;
+            }
+            if (!found && valid.contains(s))
+                result.add(s);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Find all the leaf nodes for a particular relation in WordNet.
+     * Note that a node may be a leaf simply because it has no such
+     * link to another node.
+     * @return a list of POS-prefixed synsets
+     */
+    public static HashSet<String> findLeaves(String rel)  {
+
+        HashSet<String> result = new HashSet<>();
+        for (String s : WordNet.wn.relations.keySet()) {
+            ArrayList<AVPair> avpList = WordNet.wn.relations.get(s);
+            boolean found = false;
+            Iterator<AVPair> it = avpList.iterator();
+            while (it.hasNext() && !found) {
+                AVPair avp = it.next();
+                if (avp.attribute.equals(rel))
+                    found = true;
+            }
+            if (!found)
+                result.add(s);
+        }
+        return result;
+    }
+
     /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
@@ -1410,6 +1463,16 @@ public class WordNetUtilities {
     public static void main (String[] args) {
 
         try {
+            KBmanager.getMgr().initializeOnce();
+            HashSet<String> hs = findLeavesInTree("hyponym");
+            for (String s: hs) {
+                System.out.print(WordNet.wn.getWordsFromSynset(s).get(0)+", ");
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
+        }
+        /*try {
 	        KBmanager.getMgr().initializeOnce();
 	        //extractMeronyms();
             FileWriter fw = new FileWriter("WNout.tptp");
@@ -1421,7 +1484,7 @@ public class WordNetUtilities {
         catch (Exception e) {
             System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
         }
-
+        */
     }
 }
 
