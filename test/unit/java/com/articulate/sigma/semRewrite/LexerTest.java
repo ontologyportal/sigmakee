@@ -345,6 +345,50 @@ public class LexerTest extends UnitTestBase {
      * Check the positive case of AcceptLit().
      */
     @Test
+    public void testAcceptClause5() {
+
+        String example4 = "mark(1/1000th-5, Although-1)";
+        Lexer lex = new Lexer(example4);
+        try {
+            assertEquals("mark",lex.next());
+            assertEquals("(", lex.next());
+            assertEquals("1/1000th-5", lex.next());
+            assertEquals(",", lex.next());
+            assertEquals("Although-1", lex.next());
+            assertEquals(")", lex.next());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
+     * Check the positive case of AcceptLit().
+     */
+    @Test
+    public void testAcceptClause6() {
+
+        String example4 = "amod(Earthling-3, 100-pound-2)";
+        Lexer lex = new Lexer(example4);
+        try {
+            assertEquals("amod",lex.next());
+            assertEquals("(", lex.next());
+            assertEquals("Earthling-3", lex.next());
+            assertEquals(",", lex.next());
+            assertEquals("100-pound-2", lex.next());
+            assertEquals(")", lex.next());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
+     * Check the positive case of AcceptLit().
+     */
+    @Test
     public void testAcceptClauses() {
 
         String example4 = "root(ROOT-0, reached-14), prepc_after(reached-14, making-2), amod(stops-4, several-3), dobj(making-2, stops-4), nn(islands-7, Caribbean-6), prep_at(making-2, islands-7), appos(islands-7, de-9), nsubj(reached-14, Leon-10), poss(men-13, his-12), conj_and(Leon-10, men-13), nsubj(reached-14, men-13), det(coast-17, the-15), amod(coast-17, east-16), dobj(reached-14, coast-17), prep_of(coast-17, Florida-19), nn(Augustine-22, St.-21), appos(Florida-19, Augustine-22), prep_on(reached-14, April-25), num(April-25, 2-26), num(April-25, 1513-28)";
