@@ -40,11 +40,15 @@ public class SentenceBuilder {
 
     private final List<CoreMap> sentences;
 
+    /** **************************************************************
+     */
     public SentenceBuilder(Annotation document) {
 
         this.sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
     }
 
+    /** **************************************************************
+     */
     public SentenceBuilder(CoreMap sentence) {
 
         this.sentences = ImmutableList.of(sentence);
@@ -57,6 +61,8 @@ public class SentenceBuilder {
         return needSpaceBefore(label.originalText());
     }
 
+    /** **************************************************************
+     */
     private boolean needSpaceBefore(String text) {
 
         boolean skipSpace = text.length() == 1 && (
@@ -70,16 +76,18 @@ public class SentenceBuilder {
         return !skipSpace;
     }
 
+    /** **************************************************************
+     */
     public List<String> asStrings() {
 
         return asStrings(NO_MUTATION);
     }
 
-
     /** **************************************************************
      * Builds String representation of current sentence mutating labels with provided substitutor.
      */
     public List<String> asStrings(ClauseSubstitutor substitutor) {
+
         return asStrings(label -> {
             if(substitutor.containsKey(label)) {
                 // Replace only first element for complex keys
@@ -89,7 +97,6 @@ public class SentenceBuilder {
             return label.originalText();
         });
     }
-
 
     /** **************************************************************
      * Transform the labels to String allowing make additional manual mutation on each label.

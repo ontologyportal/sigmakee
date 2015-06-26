@@ -41,14 +41,19 @@ import static edu.stanford.nlp.dcoref.CorefCoreAnnotations.*;
 
 public class CorefSubstitutor extends SimpleSubstitutorStorage {
 
-    public static final Set<String> ignorablePronouns = ImmutableSet.of("himself", "herself", "Noonan");
+    public static final Set<String> ignorablePronouns = ImmutableSet.of("himself", "herself");
 
+    /** **************************************************************
+     */
     public CorefSubstitutor(Annotation document) {
 
         initialize(document);
     }
 
+    /** **************************************************************
+     */
     private void initialize(Annotation document) {
+
         List<CoreLabel> labels = document.get(TokensAnnotation.class);
         Map<Integer, CorefChain> corefChains = document.get(CorefChainAnnotation.class);
 
@@ -77,7 +82,6 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
 
             }
         }
-
         addGroups(collectedGroups);
     }
 
@@ -86,8 +90,8 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
      * Current implementation assumes that first mention is the root.
      */
     private CorefMention findRootMention(List<CorefMention> mentions) {
-        CorefMention rootMention = mentions.get(0);
 
+        CorefMention rootMention = mentions.get(0);
         return rootMention;
     }
 
@@ -97,14 +101,14 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
 
         List<CorefMention> mentions = ImmutableList.of();
         Integer corefClusterId = label.get(CorefClusterIdAnnotation.class);
-        while(mentions.size() <= 1 && corefClusterId != null && corefClusterId.compareTo(0) > 0) {
-            if(corefs.containsKey(corefClusterId)) {
+        while (mentions.size() <= 1 && corefClusterId != null && corefClusterId.compareTo(0) > 0) {
+            if (corefs.containsKey(corefClusterId)) {
                 List<CorefMention> candidateMentions = corefs.get(corefClusterId).getMentionsInTextualOrder();
                 boolean areMentionsContainLabel = candidateMentions.stream().anyMatch(mention ->
                                 mention.sentNum == label.sentIndex() + 1
                                         && mention.startIndex == label.index()
                 );
-                if(areMentionsContainLabel) {
+                if (areMentionsContainLabel) {
                     mentions = candidateMentions;
                 }
             }
@@ -114,6 +118,8 @@ public class CorefSubstitutor extends SimpleSubstitutorStorage {
         return mentions;
     }
 
+    /** **************************************************************
+     */
     private boolean isSubstitutablePronoun(CoreLabel label) {
 
         String tag = label.tag();

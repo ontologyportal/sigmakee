@@ -705,7 +705,8 @@ public class Interpreter {
         List<String> newResults = Lists.newArrayList();
 
         for (String dependency : results) {
-            if (!dependency.startsWith(PHRASAL_VERB_PARTICLE_TAG) && !(dependency.startsWith(SUMO_TAG) && dependency.contains(verb))) {
+            if (!dependency.startsWith(PHRASAL_VERB_PARTICLE_TAG) &&
+                    !(dependency.startsWith(SUMO_TAG) && dependency.contains(verb))) {
 //                String newDependency = modifyDependencyElem(dependency, verbNum);
                 String newDependency = dependency;
                 if (newDependency.contains(verb)) {
@@ -744,7 +745,8 @@ public class Interpreter {
         String[] subElems;
         int subElemNum;
 
-        if (!newDependency.startsWith(SUMO_TAG) && !newDependency.startsWith(TENSE_TAG) && !newDependency.startsWith(NUMBER_TAG)) {
+        if (!newDependency.startsWith(SUMO_TAG) && !newDependency.startsWith(TENSE_TAG) &&
+                !newDependency.startsWith(NUMBER_TAG)) {
             elem = elems[0].trim();
             subElems = elem.split("-");
             subElemNum = Integer.parseInt(subElems[1]);
@@ -774,8 +776,8 @@ public class Interpreter {
 
         List<String> lemmatizeResults = Lists.newArrayList(results);
 
-        for(CoreLabel label : tokens) {
-            if(!"NNP".equals(label.tag()) && !"NNPS".equals(label.tag())) {
+        for (CoreLabel label : tokens) {
+            if (!"NNP".equals(label.tag()) && !"NNPS".equals(label.tag())) {
                 CoreLabelSequence grouped = substitutor.getGroupedByFirstLabel(label).orElse(new CoreLabelSequence(label));
                 String replace = grouped.toLabelString().get();
                 String replaceTo = Joiner.on("_").join(
@@ -803,13 +805,13 @@ public class Interpreter {
      *      car-4 -> NN
      */
     private static Map<String, String> getPartOfSpeechList(List<CoreLabel> tokens, ClauseSubstitutor substitutor) {
-        Map<String, String> posMap = Maps.newHashMap();
 
+        Map<String, String> posMap = Maps.newHashMap();
         for (CoreLabel token : tokens) {
             CoreLabelSequence seq = substitutor.containsKey(token)
                     ? substitutor.getGrouped(token)
                     : CoreLabelSequence.from(token);
-            for(CoreLabel label : seq.getLabels()) {
+            for (CoreLabel label : seq.getLabels()) {
                 posMap.put(label.originalText() + "-" + label.index(), label.tag());
             }
         }
