@@ -22,7 +22,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import com.google.common.collect.*;
 import com.articulate.sigma.KB;
 
 /** ***************************************************************
@@ -67,7 +67,7 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
-     * Extract the POS from a word_POS_num sense key
+     * Extract the word from a word_POS_num sense key.
      */
     public static String getWordFromKey (String senseKey) {
 
@@ -76,10 +76,20 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * Extract the synset corresponding to a word_POS_num sense key.
+     */
+    public static String getSenseFromKey (String senseKey) {
+
+        String POS = getPOSfromKey(senseKey);
+        String POSnum = posLettersToNumber(POS);
+        return POSnum + WordNet.wn.senseIndex.get(senseKey);
+    }
+
+    /** ***************************************************************
      */
     public static String removeTermPrefixes (String formula) {
 
-        return formula.replaceAll("&%","");
+        return formula.replaceAll("&%", "");
     }
 
     /** ***************************************************************
@@ -782,6 +792,22 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * @return the number of synsets in WordNet for the given part of
+     * speech
+     */
+    public static int numSynsets(char pos) {
+
+        switch (pos) {
+            case '1': return WordNet.wn.nounDocumentationHash.keySet().size();
+            case '2': return WordNet.wn.verbDocumentationHash.keySet().size();
+            case '3': return WordNet.wn.adjectiveDocumentationHash.keySet().size();
+            case '4': return WordNet.wn.adverbDocumentationHash.keySet().size();
+        }
+        System.out.println("Error in WordNetUtilities.numSynsets(): bad pos: " + pos);
+        return 0;
+    }
+
+    /** ***************************************************************
      */
     public static String printStatistics() {
 
@@ -1029,8 +1055,6 @@ public class WordNetUtilities {
     }
     
     /** *************************************************************
-     * Take a file of <id>tab<timestamp>tab<string> and calculate
-     * the average Levenshtein distance for each ID.
      */
     public static void commentSentiment(String fileWithPath) {
     	
@@ -1402,7 +1426,7 @@ public class WordNetUtilities {
      * leaf.  No isolated nodes can be considered leaves.
      * @return a list of POS-prefixed synsets
      */
-    public static HashSet<String> findLeavesInTree(String rel)  {
+    public static HashSet<String> findLeavesInTree(HashSet<String> rels)  {
 
         // first find all valid nodes that are pointed to
         HashSet<String> valid = new HashSet<>();
@@ -1411,7 +1435,7 @@ public class WordNetUtilities {
             Iterator<AVPair> it = avpList.iterator();
             while (it.hasNext()) {
                 AVPair avp = it.next();
-                if (avp.attribute.equals(rel))
+                if (rels.contains(avp.attribute))
                     valid.add(avp.value);
             }
         }
@@ -1423,13 +1447,104 @@ public class WordNetUtilities {
             Iterator<AVPair> it = avpList.iterator();
             while (it.hasNext() && !found) {
                 AVPair avp = it.next();
-                if (avp.attribute.equals(rel))
+                if (rels.contains(avp.attribute))
                     found = true;
             }
             if (!found && valid.contains(s))
                 result.add(s);
         }
         return result;
+    }
+
+    /** ***************************************************************
+     * Find the complete path from a given synset.  If multiple
+     * inheritance results in multiple paths, return them all.
+     */
+    public static ArrayList<ArrayList<String>> findPathsToRoot(ArrayList<String> base, String synset) {
+
+        //System.out.println("WordNetUtilities.findPathsToRoot(): base: " + base);
+        //System.out.println("WordNetUtilities.findPathsToRoot(): synset: " +
+        //        WordNet.wn.getWordsFromSynset(synset).get(0) + "-" + synset);
+        ArrayList<ArrayList<String>> result = new ArrayList<>();
+        if (base.contains(synset) || synset.equals("100001740")) { // catch cycles, stop at "entity"
+            ArrayList<String> path = new ArrayList<>();
+            path.addAll(base);
+            path.add(synset);
+            result.add(path);
+            return result;
+        }
+        ArrayList<AVPair> links = WordNet.wn.relations.get(synset);
+        if (links != null) {
+            for (AVPair link : links) {
+                if (link == null)
+                    System.out.println("Error in WordNetUtilities.findPathsToRoot(): null link");
+                else if (link.attribute.equals("hypernym") || link.attribute.equals("instance hypernym")) {
+                    //System.out.println("WordNetUtilities.findPathsToRoot(): link: " + link);
+                    ArrayList<String> path = new ArrayList<>();
+                    path.addAll(base);
+                    path.add(synset);
+                    result.addAll(findPathsToRoot(path,link.value));
+                }
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     */
+    private static String lowestCommonParentInner(ArrayList<String> path,
+                                                  ArrayList<ArrayList<String>> paths, int cursor) {
+
+        Iterator<ArrayList<String>> it = paths.iterator();
+        while (it.hasNext()) {
+            ArrayList<String> path2 = it.next();
+            int index1 = path.size() - cursor - 1;
+            int index2 = path2.size() - cursor - 1;
+            if (index1 < 0 || index2 < 0)
+                return null;
+            //System.out.println("lowestCommonParentInner(): index: " + index1);
+            //System.out.println("lowestCommonParentInner(): index: " + index2);
+            //System.out.println("lowestCommonParentInner() 1: " + path.get(index1));
+            //System.out.println("lowestCommonParentInner() 2: " + path2.get(index2));
+            if (path2.get(index2).equals(path.get(index1)))
+                return path.get(index1);
+        }
+        return null;
+    }
+
+    /** ***************************************************************
+     */
+    private static String lowestCommonParent(ArrayList<ArrayList<String>> paths1,
+                                            ArrayList<ArrayList<String>> paths2, int cursor) {
+
+        String bestSyn = null;
+        Iterator<ArrayList<String>> it = paths1.iterator();
+        while (it.hasNext()) {
+            String result = lowestCommonParentInner(it.next(), paths2, cursor);
+            if (result != null)
+                bestSyn = result;
+        }
+        return bestSyn;
+    }
+
+    /** ***************************************************************
+     */
+    public static String lowestCommonParent(String s1, String s2) {
+
+        ArrayList<String> base1 = new ArrayList<String>();
+        ArrayList<String> base2 = new ArrayList<String>();
+        ArrayList<ArrayList<String>> paths1 = findPathsToRoot(base1, s1);
+        ArrayList<ArrayList<String>> paths2 = findPathsToRoot(base2,s2);
+        int cursor = 0;
+        String bestSyn = "100001740"; // entity
+        String result = bestSyn;
+        while (result != null) {
+            result = lowestCommonParent(paths1,paths2,cursor);
+            cursor++;
+            if (result != null)
+                bestSyn = result;
+        }
+        return bestSyn;
     }
 
     /** ***************************************************************
@@ -1457,34 +1572,126 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     */
+    public static void showAllLeaves() {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            HashSet<String> hs = findLeavesInTree(Sets.newHashSet("hyponym","instance hyponym"));
+            int count = 0;
+            System.out.println();
+            System.out.println("====================================");
+            for (String s: hs) {
+                System.out.print(WordNet.wn.getWordsFromSynset(s).get(0)+"-" + s + ", ");
+                if (count++ > 6) {
+                    System.out.println();
+                    count = 0;
+                }
+            }
+            System.out.println();
+            System.out.println("====================================");
+        }
+        catch (Exception e) {
+            System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
+        }
+    }
+
+    /** ***************************************************************
+     */
+    public static void showAllRoots() {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            HashSet<String> hs = findLeavesInTree(Sets.newHashSet("hypernym","instance hypernym"));
+            int count = 0;
+            System.out.println();
+            System.out.println("====================================");
+            for (String s: hs) {
+                System.out.print(WordNet.wn.getWordsFromSynset(s).get(0)+"-" + s + ", ");
+                if (count++ > 6) {
+                    System.out.println();
+                    count = 0;
+                }
+            }
+            System.out.println();
+            System.out.println("====================================");
+        }
+        catch (Exception e) {
+            System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
+        }
+    }
+
+    /** ***************************************************************
+     * @return POS-prefixed synsets
+     */
+    public static HashSet<String> wordsToSynsets(String word) {
+
+        HashSet<String> result = new HashSet<String>();
+        ArrayList<String> sensekeys = WordNet.wn.wordsToSenses.get(word);
+        for (String s : sensekeys) {
+            //System.out.println("Info in WordNetUtilities.wordsToSynsets(): s: " + s);
+            String synset =  WordNet.wn.senseIndex.get(s);
+            String posnum = WordNetUtilities.getPOSfromKey(s);
+            //System.out.println("Info in WordNetUtilities.wordsToSynsets(): pos: " + posnum);
+            String posnumint = WordNetUtilities.posLettersToNumber(posnum);
+            result.add(posnumint + synset);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     */
+    public static String synsetToOneWord(String s) {
+        return WordNet.wn.getWordsFromSynset(s).get(0);
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
+        // showAllLeaves();
+        // showAllRoots();
         try {
-            KBmanager.getMgr().initializeOnce();
-            HashSet<String> hs = findLeavesInTree("hyponym");
-            for (String s: hs) {
-                System.out.print(WordNet.wn.getWordsFromSynset(s).get(0)+", ");
-            }
-        }
-        catch (Exception e) {
-            System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
-        }
-        /*try {
 	        KBmanager.getMgr().initializeOnce();
+            ArrayList<String> base = new ArrayList<String>();
+            ArrayList<ArrayList<String>> result = findPathsToRoot(base, "102858304");
+            for (ArrayList<String> path : result) {
+                int count = 0;
+                for (String s: path) {
+                    System.out.print(WordNet.wn.getWordsFromSynset(s).get(0) + "-" + s + ", ");
+                    if (count++ > 6) {
+                        System.out.println();
+                        count = 0;
+                    }
+                }
+            }
+            System.out.println();
+            ArrayList<String> base2 = new ArrayList<String>();
+            ArrayList<ArrayList<String>> result2 = findPathsToRoot(base2, "102958343");
+            for (ArrayList<String> path : result2) {
+                int count = 0;
+                for (String s: path) {
+                    System.out.print(WordNet.wn.getWordsFromSynset(s).get(0) + "-" + s + ", ");
+                    if (count++ > 6) {
+                        System.out.println();
+                        count = 0;
+                    }
+                }
+            }
+            System.out.println("\nparent: " + lowestCommonParent("102858304", "102958343"));
 	        //extractMeronyms();
-            FileWriter fw = new FileWriter("WNout.tptp");
-            PrintWriter pw = new PrintWriter(fw);
-            pw.flush();
-	        writeTPTPWordNet(pw);
-            pw.flush();
+            //FileWriter fw = new FileWriter("WNout.tptp");
+            //PrintWriter pw = new PrintWriter(fw);
+            //pw.flush();
+	        //writeTPTPWordNet(pw);
+            //pw.flush();
         }
         catch (Exception e) {
             System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
+            e.printStackTrace();
         }
-        */
     }
 }
 
