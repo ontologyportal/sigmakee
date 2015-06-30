@@ -1628,6 +1628,10 @@ public class WordNetUtilities {
 
         HashSet<String> result = new HashSet<String>();
         ArrayList<String> sensekeys = WordNet.wn.wordsToSenses.get(word);
+        if (sensekeys == null) {
+            System.out.println("Error in WordNetUtilities.wordsToSynsets(): no synset for : " + word);
+            return null;
+        }
         for (String s : sensekeys) {
             //System.out.println("Info in WordNetUtilities.wordsToSynsets(): s: " + s);
             String synset =  WordNet.wn.senseIndex.get(s);
