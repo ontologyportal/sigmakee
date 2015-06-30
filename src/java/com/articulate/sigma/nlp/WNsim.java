@@ -30,6 +30,13 @@ public class WNsim {
     // find maximum values for each POS.  Keys are "1", "2", "3" and "4"
     private static HashMap<String,Integer> maxFreqs = new HashMap<>();
 
+    // a bit is true if the synset (in order of byte offset number) is subsumed by the
+    // synset in the key
+    private static HashMap<String,BitSet> nouns = null;
+    private static HashMap<String,BitSet> verbs = null;
+    private static HashMap<String,BitSet> adjectives = null;
+    private static HashMap<String,BitSet> adverbs = null;
+
     /** ***************************************************************
      */
     public static void calcMaxFreqs() {
@@ -190,6 +197,8 @@ public class WNsim {
         HashSet<String> syns2 = WordNetUtilities.wordsToSynsets(s2);
         String bestSyn1 = "";
         String bestSyn2 = "";
+        if (syns1 == null || syns2 == null)
+            return (float) -100.0;
         for (String syn1 : syns1) {
             for (String syn2 : syns2) {
                 if (syn1.charAt(0) == syn2.charAt(0)) {
@@ -213,23 +222,31 @@ public class WNsim {
      * Read a space-delimited file of word pairs and their similarity
      * rating.
      */
-    public static HashMap<String,HashMap<String,Float>> readTestFile() {
+    public static HashMap<String,HashMap<String,Float>> readTestFile(String filename,
+                                                                     String regex, boolean removePOS) {
 
         HashMap<String,HashMap<String,Float>> sims = new HashMap<>();
         //System.out.println("INFO in WNsim.readTestFile()");
         LineNumberReader lr = null;
         try {
             String line;
-            File testFile = new File("/home/apease/WordSim/Resnik2.txt");
+            //File testFile = new File("/home/apease/WordSim/Resnik3.txt");
+            //File testFile = new File("/home/apease/WordSim/MEN/MEN_dataset_lemma_form_full");
+            File testFile = new File(filename);
             FileReader r = new FileReader( testFile );
             lr = new LineNumberReader(r);
             while ((line = lr.readLine()) != null) {
                 //System.out.println("INFO in WNsim.readTestFile(): " + line);
-                Pattern p = Pattern.compile("([^ ]+) ([^ ]+) (.*)");
+                Pattern p = Pattern.compile(regex);
+                // Pattern p = Pattern.compile("([^ ]+) ([^ ]+) (.*)");
                 Matcher m = p.matcher(line);
                 if (m.matches()) {
                     String w1 = m.group(1);
                     String w2 = m.group(2);
+                    if (removePOS) {
+                        w1 = w1.substring(0, w1.lastIndexOf('-'));
+                        w2 = w2.substring(0, w2.lastIndexOf('-'));
+                    }
                     String n1 = m.group(3);
                     //System.out.println("INFO in WNsim.readTestFile(): results: " + w1 + " " + w2 + " " + n1);
                     float f = Float.parseFloat(n1);
@@ -262,11 +279,65 @@ public class WNsim {
 
     /** ***************************************************************
      */
+    public static float mean(HashMap<String,Float> x) {
+
+        float total = 0;
+        for (String s : x.keySet()) {
+            total += x.get(s);
+        }
+        return total / (float) x.keySet().size();
+    }
+
+    /** ***************************************************************
+     */
+    public static float deviation(HashMap<String,Float> x, HashMap<String,Float> y,
+                                  float meanx, float meany) {
+
+        float dev = 0;
+        for (String s : x.keySet()) {
+            dev += (x.get(s) - meanx) * (y.get(s) - meany);
+        }
+        return dev;
+    }
+
+    /** ***************************************************************
+     */
+    public static float sqDeviation(HashMap<String,Float> x, float mean) {
+
+        float dev = 0;
+        for (String s : x.keySet()) {
+            dev += (x.get(s) - mean) * (x.get(s) - mean);
+        }
+        return dev;
+    }
+
+    /** ***************************************************************
+     * determine the sample correlation coefficient
+     */
+    public static double correlation(HashMap<String,Float> x, HashMap<String,Float> y) {
+
+        float result = 0;
+        // find means
+        float meanx = mean(x);
+        float meany = mean(y);
+        float deviation = deviation(x, y, meanx, meany);
+        float sqdeviationX = sqDeviation(x, meanx);
+        float sqdeviationY = sqDeviation(y, meany);
+        return deviation / (Math.sqrt(sqdeviationX * sqdeviationY));
+    }
+
+    /** ***************************************************************
+     */
     public static void test() {
 
         //System.out.println("INFO in WNsim.test() ");
-        HashMap<String,HashMap<String,Float>> hm = readTestFile();
+        HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/rw/rw.txt",
+                "([^\\t]+)\\t([^\\t]+)\\t([^\\t]+).*",false);
+        //HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/MEN/MEN_dataset_lemma_form_full",
+        //        "([^ ]+) ([^ ]+) (.*)",true);
         HashMap<String,HashMap<String,Float>> hm2 = new HashMap<>();
+        HashMap<String,Float> results1 = new HashMap<>();
+        HashMap<String,Float> results2 = new HashMap<>();
         for (String s1 : hm.keySet()) {
             HashMap<String,Float> m = hm.get(s1);
             if (m != null) {
@@ -282,10 +353,13 @@ public class WNsim {
                         h = hm2.get(s2);
                     h.put(s1,factual);
                     System.out.println("INFO in WNsim.readTestFile(): s1: " + s1 + " s2: " +
-                        s2 + " factual: " + factual + " fexpected: " + fexpected);
+                            s2 + " factual: " + factual + " fexpected: " + fexpected);
+                    results1.put(s1 + "-" + s2, factual);
+                    results2.put(s1 + "-" + s2, fexpected);
                 }
             }
         }
+        System.out.println("Correlation: " + correlation(results1,results2));
     }
 
     /** ***************************************************************
