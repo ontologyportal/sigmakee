@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.articulate.sigma</groupId>
 	<artifactId>sigma-component</artifactId>
 	<packaging>jar</packaging>
-	<version>2.02-SNAPSHOT</version>
+	<version>2.02</version>
 	<name>sigma-component</name>
     <description>Sigma knowledge engineering system is an system for developing, viewing and debugging theories in first 
     	order logic. It works with Knowledge Interchange Format (KIF) and is optimized for the Suggested Upper Merged 
@@ -45,10 +44,11 @@
   	</developers>
 
 	<scm>		
-		<connection>scm:cvs::pserver:anonymous@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</connection>
-		<developerConnection>scm:cvs::pserver:anonymous@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</developerConnection>
+		<connection>scm:cvs::ext:izilotti@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</connection>
+		<developerConnection>scm:cvs::ext:izilotti@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</developerConnection>
 		<url>http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/</url>
-	</scm>
+	  <tag>sigma-component-2_02</tag>
+  </scm>
 
 	<profiles>
 	  <profile>
@@ -154,7 +154,7 @@
 		<dependency>
 			<groupId>edu.stanford.nlp</groupId>
 			<artifactId>stanford-corenlp</artifactId>
-			<version>SNAPSHOT</version>
+			<version>1.0</version>
 			<scope>system</scope>
 			<systemPath>${project.basedir}/lib/stanford-corenlp-SNAPSHOT.jar</systemPath>
 		</dependency>
