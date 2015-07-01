@@ -116,6 +116,16 @@
 	</properties>
 	<dependencies>
 		<dependency>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-release-plugin</artifactId>
+			<version>2.5.2</version>
+		</dependency>		
+		<dependency>
+			<groupId>org.apache.maven.scm</groupId>
+			<artifactId>maven-scm-provider-cvs-commons</artifactId>
+			<version>1.9.4</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
@@ -192,6 +202,17 @@
 		</testResources>
 		<pluginManagement>
 			<plugins>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-scm-plugin</artifactId>
+					<version>1.9.4</version>
+					<configuration>
+						<providerImplementations>
+							<cvs>cvs_native</cvs>
+						</providerImplementations>
+					</configuration>
+				</plugin>
 
 				<plugin>
 			      <groupId>org.apache.maven.plugins</groupId>
