@@ -44,8 +44,8 @@
   	</developers>
 
 	<scm>		
-		<connection>scm:cvs::ext:@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</connection>
-		<developerConnection>scm:cvs::ext:@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</developerConnection>
+		<connection>scm:cvs::ext:izilotti@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</connection>
+		<developerConnection>scm:cvs::ext:izilotti@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</developerConnection>
 		<url>http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/</url>
 	  <tag>sigma-component-2_02</tag>
   </scm>
