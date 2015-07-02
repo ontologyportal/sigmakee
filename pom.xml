@@ -3,7 +3,7 @@
 	<groupId>com.articulate.sigma</groupId>
 	<artifactId>sigma-component</artifactId>
 	<packaging>jar</packaging>
-	<version>2.06-SNAPSHOT</version>
+	<version>2.05</version>
 	<name>sigma-component</name>
     <description>Sigma knowledge engineering system is an system for developing, viewing and debugging theories in first 
     	order logic. It works with Knowledge Interchange Format (KIF) and is optimized for the Suggested Upper Merged 
@@ -47,6 +47,7 @@
 		<connection>scm:cvs::ext:izilotti@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</connection>
 		<developerConnection>scm:cvs::ext:izilotti@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee:sigma</developerConnection>
 		<url>http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/</url>
+    <tag>sigma-component-2_05</tag>
   </scm>
 
 	<profiles>
