@@ -42,6 +42,7 @@ public class IdiomSubstitutor extends SimpleSubstitutorStorage {
      * E.g. "raining cats and dogs"
      */
     private void initialize(List<CoreLabel> labels) {
+
         int from = 0;
         Map<CoreLabelSequence, CoreLabelSequence> collectedIdioms = Maps.newHashMap();
         ArrayList<String> labelsText = Lists.newArrayList(labels.stream()
@@ -57,7 +58,6 @@ public class IdiomSubstitutor extends SimpleSubstitutorStorage {
             }
             from++;
         }
-
         addGroups(collectedIdioms);
     }
 }

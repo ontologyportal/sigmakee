@@ -120,6 +120,7 @@ public class Interpreter {
     /** *************************************************************
      */
     protected Document getUserInputs() {
+
         return userInputs;
     }
 

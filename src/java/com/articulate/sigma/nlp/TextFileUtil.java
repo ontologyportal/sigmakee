@@ -12,8 +12,7 @@ import java.util.List;
  */
 public class TextFileUtil {
 
-    /**
-     * **************************************************************
+    /****************************************************************
      * This method reads in a text file, breaking it into single line documents
      * Currently, sentences are not separated if they occur on the same line.
      *
@@ -34,7 +33,8 @@ public class TextFileUtil {
                     continue;
                 documents.add(line);
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
             throw new IOException("Unable to read line in file. Last line successfully read was: " + line);
         }

@@ -78,11 +78,11 @@ public class CoreLabelSequence {
         );
     }
 
-
     /** *************************************************************
      * Converts the sequence to text representation using "_" as a separator
      */
     public String toText() {
+
         return Joiner.on("_").join(labels.stream().map(label -> label.originalText()).toArray());
     }
 
