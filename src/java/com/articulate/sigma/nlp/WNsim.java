@@ -1,6 +1,8 @@
 package com.articulate.sigma.nlp;
 
 import com.articulate.sigma.*;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -14,6 +16,8 @@ import java.util.regex.Pattern;
  * an implementation of
  * Resnik, P. (1995). Using information content to evaluate semantic similarity in a taxonomy.
  * In Proceedings of the 14th International Joint Conference on Artificial Intelligence, 448–453.
+ *
+ * Adding a similarity method based on synset subsumption.
  */
 public class WNsim {
 
@@ -30,12 +34,28 @@ public class WNsim {
     // find maximum values for each POS.  Keys are "1", "2", "3" and "4"
     private static HashMap<String,Integer> maxFreqs = new HashMap<>();
 
+    // A bi-directional index of synsets to indexes which are in order of synset number
+    private static HashBiMap<String,Integer> nounSynsetToIndex = HashBiMap.create();
+    private static HashBiMap<String,Integer> verbSynsetToIndex = HashBiMap.create();
+    private static HashBiMap<String,Integer> adjectiveSynsetToIndex = HashBiMap.create();
+    private static HashBiMap<String,Integer> adverbSynsetToIndex = HashBiMap.create();
+
     // a bit is true if the synset (in order of byte offset number) is subsumed by the
     // synset in the key
-    private static HashMap<String,BitSet> nouns = null;
-    private static HashMap<String,BitSet> verbs = null;
-    private static HashMap<String,BitSet> adjectives = null;
-    private static HashMap<String,BitSet> adverbs = null;
+    private static HashMap<String,BitSet> nouns = new HashMap<>();
+    private static HashMap<String,BitSet> verbs = new HashMap<>();
+    private static HashMap<String,BitSet> adjectives = new HashMap<>();
+    private static HashMap<String,BitSet> adverbs = new HashMap<>();
+
+    // default bitmaps
+    private static BitSet nounBits = null;
+    private static BitSet verbBits = null;
+    private static BitSet adjectiveBits = null;
+    private static BitSet adverbBits = null;
+
+    private static boolean ResnikSim = true;
+    private static boolean SubsumptionSim = false; // if both are true,
+    // subsumption will be used by overwriting the result from Resnik
 
     /** ***************************************************************
      */
@@ -159,7 +179,7 @@ public class WNsim {
      * Compute similarity of two synsets. Note that currently only synsets of the
      * same part of speech have any similarity score.
      */
-    public static float computeSynsetSim (String s1, String s2) {
+    public static float computeSynsetSim(String s1, String s2) {
 
         if (s1.charAt(0) != s2.charAt(0)) {
             System.out.println("Error in WNsim.computeSynsetSim(): incompatible synsets" + s1 + " " + s2);
@@ -170,9 +190,13 @@ public class WNsim {
         int n = maxFreqs.get(Character.toString(pos));
         //System.out.println("Info in WNsim.computeSynsetSim(): n: " + n);
         String parent = WordNetUtilities.lowestCommonParent(s1, s2);
+        if (parent == null)
+            return (float) 0;
         //System.out.println("Info in WNsim.computeSynsetSim(): parent: " + parent);
-        //System.out.println("Info in WNsim.computeSynsetSim(): parent freq: " + getSubsumingFreq().get(parent));
-        float parFreq = getSubsumingFreq().get(parent);
+        getSubsumingFreq();
+        float parFreq = 0;
+        if (getSubsumingFreq().containsKey(parent))
+            parFreq= getSubsumingFreq().get(parent);
         //System.out.println("Info in WNsim.computeSynsetSim(): probability: " + parFreq / n);
         //System.out.println("Info in WNsim.computeSynsetSim(): score: " + (-Math.log(parFreq / n)));
         return (float) (-Math.log(parFreq / n));
@@ -183,8 +207,12 @@ public class WNsim {
      * Compute similarity of two words as the maximum similarity among
      * their possible synsets. Note that currently only synsets of the
      * same part of speech have any similarity score.
+     * @param allSynsets determines whether to take the best fit from
+     *                   all possible synsets for the words, or just
+     *                   to compare the most frequent synsets for each
+     *                   word
      */
-    public static float computeWordSim (String s1, String s2) {
+    public static float computeWordSim(String s1, String s2, boolean allSynsets) {
 
         //System.out.println("Info in WNsim.computeWordSim(): " + s1 + " " + s2);
         //if (subsumingFreq == null)
@@ -195,6 +223,18 @@ public class WNsim {
         float result = (float) -100.0;
         HashSet<String> syns1 = WordNetUtilities.wordsToSynsets(s1);
         HashSet<String> syns2 = WordNetUtilities.wordsToSynsets(s2);
+        if (!allSynsets) {
+            syns1 = new HashSet<String>();
+            String sense1 = WSD.getBestDefaultSense(s1);
+            if (!sense1.isEmpty())
+                syns1.add(sense1);
+            syns2 = new HashSet<String>();
+            String sense2 = WSD.getBestDefaultSense(s2);
+            if (!sense2.isEmpty())
+                syns2.add(sense2);
+        }
+        if (syns1 == null && syns2 == null || syns1.size() == 0 || syns2.size() == 0)
+            return 0;
         String bestSyn1 = "";
         String bestSyn2 = "";
         if (syns1 == null || syns2 == null)
@@ -202,7 +242,11 @@ public class WNsim {
         for (String syn1 : syns1) {
             for (String syn2 : syns2) {
                 if (syn1.charAt(0) == syn2.charAt(0)) {
-                    float score = computeSynsetSim(syn1,syn2);
+                    float score = 0;
+                    if (ResnikSim)
+                        score = computeSynsetSim(syn1,syn2);
+                    if (SubsumptionSim)
+                        score = maxCommonSynsetOverlap(syn1,syn2);
                     //System.out.println("Info in WNsim.computeWordSim(): " + syn1 + " " + syn2 + " " + score);
                     if (score > result) {
                         result = score;
@@ -230,8 +274,7 @@ public class WNsim {
         LineNumberReader lr = null;
         try {
             String line;
-            //File testFile = new File("/home/apease/WordSim/Resnik3.txt");
-            //File testFile = new File("/home/apease/WordSim/MEN/MEN_dataset_lemma_form_full");
+
             File testFile = new File(filename);
             FileReader r = new FileReader( testFile );
             lr = new LineNumberReader(r);
@@ -327,12 +370,213 @@ public class WNsim {
     }
 
     /** ***************************************************************
+     * @return a set of all the immediate children of the given synset from
+     * hyponym and instance hyponym links
+     */
+    public static HashSet<String> getChildList(String s) {
+
+        HashSet<String> result = new HashSet<String>();
+        ArrayList<AVPair> rels = WordNet.wn.relations.get(s);
+        for (AVPair avp : rels) {
+            if (avp.attribute.equals("hyponym") || avp.attribute.equals("instance hyponym"))
+                result.add(avp.value);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * @return an integer index into the bit vector
+     * @param s is a POS-prefixed synset
+     */
+    public static int getIndex(String s) {
+
+        int index = -1;
+        switch (s.charAt(0)) {
+            case '1' : index = nounSynsetToIndex.get(s);
+                break;
+            case '2' : index = verbSynsetToIndex.get(s);
+                break;
+            case '3' : index = adjectiveSynsetToIndex.get(s);
+                break;
+            case '4' : index = adverbSynsetToIndex.get(s);
+                break;
+        }
+        return index;
+    }
+
+    /** ***************************************************************
+     * @return a bit vector comprising set bits for all the children of
+     * the given synset
+     * @param s is a POS-prefixed synset
+     */
+    public static BitSet setBits(String s) {
+
+        //System.out.println("INFO in WNsim.setBits(): " + s);
+        HashSet<String> children = getChildList(s);
+        BitSet posMap = null;
+        int index = -1;
+        switch (s.charAt(0)) {
+            case '1' : posMap = (BitSet) nounBits.clone();
+                index = nounSynsetToIndex.get(s);
+                break;
+            case '2' : posMap = (BitSet) verbBits.clone();
+                index = verbSynsetToIndex.get(s);
+                break;
+            case '3' : posMap = (BitSet) adjectiveBits.clone();
+                index = adjectiveSynsetToIndex.get(s);
+                break;
+            case '4' : posMap = (BitSet) adverbBits.clone();
+                index = adverbSynsetToIndex.get(s);
+                break;
+        }
+        for (String c : children) {
+            posMap.or(setBits(c));
+            posMap.set(getIndex(c));
+        }
+        //System.out.println("INFO in WNsim.setBits(): s " + posMap.cardinality());
+        switch (s.charAt(0)) {
+            case '1' : nouns.put(s, posMap);
+                break;
+            case '2' : verbs.put(s,posMap);
+                break;
+            case '3' : adjectives.put(s,posMap);
+                break;
+            case '4' : adverbs.put(s, posMap);
+                break;
+        }
+        return posMap;
+    }
+
+    /** ***************************************************************
+     */
+    public static void createIndexes() {
+
+        int i = 0;
+        for (String s : WordNet.wn.nounDocumentationHash.keySet()) {
+            nounSynsetToIndex.put("1" + s,i++);
+        }
+        i = 0;
+        for (String s : WordNet.wn.verbDocumentationHash.keySet()) {
+            verbSynsetToIndex.put("2" + s,i++);
+        }
+        i = 0;
+        for (String s : WordNet.wn.adverbDocumentationHash.keySet()) {
+            adverbSynsetToIndex.put("3" + s,i++);
+        }
+        i = 0;
+        for (String s : WordNet.wn.adjectiveDocumentationHash.keySet()) {
+            adjectiveSynsetToIndex.put("4" + s,i++);
+        }
+
+        HashSet<String> leaves = WordNetUtilities.findLeavesInTree(Sets.newHashSet("hyponym", "instance hyponym"));
+
+        // a bit is true if the synset (in order of byte offset number) is subsumed by the
+        // synset in the key
+        nounBits = new BitSet(nounSynsetToIndex.size());
+        verbBits = new BitSet(verbSynsetToIndex.size());
+        adjectiveBits = new BitSet(adjectiveSynsetToIndex.size());
+        adverbBits = new BitSet(adverbSynsetToIndex.size());
+
+        HashSet<String> roots = WordNetUtilities.findLeavesInTree(Sets.newHashSet("hypernym", "instance hypernym"));
+        for (String s : roots) {
+            setBits(s);
+        }
+    }
+
+    /** ***************************************************************
+     * Compute the number of child synsets shared by the two synsets
+     */
+    public static int synsetOverlap(String s1, String s2) {
+
+        int result = 0;
+        if (s1.charAt(0) != s2.charAt(0))
+            return 0;
+        BitSet bs1 = null;
+        BitSet bs2 = null;
+        switch (s1.charAt(0)) {
+            case '1' : bs1 = (BitSet) nouns.get(s1).clone();
+                bs2 = (BitSet) nouns.get(s2).clone();
+                break;
+            case '2' : bs1 = (BitSet) verbs.get(s1).clone();
+                bs2 = (BitSet) verbs.get(s2).clone();
+                break;
+            case '3' : bs1 = (BitSet) adjectives.get(s1).clone();
+                bs2 = (BitSet) adjectives.get(s2).clone();
+                break;
+            case '4' : bs1 = (BitSet) adverbs.get(s1).clone();
+                bs2 = (BitSet) adverbs.get(s2).clone();
+                break;
+        }
+        //System.out.println("INFO in WNsim.synsetOverlap(): s1: " + s1 + " " + bs1.cardinality());
+        //System.out.println("INFO in WNsim.synsetOverlap(): s2: " + s2 + " " + bs2.cardinality());
+        bs1.and(bs2);
+        return bs1.cardinality();
+    }
+
+    /** ***************************************************************
+     * Compute the percentage of child synsets of the first synset
+     * shared by the second synset
+     */
+    public static float synsetPercentOverlap(String s1, String s2) {
+
+        int result = 0;
+        if (s1.charAt(0) != s2.charAt(0))
+            return 0;
+        BitSet bs1 = null;
+        BitSet bs2 = null;
+        switch (s1.charAt(0)) {
+            case '1' : bs1 = (BitSet) nouns.get(s1).clone();
+                bs2 = (BitSet) nouns.get(s2).clone();
+                break;
+            case '2' : bs1 = (BitSet) verbs.get(s1).clone();
+                bs2 = (BitSet) verbs.get(s2).clone();
+                break;
+            case '3' : bs1 = (BitSet) adjectives.get(s1).clone();
+                bs2 = (BitSet) adjectives.get(s2).clone();
+                break;
+            case '4' : bs1 = (BitSet) adverbs.get(s1).clone();
+                bs2 = (BitSet) adverbs.get(s2).clone();
+                break;
+        }
+        if (bs1.cardinality() == 0)
+            return 0;
+        //System.out.println("INFO in WNsim.synsetOverlap(): s1: " + s1 + " " + bs1.cardinality());
+        //System.out.println("INFO in WNsim.synsetOverlap(): s2: " + s2 + " " + bs2.cardinality());
+        BitSet bs1copy = (BitSet) bs1.clone();
+        bs1copy.and(bs2);
+        return (float) Math.exp(((float) bs1copy.cardinality()) / ((float) bs1.cardinality()));
+        //return (float) -Math.log(((float) bs1copy.cardinality()) / ((float) bs1.cardinality()));
+        //return (float) ((float) bs1copy.cardinality()) / ((float) bs1.cardinality());
+    }
+
+    /** ***************************************************************
+     */
+    public static float maxCommonSynsetOverlap(String s1, String s2) {
+
+        float result = 0;
+        String parent = WordNetUtilities.lowestCommonParent(s1, s2);
+        if (parent == null)
+            return  0;
+        result = synsetPercentOverlap(parent,s1);
+        float newval = synsetPercentOverlap(parent, s2);
+        if (newval > result)
+            result = newval;
+        return result;
+    }
+
+    /** ***************************************************************
      */
     public static void test() {
 
         //System.out.println("INFO in WNsim.test() ");
-        HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/rw/rw.txt",
-                "([^\\t]+)\\t([^\\t]+)\\t([^\\t]+).*",false);
+        HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/scws.csv",
+                "([^\\t]+)\\t([^\\t]+)\\t(.*)",false);
+        //HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/wordsim353/combined-noHead.tab",
+        //        "([^\\t]+)\\t([^\\t]+)\\t(.*)",false);
+        //HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/rw/rw.txt",
+        //        "([^\\t]+)\\t([^\\t]+)\\t([^\\t]+).*",false);
+        //HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/Resnik3.txt",
+        //        "([^ ]+) ([^ ]+) (.*)",false);
         //HashMap<String,HashMap<String,Float>> hm = readTestFile("/home/apease/WordSim/MEN/MEN_dataset_lemma_form_full",
         //        "([^ ]+) ([^ ]+) (.*)",true);
         HashMap<String,HashMap<String,Float>> hm2 = new HashMap<>();
@@ -342,20 +586,24 @@ public class WNsim {
             HashMap<String,Float> m = hm.get(s1);
             if (m != null) {
                 for (String s2 : m.keySet()) {
-                    float factual = computeWordSim(s1,s2);
+                    boolean allSynsets = false;
+                    float factual = computeWordSim(s1,s2,allSynsets);
                     float fexpected = m.get(s2);
-                    HashMap<String,Float> h = new HashMap<>();
-                    if (hm2.containsKey(s1))
-                        h = hm2.get(s1);
-                    h.put(s2,factual);
-                    h = new HashMap<>();
-                    if (hm2.containsKey(s2))
-                        h = hm2.get(s2);
-                    h.put(s1,factual);
-                    System.out.println("INFO in WNsim.readTestFile(): s1: " + s1 + " s2: " +
-                            s2 + " factual: " + factual + " fexpected: " + fexpected);
-                    results1.put(s1 + "-" + s2, factual);
-                    results2.put(s1 + "-" + s2, fexpected);
+                    if (factual > -100) {
+                        HashMap<String, Float> h = new HashMap<>();
+                        if (hm2.containsKey(s1))
+                            h = hm2.get(s1);
+                        h.put(s2, factual);
+                        h = new HashMap<>();
+                        if (hm2.containsKey(s2))
+                            h = hm2.get(s2);
+                        h.put(s1, factual);
+                        //System.out.println("INFO in WNsim.readTestFile(): s1: " + s1 + " s2: " +
+                        //        s2 + " factual: " + factual + " fexpected: " + fexpected);
+                        //System.out.println(s1 + ", " + s2 + ", " + factual + ", " + fexpected);
+                        results1.put(s1 + "-" + s2, factual);
+                        results2.put(s1 + "-" + s2, fexpected);
+                    }
                 }
             }
         }
@@ -382,9 +630,15 @@ public class WNsim {
 */
         try {
             KBmanager.getMgr().initializeOnce();
+            createIndexes();
+            System.out.println(synsetOverlap("104254777", "104199027"));
+            System.out.println(maxCommonSynsetOverlap("104254777", "104199027"));
             //System.out.println(
             getSubsumingFreq(); //.toString().replace(",", "\n"));
+            long start = System.currentTimeMillis();
             test();
+            long finish = System.currentTimeMillis();
+            System.out.println("Total time in milis: " + (finish - start));
             //System.out.println("Similarity: " + computeSynsetSim("102858304", "102958343"));
             //System.out.println("Similarity of car and boat: " + computeWordSim("car", "boat"));
             //String parent = WordNetUtilities.lowestCommonParent("102858304", "102958343");
