@@ -1646,19 +1646,124 @@ public class WordNetUtilities {
     /** ***************************************************************
      */
     public static String synsetToOneWord(String s) {
+
         return WordNet.wn.getWordsFromSynset(s).get(0);
     }
 
     /** ***************************************************************
-     *  A main method, used only for testing.  It should not be called
+     */
+    private static void addSenseSet(Hashtable<String,String> SUMOhash,
+                                   String prefix, HashMap<String,HashSet<String>> SUMOs) {
+
+        for (String synset : SUMOhash.keySet()) {
+            String SUMO = SUMOhash.get(synset);
+            String bareSUMO = getBareSUMOTerm(SUMO);
+            String posSynset = prefix + synset;
+            HashSet<String> theSet = null;
+            if (!SUMOs.containsKey(bareSUMO)) {
+                theSet = new HashSet<String>();
+                SUMOs.put(bareSUMO, theSet);
+            }
+            theSet = SUMOs.get(bareSUMO);
+            theSet.add(posSynset);
+        }
+    }
+
+    /** ***************************************************************
+     * @return a Set of Sets where each interior Set consists of
+     * WordNet word senses that all map to a single SUMO term.
+     * The goal is to provide a way to collapse WordNet synsets that
+     * embody overly fine grained distinctions.
+     */
+    public static HashMap<String,HashSet<String>> collapseSenses() {
+
+        HashMap<String,HashSet<String>> SUMOs = new HashMap<>();
+        //nounSUMOHash = new Hashtable<String,String>();   // Keys are synset Strings, values are SUMO
+        //verbSUMOHash = new Hashtable<String,String>();   // terms with the &% prefix and =, +, @ or [ suffix.
+        //djectiveSUMOHash = new Hashtable<String,String>();
+        //adverbSUMOHash = new Hashtable<String,String>();
+        addSenseSet(WordNet.wn.nounSUMOHash,"1",SUMOs);
+        addSenseSet(WordNet.wn.verbSUMOHash,"2",SUMOs);
+        addSenseSet(WordNet.wn.adjectiveSUMOHash,"3",SUMOs);
+        addSenseSet(WordNet.wn.adverbSUMOHash, "4", SUMOs);
+        return SUMOs;
+    }
+
+    /** ***************************************************************
+     * @return all the hyponyms of a given POS-prefixed synset
+     */
+    public static HashSet<String> getAllHyponyms(String s) {
+
+        HashSet<String> result = new HashSet<String>();
+        ArrayList<AVPair> rels = WordNet.wn.relations.get(s);
+        if (rels == null)
+            return result;
+        for (AVPair avp : rels) {
+            if (avp.attribute.equals("hyponym") || avp.attribute.equals("instance hyponym"))
+                result.addAll(getAllHyponyms(avp.value));
+        }
+        result.add(s);
+        return result;
+    }
+
+    /** ***************************************************************
+     * Generate sets of all hyponymous words for each synset in a file
+     */
+    public static void generateHyponymSets (String filename) {
+
+        List<String> lines = new ArrayList<String>();
+        System.out.println("INFO in WordNetUtilities.generateHyponymSets(): Reading files");
+        LineNumberReader lr = null;
+        try {
+            String line;
+            StringBuffer doc = new StringBuffer();
+            File nounFile = new File(filename);
+            if (nounFile == null) {
+                System.out.println("Error in WordNetUtilities.generateHyponymSets(): The file does not exist ");
+                return;
+            }
+            long t1 = System.currentTimeMillis();
+            FileReader r = new FileReader(nounFile);
+            lr = new LineNumberReader(r);
+            while ((line = lr.readLine()) != null) {
+                if (lr.getLineNumber() % 1000 == 0)
+                    System.out.print('.');
+                System.out.println("==============");
+                System.out.println(line.trim());
+                ArrayList<String> words = WordNet.wn.synsetsToWords.get(line.trim());
+                if (words != null)
+                    System.out.println(words);
+                HashSet<String> hyps = getAllHyponyms(line.trim());
+                for (String s : hyps) {
+                    words = WordNet.wn.synsetsToWords.get(s);
+                    System.out.println(words);
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (lr != null) {
+                    lr.close();
+                }
+            }
+            catch (Exception ex) {
+            }
+        }
+    }
+
+    /** ***************************************************************
+     *  A method used only for testing.  It should not be called
      *  during normal operation.
      */
-    public static void main (String[] args) {
+    public static void testCommonParent() {
 
         // showAllLeaves();
         // showAllRoots();
         try {
-	        KBmanager.getMgr().initializeOnce();
+            KBmanager.getMgr().initializeOnce();
             ArrayList<String> base = new ArrayList<String>();
             ArrayList<ArrayList<String>> result = findPathsToRoot(base, "102858304");
             for (ArrayList<String> path : result) {
@@ -1685,17 +1790,30 @@ public class WordNetUtilities {
                 }
             }
             System.out.println("\nparent: " + lowestCommonParent("102858304", "102958343"));
-	        //extractMeronyms();
+            //extractMeronyms();
             //FileWriter fw = new FileWriter("WNout.tptp");
             //PrintWriter pw = new PrintWriter(fw);
             //pw.flush();
-	        //writeTPTPWordNet(pw);
+            //writeTPTPWordNet(pw);
             //pw.flush();
         }
         catch (Exception e) {
             System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /** ***************************************************************
+     *  A main method, used only for testing.  It should not be called
+     *  during normal operation.
+     */
+    public static void main (String[] args) {
+
+        KBmanager.getMgr().initializeOnce();
+        //String synset = "108655464";
+        //System.out.println(getAllHyponyms(synset));
+        //System.out.println(collapseSenses());
+        generateHyponymSets("/home/apease/IPsoft/classifierSynsets.txt");
     }
 }
 
