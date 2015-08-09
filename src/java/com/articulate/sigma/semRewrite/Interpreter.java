@@ -24,6 +24,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.nlp.SimFlood;
 import com.articulate.sigma.nlp.TFIDF;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
+import com.articulate.sigma.nlp.pipeline.SentenceBuilder;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.articulate.sigma.semRewrite.datesandnumber.InterpretNumerics;
 import com.articulate.sigma.semRewrite.substitutor.*;
@@ -534,10 +535,29 @@ public class Interpreter {
         CoreMap lastSentence = SentenceUtil.getLastSentence(wholeDocument);
         List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
         results.addAll(dependenciesList);
-        String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
+        String in = StringUtil.removeEnclosingCharPair(results.toString(), Integer.MAX_VALUE, '[', ']');
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
         return cnf;
+    }
+
+    /** *************************************************************
+     * Do coreference substitution on string input
+     */
+    public static String corefSubst(List<String> input) {
+
+        Annotation document = Pipeline.toAnnotation(String.join(" ", input));
+        CoreMap lastSentence = SentenceUtil.getLastSentence(document);
+        List<CoreLabel> lastSentenceTokens = lastSentence.get(CoreAnnotations.TokensAnnotation.class);
+        ClauseSubstitutor substitutor = SubstitutorsUnion.of(
+                new CorefSubstitutor(document),
+                new NounSubstitutor(lastSentenceTokens),
+                new IdiomSubstitutor(lastSentenceTokens)
+        );
+        SentenceBuilder sb = new SentenceBuilder(lastSentence);
+        String actual = String.join(" ", sb.asStrings(substitutor));
+        actual = actual.replaceAll("_"," ");
+        return actual;
     }
 
     /** *************************************************************
