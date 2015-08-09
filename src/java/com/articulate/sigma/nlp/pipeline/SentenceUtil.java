@@ -151,6 +151,7 @@ public class SentenceUtil {
                 for (CorefChain.CorefMention ment : mentions) {
                     System.out.println(ment.sentNum + " : " + ment.headIndex + " : " + ment.mentionSpan);
                 }
+                System.out.println();
             }
         }
     }
