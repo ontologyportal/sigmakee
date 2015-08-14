@@ -52,9 +52,11 @@ public class LocationSubstitutor extends SimpleSubstitutorStorage {
             // We have to distinguish the case of "there" being used as a different part of speech, so we should only
             // seek to make "there" a coreference when it has POS tag VB and not "EX" from the Stanford POS tagger.
             if("there".equals(label.lemma()) && ("RB".equals(label.tag()) || "VB".equals(label.tag()))) {
-                CoreLabelSequence location = closestLocation(labels, rit.previousIndex());
-                if(!location.isEmpty()) {
-                    collectedGroups.put(CoreLabelSequence.from(label), location);
+                if(rit.hasPrevious()) {
+                    CoreLabelSequence location = closestLocation(labels, rit.previousIndex());
+                    if (!location.isEmpty()) {
+                        collectedGroups.put(CoreLabelSequence.from(label), location);
+                    }
                 }
             }
         }
