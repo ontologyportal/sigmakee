@@ -47,7 +47,9 @@ public class CoreLabelSequence {
 
     public static CoreLabelSequence from(CoreLabel... labels) {
 
-        return new CoreLabelSequence(labels);
+        return labels.length > 0
+                ? new CoreLabelSequence(labels)
+                : EMPTY_SEQUENCE;
     }
 
     public List<CoreLabel> getLabels() {
