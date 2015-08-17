@@ -55,6 +55,7 @@ public class MUC {
         int sentNum;
         int firstToken;
         int lastToken;
+        int chainID;
 
         public String toString() {
             return Integer.toString(ID) + ":" +
@@ -103,20 +104,46 @@ public class MUC {
     }
 
     /** ***************************************************************
+     * Convert Stanford corefs into MUC-style coreference chains.
+     */
+    public HashMap<Integer,Coref> stanfordToCoref (Annotation document) {
+
+        HashMap<Integer,Coref> result = new HashMap<>();
+        Map<Integer, CorefChain> graph = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);
+        for (CorefChain cc : graph.values()) {
+            List<CorefChain.CorefMention> mentions = cc.getMentionsInTextualOrder();
+            if (mentions.size() > 1) {
+                for (CorefChain.CorefMention ment : mentions) {
+                    Coref c = new Coref();
+                    c.ID = ment.mentionID;
+                    c.token = ment.mentionSpan;
+                    HashMap<String,String> info = new HashMap<>();
+                    c.sentNum = ment.sentNum;
+                    c.firstToken = ment.headIndex;
+                    int lastToken;
+                    result.put(c.ID,c);
+                }
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
      * @return a list of sentences with tokens
      */
     public ArrayList<ArrayList<String>> toCoref (String input) {
 
-        System.out.println("INFO in MUC.toCoref(): " + input);
+        //System.out.println("INFO in MUC.toCoref(): " + input);
         List<Coref> corefs = buildCorefList(input);
         ArrayList<ArrayList<String>> results = new ArrayList<ArrayList<String>>();
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+        props.setProperty("tokenize.options", "ptb3Escaping=false");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         document = new Annotation(input);
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-        SentenceUtil.printCorefChain(document);
+        //SentenceUtil.printCorefChain(document);
 
         Map<Integer, CorefChain> graph = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);
         for (CorefChain cc : graph.values()) {
@@ -132,6 +159,7 @@ public class MUC {
                     int lastToken;
                     System.out.println(ment.sentNum + " : " + ment.headIndex + " : " + ment.mentionSpan);
                 }
+                System.out.println();
             }
         }
 
@@ -273,8 +301,12 @@ public class MUC {
      */
     private static void removeToken(StringBuffer sb, String token) {
 
+        if (sb == null || sb.length() > 1)
+            return;
+        while (Character.isWhitespace(sb.toString().charAt(0)))
+            sb = sb.deleteCharAt(0);
         if (sb.toString().startsWith(token)) {
-            sb.delete(0,token.length());
+            sb = sb.delete(0,token.length());
         }
         else {
             System.out.println("Error - no match for " + token + " in " + sb);
@@ -299,8 +331,10 @@ public class MUC {
      */
     private static void leadingTrim(StringBuffer sb) {
 
+        if (sb == null || sb.length() > 1)
+            return;
         while (Character.isWhitespace(sb.toString().charAt(0)))
-            sb.deleteCharAt(0);
+            sb = sb.deleteCharAt(0);
     }
 
     /** ***************************************************************
@@ -328,9 +362,9 @@ public class MUC {
     private static String getTag(StringBuffer sb, Matcher m) {
 
         if (sb.indexOf("<") > -1)
-            sb.delete(0,sb.indexOf("<"));
+            sb = sb.delete(0,sb.indexOf("<"));
         String tag = sb.toString().substring(0, sb.indexOf(">") + 1);
-        sb.delete(0, sb.indexOf(">") + 1);
+        sb = sb.delete(0, sb.indexOf(">") + 1);
         return tag;
     }
 
@@ -355,6 +389,7 @@ public class MUC {
                     chainMap.put(c.ID, chainNum);
                     HashSet<Coref> chain = new HashSet<>();
                     chain.add(c);
+                    c.chainID = chainNum;
                     chains.put(chainNum,chain);
                     chainNum++;
                 }
@@ -362,6 +397,7 @@ public class MUC {
                     chainMap.put(c.ID, chainNum);
                     chainMap.put(c.ref, chainNum);
                     HashSet<Coref> chain = new HashSet<>();
+                    c.chainID = chainNum;
                     chain.add(c);
                     Coref cref = corefs.get(c.ref);
                     if (cref != null)
@@ -383,6 +419,7 @@ public class MUC {
                     chainMap.put(c.ID, chainNum);
                     chainMap.put(c.ref, chainNum);
                     HashSet<Coref> chain = new HashSet<>();
+                    c.chainID = chainNum;
                     chain.add(c);
                     Coref cref = corefs.get(c.ref);
                     if (cref != null)
@@ -413,7 +450,13 @@ public class MUC {
     }
 
     /** ***************************************************************
-     * Compare Stanford and MUC coreference chains
+     * Compare Stanford and MUC coreference chains.  Create a map for
+     * each token in MUC whether it is in Stanford and in which chain
+     * ID and which Stanford token it corresponds to. Use that map to
+     * score which tokens are not found (errors of omission, or false
+     * negatives).  Mark the tokens that are found in both MUC and
+     * Stanford in a separate map. Use that map to create a third map
+     * of tokens that are in Stanford but not in MUC.
      */
     public void compareChains(HashMap<Integer,HashSet<Coref>> chains,
                               Annotation document) {
@@ -455,7 +498,7 @@ public class MUC {
                     close = m2.find();
                     if (open) {
                         tag = getTag(sb, m1);
-                        System.out.println(tag);
+                        //System.out.println(tag);
                         level++;
                         int quoteIndex = tag.indexOf("\"");
                         String id = tag.substring(quoteIndex + 1, tag.indexOf("\"", quoteIndex + 1));
@@ -474,6 +517,11 @@ public class MUC {
                         if (sb.indexOf("<") > -1)
                             sb.delete(0, sb.indexOf("<"));
                         sb.delete(0, sb.indexOf(">") + 1);
+                        if (currentCoref.size() < 1) {
+                            System.out.println("Error in MUC.makeCorefList(): no open tag for close tag");
+                            System.out.println(sb);
+                            return;
+                        }
                         Integer cid = currentCoref.pop();
                         Coref c = new Coref();
                         c.ID = cid;
@@ -489,7 +537,7 @@ public class MUC {
                 } while (open || close);
                 String tokenNumStr = t.substring(t.lastIndexOf("-") + 1, t.length());
                 tokenNum = Integer.parseInt(tokenNumStr);
-                System.out.println("token num: " + tokenNum + " " + open);
+                //System.out.println("token num: " + tokenNum + " " + open);
                 if (openTag)
                     firstToken = tokenNum;
                 String token = t.substring(0,t.lastIndexOf("-"));
@@ -498,8 +546,8 @@ public class MUC {
                 if (level > 0) {
                     expandCurrentToken(token, currentCoref, corefTokens);
                 }
-                System.out.println("current coref: " + currentCoref);
-                System.out.println("sb: " + sb);
+                //System.out.println("current coref: " + currentCoref);
+                //System.out.println("sb: " + sb);
                 openTag = false;
             }
         }
@@ -519,9 +567,8 @@ public class MUC {
         //line = line.replaceAll("^\\@","");
         //System.out.println(line);
         //List<String> lines = cleanSGML("/home/apease/IPsoft/corpora/muc6/data/keys/formal-tst.CO.key.cleanup.09jul96");
-        //List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/formal-tst.CO.key.cleanup.09jul96");
-        List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/891101-0056.co.v0.sgm" +
-                "");
+        List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/formal-tst.CO.key.cleanup.09jul96");
+        //List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/891101-0056.co.v0.sgm" + "");
         MUC muc = new MUC();
         for (String s : lines) {
             String cleanedInput = s.replaceAll("<COREF[^>]+>", "");
