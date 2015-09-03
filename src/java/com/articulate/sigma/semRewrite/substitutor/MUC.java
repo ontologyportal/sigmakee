@@ -133,7 +133,8 @@ public class MUC {
                     c.sentNum = ment.sentNum;
                     c.firstToken = ment.headIndex;
                     int lastToken;
-                    System.out.println(ment.sentNum + " : " + ment.headIndex + " : " + ment.mentionSpan);
+                    //System.out.println(ment.sentNum + " : " + ment.headIndex + " : " + ment.mentionSpan);
+                    System.out.println(ment.sentNum + " : " + ment.startIndex + " : " + ment.mentionSpan);
                 }
                 System.out.println();
             }
@@ -159,6 +160,7 @@ public class MUC {
         List<String> results = new ArrayList<String>();
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ssplit");
+        props.setProperty("tokenize.options", "ptb3Escaping=false");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         document = new Annotation(input);
         pipeline.annotate(document);
@@ -188,7 +190,8 @@ public class MUC {
                     c.token = ment.mentionSpan;
                     HashMap<String, String> info = new HashMap<>();
                     c.sentNum = ment.sentNum;
-                    c.firstToken = ment.headIndex;
+                    //c.firstToken = ment.headIndex;
+                    c.firstToken = ment.startIndex;
                     int lastToken;
                     newchain.add(c);
                 }
