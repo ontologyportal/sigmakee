@@ -116,7 +116,7 @@ sigma_done() {
 	log warn "To run SIGMA in the future you must use following commands:"
 	log warn "  » export SIGMA_HOME=${SIGMA_HOME}"
 	log warn "  » cd ${SIGMA_SRC}/sigma"
-	log warn "  » mvn -DskipTests clean install tomcat7:run"
+	log warn "  » mvn -f pom-old.xml -DskipTests clean install tomcat7:run"
 	echo
 	log warn "After it started you can open: http://localhost:9090/sigma/login.html"
 	log warn "Default credentials are: admin/admin"
@@ -131,7 +131,7 @@ sigma_start() {
 		cd ${SIGMA_SRC}/sigma
 		export SIGMA_HOME=${SIGMA_HOME}
 		export MAVEN_OPTS="-Xmx1024m"
-		mvn -DskipTests clean install tomcat7:run
+		mvn -f pom-old.xml -DskipTests clean install tomcat7:run
 	fi
 }
 
