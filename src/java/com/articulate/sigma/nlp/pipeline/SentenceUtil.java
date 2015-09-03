@@ -32,7 +32,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations.KBestTreesAnnotation;
+//import edu.stanford.nlp.trees.TreeCoreAnnotations.KBestTreesAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.ScoredObject;
 
@@ -77,14 +77,16 @@ public class SentenceUtil {
             SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
             System.out.println(dependencies.toList());
             //System.out.println(dependencies.toPOSList());
-            System.out.println(getFullNamedEntities(sentence));
+            //System.out.println(getFullNamedEntities(sentence));
 
+            /*
             List<ScoredObject<Tree>> scoredTrees = sentence.get(KBestTreesAnnotation.class);
             System.out.println("\nTree Scores:");
             for (ScoredObject<Tree> scoredTree : scoredTrees) {
                 //SemanticGraph graph = SemanticGraphFactory.generateUncollapsedDependencies(scoredTree.object());
                 System.out.println(scoredTree.score());
             }
+            */
         }
     }
 
