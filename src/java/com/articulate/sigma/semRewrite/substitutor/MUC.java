@@ -1,17 +1,20 @@
 package com.articulate.sigma.semRewrite.substitutor;
 
-import TPTPWorld.SystemInfoParser;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.google.common.collect.Lists;
-import edu.stanford.nlp.dcoref.CorefChain;
-import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
+//import edu.stanford.nlp.dcoref.CorefChain;
+//import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
+
+import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
+import edu.stanford.nlp.hcoref.CorefSystem;
+import edu.stanford.nlp.hcoref.data.CorefChain;
+import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
+import edu.stanford.nlp.hcoref.data.Document;
+
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.AnnotationSerializer;
-import edu.stanford.nlp.pipeline.GenericAnnotationSerializer;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.pipeline.*;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 
@@ -51,6 +54,7 @@ public class MUC {
     private int falseNegative = 0;
     public static Annotation document = null;
     public static HashSet<Coref> stanfordCorefs = new HashSet<>();
+    private HashMap<String,Integer> missedRefs = new HashMap<>();
 
     /****************************************************************
      */
@@ -211,12 +215,15 @@ public class MUC {
         List<Coref> corefs = buildCorefList(input);
         ArrayList<ArrayList<String>> results = new ArrayList<ArrayList<String>>();
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+        //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, entitymentions, parse, hcoref");
         props.setProperty("tokenize.options", "ptb3Escaping=false");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         document = new Annotation(input);
         try {
             pipeline.annotate(document);
+            HybridCorefAnnotator hcoref = new HybridCorefAnnotator(props);
+            hcoref.annotate(document);
         }
         catch (Exception e) {
             System.out.println("input: " + input);
@@ -643,6 +650,40 @@ public class MUC {
         return result;
     }
 
+    /****************************************************************
+     */
+    private static TreeMap<Integer,ArrayList<String>> sortTotals(HashMap<String,Integer> missed) {
+
+        TreeMap<Integer,ArrayList<String>> commonMissed = new TreeMap<>();
+        for (String s : missed.keySet()) {
+            Integer i = missed.get(s);
+            if (commonMissed.containsKey(i)) {
+                ArrayList<String> al = commonMissed.get(i);
+                al.add(s);
+            }
+            else {
+                ArrayList<String> al = new ArrayList<>();
+                al.add(s);
+                commonMissed.put(i, al);
+            }
+        }
+        return commonMissed;
+    }
+
+    /****************************************************************
+     */
+    private static void printTopN(TreeMap<Integer,ArrayList<String>> map, int n) {
+
+        int index = 0;
+        Iterator<Integer> it = map.keySet().iterator();
+        while (index < n && index < map.keySet().size()) {
+            Integer key = it.next();
+            ArrayList<String> al = map.get(key);
+            System.out.println(key + " : " + al);
+            index++;
+        }
+    }
+
     /** ***************************************************************
      * Compare Stanford and MUC coreference chains.  Create a map for
      * each token in MUC whether it is in Stanford and in which chain
@@ -685,8 +726,15 @@ public class MUC {
                 totalMUC++;
                 thisMUC++;
                 boolean found = find(c, stanfordChains);
-                if (!found)
-                    MUCNotStanford.put(c.ID,c);
+                if (!found) {
+                    MUCNotStanford.put(c.ID, c);
+                    if (!missedRefs.containsKey(c.token))
+                        missedRefs.put(c.token,0);
+                    else {
+                        Integer counter = missedRefs.get(c.token) + 1;
+                        missedRefs.put(c.token, counter);
+                    }
+                }
             }
         }
         System.out.println("MUC not Stanford  : " + (MUCNotStanford.keySet().size() + "/" + thisMUC));
@@ -697,126 +745,8 @@ public class MUC {
     /** ***************************************************************
      * Pick tokens off the input sentence string, capturing corefXML
      * when present and aligning the corefXML with token numbers
-
-    public void makeCorefList(String sentsDirty,
-                              ArrayList<ArrayList<String>> tokenized) {
-
-        StringBuffer sb = new StringBuffer(sentsDirty);
-        HashMap<Integer,Coref> corefs = new HashMap<>();
-        HashMap<Integer,String> corefTokens = new HashMap<>();
-        HashMap<Integer,String> corefParams = new HashMap<>();
-        HashMap<Integer,Integer> references = new HashMap<>();
-        Stack<Integer> currentCoref = new Stack<>();
-        Pattern p1 = Pattern.compile("^\\s*(<COREF[^>]+>)");
-        Pattern p2 = Pattern.compile("^\\s*(</COREF>)");
-        int sentNum = 0;
-        int level = 0;
-        int tokenNum = 0;
-        int firstToken = 0;
-        boolean openTag = false;
-        String tag = "";
-        while (sb.length() > 0) {
-            if (sentNum > tokenized.size() - 1) {
-                System.out.println("Error in MUC.makeCorefList(): no tokenized sentence for: " + sb);
-                break;
-            }
-            ArrayList<String> tokens = tokenized.get(sentNum);
-            tokens = splitTokens(tokens);
-            //System.out.println("Num tokens: " + tokens.size());
-            sentNum++;
-            String lastToken = "";
-            for (String t : tokens) {
-                while (t.length() > 0 && sb.length() > 0 &&
-                        t.charAt(0) != '-' && sb.charAt(0) == '-')
-                    sb.delete(0,1);
-                while (t.length() > 0 && sb.length() > 0 && t.charAt(0) == sb.charAt(0) &&
-                        t.charAt(0) == '\'') {
-                    sb.delete(0, 1);
-                    t = t.substring(1);
-                }
-                //System.out.println("Token: " + t + " Last token: " + lastToken);
-                //System.out.println("sb: " + first100(sb));
-                // Stanford can insert an extra period if the last token in a sentence is an abbreviation
-                boolean open = false;
-                boolean close = false;
-                do {
-                    Matcher m1 = p1.matcher(sb.toString());
-                    Matcher m2 = p2.matcher(sb.toString());
-                    open = m1.find();
-                    close = m2.find();
-                    if (open) {
-                        tag = getTag(sb, m1);
-                        level++;
-                        int quoteIndex = tag.indexOf("\"");
-                        String id = tag.substring(quoteIndex + 1, tag.indexOf("\"", quoteIndex + 1));
-                        currentCoref.push(Integer.parseInt(id));
-                        corefTokens.put(Integer.parseInt(id), "");
-                        corefParams.put(Integer.parseInt(id), tag);
-                        int refIndex = tag.indexOf("REF=");
-                        if (refIndex > -1) {
-                            int refQuoteIndex = tag.indexOf("\"", refIndex + 1);
-                            String ref = tag.substring(refQuoteIndex + 1, tag.indexOf("\"", refQuoteIndex + 1));
-                            references.put(Integer.parseInt(id), Integer.parseInt(ref));
-                        }
-                        openTag = true;
-                    }
-                    if (close) {
-                        if (sb.indexOf("<") > -1)
-                            sb.delete(0, sb.indexOf("<"));
-                        sb.delete(0, sb.indexOf(">") + 1);
-                        if (currentCoref.size() < 1) {
-                            System.out.println("Error in MUC.makeCorefList(): no open tag for close tag\n" + first100(sb));
-                            return;
-                        }
-                        Integer cid = currentCoref.pop();
-                        Coref c = new Coref();
-                        c.ID = cid;
-                        c.token = trimPunc(corefTokens.get(cid));
-                        c.firstToken = firstToken + 1;
-                        c.lastToken = tokenNum + 1;
-                        processParams(c,corefParams);
-                        c.sentNum = sentNum;
-                        corefs.put(c.ID, c);
-                        level--;
-                    }
-                } while (open || close);
-                String tokenNumStr = getTokenNum(t);
-                tokenNum = Integer.parseInt(tokenNumStr);
-                if (openTag)
-                    firstToken = tokenNum;
-                String token = stripTokenNum(t);
-                while (token.length() > 0 && sb.length() > 0 &&
-                        token.charAt(0) != '-' && sb.charAt(0) == '-')
-                    sb.delete(0,1);
-                while (token.length() > 0 && sb.length() > 0 && token.charAt(0) == sb.charAt(0) &&
-                        token.charAt(0) == '\'') {
-                    sb.delete(0, 1);
-                    token = token.substring(1);
-                }
-                if (stripTokenNum(t).equals(".") && stripTokenNum(lastToken).endsWith(".") &&
-                        !sb.toString().matches("^\\s*\\..*")) {
-                    System.out.println("makeCorefList() Skipping token removal");
-                    System.out.println(first100(sb));
-                    continue;
-                }
-                lastToken = t;
-                leadingTrim(sb);
-                removeToken(sb, token);
-                if (level > 0)
-                    expandCurrentToken(token, currentCoref, corefTokens);
-                openTag = false;
-            }
-        }
-        HashMap<Integer,HashSet<Coref>> chains = buildChains(corefs);
-        printChains(chains);
-        compareChains(chains, document);
-    }
-/*
-    /** ***************************************************************
-     * Pick tokens off the input sentence string, capturing corefXML
-     * when present and aligning the corefXML with token numbers
      */
-    public void makeCorefListNew(String sentsDirty,
+    public void makeCorefList(String sentsDirty,
                               ArrayList<ArrayList<String>> tokenized) {
 
         StringBuffer sb = new StringBuffer(sentsDirty);
@@ -1017,6 +947,7 @@ public class MUC {
 
             Properties corefprops = new Properties();
             corefprops.setProperty("annotators", "dcoref");
+            //corefprops.setProperty("annotators", "hcoref");
             corefprops.setProperty("tokenize.options", "ptb3Escaping=false");
             corefprops.setProperty("enforceRequirements","false");
             StanfordCoreNLP corefpipeline = new StanfordCoreNLP(corefprops);
@@ -1059,12 +990,14 @@ public class MUC {
             cleanedInput = cleanedInput.replace("</COREF>","");
             List<String> sentsClean = toSentences(cleanedInput);
             List<String> sentsDirty = toSentences(s);
-            System.out.println("MUC markup: " + sentsDirty);
+            System.out.println("\n\nMUC markup: " + sentsDirty);
             String allClean = listToString(sentsClean);
             ArrayList<ArrayList<String>> tokenized = muc.toCoref(listToString(sentsClean));
-            muc.makeCorefListNew(s, tokenized);
+            muc.makeCorefList(s, tokenized);
         }
         System.out.println("False positive rate: " + (muc.falsePositive + "/" + muc.totalStanford));
         System.out.println("False negative rate: " + (muc.falseNegative + "/" + muc.totalMUC));
+        System.out.println("Most common missed corefs: ");
+        printTopN(sortTotals(muc.missedRefs), 20);
     }
 }
