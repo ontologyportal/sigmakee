@@ -3,14 +3,14 @@ package com.articulate.sigma.semRewrite.substitutor;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.google.common.collect.Lists;
-//import edu.stanford.nlp.dcoref.CorefChain;
-//import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
+import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
 
-import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
-import edu.stanford.nlp.hcoref.CorefSystem;
-import edu.stanford.nlp.hcoref.data.CorefChain;
-import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
-import edu.stanford.nlp.hcoref.data.Document;
+//import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
+//import edu.stanford.nlp.hcoref.CorefSystem;
+//import edu.stanford.nlp.hcoref.data.CorefChain;
+//import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
+//import edu.stanford.nlp.hcoref.data.Document;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -216,7 +216,7 @@ public class MUC {
         ArrayList<ArrayList<String>> results = new ArrayList<ArrayList<String>>();
         Properties props = new Properties();
         //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, entitymentions, parse, hcoref");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, entitymentions, parse, dcoref");
         props.setProperty("tokenize.options", "ptb3Escaping=false");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         document = new Annotation(input);
