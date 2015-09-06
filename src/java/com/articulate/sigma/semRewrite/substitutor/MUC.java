@@ -222,8 +222,8 @@ public class MUC {
         document = new Annotation(input);
         try {
             pipeline.annotate(document);
-            HybridCorefAnnotator hcoref = new HybridCorefAnnotator(props);
-            hcoref.annotate(document);
+            //HybridCorefAnnotator hcoref = new HybridCorefAnnotator(props);
+            //hcoref.annotate(document);
         }
         catch (Exception e) {
             System.out.println("input: " + input);
