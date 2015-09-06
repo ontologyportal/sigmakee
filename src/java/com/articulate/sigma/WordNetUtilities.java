@@ -1755,6 +1755,52 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     */
+    private static HashSet<String> genSUMOfromSynset(String synset,String SUMO) {
+
+        HashSet<String> result = new HashSet<>();
+        String doc = "";
+        String name = WordNet.wn.getWordsFromSynset(synset).get(0) + "-" + synset;
+        switch (SUMO.charAt(SUMO.length()-1)) {
+            case '=' : break; //shouldn't get here
+            case '+' : result.add("(subclass " + name + " " + SUMO + ")"); break;
+            case '@' : result.add("(instance " + name + " " + SUMO + ")"); break;
+        }
+        if (synset.charAt(0) =='1')
+            doc = WordNet.wn.nounDocumentationHash.get(synset.substring(1));
+        if (synset.charAt(0) =='2')
+            doc = WordNet.wn.verbDocumentationHash.get(synset.substring(1));
+        result.add("(documentation " + name + " EnglishLanguage " + SUMO + " " + doc + ")");
+        return result;
+    }
+
+    /** ***************************************************************
+     * @return a set of automatically created SUMO statements for synsets
+     * that don't have an equivalent mapping in SUMO
+     */
+    public static HashSet<String> synsetsToSUMO() {
+
+        HashSet<String> result = new HashSet<>();
+        for (String synset : WordNet.wn.nounSUMOHash.keySet()) {
+            String SUMO = WordNet.wn.nounSUMOHash.get(synset);
+            switch (SUMO.charAt(SUMO.length()-1)) {
+                case '=' : break;
+                case '+' : result.addAll(genSUMOfromSynset('1' + synset,SUMO)); break;
+                case '@' : result.addAll(genSUMOfromSynset('1' + synset,SUMO)); break;
+            }
+        }
+        for (String synset : WordNet.wn.verbSUMOHash.keySet()) {
+            String SUMO = WordNet.wn.verbSUMOHash.get(synset);
+            switch (SUMO.charAt(SUMO.length()-1)) {
+                case '=' : break;
+                case '+' : result.addAll(genSUMOfromSynset('2' + synset,SUMO)); break;
+                case '@' : result.addAll(genSUMOfromSynset('2' + synset,SUMO)); break;
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
      *  A method used only for testing.  It should not be called
      *  during normal operation.
      */
@@ -1813,7 +1859,8 @@ public class WordNetUtilities {
         //String synset = "108655464";
         //System.out.println(getAllHyponyms(synset));
         //System.out.println(collapseSenses());
-        generateHyponymSets("/home/apease/IPsoft/classifierSynsets.txt");
+        //generateHyponymSets("/home/apease/IPsoft/classifierSynsets.txt");
+        System.out.println(synsetsToSUMO());
     }
 }
 
