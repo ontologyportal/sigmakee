@@ -1,5 +1,5 @@
 Install via script from source on Linux or Mac OS with 
-bash <(curl -L http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/install.sh)
+bash <(curl -L https://raw.githubusercontent.com/ontologyportal/sigmakee/master/install.sh)
 
 Users should also see
 
@@ -12,10 +12,10 @@ https://www.virtualbox.org/
 
 > mkdir sigma_vagrant
 > cd sigma_vagrant
-> wget http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/Vagrantfile 
+> wget https://raw.githubusercontent.com/ontologyportal/sigmakee/master/Vagrantfile
 > vagrant up
 > vagrant ssh
-> bash <(curl -L http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/install.sh)
+> bash <(curl -L https://raw.githubusercontent.com/ontologyportal/sigmakee/master/install.sh)
 
 follow the prompts and Sigma will be running.  Then on the browser of your host machine, go to
 http://localhost:9090/sigma/login.html
