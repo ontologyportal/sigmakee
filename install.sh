@@ -20,7 +20,7 @@ welcome() {
 	log ' /        \|   \    \_\  \/    V    \/    |    \'
 	log '/_______  /|___|\______  /\____|__  /\____|__  /'
 	log '        \/             \/         \/         \/'
-	log "Home: https://sourceforge.net/projects/sigmakee/"
+	log "Home: http://ontologyportal.github.io/sigmakee/"
 }
 
 check_supported_os() {
