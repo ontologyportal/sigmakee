@@ -58,12 +58,25 @@ public class NaiveBayes {
             input = dg.readSpreadsheetFile(filename, ',');
         System.out.println(input);
         input.remove(0);  // remove "start"
-        types.addAll(input.get(0));
+        types.addAll(input.get(0));  // these can be discrete "disc", continuous "cont" or "class"
         labels.addAll(input.get(1));
         input.remove(0);  // remove types
         input.remove(0);  // remove headers
         //input.remove(input.size()-1);
         System.out.println(input);
+    }
+
+    /** *************************************************************
+     */
+    public NaiveBayes(ArrayList<ArrayList<String>> inputs) {
+
+        input = new ArrayList<ArrayList<String>>();
+        System.out.println("NaiveBayes with #input: " + inputs.size());
+        input.addAll(inputs);
+        types.addAll(input.get(0));  // these can be discrete "disc", continuous "cont" or "class"
+        labels.addAll(input.get(1));
+        input.remove(0);  // remove types
+        input.remove(0);  // remove headers
     }
 
     /** *************************************************************
@@ -249,7 +262,7 @@ public class NaiveBayes {
 
     /** *************************************************************
      * Compute conditionals in the format of a class name key then
-     * the probalbities of the values for each "column" which is a
+     * the probabilities of the values for each "column" which is a
      * numerical key.  So below, the probability of getting the value
      * "appearance" as the value of variable 1 for class
      * {'i500': {1: {'appearance':0.33,'health':0.44},
@@ -318,7 +331,7 @@ public class NaiveBayes {
                 maxClass = clss;
             }
         }
-        System.out.println("classify(): probabilities: " + probs);
+        //System.out.println("classify(): probabilities: " + probs);
         return maxClass;
     }
 
@@ -346,6 +359,8 @@ public class NaiveBayes {
     }
 
     /** *************************************************************
+     * take a filename and a quoted list of numbers as arguments on
+     * the command line
      */
     public static void main(String[] args) {
 
@@ -371,13 +386,32 @@ public class NaiveBayes {
         DocGen dg = DocGen.getInstance();
         //NaiveBayes nb = new NaiveBayes("/home/apease/IPsoft/NB/NBdata.txt");
         //NaiveBayes nb = new NaiveBayes("/home/apease/IPsoft/NB/house-votes-84.data");
-        NaiveBayes nb = new NaiveBayes("/home/apease/IPsoft/NB/pima-indians-diabetes.data");
-        nb.initialize();
+        NaiveBayes nb = null;
+        ArrayList<String> values = null;
+        if (args.length >= 1) {
+            nb = new NaiveBayes(args[0]);
+            nb.initialize();
+            for (int i = -1; i <= 10; i++) {
+                for (int j = -1; j <= 10; j++) {
+                    values = new ArrayList<>();
+                    values.add(Integer.toString(i));
+                    values.add(Integer.toString(j));
+                    System.out.println(values.get(0) + ", " + values.get(1) + ", " + nb.classify(values));
+                }
+            }
+        }
+        else {
+            nb = new NaiveBayes("/home/apease/IPsoft/NB/pima-indians-diabetes.data");
+            values = Lists.newArrayList("4","111","72","47","207","37.1","1.390","56");
+            nb.initialize();
+            System.out.println("main(): most likely class: " + nb.classify(values));
+        }
+
         //ArrayList<String> values = Lists.newArrayList("health","moderate","moderate","yes","class");
         //ArrayList<String> values = Lists.newArrayList("y","y","y","n","n","n","y","y","y","n","n","n","y","n","y","y");
         // ArrayList<String> values = Lists.newArrayList("both","sedentary","aggressive","no","class");
         //ArrayList<String> values = Lists.newArrayList("7","81","88","40","48","46.7","0.261","52");
-        ArrayList<String> values = Lists.newArrayList("4","111","72","47","207","37.1","1.390","56");
-        System.out.println("main(): most likely class: " + nb.classify(values));
+
+
     }
 }

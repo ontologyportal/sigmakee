@@ -305,6 +305,16 @@ public class StringUtil {
     }
 
     /** ***************************************************************
+     * @return just the first n characters of the string.  If returning
+     * less than the full string, append "..."
+     */
+    public static String getFirstNChars(String s, int n) {
+
+        if (s.isEmpty()) return "";
+        if (s.length() > n) return s.substring(0,n) + "...";
+        return s;
+    }
+    /** ***************************************************************
      *  Removes all balanced ASCII double-quote characters from each
      *  end of the String s, if any are present.
      *

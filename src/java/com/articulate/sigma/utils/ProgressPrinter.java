@@ -27,12 +27,13 @@ public class ProgressPrinter {
     final int ticksToSkip;
 
     public ProgressPrinter(int ticksToSkip) {
+
         this.ticksToSkip = ticksToSkip;
     }
 
     public void tick() {
         progress = ++progress % ticksToSkip;
-        if(progress == 0) {
+        if (progress == 0) {
             System.out.print(".");
         }
     }

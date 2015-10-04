@@ -29,9 +29,12 @@ Author: Adam Pease apease@articulatesoftware.com
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 import com.articulate.sigma.utils.ProgressPrinter;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -56,7 +59,7 @@ public class TFIDF {
 
     /** English "stop words" such as "a", "at", "them", which have no or little
      * inherent meaning when taken alone. */
-    private ArrayList<String> stopwords = new ArrayList<String>();
+    public ArrayList<String> stopwords = new ArrayList<String>();
 
       // each line of a corpus
     public ArrayList<String> lines = new ArrayList<String>();
@@ -148,7 +151,7 @@ public class TFIDF {
      * Remove punctuation and contractions from a sentence. 
      * @return the sentence in a String minus these elements.
      */
-    private String removePunctuation(String sentence) {
+    public String removePunctuation(String sentence) {
 
         Matcher m = null;
         if (isNullOrEmpty(sentence))
@@ -219,24 +222,17 @@ public class TFIDF {
      * Remove stop words from a sentence.
      * @return a string that is the sentence minus the stop words.
      */
-    private String removeStopWords(String sentence) {
+    public String removeStopWords(String sentence) {
 
         if (isNullOrEmpty(sentence))
             return "";
         String result = "";
-        ArrayList al = splitToArrayList(sentence);
+        ArrayList<String> al = splitToArrayList(sentence);
         if (al == null)
             return "";
-        for (int i = 0; i < al.size(); i++) {
-            String word = (String) al.get(i);
-            if (!stopwords.contains(word.toLowerCase())) {
-                if (result == "")
-                    result = word;
-                else
-                    result = result + " " + word;
-            }
-        }
-        return result;
+        return al.stream()
+                .filter(s -> !stopwords.contains(s.toLowerCase()))
+                .collect(Collectors.joining(" "));
     }
 
     /** ***************************************************************
@@ -289,12 +285,9 @@ public class TFIDF {
             return null;
         }
         String[] sentar = st.split(" ");
-        ArrayList<String> words = new ArrayList(Arrays.asList(sentar));
-        for (int i = 0; i < words.size(); i++) {
-            if (words.get(i).equals("") || words.get(i) == null || words.get(i).matches("\\s*"))
-                words.remove(i);
-        }
-        return words;
+        return new ArrayList<String>(Arrays.asList(sentar)).stream()
+                .filter(s -> s != null && !s.equals("") && !s.matches("\\s*"))
+                .collect(Collectors.toCollection(ArrayList<String>::new));
     }
 
     /** ***************************************************************
@@ -306,14 +299,18 @@ public class TFIDF {
      */
     private void calcIDF(int docCount) {
 
+        //System.out.print("Info in TFIDF.calcIDF(): ");
+        //ProgressPrinter pp = new ProgressPrinter(1000);
         Iterator<String> it = docfreq.keySet().iterator();
         while (it.hasNext()) {
             String token = it.next();
+            //pp.tick();
             float f = (float) Math.log10((float) docCount / (float) docfreq.get(token));
             //System.out.println("token: " + token + ", docCount: " + docCount + ", docFreq: " + docfreq.get(token) + ", idf: " + f);
             idf.put(token,new Float(f));
         }
         //System.out.println("Info in TFIDF.calcIDF(): " + idf);
+        //System.out.println();
     }
 
     /** ***************************************************************
@@ -343,8 +340,8 @@ public class TFIDF {
             tfidflist.put(term,new Float(tfidffloat));
             euc = euc + (tfidffloat * tfidffloat);
         }
-        euclid.put(int1,new Float((float) Math.sqrt(euc)));
-        tfidf.put(int1,tfidflist);        
+        euclid.put(int1, new Float((float) Math.sqrt(euc)));
+        tfidf.put(int1, tfidflist);
         //System.out.println("Info in TFIDF.calcOneTFIDF():euclid: " + euclid);
         //System.out.println("Info in TFIDF.calcOneTFIDF():TF/IDF: " + tfidf);
     } 
@@ -358,12 +355,13 @@ public class TFIDF {
      */
     private void calcTFIDF() {
 
-        Iterator<Integer> it1 = tf.keySet().iterator();
-        while (it1.hasNext()) {
-            Integer int1 = it1.next();
-            calcOneTFIDF(int1);
-        }
+        System.out.print("Info in TFIDF.calcTFIDF(): TF/IDF: ");
+        ProgressPrinter pp = new ProgressPrinter(1000);
+        tf.keySet().stream()
+                .forEach(s -> {calcOneTFIDF(s.intValue());
+                    pp.tick();} );
         //System.out.println("Info in TFIDF.calcTFIDF(): TF/IDF: " + tfidf);
+        System.out.println();
     }
 
     /** ***************************************************************
@@ -404,7 +402,7 @@ public class TFIDF {
             }    
         }
         //System.out.println("Info in TFIDF.ProcessDoc(): adding for doc# " + intlineCount + "\n freq: " + docfreq);
-        tf.put(intlineCount,tdocfreq);
+        tf.put(intlineCount, tdocfreq);
         //System.out.println("Info in TFIDF.ProcessDoc(): tf: " + tf);
     }
 
@@ -432,7 +430,7 @@ public class TFIDF {
      */
     protected void calcDFs() {
         
-        //System.out.println("Info in TFIDF.calcDFs(): Caclulate IDF, with size: " + lines.size());
+        System.out.println("Info in TFIDF.calcDFs(): Caclulate IDF, with size: " + lines.size());
         calcIDF(lines.size() - 1);
         calcTFIDF();
     }
@@ -443,7 +441,8 @@ public class TFIDF {
     * @return an int number of lines
      */
     private void readFile(String fname) {
-        
+
+        System.out.println("TFIDF.readFile(): " + fname);
         String line = "";
         BufferedReader omcs = null;
         try {
@@ -473,7 +472,55 @@ public class TFIDF {
         //System.out.println("Movie lines:\n" + lines);
         //System.out.println("TF:\n" + tf);
 
+        System.out.println();
         calcDFs();
+    }
+
+    /** ***************************************************************
+     * Assume that query is file index -1
+     * Calculate the similarity of each document in the input list to the query
+     */
+    private HashMap<Integer,Float> calcSomeDocSim(List<String> docs, String input) {
+
+        HashMap<Integer,Float> result = new HashMap<Integer,Float>();
+        // System.out.println("Info in TFIDF.calcSomeDocSim(): ");
+        Integer negone = new Integer(-1);
+        HashMap<String,Float> tfidflist = tfidf.get(negone);
+        HashMap<String,Float> normquery = new HashMap<String,Float>();
+        float euc = euclid.get(negone);
+        Iterator<String> it2 = tfidflist.keySet().iterator();
+        while (it2.hasNext()) {
+            String term = it2.next();
+            float tfidffloat = tfidflist.get(term).floatValue();
+            normquery.put(term,new Float(tfidffloat / euc));
+        }
+        //System.out.println("Info in TFIDF.calcDocSim(): normquery: " + normquery);
+        Iterator<String> it1 = docs.iterator();
+        while (it1.hasNext()) {
+            Integer int1 = Integer.parseInt(it1.next());
+            if (int1.intValue() != -1) {
+                tfidflist = tfidf.get(int1);
+                euc = euclid.get(int1);
+                float fval = 0;
+                Iterator<String> it3 = tfidflist.keySet().iterator();
+                while (it3.hasNext()) {
+                    String term = it3.next();
+                    float tfidffloat = tfidflist.get(term).floatValue();
+                    float query = 0;
+                    if (normquery.containsKey(term))
+                        query = normquery.get(term).floatValue();
+                    float normalize = 0;
+                    if (euc != 0)
+                        normalize = tfidffloat / euc;
+                    fval = fval + (normalize * query);
+                }
+                result.put(int1,fval);
+                //if (int1 == 8362)
+                //    System.out.println("TFIDF.calcDocSim(): " + fval + ":" + tf.get(8362));
+            }
+        }
+        //System.out.println("Info in TFIDF.calcDocSim(): Doc sim:\n" + docSim);
+        return result;
     }
 
     /** ***************************************************************
@@ -515,6 +562,8 @@ public class TFIDF {
                     fval = fval + (normalize * query);
                 }
                 docSim.put(int1,fval);
+                //if (int1 == 8362)
+                //    System.out.println("TFIDF.calcDocSim(): " + fval + ":" + tf.get(8362));
             }
         }
         //System.out.println("Info in TFIDF.calcDocSim(): Doc sim:\n" + docSim);
@@ -532,7 +581,7 @@ public class TFIDF {
         if (!lines.contains(input))
             lines.add(input);
         int linecount = lines.size();
-        processDoc(input,linecount-1);
+        processDoc(input, linecount - 1);
         //System.out.println("Info in TFIDF.addInput(): size: " + lines.size());
         calcIDF(linecount);
         //System.out.println("Info in TFIDF.addInput(): idf: " + idf);
@@ -579,7 +628,43 @@ public class TFIDF {
         }
         return result;
     }
-    
+
+    /** *************************************************************
+     * Rank only a set of specified document IDs against a question
+     * @return those ranks merged with the input scoredIDs
+     */
+    public TreeMap<Float,ArrayList<Integer>> rank(String question,
+                                                  List<String> toScoreIDs,
+                                                  TreeMap<Float,ArrayList<Integer>> scoredIDs) {
+
+        //System.out.println("Info in TFIDF.rank(): ");
+        TreeMap<Float,ArrayList<Integer>> result = new TreeMap<Float,ArrayList<Integer>>();
+        result.putAll(scoredIDs);
+        if (isNullOrEmpty(question))
+            System.exit(0);
+        Integer negone = new Integer(-1);
+        processDoc(question,negone);
+        calcIDF(lines.size()+1);
+        calcOneTFIDF(negone);
+        HashMap<Integer,Float> someDocSim = calcSomeDocSim(toScoreIDs,question);
+        if (docSim == null)
+            return result;
+        for (String s : toScoreIDs) {
+            int intID = Integer.parseInt(s);
+            Float f = someDocSim.get(intID);
+            if (result.containsKey(f)) {
+                ArrayList<Integer> vals = result.get(f);
+                vals.add(intID);
+            }
+            else {
+                ArrayList<Integer> vals = new ArrayList<Integer>();
+                vals.add(intID);
+                result.put(f,vals);
+            }
+        }
+        return result;
+    }
+
     /** *************************************************************
      */
     public String matchInput(String input) {
@@ -589,7 +674,7 @@ public class TFIDF {
     /** *************************************************************
      * @return a list of matches ranked by relevance to the input.
      */
-    protected TreeMap<Float,ArrayList<Integer>> matchInputFull(String input) {
+    public TreeMap<Float,ArrayList<Integer>> matchInputFull(String input) {
 
         //System.out.println("Info in TFIDF.matchInputFull(): input: " + input);
         //System.out.println("Info in TFIDF.matchInputFull(): lines: " + lines);
@@ -619,6 +704,32 @@ public class TFIDF {
            }
         }
         return sortedSim;
+    }
+
+    /** *************************************************************
+     * @return a list of document IDs which are the top n best guess matches to the input.
+     */
+    public TreeMap<Float,ArrayList<Integer>> matchInputNScored(String input, int n) {
+
+        //System.out.println("Info in TFIDF.matchInput(): " + input);
+        //System.out.println("Info in TFIDF.matchInput(): " + lines);
+        TreeMap<Float,ArrayList<Integer>> result = new TreeMap<Float,ArrayList<Integer>>();
+        TreeMap<Float,ArrayList<Integer>> sortedSim = matchInputFull(input);
+        //System.out.println("Info in TFIDF.matchInput(): " + sortedSim);
+        if (sortedSim == null || sortedSim.keySet() == null) {
+            return null;
+        }
+
+        Iterator<Float> it2 = sortedSim.descendingKeySet().iterator();
+        int counter = n;
+        while (it2.hasNext() && counter > 0) {
+            Float f = it2.next();
+            ArrayList<Integer> vals = sortedSim.get(f);
+            counter--;
+            result.put(f,vals);
+        }
+        //System.out.println("Info in TFIDF.matchInput(): result: " + result);
+        return result;
     }
 
     /** *************************************************************
@@ -727,10 +838,15 @@ public class TFIDF {
         TFIDF cb = new TFIDF(input, "testfiles/stopwords.txt");
         cb.matchInput("Who kicks the cart?");*/
         
-        TFIDF cb = new TFIDF("testfiles/stopwords.txt");
-        cb.addInput("John kicks the cart.");
-        cb.addInput("Mary pushes the wagon.");
+        //TFIDF cb = new TFIDF("testfiles/stopwords.txt");
+        TFIDF cb = new TFIDF("stopwords.txt");
+        String s1 = "John kicks the cart.";
+        String s2 = "Mary pushes the wagon.";
+        cb.addInput(s1);
+        cb.addInput(s2);
         System.out.println(cb.matchInput("Who kicks the cart?"));
+        System.out.println(cb.removeStopWords(s1));
+        System.out.println(cb.splitToArrayList(s1));
     }
     
     /** *************************************************************

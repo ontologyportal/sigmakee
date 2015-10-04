@@ -3,20 +3,21 @@ package com.articulate.sigma.semRewrite.substitutor;
 import com.articulate.sigma.nlp.pipeline.Pipeline;
 import com.articulate.sigma.nlp.pipeline.SentenceUtil;
 import com.google.common.collect.Lists;
-import edu.stanford.nlp.dcoref.CorefChain;
-import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
+//import edu.stanford.nlp.dcoref.CorefChain;
+//import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
 
-//import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
-//import edu.stanford.nlp.hcoref.CorefSystem;
-//import edu.stanford.nlp.hcoref.data.CorefChain;
-//import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
-//import edu.stanford.nlp.hcoref.data.Document;
+import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
+import edu.stanford.nlp.hcoref.CorefSystem;
+import edu.stanford.nlp.hcoref.data.CorefChain;
+import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
+import edu.stanford.nlp.hcoref.data.Document;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.*;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.StringUtils;
 
 import java.io.*;
 import java.util.*;
@@ -52,7 +53,7 @@ public class MUC {
     private int totalMUC = 0;
     private int falsePositive = 0;
     private int falseNegative = 0;
-    public static Annotation document = null;
+    public static Annotation document2 = null;
     public static HashSet<Coref> stanfordCorefs = new HashSet<>();
     private HashMap<String,Integer> missedRefs = new HashMap<>();
 
@@ -166,9 +167,9 @@ public class MUC {
         props.setProperty("annotators", "tokenize, ssplit");
         props.setProperty("tokenize.options", "ptb3Escaping=false");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-        document = new Annotation(input);
-        pipeline.annotate(document);
-        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        Annotation document1 = new Annotation(input);
+        pipeline.annotate(document1);
+        List<CoreMap> sentences = document1.get(CoreAnnotations.SentencesAnnotation.class);
         for (CoreMap sentence : sentences) {
             //System.out.println(sentence);
             results.add(sentence.get(CoreAnnotations.TextAnnotation.class));
@@ -207,21 +208,37 @@ public class MUC {
     }
 
     /****************************************************************
+     * @return a Stanford pipeline
+     */
+    public StanfordCoreNLP initPipeline() {
+
+        Properties props = new Properties();
+        //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, entitymentions, parse, depparse, hcoref");
+        props.setProperty("tokenize.options", "ptb3Escaping=false");
+        //String[] configFileProp = {"-props","/home/apease/Programs/stanford-corenlp-full-2015-04-20/CoreNLP/build/resources/main/edu/stanford/nlp/hcoref/properties/coref-default-dep.properties"};
+        String[] configFileProp = {"-props",System.getenv("COREF")};
+        props.putAll(StringUtils.argsToPropertiesWithResolve(configFileProp));
+        System.out.println("MUC.toCoref(): before initialized pipeline");
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        System.out.println("MUC.toCoref(): initialized pipeline");
+        return pipeline;
+    }
+
+    /****************************************************************
      * @return a list of sentences with tokens
      */
     public ArrayList<ArrayList<String>> toCoref(String input) {
 
         //System.out.println("INFO in MUC.toCoref(): " + input);
+        //System.out.println("INFO in MUC.toCoref(): " + input);
         List<Coref> corefs = buildCorefList(input);
         ArrayList<ArrayList<String>> results = new ArrayList<ArrayList<String>>();
-        Properties props = new Properties();
-        //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, entitymentions, parse, dcoref");
-        props.setProperty("tokenize.options", "ptb3Escaping=false");
-        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-        document = new Annotation(input);
+        StanfordCoreNLP pipeline = initPipeline();
+        document2 = new Annotation(input);
+        System.out.println("MUC.toCoref(): after annotation");
         try {
-            pipeline.annotate(document);
+            pipeline.annotate(document2);
             //HybridCorefAnnotator hcoref = new HybridCorefAnnotator(props);
             //hcoref.annotate(document);
         }
@@ -230,10 +247,10 @@ public class MUC {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        List<CoreMap> sentences = document2.get(CoreAnnotations.SentencesAnnotation.class);
         //SentenceUtil.printCorefChain(document);
         System.out.println("Stanford corefs: ");
-        Map<Integer, CorefChain> graph = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);
+        Map<Integer, CorefChain> graph = document2.get(CorefCoreAnnotations.CorefChainAnnotation.class);
         printStanfordCorefList(graph);
 
         for (CoreMap sentence : sentences) {
@@ -855,7 +872,7 @@ public class MUC {
         }
         HashMap<Integer,HashSet<Coref>> chains = buildChains(corefs);
         printChains(chains);
-        compareChains(chains, document);
+        compareChains(chains, document2);
     }
 
     /** ***************************************************************
@@ -903,8 +920,8 @@ public class MUC {
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize, ....");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-        document = new Annotation(input);
-        pipeline.annotate(document);
+        Annotation document1 = new Annotation(input);
+        pipeline.annotate(document1);
         OutputStream os = new OutputStream() {
             @Override
             public void write(int b) throws IOException {
@@ -912,7 +929,7 @@ public class MUC {
             }
         };
         try {
-            as.write(document, os);
+            as.write(document1, os);
         }
         catch (Exception e) {
 
@@ -931,8 +948,8 @@ public class MUC {
         catch (Exception e) {
 
         }
-        document = (Annotation) p.first();
-        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        document1 = (Annotation) p.first();
+        List<CoreMap> sentences = document1.get(CoreAnnotations.SentencesAnnotation.class);
     }
 
     /** ***************************************************************
@@ -974,17 +991,13 @@ public class MUC {
 
     /** ***************************************************************
      */
-    public static void main(String[] args) {
+    public void testMUC() {
 
-        //testWhitespace();
-        //String line = "@  To Be Strong Candidate to Head <COREF ID=\"3\">SEC</COREF>";
-        //line = line.replaceAll("^\\@","");
-        //System.out.println(line);
         //List<String> lines = cleanSGML("/home/apease/IPsoft/corpora/muc6/data/keys/formal-tst.CO.key.cleanup.09jul96");
-        List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/formal-tst.CO.key.cleanup.09jul96");
+        //List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/formal-tst.CO.key.cleanup.09jul96");
+        List<String> lines = getDocuments(System.getenv("MUCCORPUS") + File.separator + "formal-tst.CO.key.cleanup.09jul96");
         //List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/Wash.txt");
         //List<String> lines = getDocuments("/home/apease/IPsoft/corpora/muc6/data/keys/891101-0056.co.v0.sgm" + "");
-        MUC muc = new MUC();
         for (String s : lines) {
             String cleanedInput = s.replaceAll("<COREF[^>]+>", "");
             cleanedInput = cleanedInput.replace("</COREF>","");
@@ -992,12 +1005,23 @@ public class MUC {
             List<String> sentsDirty = toSentences(s);
             System.out.println("\n\nMUC markup: " + sentsDirty);
             String allClean = listToString(sentsClean);
-            ArrayList<ArrayList<String>> tokenized = muc.toCoref(listToString(sentsClean));
-            muc.makeCorefList(s, tokenized);
+            ArrayList<ArrayList<String>> tokenized = toCoref(listToString(sentsClean));
+            makeCorefList(s, tokenized);
         }
-        System.out.println("False positive rate: " + (muc.falsePositive + "/" + muc.totalStanford));
-        System.out.println("False negative rate: " + (muc.falseNegative + "/" + muc.totalMUC));
+        System.out.println("False positive rate: " + (falsePositive + "/" + totalStanford));
+        System.out.println("False negative rate: " + (falseNegative + "/" + totalMUC));
         System.out.println("Most common missed corefs: ");
-        printTopN(sortTotals(muc.missedRefs), 20);
+        printTopN(sortTotals(missedRefs), 20);
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) {
+
+        //testWhitespace();
+        MUC muc = new MUC();
+        muc.initPipeline();
+        //muc.toCoref("Bob likes to eat.  He is big");
+        muc.testMUC();
     }
 }
