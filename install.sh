@@ -97,9 +97,7 @@ download_src() {
 		log warn "To access the code CVS is going to ask your SourceForge password (3 times)."
 		ss_user=":ext:${ss_user}"
 	fi
-	cvs -z3 -q -d "${ss_user}@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee" co -P sigma
-	cvs -z3 -q -d "${ss_user}@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee" co -P KBs
-	cvs -z3 -q -d "${ss_user}@sigmakee.cvs.sourceforge.net:/cvsroot/sigmakee" co -P Vampire
+	git clone https://github.com/ontologyportal/sigmakee
 }
 
 sigma_install() {
