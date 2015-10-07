@@ -72,6 +72,7 @@ public class DocGen {
         return bitValue;
     }
     protected static final String SP2 = "  ";
+
     /** *************************************************************
      * The default base plus file suffix name for the main index file
      * for a set of HTML output files.
@@ -82,6 +83,7 @@ public class DocGen {
     protected static Hashtable DOC_GEN_INSTANCES = new Hashtable();
 
     public static DocGen getInstance() {
+
         DocGen inst = null;
         try {
             inst = (DocGen) DOC_GEN_INSTANCES.get(DEFAULT_KEY);
@@ -100,6 +102,7 @@ public class DocGen {
     /** *************************************************************
      */
     public static DocGen getInstance(String compositeKey) {
+
         // System.out.println("ENTER DocGen.getInstance(" + compositeKey + ")");
         DocGen inst = null;
         try {
@@ -136,9 +139,11 @@ public class DocGen {
         // System.out.println("    inst == " + inst.toString());
         return inst;
     }
+
     /** *************************************************************
      */
     public static DocGen getInstance(KB kb, String ontology) {
+
         // System.out.println("ENTER DocGen.getInstance(" + kb.name + ", " + ontology + ")");
         DocGen inst = null;
         try {
@@ -155,6 +160,7 @@ public class DocGen {
         // System.out.println("    inst == " + inst.toString());
         return inst;
     }
+
     /** *************************************************************
      * To obtain an instance of DocGen, use the static factory method
      * getInstance().
@@ -230,6 +236,7 @@ public class DocGen {
      * @return true or false
      */
     public boolean testDocGenControlBits(int valToTest) {
+
         // System.out.println("ENTER DocGen.testDocGenControlBits(" + valToTest + ")");
         boolean ans = false;
         try {
@@ -270,6 +277,7 @@ public class DocGen {
      * @return a List of Strings, which could be empty
      */
     public static ArrayList<String> getOutputFormatTokens(KB kb, String ontology) {
+
         ArrayList<String> tokens = new ArrayList<String>();
         try {
             String tkn = null;
@@ -317,6 +325,7 @@ public class DocGen {
      *
      */
     public String getDefaultNamespace() {
+
         try {
             if (StringUtil.emptyString(this.defaultNamespace)) {
                 // If no value has been set, check to see if a value
@@ -359,6 +368,7 @@ public class DocGen {
      *
      */
     public String getDefaultPredicateNamespace() {
+
         try {
             if (StringUtil.emptyString(this.defaultPredicateNamespace)) {
                 KB kb = getKB();
