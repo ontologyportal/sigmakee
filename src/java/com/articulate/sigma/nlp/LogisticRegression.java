@@ -1,5 +1,6 @@
 package com.articulate.sigma.nlp;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -10,26 +11,45 @@ import java.util.Random;
 public class LogisticRegression {
     // A simple logistic regression model with L2 regularization (zero-mean Gaussian priors on parameters).
 
-    public double[][] x_train;
-    public double[] y_train;
+    public double[][] x_train;  // first dimension is the list of points, second dimension is the dimensions
+    public double[] y_train;    // the class of each point
     public double[][] x_test;
     public double[] y_test;
-    int n;
-    double alpha;
-    double[] betas;
+    public int n; // number of points
+    public int dim; // number of dimensions
+    public double alpha;
+    public double[] betas;             // a set of coefficients the same length as the x vector
+
+    /****************************************************************
+     */
+    public static String toStringArrayWithPrecision(double[] ar) {
+
+        DecimalFormat myFormatter = new DecimalFormat("###.##");
+        StringBuffer sb = new StringBuffer();
+        sb.append("[");
+        for (int i = 0; i < ar.length; i++) {
+            if (i != 0)
+                sb.append(", ");
+            sb.append(myFormatter.format(ar[i]));
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 
     /****************************************************************
      * Create N instances of d dimensional input vectors and a 1D class label (-1 or 1).
      */
-    public void generate(int N, int d) {
+    public void generateData(int N, int d) {
 
         Random rnd = new Random();
         rnd.setSeed(0);
         double[][] means = new double[2][d];
-        Arrays.fill(means,0.05 * rnd.nextDouble()*d);
+        for (int i = 0; i < 2; i++)
+            Arrays.fill(means[i], 0.05 * rnd.nextDouble()*d);
 
         x_train = new double[N][d];
-        Arrays.fill(x_train, 0.0);
+        for (int i = 0; i < N; i++)
+            Arrays.fill(x_train[i], 0.0);
         y_train = new double[N];
         Arrays.fill(y_train, 0.0);
         int y = 0;
@@ -40,10 +60,11 @@ public class LogisticRegression {
                 y = 0;
             for (int j = 0; j < d; j++)
                 x_train[i][j] = rnd.nextDouble()*d + means[y][j];
-            y_train[i] = 2.0 * y - 1;
+            y_train[i] = 2.0 * y - 1;  // 1 or -1
         }
         x_test = new double[N][d];
-        Arrays.fill(x_test, 0.0);
+        for (int i = 0; i < N; i++)
+            Arrays.fill(x_test[i], 0.0);
         y_test = new double[N];
         Arrays.fill(y_test, 0.0);
         for (int i = 0; i < N; i++) {
@@ -55,9 +76,20 @@ public class LogisticRegression {
                 x_test[i][j] = rnd.nextDouble()*d + means[y][j];
             y_test[i] = 2.0 * y - 1;
         }
+        System.out.println("generate()");
+        for (int i = 0; i < N; i++)
+            System.out.println(i + ":" + toStringArrayWithPrecision(x_train[i]));
+        System.out.println(Arrays.toString(y_train));
+        for (int i = 0; i < N; i++)
+            System.out.println(i + ":" + toStringArrayWithPrecision(x_test[i]));
+        System.out.println(Arrays.toString(y_test));
+        n = N;
+        dim = d;
     }
 
     /****************************************************************
+     * @return value approaches 1.0 as x is large and positive, and
+     * approaches 0 as x is large and negative
      */
     public double sigmoid(double x) {
 
@@ -72,18 +104,39 @@ public class LogisticRegression {
         //this.alpha=alpha;
 
         // Initialize parameters to zero, for lack of a better choice.
-        betas = new double[x_train.length];
+        betas = new double[dim];
         Arrays.fill(betas,0.0);
+        System.out.println("init() with betas: " + toStringArrayWithPrecision(betas) + " and dim: " + dim);
     }
 
     /****************************************************************
      */
     public double negative_lik() {
 
-        return -1 * lik();
+        return -1.0 * lik();
     }
 
     /****************************************************************
+     * Likelihood of the data under the current settings of parameters.
+     * Data is smoothed with the alpha parameter
+     */
+    public double lik() {
+
+        // Data likelihood
+        double l = 0;
+        for (int i = 0; i < n; i++)
+            l += Math.log(sigmoid(y_train[i] * dotProduct(betas, x_train[i])));
+
+        //Prior likelihood
+        for (int k = 1; k < dim; k++)
+            l -= (alpha / 2.0) * betas[k] * betas[k];
+
+        return l;
+    }
+
+    /****************************************************************
+     * Equal to the cosine of the angle between the vectors times the
+     * product of the length of the vectors
      */
     public double dotProduct(double[] a1, double[] a2) {
 
@@ -106,34 +159,39 @@ public class LogisticRegression {
     }
 
     /****************************************************************
-     * Likelihood of the data under the current settings of parameters.
      */
-    public double lik() {
+    public double[] addVectors(double[] a1, double[] a2) {
 
-        // Data likelihood
-        double l = 0;
-        for (int i = 0; i < n; i++)
-            l += Math.log(sigmoid(y_train[i] * dotProduct(betas, x_train[i])));
+        double[] result = new double[a1.length];
+        for (int i = 0; i < a1.length; i++)
+            result[i] = a1[i] + a2[i];
+        return result;
+    }
 
-        //Prior likelihood
-        for (int k = 1; k < x_train[0].length; k++)
-            l -= (alpha / 2.0) * betas[k] * betas[k];
+    /****************************************************************
+     */
+    public double[] multVec(double[] a1, double c) {
 
-        return l;
+        double[] result = new double[a1.length];
+        for (int i = 0; i < a1.length; i++)
+            result[i] = a1[i] * c;
+        return result;
     }
 
     /****************************************************************
      * Define the derivative of the likelihood with respect to beta_k.
      * Need to multiply by -1 because we will be minimizing.
      */
-    public double dB_k(double[] B, int k) {
+    public double dB_k(int k) {
 
         double dB_k_result = 0;
         double sum = 0;
         for (int i = 0; i < n; i++)
-            sum += y_train[i] * x_train[i][k] * sigmoid(-y_train[i] * dotProduct(B, x_train[i]));
+            sum += y_train[i] * x_train[i][k] * sigmoid(-y_train[i] * dotProduct(betas, x_train[i]));
         if (k > 0)
-            dB_k_result = alpha * B[k] - sum;
+            dB_k_result = alpha * betas[k] - sum;
+        else
+            dB_k_result =  - sum;
 
         return dB_k_result;
     }
@@ -141,11 +199,11 @@ public class LogisticRegression {
     /****************************************************************
      * The full gradient is just an array of componentwise derivatives
      */
-    public double[] dB(double[] B) {
+    public double[] dB() {
 
-        double[] result = new double[x_train.length];
-        for (int k = 0; k < x_train.length; k++)
-            result[k] = dB_k(B, k);
+        double[] result = new double[dim];
+        for (int k = 0; k < dim; k++)
+            result[k] = dB_k(k);
         return result;
     }
 
@@ -154,10 +212,23 @@ public class LogisticRegression {
      */
     public void train() {
 
+        System.out.println("LogisticRegression.train(): initial betas: " + Arrays.toString(betas));
         int num_iterations = 1000;
+        double learningRate = 0.01;
+        int count = 0;
+        double delta = 1.0;
+        double deltaLimit = 0.001;
+        double lastLik = 0;
         //Optimize (objective function, initial guess, gradient of f
-        for (int i = 0; i < num_iterations; i++)
-            betas[i] = 0; // fmin_bfgs(negative_lik, betas, fprime = dB);
+        while (count < num_iterations && delta > deltaLimit) {
+            count++;
+            betas = addVectors(betas, multVec(dB(), -learningRate)); // fmin_bfgs(negative_lik, betas, fprime = dB);
+            double lik = negative_lik();
+            delta = Math.abs(lastLik - lik);
+            //System.out.println("LogisticRegression.train(): negative lik: " + lik);
+            //System.out.println("LogisticRegression.train(): betas: " + toStringArrayWithPrecision(betas));
+        }
+        System.out.println("LogisticRegression.train(): iterations: " + count);
     }
 
     /****************************************************************
@@ -169,7 +240,8 @@ public class LogisticRegression {
         this.y_train = lr.y_train;
         this.x_test = lr.x_test;
         this.y_test = lr.y_test;
-        n = lr.y_train.length;
+        this.n = lr.n;
+        this.dim = lr.dim;
     }
 
     /****************************************************************
@@ -190,7 +262,7 @@ public class LogisticRegression {
 
         double[] p_y1 = new double[n];
         Arrays.fill(p_y1,0);
-        for  (int i = 0; i < n; i++)
+        for (int i = 0; i < n; i++)
             p_y1[i] = sigmoid(dotProduct(betas, x_test[i]));
 
         return p_y1;
@@ -203,16 +275,22 @@ public class LogisticRegression {
         //Create 20 dimensional data set with 25 points-- this will be
         //susceptible to overfitting.
         LogisticRegression lr1 = new LogisticRegression();
-        lr1.generate(25, 20);
+
+        lr1.generateData(25, 20);
+        lr1.init();
 
         //Run for a variety of regularization strengths
         double[] alphas = {0, .001, .01, .1};
+        //double[] alphas = {0};
         for (int j = 0 ; j < alphas.length; j++) {
             double a = alphas[j];
+            System.out.println();
+            System.out.println("***** alpha: " + a + " *****");
             //Create a new learner, but use the same data for each run
 
             LogisticRegression lr = new LogisticRegression();
             lr.set_data(lr1);
+            lr.init();
             lr.alpha = a;
             System.out.println("Initial likelihood:");
             System.out.println(lr.lik());
@@ -222,7 +300,7 @@ public class LogisticRegression {
 
             //Display execution info
             System.out.println("Final betas:");
-            System.out.println(lr.betas);
+            System.out.println(toStringArrayWithPrecision(lr.betas));
             System.out.println("Final lik:");
             System.out.println(lr.lik());
         }
