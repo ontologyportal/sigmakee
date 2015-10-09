@@ -1,7 +1,9 @@
 package com.articulate.sigma.nlp;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -19,6 +21,34 @@ public class LogisticRegression {
     public int dim; // number of dimensions
     public double alpha;
     public double[] betas;             // a set of coefficients the same length as the x vector
+
+    /****************************************************************
+     */
+    public LogisticRegression() {
+
+    }
+
+    /****************************************************************
+     */
+    public LogisticRegression(ArrayList<ArrayList<String>> inputs) {
+
+        inputs.remove(0);  // remove types
+        inputs.remove(0);  // remove headers
+        int numpoints = inputs.size();
+        int numDimensions = inputs.get(0).size(); // note that it includes the class as final element
+        x_train = new double[numpoints][numDimensions];
+        y_train = new double[numpoints];
+        for (int i = 0; i < numpoints; i++) {
+            ArrayList<String> row = inputs.get(i);
+            for (int j = 0; j < numDimensions-1; j++) {
+                x_train[i][j] = Double.parseDouble(row.get(j));
+            }
+            y_train[i] = Double.parseDouble(row.get(row.size() - 1));
+        }
+        n = numpoints;
+        dim = numDimensions;
+        alpha = 0; // default no smoothing
+    }
 
     /****************************************************************
      */
@@ -85,6 +115,7 @@ public class LogisticRegression {
         System.out.println(Arrays.toString(y_test));
         n = N;
         dim = d;
+        alpha = 0; // default no smoothing
     }
 
     /****************************************************************
@@ -214,10 +245,10 @@ public class LogisticRegression {
 
         System.out.println("LogisticRegression.train(): initial betas: " + Arrays.toString(betas));
         int num_iterations = 1000;
-        double learningRate = 0.01;
+        double learningRate = 0.1;
         int count = 0;
         double delta = 1.0;
-        double deltaLimit = 0.001;
+        double deltaLimit = 0.01;
         double lastLik = 0;
         //Optimize (objective function, initial guess, gradient of f
         while (count < num_iterations && delta > deltaLimit) {
@@ -229,6 +260,8 @@ public class LogisticRegression {
             //System.out.println("LogisticRegression.train(): betas: " + toStringArrayWithPrecision(betas));
         }
         System.out.println("LogisticRegression.train(): iterations: " + count);
+        System.out.println("LogisticRegression.train(): delta: " + delta);
+        System.out.println("LogisticRegression.train(): final betas: " + Arrays.toString(betas));
     }
 
     /****************************************************************
@@ -266,6 +299,28 @@ public class LogisticRegression {
             p_y1[i] = sigmoid(dotProduct(betas, x_test[i]));
 
         return p_y1;
+    }
+
+    /****************************************************************
+     * @param values a list of string values that will be assumed to be floats
+     * @return a String representation of the class which is either 1 or 0
+     */
+    public String classify(List<String> values) {
+
+        //System.out.println("LogisticRegression.classify(): " + values);
+        double[] input = new double[dim];
+        if (values.size() != dim)
+            System.out.println("Error in LogisticRegression.classify(): wrong size array " + n);
+        for (int i = 0; i < values.size(); i++) {
+            input[i] = Double.parseDouble(values.get(i));
+        }
+        double result = sigmoid(dotProduct(betas,input));
+        //System.out.println("LogisticRegression.classify(): result: " + result + " values: " + values);
+        //System.out.println("LogisticRegression.classify(): betas: " + toStringArrayWithPrecision(betas));
+        if (result > 0.5)
+            return "1";
+        else
+            return "0";
     }
 
     /****************************************************************
