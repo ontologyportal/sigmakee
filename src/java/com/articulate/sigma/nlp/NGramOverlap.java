@@ -24,38 +24,42 @@ public class NGramOverlap {
 
     /** ***************************************************************
      * @return an integer score of the number of shared ngrams (minus
-     * stopwords and punctuation)
+     * punctuation)
      */
     public int nGramOverlap(String x, String y, int n) {
 
         //System.out.println("TokenOverlap.overlap(): testing: " + x + " \nand:\n" + y);
         int overlap = 0;
+        HashSet<String> common = new HashSet<>();
         String str1 = tfidf.removePunctuation(x);
-        str1 = tfidf.removeStopWords(str1);
+        //str1 = tfidf.removeStopWords(str1);
         ArrayList<String> s1 = new ArrayList<String>();
         String[] sspl = str1.split(" ");
         s1.addAll(Arrays.asList(sspl));
+
         String str2 = tfidf.removePunctuation(y);
-        str2 = tfidf.removeStopWords(str2);
+        //str2 = tfidf.removeStopWords(str2);
         ArrayList<String> s2 = new ArrayList<String>();
         s2.addAll(Arrays.asList(str2.split(" ")));
 
-        for (int i = 0; i < s1.size() - n; i++) {
+        for (int i = 0; i < s1.size()+1 - n; i++) {
             StringBuffer s1tok = new StringBuffer();
             for (int z = 0; z < n; z++)
                 s1tok.append(s1.get(i + z));
-            for (int j = 0; j < s2.size() - n; j++) {
+            for (int j = 0; j < s2.size()+1 - n; j++) {
                 StringBuffer s2tok = new StringBuffer();
                 for (int z = 0; z < n; z++)
                     s2tok.append(s2.get(j+z));
-                if (s1tok.equals(s2tok)) {
+                //System.out.println("'" + s1tok + "' '" + s2tok + "'");
+                if (s1tok.toString().equals(s2tok.toString())) {
                     overlap++;
-                    System.out.println("TokenOverlap.nGramOverlap(): match: " + s1tok);
+                    common.add(s1tok.toString());
+                    //System.out.println("TokenOverlap.nGramOverlap(): match: " + s1tok);
                 }
             }
         }
-        //if (s1.size() > 0)
-        //    System.out.println("TokenOverlap.overlap(): common tokens: " + s1);
+        if (common.size() > 0)
+            System.out.println("TokenOverlap.overlap(): common tokens: " + common);
         return overlap;
     }
 
@@ -81,7 +85,7 @@ public class NGramOverlap {
     /** ***************************************************************
      * @return a map of scores and the set of document IDs that have that
      * score, which is a count of token overlap with the question
-     */
+
     public TreeMap<Float,ArrayList<Integer>> computeNGramOverlap(String question) {
 
         ProgressPrinter pp = new ProgressPrinter(10);
@@ -104,7 +108,7 @@ public class NGramOverlap {
         System.out.println();
         return result;
     }
-
+*/
     /** ***************************************************************
      * @return a map of scores and the set of document IDs that have that
      * score, which is a count of token overlap with the question
@@ -112,13 +116,13 @@ public class NGramOverlap {
     public TreeMap<Float,ArrayList<Integer>> nGramRank(ShuZiInsQA.Dev dev,
                                                        List<String> toScoreIDs,
                                                        ArrayList<HashMap<Integer,HashSet<String>>> answerNgrams,
-                                                       TreeMap<Float,ArrayList<Integer>> scoredIDs) {
+                                                       TreeMap<Float,ArrayList<Integer>> scoredIDs, int n) {
 
         TreeMap<Float,ArrayList<Integer>> result = new TreeMap<>();
         result.putAll(scoredIDs);
         for (String id : toScoreIDs) {
             int intID = Integer.parseInt(id);
-            int score = cachedNGramOverlap(dev.questionNgrams, answerNgrams.get(intID), 2);
+            int score = cachedNGramOverlap(dev.questionNgrams, answerNgrams.get(intID), n);
             if (debug)
                 System.out.println("TokenOverlap.nGramRank(): id: " + id + " as int: " + intID + " with score: " + score);
             if (score == 0)
@@ -139,5 +143,17 @@ public class NGramOverlap {
      */
     public static void main(String[] args) {
 
+        TFIDF cb = null;
+        TokenOverlap to = null;
+        NGramOverlap ng = null;
+        try {
+            cb = new TFIDF("/home/apease/Sigma/KBs/stopwords.txt");
+            ng = new NGramOverlap(cb);
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in ShuZiInsQA.devsToInputs()");
+            ioe.printStackTrace();
+        }
+        System.out.println(ng.nGramOverlap("John likes big trees in the night", "John likes small leaves in the night", 3));
     }
 }
