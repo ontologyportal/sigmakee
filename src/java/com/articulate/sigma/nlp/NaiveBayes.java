@@ -68,15 +68,15 @@ public class NaiveBayes {
 
     /** *************************************************************
      */
-    public NaiveBayes(ArrayList<ArrayList<String>> in) {
+    public NaiveBayes(ArrayList<ArrayList<String>> in,
+                      ArrayList<String> labels,
+                      ArrayList<String> types) {
 
         input = new ArrayList<ArrayList<String>>();
         System.out.println("NaiveBayes with #input: " + in.size());
         input.addAll(in);
-        types.addAll(input.get(0));  // these can be discrete "disc", continuous "cont" or "class"
-        labels.addAll(input.get(1));
-        input.remove(0);  // remove types
-        input.remove(0);  // remove headers
+        this.types = types; // these can be discrete "disc", continuous "cont" or "class"
+        this.labels = labels;
         System.out.println("NaiveBayes() : starting line: " + input.get(0));
     }
 
