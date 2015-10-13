@@ -360,8 +360,9 @@ public class ShuZiInsQA {
         if (!found)
             result = -1.0;
         else
-            result = (int) (10.0 - (index / (candidates.keySet().size() / 10.0)));
-        result = (result - 4.5) / 5.5;
+            result = (int) (10.0 - index);
+            //result = (int) (10.0 - (index / (candidates.keySet().size() / 10.0)));
+        //result = (result - 4.5) / 5.5;
         return result;
     }
 
@@ -371,7 +372,11 @@ public class ShuZiInsQA {
      * term overlap rank, and a binary value for whether the answer
      * is in fact a valid answer
      */
-    private ArrayList<ArrayList<Double>> scoreOneDev(Dev dev, TFIDF cb, TokenOverlap to, NGramOverlap ng) {
+    private ArrayList<ArrayList<Double>> scoreOneDev(Dev dev,
+                                                     TFIDF cb,
+                                                     TokenOverlap to,
+                                                     NGramOverlap ng,
+                                                     SynsetOverlap so) {
 
         ArrayList<ArrayList<Double>> result = new ArrayList<>();
         //System.out.println("ShuZiInsQA.scoreOneDev(): " + dev);
@@ -396,11 +401,17 @@ public class ShuZiInsQA {
         nGramCandidatesN3 = ng.nGramRank(dev, dev.answersID, answerNgrams, nGramCandidatesN3,3);
         nGramCandidatesN3 = ng.nGramRank(dev, dev.wrongAnswerIDs, answerNgrams, nGramCandidatesN3,3);
 
+        // key is the match score and value is the list of line numbers that have that score
+        TreeMap<Float,ArrayList<Integer>> synOverlap = new TreeMap<>();
+        synOverlap = so.rank(dev.question, dev.answersID, synOverlap);
+        synOverlap = so.rank(dev.question, dev.wrongAnswerIDs, synOverlap);
+
         for (String ansID : dev.answersID) {
             double tfScore = scoreCandidate(tfidfCandidates,ansID);
             double toScore = scoreCandidate(overlapCandidates,ansID);
             double ng2Score = scoreCandidate(nGramCandidatesN2,ansID);
             double ng3Score = scoreCandidate(nGramCandidatesN3,ansID);
+            double soScore = scoreCandidate(synOverlap,ansID);
 
             //System.out.println("ShuZiInsQA.scoreOneDev(): score for ngram overlap: " + ngScore);
             ArrayList<Double> inputLine = new ArrayList<>();
@@ -408,9 +419,10 @@ public class ShuZiInsQA {
             inputLine.add(toScore);
             inputLine.add(ng2Score);
             inputLine.add(ng3Score);
+            inputLine.add(soScore);
             inputLine.add(1.0); // a correct answer
             result.add(inputLine);
-            //System.out.println(StringUtil.removeEnclosingCharPair(inputLine.toString(), 1, '[', ']'));
+            //System.out.println("ShuZiInsQA.scoreOneDev():" + StringUtil.removeEnclosingCharPair(inputLine.toString(), 1, '[', ']'));
         }
         Iterator<String> it = dev.wrongAnswerIDs.iterator();
         int count = 0;
@@ -422,15 +434,17 @@ public class ShuZiInsQA {
             double toScore = scoreCandidate(overlapCandidates,ansID);
             double ng2Score = scoreCandidate(nGramCandidatesN2,ansID);
             double ng3Score = scoreCandidate(nGramCandidatesN3,ansID);
+            double soScore = scoreCandidate(synOverlap,ansID);
 
             ArrayList<Double> inputLine = new ArrayList<>();
             inputLine.add(tfScore);
             inputLine.add(toScore);
             inputLine.add(ng2Score);
             inputLine.add(ng3Score);
+            inputLine.add(soScore);
             inputLine.add(0.0); // an incorrect answer
             result.add(inputLine);
-            //System.out.println(StringUtil.removeEnclosingCharPair(inputLine.toString(), 1, '[', ']'));
+            //System.out.println("ShuZiInsQA.scoreOneDev():" + StringUtil.removeEnclosingCharPair(inputLine.toString(), 1, '[', ']'));
         }
         return result;
     }
@@ -440,13 +454,17 @@ public class ShuZiInsQA {
      * score the correct answer(s) and negative answers with TFIDF and
      * term overlap and add to the table
      */
-    private ArrayList<ArrayList<Double>> devsToInputs(List<Dev> devs, TFIDF cb, TokenOverlap to, NGramOverlap ng) {
+    private ArrayList<ArrayList<Double>> devsToInputs(List<Dev> devs,
+                                                      TFIDF cb,
+                                                      TokenOverlap to,
+                                                      NGramOverlap ng,
+                                                      SynsetOverlap so) {
 
         ArrayList<ArrayList<Double>> result = new ArrayList<ArrayList<Double>>();
         ProgressPrinter pp = new ProgressPrinter(10);
         for (Dev dev : devs) {
             pp.tick();
-            result.addAll(scoreOneDev(dev, cb, to, ng));
+            result.addAll(scoreOneDev(dev, cb, to, ng, so));
         }
         System.out.println();
         return result;
@@ -474,6 +492,7 @@ public class ShuZiInsQA {
                                                    TFIDF cb,
                                                    TokenOverlap to,
                                                    NGramOverlap ng,
+                                                   SynsetOverlap so,
                                                    ArrayList<ArrayList<String>> inputs,
                                                    ArrayList<String> labels,
                                                    ArrayList<String> types) {
@@ -482,10 +501,19 @@ public class ShuZiInsQA {
         List<NaiveBayes> bayesList = new ArrayList<>();
         ArrayList<ArrayList<String>> newinputs = new ArrayList<>();
         // add types header and labels header
-        inputs.addAll(matrixDoubleToString(devsToInputs(devs, cb, to, ng)));
+        inputs.addAll(matrixDoubleToString(devsToInputs(devs, cb, to, ng, so)));
         NaiveBayes nb = new NaiveBayes(inputs,labels,types);
         nb.initialize();
         bayesList.add(nb);  // full feature set
+
+        labels.remove(4);
+        types.remove(4);
+        inputs.stream()
+                .forEach(a -> a.remove(4));
+        newinputs.addAll(inputs);
+        NaiveBayes nb4 = new NaiveBayes(inputs,labels,types);
+        nb4.initialize();
+        bayesList.add(nb4); // no synset overlap
 
         labels.remove(3);
         types.remove(3);
@@ -515,6 +543,7 @@ public class ShuZiInsQA {
                                                              TFIDF cb,
                                                              TokenOverlap to,
                                                              NGramOverlap ng,
+                                                             SynsetOverlap so,
                                                              ArrayList<ArrayList<String>> inputs,
                                                              ArrayList<String> labels,
                                                              ArrayList<String> types) {
@@ -523,11 +552,21 @@ public class ShuZiInsQA {
         List<LogisticRegression> lrList = new ArrayList<>();
         ArrayList<ArrayList<String>> newinputs = new ArrayList<>();
         // add types header and labels header
-        inputs.addAll(matrixDoubleToString(devsToInputs(devs, cb, to, ng)));
+        inputs.addAll(matrixDoubleToString(devsToInputs(devs, cb, to, ng, so)));
         LogisticRegression lr = new LogisticRegression(inputs,labels,types);
         lr.init();
         lr.trainAdaGrad();
         lrList.add(lr);  // full feature set
+
+        labels.remove(4);
+        types.remove(4);
+        inputs.stream()
+                .forEach(a -> a.remove(4));
+        newinputs.addAll(inputs);
+        LogisticRegression lr4 = new LogisticRegression(inputs,labels,types);
+        lr4.init();
+        lr4.trainAdaGrad();
+        lrList.add(lr4); // no synset overlap
 
         labels.remove(3);
         types.remove(3);
@@ -548,6 +587,7 @@ public class ShuZiInsQA {
         lr3.init();
         lr3.trainAdaGrad();
         lrList.add(lr3); // no bigrams
+
         long t2 = java.lang.System.currentTimeMillis();
         System.out.println("ShuZiInsQA.createTrainingClassesLR(): total time: " + (t2 - t1) / 1000 + " seconds");
         return lrList;
@@ -566,15 +606,18 @@ public class ShuZiInsQA {
                                                    List<NaiveBayes> nbList,
                                                    List<LogisticRegression> lrList,
                                                    TFIDF cb, TokenOverlap to,
-                                                   NGramOverlap ng) {
+                                                   NGramOverlap ng, SynsetOverlap so) {
 
         //System.out.print("ShuZiInsQA.classify()");
         ProgressPrinter pp = new ProgressPrinter(10);
         ArrayList<ArrayList<Double>> result = new ArrayList<ArrayList<Double>>();
+        System.out.print("ShuZiInsQA.classify(): " + test.get(0));
+        System.out.print("ShuZiInsQA.classify(): " + test.get(1));
+        System.out.print("ShuZiInsQA.classify(): " + test.get(2));
         for (Dev dev : test) {
             //System.out.println("ShuZiInsQA.classify(): dev: " + dev);
             pp.tick();
-            ArrayList<ArrayList<Double>> oneDev = scoreOneDev(dev, cb, to, ng);
+            ArrayList<ArrayList<Double>> oneDev = scoreOneDev(dev, cb, to, ng, so);
             ArrayList<ArrayList<String>> processedDev = matrixDoubleToString(oneDev);
             for (ArrayList<String> line : processedDev) {
                 String answer = line.get(line.size()-1); // scoreOneDev returns the target answer
@@ -584,6 +627,7 @@ public class ShuZiInsQA {
                 oneLine.add(Double.parseDouble(line.get(1))); // term overlap
                 oneLine.add(Double.parseDouble(line.get(2))); // bigram overlap
                 oneLine.add(Double.parseDouble(line.get(3))); // trigram overlap
+                oneLine.add(Double.parseDouble(line.get(4))); // synset overlap
                 ArrayList<String> shortened = new ArrayList<>(line);
                 for (NaiveBayes nb : nbList) {
                     //System.out.println("ShuZiInsQA.classify(): header: " + nb.labels);
@@ -623,20 +667,21 @@ public class ShuZiInsQA {
             precision.set(i,scoresPositive.get(i) / (scoresPositive.get(i) + (numPos - scoresPositive.get(i))));
             F1.set(i,2 * (precision.get(i) * recall.get(i)) / (precision.get(i) + recall.get(i)));
         }
-        System.out.println("ShuZiInsQA.score(): pos/neg count: " + numPos + " " + numNeg);
-        System.out.println("ShuZiInsQA.score(): labels:   " + resultHeader);
+        System.out.println("ShuZiInsQA.printMetrics():");
+        System.out.println("pos/neg count: " + numPos + " " + numNeg);
+        System.out.println("labels: \t" + resultHeader);
 
-        System.out.println("ShuZiInsQA.score(): pos count: " + listAsTable(scoresPositive));
-        System.out.println("ShuZiInsQA.score(): neg count: " + listAsTable(scoresNegative));
+        System.out.println("pos count: \t" + listAsTable(scoresPositive));
+        System.out.println("neg count: \t" + listAsTable(scoresNegative));
         for (int i = 0; i < classIndex; i++) {
             scoresPositive.set(i, scoresPositive.get(i) / numPos);
             scoresNegative.set(i, scoresNegative.get(i) / numNeg);
         }
-        System.out.println("ShuZiInsQA.score(): pos ratio: " + listAsTable(scoresPositive));
-        System.out.println("ShuZiInsQA.score(): neg ratio: " + listAsTable(scoresNegative));
-        System.out.println("ShuZiInsQA.score(): recall:    " + listAsTable(recall));
-        System.out.println("ShuZiInsQA.score(): precision: " + listAsTable(precision));
-        System.out.println("ShuZiInsQA.score(): F1:        " + listAsTable(F1));
+        System.out.println("pos ratio: \t" + listAsTable(scoresPositive));
+        System.out.println("neg ratio: \t" + listAsTable(scoresNegative));
+        System.out.println("recall:    \t" + listAsTable(recall));
+        System.out.println("precision: \t" + listAsTable(precision));
+        System.out.println("F1:        \t" + listAsTable(F1));
     }
 
     /****************************************************************
@@ -655,44 +700,51 @@ public class ShuZiInsQA {
             scoresPositive.add(new Float(0));
             scoresNegative.add(new Float(0));
         }
+        System.out.println("ShuZiInsQA.score(): classes: " + classifications.get(0));
+        System.out.println("ShuZiInsQA.score(): classes: " + classifications.get(1));
+        System.out.println("ShuZiInsQA.score(): classes: " + classifications.get(2));
         for (ArrayList<Double> classes : classifications) {
             //System.out.println("ShuZiInsQA.score(): classes: " + classes);
             //System.out.println("ShuZiInsQA.score(): class index: " + classIndex);
             if (classes.size() == classIndex + 1) {
                 if (classes.get(classIndex) == 1) { // a correct answer
                     numPos++;
-                    if (classes.get(0) > 0.9)  // overlap
+                    if (classes.get(0) > 9.9)  // overlap
                         scoresPositive.set(0, scoresPositive.get(0) + 1);
-                    if (classes.get(1) > 0.9) // tfidf
+                    if (classes.get(1) > 9.9) // tfidf
                         scoresPositive.set(1, scoresPositive.get(1) + 1);
-                    if (classes.get(2) > 0.9)  // bigram
+                    if (classes.get(2) > 9.9)  // bigram
                         scoresPositive.set(2, scoresPositive.get(2) + 1);
-                    if (classes.get(3) > 0.9)  // trigram
+                    if (classes.get(3) > 9.9)  // trigram
                         scoresPositive.set(3, scoresPositive.get(3) + 1);
-                    for (int counter = 4; counter < 7; counter++)
-                        if (classes.get(counter) == 1)  // NB
+                    if (classes.get(4) > 9.9)  // synset overlap
+                        scoresPositive.set(4, scoresPositive.get(4) + 1);
+                    for (int counter = 5; counter < 9; counter++)
+                        if (classes.get(counter) > .9)  // NB
                             scoresPositive.set(counter, scoresPositive.get(counter) + 1);
-                    for (int counter = 7; counter < classes.size()-1; counter++)
-                        if (classes.get(counter) == 1)  // LR
+                    for (int counter = 9; counter < classes.size()-1; counter++)
+                        if (classes.get(counter) > .9)  // LR
                             scoresPositive.set(counter, scoresPositive.get(counter) + 1);
                     if (scoresPositive.toString().contains("NaN"))
                         System.out.println("ShuZiInsQA.score(): number error: " + scoresPositive);
                 }
                 if (classes.get(classIndex) == 0) { // a wrong answer
                     numNeg++;
-                    if (classes.get(0) > -0.9)  // overlap
+                    if (classes.get(0) < -0.9)  // overlap
                         scoresNegative.set(0, scoresNegative.get(0) + 1);
-                    if (classes.get(1) > -0.9) // tfidf
+                    if (classes.get(1) < -0.9) // tfidf
                         scoresNegative.set(1, scoresNegative.get(1) + 1);
-                    if (classes.get(2) > -0.9)  // bigram
+                    if (classes.get(2) < -0.9)  // bigram
                         scoresNegative.set(2, scoresNegative.get(2) + 1);
-                    if (classes.get(3) > -0.9)  // trigram
+                    if (classes.get(3) < -0.9)  // trigram
                         scoresPositive.set(3, scoresNegative.get(3) + 1);
-                    for (int counter = 4; counter < 7; counter++)
-                        if (classes.get(counter) == 0)  // NB
+                    if (classes.get(4) < -0.9)  // trigram
+                        scoresPositive.set(4, scoresNegative.get(4) + 1);
+                    for (int counter = 5; counter < 9; counter++)
+                        if (classes.get(counter) < 0.1)  // NB
                             scoresNegative.set(counter, scoresNegative.get(counter) + 1);
-                    for (int counter = 7; counter < classes.size()-1; counter++)
-                        if (classes.get(counter) == 0)  // LR
+                    for (int counter = 9; counter < classes.size()-1; counter++)
+                        if (classes.get(counter) < 0.1)  // LR
                             scoresNegative.set(counter, scoresNegative.get(counter) + 1);
                     if (scoresNegative.toString().contains("NaN"))
                         System.out.println("ShuZiInsQA.score(): number error: " + scoresNegative);
@@ -752,37 +804,42 @@ public class ShuZiInsQA {
         List<Dev> devs = readDevTestQuestions();
         TFIDF cb = null;
         TokenOverlap to = null;
-        NGramOverlap ng = null;;
+        NGramOverlap ng = null;
+        SynsetOverlap so = null;
         try {
             List<String> a = new ArrayList<>();
             a.addAll(answers);
             cb = new TFIDF(a,"/home/apease/Sigma/KBs/stopwords.txt");
             to = new TokenOverlap(cb);
             ng = new NGramOverlap(cb);
+            so = new SynsetOverlap(cb);
         }
         catch (IOException ioe) {
-            System.out.println("Error in ShuZiInsQA.devsToInputs()");
+            System.out.println("Error in ShuZiInsQA.run()");
             ioe.printStackTrace();
         }
 
         ArrayList<ArrayList<String>> inputs = new ArrayList<>();
         // add types header and labels header
-        ArrayList<String> types = Lists.newArrayList("disc", "disc", "disc", "disc", "class");
-        ArrayList<String> labels = Lists.newArrayList("tfidf", "overlap", "bigram", "trigram", "answer");
+        ArrayList<String> types = Lists.newArrayList("disc", "disc", "disc", "disc", "disc", "class");
+        ArrayList<String> labels = Lists.newArrayList("tfidf", "overlap", "bigram", "trigram", "synOvlp", "answer");
         //inputs.addAll(matrixIntegerToString(devsToInputs(devs,cb,to,ng)));
-        List<NaiveBayes> nblist = createTrainingClasses(devs,cb,to,ng,inputs,labels,types);
+        List<NaiveBayes> nblist = createTrainingClasses(devs,cb,to,ng,so,inputs,labels,types);
 
         inputs = new ArrayList<>();
-        types = Lists.newArrayList("disc", "disc", "disc", "disc", "class");
-        labels = Lists.newArrayList("tfidf", "overlap", "bigram", "trigram", "answer");
-        List<LogisticRegression> lrList = createTrainingClassesLR(devs, cb, to, ng, inputs,labels,types);
+        types = Lists.newArrayList("disc", "disc", "disc", "disc", "disc", "class");
+        labels = Lists.newArrayList("tfidf", "overlap", "bigram", "trigram", "synOvlp", "answer");
+        List<LogisticRegression> lrList = createTrainingClassesLR(devs, cb, to, ng, so, inputs,labels,types);
 
         ArrayList<Dev> test = readTestQuestionOneFile();
 
-        resultHeader = Lists.newArrayList("tfidf", "overlap", "bigram", "trigram", "NBall",
-                "NBnoTri", "NBnoBi", "LRall", "LRnoTri", "LRnoBi");
-        ArrayList<ArrayList<Double>> intInputs = classify(test, nblist, lrList, cb, to, ng);
-        score(intInputs,10);
+        resultHeader = Lists.newArrayList("tfidf", "ovrlap", "bigram", "trigrm", "synOvl", "NBall", "NB!Syn",
+                "NB!Tri", "NB!Bi", "LRall", "LR!Syn", "LR!Tri", "LR!Bi");
+        ArrayList<ArrayList<Double>> intInputs = classify(test, nblist, lrList, cb, to, ng, so);
+        System.out.println("ShuZiInsQA.run(): " + intInputs.get(0));
+        System.out.println("ShuZiInsQA.run(): " + intInputs.get(1));
+        System.out.println("ShuZiInsQA.run(): " + intInputs.get(2));
+        score(intInputs, 13);
     }
 
     /****************************************************************
