@@ -1,10 +1,7 @@
 package com.articulate.sigma.nlp;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by apease on 10/6/15.
@@ -13,6 +10,7 @@ import java.util.Random;
 public class LogisticRegression {
     // A simple logistic regression model with L2 regularization (zero-mean Gaussian priors on parameters).
 
+    public Random rand = new Random();
     public double[][] x_train;  // first dimension is the list of points, second dimension is the dimensions
     public double[] y_train;    // the class of each point
     public double[][] x_test;
@@ -23,6 +21,12 @@ public class LogisticRegression {
     public double[] betas;             // a set of coefficients the same length as the x vector
     public ArrayList<String> labels = new ArrayList<>();
     public ArrayList<String> types = new ArrayList<>();
+    public int epochBatch = 0;
+    public static final int numBatches = 10;
+    public boolean epochs = false; // sample the training space
+
+    // batch number, then example number and original example number
+    public HashMap<Integer,HashSet<Integer>> epochMap = new HashMap<>();
 
     /****************************************************************
      */
@@ -57,6 +61,21 @@ public class LogisticRegression {
         dim = numDimensions;
         alpha = 0; // default no smoothing
 
+    }
+
+    /****************************************************************
+     * Create a new set of randomized batches of examples for training
+     */
+    public void shuffleExamples() {
+
+        System.out.println("LogisticRegression.shuffleExamples()");
+        for (int i = 0; i < numBatches; i++)
+            epochMap.put(i,new HashSet<Integer>());
+        for (int i = 0; i < n; i++) {
+            int batch = rand.nextInt(numBatches);
+            HashSet<Integer> abatch = epochMap.get(batch);
+            abatch.add(i);
+        }
     }
 
     /****************************************************************
@@ -164,6 +183,27 @@ public class LogisticRegression {
     public double negative_lik(double[] bs) {
 
         return -1.0 * lik(bs);
+    }
+
+    /****************************************************************
+     * Likelihood of the data under the current settings of parameters.
+     * Data is smoothed with the alpha parameter, data points are sampled
+     * with the minibatch method
+     */
+    public double lik_minibatch(double[] bs) {
+
+        // Data likelihood
+        double l = 0;
+        HashSet<Integer> elements = epochMap.get(epochBatch);
+        for (Integer i : elements) {
+            l += Math.log(sigmoid(y_train[i] * dotProduct(bs, x_train[i])));
+        }
+
+        //Prior likelihood
+        for (int k = 0; k < dim; k++)
+            l -= (alpha / 2.0) * bs[k] * bs[k];
+
+        return l;
     }
 
     /****************************************************************
@@ -276,6 +316,28 @@ public class LogisticRegression {
      * Define the derivative of the likelihood with respect to beta_k.
      * Need to multiply by -1 because we will be minimizing.
      */
+    public double dB_k_minibatch(int k) {
+
+        double dB_k_result = 0;
+        double sum = 0;
+        HashSet<Integer> elements = epochMap.get(epochBatch);
+        if (elements == null)
+            System.out.println("error in LogisticRegression.dB_k_minibatch(): " + epochBatch);
+        for (Integer i : elements) {
+            sum += y_train[i] * x_train[i][k] * sigmoid(-y_train[i] * dotProduct(betas, x_train[i]));
+        }
+        if (k > 0)
+            dB_k_result = alpha * betas[k] - sum;
+        else
+            dB_k_result =  - sum;
+
+        return dB_k_result;
+    }
+
+    /****************************************************************
+     * Define the derivative of the likelihood with respect to beta_k.
+     * Need to multiply by -1 because we will be minimizing.
+     */
     public double dB_k(int k) {
 
         double dB_k_result = 0;
@@ -374,6 +436,7 @@ public class LogisticRegression {
             System.out.println("LogisticRegression.trainAlt(): final betas: " + toStringArrayWithPrecision(betas));
         }
     }
+
     /****************************************************************
      * train using AdaGrad http://www.ark.cs.cmu.edu/cdyer/adagrad.pdf
      */
@@ -405,6 +468,49 @@ public class LogisticRegression {
             lastLik = lik;
             learningRateSums = addVectors(learningRateSums, multVec(gradient,gradient));
             System.out.println("LogisticRegression.train(): betas: " + toStringArrayWithPrecision(betas));
+        }
+        System.out.println("LogisticRegression.trainAdaGrad(): iterations: " + count);
+        System.out.println("LogisticRegression.trainAdaGrad(): delta: " + delta);
+        System.out.println("LogisticRegression.trainAdaGrad(): final betas: " + toStringArrayWithPrecision(betas));
+    }
+
+    /****************************************************************
+     * train using AdaGrad http://www.ark.cs.cmu.edu/cdyer/adagrad.pdf
+     */
+    public void trainAdaGradMiniBatch() {
+
+        epochBatch = 0;
+        System.out.println("LogisticRegression.trainAdaGrad(): initial betas: " + toStringArrayWithPrecision(betas));
+        int num_iterations = 1000;
+        double[] learningRates = new double[betas.length];
+        Arrays.fill(learningRates,0.0001);
+        double[] learningRateSums = new double[betas.length]; // sum of the squared rates
+        Arrays.fill(learningRateSums,0.0001);
+        double globalLearningRate = 0.0001;
+        int count = 0;
+        double delta = 1.0;
+        double deltaLimit = 0.01;
+        double lastLik = 0;
+        //Optimize (objective function, initial guess, gradient of f
+        while ((count < num_iterations && delta > deltaLimit) || epochBatch != numBatches) {
+            count++;
+            if (epochBatch == numBatches)
+                epochBatch = 0;
+            if (epochBatch == 0)
+                shuffleExamples();
+            double[] multiple = new double[betas.length];
+            for (int i = 0; i < betas.length; i++) {
+                multiple[i] = -globalLearningRate / Math.sqrt(learningRateSums[i]);
+            }
+            double[] gradient = dB();
+            betas = addVectors(betas, multVec(gradient, multiple));
+            double lik = negative_lik(betas);
+            delta = Math.abs(lastLik - lik);
+            System.out.println("LogisticRegression.trainAdaGrad(): negative lik: " + lik);
+            lastLik = lik;
+            learningRateSums = addVectors(learningRateSums, multVec(gradient,gradient));
+            System.out.println("LogisticRegression.train(): betas: " + toStringArrayWithPrecision(betas));
+            epochBatch++;
         }
         System.out.println("LogisticRegression.trainAdaGrad(): iterations: " + count);
         System.out.println("LogisticRegression.trainAdaGrad(): delta: " + delta);
