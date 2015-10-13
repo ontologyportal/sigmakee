@@ -45,22 +45,15 @@
 			<artifactId>json-simple</artifactId>
 			<version>1.1</version>
 		</dependency>
-		<!--dependency>
-			<groupId>edu.stanford.nlp</groupId>
-			<artifactId>stanford-corenlp</artifactId>
-			<version>3.5.1</version>
-		</dependency-->
 		<dependency>
 			<groupId>edu.stanford.nlp</groupId>
 			<artifactId>stanford-corenlp</artifactId>
-			<version>SNAPSHOT</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/stanford-corenlp-SNAPSHOT.jar</systemPath>
+			<version>3.5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.stanford.nlp</groupId>
 			<artifactId>stanford-corenlp</artifactId>
-			<version>3.5.1</version>
+			<version>3.5.2</version>
 			<classifier>models</classifier>
 		</dependency>
 
