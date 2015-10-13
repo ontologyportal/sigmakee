@@ -73,11 +73,11 @@ public class NaiveBayes {
                       ArrayList<String> types) {
 
         input = new ArrayList<ArrayList<String>>();
-        System.out.println("NaiveBayes with #input: " + in.size());
+        //System.out.println("NaiveBayes with #input: " + in.size());
         input.addAll(in);
         this.types = types; // these can be discrete "disc", continuous "cont" or "class"
         this.labels = labels;
-        System.out.println("NaiveBayes() : starting line: " + input.get(0));
+        //System.out.println("NaiveBayes() : starting line: " + input.get(0));
     }
 
     /** *************************************************************
@@ -104,7 +104,7 @@ public class NaiveBayes {
      */
     public void createPriorCounts() {
 
-        System.out.println("NaiveBayes.createPriorCounts() : starting line: " + input.get(0));
+        //System.out.println("NaiveBayes.createPriorCounts() : starting line: " + input.get(0));
         int classIndex = types.indexOf("class");
         for (ArrayList<String> row : input) {
             String clss = row.get(classIndex);
@@ -123,7 +123,7 @@ public class NaiveBayes {
      */
     public void createConditionalCounts() {
 
-        System.out.println("NaiveBayes.createConditionalCounts() : starting line: " + input.get(0));
+        //System.out.println("NaiveBayes.createConditionalCounts() : starting line: " + input.get(0));
         for (ArrayList<String> row : input) {
             int classIndex = types.indexOf("class");
             String clss = row.get(classIndex);
@@ -152,7 +152,7 @@ public class NaiveBayes {
             }
             conditionalCounts.put(clss,classInfo);
         }
-        System.out.println("NaiveBayes.createConditionalCounts() : " + conditionalCounts);
+        //System.out.println("NaiveBayes.createConditionalCounts() : " + conditionalCounts);
     }
 
     /** *************************************************************
@@ -160,7 +160,7 @@ public class NaiveBayes {
      */
     public void createTotals() {
 
-        System.out.println("NaiveBayes.createTotals() : starting line: " + input.get(0));
+        //System.out.println("NaiveBayes.createTotals() : starting line: " + input.get(0));
         for (ArrayList<String> row : input) {
             int classIndex = types.indexOf("class");
             String clss = row.get(classIndex);
@@ -198,7 +198,7 @@ public class NaiveBayes {
                 float value = classTotalsInfo.get(column);
                 classMeanInfo.put(column,value / count);
             }
-            System.out.println("createMeans(): " + clss + ":" + classMeanInfo);
+            //System.out.println("createMeans(): " + clss + ":" + classMeanInfo);
         }
     }
 
