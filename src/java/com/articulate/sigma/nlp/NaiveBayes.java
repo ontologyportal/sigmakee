@@ -56,27 +56,28 @@ public class NaiveBayes {
             input = dg.readSpreadsheetFile("/home/apease/IPsoft/NB/NBdata.txt", ',');
         else
             input = dg.readSpreadsheetFile(filename, ',');
-        System.out.println(input);
+        //System.out.println(input);
         input.remove(0);  // remove "start"
         types.addAll(input.get(0));  // these can be discrete "disc", continuous "cont" or "class"
         labels.addAll(input.get(1));
         input.remove(0);  // remove types
         input.remove(0);  // remove headers
         //input.remove(input.size()-1);
-        System.out.println(input);
+        //System.out.println(input);
     }
 
     /** *************************************************************
      */
-    public NaiveBayes(ArrayList<ArrayList<String>> inputs) {
+    public NaiveBayes(ArrayList<ArrayList<String>> in) {
 
         input = new ArrayList<ArrayList<String>>();
-        System.out.println("NaiveBayes with #input: " + inputs.size());
-        input.addAll(inputs);
+        System.out.println("NaiveBayes with #input: " + in.size());
+        input.addAll(in);
         types.addAll(input.get(0));  // these can be discrete "disc", continuous "cont" or "class"
         labels.addAll(input.get(1));
         input.remove(0);  // remove types
         input.remove(0);  // remove headers
+        System.out.println("NaiveBayes() : starting line: " + input.get(0));
     }
 
     /** *************************************************************
@@ -103,6 +104,7 @@ public class NaiveBayes {
      */
     public void createPriorCounts() {
 
+        System.out.println("NaiveBayes.createPriorCounts() : starting line: " + input.get(0));
         int classIndex = types.indexOf("class");
         for (ArrayList<String> row : input) {
             String clss = row.get(classIndex);
@@ -121,6 +123,7 @@ public class NaiveBayes {
      */
     public void createConditionalCounts() {
 
+        System.out.println("NaiveBayes.createConditionalCounts() : starting line: " + input.get(0));
         for (ArrayList<String> row : input) {
             int classIndex = types.indexOf("class");
             String clss = row.get(classIndex);
@@ -146,12 +149,10 @@ public class NaiveBayes {
                         values.put(value, new Integer(1));
                     classInfo.put(label.toString(), values);
                 }
-                if (types.get(column).equals("cont")) {
-
-                }
             }
             conditionalCounts.put(clss,classInfo);
         }
+        System.out.println("NaiveBayes.createConditionalCounts() : " + conditionalCounts);
     }
 
     /** *************************************************************
@@ -159,6 +160,7 @@ public class NaiveBayes {
      */
     public void createTotals() {
 
+        System.out.println("NaiveBayes.createTotals() : starting line: " + input.get(0));
         for (ArrayList<String> row : input) {
             int classIndex = types.indexOf("class");
             String clss = row.get(classIndex);
@@ -297,6 +299,10 @@ public class NaiveBayes {
      */
     public String classify(List<String> values) {
 
+        if (values == null) {
+            System.out.println("Error in NaiveBayes.classify: null input");
+            return "";
+        }
         int classIndex = types.indexOf("class");
         int indexMod = 0;  // if class name is not the last element
         if (classIndex == 0)
@@ -315,9 +321,18 @@ public class NaiveBayes {
                 String type = types.get(index);
                 if (type.equals("disc")) {
                     HashMap<String, Float> conditCol = posteriors.get(label);
-                    String value = values.get(index);
-                    float conditional = conditCol.get(value);
-                    prob = prob * conditional;
+                    if (conditCol != null) { // trap unseen features
+                        String value = values.get(index);
+                        if (value == null || value == "" || conditCol.get(value) == null) {
+                            System.out.println("Error in NaiveBayes.classify: " + label +
+                                    " index: " + index + " values: " + values + " value: " + value);
+                            System.out.println(conds.get(clss));
+                        }
+                        else {
+                            float conditional = conditCol.get(value);
+                            prob = prob * conditional;
+                        }
+                    }
                 }
                 if (type.equals("cont")) {
                     float value = Float.parseFloat(values.get(index));
@@ -331,7 +346,7 @@ public class NaiveBayes {
                 maxClass = clss;
             }
         }
-        //System.out.println("classify(): probabilities: " + probs);
+        //System.out.println("NaiveBayes.classify(): probabilities: " + probs);
         return maxClass;
     }
 
@@ -339,23 +354,24 @@ public class NaiveBayes {
      */
     public void initialize() {
 
+        System.out.println("NaiveBayes.initialize(): first line: " + input.get(0));
         createPriorCounts();
-        System.out.println("initialize() : priorCounts: " + priorCounts);
+        System.out.println("NaiveBayes.initialize() : priorCounts: " + priorCounts);
         int sum = findTrainingSetSize();
-        System.out.println("initialize() : sum: " + sum);
+        System.out.println("NaiveBayes.initialize() : sum: " + sum);
         // class name key value map of column number key
         createConditionalCounts();
-        System.out.println("initialize() : conditionalCounts: " + conditionalCounts);
+        System.out.println("NaiveBayes.initialize() : conditionalCounts: " + conditionalCounts);
         createTotals();
-        System.out.println("initialize() : totals: " + totals);
+        System.out.println("NaiveBayes.initialize() : totals: " + totals);
         createMeans();
-        System.out.println("initialize() : means: " + means);
+        System.out.println("NaiveBayes.initialize() : means: " + means);
         createStandardDeviation();
-        System.out.println("initialize() : standard deviation: " + ssd);
+        System.out.println("NaiveBayes.initialize() : standard deviation: " + ssd);
         calcPriors(sum);
-        System.out.println("initialize() : priors: " + priors);
+        System.out.println("NaiveBayes.initialize() : priors: " + priors);
         calcConditionals(sum);
-        System.out.println("initialize() : conds: " + conds);
+        System.out.println("NaiveBayes.initialize() : conds: " + conds);
     }
 
     /** *************************************************************
