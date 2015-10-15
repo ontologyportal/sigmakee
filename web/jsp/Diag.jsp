@@ -98,6 +98,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
   while (it.hasNext()) {
 	  Formula f = it.next();
 	  out.println(f.htmlFormat(kbHref));
+	  out.println("<br>");
   }
   //out.println(HTMLformatter.termList(noquant,kbHref));
       

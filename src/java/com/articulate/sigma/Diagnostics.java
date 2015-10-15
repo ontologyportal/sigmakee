@@ -374,11 +374,13 @@ public class Diagnostics {
                 if (quantifierNotInStatement(restForm)) 
                     return true;
             }
-            for (int i = 0; i < qList.size(); i++) {
-                String var = (String) qList.get(i);
-                if (body.indexOf(var) == -1) 
-                    return true;
-            }
+	    if (qList != null) {	// how can this be null....
+	            for (int i = 0; i < qList.size(); i++) {
+	                String var = (String) qList.get(i);
+	                if (body.indexOf(var) == -1) 
+	                    return true;
+	            }
+	    }
         }
         return false;
     }
