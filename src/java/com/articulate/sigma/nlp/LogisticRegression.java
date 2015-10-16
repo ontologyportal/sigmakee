@@ -17,7 +17,7 @@ public class LogisticRegression {
     public double[] y_test;
     public int n; // number of points
     public int dim; // number of dimensions
-    public double alpha;
+    public double alpha = 0.0001;
     public double[] betas;             // a set of coefficients the same length as the x vector
     public ArrayList<String> labels = new ArrayList<>();
     public ArrayList<String> types = new ArrayList<>();
@@ -631,7 +631,7 @@ public class LogisticRegression {
 
         //Run for a variety of regularization strengths
         //double[] alphas = {0, .001, .01, .1};
-        double[] alphas = {0};
+        double[] alphas = {0.0001};
         for (int j = 0 ; j < alphas.length; j++) {
             double a = alphas[j];
             System.out.println();
