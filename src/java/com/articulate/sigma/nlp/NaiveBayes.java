@@ -422,12 +422,9 @@ public class NaiveBayes {
             nb.initialize();
             System.out.println("main(): most likely class: " + nb.classify(values));
         }
-
         //ArrayList<String> values = Lists.newArrayList("health","moderate","moderate","yes","class");
         //ArrayList<String> values = Lists.newArrayList("y","y","y","n","n","n","y","y","y","n","n","n","y","n","y","y");
         // ArrayList<String> values = Lists.newArrayList("both","sedentary","aggressive","no","class");
         //ArrayList<String> values = Lists.newArrayList("7","81","88","40","48","46.7","0.261","52");
-
-
     }
 }
