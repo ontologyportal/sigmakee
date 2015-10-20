@@ -1,5 +1,9 @@
 package com.articulate.sigma.nlp;
 
+import com.articulate.sigma.DB;
+import com.sun.org.apache.bcel.internal.classfile.LineNumber;
+
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -35,10 +39,22 @@ public class LogisticRegression {
     }
 
     /****************************************************************
+     * load betas from a file to bypass training phase
+     */
+    public LogisticRegression(String filename) {
+
+        load(filename);
+        n = 0;  // training params don't matter here
+        dim = betas.length;
+        alpha = 0; // default no smoothing, but training params don't matter here
+    }
+
+    /****************************************************************
      */
     public LogisticRegression(ArrayList<ArrayList<String>> inputs,
                               ArrayList<String> labels,
                               ArrayList<String> types) {
+
         this.types = types;  // these can be discrete "disc", continuous "cont" or "class"
         this.labels = labels;
         System.out.println("LogisticRegressions(): types: " + types);
@@ -60,7 +76,67 @@ public class LogisticRegression {
         n = numpoints;
         dim = numDimensions;
         alpha = 0; // default no smoothing
+    }
 
+    /****************************************************************
+     */
+    public void printTabbedLine(PrintWriter pw, List<String> ar) throws IOException {
+
+        for (int i = 0; i < ar.size(); i++) {
+            if (i != 0)
+                pw.print("\t");
+            pw.print(ar.get(i));
+        }
+        pw.println();
+    }
+
+    /****************************************************************
+     * load a set of betas with their labels and types
+     */
+    public void load(String filename) {
+
+        ArrayList<ArrayList<String>> fn = DB.readSpreadsheet(filename,null,false,',');
+        labels = new ArrayList<>();
+        labels.addAll(fn.get(0));
+        types = new ArrayList<>();
+        types.addAll(fn.get(1));
+        betas = new double[types.size()];
+        for (int i = 0; i < fn.get(0).size(); i++)
+            betas[i] = Double.parseDouble(fn.get(2).get(i));
+    }
+
+    /****************************************************************
+     * Save tab-delimited data for the coefficients
+     */
+    public void save() {
+
+        ArrayList<ArrayList<String>> values = new ArrayList<>();
+        values.add(labels);
+        values.add(types);
+        ArrayList<String> betaString = new ArrayList<>();
+        for (int i = 0; i < betas.length; i++)
+            betaString.add(Double.toString(betas[i]));
+        values.add(betaString);
+        String out = DB.writeSpreadsheet(values,false);
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(new FileWriter("LRbetas.txt"));
+            pw.println(out);
+        }
+        catch (Exception ex) {
+            System.out.println("Error writing file LRbetas.txt");
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (pw != null) {
+                    pw.close();
+                }
+            }
+            catch (Exception ioe) {
+                ioe.printStackTrace();
+            }
+        }
     }
 
     /****************************************************************
@@ -569,22 +645,32 @@ public class LogisticRegression {
      */
     public String classify(List<String> values) {
 
-        //System.out.println("LogisticRegression.classify(): values: " + values);
-        //System.out.println("LogisticRegression.classify(): betas: " + toStringArrayWithPrecision(betas));
-        //System.out.println("LogisticRegression.classify(): dim: " + dim);
-        double[] input = new double[dim];
-        if (values.size() != dim)  // size minus the expected class column
-            System.out.println("Error in LogisticRegression.classify(): wrong size array " + values.size());
-        for (int i = 0; i < values.size()-1; i++) {
-            input[i] = Double.parseDouble(values.get(i));
-        }
-        double result = sigmoid(dotProduct(betas,input));
+        double result = classifyContinuous(values);
         //System.out.println("LogisticRegression.classify(): result: " + result + " values: " + values);
         //System.out.println("LogisticRegression.classify(): betas: " + toStringArrayWithPrecision(betas));
         if (result > 0.5)
             return "1";
         else
             return "0";
+    }
+
+    /****************************************************************
+     * @param values a list of string values that will be assumed to be floats
+     *               of features and a final element for the class
+     * @return a double representation of the olikelihood of the class
+     */
+    public double classifyContinuous(List<String> values) {
+
+        //System.out.println("LogisticRegression.classifyContinuous(): values: " + values);
+        //System.out.println("LogisticRegression.classifyContinuous(): betas: " + toStringArrayWithPrecision(betas));
+        //System.out.println("LogisticRegression.classifyContinuous(): dim: " + dim);
+        double[] input = new double[dim];
+        if (values.size() != dim)  // size minus the expected class column
+            System.out.println("Error in LogisticRegression.classifyContinuous(): wrong size array " + values.size());
+        for (int i = 0; i < values.size()-1; i++) {
+            input[i] = Double.parseDouble(values.get(i));
+        }
+        return sigmoid(dotProduct(betas,input));
     }
 
     /****************************************************************
