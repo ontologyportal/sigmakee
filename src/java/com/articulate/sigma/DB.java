@@ -746,7 +746,7 @@ public class DB {
      * statements in the knowledge base.  Only the relations that are
      * actually used are included in the header.
      *
-     *  @param The knowledge base.
+     *  @param kb The knowledge base.
      */
     public void exportTable(KB kb) {
 
