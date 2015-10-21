@@ -160,7 +160,9 @@ public class NaiveBayes {
      */
     public void createTotals() {
 
-        //System.out.println("NaiveBayes.createTotals() : starting line: " + input.get(0));
+        System.out.println("NaiveBayes.createTotals() : types: " + types);
+        System.out.println("NaiveBayes.createTotals() : labels: " + labels);
+        System.out.println("NaiveBayes.createTotals() : starting line: " + input.get(0));
         for (ArrayList<String> row : input) {
             int classIndex = types.indexOf("class");
             String clss = row.get(classIndex);
