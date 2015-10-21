@@ -657,7 +657,7 @@ public class LogisticRegression {
     /****************************************************************
      * @param values a list of string values that will be assumed to be floats
      *               of features and a final element for the class
-     * @return a double representation of the olikelihood of the class
+     * @return a double representation of the likelihood of the class
      */
     public double classifyContinuous(List<String> values) {
 
