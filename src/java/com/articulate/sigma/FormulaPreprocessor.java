@@ -39,7 +39,9 @@ public class FormulaPreprocessor {
      */
     public static String findType(int numarg, String pred, KB kb) {
 
-        ArrayList<String> sig = kb.kbCache.signatures.get(pred);
+        ArrayList<String> sig = null;
+        if (kb.kbCache != null && kb.kbCache.signatures != null)
+            sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
             if (!kb.isInstanceOf(pred, "VariableArityRelation"))
                 System.out.println("Error in FormulaPreprocessor.findType(): " +
@@ -579,7 +581,7 @@ public class FormulaPreprocessor {
                         String cl = findType(argnum,pred,kb);
                         if (debug) System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
                         if (StringUtil.emptyString(cl)) {
-                            if (!kb.kbCache.transInstOf(pred, "VariableArityRelation"))
+                            if (kb.kbCache == null || !kb.kbCache.transInstOf(pred,"VariableArityRelation"))
                                 System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                         "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
                         }
@@ -587,7 +589,7 @@ public class FormulaPreprocessor {
                             addToMap(result,arg,cl);
                     }
                     // If formula is function then recurse.
-                    else if(Formula.isFunctionalTerm(arg))  {
+                    else if (Formula.isFunctionalTerm(arg))  {
                         result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
                     newf = newf.cdrAsFormula();
