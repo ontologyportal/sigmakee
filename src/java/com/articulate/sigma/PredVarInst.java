@@ -1,5 +1,17 @@
 package com.articulate.sigma;
 
+/** This code is copyright Articulate Software (c) 2014.
+ This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+ Users of this code also consent, by use of this code, to credit Articulate Software
+ and Teknowledge in any writings, briefings, publications, presentations, or
+ other representations of any software which incorporates, builds on, or uses this
+ code.  Please cite the following article in any publication with references:
+
+ Pease, A., (2003). The Sigma Ontology Development Environment,
+ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
+ */
+
 import java.security.InvalidParameterException;
 import java.util.*;
 
@@ -127,17 +139,19 @@ public class PredVarInst {
             if (l == null) {
                 return null;
             }
-            Integer intval = kb.kbCache.valences.get(rel);
+            Integer intval = null;
+            if (kb.kbCache != null && kb.kbCache.valences != null)
+                intval= kb.kbCache.valences.get(rel);
             if (intval != null)
                 val = intval.intValue();
             else {
                 if (l.size() != 0 && !logicalTerms.contains(rel) && !rel.startsWith("?")) {
-                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s do not have a arity defined in KB, can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
-                    throw new IllegalArgumentException();
+                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s does not have an arity defined in KB, can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
+                    //throw new IllegalArgumentException();
                 }
             }
             //check the arity number of current level predict
-            if (!kb.kbCache.transInstOf(rel, "VariableArityRelation")) {
+            if (kb.kbCache == null || !kb.kbCache.transInstOf(rel, "VariableArityRelation")) {
                 //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() variable arity: " + f);
                 if (val > 0 && val != l.size()) {
                     System.out.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
