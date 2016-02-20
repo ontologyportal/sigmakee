@@ -154,10 +154,11 @@ public class EProver {
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
-
+        System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
         _eprover = _builder.start();
+        System.out.println("EProver(): new process: " + _eprover);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
@@ -179,10 +180,11 @@ public class EProver {
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
-
+        System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
         _eprover = _builder.start();
+        System.out.println("EProver(): process: " + _eprover);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
@@ -196,14 +198,17 @@ public class EProver {
      */
     public String assertFormula(String formula) {
 
+        System.out.println("EProver.assertFormula(1): process: " + _eprover);
         String result = "";
         try {
             String assertion = "";
             _writer.write(assertion);
+            System.out.println("\nINFO in EProver.assertFormula(1) write: " + assertion + "\n");
             _writer.flush();
             String line;
             do {
                 line = _reader.readLine();
+                System.out.println("\nINFO in EProver.assertFormula(1) read: " + line);
                 if (line.indexOf("Error:") != -1)
                     throw new IOException(line);
                 System.out.println("INFO EProver(): Response: " + line);
@@ -236,6 +241,7 @@ public class EProver {
     public boolean assertFormula(String userAssertionTPTP, KB kb, EProver eprover,
                                  ArrayList<Formula> parsedFormulas, boolean tptp) {
 
+        System.out.println("EProver.assertFormula(2): process: " + _eprover);
         boolean allAdded = (eprover != null);
         PrintWriter pw = null;
         try {
@@ -264,7 +270,7 @@ public class EProver {
                             pw.print("fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                             pw.println(",axiom,(" + theTPTPFormula + ")).");
                             String tptpstring = "fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                            System.out.println("INFO in EProver.assertFormula: TPTP for user assertion = " + tptpstring);
+                            System.out.println("INFO in EProver.assertFormula(2): TPTP for user assertion = " + tptpstring);
                         }
                         pw.flush();
                     }
@@ -326,17 +332,21 @@ public class EProver {
      */
     public String submitQuery(String formula, KB kb) {
 
+        System.out.println("EProver.submitQuery(): process: " + _eprover);
         String result = "";
-
         try {
             String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
             String conjecture = "fof(conj1,conjecture, " + query + ").";
-            System.out.println("\nINFO in EProver.submitQuery() conjecture: " + conjecture + "\n");
+            System.out.println("\nINFO in EProver.submitQuery() write: " + conjecture + "\n");
             _writer.write(conjecture + "\n");
+            System.out.println("\nINFO in EProver.submitQuery() write: go.");
             _writer.write("go.\n");
             _writer.flush();
 
             String line = _reader.readLine();
+            System.out.println("INFO in EProver.submitQuery(1): line: " + line);
+            line = _reader.readLine();
+            System.out.println("INFO in EProver.submitQuery(1): line: " + line);
             boolean inProof = false;
             while (line != null) {
                 if (line.indexOf("# SZS status") != -1)
@@ -347,6 +357,7 @@ public class EProver {
                     result += line + "\n";
                 }
                 line = _reader.readLine();
+                System.out.println("INFO in EProver.submitQuery: line: " + line);
             }
         }
         catch (Exception ex) {
