@@ -498,6 +498,8 @@ public class KB {
      */
     public boolean isInstanceOf(String i, String c) {
 
+        if (kbCache == null)
+            return false;
         return kbCache.isInstanceOf(i, c);
     }
 
@@ -530,7 +532,7 @@ public class KB {
             Iterator<KB> it = kbs.values().iterator();
             while (it.hasNext()) {
                 kb = it.next();
-                if (kb.kbCache.relations.contains(i)) 
+                if (kb.kbCache != null && kb.kbCache.relations != null && kb.kbCache.relations.contains(i))
                     return true;
             }
         }
@@ -1461,6 +1463,7 @@ public class KB {
      */
     public String tell(String input) {
 
+        System.out.println("KB.tell: eprover: " + eprover);
         String result = "The formula could not be added";
         KBmanager mgr = KBmanager.getMgr();            
         KIF kif = new KIF();    // 1. Parse the input string.
@@ -1488,7 +1491,7 @@ public class KB {
             // In the future, when SUMO can completely run using whole KB, we can remove
             // SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
             if (SUMOKBtoTPTPKB.filterSimpleOnly==false && !formulasAlreadyPresent.isEmpty()) {
-                String sf = ((Formula)formulasAlreadyPresent.get(0)).sourceFile;
+                String sf = ((Formula) formulasAlreadyPresent.get(0)).sourceFile;
                 result = "The formula was already added from " + sf;
             }
             else {
@@ -1496,7 +1499,8 @@ public class KB {
                 Iterator<Formula> it = kif.formulaMap.values().iterator();
                 while (it.hasNext()) { // 2. Confirm that the input has been converted into
                                        // at least one Formula object and stored in this.formulaMap.
-                    Formula parsedF = it.next();   
+                    Formula parsedF = it.next();
+                    System.out.println("KB.tell: " + parsedF.toString());
                     String term = PredVarInst.hasCorrectArity(parsedF,this);
                     if (!StringUtil.emptyString(term)) {
                         result = result + "Formula in " + parsedF.sourceFile +
@@ -1523,6 +1527,7 @@ public class KB {
                         parsedF.sourceFile = filename;
                     }
                     result = "The formula has been added for browsing";
+                    System.out.println("KB.tell: eprover: " + eprover);
                     // 5. Write the formula to the kb.name_UserAssertions.tptp
                     boolean allAdded = eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover,
                             parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
@@ -1578,15 +1583,16 @@ public class KB {
                 try {
                     eprover.addBatchConfig(null, timeout);
                     eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 }
                 String strQuery = processedStmts.get(0).theFormula;
                 result = this.eprover.submitQuery(strQuery,this);
-                if (result==null || result.isEmpty())
-                    System.out.println("No response from EProver!");
+                if (result == null || result.isEmpty())
+                    System.out.println("KB.ask: No response from EProver!");
                 else
-                    System.out.println("Get response from EProver, start for parsing ...");
+                    System.out.println("KB.ask: Get response from EProver, start for parsing ...");
                 //System.out.println("Results returned from E = \n" + EResult);
                 ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(result, this, fp);
                 return answers;
@@ -2986,13 +2992,16 @@ public class KB {
      */
     public void loadEProver() {
 
+        System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
         try {
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
                 formulaStrings.addAll(formulaMap.keySet());
-                if (eprover != null) 
+                if (eprover != null) {
+                    System.out.println("INFO in KB.loadEProver(): terminating old process first");
                     eprover.terminate();
+                }
                 eprover = null;
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
