@@ -1,5 +1,17 @@
 package com.articulate.sigma;
 
+/** This code is copyright Articulate Software (c) 2014.
+ This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+ Users of this code also consent, by use of this code, to credit Articulate Software
+ and Teknowledge in any writings, briefings, publications, presentations, or
+ other representations of any software which incorporates, builds on, or uses this
+ code.  Please cite the following article in any publication with references:
+
+ Pease, A., (2003). The Sigma Ontology Development Environment,
+ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
+ */
+
 import TPTPWorld.InterfaceTPTP;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -165,8 +177,8 @@ public class CCheck implements Runnable {
      */
     private KB makeEmptyKB() {
         
-        ccheck_kb = "CCheck-" + kb.name;
-        String kbDir = (String)KBmanager.getMgr().getPref("kbDir");
+        ccheck_kb = "CCheck_" + kb.name;
+        String kbDir = (String) KBmanager.getMgr().getPref("kbDir");
         if (KBmanager.getMgr().existsKB(ccheck_kb)) 
             KBmanager.getMgr().removeKB(ccheck_kb);        
         File dir = new File( kbDir );
@@ -176,8 +188,9 @@ public class CCheck implements Runnable {
         PrintWriter pwriter = null;
         KBmanager.getMgr().addKB(ccheck_kb, false);
         KB empty = KBmanager.getMgr().getKB(ccheck_kb);
-        
+
         try { // Fails elsewhere if no constituents, or empty constituent, thus...
+            empty.eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
             fwriter = new FileWriter( emptyCFile );
             pwriter = new PrintWriter(fwriter);   
             pwriter.println("(instance instance BinaryPredicate)\n");
@@ -309,15 +322,14 @@ public class CCheck implements Runnable {
             ex.printStackTrace();
         }
     }
-    
-    
+
     /** *************************************************************
      * This initiates the consistency check
      */
     private void runConsistencyCheck() {
         
         String proof;        
-        KB empty = this.makeEmptyKB();        
+        KB empty = this.makeEmptyKB();
         try {
             pw.println("<ConsistencyCheck>");
             pw.println("  <kb>");
@@ -328,6 +340,7 @@ public class CCheck implements Runnable {
             pw.println("  <entries>");            
             while (it.hasNext()) {
                 Formula query = (Formula) it.next();
+                System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 ArrayList<Formula> processedQueries = fp.preProcess(query,false, kb);
                 
@@ -388,6 +401,7 @@ public class CCheck implements Runnable {
      * @return - the result of the query
      */
     private String askInferenceEngine(KB empty, String query) {
+
         String result = "";
         
         try {
@@ -412,7 +426,6 @@ public class CCheck implements Runnable {
                         ieSettings.get("location"),
                         ieSettings.get("quietFlag"), empty.name,
                         ieSettings.get("language"));
-
             }                        
             else throw new Exception("No inference engine.");
         }
@@ -422,7 +435,9 @@ public class CCheck implements Runnable {
         }
         return result;
     }
-    
+
+    /** *************************************************************
+     */
     @Override
     public void run() {
         runConsistencyCheck();
