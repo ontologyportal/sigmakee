@@ -33,7 +33,7 @@ public class SUMOformulaToTPTPformula {
                 result = "'" + result + "'";            
         }
         catch (Exception ex) {
-            System.out.println("INFO in Formula.translateWord():" + ex.getMessage());
+            System.out.println("Error in SUMOformulaToTPTPformula.translateWord(): " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -47,7 +47,7 @@ public class SUMOformulaToTPTPformula {
      */
     private static String translateWord_1(StreamTokenizer_s st, boolean hasArguments) {      
 
-        //System.out.println("INFO in Formula.translateWord_1(): st: " + st.sval);
+        //System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): st: " + st.sval);
         int translateIndex;
 
         List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT, 
@@ -314,7 +314,8 @@ public class SUMOformulaToTPTPformula {
                         //----This is the start of a new term - put in the infix operator if not the
                         //----first term for this operator
                         if ((Integer)(countStack.peek()) > 0)
-                            tptpFormula.append((String)operatorStack.peek());                        
+                            tptpFormula.append((String)operatorStack.peek());
+                        // TODO: may have to trap strings - AP
                         tptpFormula.append(translateWord(st,false));      //----Output the word               
                         incrementTOS(countStack);                         //----Increment counter for this level
                     }
