@@ -55,7 +55,7 @@ August 9, Acapulco, Mexico.
      */
     private static void generateOMWformat(String fileWithPath) {
 
-        //System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file " + fileWithPath);
+        System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file " + fileWithPath);
         try {
             File f = new File(fileWithPath);
             FileWriter r = new FileWriter(f); 
@@ -362,7 +362,8 @@ August 9, Acapulco, Mexico.
         try {
             KBmanager.getMgr().initializeOnce();
             //readOMWfiles();
-            System.out.println(formatWords("Table","","FrenchLanguage",""));
+            //System.out.println(formatWords("Table","","FrenchLanguage",""));
+            generateOMWformat("wn-data-smo.tab");
         }
         catch (Exception e) {
             System.out.println("Error in OMWordnet.main(): Exception: " + e.getMessage());
