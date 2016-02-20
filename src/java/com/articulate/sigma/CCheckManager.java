@@ -14,8 +14,19 @@ import java.util.logging.Logger;
 
 import com.articulate.sigma.KB;
 
+/** This code is copyright Articulate Software (c) 2014.
+ This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+ Users of this code also consent, by use of this code, to credit Articulate Software
+ and Teknowledge in any writings, briefings, publications, presentations, or
+ other representations of any software which incorporates, builds on, or uses this
+ code.  Please cite the following article in any publication with references:
 
-/***
+ Pease, A., (2003). The Sigma Ontology Development Environment,
+ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
+ */
+
+/** ***************************************************************
  * This class manages the threads that run consistency checks for the different 
  * KBs in the system.
  * @author Karen Joy Nomorosa, Rearden Commerce Inc.
@@ -42,15 +53,15 @@ public class CCheckManager extends ThreadPoolExecutor {
 		
 		ccheckQueue = new HashMap<String, String>();
 		checkedKBs = new HashMap<String, HashMap<String, Object>>();
-		
 	}
 
-	/**
+	/** ***************************************************************
 	 * Returns the timestamp of when the last consistency check was run on this KB.
 	 * @param kbName - name of the KB
 	 * @return Timestamp if a consistency check has been run previously, null if it hasn't.
 	 */
 	public Timestamp lastCCheck(String kbName) {
+
 		if (checkedKBs.containsKey(kbName)) {
 			HashMap<String, Object> obj = checkedKBs.get(kbName);
 			
@@ -61,12 +72,13 @@ public class CCheckManager extends ThreadPoolExecutor {
 		return null;
 	}
 
-	/**
+	/** ***************************************************************
 	 * This method returns full or partial results of the consistency checks.
 	 * @param kbName - name of the KB that we want the results of
 	 * @return SimpleElement of the parsed XML file or null if there are errors or it does not exist.
 	 */
 	public String ccheckResults(String kbName) {
+
 		logger.entering("CCheckManager", "ccheckResults", "kbName = " + kbName);
 		StringBuilder result = new StringBuilder();
 		FileReader fr = null;
@@ -111,7 +123,7 @@ public class CCheckManager extends ThreadPoolExecutor {
 				}
 			}			
 		}
-		else if(checkedKBs.containsKey(kbName)) {
+		else if (checkedKBs.containsKey(kbName)) {
 			// These are for the consistency checks that are already done.  
 			// Note that code in performing CChecks ensures that a KBName cannot be in 
 			// both checkedKBs and ccheckQueue at the same time.
@@ -143,12 +155,13 @@ public class CCheckManager extends ThreadPoolExecutor {
 		return null;
 	}
 
-	/** 
+    /** ***************************************************************
 	 * Returns the current status of a KB
 	 * @param kbName - the name of the KB to be checked
 	 * @return true if there is a worker thread currently performing consistency checks on it, and false if not
 	 */
 	public CCheckStatus ccheckStatus(String kbName) {
+
 		if (ccheckQueue.containsKey(kbName))
 			return CCheckStatus.ONGOING;
 		else if (checkedKBs.containsKey(kbName))
@@ -156,7 +169,7 @@ public class CCheckManager extends ThreadPoolExecutor {
 		else return CCheckStatus.NOCCHECK;
 	}
 
-	/**
+    /** ***************************************************************
 	 * Main code that performs the consistency check on the KB.
 	 * @param kb - KB to be checked
 	 * @return the status of the check (whether it has been accepted or rejected)
@@ -201,9 +214,8 @@ public class CCheckManager extends ThreadPoolExecutor {
 			return CCheckStatus.ONGOING;
 		}
 	}
-	
-	
-	/**
+
+    /** ***************************************************************
 	 * Removes the KB from the list of kbs currently being checked, and add it to the checkedKBs list.  
 	 * This method is overridden from the parent class.
 	 * @param r 
@@ -219,6 +231,4 @@ public class CCheckManager extends ThreadPoolExecutor {
 
 		super.afterExecute(r, t);
 	}
-
-
 }
