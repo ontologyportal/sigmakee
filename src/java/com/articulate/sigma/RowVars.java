@@ -100,7 +100,8 @@ public class RowVars {
                         nonRowVar++;
                 }
 
-                if (kb.kbCache.valences.get(pred) != null) {
+                if (kb.kbCache!= null && kb.kbCache.valences != null &&
+                        kb.kbCache.valences.get(pred) != null) {
                     int arity = kb.kbCache.valences.get(pred).intValue();
                     if (arities.containsKey(pred)) {
                         if (arity < arities.get(rowvar).intValue())
