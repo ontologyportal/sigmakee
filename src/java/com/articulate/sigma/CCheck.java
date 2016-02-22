@@ -391,6 +391,79 @@ public class CCheck implements Runnable {
     }
 
     /** *************************************************************
+     * This initiates the consistency check
+     */
+    private void runConsistencyCheckNew() {
+
+        String proof;
+        KB empty = this.makeEmptyKB();
+        try {
+            pw.println("<ConsistencyCheck>");
+            pw.println("  <kb>");
+            pw.println("    " + kb.name);
+            pw.println("  </kb>");
+            Collection<Formula> allFormulas = kb.formulaMap.values();
+            Collection<String> allTPTP= new ArrayList<String>();
+            for (Formula f : allFormulas) {
+                allTPTP.addAll(f.theTptpFormulas);
+            }
+            Iterator<String> it = allTPTP.iterator();
+            pw.println("  <entries>");
+            while (it.hasNext()) {
+                String query = (String) it.next();
+                System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                //ArrayList<Formula> processedQueries = fp.preProcess(query,false, kb);
+
+                String processedQuery = null;
+                String sourceFile = null;
+                /*
+                Iterator<Formula> q = processedQueries.iterator();
+                while(q.hasNext()) {
+                    Formula f = q.next();
+                    processedQuery = f.makeQuantifiersExplicit(false);
+                    sourceFile = f.sourceFile;
+                    sourceFile = sourceFile.replace("/", "&#47;");
+                    try {
+                        proof = askInferenceEngine(empty, processedQuery);
+                        //reportAnswer(proof, query, "Redundancy", processedQuery, sourceFile);
+                    }
+                    catch(Exception e) {
+                        //reportError(e.getMessage(), query, processedQuery, sourceFile);
+                        System.out.println("Error from inference engine: " + e.getMessage());
+                    }
+                    StringBuffer negatedQuery = new StringBuffer();
+                    negatedQuery.append("(not " + processedQuery + ")");
+                    try {
+                        proof = askInferenceEngine(empty, negatedQuery.toString());
+                        //reportAnswer(proof, query ,"Inconsistency", processedQuery, sourceFile);
+                    }
+                    catch(Exception e) {
+                        //reportError(e.getMessage(), query, processedQuery, sourceFile);
+                        System.out.println("Error from inference engine: " + e.getMessage());
+                    }
+                }
+                */
+                // empty.tell(query.theFormula);
+            }
+            pw.println("  </entries>");
+            pw.print("</ConsistencyCheck>");
+        }
+        catch (Exception e) {
+            pw.println("  </entries>");
+            pw.print("  <error>");
+            pw.print("Error encountered while running consistency check.");
+            pw.println("</error>");
+            pw.print("</ConsistencyCheck>");
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        finally {
+            KBmanager.getMgr().removeKB(ccheck_kb);
+        }
+    }
+
+    /** *************************************************************
      * Picks the inference engine to use for the consistency check based on the
      * set-up inference engine.
      * 
