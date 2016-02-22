@@ -1,5 +1,8 @@
 package com.articulate.sigma.nlp;
 
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.WSD;
+import com.articulate.sigma.WordNet;
 import com.articulate.sigma.nlp.corpora.ShuZiInsQA;
 import com.articulate.sigma.utils.ProgressPrinter;
 
@@ -7,19 +10,25 @@ import java.io.IOException;
 import java.util.*;
 
 /**
-
+ * Created by apease on 10/12/15.
  */
-public class TokenOverlap {
+public class SynsetOverlap {
 
     TFIDF tfidf = null;
     public boolean debug = false;
 
     /** ***************************************************************
      */
-    public TokenOverlap(TFIDF tf) throws IOException {
+    public SynsetOverlap(TFIDF tf) throws IOException {
 
         //System.out.println("Info in TFIDF(): Initializing");
         tfidf = tf;
+        try {
+            KBmanager.getMgr().initializeOnce();
+        }
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
     /** ***************************************************************
@@ -34,14 +43,20 @@ public class TokenOverlap {
         Set<String> s1 = new HashSet<String>();
         String[] sspl = str1.split(" ");
         s1.addAll(Arrays.asList(sspl));
+        Set<String> s1synsets = new HashSet<>();
+        for (String s : s1)
+            s1synsets.add(WSD.getBestDefaultSense(s));
         String str2 = tfidf.removePunctuation(y);
         str2 = tfidf.removeStopWords(str2);
         Set<String> s2 = new HashSet<String>();
         s2.addAll(Arrays.asList(str2.split(" ")));
-        s1.retainAll(s2);
-        //if (s1.size() > 0)
-        //    System.out.println("TokenOverlap.overlap(): common tokens: " + s1);
-        return s1.size();
+        Set<String> s2synsets = new HashSet<>();
+        for (String s : s2)
+            s2synsets.add(WSD.getBestDefaultSense(s));
+        s1synsets.retainAll(s2synsets);
+        //if (s1synsets.size() > 0)
+        //    System.out.println("SynsetOverlap.overlap(): common tokens: " + s1synsets);
+        return s1synsets.size();
     }
 
     /** ***************************************************************
@@ -54,16 +69,16 @@ public class TokenOverlap {
         String s2 = "borrowing against a life insurance policy require cash value inside that policy term life insurance do not have cash value but whole life insurance policy may so you will need have a whole life policy with global Life Insurance in order to be able borrow against it call up your company and ask if you have any cash value inside your policy and what the borrowing option and cost be";
 
         TFIDF cb = null;
-        TokenOverlap to = null;
+        SynsetOverlap so = null;
         try {
             cb = new TFIDF("/home/apease/Sigma/KBs/stopwords.txt");
-            to = new TokenOverlap(cb);
+            so = new SynsetOverlap(cb);
         }
         catch (IOException ioe) {
             System.out.println("Error in TokenOverlap.devsToInputs()");
             ioe.printStackTrace();
         }
-        System.out.println(to.overlap(s1, s2));
+        System.out.println(so.overlap(s1, s2));
     }
 
     /** ***************************************************************

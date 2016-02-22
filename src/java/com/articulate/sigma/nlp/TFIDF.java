@@ -301,14 +301,16 @@ public class TFIDF {
 
         //System.out.print("Info in TFIDF.calcIDF(): ");
         //ProgressPrinter pp = new ProgressPrinter(1000);
-        Iterator<String> it = docfreq.keySet().iterator();
-        while (it.hasNext()) {
-            String token = it.next();
-            //pp.tick();
-            float f = (float) Math.log10((float) docCount / (float) docfreq.get(token));
+        //Iterator<String> it = docfreq.keySet().iterator();
+       // while (it.hasNext()) {
+        //    String token = it.next();
+        //pp.tick();
+         //   float f = (float) Math.log10((float) docCount / (float) docfreq.get(token));
             //System.out.println("token: " + token + ", docCount: " + docCount + ", docFreq: " + docfreq.get(token) + ", idf: " + f);
-            idf.put(token,new Float(f));
-        }
+         //   idf.put(token,new Float(f));
+        //}
+        idf.putAll(docfreq.keySet().stream().
+                collect(Collectors.toMap((t) -> t,t -> ((float) Math.log10((float) docCount / (float) docfreq.get(t))))));
         //System.out.println("Info in TFIDF.calcIDF(): " + idf);
         //System.out.println();
     }

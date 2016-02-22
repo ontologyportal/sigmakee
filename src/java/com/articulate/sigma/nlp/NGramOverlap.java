@@ -28,7 +28,7 @@ public class NGramOverlap {
      */
     public int nGramOverlap(String x, String y, int n) {
 
-        //System.out.println("TokenOverlap.overlap(): testing: " + x + " \nand:\n" + y);
+        //System.out.println("NGramOverlap.overlap(): testing: " + x + " \nand:\n" + y);
         int overlap = 0;
         HashSet<String> common = new HashSet<>();
         String str1 = tfidf.removePunctuation(x);
@@ -54,12 +54,12 @@ public class NGramOverlap {
                 if (s1tok.toString().equals(s2tok.toString())) {
                     overlap++;
                     common.add(s1tok.toString());
-                    //System.out.println("TokenOverlap.nGramOverlap(): match: " + s1tok);
+                    //System.out.println("NGramOverlap.nGramOverlap(): match: " + s1tok);
                 }
             }
         }
         if (common.size() > 0)
-            System.out.println("TokenOverlap.overlap(): common tokens: " + common);
+            System.out.println("NGramOverlap.overlap(): common tokens: " + common);
         return overlap;
     }
 
@@ -70,7 +70,7 @@ public class NGramOverlap {
     public int cachedNGramOverlap(HashMap<Integer,HashSet<String>> questions,
                                   HashMap<Integer,HashSet<String>> answers, int n) {
 
-        //System.out.println("TokenOverlap.cachedNGramOverlap():  " + questions + " \nand:\n" + answers);
+        //System.out.println("NGramOverlap.cachedNGramOverlap():  " + questions + " \nand:\n" + answers);
         HashSet<String> qs = questions.get(n);
         if (qs == null) return 0;
         HashSet<String> as = answers.get(n);
@@ -78,7 +78,7 @@ public class NGramOverlap {
         result.retainAll(as);
         int overlap = result.size();
         if (debug)
-            System.out.println("TokenOverlap.cachedNGramOverlap(): common tokens: " + result);
+            System.out.println("NGramOverlap.cachedNGramOverlap(): common tokens: " + result);
         return overlap;
     }
 
@@ -124,7 +124,7 @@ public class NGramOverlap {
             int intID = Integer.parseInt(id);
             int score = cachedNGramOverlap(dev.questionNgrams, answerNgrams.get(intID), n);
             if (debug)
-                System.out.println("TokenOverlap.nGramRank(): id: " + id + " as int: " + intID + " with score: " + score);
+                System.out.println("NGramOverlap.nGramRank(): id: " + id + " as int: " + intID + " with score: " + score);
             if (score == 0)
                 continue;
             float fscore = (float) score;
@@ -135,7 +135,7 @@ public class NGramOverlap {
             result.put(fscore,al);
         }
         if (debug)
-            System.out.println("TokenOverlap.nGramRank(): result " + result);
+            System.out.println("NGramOverlap.nGramRank(): result " + result);
         return result;
     }
 
@@ -151,7 +151,7 @@ public class NGramOverlap {
             ng = new NGramOverlap(cb);
         }
         catch (IOException ioe) {
-            System.out.println("Error in ShuZiInsQA.devsToInputs()");
+            System.out.println("Error in NGramOverlap.main()");
             ioe.printStackTrace();
         }
         System.out.println(ng.nGramOverlap("John likes big trees in the night", "John likes small leaves in the night", 3));

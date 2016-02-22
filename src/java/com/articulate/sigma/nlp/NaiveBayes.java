@@ -68,16 +68,16 @@ public class NaiveBayes {
 
     /** *************************************************************
      */
-    public NaiveBayes(ArrayList<ArrayList<String>> in) {
+    public NaiveBayes(ArrayList<ArrayList<String>> in,
+                      ArrayList<String> labels,
+                      ArrayList<String> types) {
 
         input = new ArrayList<ArrayList<String>>();
-        System.out.println("NaiveBayes with #input: " + in.size());
+        //System.out.println("NaiveBayes with #input: " + in.size());
         input.addAll(in);
-        types.addAll(input.get(0));  // these can be discrete "disc", continuous "cont" or "class"
-        labels.addAll(input.get(1));
-        input.remove(0);  // remove types
-        input.remove(0);  // remove headers
-        System.out.println("NaiveBayes() : starting line: " + input.get(0));
+        this.types = types; // these can be discrete "disc", continuous "cont" or "class"
+        this.labels = labels;
+        //System.out.println("NaiveBayes() : starting line: " + input.get(0));
     }
 
     /** *************************************************************
@@ -104,7 +104,7 @@ public class NaiveBayes {
      */
     public void createPriorCounts() {
 
-        System.out.println("NaiveBayes.createPriorCounts() : starting line: " + input.get(0));
+        //System.out.println("NaiveBayes.createPriorCounts() : starting line: " + input.get(0));
         int classIndex = types.indexOf("class");
         for (ArrayList<String> row : input) {
             String clss = row.get(classIndex);
@@ -123,7 +123,7 @@ public class NaiveBayes {
      */
     public void createConditionalCounts() {
 
-        System.out.println("NaiveBayes.createConditionalCounts() : starting line: " + input.get(0));
+        //System.out.println("NaiveBayes.createConditionalCounts() : starting line: " + input.get(0));
         for (ArrayList<String> row : input) {
             int classIndex = types.indexOf("class");
             String clss = row.get(classIndex);
@@ -152,7 +152,7 @@ public class NaiveBayes {
             }
             conditionalCounts.put(clss,classInfo);
         }
-        System.out.println("NaiveBayes.createConditionalCounts() : " + conditionalCounts);
+        //System.out.println("NaiveBayes.createConditionalCounts() : " + conditionalCounts);
     }
 
     /** *************************************************************
@@ -160,6 +160,8 @@ public class NaiveBayes {
      */
     public void createTotals() {
 
+        System.out.println("NaiveBayes.createTotals() : types: " + types);
+        System.out.println("NaiveBayes.createTotals() : labels: " + labels);
         System.out.println("NaiveBayes.createTotals() : starting line: " + input.get(0));
         for (ArrayList<String> row : input) {
             int classIndex = types.indexOf("class");
@@ -198,7 +200,7 @@ public class NaiveBayes {
                 float value = classTotalsInfo.get(column);
                 classMeanInfo.put(column,value / count);
             }
-            System.out.println("createMeans(): " + clss + ":" + classMeanInfo);
+            //System.out.println("createMeans(): " + clss + ":" + classMeanInfo);
         }
     }
 
@@ -422,12 +424,9 @@ public class NaiveBayes {
             nb.initialize();
             System.out.println("main(): most likely class: " + nb.classify(values));
         }
-
         //ArrayList<String> values = Lists.newArrayList("health","moderate","moderate","yes","class");
         //ArrayList<String> values = Lists.newArrayList("y","y","y","n","n","n","y","y","y","n","n","n","y","n","y","y");
         // ArrayList<String> values = Lists.newArrayList("both","sedentary","aggressive","no","class");
         //ArrayList<String> values = Lists.newArrayList("7","81","88","40","48","46.7","0.261","52");
-
-
     }
 }
