@@ -358,6 +358,8 @@ public class EProver {
                 }
                 line = _reader.readLine();
                 System.out.println("INFO in EProver.submitQuery: line: " + line);
+                if (line.contains("Problem: "))
+                    result += line + "\n";
             }
         }
         catch (Exception ex) {
