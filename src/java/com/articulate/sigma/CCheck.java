@@ -412,39 +412,7 @@ public class CCheck implements Runnable {
             while (it.hasNext()) {
                 String query = (String) it.next();
                 System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
-                FormulaPreprocessor fp = new FormulaPreprocessor();
-                //ArrayList<Formula> processedQueries = fp.preProcess(query,false, kb);
 
-                String processedQuery = null;
-                String sourceFile = null;
-                /*
-                Iterator<Formula> q = processedQueries.iterator();
-                while(q.hasNext()) {
-                    Formula f = q.next();
-                    processedQuery = f.makeQuantifiersExplicit(false);
-                    sourceFile = f.sourceFile;
-                    sourceFile = sourceFile.replace("/", "&#47;");
-                    try {
-                        proof = askInferenceEngine(empty, processedQuery);
-                        //reportAnswer(proof, query, "Redundancy", processedQuery, sourceFile);
-                    }
-                    catch(Exception e) {
-                        //reportError(e.getMessage(), query, processedQuery, sourceFile);
-                        System.out.println("Error from inference engine: " + e.getMessage());
-                    }
-                    StringBuffer negatedQuery = new StringBuffer();
-                    negatedQuery.append("(not " + processedQuery + ")");
-                    try {
-                        proof = askInferenceEngine(empty, negatedQuery.toString());
-                        //reportAnswer(proof, query ,"Inconsistency", processedQuery, sourceFile);
-                    }
-                    catch(Exception e) {
-                        //reportError(e.getMessage(), query, processedQuery, sourceFile);
-                        System.out.println("Error from inference engine: " + e.getMessage());
-                    }
-                }
-                */
-                // empty.tell(query.theFormula);
             }
             pw.println("  </entries>");
             pw.print("</ConsistencyCheck>");
