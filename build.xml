@@ -227,7 +227,7 @@
 		</move>
 		<aptrepo repoDir="${debian.folder}/temp/repository"/>
 	</target>
-<target name="uploadRepository" depends="createDEB" >
+<!-- target name="uploadRepository" depends="createDEB" >
 	<input message="SourceForge Username :" addproperty="sfusername"></input>
 	<input message="SourceForge Password :" addproperty="sfpassword" ></input>
 	<scp remoteTodir="${sfusername}@web.sourceforge.net:/home/project-web/sigmakee/htdocs/" 
@@ -236,7 +236,7 @@
 		trust="true" >
 	 	<fileset dir="native-installers/debian/temp/repository"></fileset>
 	</scp>
-</target>
+</target -->
 
 	<target name="install" depends="init">
 		<fail message="SIGMA_HOME needs to be set" unless="env.SIGMA_HOME" />
@@ -269,21 +269,21 @@
 		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/cntlist" />
 
 		<get dest="${sigma.install.downloads}" src="http://nlp.stanford.edu/software/stanford-ner-2015-01-29.zip" usetimestamp="true" />
-		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-ner-2015-01-29.zip" >
+		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-ner-2015-12-09.zip" >
 			<patternset>
 				<include name="**/classifiers/english.muc.7class.distsim.crf.ser.gz" />
 			</patternset>
 			<mapper type="flatten"/>
 		</unzip>
 
-		<get dest="${sigma.install.downloads}" src="http://nlp.stanford.edu/software/stanford-corenlp-full-2015-01-29.zip" usetimestamp="true" />
-		<unzip dest="${sigma.install.downloads}" src="${sigma.install.downloads}/stanford-corenlp-full-2015-01-29.zip" >
+		<get dest="${sigma.install.downloads}" src="http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip" usetimestamp="true" />
+		<unzip dest="${sigma.install.downloads}" src="${sigma.install.downloads}/stanford-corenlp-full-2015-12-09.zip" >
 			<patternset>
-				<include name="**/stanford-corenlp-3.5.1-models.jar" />
+				<include name="**/stanford-corenlp-3.6.0-models.jar" />
 			</patternset>
 			<mapper type="flatten"/>
 		</unzip>
-		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-corenlp-3.5.1-models.jar" >
+		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-corenlp-3.6.0-models.jar" >
 			<patternset>
 				<include name="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz" />
 			</patternset>
