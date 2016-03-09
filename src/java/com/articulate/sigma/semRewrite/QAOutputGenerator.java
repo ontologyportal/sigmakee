@@ -383,7 +383,7 @@ public class QAOutputGenerator {
                         generateForFile(input, inter);
                     }
                     catch (Exception e) {
-                        System.out.println("The file input is invalid,please enter the fullpath with filename: eg. /Users/Obama/workspace/test.txt");
+                        System.out.println("The file input is invalid, please enter the fullpath with filename: eg. /Users/Obama/workspace/test.txt");
                         continue;
                     }
                 }
