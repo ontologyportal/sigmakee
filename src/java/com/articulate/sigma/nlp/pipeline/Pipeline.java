@@ -22,9 +22,12 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.StringUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import edu.stanford.nlp.parser.nndep.DependencyParser;
 import edu.stanford.nlp.pipeline.*;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.CoreMap;
 
 import java.util.*;
@@ -45,8 +48,10 @@ public class Pipeline {
     public Pipeline(boolean useDefaultPCFGModel) {
 
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, entitymentions");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, depparse, dcoref, entitymentions");
         props.setProperty("parse.kbest", "2");
+        props.setProperty("depparse.language","English");
+        props.put("depparse.model", "edu/stanford/nlp/models/parser/nndep/english_SD.gz");
 
         if (!useDefaultPCFGModel && !Strings.isNullOrEmpty(KBmanager.getMgr().getPref("englishPCFG"))) {
             props.put("parse.model", KBmanager.getMgr().getPref("englishPCFG"));
@@ -72,7 +77,7 @@ public class Pipeline {
      */
     public static Annotation toAnnotation(String input) {
 
-        Pipeline pipeline = new Pipeline();
+        Pipeline pipeline = new Pipeline(true);
         return pipeline.annotate(input);
     }
 
@@ -89,7 +94,8 @@ public class Pipeline {
 
         Annotation wholeDocument = annotate(input);
         CoreMap lastSentence = SentenceUtil.getLastSentence(wholeDocument);
-        return SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
+        List<String> dependencies = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
+        return dependencies;
     }
 
     /** ***************************************************************
