@@ -297,10 +297,10 @@ public class CNF {
                     cnf.copyBoundFlags(cnfnew2);
                     cnfnew1 = cnfnew1.applyBindings(result2);
                     //System.out.println("INFO in CNF.unify(): cnf 1 " + cnfnew1);
-                    //System.out.println("INFO in CNF.unify(): cnf 2 " + cnfnew2);    
+                    //System.out.println("INFO in CNF.unify(): cnf 2 " + cnfnew2);
                     cnfnew2 = cnfnew2.applyBindings(result2);
                     result.putAll(result2);
-                    //System.out.println("INFO in CNF.unify(): bindings " + result); 
+                    //System.out.println("INFO in CNF.unify(): bindings " + result);
                 }
             }
         }
