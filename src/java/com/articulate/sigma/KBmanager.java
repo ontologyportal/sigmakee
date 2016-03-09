@@ -473,7 +473,6 @@ public class KBmanager {
                 SimpleElement configuration = readConfiguration(configFileDir);
                 if (configuration == null) 
                     throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
-
                 setConfiguration(configuration);
             }
             else
@@ -493,7 +492,8 @@ public class KBmanager {
      * Sets instance fields by reading the xml found in the configuration file.
      * @param configuration
      */
-    void setConfiguration(SimpleElement configuration) {
+    public void setConfiguration(SimpleElement configuration) {
+
         preferencesFromXML(configuration);
         kbsFromXML(configuration);
         String kbDir = (String) preferences.get("kbDir");
