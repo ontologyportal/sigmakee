@@ -45,6 +45,7 @@ public class SubstitutionUtil {
      */
     public static void groupClauses(ClauseSubstitutor substitutor, List<String> clauses) {
 
+        System.out.println("INFO in SubstitutionUtil.groupClauses(): " + clauses);
         Iterator<String> clauseIterator = clauses.iterator();
         List<String> modifiedClauses = Lists.newArrayList();
         while (clauseIterator.hasNext()) {
@@ -59,7 +60,8 @@ public class SubstitutionUtil {
                     CoreLabelSequence attr1Grouped = substitutor.getGrouped(attr1);
                     CoreLabelSequence attr2Grouped = substitutor.getGrouped(attr2);
                     clauseIterator.remove();
-                    if (!Objects.equals(attr1Grouped, attr2Grouped)) {
+                    if (attr1Grouped != null && attr2Grouped != null &&
+                            !Objects.equals(attr1Grouped, attr2Grouped)) {
                         String label = m.group(1);
                         String arg1 = attr1Grouped.toLabelString().orElse(attr1);
                         String arg2 = attr2Grouped.toLabelString().orElse(attr2);
@@ -69,6 +71,7 @@ public class SubstitutionUtil {
             }
         }
 
+        System.out.println("INFO in SubstitutionUtil.groupClauses(2): " + clauses);
         clauses.addAll(modifiedClauses);
     }
 }
