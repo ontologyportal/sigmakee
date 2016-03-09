@@ -52,11 +52,13 @@ public class WSD {
             else {
                 if (!WordNet.wn.isStopWord(word)) {
                     String synset = findWordSenseInContext(word,alcon);
+                    //System.out.println("INFO in WordNet.collectWordSenses(): sense in context: " + synset);
                     if (!StringUtil.emptyString(synset)) {
                         result.add(synset);
                     }
                     else {
                         synset = getBestDefaultSense(word);
+                        //System.out.println("INFO in WordNet.collectWordSenses(): default sense: " + synset);
                         if (!StringUtil.emptyString(synset)) {
                             result.add(synset);
                         }
@@ -75,8 +77,7 @@ public class WSD {
      */
     public static String findWordSenseInContext(String word, List<String> words) {
 
-        //System.out.println("INFO in findWordSenseInContext(): word, words: " + 
-        //        word + ", " + words);
+        //System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
         for (int i = 1; i <= 4; i++) {
@@ -106,7 +107,7 @@ public class WSD {
             return "";
     }
 
-    /**
+    /** ***************************************************************
      * Return the best guess at the synset for the given word in the
      * context of the sentence with the given POS.
      * @param word - word to disambiguate
@@ -302,7 +303,10 @@ public class WSD {
         }
         if (bestSense == "") {
             //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
-            ArrayList<String> al = WordNet.wn.wordsToSenses.get(word.toLowerCase());
+            ArrayList<String> al = WordNet.wn.wordsToSenses.get(word);
+            if (al == null)
+                al = WordNet.wn.wordsToSenses.get(word.toLowerCase());
+
             //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
             if (al != null) {
                 Iterator<String> it = al.iterator();
@@ -413,7 +417,8 @@ public class WSD {
         
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
         WordNet.initOnce();
@@ -437,14 +442,37 @@ public class WSD {
         for (String s : sentar)
             System.out.println("INFO in WSD.testSentenceWSD(): word: " + s + " SUMO: " + WSD.getBestDefaultSUMO(s));
     }
-    
+
+    /** ***************************************************************
+     *  A method used only for testing.  It should not be called
+     *  during normal operation.
+     */
+    public static void testSentenceWSD2() {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        WordNet.initOnce();
+        System.out.println("INFO in WSD.testSentenceWSD(): done initializing");
+        String sentence = "Play Hello on Hulu.";
+        System.out.println("INFO in WSD.testSentenceWSD(): " + sentence);
+        System.out.println("INFO in WSD.testSentenceWSD(): " + WSD.collectWordSenses(sentence));
+        ArrayList<String> sentar = Lists.newArrayList("Play", "Hello", "on", "Hulu");
+        System.out.println("INFO in WSD.testSentenceWSD(): " + sentar);
+        for (String s : sentar)
+            System.out.println("INFO in WSD.testSentenceWSD(): word: " + s + " SUMO: " + WSD.getBestDefaultSUMO(s));
+    }
+
     /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
-        testWordWSD();
-        testSentenceWSD();
+        //testWordWSD();
+        //testSentenceWSD();
+        testSentenceWSD2();
     }
 }
