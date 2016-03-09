@@ -2928,7 +2928,8 @@ public class WordNet {
      * Generate a new synset from a termFormat
      */
     public void synsetFromTermFormat(String tf, String SUMOterm, KB kb) {
-        
+
+        //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
         String synsetID = null;
         String pos = null;
         if (kb.kbCache.getParentClasses(SUMOterm) != null && 
@@ -2959,7 +2960,8 @@ public class WordNet {
         ArrayList<String> keys = new ArrayList<String>();
         if (wordsToSenses.containsKey(tf)) 
             keys = wordsToSenses.get(tf);
-        keys.add(key);        
+        keys.add(key);
+        //System.out.println("INFO in WordNet.synsetFromTermFormat(): add to wordsToSenses: " + tf + "," + keys);
         wordsToSenses.put(tf,keys);            
     }
     
@@ -2968,7 +2970,7 @@ public class WordNet {
      */
     public void termFormatsToSynsets(KB kb) {
         
-        //System.out.println("INFO in WordNet.termFormatsToSynsets()");
+        System.out.println("INFO in WordNet.termFormatsToSynsets()");
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
         for (int i = 0; i < forms.size(); i++) {
             Formula form = forms.get(i);
