@@ -90,21 +90,21 @@ download_src() {
 	log info "Installing SIGMA to: $SIGMA_SRC"
 	mkdir -p $SIGMA_SRC
 	cd $SIGMA_SRC
-	read -p  "  Provide your SourceForge account name [anonymous]: " ss_user
-	if [ -z "$ss_user" ]; then
-		ss_user=":pserver:anonymous"
-	else
-		log warn "To access the code CVS is going to ask your SourceForge password (3 times)."
-		ss_user=":ext:${ss_user}"
-	fi
+#	read -p  "  Provide your SourceForge account name [anonymous]: " ss_user
+#	if [ -z "$ss_user" ]; then
+#		ss_user=":pserver:anonymous"
+#	else
+#		log warn "To access the code CVS is going to ask your SourceForge password (3 times)."
+#		ss_user=":ext:${ss_user}"
+#	fi
 	git clone https://github.com/ontologyportal/sigmakee
 }
 
 sigma_install() {
 	log info "Setting SIGMA_HOME to: $SIGMA_HOME"
-	cd "${SIGMA_SRC}/sigma"
+	cd "${SIGMA_SRC}/sigmakee"
 	ant install
-	cp ${SIGMA_SRC}/sigma/config_vagrant.xml $SIGMA_HOME/KBs/config.xml
+	cp ${SIGMA_SRC}/sigma/config.xml $SIGMA_HOME/KBs/config.xml
 	perl -pi -e 's|/home/vagrant/\.sigmakee|$ENV{SIGMA_HOME}|g' $SIGMA_HOME/KBs/config.xml
 	perl -pi -e 's|/home/vagrant/workspace/sigma|$ENV{SIGMA_SRC}|g' $SIGMA_HOME/KBs/config.xml
 }
@@ -113,7 +113,7 @@ sigma_done() {
 	log info "SIGMA is ready to use"
 	log warn "To run SIGMA in the future you must use following commands:"
 	log warn "  » export SIGMA_HOME=${SIGMA_HOME}"
-	log warn "  » cd ${SIGMA_SRC}/sigma"
+	log warn "  » cd ${SIGMA_SRC}/sigmakee"
 	log warn "  » mvn -f pom-old.xml -DskipTests clean install tomcat7:run"
 	echo
 	log warn "After it started you can open: http://localhost:9090/sigma/login.html"
