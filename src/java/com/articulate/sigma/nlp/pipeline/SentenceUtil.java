@@ -274,10 +274,15 @@ public class SentenceUtil {
 
         ArrayList<String> results = Lists.newArrayList();
         for (CoreMap sentence : sentences) {
+            //SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
             SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
             results = Lists.newArrayList(dependencies.toList().split("\n"));
         }
-        return results;
+        ArrayList<String> deps= new ArrayList<String>();
+        for (String dep : results)
+            if (!dep.startsWith("punct(")) // TODO: handle punctuations instead of just removing - AP
+                deps.add(dep);
+        return deps;
     }
 
     /** ***************************************************************
