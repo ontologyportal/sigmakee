@@ -15,6 +15,13 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 
+import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.ling.TaggedWord;
+import edu.stanford.nlp.parser.nndep.DependencyParser;
+import edu.stanford.nlp.process.DocumentPreprocessor;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
+import edu.stanford.nlp.trees.GrammaticalStructure;
+
 public class DependencyConverter {
 
     public static final List<String> MONTHS = Arrays.asList("January",
@@ -603,6 +610,33 @@ public class DependencyConverter {
      * Take in a single quoted sentence from the command line and
      * print out its dependency parse.
      */
+    public static void testNNDep(String input) {
+
+        String modelPath = DependencyParser.DEFAULT_MODEL;
+        modelPath = "edu/stanford/nlp/models/parser/nndep/english_SD.gz";
+        System.out.println("INFO in DependencyConverter.testNNDep(): " + modelPath);
+        String taggerPath = "edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger";
+
+        String text = "I can almost always tell when movies use fake dinosaurs.";
+
+        if (!StringUtil.emptyString(input))
+            text= input;
+        MaxentTagger tagger = new MaxentTagger(taggerPath);
+        DependencyParser parser = DependencyParser.loadFromModelFile(modelPath);
+
+        DocumentPreprocessor tokenizer = new DocumentPreprocessor(new StringReader(text));
+        for (List<HasWord> sentence : tokenizer) {
+            List<TaggedWord> tagged = tagger.tagSentence(sentence);
+            GrammaticalStructure gs = parser.predict(tagged);
+
+            System.out.println("INFO in DependencyConverter.testNNDep(): " + gs);
+        }
+    }
+
+    /** *************************************************************
+     * Take in a single quoted sentence from the command line and
+     * print out its dependency parse.
+     */
     public static void test(String input) {
         
         try {
@@ -641,6 +675,9 @@ public class DependencyConverter {
         else if (args != null && args.length > 0 && args[0].equals("-i")) {
             test(StringUtil.removeEnclosingQuotes(args[1]));
         }
+        else if (args != null && args.length > 0 && args[0].equals("-n")) {
+            testNNDep(args[1]);
+        }
         else if (args != null && args.length > 0 && args[0].equals("-d")) {
             String input = args[1];
             System.out.println("Info in DependencyConverter.main(): processing: " + input);
@@ -660,6 +697,7 @@ public class DependencyConverter {
             System.out.println("                  -s filename       % split sentences from text in file");
             System.out.println("                  -d filename       % split sentences and get dependencies in file");
             System.out.println("                  -i \"blah blah\"  % get dependencies in input");
+            System.out.println("                  -n \"blah blah\"  % test neural network dependencies");
         }
         else {
             try {
