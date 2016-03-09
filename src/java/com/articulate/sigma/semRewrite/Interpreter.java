@@ -1176,7 +1176,7 @@ public class Interpreter {
                         verboseAnswer = true;
                     }
                 }
-                else if (input.startsWith("load "))
+                else if (input.startsWith("reload "))
                     loadRules(input.substring(input.indexOf(' ')+1));
                 else if (input.equals("showpos")) {
                     if (verboseParse) {
@@ -1323,6 +1323,28 @@ public class Interpreter {
         CNF cnf = Clausifier.clausify(r.lhs);
         System.out.println("INFO in Interpreter.testUnify4(): Input: " + cnfInput);
         System.out.println("INFO in Interpreter.testUnify4(): CNF rule antecedent: " + cnf);
+        HashMap<String,String> bindings = cnf.unify(cnfInput);
+        System.out.println("bindings: " + bindings);
+        if (bindings != null)
+            System.out.println("result: " + r.rhs.applyBindings(bindings));
+    }
+
+    /** ***************************************************************
+     */
+    public static void testUnify5() {
+
+        String input = "nmod:on(Terminator-2, Hulu-4), sumo(Terminator,Terminator-2), sumo(HuluProgram,Hulu-4)," +
+                " number(SINGULAR, Terminator-2), number(SINGULAR, Hulu-4), root(ROOT-0, watch-1)," +
+                " dobj(watch-1, Terminator-2), sumo(Looking,watch-1), case(Hulu-4, on-3).";
+        Lexer lex = new Lexer(input);
+        CNF cnfInput = CNF.parseSimple(lex);
+        //String rule = "nmod:on(?X,?Y), +sumo(?C,?Y), isSubclassOf(?C,ComputerProgram), +dobj(?V,?X) ==> (instrument(?V,?Y)).";
+        String rule =  "nmod:on(?X,?Y),  +dobj(?V,?X), +sumo(?C,?Y), isSubclassOf(?C,ComputerProgram) ==> (instrument(?V,?Y)).";
+        Rule r = new Rule();
+        r = Rule.parseString(rule);
+        CNF cnf = Clausifier.clausify(r.lhs);
+        System.out.println("INFO in Interpreter.testUnify5(): Input: " + cnfInput);
+        System.out.println("INFO in Interpreter.testUnify5(): CNF rule antecedent: " + cnf);
         HashMap<String,String> bindings = cnf.unify(cnfInput);
         System.out.println("bindings: " + bindings);
         if (bindings != null)
@@ -1573,18 +1595,17 @@ public class Interpreter {
             System.out.println("       'showr/noshowr' will show/not show what rules get matched.");
             System.out.println("       'showrhs/noshowrhs' will show/not show what right hand sides get asserted.");
             System.out.println("       Ending a sentence with a question mark will trigger a query,");
-            System.out.println("       otherwise results will be asserted to the KB.");
+            System.out.println("       otherwise results will be asserted to the KB. Don't end commands with a period.");
         }
         else {
             //testUnify();
-            //testUnify3();
+            testUnify5();
             //testInterpret();
             //testPreserve();
             //testQuestionPreprocess();
             //testPostProcess();
             //testTimeDateExtraction();
             //testAddQuantification();
-            testGraphMatch();
         }
     }
 }
