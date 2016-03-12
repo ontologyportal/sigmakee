@@ -98,13 +98,14 @@ download_src() {
 #		ss_user=":ext:${ss_user}"
 #	fi
 	git clone https://github.com/ontologyportal/sigmakee
+	git clone https://github.com/ontologyportal/sumo
 }
 
 sigma_install() {
 	log info "Setting SIGMA_HOME to: $SIGMA_HOME"
 	cd "${SIGMA_SRC}/sigmakee"
 	ant install
-	cp ${SIGMA_SRC}/sigma/sumo/* $SIGMA_HOME/KBs
+	cp ${SIGMA_SRC}/sumo/* $SIGMA_HOME/KBs
 	perl -pi -e 's|/home/vagrant/\.sigmakee|$ENV{SIGMA_HOME}|g' $SIGMA_HOME/KBs/config.xml
 	perl -pi -e 's|/home/vagrant/workspace/sigma|$ENV{SIGMA_SRC}|g' $SIGMA_HOME/KBs/config.xml
 }
