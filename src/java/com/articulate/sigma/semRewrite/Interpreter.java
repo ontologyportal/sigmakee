@@ -126,13 +126,38 @@ public class Interpreter {
     }
 
     /** *************************************************************
+     * @return a string consisting a clause argument
+     */
+    private static String getArg(String s, int argnum) {
+
+        int paren = s.indexOf('(');
+        int comma = s.indexOf(',');
+        int lastParen = s.lastIndexOf(')');
+        if (paren < 2 || comma < 4 || comma < paren) {
+            System.out.println("Error in Interpreter.getArg(): bad clause format: " + s);
+            return "";
+        }
+        String arg1 = s.substring(paren + 1,comma).trim();
+        String arg2 = s.substring(comma + 1,lastParen).trim();
+        if (argnum == 1)
+            return arg1;
+        if (argnum == 2)
+            return arg2;
+        System.out.println("Error in Interpreter.getArg(): bad clause number: " + argnum);
+        return "";
+    }
+
+    /** *************************************************************
      * @return a string consisting of a token without a dash and its number in
      * the sentence such as walks-5 -> walks 
      */
     private static String stripSuffix(String s) {
 
         int wordend1 = s.lastIndexOf('-');
-        return s.substring(0, wordend1);
+        if (wordend1 == -1)
+            return s;
+        else
+            return s.substring(0, wordend1);
     }
 
     /** *************************************************************
@@ -183,12 +208,46 @@ public class Interpreter {
     }
 
     /** *************************************************************
-     * @return a list of strings in the format sumo(Class,word-num) 
-     * that specify the SUMO class of each word that isn't a stopword.
+     * replace all word tokens with SUMO instance terms.  For example
+     *   prep_on(Adele-4,Spotify-6), sumoInstance(SpotifyApp,Spotify-6)
+     * becomes
+     *   prep_on(Adele-4,SpotifyApp)
+     */
+    public static List<String> replaceInstances(List<String> input) {
+
+        //System.out.println("INFO in Interpreter.replaceInstances(): input: " + input);
+        Map<String,String> replacements = new HashMap<String,String>();
+        Set<String> contents = new HashSet<String>();
+        List<String> results = new ArrayList<String>();
+        for (String s : input) {
+            if (s.startsWith("sumoInstance(")) {
+                String arg1 = getArg(s,1);
+                String arg2 = getArg(s,2);
+                replacements.put(arg2,arg1);
+            }
+            else
+                contents.add(s);
+        }
+        //System.out.println("INFO in Interpreter.replaceInstances(): replacements: " + replacements);
+        //System.out.println("INFO in Interpreter.replaceInstances(): contents: " + contents);
+        for (String s : contents) {
+            String stringNew = s;
+            for (String key : replacements.keySet())
+                stringNew = stringNew.replace(key,replacements.get(key));
+            results.add(stringNew);
+        }
+        //System.out.println("INFO in Interpreter.replaceInstances(): results: " + results);
+        return results;
+    }
+
+    /** *************************************************************
+     * @return a list of strings in the format sumo(Class,word-num) or
+     * sumoInstance(Inst,word-num) that specify the SUMO class of each
+     * word that isn't a stopword.
      */
     public static List<String> findWSD(List<String> clauses, Map<String, String> posMap, EntityTypeParser etp) {
 
-        //System.out.println("INFO in Interpreter.addWSD(): " + clauses);
+        //System.out.println("INFO in Interpreter.findWSD(): " + clauses);
         KB kb = KBmanager.getMgr().getKB("SUMO");
         DependencyConverter.readFirstNames();
 
@@ -196,11 +255,11 @@ public class Interpreter {
 
         HashMap<String,String> purewords = extractWords(clauses);
         ArrayList<String> pure = Lists.newArrayList(purewords.keySet());
-        //System.out.println("INFO in Interpreter.addWSD(): words: " + pure);
+        //System.out.println("INFO in Interpreter.findWSD(): words: " + pure);
         for (Map.Entry<String, String> pureWordEntry : purewords.entrySet()) {
             String clauseKey = pureWordEntry.getKey();
             String pureWord = pureWordEntry.getValue();
-            //System.out.println("INFO in Interpreter.addWSD(): pureWord:  " + pureWord);
+            //System.out.println("INFO in Interpreter.findWSD(): pureWord:  " + pureWord);
             if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
                 continue;
             if (etp.equalsToEntityType(clauseKey, PERSON)) {
@@ -228,11 +287,11 @@ public class Interpreter {
                 String id = Strings.isNullOrEmpty(pos)
                         ? WSD.findWordSenseInContext(pureWord, pure)
                         : WSD.findWordSendInContextWithPos(pureWord, pure, WordNetUtilities.sensePOS(pos));
-                //System.out.println("INFO in Interpreter.addWSD(): id: " + id);
+                //System.out.println("INFO in Interpreter.findWSD(): id: " + id);
 
                 if (!Strings.isNullOrEmpty(id)) {
                     String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
-                    //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
+                    //System.out.println("INFO in Interpreter.findWSD():sumo:  " + sumo);
                     if (!Strings.isNullOrEmpty(sumo)) {
                         if (sumo.contains(" ")) {  // TODO: if multiple mappings...
                             sumo = sumo.substring(0,sumo.indexOf(" ")-1);
@@ -245,6 +304,7 @@ public class Interpreter {
                 }
                 else {
                     Set<String> wordNetResults = findWordNetResults(pureWord, clauseKey);
+                    //System.out.println("INFO in Interpreter.findWSD(): wordnet:  " + wordNetResults);
                     if (!wordNetResults.isEmpty()) {
                         results.addAll(wordNetResults);
                     }
@@ -273,8 +333,9 @@ public class Interpreter {
                 }
             }
         }
-        //System.out.println("INFO in Interpreter.addWSD(): " + results);
+        //System.out.println("INFO in Interpreter.findWSD(): " + results);
         //results.addAll(clauses);
+
         return Lists.newArrayList(results);
     }
 
@@ -284,15 +345,20 @@ public class Interpreter {
 
         Set<String> results = Sets.newHashSet();
         String synset = WSD.getBestDefaultSense(pureWord.replace(" ", "_"));
-        //System.out.println("INFO in Interpreter.addWSD(): synset: " + synset);
+        //System.out.println("INFO in Interpreter.findWordNetResults(): synset: " + synset);
         if (!Strings.isNullOrEmpty(synset)) {
             String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
-            //System.out.println("INFO in Interpreter.addWSD():sumo:  " + sumo);
+            //System.out.println("INFO in Interpreter.findWordNetResults():sumo:  " + sumo);
             if (!Strings.isNullOrEmpty(sumo)) {
-                if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
-                    sumo = sumo.substring(0,sumo.indexOf(" ")-1);
+                if (isInstance(sumo)) {
+                    results.add("sumoInstance(" + sumo + "," + valueToAdd + ")");
                 }
-                results.add("sumo(" + sumo + "," + valueToAdd + ")");
+                else{
+                    if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
+                        sumo = sumo.substring(0, sumo.indexOf(" ") - 1);
+                    }
+                    results.add("sumo(" + sumo + "," + valueToAdd + ")");
+                }
             }
             else {
                 results.add("sumo(Entity," + valueToAdd + ")");
@@ -578,9 +644,12 @@ public class Interpreter {
 
         List<String> results = Lists.newArrayList();
         List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
+        System.out.println("Interpreter.interpretGenCNF(): dependencies: " + dependenciesList);
         results.addAll(dependenciesList);
+        System.out.println("Interpreter.interpretGenCNF(): before numerics: " + results);
         List<String> measures = InterpretNumerics.getSumoTerms(input);
         results.addAll(measures);
+        System.out.println("Interpreter.interpretGenCNF(): after numerics: " + results);
         ClauseSubstitutor substitutor = null;
         if (coref) {
             substitutor = SubstitutorsUnion.of(
@@ -595,13 +664,16 @@ public class Interpreter {
                     new IdiomSubstitutor(lastSentenceTokens)
             );
         }
+        System.out.println("Interpreter.interpretGenCNF(): before grouping: " + results);
         SubstitutionUtil.groupClauses(substitutor, results);
-
 
         System.out.println("Interpreter.interpretGenCNF(): corefed: " + results);
         EntityTypeParser etp = new EntityTypeParser(wholeDocument);
         List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens, substitutor), etp);
         results.addAll(wsd);
+        System.out.println("Interpreter.interpretGenCNF(): after WSD: " + results);
+        results = replaceInstances(results);
+        System.out.println("Interpreter.interpretGenCNF(): after instance replacement: " + results);
 
         List<String> posInformation = SentenceUtil.findPOSInformation(lastSentenceTokens, dependenciesList);
         // TODO: This is not the best way to substitute POS information
@@ -860,14 +932,29 @@ public class Interpreter {
 
     /** *************************************************************
      */
+    private static boolean isInstance(String s) {
+
+        String noSuffix = stripSuffix(s);
+        //System.out.println("Info in Interpreter.isInstance(): " + noSuffix);
+
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        //System.out.println("Info in Interpreter.isInstance(): " + kb.isInstance(noSuffix));
+        return kb.isInstance(noSuffix);
+    }
+
+    /** *************************************************************
+     */
     public static String postProcess(String s) {
 
+        //System.out.println("Info in Interpreter.postProcess(): " + s);
         String pattern = "([^\\?A-Za-z])([A-Za-z0-9_]+\\-[0-9]+)";
         Pattern p = Pattern.compile(pattern);
         Matcher matcher = p.matcher(s);
         while (matcher.find()) {
-            s = s.replace(matcher.group(1) + matcher.group(2), matcher.group(1) + "?" + matcher.group(2));
+            if (!isInstance(matcher.group(2)))
+                s = s.replace(matcher.group(1) + matcher.group(2), matcher.group(1) + "?" + matcher.group(2));
         }
+        //System.out.println("Info in Interpreter.postProcess(): after: " + s);
         Formula f = new Formula(s);
         return s;
     }
@@ -906,7 +993,7 @@ public class Interpreter {
             return null;
         }
         ArrayList<String> kifoutput = new ArrayList<String>();
-        System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs);
+        //System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs);
         boolean bindingFound = true;
         int counter = 0;
         while (bindingFound && counter < 10 && inputs != null && inputs.size() > 0) {
@@ -983,7 +1070,8 @@ public class Interpreter {
                 addUnprocessed(kifoutput,newInput); // a hack to add unprocessed SDP clauses as if they were KIF
             inputs = new ArrayList<CNF>();
             inputs.addAll(newinputs);
-            System.out.println("INFO in Interpreter.interpretCNF(): KB: " + printKB(inputs));
+            //System.out.println("INFO in Interpreter.interpretCNF(): KB: " + printKB(inputs));
+            //System.out.println("INFO in Interpreter.interpretCNF(): KIF: " + kifoutput);
             //System.out.println("INFO in Interpreter.interpretCNF(): bindingFound: " + bindingFound);
             //System.out.println("INFO in Interpreter.interpretCNF(): counter: " + counter);
             //System.out.println("INFO in Interpreter.interpretCNF(): newinputs: " + newinputs);
@@ -1000,9 +1088,11 @@ public class Interpreter {
     public String fromKIFClauses(ArrayList<String> kifcs) {
 
         String s1 = toFOL(kifcs);
+        //System.out.println("INFO in Interpreter.fromKIFClauses(): toFOL: " + s1);
         String s2 = postProcess(s1);
+        //System.out.println("INFO in Interpreter.fromKIFClauses(): postProcessed: " + s2);
         String s3 = addQuantification(s2);
-        System.out.println("INFO in Interpreter.fromKIFClauses(): KIF: " + (new Formula(s3)));
+        //System.out.println("INFO in Interpreter.fromKIFClauses(): KIF: " + (new Formula(s3)));
         if (inference) {
             KB kb = KBmanager.getMgr().getKB("SUMO");
             if (question) {
