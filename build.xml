@@ -11,7 +11,7 @@
   <property name="sigma.home" value="${env.SIGMA_HOME}"/>
   <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
   <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
-  <property name="kbs.home" value="${basedir}/../KBs" />
+  <property name="kbs.home" value="${sigma.home}/KBs" />
   <echo message="KBs_HOME is set to = ${kbs.home}" />
   <echo>Java Version via Ant: ${ant.java.version}</echo>
   <echo>Java Version System Prop: ${java.version}</echo> 
