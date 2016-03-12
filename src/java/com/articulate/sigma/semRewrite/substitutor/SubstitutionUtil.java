@@ -45,7 +45,7 @@ public class SubstitutionUtil {
      */
     public static void groupClauses(ClauseSubstitutor substitutor, List<String> clauses) {
 
-        System.out.println("INFO in SubstitutionUtil.groupClauses(): " + clauses);
+        //System.out.println("INFO in SubstitutionUtil.groupClauses(): " + clauses);
         Iterator<String> clauseIterator = clauses.iterator();
         List<String> modifiedClauses = Lists.newArrayList();
         while (clauseIterator.hasNext()) {
@@ -71,7 +71,7 @@ public class SubstitutionUtil {
             }
         }
 
-        System.out.println("INFO in SubstitutionUtil.groupClauses(2): " + clauses);
+        //System.out.println("INFO in SubstitutionUtil.groupClauses(2): " + clauses);
         clauses.addAll(modifiedClauses);
     }
 }
