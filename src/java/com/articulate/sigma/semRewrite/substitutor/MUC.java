@@ -6,12 +6,14 @@ import com.google.common.collect.Lists;
 //import edu.stanford.nlp.dcoref.CorefChain;
 //import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
 
-import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
-import edu.stanford.nlp.hcoref.CorefSystem;
-import edu.stanford.nlp.hcoref.data.CorefChain;
-import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
-import edu.stanford.nlp.hcoref.data.Document;
+//import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
+//import edu.stanford.nlp.hcoref.CorefSystem;
+//import edu.stanford.nlp.hcoref.data.CorefChain;
+//import edu.stanford.nlp.hcoref.data.CorefChain.CorefMention;
+//import edu.stanford.nlp.hcoref.data.Document;
 
+import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.*;
