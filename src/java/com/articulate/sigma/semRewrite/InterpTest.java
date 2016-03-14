@@ -62,7 +62,8 @@ public class InterpTest {
                 JSONObject jo = li.next();
                 result.add(transformer.apply(jo));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("Parse exception reading: " + resourcePath);
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -149,7 +150,5 @@ public class InterpTest {
         }
         System.out.println("Passed: " + pass);
         System.out.println("Failed: " + fail);
-
-
     }
 }
