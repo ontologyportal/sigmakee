@@ -297,7 +297,7 @@ public class Interpreter {
                             sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                         }
                         if (kb.isInstance(sumo))
-                            results.add("equals(" + sumo + "," + clauseKey + ")");
+                            results.add("sumoInstance(" + sumo + "," + clauseKey + ")");
                         else
                             results.add("sumo(" + sumo + "," + clauseKey + ")");
                     }
