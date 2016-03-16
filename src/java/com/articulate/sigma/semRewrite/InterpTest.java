@@ -87,7 +87,7 @@ public class InterpTest {
 
         //return JsonReader.transform("resources/translation_tiny.json", (JSONObject jo) -> {
         //return JsonReader.transform("miscellaneous/translation_tests.json", (JSONObject jo) -> {
-        return transform("/home/apease/Relcy/ImperativeTests.json", (JSONObject jo) -> {
+        return transform(KBmanager.getMgr().getPref("kbDir") + File.separator + "ImperativeTests.json", (JSONObject jo) -> {
             String text = (String) jo.get("text");
             //String tokens = (String) jo.get("tokens");
             //String type = (String) jo.get("type");
@@ -108,29 +108,26 @@ public class InterpTest {
     public static void test(String fInput, String fExpected) {
 
         String actual = interp.interpret(fInput).get(0);
-        //String actual = interp.interpretSingle(fInput);
-        // Just to have beautiful output
-        if (!Objects.equals(unify(fExpected), unify(actual))) {
-            boolean passed = (new Formula(fExpected)).logicallyEquals(new Formula(actual));
-            ArrayList<String> oneResult = new ArrayList<>();
-            System.out.println("Input: " + fInput);
-            oneResult.add(fInput);
-            System.out.println("Expected: " + fExpected);
-            oneResult.add(fExpected);
-            System.out.println("Actual: " + actual);
-            oneResult.add(actual);
-            if (!passed) {
-                System.out.println("****** FAIL ******");
-                fail++;
-            }
-            else {
-                System.out.println("pass");
-                pass++;
-            }
-            System.out.println("The following should be equal: \n" + fExpected + "\n and \n" +
-                    actual + "\n\n" + passed);
-            results.add(oneResult);
+        boolean passed = (new Formula(fExpected)).logicallyEquals(new Formula(actual));
+        ArrayList<String> oneResult = new ArrayList<>();
+        System.out.println("Input: " + fInput);
+        oneResult.add(fInput);
+        System.out.println("Expected: " + fExpected);
+        oneResult.add(fExpected);
+        System.out.println("Actual: " + actual);
+        oneResult.add(actual);
+        if (!passed) {
+            System.out.println("****** FAIL ******");
+            fail++;
         }
+        else {
+            System.out.println("pass");
+            pass++;
+        }
+        System.out.println("The following should be equal: \n" + fExpected + "\n and \n" +
+                actual + "\n\n" + passed);
+        results.add(oneResult);
+
     }
 
     /****************************************************************
